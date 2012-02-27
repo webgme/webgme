@@ -11,10 +11,13 @@
     	console.log("START");
     	var project = core.createProject();
     	var root = project.getRoot();
+    	// console.log(Object.getOwnPropertyNames(root));
     	project.getObject("/metameta/object", function(obj)
     			{
     				console.log(obj.toString());
     			});
+    	root.addEventListener(function(event) { console.log(event); });
+    	root.dispatchEvent("hihi");
     });
 </script>
 </body>

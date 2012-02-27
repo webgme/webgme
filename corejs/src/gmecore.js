@@ -23,6 +23,41 @@ define(function()
 		}
 	};
 
+	// ----------------- event target -----------------
+	
+	EventTarget = function()
+	{
+		this.eventListeners = [];
+	};
+	
+	EventTarget.prototype.addEventListener = function(callback)
+	{
+		ASSERT( this.eventListeners.indexOf(callback) < 0 );
+		
+		this.eventListeners.push(callback);
+	};
+
+	EventTarget.prototype.removeEventListener = function(callback)
+	{
+		var index = this.eventListeners.indexOf(callback);
+		ASSERT( index >= 0 );
+		
+		if( index >= 0 )
+			this.eventListeners.splice(index, 1);
+	};
+
+	EventTarget.prototype.dispatchEvent = function(event)
+	{
+		if( typeof event === "string" )
+			event = { type: event };
+
+		ASSERT( typeof event.type === "string" );
+		event.target = this;
+		
+		for(var i = 0; i < this.eventListeners.length; ++i)
+			this.eventListeners[i](event);
+	};
+	
 	// ----------------- object constructors -----------------
 	
 	/*
@@ -40,7 +75,12 @@ define(function()
 		
 		if( parent !== null )
 			parent.children[relid] = this;
+	
+		// call base
+		EventTarget.call(this);
 	};
+
+	CoreObject.prototype = new EventTarget();
 
 	CoreObject.prototype.createSubtype = function(type, parent, relid)
 	{
