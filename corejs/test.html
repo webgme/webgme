@@ -2,15 +2,20 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>Insert title here</title>
+<title>GmeCore Testing</title>
 </head>
 <body>
 <script src="lib/require.js"></script>
 <script>
-    require(["gme/core"], function(core) {
+    require(["src/gmecore"], function(core) {
+    	console.log("START");
     	var project = core.createProject();
     	var root = project.getRoot();
-    	console.log(project.getObject("/metameta/object").toString());
+    	project.getObject("/metameta/object", function(obj)
+    			{
+    				console.log(obj.toString());
+    			});
     });
-</script></body>
+</script>
+</body>
 </html>

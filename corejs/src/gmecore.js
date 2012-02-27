@@ -1,4 +1,9 @@
-// define a require.js module
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Miklos Maroti
+ */
+
 define(function()
 {
 
@@ -6,44 +11,22 @@ define(function()
 
 	ASSERT = function(cond)
 	{
-		if (!cond)
+		if( !cond )
 		{
-			var message = "ASSERT failed at " + new Error().stack;
+			var error = new Error("ASSERT failed");
+			var message = "ASSERT failed at " + error.stack;
 
-			if (console)
+			if( console )
 				console.log(message);
 			
-			throw new Error("ASSERT failed");
+			throw error;
 		}
 	};
 
-	// ----------------- object -----------------
-
-	xcoreObject = {
-		subtypes : new Array(),
-		children : {}
-	};
-
-	xcoreObject.createSubtype = function(type, parent, relid)
-	{
-		ASSERT(coreObject === type || xcoreObject.isPrototypeOf(type));
-		ASSERT(coreObject === parent || xcoreObject.isPrototypeOf(parent));
-		ASSERT(typeof relid == "string");
-
-		object = Object.create(type);
-		object.state = "new";
-		object.subtypes = [];
-		object.children = {};
-
-		type.subtypes.push(object);
-
-		return object;
-	};
-
-	// ----------------- object -----------------
+	// ----------------- object constructors -----------------
 	
 	/*
-	 * Use the constructor only for objects that have no subtype (metameta)
+	 * Use the constructor only for objects that have no subtype (metameta objects)
 	 */
 	CoreObject = function(parent, relid)
 	{
@@ -63,6 +46,8 @@ define(function()
 	{
 	};
 	
+	// ----------------- object synchronous methods -----------------
+	
 	CoreObject.prototype.getType = function()
 	{
 		return this.prototype;
@@ -77,17 +62,12 @@ define(function()
 	{
 		if( this.parent === null )
 			return "/";
-		else if( this.parent.parent == null )
+		else if( this.parent.parent === null )
 			return "/" + this.relid;
 		else
 			return this.parent.getPath() + "/" + this.relid;
 	};
 	
-	CoreObject.prototype.getChild = function(relid)
-	{
-		return this.children[relid];
-	};
-
 	CoreObject.prototype.getName = function()
 	{
 		if( this.attributes.name )
@@ -106,7 +86,14 @@ define(function()
 		return this.getName();
 	};
 	
-	// ----------------- project -----------------
+	// ----------------- object asynchronous methods -----------------
+
+	CoreObject.prototype.getChildren = function(callback)
+	{
+		callback(this, this.children);
+	};
+
+	// ----------------- project constructor -----------------
 
 	CoreProject = function()
 	{
@@ -115,15 +102,19 @@ define(function()
 		new CoreObject(metameta, "object");
 	};
 
+	// ----------------- project synchronous methods -----------------
+
 	CoreProject.prototype.getRoot = function()
 	{
 		return this.root;
 	};
 
-	CoreProject.prototype.getObject = function(path)
+	// ----------------- project asynchronous methods -----------------
+
+	CoreProject.prototype.getObject = function(path, callback)
 	{
-		// ASSERT(path.charAt(0) == "/");
-		
+		ASSERT(path.charAt(0) == "/");
+
 		var a = path.split("/");
 		var o = this.root;
 		
@@ -133,19 +124,22 @@ define(function()
 			{
 				o = o.children[a[i]];
 				if( ! o )
-					return null;
+				{
+					callback(null);
+					return;
+				}
 			}
 		}
-		
-		return o;
+
+		callback(o);
 	};
 	
-	// ----------------- interface -----------------
+	// ----------------- public interface -----------------
 
 	return {
 		createProject : function()
 		{
 			return new CoreProject();
-		},
+		}
 	};
 });
