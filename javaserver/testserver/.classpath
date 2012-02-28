@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-continuation-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-http-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-io-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-security-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-server-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-servlet-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-servlets-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-util-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-webapp-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/jetty-websocket-7.6.1.v20120215.jar"/>
+	<classpathentry kind="lib" path="D:/_WORK_/_gmeserver_/include/servlet-api-2.5.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
