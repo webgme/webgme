@@ -6,10 +6,11 @@
 
 define(function()
 {
+	"use strict";
 
 	// ----------------- debugging -----------------
 
-	ASSERT = function(cond)
+	var ASSERT = function(cond)
 	{
 		if( !cond )
 		{
@@ -24,20 +25,24 @@ define(function()
 	};
 
 	// ----------------- event target -----------------
+
+	var eventTarget = Object.create(Object.prototype);
 	
-	EventTarget = function()
+	var initEventTarget = function()
 	{
+		ASSERT( eventTarget.isPrototypeOf(this) );
+		
 		this.eventListeners = [];
 	};
 	
-	EventTarget.prototype.addEventListener = function(callback)
+	eventTarget.addEventListener = function(callback)
 	{
 		ASSERT( this.eventListeners.indexOf(callback) < 0 );
 		
 		this.eventListeners.push(callback);
 	};
 
-	EventTarget.prototype.removeEventListener = function(callback)
+	eventTarget.removeEventListener = function(callback)
 	{
 		var index = this.eventListeners.indexOf(callback);
 		ASSERT( index >= 0 );
@@ -46,7 +51,7 @@ define(function()
 			this.eventListeners.splice(index, 1);
 	};
 
-	EventTarget.prototype.dispatchEvent = function(event)
+	eventTarget.dispatchEvent = function(event)
 	{
 		if( typeof event === "string" )
 			event = { type: event };
@@ -59,46 +64,55 @@ define(function()
 	};
 	
 	// ----------------- object constructors -----------------
-	
-	/*
-	 * Use the constructor only for objects that have no subtype (metameta objects)
-	 */
-	CoreObject = function(parent, relid)
+
+	var coreObject = Object.create(eventTarget);
+
+	var initCoreObject = function(parent, relid)
 	{
-		ASSERT( (parent === null && relid === "") || (parent instanceof CoreObject && relid !== "") );
+		ASSERT( coreObject.isPrototypeOf(this) );
+		ASSERT( (parent === null && relid === "") || (coreObject.isPrototypeOf(parent) && relid !== "") );
 		
-		this.parent = parent;
 		this.relid = relid;
-		this.subtypes = [];
+		this.parent = parent;
 		this.children = {};
 		this.attributes = {};
-		
-		if( parent !== null )
+		this.subtypes = [];
+
+		if( parent )
 			parent.children[relid] = this;
-	
+		
+		if( Object.getPrototypeOf(this).subtypes )
+			Object.getPrototypeOf(this).subtypes.push(this);
+
 		// call base
-		EventTarget.call(this);
+		initEventTarget.call(this);
 	};
 
-	CoreObject.prototype = new EventTarget();
-
-	CoreObject.prototype.createSubtype = function(type, parent, relid)
+	var createCoreObject = function(parent, relid, type)
 	{
+		ASSERT( type === coreObject || coreObject.isPrototypeOf(type) );
+
+		var that = Object.create(type);
+		initCoreObject.call(that, parent, relid);
+		
+		return that;
 	};
 	
 	// ----------------- object synchronous methods -----------------
 	
-	CoreObject.prototype.getType = function()
+	coreObject.getType = function()
 	{
-		return this.prototype;
+		var p = Object.getPrototypeOf(this);
+		
+		return p;
 	};
 	
-	CoreObject.prototype.getParent = function()
+	coreObject.getParent = function()
 	{
 		return this.parent;
 	};
 
-	CoreObject.prototype.getPath = function()
+	coreObject.getPath = function()
 	{
 		if( this.parent === null )
 			return "/";
@@ -108,7 +122,7 @@ define(function()
 			return this.parent.getPath() + "/" + this.relid;
 	};
 	
-	CoreObject.prototype.getName = function()
+	coreObject.getName = function()
 	{
 		if( this.attributes.name )
 			return this.attributes.name;
@@ -116,30 +130,30 @@ define(function()
 		return "[object at " + this.getPath() + "]";
 	};
 	
-	CoreObject.prototype.setName = function(name)
+	coreObject.setName = function(name)
 	{
 		this.attributes.name = name;
 	};
 	
-	CoreObject.prototype.toString = function()
+	coreObject.toString = function()
 	{
 		return this.getName();
 	};
 	
 	// ----------------- object asynchronous methods -----------------
 
-	CoreObject.prototype.getChildren = function(callback)
+	coreObject.getChildren = function(callback)
 	{
 		callback(this, this.children);
 	};
 
 	// ----------------- project constructor -----------------
 
-	CoreProject = function()
+	var CoreProject = function()
 	{
-		this.root = new CoreObject(null, "");
-		var metameta = new CoreObject(this.root, "metameta");
-		new CoreObject(metameta, "object");
+		this.root = createCoreObject(null, "", coreObject);
+		var metameta = createCoreObject(this.root, "metameta", coreObject);
+		createCoreObject(metameta, "object", coreObject);
 	};
 
 	// ----------------- project synchronous methods -----------------
@@ -151,6 +165,13 @@ define(function()
 
 	// ----------------- project asynchronous methods -----------------
 
+	/**
+	 * Looks up an GME object by path. The path must be absolute, that is
+	 * it must start with "/". The callback function is called when the
+	 * GME object is loaded into memory, and the GME object is passed as
+	 * an argument to the callback function. The GME object stays in memory
+	 * as long as it has registered events.
+	 */
 	CoreProject.prototype.getObject = function(path, callback)
 	{
 		ASSERT(path.charAt(0) == "/");
