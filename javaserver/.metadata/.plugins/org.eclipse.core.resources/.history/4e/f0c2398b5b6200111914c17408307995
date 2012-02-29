@@ -1,0 +1,18 @@
+
+public class GmeLogger {
+
+	private static boolean _filelogging=false;
+	private static String _filepath="";
+	
+	public static void log(String line){
+		if(_filelogging)
+			logToFile(line);
+		logToConsole(line);
+	}
+	private static void logToConsole(String line){
+		System.out.println(line);
+	}
+	private static void logToFile(String line){
+		
+	}
+}

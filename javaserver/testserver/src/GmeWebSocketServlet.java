@@ -3,13 +3,9 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketFactory;
 import org.eclipse.jetty.util.log.Log;
 
 public class GmeWebSocketServlet extends WebSocketServlet{
@@ -20,25 +16,28 @@ public class GmeWebSocketServlet extends WebSocketServlet{
     	
         return new GmeWebSocket();
     }
-	class GmeWebSocket implements WebSocket.OnTextMessage
+	class GmeWebSocket implements WebSocket,WebSocket.OnTextMessage
     {
         Connection _connection;
         GmeProject _project;
 
         public GmeWebSocket(){
         	_project = new GmeProject("myproject");
+        	GmeLogger.log("ws created");
         }
         
         public void onOpen(Connection connection){
         	_connection=connection;
+        	GmeLogger.log("ws connection opened");
         }
         
         public void onClose(int closeCode, String message){
-        	
+        	GmeLogger.log("ws closed because: "+closeCode+" _cc_ , and with message: "+message);
         }
 
         public void onMessage( String data)
         {
+        	GmeLogger.log("ws got message: "+data);
         	String[] parameters = data.split(":");
         	if(parameters.length<1){
         		try{_connection.sendMessage(getObject(""));}
@@ -61,12 +60,14 @@ public class GmeWebSocketServlet extends WebSocketServlet{
         }
         
         private String getObject(String id){
+        	GmeLogger.log("ws object (id=\""+id+"\") was requested");
         	if(id.equals(""))
         		return _project.getRoot();
         	return _project.printObject(id);
         }
         
         private String getName(){
+        	GmeLogger.log("ws project name was requested");
         	return _project.getName();
         }
     }	

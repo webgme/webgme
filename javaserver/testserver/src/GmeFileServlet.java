@@ -23,6 +23,7 @@ public class GmeFileServlet extends HttpServlet{
 			path="/index.html";
 		path=rootpath+convertToPath(path);
 		
+		GmeLogger.log("file - "+path+" - was requested");
 		//check if requested file exists
 		File file=new File(path);
 		if(file.exists()){
@@ -36,6 +37,7 @@ public class GmeFileServlet extends HttpServlet{
 			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 			path = rootpath+File.separator+"notfound.html";
 		}
+		GmeLogger.log("sending - "+path+" - as a response");
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String line;
 		while((line = br.readLine()) != null) response.getWriter().print(line);

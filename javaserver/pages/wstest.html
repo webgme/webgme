@@ -7,7 +7,7 @@
                 document.getElementById("statuslabel").innerHTML = text;
             }
             function createtest(){
-                test = new WebSocket("ws://kecskes.isis.vanderbilt.edu/wstest/");
+                test = new WebSocket("ws://kecskes.isis.vanderbilt.edu/ws");
                 test.onmessage = onmessage;
                 test.onclose = onclose;
                 setlabel("connected");
