@@ -12,12 +12,15 @@
     	var project = core.createProject();
     	var root = project.getRoot();
     	// console.log(Object.getOwnPropertyNames(root));
-    	project.getObject("/metameta/object", function(obj)
-    			{
-    				console.log(obj.toString());
-    			});
-    	root.addEventListener(function(event) { console.log(event); });
-    	root.dispatchEvent("hihi");
+    	project.getObject("/metameta/object", function(obj) {
+    			console.log(obj.toString());
+    	});
+//    	root.addEventListener(function(event) { console.log(event); });
+//    	root.dispatchEvent("hihi");
+
+		var storage = core.createStorage();
+		var s = core.encodeStorage(storage);
+		console.log(core.decodeStorage(s));
     });
 </script>
 </body>

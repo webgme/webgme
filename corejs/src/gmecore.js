@@ -1,191 +1,205 @@
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
- * 
+ *
  * Author: Miklos Maroti
  */
 
-define(function()
-{
+define(["lib/sha1"], function () {
 	"use strict";
 
 	// ----------------- debugging -----------------
 
-	var ASSERT = function(cond)
-	{
-		if( !cond )
-		{
+	var ASSERT = function (cond) {
+		if( !cond ) {
 			var error = new Error("ASSERT failed");
 			var message = "ASSERT failed at " + error.stack;
 
-			if( console )
+			if( console ) {
 				console.log(message);
-			
+			}
+
 			throw error;
 		}
 	};
 
-	// ----------------- event target -----------------
+	// ----------------- storage -----------------
 
-	var eventTarget = Object.create(Object.prototype);
+	// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
 	
-	var initEventTarget = function()
-	{
-		ASSERT( eventTarget.isPrototypeOf(this) );
+	var createCoreStorage = function () {
+		var that = {
+			hash: "dirty",
+			attributes: {},
+			children: {}
+		};
 		
-		this.eventListeners = [];
-	};
-	
-	eventTarget.addEventListener = function(callback)
-	{
-		ASSERT( this.eventListeners.indexOf(callback) < 0 );
+		Object.defineProperty(that, "hash", {
+			writable: true,
+			enumerable: false
+		});
 		
-		this.eventListeners.push(callback);
-	};
-
-	eventTarget.removeEventListener = function(callback)
-	{
-		var index = this.eventListeners.indexOf(callback);
-		ASSERT( index >= 0 );
-		
-		if( index >= 0 )
-			this.eventListeners.splice(index, 1);
+		return that;
 	};
 
-	eventTarget.dispatchEvent = function(event)
-	{
-		if( typeof event === "string" )
-			event = { type: event };
-
-		ASSERT( typeof event.type === "string" );
-		event.target = this;
+	var encodeCoreStorage = function (storage) {
+		ASSERT(storage.hash === "dirty");
 		
-		for(var i = 0; i < this.eventListeners.length; ++i)
-			this.eventListeners[i](event);
+		var s = JSON.stringify(storage);
+		var hash = SHA1(s);
+		
+		return '{"hash":"' + hash + '",' + s.substr(1);
 	};
 	
-	// ----------------- object constructors -----------------
-
-	var coreObject = Object.create(eventTarget);
-
-	var initCoreObject = function(parent, relid)
-	{
-		ASSERT( coreObject.isPrototypeOf(this) );
-		ASSERT( (parent === null && relid === "") || (coreObject.isPrototypeOf(parent) && relid !== "") );
+	var decodeCoreStorage = function (json)	{
+		var that = JSON.parse(json);
 		
+		Object.defineProperty(that, "hash", {
+			writable: true,
+			enumerable: false
+		});
+		
+		// verify data
+		ASSERT(that.hash === SHA1(JSON.stringify(that)));
+		
+		return that;
+	};
+	
+	// ----------------- object -----------------
+
+	var coreObject = Object.create(Object.prototype);
+
+	var initCoreObject = function (parent, relid) {
+		ASSERT(coreObject.isPrototypeOf(this));
+		ASSERT((parent === null && relid === "")
+				|| (coreObject.isPrototypeOf(parent) && relid !== ""));
+
 		this.relid = relid;
 		this.parent = parent;
 		this.children = {};
 		this.attributes = {};
 		this.subtypes = [];
 
-		if( parent )
+		if( parent ) {
 			parent.children[relid] = this;
-		
-		if( Object.getPrototypeOf(this).subtypes )
-			Object.getPrototypeOf(this).subtypes.push(this);
+		}
 
-		// call base
-		initEventTarget.call(this);
+		if( Object.getPrototypeOf(this).subtypes ) {
+			Object.getPrototypeOf(this).subtypes.push(this);
+		}
 	};
 
-	var createCoreObject = function(parent, relid, type)
-	{
-		ASSERT( type === coreObject || coreObject.isPrototypeOf(type) );
+	var createCoreObject = function (parent, relid, type) {
+		ASSERT(type === coreObject || coreObject.isPrototypeOf(type));
 
 		var that = Object.create(type);
 		initCoreObject.call(that, parent, relid);
-		
+
 		return that;
 	};
-	
-	// ----------------- object synchronous methods -----------------
-	
-	coreObject.getType = function()
-	{
+
+	coreObject.getType = function () {
 		var p = Object.getPrototypeOf(this);
-		
+
 		return p;
 	};
-	
-	coreObject.getParent = function()
-	{
+
+	coreObject.getParent = function () {
 		return this.parent;
 	};
 
-	coreObject.getPath = function()
-	{
-		if( this.parent === null )
+	coreObject.getPath = function () {
+		if( this.parent === null ) {
 			return "/";
-		else if( this.parent.parent === null )
+		}
+		else if( this.parent.parent === null ) {
 			return "/" + this.relid;
-		else
+		}
+		else {
 			return this.parent.getPath() + "/" + this.relid;
+		}
 	};
-	
-	coreObject.getName = function()
-	{
-		if( this.attributes.name )
+
+	coreObject.getName = function () {
+		if( this.attributes.name ) {
 			return this.attributes.name;
-		
+		}
+
 		return "[object at " + this.getPath() + "]";
 	};
-	
-	coreObject.setName = function(name)
-	{
+
+	coreObject.setName = function (name) {
 		this.attributes.name = name;
 	};
-	
-	coreObject.toString = function()
-	{
+
+	coreObject.toString = function () {
 		return this.getName();
 	};
-	
-	// ----------------- object asynchronous methods -----------------
 
-	coreObject.getChildren = function(callback)
-	{
+	coreObject.getChildren = function (callback) {
 		callback(this, this.children);
 	};
 
-	// ----------------- project constructor -----------------
+	// ----------------- territory -----------------
 
-	var CoreProject = function()
-	{
+	var coreTerritory = Object.create(Object.prototype);
+
+	var initCoreTerritory = function (project) {
+		ASSERT(coreTerritory.isPrototypeOf(this));
+		ASSERT(coreProject.isPrototypeOf(project));
+
+		this.project = project;
+		this.objects = [];
+	};
+
+	var createCoreTerritory = function () {
+		var that = Object.create(coreTerritory);
+		initCoreTerritory.call(that);
+		return that;
+	};
+
+	// ----------------- project -----------------
+
+	var coreProject = Object.create(Object.prototype);
+
+	var initCoreProject = function () {
+		ASSERT(coreProject.isPrototypeOf(this));
+
 		this.root = createCoreObject(null, "", coreObject);
 		var metameta = createCoreObject(this.root, "metameta", coreObject);
 		createCoreObject(metameta, "object", coreObject);
 	};
 
-	// ----------------- project synchronous methods -----------------
+	var createCoreProject = function () {
+		var that = Object.create(coreProject);
+		initCoreProject.call(that);
+		return that;
+	};
 
-	CoreProject.prototype.getRoot = function()
-	{
+	coreProject.getRoot = function () {
 		return this.root;
 	};
 
-	// ----------------- project asynchronous methods -----------------
+	coreProject.createTerritory = function () {
+		return createCoreTerritory(this);
+	};
 
 	/**
-	 * Looks up an GME object by path. The path must be absolute, that is
-	 * it must start with "/". The callback function is called when the
-	 * GME object is loaded into memory, and the GME object is passed as
-	 * an argument to the callback function. The GME object stays in memory
-	 * as long as it has registered events.
+	 * Looks up an GME object by path. The path must be absolute, that is it
+	 * must start with "/". The callback function is called when the GME object
+	 * is loaded into memory, and the GME object is passed as an argument to the
+	 * callback function. The GME object stays in memory as long as it has
+	 * registered events.
 	 */
-	CoreProject.prototype.getObject = function(path, callback)
-	{
-		ASSERT(path.charAt(0) == "/");
+	coreProject.getObject = function (path, callback) {
+		ASSERT(path.charAt(0) === "/");
 
 		var a = path.split("/");
 		var o = this.root;
-		
-		for(var i = 0; i < a.length; ++i)
-		{
-			if( a[i].length > 0 )
-			{
+
+		for( var i = 0; i < a.length; ++i ) {
+			if( a[i].length > 0 ) {
 				o = o.children[a[i]];
-				if( ! o )
-				{
+				if( !o ) {
 					callback(null);
 					return;
 				}
@@ -194,13 +208,22 @@ define(function()
 
 		callback(o);
 	};
-	
+
 	// ----------------- public interface -----------------
 
 	return {
-		createProject : function()
-		{
-			return new CoreProject();
+		createProject: function () {
+			return createCoreProject();
+		},
+		createStorage: function () {
+			return createCoreStorage();
+		},
+		encodeStorage: function (storage) {
+			return encodeCoreStorage(storage);
+		},
+		decodeStorage: function (json) {
+			return decodeCoreStorage(json);
 		}
+		
 	};
 });
