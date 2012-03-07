@@ -33,6 +33,9 @@
 			
 				project.onopen = function (root) {
 					var request = storage.createRequest(project);
+					
+					console.log( "root: " + root) ;
+					
 					request.loadObject(root);
 					request.onload = function () {
 						if(loadchildren(request) === 0) {
@@ -41,26 +44,27 @@
 							/*
 							* Prints out the received object hierarchy recursively
 							*/
-							var printHierarchy = function ( objects, parentContainer ) {
-								for ( var obj in objects ) {
-									var newNode = document.createElement("div");
-									newNode.setAttribute("class", "subLevel");
-									newNode.innerHTML = objects[obj].name + " (" + objects[obj].hash + ")";
-									
-									if ( objects[obj].children ) {
-										for ( var c in objects[obj].children ) {
-											var childObj = {};
-											childObj[ c ] = objects[objects[obj].children[c]];
-											printHierarchy( childObj , newNode );
-										}
+							var printHierarchy = function ( object, parentContainer, parentPath, relId ) {
+							
+								var currentNodePath = parentPath + "/" + relId;
+							
+								//print out the current object
+								var newNode = document.createElement("div");
+								newNode.innerHTML = currentNodePath + " <span class='subLevel'>( name: " + object.name + ", hash: " + object.hash + ")</span>";
+
+								//add new node to its parent
+								parentContainer.appendChild( newNode);
+								
+								if ( object.children ) {
+									for ( var c in object.children ) {
+										printHierarchy( request.objects[ object.children[c] ], newNode, (relId === "" ? "" : currentNodePath ), c );
 									}
-									
-									parentContainer.appendChild( newNode);
 								}
+								
 							}
 							
 							//at this point we have all the requested hierarchy
-							printHierarchy(request.objects, document.getElementById("myContent") );
+							printHierarchy( request.objects[ root ], document.getElementById( "myContent" ), "", "" );
 							
 							project.close();
 						}
@@ -74,7 +78,7 @@
 			});
 		</script>
 		<style>
-			div.subLevel { margin-left: 20px; }
+			.subLevel { margin-left: 100px; }
 		</style>
 	</head>
 	<body>
