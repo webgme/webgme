@@ -1,54 +1,85 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>GmeCore Testing</title>
-</head>
-<body>
-<script src="lib/require.js"></script>
-<script>
-    require(["src/gmestorage"], function(storage) {
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>GmeCore Testing</title>
+		<script src="lib/require.js"></script>
+		<script>
+			require(["src/gmestorage"], function(storage) {
 
-    	var loadchildren = function (request) {
-    		var objects = request.objects;
-    		var missing = 0;
-    		for(var hash in objects) {
-    			var obj = objects[hash];
-    			if(obj.children) {
-       				for(relid in obj.children) {
-       					var hash2 = obj.children[relid];
-        				if(! objects[hash2]) {
-        					request.loadObject(hash2);
-        					missing += 1;
-        				}
-       				}
-    			} 
-    		}
-    		if(missing > 0) {
-    			request.send();
-    		}
-    		return missing;
-    	}
-    	
-    	console.log("START");
-    	var project = storage.createProject();
-   	
-    	project.onopen = function (root) {
-    		var request = storage.createRequest(project);
-    		request.loadObject(root);
-    		request.onload = function () {
-    			if(loadchildren(request) === 0) {
-	    			console.log(request.objects);
-        			project.close();
-    			}
-    		}
-    		request.send();
-    	}
-    	project.onclose = function () {
-    		console.log("DONE");
-    	};
-    	project.open("sample");
-    });
-</script>
-</body>
+				var loadchildren = function (request) {
+					var objects = request.objects;
+					var missing = 0;
+					for(var hash in objects) {
+						var obj = objects[hash];
+						if(obj.children) {
+							for(relid in obj.children) {
+								var hash2 = obj.children[relid];
+								if(! objects[hash2]) {
+									request.loadObject(hash2);
+									missing += 1;
+								}
+							}
+						} 
+					}
+					if(missing > 0) {
+						request.send();
+					}
+					return missing;
+				}
+				
+				console.log("START");
+				var project = storage.createProject();
+			
+				project.onopen = function (root) {
+					var request = storage.createRequest(project);
+					request.loadObject(root);
+					request.onload = function () {
+						if(loadchildren(request) === 0) {
+							console.log(request.objects);
+							
+							/*
+							* Prints out the received object hierarchy recursively
+							*/
+							var printHierarchy = function ( objects, parentContainer ) {
+								for ( var obj in objects ) {
+									var newNode = document.createElement("div");
+									newNode.setAttribute("class", "subLevel");
+									newNode.innerHTML = objects[obj].name + " (" + objects[obj].hash + ")";
+									
+									if ( objects[obj].children ) {
+										for ( var c in objects[obj].children ) {
+											var childObj = {};
+											childObj[ c ] = objects[objects[obj].children[c]];
+											printHierarchy( childObj , newNode );
+										}
+									}
+									
+									parentContainer.appendChild( newNode);
+								}
+							}
+							
+							//at this point we have all the requested hierarchy
+							printHierarchy(request.objects, document.getElementById("myContent") );
+							
+							project.close();
+						}
+					}
+					request.send();
+				}
+				project.onclose = function () {
+					console.log("DONE");
+				};
+				project.open("sample");
+			});
+		</script>
+		<style>
+			div.subLevel { margin-left: 20px; }
+		</style>
+	</head>
+	<body>
+		<div id="myContent" style="font-family: Courier new">
+			
+		</div>
+	</body>
 </html>
