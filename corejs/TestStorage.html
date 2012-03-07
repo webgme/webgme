@@ -10,62 +10,66 @@
 				var loadchildren = function (request) {
 					var objects = request.objects;
 					var missing = 0;
+
+					if(request.objects[request.root] === undefined) {
+						console.log("loading " + request.root);
+						request.loadObject(request.root);
+						missing += 1;
+					}
+
 					for(var hash in objects) {
 						var obj = objects[hash];
 						if(obj.children) {
 							for(relid in obj.children) {
 								var hash2 = obj.children[relid];
 								if(! objects[hash2]) {
+									console.log("loading " + hash2);
 									request.loadObject(hash2);
 									missing += 1;
 								}
 							}
-						} 
+						}
 					}
+
 					if(missing > 0) {
 						request.send();
 					}
 					return missing;
 				}
-				
+
 				console.log("START");
 				var project = storage.createProject();
-			
-				project.onopen = function (root) {
+
+				project.onopen = function () {
 					var request = storage.createRequest(project);
-					
-					console.log( "root: " + root) ;
-					
-					request.loadObject(root);
-					request.onload = function () {
+					request.loadRoot();
+					request.ondone = function () {
 						if(loadchildren(request) === 0) {
-							console.log(request.objects);
-							
 							/*
 							* Prints out the received object hierarchy recursively
 							*/
 							var printHierarchy = function ( object, parentContainer, parentPath, relId ) {
-							
+
 								var currentNodePath = parentPath + "/" + relId;
-							
+
 								//print out the current object
 								var newNode = document.createElement("div");
-								newNode.innerHTML = currentNodePath + " <span class='subLevel'>( name: " + object.name + ", hash: " + object.hash + ")</span>";
+								newNode.innerHTML = currentNodePath + " <span class='subLevel'>(name: " + object.name + ", hash: " + object.hash + ")</span>";
 
 								//add new node to its parent
 								parentContainer.appendChild( newNode);
-								
+
 								if ( object.children ) {
 									for ( var c in object.children ) {
 										printHierarchy( request.objects[ object.children[c] ], newNode, (relId === "" ? "" : currentNodePath ), c );
 									}
 								}
-								
+
 							}
-							
+
 							//at this point we have all the requested hierarchy
-							printHierarchy( request.objects[ root ], document.getElementById( "myContent" ), "", "" );
-							
+							printHierarchy( request.objects[ request.root ], document.getElementById( "myContent" ), "", "" );
+
 							project.close();
 						}
 					}
@@ -83,7 +87,7 @@
 	</head>
 	<body>
 		<div id="myContent" style="font-family: Courier new">
-			
+
 		</div>
 	</body>
 </html>

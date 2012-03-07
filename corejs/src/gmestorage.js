@@ -13,24 +13,22 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 	var STRING = "string";
 	var READY = "ready";
 	var SENDING = "sending";
-	
+
 	// ----------------- project -----------------
 
 	var Project = function () {
 		this.storage = {};
+		this.root = undefined;
 		this.state = CLOSED;
 	};
 
 	/**
 	 * Opens this project with the specified connection string, then calls the
-	 * callback function with an argument that is the hash of the root object.
-	 * If the operation did not succeed, then the callback function is called
-	 * with false instead.
+	 * onopen or onerror event.
 	 * 
 	 * @param connection the connection string
-	 * @param callback a function with a boolean argument
 	 */
-	Project.prototype.open = function (connection, callback) {
+	Project.prototype.open = function (connection) {
 		ASSERT(this.state === CLOSED);
 		ASSERT(connection === "sample");
 
@@ -51,12 +49,13 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 				z: b.hash
 			}
 		});
-		
+		request.saveRoot(c.hash);
+
 		var that = this;
-		request.onload = function () {
-			that.onopen(c.hash);
+		request.ondone = function () {
+			that.onopen();
 		};
-		
+
 		request.send();
 	};
 
@@ -78,10 +77,10 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 		}, 100);
 	};
 
-	Project.prototype.onopen = function (root) {
-		console.log("onopen: " + JSON.stringify(root));
+	Project.prototype.onopen = function () {
+		console.log("onopen");
 	};
-	
+
 	Project.prototype.onclose = function () {
 		console.log("onclose");
 	};
@@ -89,7 +88,7 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 	Project.prototype.onerror = function () {
 		console.log("onerror");
 	};
-	
+
 	// ----------------- Request -----------------
 
 	var Request = function (project) {
@@ -148,40 +147,64 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 		ASSERT(typeof hash === STRING);
 		ASSERT(hash.length === 40);
 		ASSERT(this.state === READY);
-		
+
 		var obj = this.project.storage[hash];
-		if( obj !== undefined ) {
-			this.objects[hash] = obj;
-		}
+
+		// unknown objects will be undefined
+		this.objects[hash] = obj;
 	};
 
 	/**
+	 * Sets the new root object in the database to the specified hash
+	 *
+	 * @param hash the hash of the new root object
+	 */
+	Request.prototype.saveRoot = function (hash) {
+		ASSERT(typeof hash === STRING);
+		ASSERT(hash.length === 40);
+		ASSERT(this.state === READY);
+
+		this.root = hash;
+		this.project.root = hash;
+	};
+
+	/**
+	 * Loads the has of the root object from the database and
+	 * stores it in toe root property of this request.
+	 */
+	Request.prototype.loadRoot = function () {
+		ASSERT(this.state === READY);
+
+		this.root = this.project.root;
+	};
+	
+	/**
 	 * Sends the request to the server and waits for the
 	 * completion, which will be a call either to the
-	 * onload or onerror event. The requested objects are
+	 * ondone or onerror event. The requested objects are
 	 * stored in the object property of the request. 
 	 */
 	Request.prototype.send = function () {
 		ASSERT(this.state === READY);
 
-		this.state = SENDING; 
+		this.state = SENDING;
 		var that = this;
-		
+
 		// add some artificial delay
 		window.setTimeout(function () {
 			that.state = READY;
-			that.onload();
+			that.ondone();
 		}, 100);
 	};
 
-	Request.prototype.onload = function () {
-		console.log("onload: " + JSON.stringify(this.objects));
+	Request.prototype.ondone = function () {
+		console.log("ondone: " + JSON.stringify(this.objects));
 	};
 
 	Request.prototype.onerror = function () {
 		console.log("onerror: " + JSON.stringify(this.objects));
 	};
-	
+
 	// ----------------- Interface -----------------
 
 	return {
