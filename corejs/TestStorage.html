@@ -10,18 +10,27 @@
 				var loadchildren = function (request) {
 					var objects = request.objects;
 					var missing = 0;
+					
+					if(request.objects[request.root] === undefined) {
+						console.log("loading " + request.root);
+						request.loadObject(request.root);
+						missing += 1;
+					}
+					
 					for(var hash in objects) {
 						var obj = objects[hash];
 						if(obj.children) {
 							for(relid in obj.children) {
 								var hash2 = obj.children[relid];
 								if(! objects[hash2]) {
+									console.log("loading " + hash2);
 									request.loadObject(hash2);
 									missing += 1;
 								}
 							}
 						} 
 					}
+					
 					if(missing > 0) {
 						request.send();
 					}
@@ -31,13 +40,11 @@
 				console.log("START");
 				var project = storage.createProject();
 			
-				project.onopen = function (root) {
+				project.onopen = function () {
 					var request = storage.createRequest(project);
-					request.loadObject(root);
-					request.onload = function () {
+					request.loadRoot();
+					request.ondone = function () {
 						if(loadchildren(request) === 0) {
-							console.log(request.objects);
-							
 							/*
 							* Prints out the received object hierarchy recursively
 							*/
