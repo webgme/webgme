@@ -1,0 +1,54 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>GmeCore Testing</title>
+</head>
+<body>
+<script src="lib/require.js"></script>
+<script>
+    require(["src/gmestorage"], function(storage) {
+
+    	var loadchildren = function (request) {
+    		var objects = request.objects;
+    		var missing = 0;
+    		for(var hash in objects) {
+    			var obj = objects[hash];
+    			if(obj.children) {
+       				for(relid in obj.children) {
+       					var hash2 = obj.children[relid];
+        				if(! objects[hash2]) {
+        					request.loadObject(hash2);
+        					missing += 1;
+        				}
+       				}
+    			} 
+    		}
+    		if(missing > 0) {
+    			request.send();
+    		}
+    		return missing;
+    	}
+    	
+    	console.log("START");
+    	var project = storage.createProject();
+   	
+    	project.onopen = function (root) {
+    		var request = storage.createRequest(project);
+    		request.loadObject(root);
+    		request.onload = function () {
+    			if(loadchildren(request) === 0) {
+	    			console.log(request.objects);
+        			project.close();
+    			}
+    		}
+    		request.send();
+    	}
+    	project.onclose = function () {
+    		console.log("DONE");
+    	};
+    	project.open("sample");
+    });
+</script>
+</body>
+</html>
