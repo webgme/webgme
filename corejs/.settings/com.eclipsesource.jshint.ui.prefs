@@ -1,0 +1,5 @@
+eclipse.preferences.version=1
+enabled=true
+excluded=lib/require.js\:lib/sha1.js
+globals=console, define,window,SHA1
+options=\ curly\: true, eqeqeq\: true, bitwise\: true, imed\: true, latedef\:true, newcap\: true, noempty\: true, nonew\: true, undef\: true, strict\: true, trailing\: false, smarttabs\: true, laxbreak\:true
