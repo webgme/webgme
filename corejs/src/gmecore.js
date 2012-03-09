@@ -4,66 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define(["lib/sha1"], function () {
+define(["src/gmeassert", "src/gmestorage"], function (ASSERT, storage) {
 	"use strict";
 
-	// ----------------- debugging -----------------
-
-	var ASSERT = function (cond) {
-		if( !cond ) {
-			var error = new Error("ASSERT failed");
-			var message = "ASSERT failed at " + error.stack;
-
-			if( console ) {
-				console.log(message);
-			}
-
-			throw error;
-		}
-	};
-
-	// ----------------- storage -----------------
-
-	// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
-	
-	var createCoreStorage = function () {
-		var that = {
-			hash: "dirty",
-			attributes: {},
-			children: {}
-		};
-		
-		Object.defineProperty(that, "hash", {
-			writable: true,
-			enumerable: false
-		});
-		
-		return that;
-	};
-
-	var encodeCoreStorage = function (storage) {
-		ASSERT(storage.hash === "dirty");
-		
-		var s = JSON.stringify(storage);
-		var hash = SHA1(s);
-		
-		return '{"hash":"' + hash + '",' + s.substr(1);
-	};
-	
-	var decodeCoreStorage = function (json)	{
-		var that = JSON.parse(json);
-		
-		Object.defineProperty(that, "hash", {
-			writable: true,
-			enumerable: false
-		});
-		
-		// verify data
-		ASSERT(that.hash === SHA1(JSON.stringify(that)));
-		
-		return that;
-	};
-	
 	// ----------------- object -----------------
 
 	var coreObject = Object.create(Object.prototype);
@@ -145,7 +88,7 @@ define(["lib/sha1"], function () {
 
 	var initCoreTerritory = function (project) {
 		ASSERT(coreTerritory.isPrototypeOf(this));
-		ASSERT(coreProject.isPrototypeOf(project));
+		ASSERT(project instanceof CoreProject);
 
 		this.project = project;
 		this.objects = [];
@@ -159,27 +102,17 @@ define(["lib/sha1"], function () {
 
 	// ----------------- project -----------------
 
-	var coreProject = Object.create(Object.prototype);
-
-	var initCoreProject = function () {
-		ASSERT(coreProject.isPrototypeOf(this));
-
+	var CoreProject = function () {
 		this.root = createCoreObject(null, "", coreObject);
 		var metameta = createCoreObject(this.root, "metameta", coreObject);
 		createCoreObject(metameta, "object", coreObject);
 	};
 
-	var createCoreProject = function () {
-		var that = Object.create(coreProject);
-		initCoreProject.call(that);
-		return that;
-	};
-
-	coreProject.getRoot = function () {
+	CoreProject.prototype.getRoot = function () {
 		return this.root;
 	};
 
-	coreProject.createTerritory = function () {
+	CoreProject.prototype.createTerritory = function () {
 		return createCoreTerritory(this);
 	};
 
@@ -190,7 +123,7 @@ define(["lib/sha1"], function () {
 	 * callback function. The GME object stays in memory as long as it has
 	 * registered events.
 	 */
-	coreProject.getObject = function (path, callback) {
+	CoreProject.prototype.getObject = function (path, callback) {
 		ASSERT(path.charAt(0) === "/");
 
 		var a = path.split("/");
@@ -213,17 +146,7 @@ define(["lib/sha1"], function () {
 
 	return {
 		createProject: function () {
-			return createCoreProject();
-		},
-		createStorage: function () {
-			return createCoreStorage();
-		},
-		encodeStorage: function (storage) {
-			return encodeCoreStorage(storage);
-		},
-		decodeStorage: function (json) {
-			return decodeCoreStorage(json);
+			return new CoreProject();
 		}
-		
 	};
 });
