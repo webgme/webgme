@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ *
+ * Author: Tamas Kecskes
+ */
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;

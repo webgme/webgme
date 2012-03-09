@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ *
+ * Author: Tamas Kecskes
+ */
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
@@ -6,9 +11,11 @@ import java.io.IOException;
 
 import org.eclipse.jetty.websocket.WebSocketServlet;
 import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.util.log.Log;
+
+import com.alibaba.fastjson.JSON;
 
 public class GmeWebSocketServlet extends WebSocketServlet{
+	static final long serialVersionUID = 1;
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException ,IOException {
 		getServletContext().getNamedDispatcher("default").forward(request,response);
 	}
@@ -20,9 +27,9 @@ public class GmeWebSocketServlet extends WebSocketServlet{
     {
         Connection _connection;
         GmeProject _project;
+        
 
         public GmeWebSocket(){
-        	_project = new GmeProject("myproject");
         	GmeLogger.log("ws created");
         }
         
@@ -38,37 +45,29 @@ public class GmeWebSocketServlet extends WebSocketServlet{
         public void onMessage( String data)
         {
         	GmeLogger.log("ws got message: "+data);
-        	String[] parameters = data.split(":");
-        	if(parameters.length<1){
-        		try{_connection.sendMessage(getObject(""));}
-        		catch(IOException e){}
+        	GmeQuery query = JSON.parseObject(data, GmeQuery.class);
+        	try{
+        		GmeResponse response = new GmeResponse();
+        		response.sequence = query.sequence;
+            	if(query.type==GmeQuery.QueryType.OPENPROJECT){
+            		_project = new GmeProject(query.projectname);
+            	}
+            	else{
+        		response = _project.handleQuery(query);
+            	}
+            	GmeLogger.log("sending \" "+JSON.toJSONString(response)+" \" as a response");
+        		_connection.sendMessage(JSON.toJSONString(response));
         	}
-        	else{
-        		if(parameters[0].equals("getObject")){
-        			try{_connection.sendMessage(getObject(parameters[1]));}
-            		catch(IOException e){}
+        	catch(Exception e){
+        		GmeResponse badresp = new GmeResponse();
+        		badresp.success=false;
+        		try{
+        			GmeLogger.log("sending \" "+JSON.toJSONString(badresp)+" \" as a BADresponse");
+        			_connection.sendMessage(JSON.toJSONString(badresp));
         		}
-        		else if(parameters[0].equals("getName")){
-        			try{_connection.sendMessage(getName());}
-            		catch(IOException e){}
-        		}
-        		else{
-        			try{_connection.sendMessage(getObject(""));}
-            		catch(IOException e){}
+        		catch(IOException ie){
         		}
         	}
-        }
-        
-        private String getObject(String id){
-        	GmeLogger.log("ws object (id=\""+id+"\") was requested");
-        	if(id.equals(""))
-        		return _project.getRoot();
-        	return _project.printObject(id);
-        }
-        
-        private String getName(){
-        	GmeLogger.log("ws project name was requested");
-        	return _project.getName();
-        }
+        }        
     }	
 }

@@ -1,87 +1,99 @@
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Vector;
+import java.io.UnsupportedEncodingException;
+import java.security.NoSuchAlgorithmException;
+
+
+import com.alibaba.fastjson.JSON;
 
 public class GmeProject {
-	private String name;
-	private gmemodel root;
-	private HashMap objects;
+	private GmeStorage storage;
+	private String root; //we store only the hash of the root here
 	static public int counter=0;
 	
 	public GmeProject(String name){
-		this.name=name;
-		objects = new HashMap();
-		root = new gmemodel(this.objects, "root");
-		gmemodel tmodel = new gmemodel(this.objects, "m1");
-		root.addChild(tmodel);
-		for(int i=0;i<9;i++)
-			root.addChild(new gmemodel(this.objects,"m"+(i+2)));
-		for(int i=0;i<5;i++)
-			tmodel.addChild(new gmemodel(this.objects,"mm"+(i+1)));
+		storage = new GmeStorage();
+		root = storage.testOne();
 	}
 	
-	public String getName(){
-		return name;
-	}
-	
-	public String getRoot(){
-		return root.json();
-	}
-	public String printObject(String id){
-		gmemodel m = (gmemodel) objects.get(id);
-		if(m!=null)
-			return m.json();
-		return "{}";
-	}
-
-	public class gmemodel {
-		private HashMap attributes;
-		public gmemodel(HashMap container){
-			attributes = new HashMap();
-			attributes.clear();
-			attributes.put("name", "");
-			attributes.put("id",Integer.toString(GmeProject.counter));
-			container.put(Integer.toString(GmeProject.counter), this);
-			counter++;
-			attributes.put("children", new Vector());
-		}
-		public gmemodel(HashMap container, String name){
-			attributes = new HashMap();
-			attributes.clear();
-			attributes.put("name", name);
-			attributes.put("id",Integer.toString(GmeProject.counter));
-			container.put(Integer.toString(GmeProject.counter), this);
-			counter++;
-			attributes.put("children", new Vector());		
-		}
-		public void addChild(gmemodel child){
-			Vector children = (Vector) attributes.get("children");
-			children.add(child);
-		}
-		public String json(){
-			String retval="{";
-			retval+="name : \""+attributes.get("name")+"\"";
-			retval+=",";
-			retval+="id : \""+attributes.get("id")+"\"";
-			retval+=",";
-			Vector children = (Vector) attributes.get("children");
-			Enumeration en = children.elements();
-			retval+="children : [";
-			boolean haschildren=false;
-			while(en.hasMoreElements()){
-				haschildren=true;
-				gmemodel m = (gmemodel) en.nextElement();
-				retval+="\""+m.getAttribute("id")+"\",";
+	public GmeResponse handleQuery(GmeQuery query){
+		GmeResponse response = new GmeResponse();
+		response.sequence = query.sequence;
+		switch(query.type){
+		case GETROOT:
+				try{
+					String object = getObjectByHash(root);
+					if(object==null || object.equals(""))
+						throw new NullPointerException();
+					String hash = GmeStorage.getSHA1(object);
+					response.objects.put(hash, object);
+				}
+				catch(NoSuchAlgorithmException e){
+					response.success=false;
+				}
+				catch(UnsupportedEncodingException ex){
+					response.success=false;
+				}
+				catch(NullPointerException ec){
+					response.success=false;
+				}
+			break;
+		case GETOBJECTS:
+			for(int i=0;i<query.hashes.length;i++){
+				try{
+					String object = getObjectByHash(query.hashes[i]);
+					if(object==null || object.equals(""))
+						throw new NullPointerException();
+					String hash = GmeStorage.getSHA1(object);
+					response.objects.put(hash, object);
+				}
+				catch(NoSuchAlgorithmException e){
+					response.success=false;
+				}
+				catch(UnsupportedEncodingException ex){
+					response.success=false;
+				}
+				catch(NullPointerException ec){
+					response.success=false;
+				}
 			}
-			if(haschildren)
-				retval=retval.substring(0, retval.lastIndexOf(','));
-			retval+="]";
-			retval+="}";
-			return retval;
+			break;/*
+		case SAVEOBJECTS:
+			for(int i=0;i<query.changed.length;i++){
+				try{
+					String object = getObjectByHash(query.changed[i].oldHash);
+					if(object==null || object.equals(""))
+						throw new NullPointerException();
+					//check if this is the root
+					boolean isroot = query.changed[i].oldHash.equals(GmeStorage.getSHA1(object));
+					//store the new object
+					storage.putObject(JSON.toJSONString((GmeObject)query.changed[i]));
+					//remove the old one
+					storage.delObject(query.changed[i].oldHash);
+					//if it was root then set to it
+					if(isroot)
+						root = GmeStorage.getSHA1(JSON.toJSONString((GmeObject)query.changed[i]));
+				}
+				catch(NoSuchAlgorithmException e){
+					response.success=false;
+				}
+				catch(UnsupportedEncodingException ex){
+					response.success=false;
+				}
+				catch(NullPointerException ec){
+					response.success=false;
+				}
+				
+			}
+			if(response.success)
+				counter++;*/
+		default:
+			response.success = false;
+			break;
 		}
-		public Object getAttribute(String aname){
-			return attributes.get(aname);
-		}
+		return response;
 	}
-	
+	private String getObjectByHash(String hash){
+		if(hash==null || hash.equals(""))
+			return null;
+		return storage.getObject(hash);
+	}
 }

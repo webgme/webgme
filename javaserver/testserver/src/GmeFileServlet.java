@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ *
+ * Author: Tamas Kecskes
+ */
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.ServletException;
@@ -9,9 +14,22 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 
 public class GmeFileServlet extends HttpServlet{
-	protected String rootpath = "D:\\_WORK_\\_gmeserver_\\pages"; //for windows we use this now
+	protected String rootpath = "D:\\_WORK_\\_GIT_\\gmeserver\\javaserver\\pages"; //for windows we use this now
+	static final long serialVersionUID = 1;
 	protected String convertToPath(String uri){
 		return uri.replace('/', File.separatorChar);
+	}
+	private String mimeType(String path){
+		String extension = "";
+		int from = path.lastIndexOf('.');
+		if( from>0 )
+			extension = path.substring(from);
+		
+		if(extension.equals(".js"))
+			return "application/x-javascript";
+		if(extension.equals(".ico"))
+			return "image/x-icon";
+		return "text/html";
 	}
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
 	{
@@ -28,7 +46,7 @@ public class GmeFileServlet extends HttpServlet{
 		File file=new File(path);
 		if(file.exists()){
 			//send back the file - currently we send all file as text/html
-			response.setContentType("text/html");
+			response.setContentType(mimeType(path));
 			response.setStatus(HttpServletResponse.SC_OK);
 		}
 		else{
@@ -40,6 +58,7 @@ public class GmeFileServlet extends HttpServlet{
 		GmeLogger.log("sending - "+path+" - as a response");
 		BufferedReader br = new BufferedReader(new FileReader(path));
 		String line;
-		while((line = br.readLine()) != null) response.getWriter().print(line);
+		while((line = br.readLine()) != null) response.getWriter().println(line);
+		br.close();
 	}
 }
