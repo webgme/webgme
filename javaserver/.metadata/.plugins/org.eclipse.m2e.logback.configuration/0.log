@@ -14,3 +14,5 @@
 2012-02-28 18:21:16,888 [Start Help Server] INFO  org.mortbay.log - Logging to Logger[org.mortbay.log] via org.mortbay.log.Slf4jLog
 2012-02-28 18:21:16,938 [Start Help Server] INFO  org.mortbay.log - jetty-6.1.x
 2012-02-28 18:21:16,966 [Start Help Server] INFO  org.mortbay.log - Started SelectChannelConnector@127.0.0.1:62051
+2012-03-06 11:27:17,285 [Worker-668] INFO  o.e.m.c.i.i.nexus.NexusIndexManager - Updating index for repository: central|http://repo1.maven.org/maven2
+2012-03-06 11:28:55,677 [Worker-668] INFO  o.e.m.c.i.i.nexus.NexusIndexManager - Updated index for repository: central|http://repo1.maven.org/maven2 in 98436 ms
