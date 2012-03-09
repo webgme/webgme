@@ -5,38 +5,12 @@
 		<title>GmeCore Testing</title>
 		<script src="lib/require.js"></script>
 		<script>
-			require(["src/gmestorage"], function(storage) {
+			require(["src/gmestorage", "src/gmesubtree"], function(gmestorage, gmesubtree) {
 
-				var loadchildren = function (request) {
-					var objects = request.objects;
-					var missing = 0;
-
-					if(request.objects[request.root] === undefined) {
-						console.log("loading " + request.root);
-						request.loadObject(request.root);
-						missing += 1;
-					}
-
-					for(var hash in objects) {
-						var obj = objects[hash];
-						if(obj.children) {
-							for(relid in obj.children) {
-								var hash2 = obj.children[relid];
-								if(! objects[hash2]) {
-									console.log("loading " + hash2);
-									request.loadObject(hash2);
-									missing += 1;
-								}
-							}
-						}
-					}
-
-					if(missing > 0) {
-						request.send();
-					}
-					return missing;
+				var printHierarchy = function (container, node) {
+					
 				}
-
+				
 				console.log("START");
 				var project = storage.createProject();
 

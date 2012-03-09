@@ -16,6 +16,12 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 
 	// ----------------- project -----------------
 
+	/**
+	 * The project class is responsible for loading and saving
+	 * plain JSON-able objects from and into a database. It does
+	 * not do any caching or interpreting the content of the
+	 * objects, other than those specified in territories. 
+	 */
 	var Project = function () {
 		this.storage = {};
 		this.root = undefined;
@@ -77,6 +83,10 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 		}, 100);
 	};
 
+	Project.prototype.createRequest = function () {
+		return new Request(this);
+	};
+	
 	Project.prototype.onopen = function () {
 		console.log("onopen");
 	};
@@ -91,6 +101,11 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 
 	// ----------------- Request -----------------
 
+	/**
+	 * You can use multiple request classes simultaneously
+	 * over the same database object. There is no guarantee 
+	 * on the order of servicing requests. 
+	 */
 	var Request = function (project) {
 		ASSERT(project instanceof Project);
 
@@ -112,6 +127,8 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 		ASSERT(this.state === READY);
 
 		var storage = this.project.storage;
+		
+		// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
 		var str = JSON.stringify(object);
 		var hash = SHA1(str);
 
@@ -210,9 +227,6 @@ define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
 	return {
 		createProject: function () {
 			return new Project();
-		},
-		createRequest: function (project) {
-			return new Request(project);
 		}
 	};
 });
