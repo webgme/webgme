@@ -5,6 +5,9 @@
 		<title>GmeCore Testing</title>
 		<script src="lib/require.js"></script>
 		<script>
+			require.config({
+		    	baseUrl: "../src"
+			});		
 			require(["src/gmestorage", "src/gmesubtree"], function(gmestorage, gmesubtree) {
 
 				var printHierarchy = function (container, node) {

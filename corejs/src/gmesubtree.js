@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "src/gmeassert" ], function (ASSERT) {
+define([ "gmeassert" ], function (ASSERT) {
 	"use strict";
 
 	// ----------------- Cache -----------------

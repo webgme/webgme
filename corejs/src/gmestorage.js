@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "src/gmeassert", "lib/sha1" ], function (ASSERT) {
+define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	"use strict";
 
 	var CLOSED = "closed";

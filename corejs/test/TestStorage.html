@@ -3,9 +3,12 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>GmeCore Testing</title>
-		<script src="lib/require.js"></script>
+		<script src="../lib/require.js"></script>
 		<script>
-			require(["src/gmestorage"], function(storage) {
+			require.config({
+		    	baseUrl: "../src"
+			});		
+			require(["gmestorage"], function(storage) {
 
 				var loadchildren = function (request) {
 					var objects = request.objects;
