@@ -1,0 +1,41 @@
+<html>
+    <head>
+        <title>Test WebGME page for WebSocket</title>
+        <script type="text/javascript">
+            var test;
+            function setlabel(text){
+                document.getElementById("statuslabel").innerHTML = text;
+            }
+            function createtest(){
+                test = new WebSocket("ws://kecskes.isis.vanderbilt.edu/ws");
+                test.onmessage = onmessage;
+                test.onclose = onclose;
+                setlabel("connected");
+            }
+            function onmessage(m){
+                document.getElementById("lastmessage").innerHTML = m.data;
+                setlabel("connected (receiving)");
+            }
+            function onclose(){
+                setlabel("closed");
+            }
+            function send(){
+                test.send(document.getElementById("mytext").value);
+                setlabel("connected (sending)");
+            }
+        </script>
+    </head>
+    <body>
+        <p id="statuslabel">initial</p>
+        <p><input type="button" id="b1" value="connect" onclick="createtest()"/> push button to connect to websocket server</p>
+        <p><input id="mytext" type="text"/><input type="button" id="b2" onclick="send()"/> push button to send message to server </p>
+        <p id="lastmessage">here will be printed the last received message</p>
+        <br/>
+        <br/>
+        <p>Guidance:</p>
+        <p>  available commands:</p>
+        <p>    (getRoot) - gives back the root object of the project</p>
+        <p>    (getObject:id) - gives back the object represented by the given id</p>
+        <p>    (getName) - gives back the name of the project</p>
+    </body>
+</html>
