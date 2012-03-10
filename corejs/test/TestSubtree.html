@@ -2,53 +2,40 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>GmeCore Testing</title>
-		<script src="lib/require.js"></script>
+		<title>TestSubtree</title>
+		<script src="../lib/require.js"></script>
 		<script>
 			require.config({
 		    	baseUrl: "../src"
 			});		
-			require(["src/gmestorage", "src/gmesubtree"], function(gmestorage, gmesubtree) {
+			require(["gmestorage", "gmesubtree"], function(gmestorage, gmesubtree) {
 
-				var printHierarchy = function (container, node) {
+				var printNode = function (container, path, node) {
+					var newNode = document.createElement("div");
+					newNode.innerHTML = path + " <span class='subLevel'>(name: " + node.name + ", hash: " + node.hash + ")</span>";
+					container.appendChild(newNode);
 					
+					if(node.children) {
+						for(var relid in node.children) {
+							printNode(newNode, path + "/" + relid, node.children[relid]);
+						}
+					}
 				}
-				
+
 				console.log("START");
-				var project = storage.createProject();
+				var project = gmestorage.createProject();
 
 				project.onopen = function () {
 					var request = project.createRequest();
 					request.loadRoot();
 					request.ondone = function () {
-						if(loadchildren(request) === 0) {
-							/*
-							* Prints out the received object hierarchy recursively
-							*/
-							var printHierarchy = function ( object, parentContainer, parentPath, relId ) {
+						var root = request.root;
 
-								var currentNodePath = parentPath + "/" + relId;
-
-								//print out the current object
-								var newNode = document.createElement("div");
-								newNode.innerHTML = currentNodePath + " <span class='subLevel'>(name: " + object.name + ", hash: " + object.hash + ")</span>";
-
-								//add new node to its parent
-								parentContainer.appendChild( newNode);
-
-								if ( object.children ) {
-									for ( var c in object.children ) {
-										printHierarchy( request.objects[ object.children[c] ], newNode, (relId === "" ? "" : currentNodePath ), c );
-									}
-								}
-
-							}
-
-							//at this point we have all the requested hierarchy
-							printHierarchy( request.objects[ request.root ], document.getElementById( "myContent" ), "", "" );
-
+						// create another request
+						gmesubtree.loadTree(project.createRequest(), root, {recursive_children: undefined}, function (root) {
+							printNode(document.getElementById("myContent"), "", root);
 							project.close();
-						}
+						});
 					}
 					request.send();
 				}
@@ -64,7 +51,6 @@
 	</head>
 	<body>
 		<div id="myContent" style="font-family: Courier new">
-
 		</div>
 	</body>
 </html>

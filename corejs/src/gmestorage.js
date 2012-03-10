@@ -86,7 +86,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	Project.prototype.createRequest = function () {
 		return new Request(this);
 	};
-	
+
 	Project.prototype.onopen = function () {
 		console.log("onopen");
 	};
@@ -165,6 +165,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		ASSERT(hash.length === 40);
 		ASSERT(this.state === READY);
 
+		console.log("loading: " + hash);
 		var obj = this.project.storage[hash];
 
 		// unknown objects will be undefined

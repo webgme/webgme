@@ -91,10 +91,10 @@ define([ "gmeassert" ], function (ASSERT) {
 				cache[hash] = data;
 			}
 		}
-		
+
 		return data;
 	};
-	
+
 	/**
 	 * Returns the child node with the specified relid/hash, and schedules it to
 	 * be loaded if it is missing.
@@ -105,12 +105,19 @@ define([ "gmeassert" ], function (ASSERT) {
 		if( !child ) {
 			// create the new child
 			child = {
-				children: {},
-				parent: node
+				children: {}
 			};
 			node.children[relid] = child;
 
-			var hash = node.data[relid];
+			// make the parent invisible, so it can be serialized/displayed
+			Object.defineProperty(child, "parent", {
+				value: node,
+				writable: true,
+				enumerable: false,
+				configurable: true
+			});
+
+			var hash = node.data.children[relid];
 			ASSERT(typeof hash === "string");
 
 			var data = this.getData(hash);
@@ -172,12 +179,14 @@ define([ "gmeassert" ], function (ASSERT) {
 						child = this.getChild(node, relid);
 						this.processNode(child, pattern[cmd]);
 					}
-				} else if( cmd === "recursive-children" ) {
+				}
+				else if( cmd === "recursive_children" ) {
 					for( relid in node.data.children ) {
 						child = this.getChild(node, relid);
 						this.processNode(child, pattern);
 					}
-				} else if( cmd === "relids" ) {
+				}
+				else if( cmd === "relids" ) {
 					for( relid in pattern[cmd] ) {
 						child = this.getChild(node, relid);
 						this.processNode(child, pattern[cmd][relid]);
@@ -195,28 +204,30 @@ define([ "gmeassert" ], function (ASSERT) {
 	 */
 	Loader.prototype.loadTree = function (hash, pattern) {
 		ASSERT(this.missing.length === 0);
-		
+
 		// Load the root object with a fake parent
 		var root = this.getChild({
 			data: {
-				root: hash
+				children: {
+					root: hash
+				}
 			},
 			children: {}
 		}, "root");
 		delete root.parent;
 
 		this.processNode(root, pattern);
-		
+
 		// load additional data as needed
 		while( this.missing.length > 0 ) {
 			var processing = this.missing;
 			this.missing = [];
 			for( var i = 0; i !== processing.length; ++i ) {
 				var obj = processing[i];
-				
+
 				hash = obj.data;
 				ASSERT(typeof hash === "string");
-				
+
 				obj.data = this.getData(hash);
 				ASSERT(obj.data.hash === hash);
 
@@ -228,7 +239,11 @@ define([ "gmeassert" ], function (ASSERT) {
 			}
 		}
 
-		return root;
+		this.ondone(root);
+	};
+
+	Loader.prototype.ondone = function (root) {
+		console.log("ondone: " + JSON.stringify(root));
 	};
 
 	// ----------------- Interface -----------------
@@ -238,8 +253,11 @@ define([ "gmeassert" ], function (ASSERT) {
 			ASSERT(tree.parent === undefined);
 			unloadTree(tree);
 		},
-		loadTree: function (request, hash, pattern) {
+		loadTree: function (request, hash, pattern, callback) {
 			var loader = new Loader(request);
+			loader.ondone = function (root) {
+				callback(root);
+			};
 			return loader.loadTree(hash, pattern);
 		}
 	};
