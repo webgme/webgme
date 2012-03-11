@@ -6,16 +6,15 @@
 package org.isis.webgme.server;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Vector;
 
-import org.eclipse.jetty.io.ConnectedEndPoint;
 import org.eclipse.jetty.websocket.WebSocket;
-import org.eclipse.jetty.websocket.WebSocketServletConnectionD00;
 
 import com.alibaba.fastjson.JSON;
 
 public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
-	protected WebSocketServletConnectionD00 connection;
+	protected Connection connection;
 	protected SimpleStorage storage;
 	protected String client;
 	public SimpleWebSocket(SimpleStorage s){
@@ -23,9 +22,11 @@ public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
 	}
 	
 	public void onOpen(Connection conn){
-		connection = (WebSocketServletConnectionD00) conn;
-		ConnectedEndPoint c = (ConnectedEndPoint) connection.getEndPoint();
-		client = "C["+c.getRemoteAddr()+":"+c.getRemotePort()+"]";
+		connection = conn;
+		connection.setMaxTextMessageSize(1073741824);
+		connection.setMaxIdleTime(600000);
+		/*TODO: getting the information of the client*/
+		client = "C[TODO]";
 		Log.info(client+"websocket connection opened");
     }
     
@@ -36,30 +37,39 @@ public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
     public void onMessage( String data){
     	Log.info(client+" request arrives to websocket");
     	Log.debug(client+" request arrives to websocket with content: "+data);
-    	Vector<Commit> transaction = (Vector<Commit>) JSON.parseArray(data,Commit.class);
     	Vector<Commit> response = new Vector<Commit>();
-    	for(int i=0;i<transaction.size();i++){
-    		if(transaction.get(i).object!=null){
-    			//save object
-    			//assertion of hash is needed
-    			Log.debug(client+" saving object H["+transaction.get(i).hash+"]");
-    			storage.put(transaction.get(i).hash, transaction.get(i).object);
-    			//probably some response needed as well, but now we didn't need it
-    		}
-    		else{
-    			//get object
-    			Log.debug(client+" loading object H["+transaction.get(i).hash+"]");
-    			Commit cresponse = new Commit();
-    			cresponse.hash = transaction.get(i).hash;
-    			cresponse.object = storage.get(cresponse.hash);
-    			if(cresponse.object==null){
-    				Log.error(client+" searched object H["+cresponse.hash+"] was not found");
-    			}
-    			else{
-    				Log.debug(client+" object H["+cresponse.hash+"] \""+cresponse.object+"\" added to response");
-    				response.add(cresponse);
-    			}
-    		}
+    	try{
+    		List<Commit> transaction = JSON.parseArray(data,Commit.class);
+	    	for(int i=0;i<transaction.size();i++){
+	    		if(transaction.get(i).object!=null){
+	    			/*save object*/
+	    			/*TODO: hash assertion*/
+	    			String checkhash = Hash.SHA1(transaction.get(i).object);
+	    			if(!checkhash.equals(transaction.get(i).hash)){
+	    				Log.error(client+" hash mismatch received "+Log.putHash(transaction.get(i).hash)+" calculated "+Log.putHash(checkhash));
+	    			}
+	    			Log.debug(client+" saving object "+Log.putHash(transaction.get(i).hash));
+	    			storage.put(transaction.get(i).hash, transaction.get(i).object);
+	    			/*TODO: sending some state response*/
+	    		}
+	    		else{
+	    			/*get object*/
+	    			Log.debug(client+" loading object "+Log.putHash(transaction.get(i).hash));
+	    			Commit cresponse = new Commit();
+	    			cresponse.hash = transaction.get(i).hash;
+	    			cresponse.object = storage.get(cresponse.hash);
+	    			if(cresponse.object==null){
+	    				Log.error(client+" searched object "+Log.putHash(cresponse.hash)+" was not found");
+	    			}
+	    			else{
+	    				Log.debug(client+" object "+Log.putHash(cresponse.hash)+" \""+cresponse.object+"\" added to response");
+	    				response.add(cresponse);
+	    			}
+	    		}
+	    	}
+    	}
+    	catch(Exception e){
+    		Log.error(client+" wrong incoming message");
     	}
     	try{
     		String rtext = JSON.toJSONString(response);

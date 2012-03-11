@@ -5,6 +5,8 @@
  */
 package org.isis.webgme.server;
 
+import java.io.File;
+
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
@@ -12,12 +14,11 @@ import org.eclipse.jetty.servlet.ServletHolder;
 public class SimpleServer {
 
 	protected static int port=8081;
-	protected static String root="";
+	protected static String root=System.getProperty("user.dir")+File.separator+"test";
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception{
-		// TODO Auto-generated method stub
 		Server server = new Server(port);
 		Log.info("server will listen on port: "+port);
 		
@@ -27,8 +28,8 @@ public class SimpleServer {
 	 
 	    context.addServlet(new ServletHolder(new SimpleFileServlet(root)),"/*");
 	    Log.info("the path \"/*\" will be handled by: "+SimpleFileServlet.class.toString());
-	    //context.addServlet(new ServletHolder(new GmeWebSocketServlet()), "/ws/*");
-	    //Log.info("the path \"/*\" will be handled by: "+SimpleFileServlet.class.toString());
+	    context.addServlet(new ServletHolder(new SimpleWebSocketServlet()), "/ws/*");
+	    Log.info("the path \"/*\" will be handled by: "+SimpleFileServlet.class.toString());
 	    server.start();
 	    Log.info("server started");
 	    

@@ -1,0 +1,119 @@
+<html>
+	<title>Static WebSocket Demo</title>
+	<head>
+		<script>
+			var root = "";
+			var objects = [];
+			var query = [];
+			var rootinrequest=false;
+			var counter = 0;
+			var maxlevel = 4;
+			var level = 0;
+			var create = false;
+			var socket = new WebSocket("ws://localhost:8081/ws");
+			readchildren = function(){
+				query=[];
+				for(var i in objects){
+					for(var j in objects[i].children){
+						if(objects[objects[i].children[j]]==undefined){
+							var commit = {};
+							commit.hash = objects[i].children[j];
+							commit.object = undefined;
+							query.push(commit);
+						}
+					}
+				}
+				if(query.length==0){
+					/*we should query at least the root*/
+					var commit = {};
+					commit.hash = root;
+					commit.object = undefined;
+					query.push(commit);
+				}
+				create = false;
+				socket.send(JSON.stringify(query));
+			};
+			createonelevel = function(){
+				/*empty the query*/
+				for(var i in objects){
+					if(objects[i].children.length==0){
+						for(var j=0;j<maxlevel;j++){
+							var child = {};
+							child.name = counter.toString();
+							counter++;
+							child.children=[];
+							/*add to parents children array*/
+							objects[i].children.push(child.name);
+							/*add object to query as commit*/
+							var commit = {};
+							commit.hash = child.name;
+							commit.object = JSON.stringify(child);
+							query.push(commit);
+						}
+						/*the object itself changed so  that should be part of the query as well*/
+						var commit = {};
+						commit.hash = objects[i].name;
+						commit.object = JSON.stringify(objects[i]);
+						query.push(commit);
+					}
+				}
+				level++;
+				create = true;
+				socket.send(JSON.stringify(query));
+			};
+			
+			socket.onclose = function(){
+				alert("connection closed");
+			};
+			socket.onopen = function(){
+				/*we create the root*/
+				var commit = {};
+				var robj = {};
+				robj.name="root";
+				robj.children=[];
+				commit.hash = "root";
+				commit.object = JSON.stringify(robj);
+				query=[];
+				query.push(commit);
+				create = true;
+				socket.send(JSON.stringify(query));
+				root = "root";
+			};
+			socket.onmessage = function(msg){
+				/*empty our query*/
+				query = [];
+				if(create){
+					/*there should be an empty response*/
+					/*but we have to read the new children*/
+					readchildren();
+				}
+				else{
+					var response = JSON.parse(msg.data);
+					for(var i in response){
+						objects[response[i].hash]= JSON.parse(response[i].object);
+					}
+					printobjects();
+					if(level<maxlevel){
+						alert("you can push that button to get those children");
+					}
+					else{
+						alert("we are done");
+					}
+				}
+			};
+			printobjects = function(){
+				var text="objects<br/>";
+				for(var i in objects){
+					text+="obj "+i+" "+JSON.stringify(objects[i])+"<br/>";
+				}
+				document.getElementById("mytextplace").innerHTML = text;
+				
+			};
+			
+		</script>
+	</head>
+	<body>
+	<input type="button" id="nextlevelbutton" value="fetch next level" onclick="createonelevel()"/>
+	<p id="mytextplace"></p>
+	</body>
+</html>

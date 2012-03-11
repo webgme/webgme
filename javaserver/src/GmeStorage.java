@@ -32,7 +32,7 @@ public class GmeStorage {
   	      hex[index++] = HEX_CHAR_TABLE[v >>> 4];
   	      hex[index++] = HEX_CHAR_TABLE[v & 0xF];
   	    }
-	    return new String(hex,"ASCII");
+	    return new String(hex);
 	}
 	
 	private HashMap<String, GmeObject> objects;
