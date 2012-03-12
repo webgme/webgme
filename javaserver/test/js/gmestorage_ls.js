@@ -143,7 +143,7 @@ define([ "../js/gmeassert", "../js/lib/sha1" ], function (ASSERT) {
 		var obj = localStorage.getItem(hash);
 
 		// unknown objects will be undefined
-		this.objects[hash] = obj;
+		this.objects[hash] = JSON.parse(obj);
 	};
 
 	/**
@@ -163,7 +163,6 @@ define([ "../js/gmeassert", "../js/lib/sha1" ], function (ASSERT) {
 	 * stores it in toe root property of this request.
 	 */
 	Request.prototype.loadRoot = function () {
-		ASSERT(this.state === READY);
 		this.root = localStorage.getItem("root");
 		
 		/*
