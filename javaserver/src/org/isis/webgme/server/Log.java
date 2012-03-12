@@ -5,11 +5,14 @@
  */
 package org.isis.webgme.server;
 
-import java.util.Calendar;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 
 public class Log {
 	public static boolean _debug=true;
 	public static boolean _timed=true;
+	public static SimpleDateFormat _tformat = new SimpleDateFormat("[yyyy/MM/dd - kk:mm:ss.SSS]");
+	public static Date _date;
 	public static void debug(String text){
 		/*TODO: make the color yellow*/
 		if(_debug){
@@ -28,7 +31,8 @@ public class Log {
 	}
 	protected static void print(String text){
 		if(_timed){
-			text="["+Calendar.getInstance().getTime()+"] "+text;
+			_date = new Date();
+			text=_tformat.format(_date)+text;
 		}
 		System.out.println(text);
 	}
