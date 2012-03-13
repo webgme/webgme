@@ -129,58 +129,24 @@ define([ "gmeassert" ], function (ASSERT) {
 		this.missing = [];
 		
 		/*
-		 * We do not use closure to avoid the creation of function objects
+		 * We do not use closures to avoid the creation of function objects
 		 * for each call. Of course this cannot be in the prototype. 
 		 */
 		var that = this;
 		this.onRequestDone = function () {
-			that.processMissing(this);
+			that.processMissing(this.objects);
 		};
 	};
 
 	/**
-	 * Returns the storage data identified by the hash value and
-	 * increases the refcount on the object.
-	 *  
-	 * @param hash the hash of the storage data
-	 * @returns the storage data or undefined
-	 */
-	Loader.prototype.getData = function (hash) {
-		ASSERT(typeof hash === "string");
-
-		// check in the cache
-		var data = cache[hash];
-		if( data ) {
-			ASSERT(data.hash === hash);
-			ASSERT(data.refcount >= 1);
-
-			++data.refcount;
-		}
-		else {
-			// check among the extra objects
-			data = this.extra[hash];
-			if( data ) {
-				ASSERT(!data.hasOwnProperty("refcount"));
-				Object.defineProperty(data, "refcount", {
-					value: 1,
-					writable: true,
-					enumerable: false
-				});
-				cache[hash] = data;
-			}
-		}
-
-		return data;
-	};
-
-	/**
-	 * Returns the child node with the specified relid/hash, and schedules it to
-	 * be loaded if it is missing.
+	 * Returns the child node with the specified relid, and schedules it to
+	 * be loaded if its data is missing.
 	 */
 	Loader.prototype.getChild = function (node, relid) {
+		ASSERT(typeof node.data === "object");
+		
 		var child = node.children[relid];
 		if( !child ) {
-			// create the new child
 			child = {
 				children: {}
 			};
@@ -197,17 +163,33 @@ define([ "gmeassert" ], function (ASSERT) {
 			var hash = node.data.children[relid];
 			ASSERT(typeof hash === "string");
 
-			var data = this.getData(hash);
-
+			var data = cache[hash];
 			if( data ) {
 				ASSERT(data.hash === hash);
+				ASSERT(data.refcount >= 1);
+
+				++data.refcount;
 				child.data = data;
 			}
 			else {
-				// schedule it to be loaded
-				child.data = hash;
-				child.patterns = [];
-				this.missing.push(child);
+				// check among the extra objects
+				data = this.extra[hash];
+				if( data ) {
+					ASSERT(!data.hasOwnProperty("refcount"));
+					Object.defineProperty(data, "refcount", {
+						value: 1,
+						writable: true,
+						enumerable: false
+					});
+					cache[hash] = data;
+					child.data = data;
+				}
+				else {
+					// schedule it to be loaded
+					child.data = hash;
+					child.patterns = [];
+					this.missing.push(child);
+				}
 			}
 		}
 
@@ -238,6 +220,7 @@ define([ "gmeassert" ], function (ASSERT) {
 	Loader.prototype.processNode = function (node, pattern) {
 		var i, cmd, relid, child;
 
+		// data is either the hash or the storage object
 		ASSERT(node.data);
 		
 		// if data is yet available
@@ -282,30 +265,62 @@ define([ "gmeassert" ], function (ASSERT) {
 	/**
 	 * This method is called from the request ondone event. It is
 	 * not dynamically created as a closure to speed up execution and
-	 * not to create deep recursion.  
+	 * not to create deep recursion.
+	 * 
+	 * @param newobjects a set of newly loaded storage objects
 	 */
-	Loader.prototype.processMissing = function (request) {
-		ASSERT(this.missing.length !== 0);
-		ASSERT(request.objects.length !== 0);
+	Loader.prototype.processMissing = function (newobjects) {
+		ASSERT(this.missing.length !== 0 );
+		ASSERT(newobjects.length !== 0);
 
 		var processing = this.missing;
 		this.missing = [];
 
+		var i, node;
+
 		/*
-		 * TODO: First we update all missing data so subsequent traversals
-		 * that need some of the currently obtained data will not need
-		 * to get it again. 
+		 * First we update all missing data so subsequent traversals
+		 * that need some of the currently obtained data will not load it
+		 * it again. 
 		 */
-		for(var i = 0; i !== processing.length; ++i) {
-			var node = processing[i];
+		for(i = 0; i !== processing.length; ++i) {
+			node = processing[i];
 			var hash = node.data;
 
 			ASSERT(typeof hash === "string");
-			node.data = request.objects[hash];
-			
+			var data = newobjects[hash];
+			ASSERT(data.hash === hash);
+
+			/*
+			 * The same hash can appear multiple times in the processing list
+			 * so we might have already added it to the cache. 
+			 */
+			if(data.hasOwnProperty("refcount")) {
+				ASSERT(hash in cache);
+				ASSERT(data.refcount >= 1);
+				data.refcount += 1;
+			}
+			else {
+				ASSERT(!(hash in cache));
+				Object.defineProperty(data, "refcount", {
+					value: 1,
+					writable: true,
+					enumerable: false
+				});
+				cache[hash] = data;
+			}
+
+			node.data = data;
+		}
+
+		/*
+		 * Now process the missing patterns over the same set of nodes 
+		 */
+		for(i = 0; i !== processing.length; ++i) {	
+			node = processing[i];
 			var patterns = node.patterns;
 			ASSERT(patterns.length !== 0);
-			
+
 			delete node.patterns;
 			
 			for(var j = 0; j !== patterns.length; ++j) {
@@ -313,13 +328,13 @@ define([ "gmeassert" ], function (ASSERT) {
 			}
 		}
 
-		this.loadMissing();
+		this.requestMissing();
 	};
 	
 	/**
 	 * Loads the missing objects into a request
 	 */
-	Loader.prototype.loadMissing = function ()
+	Loader.prototype.requestMissing = function ()
 	{
 		if(this.missing.length === 0) {
 			this.ondone(this.root);
@@ -366,7 +381,7 @@ define([ "gmeassert" ], function (ASSERT) {
 		delete this.root.parent;
 
 		this.processNode(this.root, pattern);
-		this.loadMissing();
+		this.requestMissing();
 	};
 
 	Loader.prototype.ondone = function (root) {

@@ -12,7 +12,7 @@
 
 				var printNode = function (container, path, node) {
 					var newNode = document.createElement("div");
-					newNode.innerHTML = path + " <span class='subLevel'>(name: " + node.data.name + ", hash: " + node.data.hash + ")</span>";
+					newNode.innerHTML = path + "<span class='subLevel'>(name: " + node.data.name + ", hash: " + node.data.hash + ")</span>";
 					container.appendChild(newNode);
 					
 					if(node.children) {
@@ -35,7 +35,7 @@
 						// create another request
 						subtree.loadTree(root, {recursive_children: true}, function (root) {
 							printNode(document.getElementById("myContent"), "", root);
-							gmesubtree.unloadTree(root);
+							subtree.unloadTree(root);
 							project.close();
 						});
 					}
