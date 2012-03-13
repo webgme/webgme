@@ -12,7 +12,7 @@
 
 				var printNode = function (container, path, node) {
 					var newNode = document.createElement("div");
-					newNode.innerHTML = path + " <span class='subLevel'>(name: " + node.name + ", hash: " + node.hash + ")</span>";
+					newNode.innerHTML = path + " <span class='subLevel'>(name: " + node.data.name + ", hash: " + node.data.hash + ")</span>";
 					container.appendChild(newNode);
 					
 					if(node.children) {
@@ -24,6 +24,7 @@
 
 				console.log("START");
 				var project = gmestorage.createProject();
+				var subtree = gmesubtree.createProject(project);
 
 				project.onopen = function () {
 					var request = project.createRequest();
@@ -32,8 +33,9 @@
 						var root = request.root;
 
 						// create another request
-						gmesubtree.loadTree(project.createRequest(), root, {recursive_children: undefined}, function (root) {
+						subtree.loadTree(root, {recursive_children: true}, function (root) {
 							printNode(document.getElementById("myContent"), "", root);
+							gmesubtree.unloadTree(root);
 							project.close();
 						});
 					}

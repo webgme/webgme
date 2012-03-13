@@ -16,17 +16,75 @@ define([ "gmeassert" ], function (ASSERT) {
 	 */
 	var cache = {};
 
-	// ----------------- Nodes -----------------
+	// detect memory leaks
+	if( window ) {
+		var oldOnunload = window.onunload;
+		window.onunload = function () {
+			if( oldOnunload ) {
+				oldOnunload();
+			}
+
+			var hash;
+			for(hash in cache) {
+				window.alert("Warning, you have a MEMORY LEAK:\ngmesubtree cache is not empty.");
+				break;
+			}
+		};
+	}
+
+	// ----------------- Project -----------------
+	
+	var Project = function(subproject) {
+		ASSERT(subproject);
+		
+		this.subproject = subproject;
+
+		var that = this;
+
+		subproject.onopen = function () {
+			that.onopen();
+		};
+		
+		subproject.onclose = function () {
+			that.onclose();
+		};
+		
+		subproject.onerror = function () {
+			that.onerror();
+		};
+	};
+
+	Project.prototype.open = function (connection) {
+		this.subproject.open(connection);
+	};
+	
+	Project.prototype.close = function () {
+		this.subproject.close();
+	};
+	
+	Project.prototype.onopen = function () {
+		console.log("onopen");
+	};
+
+	Project.prototype.onclose = function () {
+		console.log("onclose");
+	};
+
+	Project.prototype.onerror = function () {
+		console.log("onerror");
+	};
+
+	// ----------------- Unloader -----------------
 
 	/**
 	 * Unloads the storage objects associated with this object and all of its
 	 * children.
 	 */
-	var unloadTree = function (node) {
+	var unloadNode = function (node) {
 		// unload children first
 		ASSERT(node.children);
 		for( var relid in node.children ) {
-			unloadTree(node.children[relid]);
+			unloadNode(node.children[relid]);
 		}
 		delete node.children;
 
@@ -43,14 +101,25 @@ define([ "gmeassert" ], function (ASSERT) {
 		delete node.parent;
 	};
 
+	Project.prototype.unloadTree = function (tree) {
+		// make sure that a root node is passed 
+		ASSERT(tree.parent === undefined);
+		unloadNode(tree);
+	};
+	
 	// ----------------- Loader -----------------
 
 	/**
-	 * Loader class loads objects in a territory specified by the given pattern
-	 * using a storage request.
+	 * The Loader class loads objects specified by 
+	 * the given pattern using the given project and extra
+	 * objects.
 	 */
-	var Loader = function (request) {
-		this.request = request;
+	var Loader = function (subproject, extra) {
+		ASSERT(subproject);
+		this.subproject = subproject;
+
+		// use an empty set of not specified
+		this.extra = extra || {};
 
 		/*
 		 * This array contains the nodes whose data is not yet loaded and
@@ -58,6 +127,15 @@ define([ "gmeassert" ], function (ASSERT) {
 		 * of patterns that need to be executed once the data is available.
 		 */
 		this.missing = [];
+		
+		/*
+		 * We do not use closure to avoid the creation of function objects
+		 * for each call. Of course this cannot be in the prototype. 
+		 */
+		var that = this;
+		this.onRequestDone = function () {
+			that.processMissing(this);
+		};
 	};
 
 	/**
@@ -79,8 +157,8 @@ define([ "gmeassert" ], function (ASSERT) {
 			++data.refcount;
 		}
 		else {
-			// check in the request
-			data = this.request.objects[hash];
+			// check among the extra objects
+			data = this.extra[hash];
 			if( data ) {
 				ASSERT(!data.hasOwnProperty("refcount"));
 				Object.defineProperty(data, "refcount", {
@@ -101,7 +179,6 @@ define([ "gmeassert" ], function (ASSERT) {
 	 */
 	Loader.prototype.getChild = function (node, relid) {
 		var child = node.children[relid];
-
 		if( !child ) {
 			// create the new child
 			child = {
@@ -128,13 +205,13 @@ define([ "gmeassert" ], function (ASSERT) {
 			}
 			else {
 				// schedule it to be loaded
-				this.request.loadObject(hash);
 				child.data = hash;
 				child.patterns = [];
 				this.missing.push(child);
 			}
 		}
 
+		ASSERT(child.data);
 		return child;
 	};
 
@@ -161,6 +238,8 @@ define([ "gmeassert" ], function (ASSERT) {
 	Loader.prototype.processNode = function (node, pattern) {
 		var i, cmd, relid, child;
 
+		ASSERT(node.data);
+		
 		// if data is yet available
 		if( typeof node.data === "string" ) {
 			ASSERT(this.missing.indexOf(node) !== -1);
@@ -192,7 +271,77 @@ define([ "gmeassert" ], function (ASSERT) {
 						this.processNode(child, pattern[cmd][relid]);
 					}
 				}
+				else {
+					console.log("unknown pattern: " + cmd);
+					ASSERT(false);
+				}
 			}
+		}
+	};
+
+	/**
+	 * This method is called from the request ondone event. It is
+	 * not dynamically created as a closure to speed up execution and
+	 * not to create deep recursion.  
+	 */
+	Loader.prototype.processMissing = function (request) {
+		ASSERT(this.missing.length !== 0);
+		ASSERT(request.objects.length !== 0);
+
+		var processing = this.missing;
+		this.missing = [];
+
+		/*
+		 * TODO: First we update all missing data so subsequent traversals
+		 * that need some of the currently obtained data will not need
+		 * to get it again. 
+		 */
+		for(var i = 0; i !== processing.length; ++i) {
+			var node = processing[i];
+			var hash = node.data;
+
+			ASSERT(typeof hash === "string");
+			node.data = request.objects[hash];
+			
+			var patterns = node.patterns;
+			ASSERT(patterns.length !== 0);
+			
+			delete node.patterns;
+			
+			for(var j = 0; j !== patterns.length; ++j) {
+				this.processNode(node, patterns[j]);
+			}
+		}
+
+		this.loadMissing();
+	};
+	
+	/**
+	 * Loads the missing objects into a request
+	 */
+	Loader.prototype.loadMissing = function ()
+	{
+		if(this.missing.length === 0) {
+			this.ondone(this.root);
+		}
+		else {
+			var hashes = {};
+			
+			var request = this.subproject.createRequest();
+			var missing = this.missing;
+			for(var i = 0; i !== missing.length; ++i) {
+				var hash = missing[i].data;
+				ASSERT(typeof hash === "string");
+				if(!(hash in hashes)) {
+					hashes[hash] = true;
+					request.loadObject(hash);
+				}
+			}
+			
+			hashes = null;
+			
+			request.ondone = this.onRequestDone; 
+			request.send();
 		}
 	};
 
@@ -206,7 +355,7 @@ define([ "gmeassert" ], function (ASSERT) {
 		ASSERT(this.missing.length === 0);
 
 		// Load the root object with a fake parent
-		var root = this.getChild({
+		this.root = this.getChild({
 			data: {
 				children: {
 					root: hash
@@ -214,51 +363,36 @@ define([ "gmeassert" ], function (ASSERT) {
 			},
 			children: {}
 		}, "root");
-		delete root.parent;
+		delete this.root.parent;
 
-		this.processNode(root, pattern);
-
-		// load additional data as needed
-		while( this.missing.length > 0 ) {
-			var processing = this.missing;
-			this.missing = [];
-			for( var i = 0; i !== processing.length; ++i ) {
-				var obj = processing[i];
-
-				hash = obj.data;
-				ASSERT(typeof hash === "string");
-
-				obj.data = this.getData(hash);
-				ASSERT(obj.data.hash === hash);
-
-				var patterns = obj.patterns;
-				ASSERT(patterns.length >= 1);
-
-				delete obj.patterns;
-				this.processNode(obj, patterns);
-			}
-		}
-
-		this.ondone(root);
+		this.processNode(this.root, pattern);
+		this.loadMissing();
 	};
 
 	Loader.prototype.ondone = function (root) {
 		console.log("ondone: " + JSON.stringify(root));
 	};
 
+	/**
+	 * Loads the given subtree and calls the callback when finished
+	 * 
+	 * @param hash the has of the root object
+	 * @param pattern the pattern describing the subtree to be loaded
+	 * @param callback the callback to be called when finished
+	 */
+	Project.prototype.loadTree = function(hash, pattern, callback) {
+		var loader = new Loader(this.subproject);
+		loader.ondone = function (root) {
+			callback(root);
+		};
+		loader.loadTree(hash, pattern);
+	};
+	
 	// ----------------- Interface -----------------
 
 	return {
-		unloadTree: function (tree) {
-			ASSERT(tree.parent === undefined);
-			unloadTree(tree);
-		},
-		loadTree: function (request, hash, pattern, callback) {
-			var loader = new Loader(request);
-			loader.ondone = function (root) {
-				callback(root);
-			};
-			return loader.loadTree(hash, pattern);
+		createProject: function (subproject) {
+			return new Project(subproject);
 		}
 	};
 });
