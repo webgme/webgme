@@ -20,7 +20,7 @@
 	</script>
 	<script src="js/lib/require.js"></script>
 	<script>
-		require(["js/gmestorage_ls"], function(storage) {
+		require(["js/gmestorage_ws"], function(storage) {
 			var projectopened=false;
 			var widgetobjects = {};
 			var project = storage.createProject();
@@ -66,7 +66,7 @@
 				projectopened=true;
 			}
 			//START
-			project.open("localStorage");
+			project.open("ws://localhost:8081/ws");
 		});
 	</script>
 </head>

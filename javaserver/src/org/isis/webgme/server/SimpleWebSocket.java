@@ -54,16 +54,34 @@ public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
 	    		}
 	    		else{
 	    			/*get object*/
-	    			Log.debug(client+" loading object "+Log.putHash(transaction.get(i).hash));
-	    			Commit cresponse = new Commit();
-	    			cresponse.hash = transaction.get(i).hash;
-	    			cresponse.object = storage.get(cresponse.hash);
-	    			if(cresponse.object==null){
-	    				Log.error(client+" searched object "+Log.putHash(cresponse.hash)+" was not found");
+	    			if(transaction.get(i).hash.equals("root")){
+	    				Log.debug(client+"loading root object"+Log.putHash(transaction.get(i).hash));
+	    				Commit cresponse = new Commit();
+	    				String rhash = storage.get("root");
+	    				if(rhash!=null){
+	    					cresponse.hash = rhash;
+	    					cresponse.object = storage.get(rhash);
+		    				if(cresponse.object==null){
+		    					Log.error(client+" searched object "+Log.putHash(cresponse.hash)+" was not found");
+		    				}
+		    				else{
+		    					Log.debug(client+" object "+Log.putHash(cresponse.hash)+" \""+cresponse.object+"\" added to response");
+		    					response.add(cresponse);
+		    				}	    					
+	    				}
 	    			}
 	    			else{
-	    				Log.debug(client+" object "+Log.putHash(cresponse.hash)+" \""+cresponse.object+"\" added to response");
-	    				response.add(cresponse);
+	    				Log.debug(client+" loading object "+Log.putHash(transaction.get(i).hash));
+	    				Commit cresponse = new Commit();
+	    				cresponse.hash = transaction.get(i).hash;
+	    				cresponse.object = storage.get(cresponse.hash);
+	    				if(cresponse.object==null){
+	    					Log.error(client+" searched object "+Log.putHash(cresponse.hash)+" was not found");
+	    				}
+	    				else{
+	    					Log.debug(client+" object "+Log.putHash(cresponse.hash)+" \""+cresponse.object+"\" added to response");
+	    					response.add(cresponse);
+	    				}
 	    			}
 	    		}
 	    	}

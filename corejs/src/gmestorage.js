@@ -13,6 +13,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	var STRING = "string";
 	var READY = "ready";
 	var SENDING = "sending";
+	var DONE = "done";
 
 	// ----------------- project -----------------
 
@@ -55,7 +56,15 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 				z: b.hash
 			}
 		});
-		request.saveRoot(c.hash);
+		var d = request.saveObject({
+			name: "d",
+			children: {
+				u: a.hash,
+				v: c.hash,
+				w: c.hash
+			}
+		});
+		request.saveRoot(d.hash);
 
 		var that = this;
 		request.ondone = function () {
@@ -112,6 +121,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		this.state = READY;
 		this.project = project;
 		this.objects = {};
+		this.loading = {};
 	};
 
 	/**
@@ -127,7 +137,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		ASSERT(this.state === READY);
 
 		var storage = this.project.storage;
-		
+
 		// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
 		var str = JSON.stringify(object);
 		var hash = SHA1(str);
@@ -169,7 +179,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		var obj = this.project.storage[hash];
 
 		// unknown objects will be undefined
-		this.objects[hash] = obj;
+		this.loading[hash] = obj;
 	};
 
 	/**
@@ -195,7 +205,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 
 		this.root = this.project.root;
 	};
-	
+
 	/**
 	 * Sends the request to the server and waits for the
 	 * completion, which will be a call either to the
@@ -210,7 +220,14 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 
 		// add some artificial delay
 		window.setTimeout(function () {
-			that.state = READY;
+			that.state = DONE;
+
+			// copy new objects
+			for( var hash in that.loading ) {
+				that.objects[hash] = that.loading[hash];
+			}
+			that.loading = [];
+
 			that.ondone();
 		}, 100);
 	};
