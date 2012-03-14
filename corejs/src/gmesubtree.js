@@ -185,7 +185,7 @@ define([ "gmeassert" ], function (ASSERT) {
 					child.data = data;
 				}
 				else {
-					// schedule it to be loaded
+				// schedule it to be loaded
 					child.data = hash;
 					child.patterns = [];
 					this.missing.push(child);
