@@ -14,7 +14,7 @@ public class Hash {
 		try{
 		    md = MessageDigest.getInstance("SHA-1");
 		    byte[] sha1hash = new byte[40];
-		    md.update(object.getBytes("iso-8859-1"), 0, object.length());
+		    md.update(object.getBytes(), 0, object.length());
 		    sha1hash = md.digest();
 		    int index=0;
 		    byte[] hex = new byte[2*sha1hash.length];
@@ -23,7 +23,7 @@ public class Hash {
 	  	      hex[index++] = HEX_CHAR_TABLE[v >>> 4];
 	  	      hex[index++] = HEX_CHAR_TABLE[v & 0xF];
 	  	    }
-		    return new String(hex);
+		    return new String(hex,"UTF-8");
 		}
 		catch(Exception e){
 			return null;
