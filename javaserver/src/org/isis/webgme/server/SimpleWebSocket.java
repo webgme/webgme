@@ -15,9 +15,9 @@ import com.alibaba.fastjson.JSON;
 
 public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
 	protected Connection connection;
-	protected SimpleStorage storage;
+	protected SimpleStorageInterface storage;
 	protected String client;
-	public SimpleWebSocket(SimpleStorage s){
+	public SimpleWebSocket(SimpleStorageInterface s){
 		storage = s;
 	}
 	

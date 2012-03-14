@@ -13,12 +13,15 @@ import org.eclipse.jetty.websocket.WebSocketServlet;
 
 public class SimpleWebSocketServlet extends WebSocketServlet{
 	static final long serialVersionUID = 0;
-	protected SimpleStorage storage;
+	protected SimpleStorageInterface storage;
+	
 	public SimpleWebSocketServlet(){
-		storage = new SimpleStorage();
 	}
 	public SimpleWebSocket doWebSocketConnect(HttpServletRequest request, String protocol){
     	
         return new SimpleWebSocket(storage);
     }
+	public void setStorage(SimpleStorageInterface s){
+		storage = s;
+	}
 }

@@ -28,8 +28,15 @@ public class SimpleServer {
 	 
 	    context.addServlet(new ServletHolder(new SimpleFileServlet(root)),"/*");
 	    Log.info("the path \"/*\" will be handled by: "+SimpleFileServlet.class.toString());
-	    context.addServlet(new ServletHolder(new SimpleWebSocketServlet()), "/ws/*");
-	    Log.info("the path \"/*\" will be handled by: "+SimpleFileServlet.class.toString());
+	    
+	    SimpleWebSocketServlet wss = new SimpleWebSocketServlet();
+	    context.addServlet(new ServletHolder(wss), "/ws/*");
+	    Log.info("the path \"/*\" will be handled by: "+SimpleWebSocketServlet.class.toString());
+	    
+	    //wss.setStorage(new SimpleStorage());
+	    wss.setStorage(new MongoStorage());
+	    
+	    
 	    server.start();
 	    Log.info("server started");
 	    
