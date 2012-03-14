@@ -10,8 +10,8 @@ import java.net.UnknownHostException;
 import com.mongodb.Mongo;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
-//import com.mongodb.BasicDBObject;
-//import com.mongodb.DBObject;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 //import com.mongodb.DBCursor;
 
 public class MongoStorage implements SimpleStorageInterface{
@@ -29,16 +29,21 @@ public class MongoStorage implements SimpleStorageInterface{
 		}
 	}
 	public void put(String key, String value){
-		System.out.println(key);
+		BasicDBObject dbobj = new BasicDBObject();
+		dbobj.put("_id", key);
+		dbobj.put("object", value);
+		objects.save(dbobj);
 	}
 	public String get(String key){
-		return "";
+		BasicDBObject query = new BasicDBObject("_id", key);
+		DBObject dbobj = objects.findOne(query);
+		return dbobj.get("object").toString();
 	}
 	public String getRoot(){
-		return "";
+		return get(get("root"));
 	}
 	public void putRoot(String key, String value){
-		//root = key;
+		put("root",value);
 		put(key, value);
 	}
 }

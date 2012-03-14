@@ -33,8 +33,8 @@ public class SimpleServer {
 	    context.addServlet(new ServletHolder(wss), "/ws/*");
 	    Log.info("the path \"/*\" will be handled by: "+SimpleWebSocketServlet.class.toString());
 	    
-	    wss.setStorage(new SimpleStorage());
-	    //wss.setStorage(new MongoStorage());
+	    //wss.setStorage(new SimpleStorage());
+	    wss.setStorage(new MongoStorage());
 	    
 	    
 	    server.start();
