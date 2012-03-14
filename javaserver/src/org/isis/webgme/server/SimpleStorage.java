@@ -7,7 +7,7 @@ package org.isis.webgme.server;
 
 import java.util.HashMap;
 
-public class SimpleStorage {
+public class SimpleStorage implements SimpleStorageInterface {
 	private HashMap<String, String> objects;
 	private String root;
 	public SimpleStorage(){

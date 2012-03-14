@@ -14,5 +14,6 @@
 	<classpathentry kind="lib" path="lib/jetty-websocket-7.6.1.v20120215.jar"/>
 	<classpathentry kind="lib" path="lib/servlet-api-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/fastjson-1.1.15.jar"/>
+	<classpathentry kind="lib" path="lib/mongo-2.7.3.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
