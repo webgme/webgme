@@ -3,7 +3,7 @@
  * 
  * Author: Tamas Kecskes
  */
-define([ "./lib/sha1_2.js", "/socket.io/socket.io.js" ], function (HASH) {
+define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 	"use strict";
 
 
@@ -99,7 +99,7 @@ define([ "./lib/sha1_2.js", "/socket.io/socket.io.js" ], function (HASH) {
 		
 		// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
 		var str = JSON.stringify(object);
-		var hash = HASH.SHA1(str);
+		var hash = SHA1(str);
 
 		/*
 		 * in this implementation we make a commit object form the input

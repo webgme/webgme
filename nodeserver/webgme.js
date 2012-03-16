@@ -2,7 +2,7 @@ var httpserver = require('http').createServer(httpGet)
 , io = require('socket.io').listen(httpserver)
 , fs = require('fs')
 , st = require('./storage.js')
-, sh = require('./lib/sha1_2.js')
+, sh = require('./lib/sha1.js')
 
 
 httpserver.listen(8081);
