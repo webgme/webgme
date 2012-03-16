@@ -1,0 +1,74 @@
+<html>
+	<head>
+		<title>The name of the game is webgme</title>
+		<script src="/lib/require.js"></script>
+		<script>
+			require(['./gmestorage'], function(storage){
+				var myproject = storage.createProject();
+				var objects = {};
+				myproject.open();
+				createNewProject = function(){
+					alert("creating new project");
+					var request = myproject.createRequest();
+					var object = {}; object.name="firstobject";object.children=[];
+					var hash = request.saveObject(object);
+					request.saveRoot(hash);
+					request.send();
+					request.ondone = function(){
+						for(var i in request.objects){
+							objects[i] = request.objects[i];
+						}
+						printDownloadedObjects();
+					};	
+				};
+				loadNextLevel = function(){
+					alert("loading the next level of elements");
+					var request = myproject.createRequest();
+					var haselements=false;
+					var haschildren=false;
+					for(var i in objects){
+						haselements=true;
+						for(var j in objects[i].children){
+							haschildren=true;
+							request.loadObject(objects[i].children[j]);
+						}
+					}
+					if(!haselements){
+						/*we ask the root at leas ;)*/
+						request.loadRoot();
+					}
+					else{
+						if(!haschildren){
+							alert("we got all the project");
+							return;
+						}
+					}
+					request.send();
+					request.ondone = function(){
+						for(var i in request.objects){
+							objects[i] = request.objects[i];
+						}
+						printDownloadedObjects();
+					};
+				};
+				clearDownloadedObjects = function(){
+					alert("cleaning the elements we got!!!");
+					objects = {};
+					printDownloadedObjects();
+				};
+				printDownloadedObjects = function(){
+					document.getElementById("DownloadedObjectsContainer").innerHTML = JSON.stringify(objects);
+				};
+				
+			});
+			
+		</script>
+	</head>
+	<body>
+		<input type="button" id="createProjectButton" value="create a project" onclick="createNewProject()" />
+		<input type="button" id="fetchNextLevelButton" value="download one level" onclick="loadNextLevel()" />
+		<input type="button" id="clearDownloadedButton" value="clear all objects locally" onclick="clearDownloadedObjects()" />
+		<br/>
+		<p id="DownloadedObjectsContainer"></p>
+	</body>
+</html>
