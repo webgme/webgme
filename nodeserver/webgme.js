@@ -2,7 +2,8 @@ var httpserver = require('http').createServer(httpGet)
 , io = require('socket.io').listen(httpserver)
 , fs = require('fs')
 , st = require('./storage.js')
-, sh = require('./lib/sha1_2.js');
+, sh = require('./lib/sha1_2.js')
+
 
 httpserver.listen(8081);
 var storage = new st.Storage();
@@ -50,7 +51,7 @@ io.sockets.on('connection', function(socket){
 			}
 			else{
 				/*write operation*/
-				//console.log("calculated hash: "+SHA1(commits[i].object));
+				console.log("calculated hash: "+sh.SHA1(commits[i].object));
 				console.log("received hash: "+commits[i].hash);
 				storage.put(commits[i].hash,commits[i].object,function(){});					
 			}
