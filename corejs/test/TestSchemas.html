@@ -1,0 +1,31 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>TestSchemas</title>
+<script src="../lib/require.js"></script>
+<script>
+	require.config({
+    	baseUrl: "../src"
+	});		
+	require(["../lib/validate", "../lib/schema", "gmeschema"], function(jsonschema, schema, gmeschema) {
+		console.log();
+		
+		var node = {
+			attributes: {
+				name: "root"
+			},
+			children: {
+				a: "0123456789012345678901234567890123456789",
+				b: "012345678901234567890123456789012345678ax"
+			}
+		};
+
+		console.log(jsonschema.validate(gmeschema.node, schema));
+		console.log(jsonschema.validate(node, gmeschema.node));
+	});
+</script>
+</head>
+<body>
+</body>
+</html>
