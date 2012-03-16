@@ -35,6 +35,7 @@ function httpGet(req, res){
 
 io.sockets.on('connection', function(socket){
 	console.log("someone connected");
+	socket.emit('connected', undefined);
 	socket.on('msg', function(data){
 		console.log("got request"+data);
 		var response = [];

@@ -30,6 +30,9 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 	Project.prototype.open = function (connection) {
 		this.socket  = io.connect(connection);
 		var that = this;
+		this.socket.on('connected', function(){
+			that.onopen();
+		});
 		this.socket.on('msg', function(data){
 			alert(data);
 		});		
