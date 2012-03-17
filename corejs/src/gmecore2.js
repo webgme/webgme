@@ -7,58 +7,143 @@
 define([ "gmeassert" ], function (ASSERT) {
 	"use strict";
 
-	// ----------------- project -----------------
+	// ----------------- Cache -----------------
 
-	var CLOSED = "closed";
-	var OPENED = "opened";
+	/**
+	 * We store storage objects here indexed by hash. The storage objects will
+	 * have an invisible refcount property to manage the lifetime of objects.
+	 * All projects and branches share a common cache.
+	 */
+	var cache = {};
 
-	var CoreProject = function () {
-		this.status = CLOSED;
+	// detect memory leaks
+	if( window ) {
+		var oldUnload = window.onunload;
+		window.onunload = function () {
+			if( oldUnload ) {
+				oldUnload();
+			}
+
+			var hash;
+			for( hash in cache ) {
+				window.alert("Warning, you have a memory leak");
+				break;
+			}
+		};
+	}
+
+	// ----------------- Node -----------------
+
+	var NODE = {
+		unknown: "unknown"
+	};
+
+	var Node = function (parent, relid) {
+		ASSERT(typeof relid === "string");
+		ASSERT(parent === null || parent instanceof Node);
+
+		Object.defineProperties(this, {
+			parent: {
+				value: parent,
+				enumerable: false,
+				writable: false
+			},
+			level: {
+				value: parent === null ? 0 : parent.level + 1,
+				enumerable: true,
+				writable: false
+			},
+			relid: {
+				value: relid,
+				enumerable: true,
+				writable: false
+			},
+			state: {
+				value: NODE.unknown,
+				enumerable: true,
+				writable: true
+			}
+		});
+	};
+
+	Object.defineProperties(Node.prototype, {
+		path: {
+			get: function () {
+				return this.parent === null ? "" : this.parent.getPath() + "."
+						+ this.relid;
+			}
+		},
+		root: {
+			get: function () {
+				var node = this;
+				while( node.parent !== null ) {
+					node = node.parent;
+				}
+				return node;
+			}
+		}
+	});
+
+	var loadNode = function (node, hash) {
+		ASSERT(node instanceof Node);
+		ASSERT(typeof hash === "string");
+
+	};
+
+	// ----------------- Project -----------------
+
+	var PROJECT = {
+		closed: "closed",
+		opened: "opened"
+	};
+
+	var Project = function () {
+		this.status = PROJECT.closed;
 		this.root = null;
 	};
 
-	CoreProject.prototype.open = function (connection) {
+	Project.prototype.open = function (connection) {
 		ASSERT(connection === "server");
 
 		var that = this;
 		window.setTimeout(function () {
-			that.status = OPENED;
+			that.status = PROJECT.opened;
 			that.onopen();
 		}, 100);
 	};
 
-	CoreProject.prototype.close = function (callback) {
+	Project.prototype.close = function (callback) {
 		var that = this;
 		window.setTimeout(function () {
-			that.status = CLOSED;
+			that.status = PROJECT.closed;
 			that.onclose();
 		}, 100);
 	};
 
-	CoreProject.prototype.onopen = function () {
+	Project.prototype.onopen = function () {
 		window.alert("GmeCore: unhandled onopen");
 	};
-	
-	CoreProject.prototype.onerror = function () {
+
+	Project.prototype.onerror = function () {
 		window.alert("GmeCore: unhandled onerror");
 	};
-	
-	CoreProject.prototype.onclose = function () {
+
+	Project.prototype.onclose = function () {
 		window.alert("GmeCore: unhandled onclose");
 	};
 
-	CoreProject.prototype.modify = function () {
+	Project.prototype.modify = function () {
 	};
 
-	CoreProject.prototype.commit = function () {
+	Project.prototype.commit = function () {
 	};
-	
-	CoreProject.prototype.abort = function () {
+
+	Project.prototype.abort = function () {
 	};
-	
-	// ----------------- public interface -----------------
+
+	// ----------------- Public Interface -----------------
 
 	return {
-		Project: CoreProject
+		Project: Project
 	};
 });

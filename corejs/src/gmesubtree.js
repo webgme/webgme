@@ -355,7 +355,7 @@ define([ "gmeassert" ], function (ASSERT) {
 			
 			hashes = null;
 			
-			request.ondone = this.onRequestDone; 
+			request.ondone = this.onRequestDone;
 			request.send();
 		}
 	};
