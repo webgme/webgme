@@ -50,6 +50,7 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 		this.sid = project.rcount++;
 		this.completed = false;
 		this.objects = {};
+		this.pathes = {};
 		this.root = undefined;
 		this.commits = [];
 	};
@@ -72,9 +73,18 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 
 		if(this.objects[hash]===undefined){
 			//only if the hash is not in the request already
-			this.objects[hash] = object;
-			var commit = {}; commit.hash = hash; commit.object = str;
-			this.commits.push(commit);
+			if(this.pathes[object.path]===undefined){
+				//totally new element
+				this.objects[hash] = object;
+				this.pathes[object.path] = hash;
+			}
+			else{
+				//we should replace the old one
+				this.objects[hash] = object;
+				delete this.objects[this.pathes[object.path]];
+				this.pathes[object.path] = hash;
+			}
+			//we should put the save commits at the time of send
 		}
 		return hash;
 	};
@@ -116,6 +126,13 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 			}
 			this.request.ondone();			
 		});
+		/* now we fill the save request to the end of the commits*/
+		for(var i in this.objects){
+			if(this.objects[i]!=undefined){
+				var commit={};commit.hash = i ; commit.object = JSON.stringify(this.objects[i]);
+				this.commits.push(commit);
+			}
+		}
 		socket.emit('msg',JSON.stringify(this.commits));
 	};
 

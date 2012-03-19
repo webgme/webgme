@@ -75,6 +75,9 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 			this.objects[hash] = object;
 			var commit = {}; commit.hash = hash; commit.object = str;
 			this.commits.push(commit);
+			this.project.socket.on('msg', function(data){});
+			this.project.socket.emit('msg',JSON.stringify(this.commits));
+			this.commits = [];
 		}
 		return hash;
 	};

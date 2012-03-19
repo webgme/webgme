@@ -2,27 +2,29 @@
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  * 
  * Author: Tamas Kecskes
+ * 
+ * This version will handle plain websockets
  */
-define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
+define([ "./lib/sha1.js"  ], function () {
 	"use strict";
 
 
 	// ----------------- project -----------------
 	var Project = function () {
-		this.rcount = 0;
 	};
 	Project.prototype.open = function (connection) {
-		this.socket  = io.connect(connection);
+		this.socket  = new WebSocket("ws://localhost:8081/ws");
 		var that = this;
-		this.socket.on('connected', function(){
+		this.socket.onopen = function(){
 			that.onopen();
-		});
-		this.socket.on('close', function(){
+		};
+		this.socket.onclose = function(){
 			that.onerror();
-		});
+		}
 	};
 
 	Project.prototype.close = function () {
+		this.socket.close();
 		this.onclose();
 	};
 
@@ -31,15 +33,15 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 	};
 
 	Project.prototype.onopen = function () {
-		alert("onopen");
+		console.log("onopen");
 	};
 
 	Project.prototype.onclose = function () {
-		alert("onclose");
+		console.log("onclose");
 	};
 
 	Project.prototype.onerror = function () {
-		alert("onerror");
+		console.log("onerror");
 	};
 
 	// ----------------- Request -----------------
@@ -47,18 +49,13 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 	var Request = function (project) {
 
 		this.project = project;
-		this.sid = project.rcount++;
-		this.completed = false;
 		this.objects = {};
 		this.root = undefined;
 		this.commits = [];
 	};
 
 	Request.prototype.ondone = function () {
-		if(!this.completed){
-			this.completed = true;
-			console.log("ondone: " + JSON.stringify(this.objects));
-		}
+		console.log("ondone: " + JSON.stringify(this.objects));
 	};
 
 	Request.prototype.onerror = function () {
@@ -102,9 +99,9 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 	Request.prototype.send = function () {
 		var socket = this.project.socket;
 		socket.request = this;
-		socket.on('msg', function(data){
-			if(data.length>0){
-				var askedobjects = JSON.parse(data);
+		socket.onmessage = function(msg){
+			if(msg.data.length>0){
+				var askedobjects = JSON.parse(msg.data);
 				for(var i in askedobjects){
 					if(askedobjects[i].hash==="root"){
 						this.request.root = askedobjects[i].hash;
@@ -115,8 +112,8 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 				}
 			}
 			this.request.ondone();			
-		});
-		socket.emit('msg',JSON.stringify(this.commits));
+		};
+		socket.send(JSON.stringify(this.commits));
 	};
 
 	

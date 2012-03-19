@@ -57,6 +57,7 @@ io.sockets.on('connection', function(socket){
 				storage.put(commits[i].hash,commits[i].object,function(){});					
 			}
 		}
+		console.log("sending response: "+ response);
 		socket.emit('msg', response);
 	});
 	socket.on('close',function(){
