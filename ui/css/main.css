@@ -1,0 +1,11 @@
+body { 
+	background-color:white;
+    font-size:90%;
+	font-family:Helvetica;
+}
+
+.dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
+{
+    background-position: 0 0;
+    background-image: url("../img/progress.gif") !important;
+}
