@@ -148,8 +148,8 @@ TreeBrowserWidget.prototype = {
         } else {
             //check if parent is expanded
             //if parent is not expanded, do not append child, makes no sense since the next open will load tha parent's children
-            if ( parentNode.isExpanded() !== true )
-                return null;
+            /*if ( parentNode.isExpanded() !== true )
+                return null;*/
         }
 
         // Call the DynaTreeNode.addChild() member function and pass options for the new node
@@ -165,9 +165,11 @@ TreeBrowserWidget.prototype = {
         window.logMessage( "New node created: " + newNode );
 
         //a bit of visual effect
-        var jqTreeNode = $( newNode.span.childNodes[2] );
-        jqTreeNode.hide();
-        jqTreeNode.fadeIn();
+        if ( parentNode.isExpanded() === true ) {
+            var jqTreeNode = $( newNode.span.childNodes[2] );
+            jqTreeNode.hide();
+            jqTreeNode.fadeIn();
+        }
 
         //return the newly created node
         return newNode;
@@ -272,6 +274,44 @@ TreeBrowserWidget.prototype = {
 
         //otherwise return null
         return null;
+    },
+
+    /*
+     * Cancels the node's layz load status, makes it closed and removes the in-progress icon
+     */
+    cancelLazyLoad : function( node, collapse ) {
+        node.setLazyNodeStatus(DTNodeStatus_Ok);
+        if ( collapse === true ) {
+            this.collapse( node );
+        }
+    },
+
+    /*
+     * Collapses the given node
+     */
+    collapse: function( node) {
+        node.expand(false);
+    },
+
+    /*
+     * Expands the given node
+     */
+    expand : function( node ) {
+        node.expand(true);
+    },
+
+    /*
+     * Removes all the children of the tree
+     */
+    clear : function() {
+        var root = this.treeViewE.dynatree("getRoot");
+        root.removeChildren();
+    },
+
+    expandTree : function () {
+        this.treeViewE.dynatree("getRoot").visit(function(node){
+            node.expand(true);
+        });
     }
 
 }
