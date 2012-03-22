@@ -18,10 +18,10 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	// ----------------- project -----------------
 
 	/**
-	 * The project class is responsible for loading and saving
-	 * plain JSON-able objects from and into a database. It does
-	 * not do any caching or interpreting the content of the
-	 * objects, other than those specified in territories. 
+	 * The project class is responsible for loading and saving plain JSON-able
+	 * objects from and into a database. It does not do any caching or
+	 * interpreting the content of the objects, other than those specified in
+	 * territories.
 	 */
 	var Project = function () {
 		this.storage = {};
@@ -111,9 +111,9 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	// ----------------- Request -----------------
 
 	/**
-	 * You can use multiple request classes simultaneously
-	 * over the same database object. There is no guarantee 
-	 * on the order of servicing requests. 
+	 * You can use multiple request classes simultaneously over the same
+	 * database object. There is no guarantee on the order of servicing
+	 * requests.
 	 */
 	var Request = function (project) {
 		ASSERT(project instanceof Project);
@@ -138,7 +138,8 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 
 		var storage = this.project.storage;
 
-		// TODO: JSON.stringify does not guarantee any ordering, we need to do this manually
+		// TODO: JSON.stringify does not guarantee any ordering, we need to do
+		// this manually
 		var str = JSON.stringify(object);
 		var hash = SHA1(str);
 
@@ -165,8 +166,8 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	};
 
 	/**
-	 * Loads the object with the specified hash from the database
-	 * and stores it in the objects set of this request.
+	 * Loads the object with the specified hash from the database and stores it
+	 * in the objects set of this request.
 	 * 
 	 * @param hash the hash of the object to be loaded
 	 */
@@ -184,7 +185,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 
 	/**
 	 * Sets the new root object in the database to the specified hash
-	 *
+	 * 
 	 * @param hash the hash of the new root object
 	 */
 	Request.prototype.saveRoot = function (hash) {
@@ -197,8 +198,8 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	};
 
 	/**
-	 * Loads the has of the root object from the database and
-	 * stores it in toe root property of this request.
+	 * Loads the has of the root object from the database and stores it in toe
+	 * root property of this request.
 	 */
 	Request.prototype.loadRoot = function () {
 		ASSERT(this.state === READY);
@@ -207,10 +208,9 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	};
 
 	/**
-	 * Sends the request to the server and waits for the
-	 * completion, which will be a call either to the
-	 * ondone or onerror event. The requested objects are
-	 * stored in the object property of the request. 
+	 * Sends the request to the server and waits for the completion, which will
+	 * be a call either to the ondone or onerror event. The requested objects
+	 * are stored in the object property of the request.
 	 */
 	Request.prototype.send = function () {
 		ASSERT(this.state === READY);
