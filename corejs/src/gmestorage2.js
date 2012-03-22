@@ -11,8 +11,6 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 	var READY = "ready";
 	var BUSY = "busy";
 
-	// ----------------- project -----------------
-
 	/**
 	 * The project class is responsible for loading and saving plain JSON-able
 	 * objects from and into a database. It does not do any caching or
@@ -74,7 +72,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		});
 		this.saveRoot(d.hash);
 
-		this.loadRoot(this.onOpen);
+		this.loadObject("0000000000000000000000000000000000000000", this.onOpen);
 	};
 
 	/**
@@ -130,6 +128,7 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 
 				for( var i = 0; i !== loading.length; ++i ) {
 					hash = loading[i][0];
+					ASSERT(saving[hash] === undefined);
 					var callback = loading[i][1];
 					callback(project.storage[hash]);
 				}
@@ -215,8 +214,6 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		this.loading.push([ "root", callback ]);
 		request(this);
 	};
-
-	// ----------------- Interface -----------------
 
 	return Project;
 });
