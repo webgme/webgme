@@ -38,7 +38,7 @@
 						request.send();
 					}
 					return missing;
-				}
+				};
 
 				console.log("START");
 				var project = storage.createProject();
@@ -67,17 +67,16 @@
 										printHierarchy( request.objects[ object.children[c] ], newNode, (relId === "" ? "" : currentNodePath ), c );
 									}
 								}
-
-							}
+							};
 
 							//at this point we have all the requested hierarchy
 							printHierarchy( request.objects[ request.root ], document.getElementById( "myContent" ), "", "" );
 
 							project.close();
 						}
-					}
+					};
 					request.send();
-				}
+				};
 				project.onclose = function () {
 					console.log("DONE");
 				};

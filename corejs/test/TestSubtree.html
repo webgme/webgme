@@ -20,7 +20,7 @@
 							printNode(newNode, path + "/" + relid, node.children[relid]);
 						}
 					}
-				}
+				};
 
 				console.log("START");
 				var project = gmestorage.createProject();
@@ -38,9 +38,9 @@
 							subtree.unloadTree(root);
 							project.close();
 						});
-					}
+					};
 					request.send();
-				}
+				};
 				project.onclose = function () {
 					console.log("DONE");
 				};

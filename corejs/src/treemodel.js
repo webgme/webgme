@@ -9,6 +9,11 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 
 	// ----------------- data -----------------
 
+	var getHash = function (data) {
+		ASSERT(typeof data.hash === "string");
+		return data.hash;
+	};
+	
 	var getName = function (data) {
 		ASSERT(data);
 		var attr = data.attributes || {};
@@ -29,8 +34,6 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 	// ----------------- node -----------------
 
 	var nodeProto = {};
-
-	// ------- getters -------
 
 	Object.defineProperties(nodeProto, {
 		relid: {
@@ -80,8 +83,6 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 		}
 	});
 
-	// ------- default event handlers -------
-
 	/**
 	 * Called just after a new child node is added to an expanded parent because
 	 * of a database update.
@@ -92,8 +93,9 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 
 	/**
 	 * Called just before a child node and all its children are removed from an
-	 * expanded parent because of a database update. This call is not recursive,
-	 * so it is not called for the children of the removed node.
+	 * expanded parent because of a database update. This event is not recursive,
+	 * so it is not called for the children of the removed node, even though
+	 * those nodes will be also removed.
 	 */
 	nodeProto.onRemoved = function () {
 		console.log("node removed " + this.path);
@@ -115,13 +117,20 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 		console.log("node changed " + this.path + " with name " + this.name);
 	};
 
-	// ------- commands -------
-
+	/**
+	 * Takes a data hash value describing the full subtree hierarchy and updates
+	 * the subtree to reflect the new state. This method will not only modify
+	 * the subtree but also will call the appropriate events above. If data is
+	 * missing, then it will request the necessary data from the storage and complete
+	 * the update in possibly several steps.
+	 * 
+	 * @param hash the new hash value to be set at this node
+	 */
 	nodeProto.update = function (hash) {
 		ASSERT(this.data);
 
 		// if nothing changed, then stop traversing
-		if( this.data.hash === hash ) {
+		if( getHash(this.data) === hash ) {
 			return;
 		}
 
@@ -161,4 +170,26 @@ define([ "gmeassert", "loader" ], function (ASSERT, loader) {
 			}
 		});
 	};
+	
+	// ----------------- tree -----------------
+
+	var treeProto = {};
+
+	var createTree = function () {
+		var tree = Object.create(treeProto);
+
+		/**
+		 * We create an event handler node whose instances will be the contained
+		 * nodes.
+		 */
+		tree.handler = Object.create(nodeProto);
+
+		tree.root = Object.create(tree.handler);
+
+		return tree;
+	};
+
+	// ----------------- interface -----------------
+
+	return createTree;
 });

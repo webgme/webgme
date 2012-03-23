@@ -15,14 +15,12 @@
 			project.onopen = function () {
 				console.log("opened");
 				this.close();
-			}
+			};
 			project.onclose = function () {
 				console.log("closed");
 			};
 			project.open("server");
-		}		
-
-		
+		};		
 		
 		console.log();
 		openProject();
