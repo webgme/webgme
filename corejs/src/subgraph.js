@@ -4,12 +4,14 @@
  * Author: Miklos Maroti
  */
 
-define([ "gmeassert" ], function(ASSERT) {
+define([ "gmeassert" ], function (ASSERT) {
 	"use strict";
+
+	// ----------------- node -----------------
 
 	var nodeCount = 0;
 
-	var Node = function() {
+	var Node = function () {
 		Object.defineProperties(this, {
 			/**
 			 * Every node has a hidden private id property that uniquely
@@ -18,10 +20,10 @@ define([ "gmeassert" ], function(ASSERT) {
 			 * fragments coming from even different revisions, however you
 			 * should use the compare method.
 			 */
-			__id__ : {
-				value : ++nodeCount,
-				writable : false,
-				enumerable : false
+			__id__: {
+				value: ++nodeCount,
+				writable: false,
+				enumerable: false
 			},
 
 			/**
@@ -29,10 +31,10 @@ define([ "gmeassert" ], function(ASSERT) {
 			 * should use the public getter and setter methods to access the
 			 * attributes.
 			 */
-			__attributes__ : {
-				value : {},
-				writable : true,
-				enumerable : false
+			__attributes__: {
+				value: {},
+				writable: true,
+				enumerable: false
 			}
 		});
 	};
@@ -49,14 +51,14 @@ define([ "gmeassert" ], function(ASSERT) {
 	 * to recreate an object with the same identity as another one (only backup
 	 * and restore functions should be able to do that).
 	 */
-	Node.prototype.compare = function(node) {
+	Node.prototype.compare = function (node) {
 		return this.__id__ === node.__id__;
 	};
 
 	/**
 	 * Returns the value of the given attribute stored in this object.
 	 */
-	Node.prototype.getAttribute = function(name) {
+	Node.prototype.getAttribute = function (name) {
 		return this.__attributes__[name];
 	};
 
@@ -67,7 +69,7 @@ define([ "gmeassert" ], function(ASSERT) {
 	 * attribute values can (but do not have to) propagate in the prototype
 	 * hierarchy.
 	 */
-	Node.prototype.setAttribute = function(name, value) {
+	Node.prototype.setAttribute = function (name, value) {
 		this.__attributes__[name] = value;
 	};
 
@@ -77,16 +79,40 @@ define([ "gmeassert" ], function(ASSERT) {
 	 * by the prototype. The same rules apply as for setAttribute, that is, this
 	 * propagation need not be performed automatically.
 	 */
-	Node.prototype.deleteAttribute = function(name) {
+	Node.prototype.deleteAttribute = function (name) {
 		delete this.__attributes__[name];
 	};
 
-	Node.prototype.loadPointer = function(name) {
+	Node.prototype.getPointer = function (name) {
 	};
 
-	Node.prototype.getPointer = function(name) {
+	Node.prototype.setPointer = function (name, node) {
 	};
 
-	Node.prototype.setPointer = function(name, node) {
+	Node.prototype.deletePointer = function (name) {
 	};
+
+	/**
+	 * Returns a unordered set of objects indexed by their id.
+	 */
+	Node.prototype.getCollection = function (name) {
+	};
+
+	Node.prototype.loadPointer = function (name, callback) {
+	};
+
+	Node.prototype.loadCollection = function (name, callback) {
+	};
+
+// ----------------- subgraph -----------------
+
+	var Subgraph = function (revid) {
+	};
+
+	Subgraph.getNode = function (id) {
+	};
+
+	Subgraph.getRevisionId = function () {
+	};
+	
 });
