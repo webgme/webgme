@@ -98,10 +98,16 @@ define([ "gmeassert" ], function (ASSERT) {
 	Node.prototype.getCollection = function (name) {
 	};
 
+	Node.prototype.getCollectionCount = function (name) {
+	};
+	
 	Node.prototype.loadPointer = function (name, callback) {
 	};
 
 	Node.prototype.loadCollection = function (name, callback) {
+	};
+
+	Node.prototype.loadCollectionCount = function (name, callback) {
 	};
 
 // ----------------- subgraph -----------------
@@ -109,7 +115,7 @@ define([ "gmeassert" ], function (ASSERT) {
 	var Subgraph = function (revid) {
 	};
 
-	Subgraph.getNode = function (id) {
+	Subgraph.getNode = function (nodeid) {
 	};
 
 	Subgraph.getRevisionId = function () {
