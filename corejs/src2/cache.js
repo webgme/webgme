@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
+define([ "assert" ], function (ASSERT) {
 	"use strict";
 
 	/**
@@ -79,9 +79,9 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		},
 
 		/**
-		 * Takes an object, calculates its json representation and its hash and
-		 * puts it into the cache. If the cache already contains an object with
-		 * the same hash, then that object is returned.
+		 * Takes an object with a hash property and puts it into the cache. If
+		 * the cache already contains an object with the same hash, then that
+		 * object is returned.
 		 * 
 		 * @param obj the object to be stored in the cache
 		 * @returns an object in the cache that has the same hash as the given
@@ -89,38 +89,22 @@ define([ "gmeassert", "../lib/sha1" ], function (ASSERT) {
 		 */
 		add: function (obj) {
 			ASSERT(!obj.hasOwnProperty("refcount"));
-			ASSERT(!obj.hasOwnProperty("hash"));
-			ASSERT(!obj.hasOwnProperty("json"));
 
-			// TODO: stringify does not guarantee any ordering, we need to do
-			// this manually
-			var json = JSON.stringify(obj);
-			var hash = SHA1(json);
+			var hash = obj.hash;
+			ASSERT(obj.hasOwnProperty("hash"));
+			ASSERT(typeof hash === "string");
 
 			if( cache[hash] ) {
 				obj = cache[hash];
-				ASSERT(obj.json === json);
 				ASSERT(obj.hash === hash);
 				ASSERT(obj.refcount >= 1);
 				++obj.refcount;
 			}
 			else {
-				Object.defineProperties(obj, {
-					json: {
-						value: json,
-						enumerable: false,
-						writable: false
-					},
-					hash: {
-						value: hash,
-						enumerable: false,
-						writable: false
-					},
-					refcount: {
-						value: 1,
-						enumerable: false,
-						writable: true
-					}
+				Object.defineProperty(obj, "refcount", {
+					value: 1,
+					enumerable: false,
+					writable: true
 				});
 			}
 
