@@ -6,7 +6,6 @@
 package org.isis.webgme.server;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Vector;
 
 import org.eclipse.jetty.websocket.WebSocket;
@@ -37,17 +36,21 @@ public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
     public void onMessage( String data){
     	Log.info(client+" request arrives to websocket");
     	Log.debug(client+" request arrives to websocket with content: "+data);
-    	Vector<Commit> response = new Vector<Commit>();
+    	SimpleWebSocketMessage rmessage = new SimpleWebSocketMessage();
+    	Vector<Commit> response = rmessage.commits;
     	try{
-    		List<Commit> transaction = JSON.parseArray(data,Commit.class);
+    		SimpleWebSocketMessage request = JSON.parseObject(data,SimpleWebSocketMessage.class);
+    		Vector<Commit> transaction = request.commits;
+    		rmessage.sequence = request.sequence;
 	    	for(int i=0;i<transaction.size();i++){
 	    		if(transaction.get(i).object!=null){
 	    			/*save object*/
-	    			/*TODO: hash assertion*/
+	    			/*TODO: hash assertion
 	    			String checkhash = Hash.SHA1(transaction.get(i).object);
 	    			if(!checkhash.equals(transaction.get(i).hash)){
 	    				Log.error(client+" hash mismatch received "+Log.putHash(transaction.get(i).hash)+" calculated "+Log.putHash(checkhash));
 	    			}
+	    			*/
 	    			Log.debug(client+" saving object "+Log.putHash(transaction.get(i).hash));
 	    			storage.put(transaction.get(i).hash, transaction.get(i).object);
 	    			/*TODO: sending some state response*/
@@ -90,7 +93,7 @@ public class SimpleWebSocket implements WebSocket,WebSocket.OnTextMessage {
     		Log.error(client+" wrong incoming message");
     	}
     	try{
-    		String rtext = JSON.toJSONString(response);
+    		String rtext = JSON.toJSONString(rmessage);
     		connection.sendMessage(rtext);
     		Log.info(client+" responding to request");
     		Log.debug(client+" responding to request with: "+rtext);

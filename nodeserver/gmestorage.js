@@ -104,10 +104,14 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 		socket.request = this;
 		socket.on('msg', function(data){
 			if(data.length>0){
-				var askedobjects = JSON.parse(data);
+				var response = JSON.parse(data);
+				if(this.request.sid!=response.sequence){
+					alert("sequence mismatch!!! sent "+this.request.sid+", but got "+response.sequence);
+				}
+				var askedobjects = response.commits;
 				for(var i in askedobjects){
 					if(askedobjects[i].hash==="root"){
-						this.request.root = askedobjects[i].hash;
+						this.request.root = askedobjects[i].object;
 					}
 					else{
 						this.request.objects[askedobjects[i].hash] =  JSON.parse(askedobjects[i].object);
@@ -116,7 +120,8 @@ define([ "./lib/sha1.js", "/socket.io/socket.io.js" ], function () {
 			}
 			this.request.ondone();			
 		});
-		socket.emit('msg',JSON.stringify(this.commits));
+		var message = {}; message.sequence = this.sid; message.commits = this.commits;
+		socket.emit('msg',JSON.stringify(message));
 	};
 
 	

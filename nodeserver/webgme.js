@@ -37,28 +37,60 @@ io.sockets.on('connection', function(socket){
 	console.log("someone connected");
 	socket.emit('connected', undefined);
 	socket.on('msg', function(data){
-		console.log("got request"+data);
-		var response = [];
-		var commits = JSON.parse(data);
+		console.log("got request:"+data);
+		var response = {}; response.sequence = 0; response.commits=[];
+		var request = JSON.parse(data);
+		var commits = request.commits;
+		var balance = 0;
+		var handled = 0;
+		response.sequence = request.sequence;
 		for(var i in commits){
-			if(commits[i].object===undefined){
+			balance++;
+			if(commits[i].object==undefined){
 				/*read request*/
 				storage.get(commits[i].hash, function(result){
 					if(result!=undefined){
-						var resobj = {}; resobj.hash = commits[i].hash;resobj.object=result;
-						response.push(resobj);
+						/*if(commits[i].hash=="root"){
+							storage.get(result, function(rootres){
+								balance--;handled++;
+								if(rootres!=undefined){
+									var resobj = {}; resobj.hash = result; resobj.object = rootres;
+									response.commits.push(resobj);
+								}
+								if(balance==0 && handled>=commits.length){
+									socket.emit('msg', JSON.stringify(response));
+								}											
+							});
+							var rootobj = {}; rootobj.hash = commits[i].hash; rootobj.object = result;
+							response.commits.push(rootobj);
+						}
+						else*/{
+							balance--;handled++;
+							var resobj = {}; resobj.hash = commits[i].hash;resobj.object=result;
+							response.commits.push(resobj);
+						}
+					}
+					
+					if(balance==0 && handled>=commits.length){
+						console.log("kecso2 "+balance);
+						socket.emit('msg', JSON.stringify(response));
 					}
 				});
 			}
 			else{
 				/*write operation*/
-				console.log("calculated hash: "+sh.SHA1(commits[i].object));
-				console.log("received hash: "+commits[i].hash);
-				storage.put(commits[i].hash,commits[i].object,function(){});					
+				storage.put(commits[i].hash,commits[i].object,function(){
+					balance--;handled++;
+					if(balance==0 && handled>=commits.length){
+						socket.emit('msg', JSON.stringify(response));
+					}
+				});					
 			}
 		}
-		console.log("sending response: "+ response);
-		socket.emit('msg', response);
+		//console.log("sending response: "+ JSON.stringify(response));
+		if(balance==0 && handled>=commits.length){
+			socket.emit('msg', JSON.stringify(response));
+		};
 	});
 	socket.on('close',function(){
 		console.log("connection closed");

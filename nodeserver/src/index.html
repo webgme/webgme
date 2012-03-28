@@ -1,0 +1,32 @@
+<html>
+	<head>
+		<title>webgme trial page</title>
+		<script src="/lib/require.js"></script>
+		<script>
+			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js'],function(PR,LI,MO){
+				var myproject = undefined;
+				var mylister = undefined;
+				var mymodifier = undefined;
+				openProject = function(){
+					myproject = new PR(document.getElementById('projectselector/projid').value);
+					myproject.onOpen = function(){
+						/*appending widgets*/
+						mylister = new LI(myproject,document.getElementById('projectlister'));
+						mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
+						alert('it is opened');
+					};
+					
+					myproject.open();
+					
+				}
+			});
+		</script>
+	</head>
+	<body>
+		<div id="projectselector">
+			<input type="text" id="projectselector/projid" /><input type="button" value="open" id="projectselector/openbutton" onclick="openProject()" />
+		</div>
+		<div id="projectlister"></div>
+		<div id="projectmodifier"></div>
+	</body>
+</html>

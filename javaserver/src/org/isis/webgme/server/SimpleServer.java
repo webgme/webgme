@@ -13,12 +13,13 @@ import org.eclipse.jetty.servlet.ServletHolder;
 
 public class SimpleServer {
 
-	protected static int port=8081;
+	protected static int port=8082;
 	protected static String root=System.getProperty("user.dir")+File.separator+"test";
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) throws Exception{
+		Log._debug = false;
 		Server server = new Server(port);
 		Log.info("server will listen on port: "+port);
 		

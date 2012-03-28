@@ -4,7 +4,7 @@
 		<script src="./lib/require.js"></script>
 		<script>
 			var session = 0;
-			require(['./gmestoragesingle.js'], function(storage){
+			require(['./gmestorage.js'], function(storage){
 				createProject = function(){
 					getParentPath = function(path){
 						if(path.lastIndexOf('/')>0){
@@ -24,7 +24,7 @@
 						}
 						else{
 							for(var i=0;i<number;i++){
-								var child = {}; child.name = object.name+"_"+i; child.path = object.path +"/"+child.name; child.children = [];
+								var child = {}; child.name = i; child.path = object.path +"/"+child.name; child.children = [];
 								addChild(child,request);
 							}
 						}
@@ -173,7 +173,8 @@
 		</script>
 	</head>
 	<body>
-		<input type="text" id="NumberOfChildField" /><input type="text" id="NumberOfObjectsToBeCreatedField" /><br />
+		<input type="text" id="NumberOfChildField" >give how many children one object should have if it has children</input><br />
+		<input type="text" id="NumberOfObjectsToBeCreatedField" >give how many objects should be created to the project</input><br />
 		<input type="button" id="StartCreationButton" value="Start" onclick="createProject()" />
 		<div id="LogContainer">Here will be the logs and timings of the run...<br /></div>
 	</body>
