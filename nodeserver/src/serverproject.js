@@ -24,20 +24,11 @@ Project.prototype.addClient = function(socket){
 };
 
 Project.prototype.onMessage = function(data){
-	/*
-	 * here comes the fun :)
-	 * 1 handle the transaction
-	 * 2 create new revision if it contained modifications
-	 * 3 gather the changes - currently we will have everything
-	 * 4 emit the response to everyone -> call send function
-	 */
-	var transaction = JSON.parse(data);
-	for(var i in transaction.elements){
-		var tritem = transaction.elements[i];
-			var newobj = {}; newobj.id = tritem.id; newobj.object = tritem.object;
-			this.mystorage.set(tritem.id,tritem.object);
-		}
-	this.mystorage.finalize();		
+	for(var i in data.objects){
+		var tritem = data.objects[i];
+		this.mystorage.set(tritem.id,tritem.object);
+	}
+	refresh(this);		
 };
 
 /*private function*/

@@ -1,6 +1,5 @@
 define([],function(){
 	var ModifyCtrl = function(project,div){
-		this.counter = 0;
 		this.project = project;
 		this.div = div;
 		this.query = this.project.createQuery();
@@ -16,13 +15,11 @@ define([],function(){
 		var that = this;
 		this.addButton.onclick = function(){
 			var newchild = {};
-			var root = that.query.getNode("root");
-			var newid = ++that.counter+"_object";
-			newchild = {_id:newid, attributes:{name:"kolok", children:[], size:"small"}};
-			root.attributes.children.push(newid);
-			that.query.addPattern(newid);
-			that.query.setNode(newid,newchild);
-			that.query.setNode("root",root);
+			var root = that.project.getNode("root");
+			newchild = {name:"kolok", children:[], size:"small"};
+			var newid = that.project.setNode(newchild);
+			root.children.push(newid);
+			that.project.setNode(root);
 		};
 		
 		/*remove button*/

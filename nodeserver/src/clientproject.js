@@ -43,8 +43,8 @@ define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], fu
  	* Query handling functions
  	*/
 	Project.prototype.createQuery = function() {
-		var newquery = new QU(this,++this.querycount);
-		this.queries[this.querycount] = newquery;
+		var newquery = new QU(this,"q_"+(++this.querycount));
+		this.queries[newquery.id] = newquery;
 		return newquery;
 	};
 	Project.prototype.deleteQuery = function(queryid) {
@@ -70,6 +70,10 @@ define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], fu
 			message.objects.push(msgitem);
 			this.storage.set(node);
 			this.socket.emit('updateObjects', message);
+			return node._id;
+		}
+		else{
+			return undefined;
 		}
 	}
 	Project.prototype.delNode = function(node){

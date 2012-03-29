@@ -23,7 +23,7 @@ define([], function(){
 		for(var i in ids){
 			var newelement = document.createElement('p');
 			newelement.id = this.div.id+"/"+i;
-			newelement.innerHTML = ids[i];
+			newelement.innerHTML = "ID = "+ids[i]+" - NAME = "+this.project.storage.get(ids[i]).name;
 			this.div.appendChild(newelement);
 		}
 				

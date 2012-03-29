@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 /*
- * --------SOCKET-------
+ * --------SOCKET--------
  */
 Socket = function(socket, storage){
 	this.socket = socket;
@@ -30,10 +30,20 @@ Socket.prototype.setListener = function(listener){
 	this.listener = listener;
 };
 Socket.prototype.refresh = function(){
+	/*
+	 * first we need to refresh the whole querymatrix
+	 */
+	for(var i in this.queries){
+		var queryid = i;
+		var objectlist = queryToObjectList(this,queryid);
+		updateQueryMatrix(this,queryid,objectlist);
+	}
+	
 	var fullobjectlist = [];
 	for(var i in this.querymatrix){
 		fullobjectlist.push(i);
 	}
+	
 	sendObjectList(this,fullobjectlist);
 }
 
@@ -67,18 +77,28 @@ queryToObjectList = function(serversocket,queryid){
 };
 
 updateQueryMatrix = function(serversocket,queryid,objectlist){
-	for(var i in this.querymatrix){
-		var queryarray = serversocket.querymatrix[i];
-		var queryindex = queryarray.indexOf(queryid); 
-		
-		if(queryindex>=0){
-			if(objectlist.indexOf(i)==-1){
-				queryarray.splice(queryindex,1);
-				if(queryarray.length===0){
-					delete serversocket.querymatrix[i];
-				}
+	/*
+	 * 1 we remove the queryid from objects in querymatrix which not in the query anymore
+	 * 2 we put the queryid to the object in querymatrix where it is missing
+	 */
+	/*1*/
+	for(var i in serversocket.querymatrix){
+		if(objectlist.indexOf(i) == -1 ){
+			var index = serversocket.querymatrix[i].indexOf(queryid);
+			if(index >= 0){
+				serversocket.querymatrix[i].splice(index,1);
 			}
 		}
+	}
+	/*2*/
+	for(var i in objectlist){
+		if(serversocket.querymatrix[objectlist[i]] === undefined){
+			serversocket.querymatrix[objectlist[i]] = [];
+		}
+		if(serversocket.querymatrix[objectlist[i]].indexOf(queryid) === -1){
+			serversocket.querymatrix[objectlist[i]].push(queryid);
+		}
+		
 	}
 };
 sendObjectList = function(serversocket,objectlist,queryid){

@@ -9,8 +9,10 @@ define([], function(){
 	
 	/*modifications*/
 	Query.prototype.addPattern = function(nodeid,type){
-		this.patterns[nodeid] = type || {self:true};	
-		this.project.onQueryChange(this.id); 
+		if(nodeid !== undefined){
+			this.patterns[nodeid] = type || {self:true};	
+			this.project.onQueryChange(this.id);
+		} 
 	};
 	Query.prototype.deletePattern = function(nodeid,type){
 		delete this.patterns[nodeid];
