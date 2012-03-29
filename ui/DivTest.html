@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>TreeBrowser test</title>
+
+<!-- CSS libraries -->
+<link href="css/main.css" type="text/css" rel="stylesheet"/>
+<link href="css/temp.css" type="text/css" rel="stylesheet"/>
+<!-- // CSS libraries -->
+
+<!-- JS libraries -->
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<!-- // External JS libraries -->
+
+<script type="text/javascript">
+
+    /*********
+     * UTILITY HELPERS
+     */
+
+    function S4() {
+        return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+    }
+
+    function guid() {
+        return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+    }
+
+    function logMessage( msg, enabled )
+    {
+        enabled = enabled || false;
+
+        if ( enabled == true )
+        {
+            if ( window.console ) {
+                var d = new Date();
+                console.log( d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + "." + d.getMilliseconds() + ": " + msg );
+            }
+        }
+    }
+
+    (function($) {
+        $.QueryString = (function(a) {
+            if (a == "") return {};
+            var b = {};
+            for (var i = 0; i < a.length; ++i)
+            {
+                var p=a[i].split('=');
+                if (p.length != 2) continue;
+                b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+            }
+            return b;
+        })(window.location.search.substr(1).split('&'))
+    })(jQuery);
+
+    function TryParseInt(str,defaultValue){
+        var retValue = defaultValue;
+        if(str!=null){
+            if(str.length>0){
+                if (!isNaN(str)){
+                    retValue = parseInt(str);
+                }
+            }
+        }
+        return retValue;
+    }
+
+    var treeBrowser = null;
+
+    /*********
+     * DOCUMENT READY
+     */
+    $(document).ready(function(){
+
+        var refreshCycle = 1;
+
+        var queryNode = $.QueryString["n"];
+
+        var maxSublevel = TryParseInt(queryNode, 2);
+
+
+
+
+        var startTreeTest = function() {
+            window.logMessage( "RefreshCycle " + refreshCycle + " START", true );
+
+            var startTime = new Date();
+
+            //set initial variable values
+            var counter = 0;
+
+            var createChildNodes = function( parent, subLevel ) {
+                for ( var i = 0; i < 10; i++ ) {
+                    var childNode =  $('<div/>');
+                    childNode.addClass("column");
+
+                    var childHeader = $('<header/>');
+                    childHeader.html(counter);
+
+                    childNode.append(childHeader);
+
+                    var childBody =  $('<div/>');
+                    //childBody.addClass("body");
+
+                    childNode.append(childBody);
+
+                    /*childNode.html("<header>"+ counter + "</header><div class='body'></div>");*/
+                    counter += 1;
+
+                    $(parent[0].children[1]).append(childNode);
+
+                    if ( subLevel > 1) {
+                        createChildNodes( childNode, subLevel - 1  );
+                    }
+
+
+                }
+            }
+
+            //create all the childs
+            createChildNodes( $("#dTreeBrowser"), maxSublevel );
+
+            var checkPoint = function ( checkPointTitle ) {
+                var endTime = new Date();
+
+                var deltaMillisec = ( endTime.getTime() - startTime.getTime() ) / 1000;
+
+                var startMilSecStr = startTime.getMilliseconds();
+                if ( startTime.getMilliseconds() < 10 ) {
+                    startMilSecStr = "00" + startMilSecStr;
+                } else {
+                    if ( startTime.getMilliseconds() < 100 ) {
+                        startMilSecStr = "0" + startMilSecStr;
+                    }
+                }
+
+                var endMilSecStr = endTime.getMilliseconds();
+                if ( endTime.getMilliseconds() < 10 ) {
+                    endMilSecStr = "00" + endMilSecStr;
+                } else {
+                    if ( endTime.getMilliseconds() < 100 ) {
+                        endMilSecStr = "0" + endMilSecStr;
+                    }
+                }
+
+
+                var msg = checkPointTitle + " --- StartTime: " + startTime.getHours() + ":" + startTime.getMinutes() + ":" + startTime.getSeconds() + "." + startMilSecStr + ", EndTime:" + endTime.getHours() + ":" + endTime.getMinutes() + ":" + endTime.getSeconds() + "." +endMilSecStr;
+                msg += ", DURATION: " + deltaMillisec + " sec" + ", NODES: " + counter;
+
+                window.logMessage(msg, true );
+            }
+
+            checkPoint( "HIERARCHY-DONE" );
+
+            //log refresh cycle end
+            window.logMessage( "RefreshCycle " + refreshCycle + " END", true );
+
+            //increment counter and start again
+            refreshCycle += 1;
+
+            setTimeout( function() {
+                //clear tree
+                $("#dTreeBrowser .body").html("");
+                setTimeout( startTreeTest, 2000  );
+            }, 2000);
+
+        }
+
+        startTreeTest();
+    });
+</script>
+</head>
+<body>
+<div id="dTreeBrowser">
+    <div class="bla"></div>
+    <div class="body"></div>
+</div>
+</body>
+</html>

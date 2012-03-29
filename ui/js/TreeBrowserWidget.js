@@ -165,10 +165,12 @@ TreeBrowserWidget.prototype = {
         window.logMessage( "New node created: " + newNode );
 
         //a bit of visual effect
-        if ( parentNode.isExpanded() === true ) {
-            var jqTreeNode = $( newNode.span.childNodes[2] );
-            jqTreeNode.hide();
-            jqTreeNode.fadeIn();
+        if ( parentNode != null ) {
+            if ( parentNode.isExpanded() === true ) {
+                var jqTreeNode = $( newNode.span.childNodes[2] );
+                jqTreeNode.hide();
+                jqTreeNode.fadeIn();
+            }
         }
 
         //return the newly created node
@@ -223,7 +225,6 @@ TreeBrowserWidget.prototype = {
      */
     onNodeOpen : function( node ) {
         window.logMessage( "Default onNodeOpen called, doing nothing. Please override onNodeOpen(node)" );
-        this.createNode( node, { name: "Default onNodeOpen called, doing nothing. Please override onNodeOpen(node)!", guid: "_default", hasChildren : false } )
     },
 
     /*
@@ -279,9 +280,11 @@ TreeBrowserWidget.prototype = {
     /*
      * Cancels the node's layz load status, makes it closed and removes the in-progress icon
      */
-    cancelLazyLoad : function( node, collapse ) {
+    lazyLoadFinished : function( node, collapse ) {
         node.setLazyNodeStatus(DTNodeStatus_Ok);
-        if ( collapse === true ) {
+
+        var needCollapse = false || collapse;
+        if ( needCollapse === true ) {
             this.collapse( node );
         }
     },

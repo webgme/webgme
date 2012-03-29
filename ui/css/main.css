@@ -9,3 +9,8 @@ body {
     background-position: 0 0;
     background-image: url("../img/progress.gif") !important;
 }
+
+li.jstree-openProgress > a .jstree-icon
+{
+    background:url("../img/progress.gif") 0px 0px no-repeat !important;
+}
