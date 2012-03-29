@@ -4,15 +4,20 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "cache" ], function (ASSERT, cache) {
+define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 	"use strict";
 
+	var relidPow = Math.pow(36,6);
+	var generateRelid = function() {
+		return Math.floor(Math.random()*relidPow).toString(36);
+	};
+	
 	// ----------------- node -----------------
 
 	/**
 	 * Each node object is derived from this object. This object contains only
-	 * the shared methods. The static variables are stored on a unique derived
-	 * object for each subtree. Then node variables are initialized by the
+	 * the shared methods. The static variables are stored in a unique derived
+	 * object for each subtree. Regular node variables are initialized by the
 	 * initParent function.
 	 */
 	var nodeProto = {};
@@ -26,7 +31,7 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 		ASSERT(typeof relid === "string");
 		ASSERT(parent === null || nodeProto.isPrototypeOf(node));
 
-		Object.defineProperties(this, {
+		Object.defineProperties(node, {
 			parent: {
 				value: parent,
 				enumerable: false,
@@ -41,8 +46,103 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 				value: relid,
 				enumerable: true,
 				writable: false
+			},
+			children: {
+				value: {},
+				enumerable: true,
+				writable: true
 			}
 		});
+	};
+
+	/**
+	 * Initializes the content of this node to be empty with no attributes and
+	 * makes it dirty.
+	 */
+	var initData = function (node) {
+		ASSERT(!node.data);
+
+		node.data = {
+			attributes: {},
+			children: {}
+		};
+	};
+
+	/**
+	 * This method loads the data specified by the hash into this node object.
+	 */
+	var loadData = function (node, hash) {
+		ASSERT(node && !node.data);
+		ASSERT(typeof hash === "string");
+
+		node.data = cache.get(hash);
+		ASSERT(node.data && node.data.hash === hash);
+	};
+
+	/**
+	 * This method returns true if this node is dirty (that is either this node
+	 * or any of its children has been modified).
+	 */
+	var isDirty = function (node) {
+		ASSERT(node.data);
+		ASSERT(node.data.hash === undefined
+		|| typeof node.data.hash === "string");
+
+		return !node.data.hash;
+	};
+
+	/**
+	 * This method makes a copy of the data object and allows subsequent
+	 * modification. It also makes the parent dirty recursively all the way up
+	 * to the root.
+	 */
+	var makeDirty = function (node) {
+		ASSERT(node.data);
+
+		while( node.data.hash ) {
+			ASSERT(isDirty());
+
+			var old = node.data;
+			var copy = {
+				attributes: {}
+			};
+
+			for( var name in old.attributes ) {
+				copy.attributes[name] = old.attributes[name];
+			}
+			node.data = copy;
+
+			cache.release(old.hash);
+
+			// go to the parent
+			node = node.parent;
+			if( node === null ) {
+				break;
+			}
+
+			ASSERT(node.data);
+		}
+	};
+
+	var saveData = function (node) {
+		ASSERT(isDirty(node));
+
+		var json = JSON.stringify(node.data);
+
+		Object.defineProperties(node.data, {
+			json: {
+				value: json,
+				enumerable: false,
+				writable: false
+			},
+			hash: {
+				value: SHA1(json),
+				enumerable: true,
+				writable: false
+			}
+		});
+
+		node.data = cache.add(node.data);
 	};
 
 	/**
@@ -85,6 +185,7 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 
 		var other = this;
 		do {
+			ASSERT(other && node);
 			other = other.parent;
 			node = node.parent;
 		} while( other !== node && other.relid === node.relid );
@@ -93,34 +194,32 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 	};
 
 	/**
-	 * Returns the value of the given attribute stored in this object.
+	 * Returns the child (or grand child, etc) of this node given by a relative
+	 * path. If the relative path is the empty "" string, then this node is
+	 * returned. If the relative path is the "/relid", then a child is returned.
+	 * If the relative path is "/relid1/relid2", then a grand child is returned,
+	 * etc.
 	 */
-	nodeProto.getAttribute = function (name) {
-		ASSERT(this.data && this.data.attr);
-		return this.data.attr[name];
+	var getChildByPath = function (node, path) {
+		ASSERT(typeof path === "string");
+
+		var relids = path.split("/");
+		ASSERT(relids[0] === "");
+
+		for( var i = 1; node && i < relids.length; ++i ) {
+			node = node.children[relids[i]];
+		}
+
+		return node;
 	};
 
 	/**
-	 * This method makes a copy of the data object and allows subsequent 
-	 * modification.
+	 * Returns the value of the given attribute stored in this object.
 	 */
-	var makeDirty = function() {
-		ASSERT(this.data);
-		
-		if(this.data.hash) {
-			ASSERT(typeof this.data.hash === "string");
+	nodeProto.getAttribute = function (name) {
+		ASSERT(this.data && this.data.attributes);
 
-			var old = this.data;
-			var copy = {
-				attr: {}
-			};
-			
-			for(var name in old.attr) {
-				copy.attr[name] = old.attr[name];
-			}
-			
-			cache.release(old);
-		}
+		return this.data.attributes[name];
 	};
 
 	/**
@@ -131,8 +230,10 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 	 * hierarchy.
 	 */
 	nodeProto.setAttribute = function (name, value) {
+		ASSERT(this.data && this.data.attributes);
+
 		makeDirty(this);
-		this.data.attr[name] = value;
+		this.data.attributes[name] = value;
 	};
 
 	/**
@@ -142,58 +243,89 @@ define([ "assert", "cache" ], function (ASSERT, cache) {
 	 * propagation need not be performed automatically.
 	 */
 	nodeProto.deleteAttribute = function (name) {
+		ASSERT(this.data && this.data.attributes);
+
 		makeDirty(this);
-		delete this.data.attr[name];
+		delete this.data.attributes[name];
 	};
 
-	nodeProto.getPointer = function (name) {
-		if(name === "parent") {
-			return this.parent;
-		}
-		
-		return undefined;
-	};
-
-	nodeProto.setPointer = function (name, node) {
-		ASSERT(false);
-	};
-
-	nodeProto.deletePointer = function (name) {
-		ASSERT(false);
+	nodeProto.getParent = function () {
+		return this.parent;
 	};
 
 	/**
-	 * Returns a unordered set of objects indexed by their id.
+	 * Moves the current node to the new location
 	 */
-	nodeProto.getCollection = function (name) {
-		if(name === "children") {
-			return this.children;
-		}
-
-		return undefined;
+	nodeProto.setParent = function (parent) {
+		ASSERT(nodeProto.isPrototypeOf(parent));
+		ASSERT(!this.parent);
+		
+		var relid = generateRelid();
+		initParent(this, parent, relid);
+		parent.children[relid] = this;
 	};
 
-	nodeProto.getCollectionCount = function (name) {
+	/**
+	 * This method returns the list of loaded children. The children list is
+	 * always partial. The actual number of children is always stored in the
+	 * data property (with hashes or undefined).
+	 */
+	nodeProto.getChildren = function () {
+		return this.children;
 	};
 
-	nodeProto.loadPointer = function (name, callback) {
+	/*
+	 * nodeProto.getPointer = function (name) { if( name === "parent" ) { return
+	 * this.parent; } ASSERT(false); };
+	 * 
+	 * nodeProto.getCollection = function (name) { if( name === "children" ) {
+	 * return this.children; } ASSERT(false); };
+	 * 
+	 * nodeProto.loadPointer = function (name, callback) { };
+	 * 
+	 * nodeProto.loadCollection = function (name, callback) { };
+	 */
+
+	// ----------------- graph -----------------
+	var Graph = function () {
+		/**
+		 * We have our own node prototype to store the owner graph
+		 */
+		this.nodeProto = Object.create(nodeProto, {
+			graph: {
+				value: this,
+				enumerable: false,
+				writable: false
+			}
+		});
+
+		this.root = Object.create(this.nodeProto);
+		initParent(this.root, null, "");
+		initData(this.root);
+		saveData(this.root);
 	};
 
-	nodeProto.loadCollection = function (name, callback) {
+	/**
+	 * We look up in this subgraph the node with the given node id. If the
+	 * subgraph does not contain (either because it is not loaded or this
+	 * version does not even have that a node with that node id) a node with the
+	 * given id, then undefined is returned.
+	 * 
+	 * This implementation looks up the node by its path
+	 */
+	Graph.prototype.getNode = function (nodeid) {
+		ASSERT(typeof nodeid === "string");
+		return getChildByPath(this.root, nodeid);
 	};
 
-	nodeProto.loadCollectionCount = function (name, callback) {
+	Graph.prototype.createNode = function () {
+		var node = Object.create(this.nodeProto);
+
+		initData(node);
+		return node;
 	};
 
-	// ----------------- subgraph -----------------
+	// ----------------- public interface -----------------
 
-	var Subgraph = function (revid) {
-	};
-
-	Subgraph.getNode = function (nodeid) {
-	};
-
-	Subgraph.getRevisionId = function () {
-	};
-
+	return Graph;
 });
