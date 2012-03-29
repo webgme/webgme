@@ -41,8 +41,8 @@ Socket.prototype.refresh = function(changedobjects){
 	
 	var fullobjectlist = [];
 	for(var i in this.querymatrix){
-		if(changedobjects){
-			if(changedobject.indexof(i) > -1){
+		if(changedobjects !== undefined){
+			if(changedobjects.indexOf(i) > -1){
 				fullobjectlist.push(i);
 			}
 		}

@@ -25,15 +25,15 @@
 
 			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js'],function(PR,LI,MO, LI2){
 				var myproject = undefined;
-				var mylister = undefined;
-				var mymodifier = undefined;
+				//var mylister = undefined;
+				//var mymodifier = undefined;
                 var mylister2 = undefined;
 				openProject = function(){
 					myproject = new PR(document.getElementById('projectselector/projid').value);
 					myproject.onOpen = function(){
 						/*appending widgets*/
-						mylister = new LI(myproject,document.getElementById('projectlister'));
-						mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
+						//mylister = new LI(myproject,document.getElementById('projectlister'));
+						//mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
                         mylister2 = new LI2(myproject, "projectlister2" );
 						alert('it is opened');
 					};
