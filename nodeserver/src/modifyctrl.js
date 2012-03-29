@@ -5,7 +5,7 @@ define([],function(){
 		this.div = div;
 		this.query = this.project.createQuery();
 		this.query.addUI(this);
-		this.query.addPattern("root","none");
+		this.query.addPattern("root",{self:true});
 		
 		/*add button*/
 		this.addButton = document.createElement('input');

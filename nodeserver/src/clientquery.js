@@ -1,41 +1,37 @@
 define([], function(){
 	var Query = function(project,id){
 		this.id = id;
-		this.project = project;
 		this.patterns = {};
-		this.nodes = {};
+		
+		this.project = project;
 		this.ui = undefined;
 	}
 	
+	/*modifications*/
 	Query.prototype.addPattern = function(nodeid,type){
-		this.patterns[nodeid] = true;	
-		this.project.onQueryChange(this.id,nodeid); /*this will change*/
+		this.patterns[nodeid] = type || {self:true};	
+		this.project.onQueryChange(this.id); 
 	};
 	Query.prototype.deletePattern = function(nodeid,type){
 		delete this.patterns[nodeid];
-	};
-	Query.prototype.getNode = function(nodeid){
-		if(this.patterns[nodeid]){
-			return this.nodes[nodeid];
-		}
-		else{
-			return undefined;
-		}
-	};
-	Query.prototype.setNode = function(nodeid, node){
-		this.project.onNodeChange(nodeid,node);
-	};
-	Query.prototype.onRefresh = function(nodes){
-		for(var i in nodes){
-			if(this.patterns[i]){
-				this.nodes[i] = nodes[i];
-			}
-		}
-		if(this.ui !== undefined){
-			this.ui.onRefresh();
-		}
+		this.project.onQueryChange(this.id);
 	};
 	
+	/*helper to send the query to the server*/
+	Query.prototype.get = function(){
+		var query = {};
+		query.id = this.id;
+		query.query = {};
+		query.query.patterns = this.patterns;
+		return query;
+	};
+	
+	/*data from server*/
+	Query.prototype.onRefresh = function(nodes){
+		if(this.ui !== undefined){
+			this.ui.onRefresh(nodes);
+		}
+	};
 	Query.prototype.addUI = function(ui){
 		this.ui = ui;
 	};
