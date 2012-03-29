@@ -51,17 +51,19 @@ Project.prototype.addClient = function(socket){
 };
 
 Project.prototype.onMessage = function(data){
+	var changed = [];
 	for(var i in data.objects){
 		var tritem = data.objects[i];
 		this.mystorage.set(tritem.id,tritem.object);
+		changed.push(tritem.id);
 	}
-	refresh(this);		
+	refresh(this, changed);		
 };
 
 /*private function*/
-refresh = function(serverproject){
+refresh = function(serverproject, changedobjects){
 	for(var i in serverproject.mysockets){
-		serverproject.mysockets[i].refresh();
+		serverproject.mysockets[i].refresh(changedobjects);
 	}
 };
 /*

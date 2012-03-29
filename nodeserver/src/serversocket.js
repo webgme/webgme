@@ -29,7 +29,7 @@ Socket = function(socket, storage){
 Socket.prototype.setListener = function(listener){
 	this.listener = listener;
 };
-Socket.prototype.refresh = function(){
+Socket.prototype.refresh = function(changedobjects){
 	/*
 	 * first we need to refresh the whole querymatrix
 	 */
@@ -41,7 +41,14 @@ Socket.prototype.refresh = function(){
 	
 	var fullobjectlist = [];
 	for(var i in this.querymatrix){
-		fullobjectlist.push(i);
+		if(changedobjects){
+			if(changedobject.indexof(i) > -1){
+				fullobjectlist.push(i);
+			}
+		}
+		else{
+			fullobjectlist.push(i);
+		}
 	}
 	
 	sendObjectList(this,fullobjectlist);
