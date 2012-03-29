@@ -33,7 +33,13 @@ function httpGet(req, res){
   				'Content-Length': data.length,
   				'Content-Type': 'application/x-javascript' });
 
-		}
+		} else if (req.url.indexOf('.css')>0) {
+            console.log("sending back css :"+req.url);
+            res.writeHead(200, {
+                'Content-Length': data.length,
+                'Content-Type': 'text/css' });
+
+        }
 		else{
 			res.writeHead(200);
 		}

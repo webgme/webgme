@@ -11,7 +11,7 @@ define([],function(){
 		this.div.appendChild(this.addButton);
 		this.addButton.id = this.div.id+"/addButton";
 		this.addButton.value = "add children";
-		this.addButton.type = "button";
+		/*this.addButton.type = "button";
 		var that = this;
 		this.addButton.onclick = function(){
 			var newchild = {};
@@ -20,7 +20,7 @@ define([],function(){
 			var newid = that.project.setNode(newchild);
 			root.children.push(newid);
 			that.project.setNode(root);
-		};
+		};*/
 		
 		/*remove button*/
 	}

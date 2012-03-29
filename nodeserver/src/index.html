@@ -1,18 +1,40 @@
 <html>
 	<head>
 		<title>webgme trial page</title>
+
+        <!-- CSS libraries -->
+        <link href="css/main.css" type="text/css" rel="stylesheet"/>
+        <link href="css/dynatree/ui.dynatree.css" rel="stylesheet" type="text/css">
+        <!-- // CSS libraries -->
+
+        <script src="/jquery.min.js"></script>
+        <script src="/jquery-ui.min.js"></script>
+        <script src="/jquery.dynatree.min.js"></script>
+        <script src="/TreeBrowserWidget.js"></script>
+
 		<script src="/lib/require.js"></script>
+
 		<script>
-			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js'],function(PR,LI,MO){
+            function logMessage( msg )
+            {
+                if ( window.console ) {
+                    var d = new Date();
+                    console.log( d.getHours() + ":" + d.getMinutes() + ":" + d.getSeconds() + "." + d.getMilliseconds() + ": " + msg );
+                }
+            }
+
+			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js'],function(PR,LI,MO, LI2){
 				var myproject = undefined;
 				var mylister = undefined;
 				var mymodifier = undefined;
+                var mylister2 = undefined;
 				openProject = function(){
 					myproject = new PR(document.getElementById('projectselector/projid').value);
 					myproject.onOpen = function(){
 						/*appending widgets*/
 						mylister = new LI(myproject,document.getElementById('projectlister'));
 						mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
+                        mylister2 = new LI2(myproject, "projectlister2" );
 						alert('it is opened');
 					};
 					
@@ -28,5 +50,6 @@
 		</div>
 		<div id="projectlister"></div>
 		<div id="projectmodifier"></div>
+        <div id="projectlister2"></div>
 	</body>
 </html>
