@@ -13,8 +13,40 @@ Project = function(){
 	this.mysockets = [];
 	//this.mystorage.set("root",{_id: "root", name:"gyoker", children:[], size:"big"});
 
-    var rootChildrend = [];
-    for ( var i = 0; i < 10; i++ ) {
+    var rootChildren = [];
+
+    var itemNum = 10000;
+    var topLevelItems = 30;
+    var entityIds = [];
+
+    console.log( "Generating " + itemNum + " objects..." );
+    for ( var i = 0; i < itemNum; i++ ) {
+        //generate obejct
+        var myId = "id" + i;
+        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : null };
+
+        if ( i > topLevelItems  ) {
+            //pick a parent for it randomly
+            var rndParentPos = Math.floor(Math.random()* (i - 1) );
+
+            var parentEntityId = entityIds[ rndParentPos ];
+
+            //set its parent
+            myObject.parentId = parentEntityId;
+
+            //add it to its parent's children list
+            this.mystorage.get( parentEntityId ).children.push(myId);
+        } else {
+            rootChildren.push( myId );
+        }
+
+        //store object in my storage
+        this.mystorage.set( myId, myObject );
+        entityIds.push( myId );
+    }
+    console.log( "DONE" );
+
+    /*for ( var i = 0; i < 10; i++ ) {
         var myId = "id" + i;
 
         var myObject = { _id: myId, name: "Object" + i, children: [], parentId : null };
@@ -31,14 +63,14 @@ Project = function(){
 
         myObject.children = level1Children;
 
-        rootChildrend.push( myId );
+        rootChildren.push( myId );
 
         this.mystorage.set( myId, myObject );
     }
     /*this.mystorage.set("id1",{_id: "id1", name:"Object1", children:[ ], size:"big"});
     this.mystorage.set("id2",{_id: "id2", name:"Object2", children:[ ], size:"big"});*/
 
-    this.mystorage.set("root",{_id: "root", name:"gyoker", children: rootChildrend , size:"big"});
+    this.mystorage.set("root",{_id: "root", name:"gyoker", children: rootChildren , size:"big"});
 };
 /*public functions*/
 Project.prototype.addClient = function(socket){

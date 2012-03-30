@@ -14,6 +14,7 @@ var FS = require('fs');
 
 var http = HT.createServer(httpGet);
 var io = IO.listen(http);
+io.set('log level', 1); // reduce logging
 var librarian = new LI.Librarian();
 
 http.listen(8081);

@@ -135,6 +135,9 @@ addToList = function(list,elem){
 	}
 };
 sendMessage = function(socket,data){
+    var address = socket.handshake.address;
+
+    console.log( "Sending " + data.objects.length + " to client :" + address.address + ":" + address.port + " client id " + socket.id );
 	socket.emit('updateObjects',data);
 };
 /*

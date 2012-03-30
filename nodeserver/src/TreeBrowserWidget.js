@@ -165,13 +165,13 @@ TreeBrowserWidget.prototype = {
         window.logMessage( "New node created: " + newNode );
 
         //a bit of visual effect
-        if ( parentNode != null ) {
+        /*if ( parentNode != null ) {
             if ( parentNode.isExpanded() === true ) {
                 var jqTreeNode = $( newNode.span.childNodes[2] );
                 jqTreeNode.hide();
                 jqTreeNode.fadeIn();
             }
-        }
+        }*/
 
         //return the newly created node
         return newNode;
@@ -319,6 +319,10 @@ TreeBrowserWidget.prototype = {
         this.treeViewE.dynatree("getRoot").visit(function(node){
             node.expand(true);
         });
+    },
+
+    enableUpdate : function ( enabled ) {
+        this.treeViewE.dynatree("getTree").enableUpdate(enabled);
     }
 
 }

@@ -34,7 +34,12 @@ define([], function(){
             var allChildrenIds = [];
 
             var getChildren = function( moduleNode ) {
-                for( var i = 0; i < moduleNode.children; i++ ) {
+
+                if ( moduleNode === undefined ) {
+                    return;
+                }
+
+                for( var i = 0; i < moduleNode.children.length; i++ ) {
                     allChildrenIds.push( moduleNode.children[i] );
 
                     getChildren( self.project.getNode(  moduleNode.children[i] ) );
@@ -50,15 +55,18 @@ define([], function(){
                 delete self._nodes[ allChildrenIds[ j ] ];
 
                 //remove the chilren's interest from territory
-                self.query.removePattern( allChildrenIds[ j ] );
+                self.query.deletePattern( allChildrenIds[ j ] );
             }
 
             //remove the node itself from querypattern
-            self.query.removePattern( node.data.key );
+            self.query.deletePattern( node.data.key );
         }
     };
 
     ListerCtrl.prototype.onRefresh = function( nodes ){
+        //disable rendering for tree, speed it up
+        this.treeBrowser.enableUpdate(false);
+
         for ( var i = 0; i < nodes.length; i++ ) {
             var currentNodeId = nodes[i];
 
@@ -85,6 +93,9 @@ define([], function(){
                 }
             }
         }
+
+        //disable rendering for tree, speed it up
+        this.treeBrowser.enableUpdate(true);
     };
 
 
