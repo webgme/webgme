@@ -11,11 +11,14 @@
 	require(["subgraph"], function(Subgraph) {
 
 		var subgraph = new Subgraph();
+		subgraph.open();
 		var root = subgraph.getNode("");
+		root.setAttribute("name", "hi");
 		var node = subgraph.createNode();
 		node.setParent(root);
 		console.log(root);
-		console.log(node);
+		subgraph.save();
+		subgraph.close();
 	});
 </script>
 </head>

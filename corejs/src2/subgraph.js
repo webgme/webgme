@@ -7,11 +7,11 @@
 define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 	"use strict";
 
-	var relidPow = Math.pow(36,6);
-	var generateRelid = function() {
-		return Math.floor(Math.random()*relidPow).toString(36);
+	var relidPow = Math.pow(36, 6);
+	var generateRelid = function () {
+		return Math.floor(Math.random() * relidPow).toString(36);
 	};
-	
+
 	// ----------------- node -----------------
 
 	/**
@@ -35,7 +35,8 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 			parent: {
 				value: parent,
 				enumerable: false,
-				writable: false
+				writable: false,
+				configurable: true
 			},
 			level: {
 				value: parent === null ? 0 : parent.level + 1,
@@ -50,7 +51,8 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 			children: {
 				value: {},
 				enumerable: true,
-				writable: true
+				writable: true,
+				configurable: true
 			}
 		});
 	};
@@ -84,7 +86,7 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 	 * or any of its children has been modified).
 	 */
 	var isDirty = function (node) {
-		ASSERT(node.data);
+		ASSERT(node && node.data);
 		ASSERT(node.data.hash === undefined
 		|| typeof node.data.hash === "string");
 
@@ -100,7 +102,7 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 		ASSERT(node.data);
 
 		while( node.data.hash ) {
-			ASSERT(isDirty());
+			ASSERT(!isDirty(node));
 
 			var old = node.data;
 			var copy = {
@@ -112,7 +114,7 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 			}
 			node.data = copy;
 
-			cache.release(old.hash);
+			cache.release(old);
 
 			// go to the parent
 			node = node.parent;
@@ -126,6 +128,17 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 
 	var saveData = function (node) {
 		ASSERT(isDirty(node));
+
+		for( var relid in node.children ) {
+			if( isDirty(node.children[relid]) ) {
+				saveData(node.children[relid]);
+			}
+
+			ASSERT(node.data.children[relid] === undefined
+			|| node.data.children[relid] === node.children[relid].data.hash);
+
+			node.data.children[relid] = node.children[relid].data.hash;
+		}
 
 		var json = JSON.stringify(node.data);
 
@@ -258,8 +271,8 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 	 */
 	nodeProto.setParent = function (parent) {
 		ASSERT(nodeProto.isPrototypeOf(parent));
-		ASSERT(!this.parent);
-		
+		ASSERT(this.parent === undefined);
+
 		var relid = generateRelid();
 		initParent(this, parent, relid);
 		parent.children[relid] = this;
@@ -274,35 +287,38 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 		return this.children;
 	};
 
-	/*
-	 * nodeProto.getPointer = function (name) { if( name === "parent" ) { return
-	 * this.parent; } ASSERT(false); };
-	 * 
-	 * nodeProto.getCollection = function (name) { if( name === "children" ) {
-	 * return this.children; } ASSERT(false); };
-	 * 
-	 * nodeProto.loadPointer = function (name, callback) { };
-	 * 
-	 * nodeProto.loadCollection = function (name, callback) { };
+	/**
+	 * Unloads this node and its children recursively
 	 */
+	var unloadNode = function(node) {
+		for(var relid in node.children) {
+			unloadNode(node.children[relid]);
+		}
 
-	// ----------------- graph -----------------
-	var Graph = function () {
+		if( node.data.hash ) {
+			cache.release(node.data);
+		}
+
+		delete node.children;
+		delete node.parent;
+		delete node.data;
+	};
+
+	// ----------------- subgraph -----------------
+
+	var subgraphProto = {};
+	
+	var initSubgraph = function (subgraph) {
 		/**
 		 * We have our own node prototype to store the owner graph
 		 */
-		this.nodeProto = Object.create(nodeProto, {
-			graph: {
-				value: this,
+		subgraph.nodeProto = Object.create(nodeProto, {
+			subgraph: {
+				value: subgraph,
 				enumerable: false,
 				writable: false
 			}
 		});
-
-		this.root = Object.create(this.nodeProto);
-		initParent(this.root, null, "");
-		initData(this.root);
-		saveData(this.root);
 	};
 
 	/**
@@ -313,19 +329,54 @@ define([ "assert", "cache", "../lib/sha1" ], function (ASSERT, cache) {
 	 * 
 	 * This implementation looks up the node by its path
 	 */
-	Graph.prototype.getNode = function (nodeid) {
+	subgraphProto.getNode = function (nodeid) {
 		ASSERT(typeof nodeid === "string");
 		return getChildByPath(this.root, nodeid);
 	};
 
-	Graph.prototype.createNode = function () {
+	subgraphProto.createNode = function () {
 		var node = Object.create(this.nodeProto);
 
 		initData(node);
 		return node;
 	};
 
+	subgraphProto.isOpen = function() {
+		return !!this.root;
+	};
+	
+	subgraphProto.open = function (commitid) {
+		ASSERT(!this.isOpen());
+		if(commitid === undefined) {
+			this.root = Object.create(this.nodeProto);
+			initParent(this.root, null, "");
+			initData(this.root);
+		}
+		else {
+			ASSERT(false);
+		}
+	};
+	
+	subgraphProto.save = function () {
+		if( isDirty(this.root) ) {
+			saveData(this.root);
+		}
+	};
+	
+	subgraphProto.close = function () {
+		ASSERT(this.isOpen());
+		
+		unloadNode(this.root);
+		delete this.root;
+	};
+	
 	// ----------------- public interface -----------------
 
-	return Graph;
+	var Subgraph = function() {
+		initSubgraph(this);
+	};
+
+	Subgraph.prototype = subgraphProto;
+	
+	return Subgraph;
 });
