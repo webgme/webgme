@@ -1,0 +1,20 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>WebGme Test</title>
+<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+Test
+<script>
+	var socket = io.connect();
+	socket.on("connect", function () {
+		console.log("socket: connected to server");
+	});
+	socket.on("message", function (data) {
+		console.log("socket message: " + data);
+	});
+</script>
+</body>
+</html>
