@@ -1,22 +1,15 @@
-define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], function(QU, ST){
+define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.io/socket.io.js'], function(QU, ST, SO){
 	var Project = function(projid) {
 		this.id = projid;
 		this.queries = {};
 		this.querycount = 0;
 		this.storage = new ST(this);
-		this.socket = undefined;
-	};
-
-	Project.prototype.open = function () {
-		this.storage.clear();
-		this.socket = io.connect();
-		var that = this;
-		this.socket.on('connect', that.onOpen);
-		this.socket.on('error', that.onError);
-		this.socket.on('updateObjects', function(msg){
+		this.socket = new SO();
+		var self = this;
+		this.updateObjects = function(msg){
 			var objectmatrix = {};
 			for(var i in msg.objects){
-				that.storage.set(msg.objects[i].object);
+				self.storage.set(msg.objects[i].object);
 				for(var j in msg.objects[i].querylist){
 					if(objectmatrix[msg.objects[i].querylist[j]] == undefined){
 						objectmatrix[msg.objects[i].querylist[j]] = [];
@@ -25,10 +18,17 @@ define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], fu
 				}
 			}
 			for(var i in objectmatrix){
-				that.queries[i].onRefresh(objectmatrix[i]);
-			}
-		});
+				self.queries[i].onRefresh(objectmatrix[i]);
+			}					
+		}
 	};
+
+	Project.prototype.open = function () {
+		this.storage.clear();
+		this.socket.setListener({'connect': this.onOpen, 'error': this.onError, 'updateObjects': this.updateObjects});
+		this.socket.open();
+	};
+	
 	
 	Project.prototype.onOpen = function() {
 	};
@@ -69,7 +69,7 @@ define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], fu
 			var msgitem = {}; msgitem.id = node._id; msgitem.object = node;
 			message.objects.push(msgitem);
 			this.storage.set(node);
-			this.socket.emit('updateObjects', message);
+			this.socket.objectUpdate(message);
 			return node._id;
 		}
 		else{
@@ -90,7 +90,7 @@ define(['./clientquery.js', './clientstorage.js', '/socket.io/socket.io.js'], fu
 		 */
 		var querymessage = this.queries[queryid].get();
 		if(this.socket !== undefined && querymessage !== undefined){
-			this.socket.emit('updateQuery', querymessage);
+			this.socket.queryUpdate(querymessage);
 		}	
 	}
 

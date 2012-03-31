@@ -34,6 +34,10 @@
 						/*appending widgets*/
 						//mylister = new LI(myproject,document.getElementById('projectlister'));
 						//mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
+						myproject.socket.configUpdate({inblock:true});
+						setTimeout(function(){
+							myproject.socket.configUpdate({inblock:false});
+						},5000)
                         mylister2 = new LI2(myproject, "projectlister2" );
 						alert('it is opened');
 					};
