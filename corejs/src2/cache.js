@@ -70,6 +70,7 @@ define([ "assert" ], function (ASSERT) {
 		 * @returns nothing
 		 */
 		release: function (obj) {
+			ASSERT(typeof obj.hash === "string");
 			ASSERT(obj.refcount >= 1);
 			ASSERT(cache[obj.hash] === obj);
 
@@ -106,6 +107,7 @@ define([ "assert" ], function (ASSERT) {
 					enumerable: false,
 					writable: true
 				});
+				cache[hash] = obj;
 			}
 
 			return obj;
