@@ -45,11 +45,11 @@ define(['/socket.io/socket.io.js'], function(){
 			if(newconf.outblock !== undefined){
 				if(_outblock){
 					if(!newconf.outblock){
+						_outblock=false;
 						while(_outqueue.length>0){
 							sendMessage(_outqueue[0].type,_outqueue[0].msg);
-							_outqueue.splice(0,1);
+							_outqueue.shift();
 						}
-						_outblock=false;
 					}
 				}
 				else{

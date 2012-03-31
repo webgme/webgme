@@ -23,22 +23,20 @@
                 }
             }
 
-			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js'],function(PR,LI,MO, LI2){
+			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js', './delayctrl.js'],function(PR,LI,MO,LI2,DE){
 				var myproject = undefined;
 				//var mylister = undefined;
 				//var mymodifier = undefined;
                 var mylister2 = undefined;
+                var delayer = undefined;
 				openProject = function(){
 					myproject = new PR(document.getElementById('projectselector/projid').value);
 					myproject.onOpen = function(){
 						/*appending widgets*/
 						//mylister = new LI(myproject,document.getElementById('projectlister'));
 						//mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
-						myproject.socket.configUpdate({inblock:true});
-						setTimeout(function(){
-							myproject.socket.configUpdate({inblock:false});
-						},5000)
                         mylister2 = new LI2(myproject, "projectlister2" );
+                        delayer = new DE(myproject.socket, document.getElementById("delaycontrol"));
 						alert('it is opened');
 					};
 					
@@ -52,8 +50,9 @@
 		<div id="projectselector">
 			<input type="text" id="projectselector/projid" /><input type="button" value="open" id="projectselector/openbutton" onclick="openProject()" />
 		</div>
-		<div id="projectlister"></div>
-		<div id="projectmodifier"></div>
-        <div id="projectlister2"></div>
+		<div>
+        	<div id="projectlister2" style="background-color:#FFD700;height:400px;width:200px;float:left;"></div>
+        	<div id="delaycontrol" ></div>
+        </div>
 	</body>
 </html>
