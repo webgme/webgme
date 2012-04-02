@@ -30,7 +30,14 @@ Socket = function(socket, storage){
 			clipboard = msg.data;
 		}
 		else{ //paste
-			deepCopyObject(msg.data,clipboard);
+			var newid = deepCopyObject(msg.data,clipboard);
+            var parentid = "root" || msg.data;
+            var parent=that.storage.get(parentid);
+            parent.children.push(newid);
+            var updatemsg = {}; updatemsg.objects = [];
+            var msgitem = {}; msgitem.id = newid; msgitem.object = that.storage.get(newid);
+            updatemsg.objects.push(msgitem);
+            that.listener.onMessage(updatemsg);
 		}
 	});
 	
@@ -39,14 +46,15 @@ Socket = function(socket, storage){
 		var newobj = {};
 		var copyobj = that.storage.get(tocopyid);
 		if(copyobj!== undefined){
-			newobj.children = [];
 			for(var i in copyobj){
-				if(i!== 'children' || i!== 'parent'){
-					newobj[i] = copyobj[i];
-				}
+    			newobj[i] = copyobj[i];
 			};
+            newobj.children=[];
+            newobj.parentId=null;
 			var copychildren = copyobj.children;
-			newobj._id = "P"+date.getFullYear().toString()+date.getMonth().toString()+date.getDate().toString();
+            var date = new Date();
+            newobj._id="P_"+copyobj._id+"_";
+			newobj._id += date.getFullYear().toString()+date.getMonth().toString()+date.getDate().toString();
 			newobj._id += date.getHours().toString()+date.getMinutes().toString()+date.getSeconds().toString()+date.getMilliseconds().toString();
 			for(var i in copychildren){
 				var childid = deepCopyObject(newobj._id,copychildren[i]);
@@ -54,6 +62,7 @@ Socket = function(socket, storage){
 					newobj.children.push(childid);
 				}
 			}
+            newobj.parentId = parentid;
 			var updatemsg = {}; updatemsg.objects = [];
 			var msgitem = {}; msgitem.id = newobj._id; msgitem.object = newobj;
 			updatemsg.objects.push(msgitem);
@@ -173,9 +182,13 @@ addToList = function(list,elem){
 	}
 };
 sendMessage = function(socket,data){
-    var address = socket.handshake.address;
-
-    console.log( "Sending " + data.objects.length + " to client :" + address.address + ":" + address.port + " client id " + socket.id );
+   /* var address = socket.handshake.address || undefined;
+    if(address!==undefined){
+        console.log( "Sending " + data.objects.length + " to client :" + address.address + ":" + address.port + " client id " + socket.id );
+    }
+    else {*/
+        console.log( "Sending " + data.objects.length + " to client : UNKNOWN");
+    /*}*/
 	socket.emit('updateObjects',data);
 };
 /*
