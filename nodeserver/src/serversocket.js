@@ -191,6 +191,97 @@ sendMessage = function(socket,data){
     /*}*/
 	socket.emit('updateObjects',data);
 };
+
+var QU = require('./serverquery.js');
+SocketEnhanced = function(_socket,_readstorage){
+    var _queries = {};
+    var _territory = {};
+    var _listener = undefined;
+
+    /*public functions*/
+    this.setListener = function(listener){
+        _listener = listener;
+    };
+    this.refresh = function(modifiedobjects){
+        var newterritory = {};
+        var message = {};
+        message.querylists = [];
+        for(var i in _territory){
+            newterritory[i] = [];
+            for(var j in _territory[i]){
+                newterritory.push(_territory[i][j]);
+            }
+        }
+
+        var objectidlist = []; /*we have to collect the changed object separately*/
+        for(var i in _queries){
+            var querydelta = _queries[i].refresh(modifiedobjects);
+            message.querylists.push(querydelta);
+            for(var m in querydelta.mlist){
+                insertIntoArray(objectidlist,querydelta.mlist[m]);
+            }
+
+            for(var j in querydelta.ilist){
+                if(newterritory[querydelta.ilist[j]] === undefined){
+                    newterritory[querydelta.ilist[j]] = [];
+                }
+                insertIntoArray(newterritory[querydelta.ilist[j]],i);
+            }
+
+            for(var d in querydelta.dlist){
+                removeFromArray(newterritory[querydelta.dlist[d]],i);
+            }
+        }
+
+        for(var i in newterritory){
+            if(_territory[i] === undefined){
+                insertIntoArray(objectidlist,i);
+            }
+        }
+
+        var delobjectidlist = [];
+        for(var i in newterritory){
+            if(newterritory[i].length === 0){
+                delete newterritory[i];
+                insertIntoArray(delobjectidlist,i);
+            }
+        }
+
+        _territory = newterritory;
+
+        /*now we can build the whole message*/
+        /*first the real objects*/
+        message.objects = [];
+        for(var i in objectidlist){
+            var msgobj = {};
+            msgobj.object = _readstorage.get(objectidlist[i]);
+            if(msgobj.object !== undefined){
+                msgobj.id = objectidlist[i];
+                message.objects.push(msgobj);
+            }
+        }
+        for(var i in delobjectidlist){
+            var msgobj = {};
+            msgobj.id = delobjectidlist[i];
+            msgobj.object = undefined;
+        }
+        _socket.emit('updateObjects',message);
+    };
+
+    /*private functions*/
+    var insertIntoArray = function(list,item){
+        if(list.indexOf(item) === -1){
+            list.push(item);
+        }
+    };
+    var removeFromArray = function(list,item){
+        var position = list.indexOf(item);
+        if(position !== -1){
+            list.splice(position,1);
+        }
+    };
+};
+
 /*
  * exports
  */
