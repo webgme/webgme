@@ -375,7 +375,7 @@ define([ "assert", "cache", "sha1" ], function (ASSERT, cache) {
 	
 	subgraphProto.close = function () {
 		ASSERT(this.isOpened());
-		
+
 		unloadNode(this.root);
 		delete this.root;
 	};
