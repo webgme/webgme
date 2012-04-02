@@ -16,16 +16,16 @@ define([ "assert" ], function (ASSERT) {
 
 	// detect memory leaks
 	if( window ) {
-		var oldUnload = window.onunload;
-		window.onunload = function () {
-			if( oldUnload ) {
-				oldUnload();
-			}
-
+		var oldUnload = window.onbeforeunload;
+		window.onbeforeunload = function () {
 			var hash;
 			for( hash in cache ) {
 				window.alert("Warning, you have a memory leak");
 				break;
+			}
+
+			if( oldUnload ) {
+				return oldUnload();
 			}
 		};
 	}

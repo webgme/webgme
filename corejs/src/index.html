@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>WebGme Test</title>
+<script src="require.js"></script>
 <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
@@ -13,8 +14,16 @@ Test
 		console.log("socket: connected to server");
 	});
 	socket.on("message", function (data) {
-		console.log("socket message: " + data);
+		console.log("socket message: " + dara);
 	});
-</script>
+	
+	require(["assert", "subgraph"], function(ASSERT, Subgraph) {
+		var subgraph = new Subgraph();
+		subgraph.open();
+		subgraph.save();
+		console.log(subgraph.root);
+		subgraph.close();
+	});
+	</script>
 </body>
 </html>
