@@ -13,6 +13,7 @@ Socket = function(socket, storage){
 	this.querymatrix = {};
 	this.storage = storage; /*read only connection - na ezt hogy lehet javascript-ben megcsinalni???*/
 	var that = this;
+	var clipboard = {};
 	this.socket.on('updateObjects', function(data){
 		if(that.listener !== undefined){
 			that.listener.onMessage(data);
@@ -24,6 +25,43 @@ Socket = function(socket, storage){
 		updateQueryMatrix(that,msg.id,objectlist);
 		sendObjectList(that,objectlist,msg.id);
 	});
+	this.socket.on('updateClipboard', function(msg){
+		if(msg.type === 'copy'){
+			clipboard = msg.data;
+		}
+		else{ //paste
+			deepCopyObject(msg.data,clipboard);
+		}
+	});
+	
+	/*private functions*/
+	deepCopyObject = function(parentid,tocopyid){
+		var newobj = {};
+		var copyobj = that.storage.get(tocopyid);
+		if(copyobj!== undefined){
+			newobj.children = [];
+			for(var i in copyobj){
+				if(i!== 'children' || i!== 'parent'){
+					newobj[i] = copyobj[i];
+				}
+			};
+			var copychildren = copyobj.children;
+			newobj._id = "P"+date.getFullYear().toString()+date.getMonth().toString()+date.getDate().toString();
+			newobj._id += date.getHours().toString()+date.getMinutes().toString()+date.getSeconds().toString()+date.getMilliseconds().toString();
+			for(var i in copychildren){
+				var childid = deepCopyObject(newobj._id,copychildren[i]);
+				if(childid!==undefined){
+					newobj.children.push(childid);
+				}
+			}
+			var updatemsg = {}; updatemsg.objects = [];
+			var msgitem = {}; msgitem.id = newobj._id; msgitem.object = newobj;
+			updatemsg.objects.push(msgitem);
+			that.listener.onMessage(updatemsg);
+			return newobj._id;
+		}
+		return undefined;
+	};
 };
 /*public functions*/
 Socket.prototype.setListener = function(listener){

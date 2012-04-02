@@ -78,6 +78,9 @@ define(['/socket.io/socket.io.js'], function(){
 		this.objectUpdate = function(omsg){
 			sendMessage('updateObjects',omsg);			
 		};
+		this.clipboardUpdate = function(cmsg){
+			sendMessage('updateClipboard',cmsg);
+		}
 		/*private functions*/
 		var sendMessage = function(msgtype,message){
 			if(_outblock){

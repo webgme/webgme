@@ -6,6 +6,7 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 		this.storage = new ST(this);
 		this.socket = new SO();
 		var self = this;
+		/*public functions*/
 		this.updateObjects = function(msg){
 			var objectmatrix = {};
 			for(var i in msg.objects){
@@ -20,6 +21,14 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 			for(var i in objectmatrix){
 				self.queries[i].onRefresh(objectmatrix[i]);
 			}					
+		};
+		this.copyNode = function(id){
+			var cmsg={};cmsg.type='copy';cmsg.data=id;
+			self.socket.clipboardUpdate(cmsg);
+		}
+		this.pasteTo = function(parentid){
+			var cmsg = {}; cmsg.tpye='paste'; cmsg.data = parentid;
+			self.socket.clipboardUpdate(cmsg);
 		}
 	};
 
