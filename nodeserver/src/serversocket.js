@@ -31,11 +31,11 @@ Socket = function(socket, storage){
 		}
 		else{ //paste
 			var newid = deepCopyObject(msg.data,clipboard);
-            var parentid = "root" || msg.data;
+            var parentid = msg.data || "root";
             var parent=that.storage.get(parentid);
             parent.children.push(newid);
             var updatemsg = {}; updatemsg.objects = [];
-            var msgitem = {}; msgitem.id = newid; msgitem.object = that.storage.get(newid);
+            var msgitem = {}; msgitem.id = parentid; msgitem.object = parent;
             updatemsg.objects.push(msgitem);
             that.listener.onMessage(updatemsg);
 		}
@@ -85,17 +85,16 @@ Socket.prototype.refresh = function(changedobjects){
 		var objectlist = queryToObjectList(this,queryid);
 		updateQueryMatrix(this,queryid,objectlist);
 	}
-	
 	var fullobjectlist = [];
 	for(var i in this.querymatrix){
-		if(changedobjects !== undefined){
+		/*if(changedobjects !== undefined){
 			if(changedobjects.indexOf(i) > -1){
 				fullobjectlist.push(i);
 			}
 		}
-		else{
+		else{*/
 			fullobjectlist.push(i);
-		}
+		/*}*/
 	}
 	
 	sendObjectList(this,fullobjectlist);
