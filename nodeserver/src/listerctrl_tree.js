@@ -61,11 +61,23 @@ define([], function(){
             //remove the node itself from querypattern
             self.query.deletePattern( node.data.key );
         }
+
+        this.treeBrowser.onNodeCopy = function( nodeId ) {
+            console.log( "treeBrowser.onNodeCopy " + nodeId );
+            self.project.copyNode( nodeId );
+        }
+
+        this.treeBrowser.onNodePaste = function( nodeId ) {
+            console.log( "treeBrowser.onNodePaste " + nodeId );
+            self.project.pasteTo( nodeId );
+        }
     };
 
     ListerCtrl.prototype.onRefresh = function( nodes ){
+
         //disable rendering for tree, speed it up
-        this.treeBrowser.enableUpdate(false);
+        if ( nodes.length > 1 )
+            this.treeBrowser.enableUpdate(false);
 
         for ( var i = 0; i < nodes.length; i++ ) {
             var currentNodeId = nodes[i];
@@ -95,7 +107,10 @@ define([], function(){
         }
 
         //disable rendering for tree, speed it up
-        this.treeBrowser.enableUpdate(true);
+        if ( nodes.length > 1 )
+            this.treeBrowser.enableUpdate(true);
+
+        this.treeBrowser.focusActiveNode();
     };
 
 

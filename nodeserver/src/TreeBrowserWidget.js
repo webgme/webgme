@@ -6,6 +6,10 @@ function TreeBrowserWidget( containerId ){
     //save parentcontrol
     this.containerControl =  $("#" + containerId );
 
+    this.containerControl.bind('onkeydown', function() {
+        alert('User clicked on "foo."');
+    });
+
     if ( this.containerControl.length === 0 ) {
         alert( "TreeBrowserWidget's container control with id:'" + containerId + "' could not be found" );
         return;
@@ -25,13 +29,66 @@ function TreeBrowserWidget( containerId ){
     //save this for later use
     var self = this;
 
+    var editNode = function (nodeToEdit){
+        var prevTitle = nodeToEdit.data.title,
+            tree = nodeToEdit.tree;
+        // Disable dynatree mouse- and key handling
+        tree.$widget.unbind();
+        // Replace node with <input>
+        $(nodeToEdit.span).find(".dynatree-title").html("<input id='editNode' value='" + prevTitle + "'  size='10' />");
+        // Focus <input> and bind keyboard handler
+        $("input#editNode")
+            .focus()
+            .keydown(function(event){
+                switch( event.which ) {
+                    case 27: // [esc]
+                        // discard changes on [esc]
+                        $("input#editNode").val(prevTitle);
+                        event.preventDefault();
+                        $(this).blur();
+                        break;
+                    case 13: // [enter]
+                        // simulate blur to accept new value
+                        event.preventDefault();
+                        $(this).blur();
+                        break;
+                }
+            }).blur(function(event){
+                // Accept new value, when user leaves <input>
+                var title = $("input#editNode").val();
+                $(nodeToEdit.span).find(".dynatree-title").html(prevTitle);
+                if ( prevTitle !== title  ) {
+                    var changeAllowed = true;
+
+                    if ($.isFunction(self.onNodeTitleChanged)){
+                        changeAllowed = self.onNodeTitleChanged.call(self, nodeToEdit, prevTitle, title );
+                    }
+
+                    if ( changeAllowed === true ) {
+                        self.renameNode( nodeToEdit, title );
+                    } else {
+                        nodeToEdit.setTitle(prevTitle);
+                        window.logMessage( "TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed" );
+                    }
+                } else {
+                    nodeToEdit.setTitle(title);
+                }
+                // Re-enable mouse and keyboard handlling
+                tree.$widget.bind();
+                nodeToEdit.focus();
+            });
+    }
+
     //create tree using DynaTree
     this.treeViewE.dynatree( {
+        /*debugLevel: 2,*/
         onLazyRead : function (node) {
             window.logMessage( "onLazyRead node:" + node.data.key );
             if ($.isFunction(self.onNodeOpen)){
                 self.onNodeOpen.call(self, node);
             }
+
+            return false;
         },
 
         onQueryExpand: function(expand, node){
@@ -52,81 +109,52 @@ function TreeBrowserWidget( containerId ){
         },
 
         onClick: function(node, event) {
+            var i = 7;
+            //single click on the title means rename if the node is already selected
+            if ( ( node.getEventTargetType(event) === "title" ) && ( node.isActive() ) ) {
 
-            //single click on the title means rename
-            if(node.getEventTargetType(event) === "title"){
 
-                var editInPlace = function( nodeToEdit ) {
 
-                    nodeToEdit.inPlaceEditing = true;
 
-                    //save original text
-                    var originalText = nodeToEdit.data.title;
-
-                    //activate editor
-                    var editorElement = $('<input type="text" name="inplace_value" class="inplace_field"  size="10" />');
-
-                    //insert inplace form and textbox
-                    var editForm = $(nodeToEdit.span).find(".dynatree-title").html('<form class="inplace_form" style="display: inline; margin: 0; padding: 0;"></form>').find('form');
-                    editForm.append(editorElement);
-
-                    var cancelEditorAction = function (anEvent) {
-                        $(nodeToEdit.span).find(".dynatree-title").html(originalText);
-                        delete nodeToEdit["inPlaceEditing"];
-                        return false; // stop event bubbling
-                    }
-
-                    var saveEditorAction = function (anEvent) {
-                        delete nodeToEdit["inPlaceEditing"];
-                        var newText = editorElement.val();
-                        if ( newText !== originalText  ) {
-                            var changeAllowed = true;
-
-                            if ($.isFunction(self.onNodeTitleChanged)){
-                                changeAllowed = self.onNodeTitleChanged.call(self, nodeToEdit, originalText, newText );
-                            }
-
-                            if ( changeAllowed === true ) {
-                                self.renameNode( nodeToEdit, newText );
-                            } else {
-                                window.logMessage( "TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed" );
-                                cancelEditorAction();
-                            }
-                        } else {
-                            cancelEditorAction();
-                        }
-                        return false; // stop event bubbling
-                    }
-
-                    editForm.keyup(function(anEvent) {
-                        // allow canceling with escape
-                        var escape = 27;
-                        if (escape === anEvent.which)
-                            return cancelEditorAction();
-                    });
-
-                    editorElement.keyup(function(anEvent) {
-                        // allow canceling with escape
-                        var enter = 13;
-                        if (enter === anEvent.which)
-                            editForm.submit();
-                    });
-
-                    editorElement.blur(saveEditorAction);
-
-                    editForm.submit(saveEditorAction);
-
-                    editorElement.focus().val( originalText ).select();
-
-                }
-
-                editInPlace( node );
+                editNode( node );
 
                 return false;// Prevent default processing
             } else {
-                if ( node.inPlaceEditing && node.inPlaceEditing === true ) {
+                /*if ( node.inPlaceEditing && node.inPlaceEditing === true ) {
                     return false;// Prevent default processing
-                }
+                }*/
+            }
+        },
+
+        onKeydown: function(node, event) {
+            switch( event.which ) {
+                // Handle Ctrl-C, -X and -V
+                case 67:
+                    if( event.ctrlKey ) { // Ctrl-C
+                        //call onNodeClose if exist
+                        console.log( "TreeBrowser copy " +  node.data.key );
+                        if ($.isFunction(self.onNodeCopy)){
+                            self.onNodeCopy.call(self, node.data.key);
+                        }
+                        return false;
+                    }
+                    break;
+                case 86:
+                    if( event.ctrlKey ) { // Ctrl-V
+                        console.log( "TreeBrowser paste " +  node.data.key );
+                        if ($.isFunction(self.onNodePaste)){
+                            self.onNodePaste.call(self, node.data.key);
+                        }
+                        return false;
+                    }
+                    break;
+                case 113: //F2
+                    editNode( node );
+                    return false;
+                    break;
+                case 13: //ENTER
+                    return false;
+                    break;
             }
         }
     });
@@ -157,9 +185,11 @@ TreeBrowserWidget.prototype = {
             title: objDescriptor.name,
             tooltip: objDescriptor.name,
             key : objDescriptor.id,
-            isFolder: objDescriptor.hasChildren,
-            isLazy: objDescriptor.hasChildren
+            isFolder: false,// objDescriptor.hasChildren,
+            isLazy: objDescriptor.hasChildren,
+            addClass : objDescriptor.objectType ? "gme-" + objDescriptor.objectType : ""
         });
+
 
         //log
         window.logMessage( "New node created: " + newNode );
@@ -323,6 +353,14 @@ TreeBrowserWidget.prototype = {
 
     enableUpdate : function ( enabled ) {
         this.treeViewE.dynatree("getTree").enableUpdate(enabled);
+    },
+
+    focusActiveNode : function () {
+        var activeNode = this.treeViewE.dynatree("getActiveNode");
+        if ( activeNode ) {
+            if ( activeNode.isFocused() === false )
+                activeNode.focus();
+        }
     }
 
 }

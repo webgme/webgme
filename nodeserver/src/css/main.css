@@ -14,3 +14,42 @@ li.jstree-openProgress > a .jstree-icon
 {
     background:url("../img/progress.gif") 0px 0px no-repeat !important;
 }
+
+/* Remove blue color and underline from title links */
+ul.dynatree-container span.dynatree-title
+{
+    color: black; /* inherit doesn't work on IE */
+    text-decoration: none;
+    vertical-align: top;
+    margin: 0px;
+    margin-left: 3px;
+    padding: 1px;
+}
+
+span.dynatree-active span.dynatree-title
+{
+    color: white;
+    background-color: #3399FF;
+}
+
+span.dynatree-icon {
+    margin-left: 0px;
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: 0 0 !important;
+}
+
+span.gme-model span.dynatree-icon  {
+    background-position: -48px 0 !important;
+}
+
+span.gme-atom span.dynatree-icon  {
+    background-position: -16px 0 !important;
+}
+
+span.gme-aspect span.dynatree-icon  {
+     background-position: -32px 0 !important;
+ }
+
+span.gme-connection span.dynatree-icon  {
+    background-position: -64px 0 !important;
+}
