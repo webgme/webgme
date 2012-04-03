@@ -9,9 +9,9 @@ define([ "assert" ], function (ASSERT) {
 
 	var Query = function (project) {
 		ASSERT(project);
-		this.patterns = {};
-
 		this.project = project;
+
+		this.patterns = {};
 		this.ui = undefined;
 	};
 
@@ -21,34 +21,26 @@ define([ "assert" ], function (ASSERT) {
 			this.patterns[nodeid] = type || {
 				self: true
 			};
-			this.project.onQueryChange(this.id);
+			this.project.onQueryChange(this);
 		}
 	};
 
 	// TODO: why did it have a type parameter?
 	Query.prototype.deletePattern = function (nodeid) {
 		delete this.patterns[nodeid];
-		this.project.onQueryChange(this.id);
+		this.project.onQueryChange(this);
 	};
 
-	/* helper to send the query to the server */
-	Query.prototype.get = function () {
-		var query = {};
-		query.id = this.id;
-		query.query = {};
-		query.query.patterns = this.patterns;
-		return query;
+	Query.prototype.getPatterns = function () {
+		return this.patterns;
 	};
 
-	/* data from server */
+	Query.prototype.setPatterns = function (patterns) {
+		this.patterns = patterns;
+	};
+
 	Query.prototype.onRefresh = function (nodes) {
-		if( this.ui ) {
-			this.ui.onRefresh(nodes);
-		}
-	};
-
-	Query.prototype.addUI = function (ui) {
-		this.ui = ui;
+		console.log("query onrefresh");
 	};
 
 	return Query;

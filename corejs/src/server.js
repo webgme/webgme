@@ -7,41 +7,38 @@
 var requirejs = require("requirejs");
 
 requirejs.config({
-	nodeRequire: require
+	nodeRequire : require
 });
 
-requirejs([ "fs", "http", "socket.io" ], function (fs, http, socketio) {
+requirejs([ "fs", "http", "query", "socket.io" ], function(fs, http, Query, socketio) {
 	"use strict";
 
-	var server = http.createServer(function (req, res) {
+	var server = http.createServer(function(req, res) {
 		console.log("http get: " + req.url);
-		if( req.url === "/" ) {
+		if (req.url === "/") {
 			req.url = "/index.html";
 		}
 
-		var notFound = function () {
+		var notFound = function() {
 			console.log("not found: " + req.url);
 			res.writeHead(404);
 			res.end("Error loading " + req.url);
 		};
 
-		var pattern = /^\/[a-zA-Z0-9]+\.(html|js)$/;
-		if( req.url.search(pattern) !== 0 ) {
+		var pattern = /^\/[a-zA-Z0-9_\-]+\.(html|js)$/;
+		if (req.url.search(pattern) !== 0) {
 			notFound();
-		}
-		else {
-			fs.readFile(__dirname + req.url, function (err, data) {
-				if( err ) {
+		} else {
+			fs.readFile(__dirname + req.url, function(err, data) {
+				if (err) {
 					notFound();
-				}
-				else {
-					if( req.url.indexOf(".js") > 0 ) {
+				} else {
+					if (req.url.indexOf(".js") > 0) {
 						res.writeHead(200, {
-							"Content-Length": data.length,
-							"Content-Type": "application/x-javascript"
+							"Content-Length" : data.length,
+							"Content-Type" : "application/x-javascript"
 						});
-					}
-					else {
+					} else {
 						res.writeHead(200);
 					}
 
@@ -55,12 +52,23 @@ requirejs([ "fs", "http", "socket.io" ], function (fs, http, socketio) {
 	console.log("webgme: listening on port 8082...");
 
 	var io = socketio.listen(server, {
-		log: false
+		log : false
 	});
 
-	io.sockets.on("connection", function (socket) {
+	io.sockets.on("connection", function(socket) {
 		console.log("socket: connected from "
-		+ socket.handshake.address.address);
+				+ socket.handshake.address.address);
+
 		socket.emit("message", "welcome to the webgme server");
+
+//		var query = new Query();
+
+		socket.on("setquery", function(patterns, callback) {
+//			query.setPatterns(patterns);
+			console.log(patterns);
+			if(callback) {
+				callback('done');
+			}
+		});
 	});
 });
