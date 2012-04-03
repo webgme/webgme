@@ -24,11 +24,16 @@ define([],function(){
         var query = project.createQuery();
         query.addUI(this);
         query.addPattern("root",{self:false,children:true});
-        this.onRefresh = function(nodes){
-            _nodes = [];
-            for(var i in nodes){
-                if(project.storage.get(nodes[i])!==undefined){
-                    _nodes.push(nodes[i]);
+        this.onRefresh = function(updatedata){
+            for(var i in updatedata.ilist){
+                if(_nodes.indexOf(updatedata.ilist[i]) === -1){
+                    _nodes.push(updatedata.ilist[i]);
+                }
+            }
+            for(var i in updatedata.dlist){
+                var pos = _nodes.indexOf(updatedata.dlist[i]);
+                if(pos !== -1 ){
+                    _nodes.splice(pos,1);
                 }
             }
         };

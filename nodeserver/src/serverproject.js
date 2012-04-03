@@ -83,13 +83,43 @@ Project.prototype.addClient = function(socket){
 };
 
 Project.prototype.onMessage = function(data){
-	var changed = [];
-	for(var i in data.objects){
-		var tritem = data.objects[i];
-		this.mystorage.set(tritem.id,tritem.object);
-		changed.push(tritem.id);
-	}
-	refresh(this, changed);		
+
+    var self = this;
+    var removeNodeRecursive = function(objectid, changequeue){
+        var object = self.mystorage.get(objectid);
+        if(object){
+            self.mystorage.set(objectid,undefined);
+            changequeue.push(objectid);
+            for(var i in object.children){
+                removeNodeRecursive(object.children[i],changequeue);
+            }
+        }
+    };
+
+    var changed = [];
+    for(var i in data.objects){
+        var tritem = data.objects[i];
+        if(tritem.object === undefined){
+            var object = this.mystorage.get(tritem.id);
+            if(object){
+                var parent = this.mystorage.get(object.parentId);
+                removeNodeRecursive(tritem.id, changed );
+                if(parent){
+                    var objectpos = parent.children.indexOf(tritem.id);
+                    if(objectpos !== -1){
+                        parent.children.splice(objectpos,1);
+                        this.mystorage.set(parent._id,parent);
+                        changed.push(parent._id);
+                    }
+                }
+            }
+        }
+        else{
+            this.mystorage.set(tritem.id,tritem.object);
+            changed.push(tritem.id);
+        }
+    }
+    refresh(self,changed);
 };
 
 /*private function*/
