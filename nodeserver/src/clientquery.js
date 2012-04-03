@@ -18,6 +18,25 @@ define([], function(){
 		delete this.patterns[nodeid];
 		this.project.onQueryChange(this.id);
 	};
+    Query.prototype.addPatterns = function(patternlist){
+        for(var i in patternlist){
+            var pattern = patternlist[i];
+            if(pattern.nodeid !== undefined){
+                this.patterns[pattern.nodeid] = pattern.type || {self:true};
+            }
+        }
+        this.project.onQueryChange(this.id);
+    };
+    Query.prototype.deletePatterns = function(patternlist){
+      for(var i in patternlist){
+          var pattern = patternlist[i];
+          if(pattern.nodeid !== undefined){
+              delete this.patterns[pattern.nodeid];
+          }
+      }
+      this.project.onQueryChange(this.id);
+    };
+
 	
 	/*helper to send the query to the server*/
 	Query.prototype.get = function(){
@@ -29,9 +48,10 @@ define([], function(){
 	};
 	
 	/*data from server*/
-	Query.prototype.onRefresh = function(nodes){
+	Query.prototype.onRefresh = function(updatedata){
 		if(this.ui !== undefined){
-			this.ui.onRefresh(nodes);
+            var objects = updatedata.ilist.concat(updatedata.mlist,updatedata.dlist);
+			this.ui.onRefresh(objects);
 		}
 	};
 	Query.prototype.addUI = function(ui){

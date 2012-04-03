@@ -8,19 +8,26 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 		var self = this;
 		/*public functions*/
 		this.updateObjects = function(msg){
-			var objectmatrix = {};
-			for(var i in msg.objects){
-				self.storage.set(msg.objects[i].object);
-				for(var j in msg.objects[i].querylist){
-					if(objectmatrix[msg.objects[i].querylist[j]] == undefined){
-						objectmatrix[msg.objects[i].querylist[j]] = [];
-					}
-					objectmatrix[msg.objects[i].querylist[j]].push(msg.objects[i].id);
-				}
-			}
-			for(var i in objectmatrix){
-				self.queries[i].onRefresh(objectmatrix[i]);
-			}					
+
+            /*first we save/delete the objects in storage*/
+            for(var i in msg.objects){
+                if(msg.objects[i].object === undefined){
+                    self.storage.del(msg.objects[i].id);
+                }
+                else{
+                    self.storage.set(msg.objects[i].object);
+                }
+            }
+
+            /*now we send the update data to the queries*/
+            for(var i in msg.querylists){
+                if(self.queries[msg.querylists[i].id] === undefined){
+                    console.log("ERROR wrong query ID arrived!!! "+i);
+                }
+                else{
+                  self.queries[msg.querylists[i].id].onRefresh(msg.querylists[i]);
+                }
+            }
 		};
 		this.copyNode = function(id){
 			var cmsg={};cmsg.type='copy';cmsg.data=id;

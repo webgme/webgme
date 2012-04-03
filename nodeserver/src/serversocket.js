@@ -196,7 +196,85 @@ SocketEnhanced = function(_socket,_readstorage){
     var _queries = {};
     var _territory = {};
     var _listener = undefined;
+    var _clipboard = undefined;
 
+    /*websocket message handlings*/
+    _socket.on('updateObjects', function(data){
+        if(_listener !== undefined){
+            _listener.onMessage(data);
+        }
+    });
+    _socket.on('updateQuery', function(msg){
+        if(msg.id !== undefined){
+            if(_queries[msg.id] === undefined){
+                _queries[msg.id] = new QU.Query(msg.id,_readstorage);
+            }
+            if(msg.query === undefined){
+                msg.query = {}; msg.query.patterns = [];
+            }
+            var querydelta = _queries[msg.id].updatePatterns(msg.query.patterns);
+            /*now we should update the territory wisely*/
+            var objectidlist = [];
+            var delobjectidlist = [];
+            for(var i in querydelta.ilist){
+                if(_territory[querydelta.ilist[i]] === undefined){
+                    objectidlist.push(querydelta.ilist[i]);
+                    _territory[querydelta.ilist[i]] = [querydelta.id];
+                }
+                else{
+                    insertIntoArray(_territory[querydelta.ilist[i]],querydelta.id);
+                }
+            }
+            for(var i in querydelta.dlist){
+                removeFromArray(_territory[querydelta.dlist[i]],querydelta.id);
+                if(_territory[querydelta.dlist[i]].length === 0){
+                    delete _territory[querydelta.dlist[i]];
+                    delobjectidlist.push(querydelta.dlist[i]);
+                }
+            }
+
+            var message = {};
+            message.querylists = [];
+            if(querydelta.ilist.length>0 || querydelta.mlist.length>0 || querydelta.dlist.length>0){
+                message.querylists.push(querydelta);
+            }
+            message.objects = [];
+            for(var i in objectidlist){
+                var msgobj = {};
+                msgobj.object = _readstorage.get(objectidlist[i]);
+                if(msgobj.object !== undefined){
+                    msgobj.id = objectidlist[i];
+                    message.objects.push(msgobj);
+                }
+            }
+            for(var i in delobjectidlist){
+                var msgobj = {};
+                msgobj.id = delobjectidlist[i];
+                msgobj.object = undefined;
+                message.objects.push(msgobj);
+            }
+            if(message.querylists.length > 0){
+                _socket.emit('updateObjects',message);
+            }
+        }
+
+
+    });
+    _socket.on('updateClipboard', function(msg){
+        if(msg.type === 'copy'){
+            _clipboard = msg.data;
+        }
+        else{ //paste
+            var newid = deepCopyObject(msg.data,_clipboard);
+            var parentid = msg.data || "root";
+            var parent=_readstorage.get(parentid);
+            parent.children.push(newid);
+            var updatemsg = {}; updatemsg.objects = [];
+            var msgitem = {}; msgitem.id = parentid; msgitem.object = parent;
+            updatemsg.objects.push(msgitem);
+            _listener.onMessage(updatemsg);
+        }
+    });
     /*public functions*/
     this.setListener = function(listener){
         _listener = listener;
@@ -208,14 +286,16 @@ SocketEnhanced = function(_socket,_readstorage){
         for(var i in _territory){
             newterritory[i] = [];
             for(var j in _territory[i]){
-                newterritory.push(_territory[i][j]);
+                newterritory[i].push(_territory[i][j]);
             }
         }
 
         var objectidlist = []; /*we have to collect the changed object separately*/
         for(var i in _queries){
-            var querydelta = _queries[i].refresh(modifiedobjects);
-            message.querylists.push(querydelta);
+            var querydelta = _queries[i].updateObjects(modifiedobjects);
+            if(querydelta.ilist.length>0 || querydelta.mlist.length>0 || querydelta.dlist.length>0){
+                message.querylists.push(querydelta);
+            }
             for(var m in querydelta.mlist){
                 insertIntoArray(objectidlist,querydelta.mlist[m]);
             }
@@ -263,25 +343,57 @@ SocketEnhanced = function(_socket,_readstorage){
             var msgobj = {};
             msgobj.id = delobjectidlist[i];
             msgobj.object = undefined;
+            message.objects.push(msgobj);
         }
-        _socket.emit('updateObjects',message);
+        if(message.querylists.length>0){
+            _socket.emit('updateObjects',message);
+        }
     };
 
     /*private functions*/
     var insertIntoArray = function(list,item){
-        if(list.indexOf(item) === -1){
-            list.push(item);
-        }
+            if(list.indexOf(item) === -1){
+                list.push(item);
+            }
     };
     var removeFromArray = function(list,item){
-        var position = list.indexOf(item);
-        if(position !== -1){
-            list.splice(position,1);
+            var position = list.indexOf(item);
+            if(position !== -1){
+                list.splice(position,1);
+            }
+    };
+    var deepCopyObject = function(parentid,tocopyid){
+        var newobj = {};
+        var copyobj = _readstorage.get(tocopyid);
+        if(copyobj!== undefined){
+            for(var i in copyobj){
+                newobj[i] = copyobj[i];
+            };
+            newobj.children=[];
+            newobj.parentId=null;
+            var copychildren = copyobj.children;
+            var date = new Date();
+            newobj._id="P_"+copyobj._id+"_";
+            newobj._id += date.getFullYear().toString()+date.getMonth().toString()+date.getDate().toString();
+            newobj._id += date.getHours().toString()+date.getMinutes().toString()+date.getSeconds().toString()+date.getMilliseconds().toString();
+            for(var i in copychildren){
+                var childid = deepCopyObject(newobj._id,copychildren[i]);
+                if(childid!==undefined){
+                    newobj.children.push(childid);
+                }
+            }
+            newobj.parentId = parentid;
+            var updatemsg = {}; updatemsg.objects = [];
+            var msgitem = {}; msgitem.id = newobj._id; msgitem.object = newobj;
+            updatemsg.objects.push(msgitem);
+            _listener.onMessage(updatemsg);
+            return newobj._id;
         }
+        return undefined;
     };
 };
 
 /*
  * exports
  */
-exports.Socket = Socket;
+exports.Socket = SocketEnhanced;

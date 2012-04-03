@@ -41,7 +41,7 @@ Query = function(_queryid, _readstorage){
         which will then be exactly the dlist
          */
         for(var i in newlist){
-            if(_objectlist.indexOf(newlist) === -1){
+            if(_objectlist.indexOf(newlist[i]) === -1){
                 insertIntoArray(response.ilist,newlist[i]);
             }
             else{
@@ -86,7 +86,7 @@ Query = function(_queryid, _readstorage){
                 var object =  _readstorage.get(i);
                 if(object !== undefined){
                     for(var j in object.children){
-                        insertIntoArray(objectlist,i);
+                        insertIntoArray(objectlist,object.children[j]);
                     }
                 }
             }
@@ -95,3 +95,7 @@ Query = function(_queryid, _readstorage){
         return objectlist;
     };
 };
+/*
+exports
+ */
+exports.Query = Query;
