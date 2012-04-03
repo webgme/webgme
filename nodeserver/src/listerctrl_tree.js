@@ -31,22 +31,9 @@ define([], function(){
 
         this.treeBrowser.onNodeClose = function( node) {
             //remove all chilrend (deep nested children) from the accoutned open-node list
-            var allChildrenIds = [];
+            var allChildrenIds = self._queryNodeAllChildrenIds( node.data.key );
 
-            var getChildren = function( moduleNode ) {
-
-                if ( moduleNode === undefined ) {
-                    return;
-                }
-
-                for( var i = 0; i < moduleNode.children.length; i++ ) {
-                    allChildrenIds.push( moduleNode.children[i] );
-
-                    getChildren( self.project.getNode(  moduleNode.children[i] ) );
-                }
-            };
-
-            getChildren( self.project.getNode( node.data.key ) );
+            var removeFromTerritory = [];
 
             //at this point we have all the nested childrenIds we don't care anymore
             for ( var j = 0; j < allChildrenIds.length; j++  ) {
@@ -54,12 +41,14 @@ define([], function(){
                 //remove from
                 delete self._nodes[ allChildrenIds[ j ] ];
 
-                //remove the chilren's interest from territory
-                self.query.deletePattern( allChildrenIds[ j ] );
+                removeFromTerritory.push( { id : allChildrenIds[ j ] } );
             }
 
+            //extend list with the current node's ID
+            removeFromTerritory.push( { id : node.data.key } );
+
             //remove the node itself from querypattern
-            self.query.deletePattern( node.data.key );
+            self.query.deletePatterns( removeFromTerritory );
         }
 
         this.treeBrowser.onNodeCopy = function( nodeId ) {
@@ -71,15 +60,135 @@ define([], function(){
             console.log( "treeBrowser.onNodePaste " + nodeId );
             self.project.pasteTo( nodeId );
         }
+
+        this.treeBrowser.onNodeDelete = function( nodeId ) {
+            console.log( "treeBrowser.onNodeDelete " + nodeId );
+            self.project.delNode( nodeId );
+        }
     };
 
-    ListerCtrl.prototype.onRefresh = function( nodes ){
+    ListerCtrl.prototype._queryNodeAllChildrenIds = function( nodeId ) {
+        //remove all chilrend (deep nested children) from the accoutned open-node list
+        var allChildrenIds = [];
+
+        var self = this;
+
+        var getChildren = function( moduleNode ) {
+
+            if ( moduleNode === undefined ) {
+                return;
+            }
+
+            for( var i = 0; i < moduleNode.children.length; i++ ) {
+                allChildrenIds.push( moduleNode.children[i] );
+
+                getChildren( self.project.getNode(  moduleNode.children[i] ) );
+            }
+        };
+
+        getChildren( self.project.getNode( nodeId ) );
+
+        //return the children ID list
+        return allChildrenIds;
+    }
+
+
+    ListerCtrl.prototype.onRefresh = function( updatedata ){
+
+        //updatedata contains:
+        //ilist for inserted nodes
+        //mlist for updated nodes
+        //dlist for deleted ndoes
 
         //disable rendering for tree, speed it up
-        if ( nodes.length > 1 )
+        if ( updatedata.ilist.length + updatedata.mlist.length + updatedata.dlist.length > 1 )
             this.treeBrowser.enableUpdate(false);
 
-        for ( var i = 0; i < nodes.length; i++ ) {
+        //Handle INSERTED LIST
+        for ( var i = 0; i < updatedata.ilist.length; i++ ) {
+            var inseretedNodeId = updatedata.ilist[i];
+
+            if ( inseretedNodeId !== "root" ) {
+
+                var inseretedNode = this.project.getNode( inseretedNodeId );
+
+                //just to make sure that the inserted node really exist on the client
+                if ( inseretedNode )
+                {
+                    var parentNode = inseretedNode.parentId;
+
+                    if ( inseretedNode.parentId !== null ) {
+                        parentNode = this._nodes[ inseretedNode.parentId ];
+                    }
+
+                    var newTreeNode = this.treeBrowser.createNode( parentNode, { id: inseretedNode._id, name: inseretedNode.name, hasChildren : inseretedNode.children.length > 0 } );
+
+                    this._nodes[ inseretedNode._id ] = newTreeNode;
+                }
+            }
+        }
+
+        //HANDLE UPDATED LIST
+        for (  i = 0; i < updatedata.mlist.length; i++ ) {
+            var updatedNodeId = updatedata.mlist[i];
+
+            if ( updatedNodeId !== "root" ) {
+
+                var updatedNode = this.project.getNode( updatedNodeId );
+
+                //just to make sure that the inserted node really exist on the client
+                if ( updatedNode )
+                {
+                    if ( this._nodes[ updatedNodeId ] ) {
+                        //node is present in treebrowser, update it
+
+                        //check if name changed
+                        if ( updatedNode.name !== this.treeBrowser.getNodeText( this._nodes[ updatedNodeId ] ) ) {
+                            this.treeBrowser.renameNode( this._nodes[ updatedNodeId ], updatedNode.name );
+                        }
+
+                        //check if children number changed
+                        //1) before it had no children and now it has
+
+                        //2) before it had children, and now it has no chilren
+                        //2a) node was closed --> remove the "expand" icon
+                        this._nodes[ updatedNodeId ].data.isLazy =  updatedNode.children.length > 0;
+                        this._nodes[ updatedNodeId ].render();
+                        //2b) node was open --> remove the children, close it, and remove the "expand" icon   --- HANDLED with the children deletion
+
+                    } else {
+                        //there is an update indicator about the node, but the node itself is not in the tree
+                        //this should never happen
+                    }
+                }
+            }
+        }
+
+        //HANDLE DELETED LIST
+        var removeFromTerritory = [];
+        for (  i = 0; i < updatedata.dlist.length; i++ ) {
+            var deletedNodeId = updatedata.dlist[i];
+
+            if ( deletedNodeId !== "root" ) {
+
+                if ( this._nodes[ deletedNodeId ] ) {
+                    //node is present in treebrowser, update it
+                    this.treeBrowser.deleteNode( this._nodes[ deletedNodeId ]  );
+
+                    //remove from local opened node list
+                    delete this._nodes[ deletedNodeId ];
+
+                    //extend list with the current node's ID
+                    removeFromTerritory.push( { nodeid : deletedNodeId } );
+                }
+            }
+        }
+        //remove the node itself from querypattern
+        if ( removeFromTerritory.length > 0 )  {
+            this.query.deletePatterns( removeFromTerritory );
+        }
+
+        /*for ( var i = 0; i < nodes.length; i++ ) {
             var currentNodeId = nodes[i];
 
             var currentNode = this.project.getNode( currentNodeId );
@@ -107,13 +216,11 @@ define([], function(){
                     }
                 }
             }
-        }
+        }*/
 
         //disable rendering for tree, speed it up
-        if ( nodes.length > 1 )
+        if ( updatedata.ilist.length + updatedata.mlist.length + updatedata.dlist.length > 1 )
             this.treeBrowser.enableUpdate(true);
-
-        //this.treeBrowser.focusActiveNode();
     };
 
 
