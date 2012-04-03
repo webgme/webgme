@@ -93,7 +93,13 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 		}
 	}
 	Project.prototype.delNode = function(node){
-		this.storage.del(node._id || node);
+        var did = node._id || node;
+		this.storage.del(did);
+        var message = {};
+        message.objects = [];
+        var msgitem = {}; msgitem.id = did; msgitem.object = undefined;
+        message.objects.push(msgitem);
+        this.socket.objectUpdate(message);
 	}
 	
 	/*

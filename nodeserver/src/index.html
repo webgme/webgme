@@ -23,13 +23,14 @@
                 }
             }
 
-			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js', './delayctrl.js', './pasterootctrl.js'],function(PR,LI,MO,LI2,DE,PA){
+			require(['./clientproject.js','./listerctrl.js','./modifyctrl.js', './listerctrl_tree.js', './delayctrl.js', './pasterootctrl.js','./deletetestctrl.js'],function(PR,LI,MO,LI2,DE,PA,DT){
 				var myproject = undefined;
 				//var mylister = undefined;
 				//var mymodifier = undefined;
                 var mylister2 = undefined;
                 var delayer = undefined;
                 var paster = undefined;
+                var deleter = undefined;
 				openProject = function(){
 					myproject = new PR(document.getElementById('projectselector/projid').value);
 					myproject.onOpen = function(){
@@ -39,6 +40,7 @@
                         mylister2 = new LI2(myproject, "projectlister2" );
                         delayer = new DE(myproject.socket, document.getElementById("delaycontrol"));
                         paster = new PA(myproject,document.getElementById("pastecontrol"));
+                        deleter = new DT(myproject,document.getElementById("deletecontrol"));
 						alert('it is opened');
 					};
 					
@@ -56,6 +58,7 @@
         	<div id="projectlister2" style="background-color:#FFD700;height:400px;width:200px;float:left;"></div>
         	<div id="delaycontrol" ></div>
             <div id="pastecontrol" ></div>
+            <div id="deletecontrol" ></div>
         </div>
 	</body>
 </html>
