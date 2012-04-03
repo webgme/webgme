@@ -9,12 +9,13 @@
 <body>
 Test
 <script>
-	var socket = io.connect();
-	socket.on("connect", function () {
-		console.log("socket: connected to server");
-	});
-	socket.on("message", function (data) {
-		console.log("socket message: " + dara);
+	require(["client-project"], function(Project) {
+		var project = new Project();
+		project.onOpen = function() {
+			var query = project.createQuery();
+			query.addPattern("");
+		};
+		project.open();			
 	});
 	
 	require(["assert", "subgraph"], function(ASSERT, Subgraph) {

@@ -84,24 +84,27 @@ define([], function(){
 
             var currentNode = this.project.getNode( currentNodeId );
 
-            //check if node is already here?
-            if ( this._nodes[ currentNodeId ] ) {
-                //node is present in treebrowser, update it
-                if ( currentNode.name !== this.treeBrowser.getNodeText( this._nodes[ currentNodeId ] ) ) {
-                    this.treeBrowser.renameNode( this._nodes[ currentNodeId ], currentNode.name );
-                }
-            } else {
-                if ( currentNode._id !== "root" ) {
-
-                    var parentNode = currentNode.parentId;
-
-                    if ( currentNode.parentId !== null ) {
-                        parentNode = this._nodes[ currentNode.parentId ];
+            if ( currentNode )
+            {
+                //check if node is already here?
+                if ( this._nodes[ currentNodeId ] ) {
+                    //node is present in treebrowser, update it
+                    if ( currentNode.name !== this.treeBrowser.getNodeText( this._nodes[ currentNodeId ] ) ) {
+                        this.treeBrowser.renameNode( this._nodes[ currentNodeId ], currentNode.name );
                     }
+                } else {
+                    if ( currentNode._id !== "root" ) {
 
-                    var newTreeNode = this.treeBrowser.createNode( parentNode, { id: currentNode._id, name: currentNode.name, hasChildren : currentNode.children.length > 0 } );
+                        var parentNode = currentNode.parentId;
 
-                    this._nodes[ currentNode._id ] = newTreeNode;
+                        if ( currentNode.parentId !== null ) {
+                            parentNode = this._nodes[ currentNode.parentId ];
+                        }
+
+                        var newTreeNode = this.treeBrowser.createNode( parentNode, { id: currentNode._id, name: currentNode.name, hasChildren : currentNode.children.length > 0 } );
+
+                        this._nodes[ currentNode._id ] = newTreeNode;
+                    }
                 }
             }
         }
@@ -110,7 +113,7 @@ define([], function(){
         if ( nodes.length > 1 )
             this.treeBrowser.enableUpdate(true);
 
-        this.treeBrowser.focusActiveNode();
+        //this.treeBrowser.focusActiveNode();
     };
 
 

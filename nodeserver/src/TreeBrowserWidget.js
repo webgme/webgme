@@ -29,6 +29,40 @@ function TreeBrowserWidget( containerId ){
     //save this for later use
     var self = this;
 
+    //create context menu dinamically
+    var contextMenuId = this.guid + "contextMenu";
+    var myContextMenu = $( '<ul/>', {
+        id : contextMenuId,
+        "class" : "contextMenu"
+    } );
+
+    //Context menu EDIT option
+    var contextMenuEdit = $( '<li/>', {
+        "class" : "edit"
+    } ).html("<a href='#edit'>Edit</a>");
+    myContextMenu.append( contextMenuEdit );
+
+    //Context menu COPY option
+    var contextMenuCopy = $( '<li/>', {
+        "class" : "copy separator"
+    } ).html("<a href='#copy'>Copy</a>");
+    myContextMenu.append( contextMenuCopy );
+
+    //Context menu PASTE option
+    var contextMenuPaste = $( '<li/>', {
+        "class" : "paste"
+    } ).html("<a href='#paste'>Paste</a>");
+    myContextMenu.append( contextMenuPaste );
+
+    //Context menu DELETE option
+    var contextMenuDelete = $( '<li/>', {
+        "class" : "delete separator"
+    } ).html("<a href='#delete'>Delete</a>");
+    myContextMenu.append( contextMenuDelete );
+
+    //finylla add the context menu conainet to the current control
+    this.containerControl.append( myContextMenu );
+
     var editNode = function (nodeToEdit){
         var prevTitle = nodeToEdit.data.title,
             tree = nodeToEdit.tree;
@@ -79,6 +113,20 @@ function TreeBrowserWidget( containerId ){
             });
     }
 
+    var copyNode = function( node ) {
+        console.log( "TreeBrowser copy " +  node.data.key );
+        if ($.isFunction(self.onNodeCopy)){
+            self.onNodeCopy.call(self, node.data.key);
+        }
+    }
+
+    var pasteNode = function( node ) {
+        console.log( "TreeBrowser paste " +  node.data.key );
+        if ($.isFunction(self.onNodePaste)){
+            self.onNodePaste.call(self, node.data.key);
+        }
+    }
+
     //create tree using DynaTree
     this.treeViewE.dynatree( {
         /*debugLevel: 2,*/
@@ -113,49 +161,65 @@ function TreeBrowserWidget( containerId ){
             //single click on the title means rename if the node is already selected
             if ( ( node.getEventTargetType(event) === "title" ) && ( node.isActive() ) ) {
 
-
-
-
                 editNode( node );
 
                 return false;// Prevent default processing
-            } else {
-                /*if ( node.inPlaceEditing && node.inPlaceEditing === true ) {
-                    return false;// Prevent default processing
-                }*/
             }
         },
 
         onKeydown: function(node, event) {
             switch( event.which ) {
                 // Handle Ctrl-C, -X and -V
-                case 67:
+                /*case 67:
                     if( event.ctrlKey ) { // Ctrl-C
                         //call onNodeClose if exist
-                        console.log( "TreeBrowser copy " +  node.data.key );
-                        if ($.isFunction(self.onNodeCopy)){
-                            self.onNodeCopy.call(self, node.data.key);
-                        }
+                        copyNode( node );
                         return false;
                     }
                     break;
                 case 86:
                     if( event.ctrlKey ) { // Ctrl-V
-                        console.log( "TreeBrowser paste " +  node.data.key );
-                        if ($.isFunction(self.onNodePaste)){
-                            self.onNodePaste.call(self, node.data.key);
-                        }
+                        pasteNode( node );
+
                         return false;
                     }
                     break;
                 case 113: //F2
                     editNode( node );
                     return false;
-                    break;
+                    break;*/
                 case 13: //ENTER
                     return false;
                     break;
             }
+        },
+
+        onCreate: function(node, span){
+            // --- Contextmenu helper --------------------------------------------------
+            var bindContextMenu = function(span) {
+                // Add context menu to this node:
+                $(span).contextMenu({menu: contextMenuId }, function(action, el, pos) {
+                    // The event was bound to the <span> tag, but the node object
+                    // is stored in the parent <li> tag
+                    var node = $.ui.dynatree.getNode(el);
+                    switch( action ) {
+                        case "edit":
+                            editNode( node );
+                            break;
+                        case "copy":
+                            copyNode(node);
+                            break;
+                        case "paste":
+                            pasteNode(node);
+                            break;
+                        case "delete":
+                            alert( "Delete not yet implemented" );
+                            break;
+                    }
+                });
+            };
+
+            bindContextMenu(span);
         }
     });
 }
