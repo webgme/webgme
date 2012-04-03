@@ -29,7 +29,11 @@ Query = function(_queryid, _readstorage){
          */
         for(var i in modifiedobjects){
             if(newlist.indexOf(modifiedobjects[i]) !== -1){
-                insertIntoArray(response.mlist,modifiedobjects[i]);
+                if ( _readstorage.get( modifiedobjects[i] ) ) {
+                    insertIntoArray(response.mlist,modifiedobjects[i]);
+                } else {
+                    insertIntoArray(response.dlist,modifiedobjects[i]);
+                }
             }
         }
         /*

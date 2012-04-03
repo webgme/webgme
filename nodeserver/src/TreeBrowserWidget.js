@@ -127,6 +127,13 @@ function TreeBrowserWidget( containerId ){
         }
     }
 
+    var deleteNode = function( node ) {
+        console.log( "TreeBrowser delete " +  node.data.key );
+        if ($.isFunction(self.onNodeDelete)){
+            self.onNodeDelete.call(self, node.data.key);
+        }
+    }
+
     //create tree using DynaTree
     this.treeViewE.dynatree( {
         /*debugLevel: 2,*/
@@ -213,7 +220,7 @@ function TreeBrowserWidget( containerId ){
                             pasteNode(node);
                             break;
                         case "delete":
-                            alert( "Delete not yet implemented" );
+                            deleteNode(node);
                             break;
                     }
                 });
@@ -281,10 +288,24 @@ TreeBrowserWidget.prototype = {
         if ( ! node )
             return;
 
-        node.remove();
+        node = node.tree.getNodeByKey(node.data.key);
 
-        //log
-        window.logMessage( "Node removed: " + node );
+        if ( node ) {
+            //get its parent
+            var parent = node.getParent();
+
+            node.remove();
+
+            //the parent has no more children
+            if (parent.hasChildren() !== true ) {
+                //close parent and update it's lazyLoad status to nonLazyLoad
+                parent.data.isLazy = false;
+                parent.render();
+            }
+
+            //log
+            window.logMessage( "Node removed: " + node );
+        }
     },
 
     /**

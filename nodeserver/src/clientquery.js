@@ -31,7 +31,9 @@ define([], function(){
       for(var i in patternlist){
           var pattern = patternlist[i];
           if(pattern.nodeid !== undefined){
-              delete this.patterns[pattern.nodeid];
+              if ( this.patterns[pattern.nodeid] ) {
+                delete this.patterns[pattern.nodeid];
+              }
           }
       }
       this.project.onQueryChange(this.id);
@@ -50,8 +52,8 @@ define([], function(){
 	/*data from server*/
 	Query.prototype.onRefresh = function(updatedata){
 		if(this.ui !== undefined){
-            var objects = updatedata.ilist.concat(updatedata.mlist,updatedata.dlist);
-			this.ui.onRefresh(objects);
+            /*var objects = updatedata.ilist.concat(updatedata.mlist,updatedata.dlist);*/
+			this.ui.onRefresh(updatedata);
 		}
 	};
 	Query.prototype.addUI = function(ui){
