@@ -63,7 +63,7 @@ function TreeBrowserWidget( containerId ){
     //finylla add the context menu conainet to the current control
     this.containerControl.append( myContextMenu );
 
-    var editNode = function (nodeToEdit){
+    var editNode = function (nodeToEdit) {
         var prevTitle = nodeToEdit.data.title,
             tree = nodeToEdit.tree;
         // Disable dynatree mouse- and key handling
@@ -73,8 +73,9 @@ function TreeBrowserWidget( containerId ){
         // Focus <input> and bind keyboard handler
         $("input#editNode")
             .focus()
-            .keydown(function(event){
-                switch( event.which ) {
+            .keydown(
+            function (event) {
+                switch (event.which) {
                     case 27: // [esc]
                         // discard changes on [esc]
                         $("input#editNode").val(prevTitle);
@@ -87,22 +88,22 @@ function TreeBrowserWidget( containerId ){
                         $(this).blur();
                         break;
                 }
-            }).blur(function(event){
+            }).blur(function (event) {
                 // Accept new value, when user leaves <input>
                 var title = $("input#editNode").val();
                 $(nodeToEdit.span).find(".dynatree-title").html(prevTitle);
-                if ( prevTitle !== title  ) {
+                if (prevTitle !== title) {
                     var changeAllowed = true;
 
-                    if ($.isFunction(self.onNodeTitleChanged)){
-                        changeAllowed = self.onNodeTitleChanged.call(self, nodeToEdit, prevTitle, title );
+                    if ($.isFunction(self.onNodeTitleChanged)) {
+                        changeAllowed = self.onNodeTitleChanged.call(self, nodeToEdit.data.key, prevTitle, title);
                     }
 
-                    if ( changeAllowed === true ) {
-                        self.renameNode( nodeToEdit, title );
+                    if (changeAllowed === true) {
+                        self.renameNode(nodeToEdit, title);
                     } else {
                         nodeToEdit.setTitle(prevTitle);
-                        window.logMessage( "TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed" );
+                        console.log("TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
                     }
                 } else {
                     nodeToEdit.setTitle(title);
@@ -111,28 +112,28 @@ function TreeBrowserWidget( containerId ){
                 tree.$widget.bind();
                 nodeToEdit.focus();
             });
-    }
+    };
 
     var copyNode = function( node ) {
         console.log( "TreeBrowser copy " +  node.data.key );
         if ($.isFunction(self.onNodeCopy)){
             self.onNodeCopy.call(self, node.data.key);
         }
-    }
+    };
 
     var pasteNode = function( node ) {
         console.log( "TreeBrowser paste " +  node.data.key );
         if ($.isFunction(self.onNodePaste)){
             self.onNodePaste.call(self, node.data.key);
         }
-    }
+    };
 
     var deleteNode = function( node ) {
         console.log( "TreeBrowser delete " +  node.data.key );
         if ($.isFunction(self.onNodeDelete)){
             self.onNodeDelete.call(self, node.data.key);
         }
-    }
+    };
 
     //create tree using DynaTree
     this.treeViewE.dynatree( {
@@ -140,7 +141,7 @@ function TreeBrowserWidget( containerId ){
         onLazyRead : function (node) {
             window.logMessage( "onLazyRead node:" + node.data.key );
             if ($.isFunction(self.onNodeOpen)){
-                self.onNodeOpen.call(self, node);
+                self.onNodeOpen.call(self, node.data.key);
             }
 
             return false;
@@ -152,19 +153,18 @@ function TreeBrowserWidget( containerId ){
                  window.logMessage( "expanding node:" + node.data.key );
                  */
             } else {
-                window.logMessage( "collapsing node:" + node.data.key );
+                console.log( "collapsing node:" + node.data.key );
                 //remove all children from DOM
                 node.removeChildren();
 
                 //call onNodeClose if exist
-                if ($.isFunction(self.onNodeClose)){
-                    self.onNodeClose.call(self, node);
+                if ( $.isFunction(self.onNodeClose) ) {
+                    self.onNodeClose.call(self, node.data.key);
                 }
             }
         },
 
         onClick: function(node, event) {
-            var i = 7;
             //single click on the title means rename if the node is already selected
             if ( ( node.getEventTargetType(event) === "title" ) && ( node.isActive() ) ) {
 
@@ -238,41 +238,43 @@ TreeBrowserWidget.prototype = {
      * @param parentNode
      * @param objDescriptor
      */
-    createNode : function ( parentNode, objDescriptor ) {
+    createNode:function (parentNode, objDescriptor, useVisualEffect) {
         //check if the parentNode is null or not
         //when null, the new node belongs to the root
-        if ( parentNode === null ) {
+        if (parentNode === null) {
             // Now get the root node object
             parentNode = this.treeViewE.dynatree("getRoot");
         } else {
             //check if parent is expanded
             //if parent is not expanded, do not append child, makes no sense since the next open will load tha parent's children
             /*if ( parentNode.isExpanded() !== true )
-                return null;*/
+             return null;*/
         }
 
         // Call the DynaTreeNode.addChild() member function and pass options for the new node
         var newNode = parentNode.addChild({
-            title: objDescriptor.name,
-            tooltip: objDescriptor.name,
-            key : objDescriptor.id,
-            isFolder: false,// objDescriptor.hasChildren,
-            isLazy: objDescriptor.hasChildren,
-            addClass : objDescriptor.objectType ? "gme-" + objDescriptor.objectType : ""
+            title:objDescriptor.name,
+            tooltip:objDescriptor.name,
+            key:objDescriptor.id,
+            isFolder:false, // objDescriptor.hasChildren,
+            isLazy:objDescriptor.hasChildren,
+            addClass:objDescriptor.objectType ? "gme-" + objDescriptor.objectType : ""
         });
 
 
         //log
-        window.logMessage( "New node created: " + newNode );
+        console.log("New node created: " + newNode);
 
         //a bit of visual effect
-        /*if ( parentNode != null ) {
-            if ( parentNode.isExpanded() === true ) {
-                var jqTreeNode = $( newNode.span.childNodes[2] );
-                jqTreeNode.hide();
-                jqTreeNode.fadeIn();
+        if (useVisualEffect === true) {
+            if (parentNode != null) {
+                if (parentNode.isExpanded() === true) {
+                    var jqTreeNode = $(newNode.span.childNodes[2]);
+                    jqTreeNode.hide();
+                    jqTreeNode.fadeIn();
+                }
             }
-        }*/
+        }
 
         //return the newly created node
         return newNode;
@@ -282,29 +284,28 @@ TreeBrowserWidget.prototype = {
      * Deletes the node from the tree
      * @param node
      */
-    deleteNode: function( node ) {
+    deleteNode:function (node) {
         //if no valid node, return
         //otherwise delete node
-        if ( ! node )
+        if (!node)
             return;
 
         node = node.tree.getNodeByKey(node.data.key);
 
-        if ( node ) {
+        if (node) {
             //get its parent
             var parent = node.getParent();
 
             node.remove();
 
             //the parent has no more children
-            if (parent.hasChildren() !== true ) {
-                //close parent and update it's lazyLoad status to nonLazyLoad
-                parent.data.isLazy = false;
-                parent.render();
+            if (parent.hasChildren() !== true) {
+                //close parent and update it's lazyLoad status and remove expand icon
+                this.updateNode(parent, null, false, true);
             }
 
             //log
-            window.logMessage( "Node removed: " + node );
+            console.log("Node removed: " + node.data.key);
         }
     },
 
@@ -313,142 +314,110 @@ TreeBrowserWidget.prototype = {
      * @param node
      * @param text
      */
-    renameNode: function( node, text ) {
+    renameNode:function (node, text) {
 
-        //check if valid node
-        if ( ! node)
-            return;
-
-        //set new text value
-        node.data.title =  text;
-        node.data.tooltip = text;
-        node.setTitle( text );
-
-        //a bit of visual effect
-        var jqTreeNode = $( node.span.childNodes[2] );
-        jqTreeNode.hide();
-        jqTreeNode.fadeIn();
-
-        //log
-        window.logMessage( "Node renamed: " + node );
+        this.updateNode(node, text, null, true);
     },
 
-    getNodeText : function( node ) {
+    /*
+     * Resets the given nodes text tp the given value
+     * @param node
+     * @param text
+     */
+    updateNode:function (node, text, hasChildren, useVisualEffect) {
+
+        //check if valid node
+        if (!node)
+            return;
+
+        //by default we say there is nothing to update
+        var nodeDataChanged = false;
+
+        //set new text value (if any)
+        if (text && node.data.title !== text) {
+            node.data.title = text;
+            node.data.tooltip = text;
+
+            //mark that change happened
+            nodeDataChanged = true;
+        }
+
+        //set new childrend value (if any)
+        if (hasChildren === true || hasChildren === false) {
+            if (hasChildren !== node.data.isLazy) {
+                node.data.isLazy = hasChildren;
+
+                //furthermore if it has no more childrend, collapse node
+                if (hasChildren === false) {
+                    this.collapse(node);
+                }
+
+                //mark that change happened
+                nodeDataChanged = true;
+            }
+        }
+
+        if (nodeDataChanged === true) {
+            node.render();
+
+            if (useVisualEffect === true) {
+                var jqTreeNode = $(node.span.childNodes[2]);
+                jqTreeNode.hide();
+                jqTreeNode.fadeIn();
+            }
+
+            //log
+            console.log("Node updated: " + node.data.key);
+        }
+    },
+
+    /*
+     * Returns the given node's text value
+     */
+    getNodeText:function (node) {
         return node.data.title;
     },
 
     /**
      * Called when a node is opened in the tree
      * PLEASE OVERIDDE TO FILL THE NODES CHILDREN
-     * @param node
+     * @param nodeId
      */
-    onNodeOpen : function( node ) {
-        window.logMessage( "Default onNodeOpen called, doing nothing. Please override onNodeOpen(node)" );
+    onNodeOpen:function (nodeId) {
+        console.log("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
     },
 
     /*
      * Called when a node's title is changed in the reeview
      * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
      */
-    onNodeTitleChanged : function( node, oldText, newText ) {
-        window.logMessage( "Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, newText)" );
+    onNodeTitleChanged:function (nodeId, oldText, newText) {
+        console.log("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
         return true;
-    },
-
-    /**
-     * Returns the parent node of the argument
-     * @param node
-     */
-    getParent : function( node ) {
-        if ( ! node )
-            return null;
-
-        return node.getParent();
-    },
-
-    /**
-     * Returns the children node of the argument if any. Otherwise returns null.
-     * For lazy nodes that have not yet been loaded, undefined is is returned.
-     * @param node
-     */
-    getChildren : function( node ) {
-        if ( ! node )
-            return null;
-
-        return node.getChildren();
-    },
-
-    /**
-     * Stores the given obj in the node
-     * @param node
-     * @param obj
-     */
-    setCustomData : function( node, obj ) {
-        node["TreeBrowserCustomData"] = obj;
-    },
-
-    getCustomData : function( node ) {
-        //return WebGMEData if exists
-        if ( node.hasOwnProperty("TreeBrowserCustomData") )
-            return node["TreeBrowserCustomData"];
-
-        //otherwise return null
-        return null;
-    },
-
-    /*
-     * Cancels the node's layz load status, makes it closed and removes the in-progress icon
-     */
-    lazyLoadFinished : function( node, collapse ) {
-        node.setLazyNodeStatus(DTNodeStatus_Ok);
-
-        var needCollapse = false || collapse;
-        if ( needCollapse === true ) {
-            this.collapse( node );
-        }
     },
 
     /*
      * Collapses the given node
      */
-    collapse: function( node) {
+    collapse:function (node) {
         node.expand(false);
     },
 
     /*
      * Expands the given node
      */
-    expand : function( node ) {
+    expand:function (node) {
         node.expand(true);
     },
 
     /*
-     * Removes all the children of the tree
+     * Enables or disables the rendering for the tree (very helpful for bulk edit, can speed up things)
      */
-    clear : function() {
-        var root = this.treeViewE.dynatree("getRoot");
-        root.removeChildren();
-    },
-
-    expandTree : function () {
-        this.treeViewE.dynatree("getRoot").visit(function(node){
-            node.expand(true);
-        });
-    },
-
-    enableUpdate : function ( enabled ) {
+    enableUpdate:function (enabled) {
         this.treeViewE.dynatree("getTree").enableUpdate(enabled);
-    },
-
-    focusActiveNode : function () {
-        var activeNode = this.treeViewE.dynatree("getActiveNode");
-        if ( activeNode ) {
-            if ( activeNode.isFocused() === false )
-                activeNode.focus();
-        }
     }
 
-}
+};
 /*
  * TREEVIEW WIDGET
  */
