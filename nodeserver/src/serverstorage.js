@@ -25,7 +25,16 @@ Storage.prototype.set = function(id,object){
 };
 Storage.prototype.get = function(id){
 	return this.objects[id]; 
+};
+
+MongoStorage = function(){
+    var DB = require('mongodb').Db;
+    var SERVER = require('mongodb').Server;
+    var _db = new DB('mongo_webgme_storage', new SERVER('localhost',27017,{auto_recconcet:true}));
+
 }
+
+
 /*
  * export setting
  */

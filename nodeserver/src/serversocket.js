@@ -192,6 +192,7 @@ sendMessage = function(socket,data){
 };
 
 var QU = require('./serverquery.js');
+var ALIB = require('./arraylibrary.js');
 SocketEnhanced = function(_socket,_readstorage){
     var _queries = {};
     var _territory = {};
@@ -222,14 +223,16 @@ SocketEnhanced = function(_socket,_readstorage){
                     _territory[querydelta.ilist[i]] = [querydelta.id];
                 }
                 else{
-                    insertIntoArray(_territory[querydelta.ilist[i]],querydelta.id);
+                    ALIB.insert(_territory[querydelta.ilist[i]],querydelta.id);
                 }
             }
             for(var i in querydelta.dlist){
-                removeFromArray(_territory[querydelta.dlist[i]],querydelta.id);
-                if(_territory[querydelta.dlist[i]].length === 0){
-                    delete _territory[querydelta.dlist[i]];
-                    delobjectidlist.push(querydelta.dlist[i]);
+                if(_territory[querydelta[i]] !== undefined){
+                    ALIB.remove(_territory[querydelta.dlist[i]],querydelta.id);
+                    if(_territory[querydelta.dlist[i]].length === 0){
+                        delete _territory[querydelta.dlist[i]];
+                        delobjectidlist.push(querydelta.dlist[i]);
+                    }
                 }
             }
 
@@ -297,24 +300,24 @@ SocketEnhanced = function(_socket,_readstorage){
                 message.querylists.push(querydelta);
             }
             for(var m in querydelta.mlist){
-                insertIntoArray(objectidlist,querydelta.mlist[m]);
+                ALIB.insert(objectidlist,querydelta.mlist[m]);
             }
 
             for(var j in querydelta.ilist){
                 if(newterritory[querydelta.ilist[j]] === undefined){
                     newterritory[querydelta.ilist[j]] = [];
                 }
-                insertIntoArray(newterritory[querydelta.ilist[j]],i);
+                ALIB.insert(newterritory[querydelta.ilist[j]],i);
             }
 
             for(var d in querydelta.dlist){
-                removeFromArray(newterritory[querydelta.dlist[d]],i);
+                ALIB.remove(newterritory[querydelta.dlist[d]],i);
             }
         }
 
         for(var i in newterritory){
             if(_territory[i] === undefined){
-                insertIntoArray(objectidlist,i);
+                ALIB.insert(objectidlist,i);
             }
         }
 
@@ -322,7 +325,7 @@ SocketEnhanced = function(_socket,_readstorage){
         for(var i in newterritory){
             if(newterritory[i].length === 0){
                 delete newterritory[i];
-                insertIntoArray(delobjectidlist,i);
+                ALIB.insert(delobjectidlist,i);
             }
         }
 
@@ -351,21 +354,6 @@ SocketEnhanced = function(_socket,_readstorage){
     };
 
     /*private functions*/
-    var insertIntoArray = function(list,item){
-        if (list instanceof Array){
-            if(list.indexOf(item) === -1){
-                list.push(item);
-            }
-        }
-    };
-    var removeFromArray = function(list,item){
-        if (list instanceof Array){
-            var position = list.indexOf(item);
-            if(position !== -1){
-                list.splice(position,1);
-            }
-        }
-    };
     var deepCopyObject = function(parentid,tocopyid){
         var newobj = {};
         var copyobj = _readstorage.get(tocopyid);

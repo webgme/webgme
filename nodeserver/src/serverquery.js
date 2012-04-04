@@ -1,3 +1,4 @@
+var ALIB = require('./arraylibrary.js');
 Query = function(_queryid, _readstorage){
     var _objectlist = [];
     var _patterns = {};
@@ -30,9 +31,9 @@ Query = function(_queryid, _readstorage){
         for(var i in modifiedobjects){
             if(newlist.indexOf(modifiedobjects[i]) !== -1){
                 if ( _readstorage.get( modifiedobjects[i] ) ) {
-                    insertIntoArray(response.mlist,modifiedobjects[i]);
+                    ALIB.insert(response.mlist,modifiedobjects[i]);
                 } else {
-                    insertIntoArray(response.dlist,modifiedobjects[i]);
+                    ALIB.insert(response.dlist,modifiedobjects[i]);
                 }
             }
         }
@@ -46,15 +47,15 @@ Query = function(_queryid, _readstorage){
          */
         for(var i in newlist){
             if(_objectlist.indexOf(newlist[i]) === -1){
-                insertIntoArray(response.ilist,newlist[i]);
+                ALIB.insert(response.ilist,newlist[i]);
             }
             else{
-                removeFromArray(_objectlist,newlist[i]);
+                ALIB.remove(_objectlist,newlist[i]);
             }
         }
 
         for(var i in _objectlist){
-            insertIntoArray(response.dlist,_objectlist[i]);
+            ALIB.insert(response.dlist,_objectlist[i]);
         }
 
         /*
@@ -65,17 +66,6 @@ Query = function(_queryid, _readstorage){
         return response;
     }
     /*private functions*/
-    var insertIntoArray = function(list,item){
-        if(list.indexOf(item) === -1){
-            list.push(item);
-        }
-    };
-    var removeFromArray = function(list,item){
-      var position = list.indexOf(item);
-        if(position !== -1){
-            list.splice(position,1);
-        }
-    };
     var evaluatePatterns = function(){
         var objectlist = [];
         for(var i in _patterns){
@@ -83,14 +73,14 @@ Query = function(_queryid, _readstorage){
 
             /*self*/
             if(pattern.self){
-                insertIntoArray(objectlist,i);
+                ALIB.insert(objectlist,i);
             }
             /*children*/
             if(pattern.children){
                 var object =  _readstorage.get(i);
                 if(object !== undefined){
                     for(var j in object.children){
-                        insertIntoArray(objectlist,object.children[j]);
+                        ALIB.insert(objectlist,object.children[j]);
                     }
                 }
             }
