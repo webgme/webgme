@@ -4,6 +4,19 @@ body {
 	font-family:Helvetica;
 }
 
+ul.dynatree-container
+{
+    overflow: visible !important;
+    padding-bottom: 0px !important;
+    height: auto;
+}
+
+div.ObjectBrowser {
+    width :200px;
+    height: 600px;
+    overflow : auto;
+}
+
 .dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
 {
     background-position: 0 0;
@@ -52,4 +65,34 @@ span.gme-aspect span.dynatree-icon  {
 
 span.gme-connection span.dynatree-icon  {
     background-position: -64px 0 !important;
+}
+
+li.gme-folder > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: 0px 0px !important;
+}
+
+li.gme-model > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: -48px 0px !important;
+}
+
+li.gme-atom > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: -16px 0px !important;
+}
+
+li.gme-aspect > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: -32px 0px !important;
+}
+
+li.gme-connection > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: -64px 0px !important;
 }

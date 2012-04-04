@@ -14,6 +14,10 @@
         <script src="/TreeBrowserWidget.js"></script>
         <script src="/jquery.contextMenu.js"></script>
 
+        <script src="/jquery.jstree.js"></script>
+        <script src="/JSTreeBrowserWidget.js"></script>
+
+
 		<script src="/lib/require.js"></script>
 
 		<script>
@@ -30,6 +34,7 @@
 				//var mylister = undefined;
 				//var mymodifier = undefined;
                 var mylister2 = undefined;
+                var mylisterJSTree = undefined;
                 var delayer = undefined;
                 var paster = undefined;
                 var deleter = undefined;
@@ -39,10 +44,11 @@
 						/*appending widgets*/
 						//mylister = new LI(myproject,document.getElementById('projectlister'));
 						//mymodifier = new MO(myproject,document.getElementById('projectmodifier'));
-                        mylister2 = new LI2(myproject, "projectlister2" );
+                        mylister2 = new LI2(myproject, new TreeBrowserWidget( "projectlister2" ) );
                         delayer = new DE(myproject.socket, document.getElementById("delaycontrol"));
                         paster = new PA(myproject,document.getElementById("pastecontrol"));
                         deleter = new DT(myproject,document.getElementById("deletecontrol"));
+                        mylisterJSTree = new LI2(myproject, new JSTreeBrowserWidget( "projectlisterJSTree" ) );
 						//alert('it is opened');
 					};
 					
@@ -57,10 +63,11 @@
 			<input type="text" id="projectselector/projid" /><input type="button" value="open" id="projectselector/openbutton" onclick="openProject()" />
 		</div>
 		<div>
-        	<div id="projectlister2" style="background-color:#FFD700;height:400px;width:200px;float:left;"></div>
+        	<div id="projectlister2" class="ObjectBrowser" style="float:left;"></div>
         	<div id="delaycontrol" ></div>
             <div id="pastecontrol" ></div>
             <div id="deletecontrol" ></div>
+            <div id="projectlisterJSTree" class="ObjectBrowser" style="float:left;"></div>
         </div>
 	</body>
 </html>

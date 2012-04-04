@@ -1,22 +1,23 @@
 define([], function(){
-    var ListerCtrl = function(project, containerId ){
+    var ListerCtrl = function(project, treeBrowser ){
         this.project = project;
-
-        this.containerId = containerId;
 
         this.query = this.project.createQuery();
         this.query.addUI(this);
-        this.query.addPattern( "root",{self:true, children:true} );
 
         //local container for accounting the currently opened node list
         //its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
         this._nodes = {};
 
         //create the tree using our custom widget
-        this.treeBrowser = new TreeBrowserWidget( containerId );
+        this.treeBrowser = treeBrowser;
 
         //save "this" for later
         var self = this;
+
+        setTimeout( function () {
+            self.query.addPattern( "root",{self:true, children:true} );
+           } , 1 );
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
         this.treeBrowser.onNodeOpen = function( nodeId ) {
@@ -133,7 +134,7 @@ define([], function(){
                     }
 
                     //create a new node for it in the tree
-                    var newTreeNode = this.treeBrowser.createNode( parentNode, { id: inseretedNode._id, name: inseretedNode.name, hasChildren : inseretedNode.children.length > 0 } );
+                    var newTreeNode = this.treeBrowser.createNode( parentNode, { id: inseretedNode._id, name: inseretedNode.name, hasChildren : inseretedNode.children.length > 0, objectType :  (inseretedNode.children.length > 0 ) ? "model" : "atom"  } );
 
                     //store the node's info in the local hashmap
                     this._nodes[ inseretedNode._id ] = { "treeNode": newTreeNode, "children" : inseretedNode.children };
