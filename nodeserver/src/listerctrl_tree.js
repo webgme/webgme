@@ -19,76 +19,76 @@ define([], function(){
         var self = this;
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
-        this.treeBrowser.onNodeOpen = function( node ) {
+        this.treeBrowser.onNodeOpen = function( nodeId ) {
             //need to expand the territory
-            self.query.addPattern( node.data.key, {self:true, children:true} );
+            self.query.addPattern( nodeId, {self:true, children:true} );
         }
 
         //called from the TreeBrowserWidget when a node has been renamed
-        this.treeBrowser.onNodeTitleChanged = function( node, oldText, newText ) {
+        this.treeBrowser.onNodeTitleChanged = function (nodeId, oldText, newText) {
 
             //send name update to the server
             //TODO: fixme (no good this way...)
-            var currentNode = self.project.getNode( node.data.key );
+            var currentNode = self.project.getNode(nodeId);
             currentNode.name = newText;
-            self.project.setNode( currentNode );
+            self.project.setNode(currentNode);
 
             //accept namechange
             return true;
-        }
+        };
 
         //called from the TreeBrowserWidget when a node has been closed by its collapse icon
-        this.treeBrowser.onNodeClose = function( node) {
+        this.treeBrowser.onNodeClose = function( nodeId ) {
             //remove all chilren (all deep-nested children) from the accoutned open-node list
 
             //local array to hold all the (nested) children ID to remove from the territory
             var removeFromTerritory = [];
 
             //removes all the (nested)childrendIDs from the local container accounting the currently opened nodes' list
-            var deleteNodeAndChildrenFromLocalHash = function ( nodeId, deleteItself ) {
+            var deleteNodeAndChildrenFromLocalHash = function (myNodeId, deleteItself) {
 
                 //if the given node is in this list, go forward with its chilren's ID recursively
-                if ( self._nodes[ nodeId ] ) {
-                    for ( var xx = 0; xx< self._nodes[ nodeId ].children.length ; xx++ ) {
-                        deleteNodeAndChildrenFromLocalHash( self._nodes[ nodeId ].children[xx], true );
+                if (self._nodes[ myNodeId ]) {
+                    for (var xx = 0; xx < self._nodes[ myNodeId ].children.length; xx++) {
+                        deleteNodeAndChildrenFromLocalHash(self._nodes[ myNodeId ].children[xx], true);
                     }
 
                     //finally delete the nodeId itself (if needed)
-                    if ( deleteItself === true ) {
-                        delete self._nodes[ nodeId ];
+                    if (deleteItself === true) {
+                        delete self._nodes[ myNodeId ];
                     }
 
                     //and collect the nodeId from territory removal
-                    removeFromTerritory.push( { nodeid :nodeId } );
+                    removeFromTerritory.push({ nodeid:myNodeId });
                 }
-            }
+            };
 
             //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
-            deleteNodeAndChildrenFromLocalHash( node.data.key, false );
+            deleteNodeAndChildrenFromLocalHash( nodeId, false );
 
             //if there is anything to remove from the territory, do it
             if ( removeFromTerritory.length > 0 )  {
                 self.query.deletePatterns( removeFromTerritory );
             }
-        }
+        };
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
         this.treeBrowser.onNodeCopy = function( nodeId ) {
             console.log( "treeBrowser.onNodeCopy " + nodeId );
             self.project.copyNode( nodeId );
-        }
+        };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
         this.treeBrowser.onNodePaste = function( nodeId ) {
             console.log( "treeBrowser.onNodePaste " + nodeId );
             self.project.pasteTo( nodeId );
-        }
+        };
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         this.treeBrowser.onNodeDelete = function( nodeId ) {
             console.log( "treeBrowser.onNodeDelete " + nodeId );
             self.project.delNode( nodeId );
-        }
+        };
     };
 
     /*
@@ -160,23 +160,8 @@ define([], function(){
                     //check to see if the updated node is present in the tree
                     //whatever is present in the tree should be present in the local hashmap
                     if ( this._nodes[ updatedNodeId ] ) {
-                        //by default assume that nothing has schanged that concers the treeview
-                        var nodeChanged = false;
 
-                        //check if name changed
-                        if ( updatedNode.name !== this._nodes[ updatedNodeId ].treeNode.data.title  ) {
-                            this._nodes[ updatedNodeId ].treeNode.data.title = updatedNode.name;
-                            nodeChanged = true;
-                        }
-
-                        //check if children number changed
-                        if ( (updatedNode.children.length > 0 ) !== this._nodes[ updatedNodeId ].treeNode.data.isLazy  ) {
-                            this._nodes[ updatedNodeId ].treeNode.data.isLazy = updatedNode.children.length > 0;
-                            if ( this._nodes[ updatedNodeId ].treeNode.data.isLazy === false ) {
-                                this._nodes[ updatedNodeId ].treeNode.expand(false);
-                            }
-                            nodeChanged = true;
-                        }
+                        this.treeBrowser.updateNode( this._nodes[ updatedNodeId ].treeNode, updatedNode.name, updatedNode.children.length > 0, useVisualEffect  );
 
                         //independently of the existence of children update the children info in the local hashmap
                         this._nodes[ updatedNodeId ].children = updatedNode.children;
@@ -186,27 +171,6 @@ define([], function(){
                             removeFromTerritory.push( { nodeid : updatedNodeId } );
                         }
 
-
-                        //TODO: think about it everythig of these has been covered already!!!!!!!
-                        //1) before it had no children and now it has
-
-                        //2) before it had children, and now it has no chilren
-                        //2a) node was closed --> remove the "expand" icon
-                        //this._nodes[ updatedNodeId ].data.isLazy =  updatedNode.children.length > 0;
-                        //this._nodes[ updatedNodeId ].render();
-                        //2b) node was open --> remove the children, close it, and remove the "expand" icon   --- HANDLED with the children deletion
-                        //TODO: eof
-
-                        //if there was any change, make the node render itself again
-                        if ( nodeChanged === true ) {
-                            this._nodes[ updatedNodeId ].treeNode.render();
-
-                            if ( useVisualEffect === true ) {
-                                var jqTreeNode = $( this._nodes[ updatedNodeId ].treeNode.span.childNodes[2] );
-                                jqTreeNode.hide();
-                                jqTreeNode.fadeIn();
-                            }
-                        }
                     } else {
                         //there is an update indicator about the node, but the node itself is not in the tree
                         //this should never happen
@@ -246,7 +210,7 @@ define([], function(){
                             //finally delete the nodeId itself
                             delete self._nodes[ nodeId ];
                         }
-                    }
+                    };
 
                     //delete this subtree from the deleted node
                     deleteNodeAndChildrenFromLocalHash( deletedNodeId );
