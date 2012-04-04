@@ -8,13 +8,11 @@
 <body>
 Test
 <script>
-	require(["treemap"], function(Treemap) {
-		var treemap = new Treemap();
-		treemap.setData(treemap.getNode(""), "hihi");
-		treemap.setData(treemap.getNode("/a"), "haha");
-		console.log(treemap.getNode("/b").path);
-		console.log(treemap.root);
-		setTimeout(function() {console.log(treemap.root); }, 1000);
+	require(["tree-query"], function(Query) {
+		var query = new Query(true);
+		query.setPattern(query.getNode("/a"), {self: true});
+		query.deletePattern(query.getNode("/a"));
+		console.log(query.saveToJSON());
 	});
 	</script>
 </body>

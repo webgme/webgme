@@ -1,62 +1,67 @@
 /*
  * Copyright (C) 2012 Vanderbilt University, All rights reserved.
  * 
- * Author: Tamas Kecskes, Miklos Maroti
+ * Author: Miklos Maroti
  */
 
-define([ "assert", "tree-ids" ], function (ASSERT, Tree) {
+define([ "assert", "treemap" ], function (ASSERT, Treemap) {
 	"use strict";
 
 	var Query = function (project) {
 		ASSERT(project);
+
 		this.project = project;
-
 		this.ui = undefined;
-		this.tree = new Tree();
+
+		// initialize the superclass
+		Treemap.call(this);
 	};
 
-	Query.prototype.setDirty = function (node) {
-		for( ;; ) {
-			var data = this.tree.getData(node);
-
-			if( data.dirty ) {
-				return;
-			}
-			else {
-				data.dirty = true;
-			}
-			
-			node = node.parent;
+	(function () {
+		for( var a in Treemap.prototype ) {
+			Query.prototype[a] = Treemap.prototype[a];
 		}
-	};
+	}());
 
 	Query.prototype.isDirty = function (node) {
-		var data = this.tree.peekData(node);
+		var data = this.getData(node);
 		return data && data.dirty;
 	};
 
 	Query.prototype.setPattern = function (node, type) {
+		ASSERT(type);
 
-		this.tree.setData(node, type || {
-			self: true
-		});
-	
-		this.setDirty(node);
-	};
+		type.dirty = true;
+		this.setData(node, type);
 
-	Query.prototype.deletePattern = function (node) {
-		ASSERT(node.tree === tree);
+		node = node.parent;
+		while( node && !this.hasData(node) ) {
+			this.setData(node, {
+				dirty: true
+			});
+			node = node.parent;
+		}
 
-		node[this.property] = {};
-
-		while( !node[this.property].dirty ) {
-			node[this.property].dirty = true;
+		var data;
+		while( node && !(data = this.getData(node)).dirty ) {
+			data.dirty = true;
 			node = node.parent;
 		}
 	};
 
-	Query.prototype.savePatterns = function () {
+	Query.prototype.deletePattern = function (node) {
+		if( this.hasData(node) )
+		{
+			this.deleteData(node);
+		
+			node = node.parent;
 
+			var data;
+			while( node && !(data = this.getData(node)).dirty ) {
+				data.dirty = true;
+				node = node.parent;
+			}
+		}
 	};
 
 	Query.prototype.onRefresh = function (nodes) {
