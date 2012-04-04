@@ -8,19 +8,27 @@ define([], function(){
         this.query.addUI(this);
         this.query.addPattern( "root",{self:true, children:true} );
 
+        //local container for accounting the currently opened node list
+        //its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
         this._nodes = {};
 
+        //create the tree using our custom widget
         this.treeBrowser = new TreeBrowserWidget( containerId );
 
-        //handle node open
+        //save "this" for later
         var self = this;
 
+        //called from the TreeBrowserWidget when a node is expanded by its expand icon
         this.treeBrowser.onNodeOpen = function( node ) {
+            //need to expand the territory
             self.query.addPattern( node.data.key, {self:true, children:true} );
         }
 
+        //called from the TreeBrowserWidget when a node has been renamed
         this.treeBrowser.onNodeTitleChanged = function( node, oldText, newText ) {
 
+            //send name update to the server
+            //TODO: fixme (no good this way...)
             var currentNode = self.project.getNode( node.data.key );
             currentNode.name = newText;
             self.project.setNode( currentNode );
@@ -29,70 +37,63 @@ define([], function(){
             return true;
         }
 
+        //called from the TreeBrowserWidget when a node has been closed by its collapse icon
         this.treeBrowser.onNodeClose = function( node) {
-            //remove all chilrend (deep nested children) from the accoutned open-node list
-            var allChildrenIds = self._queryNodeAllChildrenIds( node.data.key );
+            //remove all chilren (all deep-nested children) from the accoutned open-node list
 
+            //local array to hold all the (nested) children ID to remove from the territory
             var removeFromTerritory = [];
 
-            //at this point we have all the nested childrenIds we don't care anymore
-            for ( var j = 0; j < allChildrenIds.length; j++  ) {
+            //removes all the (nested)childrendIDs from the local container accounting the currently opened nodes' list
+            var deleteNodeAndChildrenFromLocalHash = function ( nodeId, deleteItself ) {
 
-                //remove from
-                delete self._nodes[ allChildrenIds[ j ] ];
+                //if the given node is in this list, go forward with its chilren's ID recursively
+                if ( self._nodes[ nodeId ] ) {
+                    for ( var xx = 0; xx< self._nodes[ nodeId ].children.length ; xx++ ) {
+                        deleteNodeAndChildrenFromLocalHash( self._nodes[ nodeId ].children[xx], true );
+                    }
 
-                removeFromTerritory.push( { id : allChildrenIds[ j ] } );
+                    //finally delete the nodeId itself (if needed)
+                    if ( deleteItself === true ) {
+                        delete self._nodes[ nodeId ];
+                    }
+
+                    //and collect the nodeId from territory removal
+                    removeFromTerritory.push( { nodeid :nodeId } );
+                }
             }
 
-            //extend list with the current node's ID
-            removeFromTerritory.push( { id : node.data.key } );
+            //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
+            deleteNodeAndChildrenFromLocalHash( node.data.key, false );
 
-            //remove the node itself from querypattern
-            self.query.deletePatterns( removeFromTerritory );
+            //if there is anything to remove from the territory, do it
+            if ( removeFromTerritory.length > 0 )  {
+                self.query.deletePatterns( removeFromTerritory );
+            }
         }
 
+        //called from the TreeBrowserWidget when a node has been marked to "copy this"
         this.treeBrowser.onNodeCopy = function( nodeId ) {
             console.log( "treeBrowser.onNodeCopy " + nodeId );
             self.project.copyNode( nodeId );
         }
 
+        //called from the TreeBrowserWidget when a node has been marked to "paste here"
         this.treeBrowser.onNodePaste = function( nodeId ) {
             console.log( "treeBrowser.onNodePaste " + nodeId );
             self.project.pasteTo( nodeId );
         }
 
+        //called from the TreeBrowserWidget when a node has been marked to "delete this"
         this.treeBrowser.onNodeDelete = function( nodeId ) {
             console.log( "treeBrowser.onNodeDelete " + nodeId );
             self.project.delNode( nodeId );
         }
     };
 
-    ListerCtrl.prototype._queryNodeAllChildrenIds = function( nodeId ) {
-        //remove all chilrend (deep nested children) from the accoutned open-node list
-        var allChildrenIds = [];
-
-        var self = this;
-
-        var getChildren = function( moduleNode ) {
-
-            if ( moduleNode === undefined ) {
-                return;
-            }
-
-            for( var i = 0; i < moduleNode.children.length; i++ ) {
-                allChildrenIds.push( moduleNode.children[i] );
-
-                getChildren( self.project.getNode(  moduleNode.children[i] ) );
-            }
-        };
-
-        getChildren( self.project.getNode( nodeId ) );
-
-        //return the children ID list
-        return allChildrenIds;
-    }
-
-
+    /*
+     * Called from its query when any object in its territory has been modified
+     */
     ListerCtrl.prototype.onRefresh = function( updatedata ){
 
         //updatedata contains:
@@ -100,62 +101,112 @@ define([], function(){
         //mlist for updated nodes
         //dlist for deleted ndoes
 
+        //save "this" for future use
+        var self = this;
+
+        //by default use visual effect to highlight modification (flash the node)
+        var useVisualEffect = true;
+
         //disable rendering for tree, speed it up
-        if ( updatedata.ilist.length + updatedata.mlist.length + updatedata.dlist.length > 1 )
+        if ( updatedata.ilist.length + updatedata.mlist.length + updatedata.dlist.length > 1 ) {
             this.treeBrowser.enableUpdate(false);
+            useVisualEffect = false;
+        }
 
         //Handle INSERTED LIST
         for ( var i = 0; i < updatedata.ilist.length; i++ ) {
             var inseretedNodeId = updatedata.ilist[i];
 
+            //root is not represented in the tree
             if ( inseretedNodeId !== "root" ) {
 
+                //get the node itself from the Entity Manager
                 var inseretedNode = this.project.getNode( inseretedNodeId );
 
                 //just to make sure that the inserted node really exist on the client
                 if ( inseretedNode )
                 {
+                    //figure out its parent
                     var parentNode = inseretedNode.parentId;
-
                     if ( inseretedNode.parentId !== null ) {
-                        parentNode = this._nodes[ inseretedNode.parentId ];
+                        parentNode = this._nodes[ inseretedNode.parentId ].treeNode;
                     }
 
+                    //create a new node for it in the tree
                     var newTreeNode = this.treeBrowser.createNode( parentNode, { id: inseretedNode._id, name: inseretedNode.name, hasChildren : inseretedNode.children.length > 0 } );
 
-                    this._nodes[ inseretedNode._id ] = newTreeNode;
+                    //store the node's info in the local hashmap
+                    this._nodes[ inseretedNode._id ] = { "treeNode": newTreeNode, "children" : inseretedNode.children };
                 }
             }
         }
+
+        //local array to hold all the (nested) children ID to remove from the territory
+        var removeFromTerritory = [];
 
         //HANDLE UPDATED LIST
         for (  i = 0; i < updatedata.mlist.length; i++ ) {
             var updatedNodeId = updatedata.mlist[i];
 
+            //root is not represented in the tree
             if ( updatedNodeId !== "root" ) {
 
+                //get the node itself from the Entity Manager
                 var updatedNode = this.project.getNode( updatedNodeId );
 
-                //just to make sure that the inserted node really exist on the client
+                //just to make sure that the updated node really exist on the client
                 if ( updatedNode )
                 {
+                    //check to see if the updated node is present in the tree
+                    //whatever is present in the tree should be present in the local hashmap
                     if ( this._nodes[ updatedNodeId ] ) {
-                        //node is present in treebrowser, update it
+                        //by default assume that nothing has schanged that concers the treeview
+                        var nodeChanged = false;
 
                         //check if name changed
-                        if ( updatedNode.name !== this.treeBrowser.getNodeText( this._nodes[ updatedNodeId ] ) ) {
-                            this.treeBrowser.renameNode( this._nodes[ updatedNodeId ], updatedNode.name );
+                        if ( updatedNode.name !== this._nodes[ updatedNodeId ].treeNode.data.title  ) {
+                            this._nodes[ updatedNodeId ].treeNode.data.title = updatedNode.name;
+                            nodeChanged = true;
                         }
 
                         //check if children number changed
+                        if ( (updatedNode.children.length > 0 ) !== this._nodes[ updatedNodeId ].treeNode.data.isLazy  ) {
+                            this._nodes[ updatedNodeId ].treeNode.data.isLazy = updatedNode.children.length > 0;
+                            if ( this._nodes[ updatedNodeId ].treeNode.data.isLazy === false ) {
+                                this._nodes[ updatedNodeId ].treeNode.expand(false);
+                            }
+                            nodeChanged = true;
+                        }
+
+                        //independently of the existence of children update the children info in the local hashmap
+                        this._nodes[ updatedNodeId ].children = updatedNode.children;
+
+                        //if there is no more children of the current node, remove it from the territory
+                        if ( updatedNode.children.length === 0 ) {
+                            removeFromTerritory.push( { nodeid : updatedNodeId } );
+                        }
+
+
+                        //TODO: think about it everythig of these has been covered already!!!!!!!
                         //1) before it had no children and now it has
 
                         //2) before it had children, and now it has no chilren
                         //2a) node was closed --> remove the "expand" icon
-                        this._nodes[ updatedNodeId ].data.isLazy =  updatedNode.children.length > 0;
-                        this._nodes[ updatedNodeId ].render();
+                        //this._nodes[ updatedNodeId ].data.isLazy =  updatedNode.children.length > 0;
+                        //this._nodes[ updatedNodeId ].render();
                         //2b) node was open --> remove the children, close it, and remove the "expand" icon   --- HANDLED with the children deletion
+                        //TODO: eof
 
+                        //if there was any change, make the node render itself again
+                        if ( nodeChanged === true ) {
+                            this._nodes[ updatedNodeId ].treeNode.render();
+
+                            if ( useVisualEffect === true ) {
+                                var jqTreeNode = $( this._nodes[ updatedNodeId ].treeNode.span.childNodes[2] );
+                                jqTreeNode.hide();
+                                jqTreeNode.fadeIn();
+                            }
+                        }
                     } else {
                         //there is an update indicator about the node, but the node itself is not in the tree
                         //this should never happen
@@ -165,60 +216,52 @@ define([], function(){
         }
 
         //HANDLE DELETED LIST
-        var removeFromTerritory = [];
+
+
+
         for (  i = 0; i < updatedata.dlist.length; i++ ) {
             var deletedNodeId = updatedata.dlist[i];
 
+            //root is not represented in the tree
             if ( deletedNodeId !== "root" ) {
 
+                //check to see if the deleted node is present in the tree
+                //whatever is present in the tree should be present in the local hashmap
                 if ( this._nodes[ deletedNodeId ] ) {
-                    //node is present in treebrowser, update it
-                    this.treeBrowser.deleteNode( this._nodes[ deletedNodeId ]  );
 
-                    //remove from local opened node list
-                    delete this._nodes[ deletedNodeId ];
+                    //call the TreeBrowserWidget the delete the node from the tree representation
+                    this.treeBrowser.deleteNode( this._nodes[ deletedNodeId ].treeNode  );
 
-                    //extend list with the current node's ID
+                    //remove the node and all its (nested)childrem from local opened node hashmap
+                    var deleteNodeAndChildrenFromLocalHash = function ( nodeId ) {
+
+                        //if the nodeId is present in the local hashmap
+                        if ( self._nodes[ nodeId ] ) {
+
+                            //first remove its children recursively
+                            for ( var xx = 0; xx< self._nodes[ nodeId ].children.length ; xx++ ) {
+                                deleteNodeAndChildrenFromLocalHash( self._nodes[ nodeId ].children[xx] );
+                            }
+
+                            //finally delete the nodeId itself
+                            delete self._nodes[ nodeId ];
+                        }
+                    }
+
+                    //delete this subtree from the deleted node
+                    deleteNodeAndChildrenFromLocalHash( deletedNodeId );
+
+                    //extend list to remove from the territory with the current node's ID
                     removeFromTerritory.push( { nodeid : deletedNodeId } );
                 }
             }
         }
-        //remove the node itself from querypattern
+        //if there is anythign to remove from the territory, do so
         if ( removeFromTerritory.length > 0 )  {
             this.query.deletePatterns( removeFromTerritory );
         }
 
-        /*for ( var i = 0; i < nodes.length; i++ ) {
-            var currentNodeId = nodes[i];
-
-            var currentNode = this.project.getNode( currentNodeId );
-
-            if ( currentNode )
-            {
-                //check if node is already here?
-                if ( this._nodes[ currentNodeId ] ) {
-                    //node is present in treebrowser, update it
-                    if ( currentNode.name !== this.treeBrowser.getNodeText( this._nodes[ currentNodeId ] ) ) {
-                        this.treeBrowser.renameNode( this._nodes[ currentNodeId ], currentNode.name );
-                    }
-                } else {
-                    if ( currentNode._id !== "root" ) {
-
-                        var parentNode = currentNode.parentId;
-
-                        if ( currentNode.parentId !== null ) {
-                            parentNode = this._nodes[ currentNode.parentId ];
-                        }
-
-                        var newTreeNode = this.treeBrowser.createNode( parentNode, { id: currentNode._id, name: currentNode.name, hasChildren : currentNode.children.length > 0 } );
-
-                        this._nodes[ currentNode._id ] = newTreeNode;
-                    }
-                }
-            }
-        }*/
-
-        //disable rendering for tree, speed it up
+        //finally enable rendering for the tree again
         if ( updatedata.ilist.length + updatedata.mlist.length + updatedata.dlist.length > 1 )
             this.treeBrowser.enableUpdate(true);
     };
