@@ -96,3 +96,10 @@ li.gme-connection > a .jstree-icon
     background-image: url("../img/gmeicons.png") !important;
     background-position: -64px 0px !important;
 }
+
+#vakata-contextmenu {
+    font-size: 10px;
+    font-family: Verdana;
+    /*margin-top: -5px !important;
+    margin-left: 5px !important;*/
+}

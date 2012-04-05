@@ -47,6 +47,11 @@ function JSTreeBrowserWidget( containerId ){
         }
     };
 
+    var editNode = function (nodeId) {
+        console.log( "TreeBrowser edit " +  nodeId );
+        var result = self.treeViewE.jstree("rename",null );
+    };
+
     var customContextMenu = function (node) {
 
         // The default set of all items
@@ -54,28 +59,32 @@ function JSTreeBrowserWidget( containerId ){
             renameItem: { // The "rename" menu item
                 label: "Rename",
                 action: function (obj) {
-                    this.rename( obj.attr("nId") );
-                }
+                    editNode( obj.attr("nId") );
+                },
+                icon : "css/contextmenu/page_white_edit.png"
             },
             copyItem: { // The "delete" menu item
                 label: "Copy",
                 separator_before : true,
                 action: function ( obj ) {
                     copyNode( obj.attr("nId") );
-                }
+                },
+                icon : "css/contextmenu/page_white_copy.png"
             },
             pasteItem: { // The "delete" menu item
                 label: "Paste",
                 action: function ( obj ) {
                     pasteNode( obj.attr("nId") );
-                }
+                },
+                icon : "css/contextmenu/page_white_paste.png"
             },
             deleteItem: { // The "delete" menu item
              label: "Delete",
              separator_before : true,
              action: function ( obj ) {
                  deleteNode( obj.attr("nId") );
-             }
+             },
+             icon : "css/contextmenu/page_white_delete.png"
             }
         };
 
@@ -84,14 +93,14 @@ function JSTreeBrowserWidget( containerId ){
 
     //contruct the tree itself using jsTree
     this.treeViewE.jstree({
-        "plugins" : [ "themes", "html_data", "contextmenu" ],
+        "plugins" : [ "themes", "html_data", "contextmenu", "ui", "crrm" ],
         "open_parents" : false,
         "contextmenu" : {
             "select_node" : "true",
-                "show_at_node" : "true",
-                "items": function(node) {
-                            return customContextMenu( node );
-                        }
+            "show_at_node" : "true",
+            "items": function(node) {
+                        return customContextMenu( node );
+                    }
         }
     });
 
@@ -130,6 +139,27 @@ function JSTreeBrowserWidget( containerId ){
 
         if ($.isFunction(self.onNodeClose)){
             self.onNodeClose.call(self,  nodeClosing.attr("nId") );
+        }
+    });
+
+    //hook up close open eventhandler
+    this.treeViewE.bind("rename.jstree", function (e, data) {
+        //get the node which is about to open
+        var renamedNode = data.rslt.obj;
+        var oldName = data.rslt.old_name;
+        var newName = data.rslt.new_name;
+
+        if ( oldName !== newName ) {
+            var changeAllowed = true;
+
+            if ($.isFunction(self.onNodeTitleChanged)) {
+                changeAllowed = self.onNodeTitleChanged.call(self, renamedNode.attr("nId"), oldName, newName);
+            }
+
+            if (changeAllowed !== true) {
+                self.updateNode( renamedNode, oldName, null, false );
+                console.log("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
+            }
         }
     });
 }

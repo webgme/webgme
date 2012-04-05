@@ -35,7 +35,7 @@ define([], function(){
             self.project.setNode(currentNode);
 
             //accept namechange
-            return true;
+            return false;
         };
 
         //called from the TreeBrowserWidget when a node has been closed by its collapse icon
