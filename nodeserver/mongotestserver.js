@@ -18,7 +18,7 @@ var log = function(text){
         fs.writeSync(lfd,"["+timeStamp()+"] "+text+"\n");
     }
     else{
-        lfd = fs.openSync(timeStampNoFormat()+".log", 'a', 666);
+        lfd = fs.openSync(timeStampNoFormat()+".log", 'a');
         log(text);
     }
 }
@@ -107,11 +107,26 @@ var MongoStorage = function(){
 
     };
 };
+
 /*tree like functioning*/
 var DEPTH = 3;
 var CHILDREN = 3;
 var PAYLOAD = 1;
 var COUNTER = 0;
+var numOfNodes = function(){
+	var retval=1;
+	var leaf=1;
+	for(var i=0;i<DEPTH;i++){
+		leaf = leaf*CHILDREN;
+		retval +=leaf;
+	}
+	return retval;
+};
+var MAX = numOfNodes();
+var READSTART = 0;
+var READEND = 0;
+var CREATESTART = 0;
+var CREATEEND = 0;
 var createSubTree = function(root){
     var level = root.split('_').length-1;
     var object = createObject(root,PAYLOAD);
@@ -133,65 +148,28 @@ var createSubTree = function(root){
 var treeItemCreated = function(id){
     log("{"+id+"} have been created");
     COUNTER++;
+    if(COUNTER==MAX){
+    	CREATEEND = timeStampInt();
+    }
 };
 var readSubTree = function(root){
-    mystorage.getOne({_id:root},timeStampInt,function(err,result,query,starttime){
-        var time = timeStampInt-starttime;
-        log("{"+result._id+"} returned in "+time+"ms");
-        for(var i in result.children){
-            readSubTree(result.children[i]);
-        }
-        if(--COUNTER == 0){
-            exitProgram();
-        }
+    mystorage.getOne({_id:root},timeStampInt(),function(err,result,query,starttime){
+    	if(err){
+    		log("ooops "+query);
+    	}
+    	else{    		
+	        var time = timeStampInt()-starttime;
+	        log("{"+result._id+"} returned in "+time+"ms");
+	        for(var i in result.children){
+	            readSubTree(result.children[i]);
+	        }
+	        if(--COUNTER == 0){
+	        	READEND = timeStampInt();
+	        	printTreeResults();
+	            exitProgram();
+	        }
+    	}
     });
-};
-
-/*paralel functions*/
-var createLotOfObjectsParalelly = function(howmany){
-    for(var i=0;i<howmany;i++){
-        mystorage.set(createObject(i,sizeofobjects),paralelObjectCreated);
-    }
-};
-var paralelObjectCreated = function(id){
-    log("object "+id+" paralelly created...");
-};
-var readLotOfObjectsParalellyOneByOne = function(howmany){
-    for(var i=0;i<howmany;i++){
-        mystorage.getOne({_id:i},timeStampInt(),paralelObjectRead);
-    }
-};
-var readLotOfObjectsParalellyInTens = function(howmany){
-    for(var i=0;i<howmany;i+=10){
-        mystorage.get({$or:[{_id:i},{_id:i+1},{_id:i+2},{_id:i+3},{_id:i+4},{_id:i+5},{_id:i+6},{_id:i+7},{_id:i+8},{_id:i+9}]},paralelObjectRead);
-    }
-}
-var paralelObjectRead = function(err,result,query,starttime){
-    log("object have been loaded paralelly");
-    if(err){
-        log("something was wrong during the load "+err);
-    }
-    else{
-        var time=timeStampInt()-starttime
-        log("object: "+JSON.stringify(query)+" time was: "+time);
-    }
-}
-
-/*sequential tries...*/
-var createLotOfObjectsSequentially = function(howmany){
-    var i=0;
-    var creationDone = function(){
-        log("sequentially created object:"+i);
-        i++;
-        if(i<howmany){
-            mystorage.set(bigObject(i),creationDone);
-        }
-        else{
-            log("sequential creation have been done");
-            exitProgram();
-        }
-    };
-    mystorage.set(bigObject(i),creationDone);
 };
 var objecthusi = {};
 var createObject = function(id,size){
@@ -217,18 +195,38 @@ var exitProgram = function(){
     /*terminating the test*/
     process.exit(0);
 };
-
+var printTreeResults = function(){
+	var text = "testing parameters: depth="+DEPTH+", children="+CHILDREN+", payload="+PAYLOAD;
+	text    += "\n";
+	text    += "testing results: creation time="+(CREATEEND-CREATESTART)+"ms, read time="+(READEND-READSTART)+"ms";
+	log("testing parameters: depth="+DEPTH+", children="+CHILDREN+", payload="+PAYLOAD);
+	log("testing results: creation time="+(CREATEEND-CREATESTART)+"ms, read time="+(READEND-READSTART)+"ms");
+	console.log(text);
+};
+var printHelpText = function(){
+	console.log("wrong parameters!!!");
+	console.log("proper usage: node mongotestserver.js depth(1-) children(1-) payload(1-100)");
+	exitProgram();
+};
 
 /*MAIN*/
-log(" ... "+timeStampNoFormat());
-var numofobjects = 10000;
-var sizeofobjects = 1;
+var parameters = process.argv.splice(" ");
+if(parameters.length != 5){
+	printHelpText();
+}
+DEPTH=parseInt(parameters[2]);
+CHILDREN=parseInt(parameters[3]);
+PAYLOAD=parseInt(parameters[4]);
+if(!(DEPTH>0 && CHILDREN>0 && PAYLOAD>0 && PAYLOAD<101)){
+	printHelpText();
+}
+MAX = numOfNodes();
 var mystorage = new MongoStorage();
 mystorage.onOpen = function(){
     mystorage.clear();
-    //createLotOfObjectsParalelly(numofobjects);
-    //readLotOfObjectsParalellyOneByOne(numofobjects);
     COUNTER = 0;
+    CREATESTART = timeStampInt();
     createSubTree("root");
+    READSTART = timeStampInt();
     readSubTree("root");
 };
