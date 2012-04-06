@@ -67,6 +67,10 @@ span.gme-connection span.dynatree-icon  {
     background-position: -64px 0 !important;
 }
 
+span.gme-root span.dynatree-icon  {
+    background-position: -80px 0 !important;
+}
+
 li.gme-folder > a .jstree-icon
 {
     background-image: url("../img/gmeicons.png") !important;
@@ -97,9 +101,42 @@ li.gme-connection > a .jstree-icon
     background-position: -64px 0px !important;
 }
 
+li.gme-root > a .jstree-icon
+{
+    background-image: url("../img/gmeicons.png") !important;
+    background-position: -80px 0px !important;
+}
+
+/* JSTREE CONTEXT MENU */
 #vakata-contextmenu {
     font-size: 10px;
     font-family: Verdana;
     /*margin-top: -5px !important;
     margin-left: 5px !important;*/
 }
+
+/* Loading in progress for JSTree*/
+li.gme-loading > a
+{
+    color: #aaaaaa;
+    font-style: italic;
+}
+
+li.gme-loading > a .jstree-icon
+{
+    background-position: 0 0 !important;
+    background-image: url("../img/progress.gif") !important;
+}
+
+/* Loading in progress for DynaTree*/
+
+span.gme-loading a.dynatree-title {
+    color: #aaaaaa;
+    font-style: italic;
+}
+
+span.gme-loading span.dynatree-icon  {
+    background-position: 0 0 !important;
+    background-image: url("../img/progress.gif") !important;
+}
+

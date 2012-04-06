@@ -23,7 +23,7 @@ Project = function(){
     for ( var i = 0; i < itemNum; i++ ) {
         //generate obejct
         var myId = "id" + i;
-        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : null };
+        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : "root" };
 
         if ( i > topLevelItems  ) {
             //pick a parent for it randomly
@@ -46,31 +46,7 @@ Project = function(){
     }
     console.log( "DONE" );
 
-    /*for ( var i = 0; i < 10; i++ ) {
-        var myId = "id" + i;
-
-        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : null };
-
-        var level1Children = [];
-        for ( j = 0; j < 10; j++ ) {
-            var level1id = "id_" + i + "_" + j;
-
-            var level1Object = { _id: level1id, name: "Object" + i + "_" + j, children: [], parentId : myId };
-            this.mystorage.set( level1id, level1Object );
-
-            level1Children.push( level1id );
-        }
-
-        myObject.children = level1Children;
-
-        rootChildren.push( myId );
-
-        this.mystorage.set( myId, myObject );
-    }
-    /*this.mystorage.set("id1",{_id: "id1", name:"Object1", children:[ ], size:"big"});
-    this.mystorage.set("id2",{_id: "id2", name:"Object2", children:[ ], size:"big"});*/
-
-    this.mystorage.set("root",{_id: "root", name:"gyoker", children: rootChildren , size:"big"});
+    this.mystorage.set( "root" ,{_id: "root", name:"RootFolder", children: rootChildren , size:"big"});
 };
 /*public functions*/
 Project.prototype.addClient = function(socket){

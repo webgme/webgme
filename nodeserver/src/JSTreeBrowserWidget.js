@@ -12,7 +12,7 @@ function JSTreeBrowserWidget( containerId ){
     }
 
     //generate unique id for control
-    this.guid = "jsTreeGuidBla";
+    this.guid = "TreeBrowserWidgetjsTree";
 
     //generate control dynamically
     this.treeViewE = $('<div/>', {
@@ -21,6 +21,9 @@ function JSTreeBrowserWidget( containerId ){
 
     //add control to parent
     this.containerControl.append( this.treeViewE );
+
+    //by default use visual animations to reflect changes in the three
+    this._animation = true;
 
     //save this for later use
     var self = this;
@@ -49,10 +52,14 @@ function JSTreeBrowserWidget( containerId ){
 
     var editNode = function (nodeId) {
         console.log( "TreeBrowser edit " +  nodeId );
-        var result = self.treeViewE.jstree("rename",null );
+        self.treeViewE.jstree("rename",null );
     };
 
     var customContextMenu = function (node) {
+
+        if ( node.hasClass("gme-loading") === true ) {
+            return {};
+        }
 
         // The default set of all items
         var items = {
@@ -115,10 +122,7 @@ function JSTreeBrowserWidget( containerId ){
         if ( nodes.length === 0 ) {
             //it has no children, call external function to get children
             nodeOpening = $(nodeOpening);
-            window.logMessage( "onLazyRead node:" + nodeOpening.attr("nId") );
-
-            //icon set either via type or css
-            //nodeOpening.addClass('jstree-openProgress');
+            console.log( "onLazyRead node:" + nodeOpening.attr("nId") );
 
             if ($.isFunction(self.onNodeOpen)){
                 self.onNodeOpen.call(self,  nodeOpening.attr("nId"));
@@ -157,7 +161,7 @@ function JSTreeBrowserWidget( containerId ){
             }
 
             if (changeAllowed !== true) {
-                self.updateNode( renamedNode, oldName, null, false );
+                self.updateNode( renamedNode, { "text" : oldName } );
                 console.log("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
             }
         }
@@ -173,8 +177,6 @@ JSTreeBrowserWidget.prototype = {
      */
     createNode : function ( parentNode, objDescriptor ) {
 
-        var parentExpanded = false;
-
         //check if the parentNode is null or not
         //when null, the new node belongs to the root
         if ( parentNode === null ) {
@@ -185,7 +187,7 @@ JSTreeBrowserWidget.prototype = {
         var newNodeData = {
             "data" :  objDescriptor.name,
             "attr" : { "nId" : objDescriptor.id,
-                        "class" : objDescriptor.objectType ? "gme-" + objDescriptor.objectType : "gme-folder"
+                        "class" : objDescriptor.objectType || "gme-folder"
                     }
         };
 
@@ -197,23 +199,26 @@ JSTreeBrowserWidget.prototype = {
         var newNode = this.treeViewE.jstree("create_node", parentNode, "last", newNodeData, false );
 
         //log
-        window.logMessage( "New node created: " + objDescriptor.id );
+        console.log( "New node created: " + objDescriptor.id );
 
         //a bit of visual effect
-        var needVisualEffect = true;
-        if ( parentNode !== -1 ) {
-            if ( this.treeViewE.jstree("is_open", parentNode ) !== true ) {
-                needVisualEffect = false;
-            }
-        }
-
-        if ( needVisualEffect === true ) {
-            newNode.hide();
-            newNode.fadeIn();
-        }
+        this.animateNode( newNode );
 
         //return the newly created node
         return newNode;
+    },
+
+
+    /*
+     * Applies a visual animation to the specfied node to get user's attention
+     */
+    animateNode : function(node) {
+        //if animation is enabled for the widget
+        if (this._animation === true) {
+            var nodePartToAnimate = $( node[0].children[1] );
+            nodePartToAnimate.hide();
+            nodePartToAnimate.fadeIn( 'fast' );
+        }
     },
 
     /**
@@ -230,10 +235,10 @@ JSTreeBrowserWidget.prototype = {
         jQuery.jstree._reference( this.treeViewE ).delete_node( node );
 
         //log
-        window.logMessage( "Node removed: " + node.attr("nId") );
+        console.log( "Node removed: " + node.attr("nId") );
     },
 
-    updateNode:function (node, text, hasChildren, useVisualEffect) {
+    updateNode:function (node, objDescriptor) {
         //check if valid node
         if (!node)
             return;
@@ -242,12 +247,12 @@ JSTreeBrowserWidget.prototype = {
         var nodeDataChanged = false;
 
         //set new text value (if any)
-        if ( text ) {
+        if ( objDescriptor.text ) {
 
             var currentText = this.treeViewE.jstree("get_text", node );
 
-            if (currentText !== text) {
-                this.treeViewE.jstree("set_text", node, text );
+            if (currentText !== objDescriptor.text) {
+                this.treeViewE.jstree("set_text", node, objDescriptor.text );
 
                 //mark that change happened
                 nodeDataChanged = true;
@@ -255,15 +260,15 @@ JSTreeBrowserWidget.prototype = {
             }
         }
 
-        if (hasChildren === true || hasChildren === false) {
+        if ( objDescriptor.hasChildren === true || objDescriptor.hasChildren === false) {
 
             //set new childrend value (if any)
             //check if parent has any children
             var currentlyHasChildren = !this.treeViewE.jstree("is_leaf", node );
 
-            if ( hasChildren !== currentlyHasChildren ) {
+            if ( objDescriptor.hasChildren !== currentlyHasChildren ) {
 
-                if ( hasChildren === true ) {
+                if ( objDescriptor.hasChildren === true ) {
                     //hack tree to show the node as an closed but openable treenode
                     node.removeClass('jstree-leaf').addClass('jstree-closed');
                 } else {
@@ -277,12 +282,27 @@ JSTreeBrowserWidget.prototype = {
             }
         }
 
+        //set new icon (if any)
+        if ( objDescriptor.objType ) {
+            if ( node.hasClass( objDescriptor.objType ) !== true ) {
+
+                //remove loading if it was there
+                if ( node.hasClass( "gme-loading" ) === true ) {
+                    node.removeClass( "gme-loading" );
+                }
+
+                //add new class
+                node.addClass( objDescriptor.objType );
+
+                //mark that change happened
+                nodeDataChanged = true;
+            }
+        }
+
         if (nodeDataChanged === true) {
 
-            if (useVisualEffect === true) {
-                node.hide();
-                node.fadeIn();
-            }
+            //a bit of visual effect
+            this.animateNode( node );
 
             //log
             console.log("Node updated: " + node.attr("nId"));
@@ -295,7 +315,7 @@ JSTreeBrowserWidget.prototype = {
      * @param node
      */
     onNodeOpen : function( node ) {
-        window.logMessage( "Default onNodeOpen called, doing nothing. Please override onNodeOpen(node) and at the end call lazyLoadFinished(node, false)" );
+        console.log( "Default onNodeOpen called, doing nothing. Please override onNodeOpen(node) and at the end call lazyLoadFinished(node, false)" );
         this.lazyLoadFinished( node, true );
     },
 
@@ -304,18 +324,20 @@ JSTreeBrowserWidget.prototype = {
      * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
      */
     onNodeTitleChanged : function( node, oldText, newText ) {
-        window.logMessage( "Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, newText)" );
+        console.log( "Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, newText)" );
         return true;
     },
 
-    /*
-     * Enables or disables the rendering for the tree (very helpful for bulk edit, can speed up things)
-     */
-    enableUpdate:function (enabled) {
-        //this.treeViewE.dynatree("getTree").enableUpdate(enabled);
-    }
+    isExpanded : function( node ) {
+        //if the node is null its most propably represents the root
+        //and the root is always expanded (since is not shown in the tree)
+        if ( node === null ) {
+            return true;
+        }
 
-}
+        return this.treeViewE.jstree("is_open", node );
+    }
+};
 /*
  * TREEVIEW WIDGET
  */
