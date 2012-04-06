@@ -1,14 +1,16 @@
 /*
  * TreeViewWidget JSTree WIDGET
  */
-function JSTreeBrowserWidget( containerId ){
+function JSTreeBrowserWidget( containerId ) {
+    //save this for later use
+    var self = this;
 
     //save parentcontrol
     this.containerControl =  $("#" + containerId );
 
     if ( this.containerControl.length === 0 ) {
         alert( "JSTreeBrowserWidget's container control with id:'" + containerId + "' could not be found" );
-        return;
+        return undefined;
     }
 
     //generate unique id for control
@@ -25,10 +27,7 @@ function JSTreeBrowserWidget( containerId ){
     //by default use visual animations to reflect changes in the three
     this._animation = true;
 
-    //save this for later use
-    var self = this;
-
-
+    //Called when the ContexMenu's 'Copy' action is selected for the node
     var copyNode = function( nodeId ) {
         console.log( "TreeBrowser copy " + nodeId );
         if ($.isFunction(self.onNodeCopy)){
@@ -36,6 +35,7 @@ function JSTreeBrowserWidget( containerId ){
         }
     };
 
+    //Called when the ContexMenu's 'Paste' action is selected for the node
     var pasteNode = function( nodeId ) {
         console.log( "TreeBrowser paste " + nodeId );
         if ($.isFunction(self.onNodePaste)){
@@ -43,6 +43,7 @@ function JSTreeBrowserWidget( containerId ){
         }
     };
 
+    //Called when the ContexMenu's 'Delete' action is selected for the node
     var deleteNode = function( nodeId ) {
         console.log( "TreeBrowser delete " +  nodeId );
         if ($.isFunction(self.onNodeDelete)){
@@ -50,51 +51,57 @@ function JSTreeBrowserWidget( containerId ){
         }
     };
 
+    //Called when the ContexMenu's 'Rename' action is selected for the node
     var editNode = function (nodeId) {
         console.log( "TreeBrowser edit " +  nodeId );
         self.treeViewE.jstree("rename",null );
     };
 
+    //Called when the user right-clicks on a node and
+    //the customized context menu has to be displayed
     var customContextMenu = function (node) {
+        //the object will hold the available context menu actions
+        var items = {};
 
-        if ( node.hasClass("gme-loading") === true ) {
-            return {};
+        //context menu is available for nodes that are not currently in 'loading' state
+        if ( node.hasClass("gme-loading") !== true ) {
+
+            // The default set of available items :  Rename, Copy, Paste, Delete
+            items = {
+                "renameItem": { // The "rename" menu item
+                    "label": "Rename",
+                    "action": function (obj) {
+                        editNode( obj.attr("nId") );
+                    },
+                    "icon" : "css/contextmenu/page_white_edit.png"
+                },
+                "copyItem": { // The "delete" menu item
+                    "label": "Copy",
+                    "separator_before" : true,
+                    "action": function ( obj ) {
+                        copyNode( obj.attr("nId") );
+                    },
+                    "icon" : "css/contextmenu/page_white_copy.png"
+                },
+                "pasteItem": { // The "delete" menu item
+                    "label": "Paste",
+                    "action": function ( obj ) {
+                        pasteNode( obj.attr("nId") );
+                    },
+                    "icon" : "css/contextmenu/page_white_paste.png"
+                },
+                "deleteItem": { // The "delete" menu item
+                 "label": "Delete",
+                 "separator_before" : true,
+                 "action": function ( obj ) {
+                     deleteNode( obj.attr("nId") );
+                 },
+                 "icon" : "css/contextmenu/page_white_delete.png"
+                }
+            };
         }
 
-        // The default set of all items
-        var items = {
-            renameItem: { // The "rename" menu item
-                label: "Rename",
-                action: function (obj) {
-                    editNode( obj.attr("nId") );
-                },
-                icon : "css/contextmenu/page_white_edit.png"
-            },
-            copyItem: { // The "delete" menu item
-                label: "Copy",
-                separator_before : true,
-                action: function ( obj ) {
-                    copyNode( obj.attr("nId") );
-                },
-                icon : "css/contextmenu/page_white_copy.png"
-            },
-            pasteItem: { // The "delete" menu item
-                label: "Paste",
-                action: function ( obj ) {
-                    pasteNode( obj.attr("nId") );
-                },
-                icon : "css/contextmenu/page_white_paste.png"
-            },
-            deleteItem: { // The "delete" menu item
-             label: "Delete",
-             separator_before : true,
-             action: function ( obj ) {
-                 deleteNode( obj.attr("nId") );
-             },
-             icon : "css/contextmenu/page_white_delete.png"
-            }
-        };
-
+        //return the complete action set for this node
         return items;
     };
 
@@ -105,28 +112,18 @@ function JSTreeBrowserWidget( containerId ){
         "contextmenu" : {
             "select_node" : "true",
             "show_at_node" : "true",
-            "items": function(node) {
-                        return customContextMenu( node );
-                    }
+            "items": function(node) { return customContextMenu( node ); }
         }
     });
 
-    //hook up node open eventhandler
+    //hook up 'node opened' EventHandler
     this.treeViewE.bind("open_node.jstree", function (e, data) {
         //get the node which is about to open
         var nodeOpening = data.args[0];
 
-        //check if parent has any children
-        var nodes = jQuery.jstree._reference ( self.treeViewE )._get_children( nodeOpening );
-
-        if ( nodes.length === 0 ) {
-            //it has no children, call external function to get children
-            nodeOpening = $(nodeOpening);
-            console.log( "onLazyRead node:" + nodeOpening.attr("nId") );
-
-            if ($.isFunction(self.onNodeOpen)){
-                self.onNodeOpen.call(self,  nodeOpening.attr("nId"));
-            }
+        //call event handler if exist
+        if ($.isFunction(self.onNodeOpen)){
+            self.onNodeOpen.call(self,  nodeOpening.attr("nId"));
         }
     });
 
