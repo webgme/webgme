@@ -11,29 +11,39 @@ define([ "assert" ], function (ASSERT) {
 
 	var Column = function (table) {
 		ASSERT(table instanceof Table);
-		
+
 		this.table = table;
-		this.rows = {};
+
+		this.values = {};
 	};
 
-	Column.prototype.getRows = function() {
+	Column.prototype.foreach = function(callback) {
 		ASSERT(this.table);
-		
-		return this.rows;
+
+		for(var row in this.values) {
+			callback(row);
+		}
 	};
 	
-	Column.prototype.setData = function (row, value) {
+	Column.prototype.set = function (row, value) {
 		ASSERT(this.table);
-		ASSERT(typeof id === "string" || typeof id === "number");
+		ASSERT(typeof row === "string" || typeof row === "number");
 
-		this.rows[row] = value;
+		this.values[row] = value;
 	};
 
-	Column.prototype.getData = function (row) {
+	Column.prototype.get = function (row) {
 		ASSERT(this.table);
-		ASSERT(typeof id === "string" || typeof id === "number");
+		ASSERT(typeof row === "string" || typeof row === "number");
 		
-		return this.rows[row];
+		return this.values[row];
+	};
+
+	Column.prototype.del = function (row) {
+		ASSERT(this.table);
+		ASSERT(typeof row === "string" || typeof row === "number");
+
+		delete this.values[row];
 	};
 
 	// ----------------- table -----------------
@@ -41,22 +51,28 @@ define([ "assert" ], function (ASSERT) {
 	var Table = function () {
 	};
 
-	Table.getRow = function (id) {
+	Table.prototype.getRow = function (id) {
 		ASSERT(typeof id === "string" || typeof id === "number");
 
 		return id;
 	};
 
-	Table.createColumn = function () {
+	Table.prototype.getId = function (row) {
+		ASSERT(typeof row === "string" || typeof row === "number");
+
+		return row;
+	};
+	
+	Table.prototype.createColumn = function () {
 		return new Column(this);
 	};
 
-	Table.deleteColumn = function (column) {
+	Table.prototype.deleteColumn = function (column) {
 		ASSERT(column instanceof Column);
 		ASSERT(column.table === this);
 
-		column.table = null;
-		delete column.rows;
+		delete column.values;
+		delete column.table;
 	};
 
 	// ----------------- interface -----------------

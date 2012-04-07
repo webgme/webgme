@@ -8,11 +8,40 @@
 <body>
 Test
 <script>
-	require(["tree-query"], function(Query) {
-		var query = new Query(true);
-		query.setPattern(query.getNode("/a"), {self: true});
-		query.deletePattern(query.getNode("/a"));
-		console.log(query.saveToJSON());
+	require(["flattable", "notifier"], function(Table, Notifier) {
+		var table = new Table();
+		var column = table.createColumn();
+		column.set(table.getRow("a"), "b");
+		column.set(table.getRow("c"), "d");
+		column.set(table.getRow("e"), "f");
+		column.set(table.getRow("c"), "-");
+		column.foreach(function(row) {
+			console.log(table.getId(row) + " : " + column.get(row));
+		});
+
+		console.log("");
+		column.del(table.getRow("a"));
+		column.foreach(function(row) {
+			console.log(table.getId(row) + " : " + column.get(row));
+		});
+		
+		console.log("");
+		var notifier = new Notifier(table, function(row, data) {
+			console.log(table.getId(row) + " : " + data);
+		});
+
+		notifier.add(table.getRow("a"), "x");
+		notifier.add(table.getRow("c"), "y");
+		notifier.add(table.getRow("c"), "z");
+		
+		column.foreach(function(row) {
+			notifier.notify(row);
+		});
+		
+		console.log("");
+		notifier.backup.foreach(function(row) {
+			console.log(table.getId(row) + " : " + notifier.backup.get(row) + " -> " + notifier.watched(row));
+		});
 	});
 	</script>
 </body>

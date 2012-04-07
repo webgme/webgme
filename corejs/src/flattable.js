@@ -9,87 +9,91 @@ define([ "assert" ], function (ASSERT) {
 
 	// ----------------- row -----------------
 
-	var rowProto = {};
-
-	// hidden empty property
-	Object.defineProperties(rowProto, {
-		empty: {
-			get: function () {
-				var columnid;
-				for( columnid in this ) {
-					return false;
-				}
-				return true;
-			}
-		}
-	});
-
+	var Row = function(id) {
+		this.id = id;
+	};
+	
 	// ----------------- column -----------------
 
 	var Column = function (table, id) {
 		ASSERT(table instanceof Table);
-		ASSERT(typeof id === "string");
+		ASSERT(typeof id === "number");
 
 		this.table = table;
-		this.rows = [];
 
+		this.rows = [];
 		this.id = id;
 	};
 
-	Column.prototype.getRows = function() {
-		return this.rows;
+	Column.prototype.foreach = function(callback) {
+		ASSERT(this.table);
+		
+		var rows = this.rows;
+		var length = rows.length;
+		for(var i = 0; i < length; ++i) {
+			callback(rows[i]);
+		}
 	};
-	
-	Column.prototype.setData = function (row, value) {
-		ASSERT(row.table === this.table);
 
-		if( !row.hasOwnData(this.id) ) {
-			ASSERT(this.columns.indexOf(row) === -1);
-			this.columns.push(row);
+	Column.prototype.set = function (row, value) {
+		ASSERT(this.table);
+		ASSERT(row instanceof Row);
+		ASSERT(this.table.rows[row.id] === row);
+		
+		if( !row.hasOwnProperty(this.id) ) {
+			ASSERT(this.rows.indexOf(row) === -1);
+			this.rows.push(row);
 		}
 
 		row[this.id] = value;
 	};
 
-	Column.prototype.getData = function (row) {
-		ASSERT(row.table === this.table);
+	Column.prototype.get = function (row) {
+		ASSERT(this.table);
+		ASSERT(row instanceof Row);
+		ASSERT(this.table.rows[row.id] === row);
 
 		return row[this.id];
 	};
 
+	Column.prototype.del = function (row) {
+		ASSERT(this.table);
+		ASSERT(row instanceof Row);
+		ASSERT(this.table.rows[row.id] === row);
+		
+		if( row.hasOwnProperty(this.id) ) {
+			row[this.id] = undefined;
+		}
+	};
+	
 	// ----------------- table -----------------
 
 	var Table = function () {
-		// create row prototype with hidden table property
-		this.rowProto = Object.create(rowProto, {
-			table: {
-				value: this
-			}
-		});
-
 		this.rows = {};
 		this.columns = [];
 	};
 
-	Table.getRow = function (id) {
+	Table.prototype.getRow = function (id) {
 		ASSERT(typeof id === "string" || typeof id === "number");
 
 		var row = this.rows[id];
 		if( !row ) {
-			// create new row with hidden id property
-			row = Object.create(this.rowProto, {
-				id: {
-					value: id
-				}
-			});
-
+			row = new Row(id);
 			this.rows[id] = row;
 		}
+		ASSERT(row.id === id);
 
 		return row;
 	};
 
-	Table.createColumn = function () {
+	Table.prototype.getId = function (row) {
+		ASSERT(row instanceof Row);
+		ASSERT(this.rows[row.id] === row);
+
+		return row.id;
+	};
+	
+	Table.prototype.createColumn = function () {
 		var id = 0;
 		while( this.columns[id] ) {
 			++id;
@@ -102,23 +106,22 @@ define([ "assert" ], function (ASSERT) {
 		return column;
 	};
 
-	Table.deleteColumn = function (column) {
+	Table.prototype.deleteColumn = function (column) {
 		ASSERT(column instanceof Column);
 		ASSERT(column.table === this);
 
 		var rows = column.rows;
+		var length = rows.length;
 		var id = column.id;
 
-		for( var index in rows ) {
-			ASSERT(rows[index].hasOwnProperty(id));
-
-			delete rows[index][id];
+		for(var i = 0; i !== length; ++i) {
+			ASSERT(rows[i].hasOwnProperty(id));
+			delete rows[i][id];
 		}
 
 		delete column.rows;
-
+		delete column.table;
 		delete this.columns[id];
-		column.table = null;
 	};
 
 	// ----------------- interface -----------------
