@@ -101,6 +101,54 @@ define([ "assert" ], function (ASSERT) {
 		}
 	};
 
+	// ----------------- CalculatedColumn -----------------
+
+	var columnValue = function() {
+		return {
+			get: function(row) {
+			},
+			
+			set: function(row) {
+			},
+			
+			destroy: function() {
+			}
+		};
+	};
+	
+	var accumulator = function(value) {
+		var dirty = column(value.table);
+		
+	};
+	
+	var binaryMap = function(combiner, arg1, arg2) {
+		ASSERT()
+
+		var get1 = arg1.get;
+		var get2 = arg2.get;
+		
+		return {
+			get: function(row) {
+				return combiner(get1(row), get2(row));
+			},
+
+			addWatcher: function(watcher) {
+				arg1.addWatcher(watcher);
+				arg2.addWatcher(watcher);
+			},
+			
+			removeWatcher: function(watcher) {
+				arg1.removeWatcher(watcher);
+				arg2.removeWatcher(watcher);
+			},
+			
+			destroy: function() {
+			},
+			
+			table: arg1.table
+		};
+	};
+	
 	// ----------------- Territory -----------------
 
 	var Territory = function (table) {
