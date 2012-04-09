@@ -1,0 +1,49 @@
+li.gme-folder > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") 0 0 !important;
+}
+
+li.gme-model > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") -48px 0 !important;
+}
+
+li.gme-atom > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") -16px 0 !important;
+}
+
+li.gme-aspect > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") -32px 0 !important;
+}
+
+li.gme-connection > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") -64px 0 !important;
+}
+
+li.gme-root > a .jstree-icon
+{
+    background: url("../img/gmeicons.png") -80px 0 !important;
+}
+
+/* JSTREE CONTEXT MENU */
+#vakata-contextmenu {
+    font-size: 10px;
+    font-family: Verdana,serif;
+    /*margin-top: -5px !important;
+    margin-left: 5px !important;*/
+}
+
+/* Loading in progress for JSTree*/
+li.gme-loading > a
+{
+    color: #aaaaaa;
+    font-style: italic;
+}
+
+li.gme-loading > a .jstree-icon
+{
+    background: url("../img/progress.gif") 0 0 !important;
+}

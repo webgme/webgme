@@ -1,13 +1,13 @@
 body { 
 	background-color:white;
     font-size:90%;
-	font-family:Helvetica;
+	font-family:Helvetica,serif;
 }
 
 ul.dynatree-container
 {
     overflow: visible !important;
-    padding-bottom: 0px !important;
+    padding-bottom: 0 !important;
     height: auto;
 }
 
@@ -23,10 +23,10 @@ div.ObjectBrowser {
     background-image: url("../img/progress.gif") !important;
 }
 
-li.jstree-openProgress > a .jstree-icon
+/*li.jstree-openProgress > a .jstree-icon
 {
-    background:url("../img/progress.gif") 0px 0px no-repeat !important;
-}
+    background:url("../img/progress.gif") 0 0 no-repeat !important;
+}*/
 
 /* Remove blue color and underline from title links */
 ul.dynatree-container span.dynatree-title
@@ -34,8 +34,7 @@ ul.dynatree-container span.dynatree-title
     color: black; /* inherit doesn't work on IE */
     text-decoration: none;
     vertical-align: top;
-    margin: 0px;
-    margin-left: 3px;
+    margin: 0 0 0 3px;
     padding: 1px;
 }
 
@@ -46,9 +45,8 @@ span.dynatree-active span.dynatree-title
 }
 
 span.dynatree-icon {
-    margin-left: 0px;
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: 0 0 !important;
+    margin-left: 0;
+    background: url("../img/gmeicons.png") 0 0 !important;
 }
 
 span.gme-model span.dynatree-icon  {
@@ -71,72 +69,12 @@ span.gme-root span.dynatree-icon  {
     background-position: -80px 0 !important;
 }
 
-li.gme-folder > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: 0px 0px !important;
-}
-
-li.gme-model > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: -48px 0px !important;
-}
-
-li.gme-atom > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: -16px 0px !important;
-}
-
-li.gme-aspect > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: -32px 0px !important;
-}
-
-li.gme-connection > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: -64px 0px !important;
-}
-
-li.gme-root > a .jstree-icon
-{
-    background-image: url("../img/gmeicons.png") !important;
-    background-position: -80px 0px !important;
-}
-
-/* JSTREE CONTEXT MENU */
-#vakata-contextmenu {
-    font-size: 10px;
-    font-family: Verdana;
-    /*margin-top: -5px !important;
-    margin-left: 5px !important;*/
-}
-
-/* Loading in progress for JSTree*/
-li.gme-loading > a
-{
-    color: #aaaaaa;
-    font-style: italic;
-}
-
-li.gme-loading > a .jstree-icon
-{
-    background-position: 0 0 !important;
-    background-image: url("../img/progress.gif") !important;
-}
-
-/* Loading in progress for DynaTree*/
-
 span.gme-loading a.dynatree-title {
     color: #aaaaaa;
     font-style: italic;
 }
 
 span.gme-loading span.dynatree-icon  {
-    background-position: 0 0 !important;
-    background-image: url("../img/progress.gif") !important;
+    background: url("../img/progress.gif") 0 0 !important;
 }
 
