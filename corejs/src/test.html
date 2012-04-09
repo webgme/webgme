@@ -28,19 +28,17 @@ Test
 		console.log("");
 		var notifier = new Notifier(table, function(row, data) {
 			console.log(table.getId(row) + " : " + data);
+		}, function(row, o, n) {
+			console.log(table.getId(row) + " : " + o + " -> " + n);
 		});
 
 		notifier.add(table.getRow("a"), "x");
 		notifier.add(table.getRow("c"), "y");
 		notifier.add(table.getRow("c"), "z");
+		notifier.remove(table.getRow("c"), "y");
 		
 		column.foreach(function(row) {
 			notifier.notify(row);
-		});
-		
-		console.log("");
-		notifier.backup.foreach(function(row) {
-			console.log(table.getId(row) + " : " + notifier.backup.get(row) + " -> " + notifier.watched(row));
 		});
 	});
 	</script>

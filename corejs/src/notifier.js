@@ -7,17 +7,14 @@
 define([ "assert" ], function (ASSERT) {
 	"use strict";
 
-	// ----------------- notifier -----------------
+	// ----------------- Notifier -----------------
 
-	var Notifier = function(table, callback) {
-		ASSERT(table && callback);
+	var Notifier = function(table, onnotify, onmodified) {
+		ASSERT(table && onnotify);
 
 		this.lists = table.createColumn();
-
-		// public
-		this.backup = table.createColumn();
-		
-		this.callback = callback;
+		this.onnotify = onnotify;
+		this.onmodified = onmodified || function() {};
 	};
 
 	Notifier.prototype.notify = function(row) {
@@ -26,7 +23,7 @@ define([ "assert" ], function (ASSERT) {
 		var list = this.lists.get(row);
 		if( list ) {
 			for(var i = 0; i !== list.length; ++i) {
-				this.callback(row, list[i]);
+				this.onnotify(row, list[i]);
 			}
 		}
 	};
@@ -51,13 +48,7 @@ define([ "assert" ], function (ASSERT) {
 		}
 		else {
 			this.lists.set(row, [data]);
-			
-			var old = this.backup.get(row);
-			if( old === undefined ) {
-				this.backup.set(row, false);
-			} else if( old === true ) {
-				this.backup.del(row);
-			}
+			this.onmodified(row, false, true);
 		};
 	};
 
@@ -75,17 +66,18 @@ define([ "assert" ], function (ASSERT) {
 		}
 		else {
 			ASSERT(list[0] === data);
+
 			this.lists.del(row);
-			
-			var old = this.backup.get(row);
-			if( old === undefined ) {
-				this.backup.set(row, true);
-			} else if( old === false ) {
-				this.backup.del(row);
-			}
+			this.onmodified(row, true, false);
 		}
 	};
 
+	// ----------------- Combiner -----------------
+
+	var Combiner = function(table, onmodified) {
+		
+	};
+	
 	// ----------------- interface -----------------
 
 	return Notifier;
