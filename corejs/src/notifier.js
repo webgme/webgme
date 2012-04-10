@@ -6,7 +6,7 @@
 
 define([ "assert" ], function (ASSERT) {
 	"use strict";
-
+	
 	// ----------------- Notifier -----------------
 
 	var Notifier = function (table, onnotify, onmodified) {
@@ -105,72 +105,115 @@ define([ "assert" ], function (ASSERT) {
 
 	var Territory = function (table) {
 		this.counters = table.createColumn();
+		this.backups = table.createColumn();
 	};
 
-	Territory.prototype.addWatcher = WatchedColumn.prototype.addWatcher;
-	Territory.prototype.removeWatcher = WatchedColumn.prototype.removeWatcher;
-	Territory.prototype.notifyWatchers = WatchedColumn.prototype.notifyWatchers;
+	Territory.prototype.contains = function (row) {
+		var refcount = this.counters.get(row);
+		ASSERT(refcount === undefined || refcount >= 1);
 
-	Territory.prototype.get = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter === undefined || counter >= 1);
-
-		return counter;
+		return !!refcount;
 	};
 
-	Territory.prototype.load = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter === undefined || counter >= 1);
+	Territory.prototype.isDirty = function (row) {
+		var old = this.backups.get(row);
+		ASSERT(old !== this.contains(row));
 
-		if( counter ) {
+		return old !== undefined;
+	};
+
+	Territory.prototype.increase = function (row) {
+		var refcount = this.counters.get(row);
+		ASSERT(refcount === undefined || refcount >= 1);
+
+		if( refcount ) {
+			this.counters.set(row, refcount + 1);
+		}
+		else {
 			this.counters.set(row, 1);
-			this.notifyWatchers(row);
-		}
-		else {
-			this.counters.set(row, counter + 1);
+
+			var old = this.backups.get(row);
+			if( old === undefined ) {
+				this.backups.set(row, false);
+			}
+			else if( old === true ) {
+				this.backups.del(row);
+			}
 		}
 	};
 
-	Territory.prototype.unload = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter !== undefined && counter >= 1);
+	Territory.prototype.decrease = function (row) {
+		var refcount = this.counters.get(row);
+		ASSERT(refcount !== undefined && refcount >= 1);
 
-		if( counter === 1 ) {
+		if( refcount >= 2 ) {
+			this.counters.set(row, refcount - 1);
+		}
+		else {
 			this.counters.del(row);
-			this.notifyWatchers(row, true, false);
+
+			var old = this.backups.get(row);
+			if( old === undefined ) {
+				this.backups.set(row, true);
+			}
+			else if( old === false ) {
+				this.backups.del(row);
+			}
+		}
+	};
+
+	// ----------------- Query -----------------
+
+	var Query = function (table, data, subquery) {
+		this.table = table;
+		this.subquery = subquery;
+
+		this.refcount = table.createColumn();
+		this.loaded = table.createColumn();
+	};
+
+	Query.prototype.isDirty = function (row) {
+	};
+
+	Query.prototype.dataChanged = function (row) {
+		var refcount = this.refcount.get(row);
+		ASSERT(refcount === undefined || refcount >= 1);
+
+		if( refcount ) {
+			this.dirty.set(row);
+		}
+	};
+
+	Query.prototype.increase = function (row) {
+		var refcount = this.refcount.get(row);
+		ASSERT(refcount === undefined || refcount >= 1);
+
+		if( refcount ) {
+			this.refcount.set(refcount + 1);
 		}
 		else {
-			this.counters.set(row);
+			this.refcount.set(1);
+			this.dirty.set(true);
 		}
 	};
 
-	// ----------------- Server -----------------
+	Query.prototype.decrease = function (row) {
+		var refcount = this.refcount.get(row);
+		ASSERT(refcount !== undefined && refcount >= 1);
 
-	var combine = function(serverData, clientTerritory) {
-		return territory && data;
-	};
-	
-	var Client = function(server) {
-		this.territory = new Territory(server.table);
-		this.territory.addWatcher(function(row, prev, curr) {
-			ASSERT((prev === false) === curr);
-			if( curr ) {
-				server.territory.load(row);
-			}
-			else {
-				server.territory.unload(row);
-			}
-		});
+		if( refcount >= 2 ) {
+			this.refcount.set(refcount - 1);
+		}
+		else {
+			this.refcount.del(row);
+			this.dirty.set(true);
+		}
 	};
 
-	Client.prototype.destroy = function() {
+	Query.prototype.isDirty = function () {
+		return this.dirty.isEmpty();
 	};
-	
-	var Server = function(table) {
-		this.clients = [];
-		this.territory = new Territory(table);
-	};
-	
+
 	// ----------------- interface -----------------
 
 	return Notifier;

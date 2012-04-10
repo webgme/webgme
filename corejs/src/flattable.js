@@ -35,11 +35,15 @@ define([ "assert" ], function (ASSERT) {
 		}
 	};
 
+	Column.prototype.isEmpty = function() {
+		return this.rows.length === 0;
+	};
+	
 	Column.prototype.set = function (row, value) {
 		ASSERT(this.table);
 		ASSERT(row instanceof Row);
 		ASSERT(this.table.rows[row.id] === row);
-		
+
 		if( !row.hasOwnProperty(this.id) ) {
 			ASSERT(this.rows.indexOf(row) === -1);
 			this.rows.push(row);

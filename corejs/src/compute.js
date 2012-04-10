@@ -7,219 +7,202 @@
 define([ "assert" ], function (ASSERT) {
 	"use strict";
 
-	// ----------------- Notifier -----------------
+	var createRefCount = function (table) {
 
-	var Notifier = function (table, onnotify, onmodified) {
-		ASSERT(table && onnotify);
+		var callbacks = [];
+		var storage = table.createColumn();
+		var changes = table.createColumn();
 
-		this.lists = table.createColumn();
-		this.onnotify = onnotify;
-		this.onmodified = onmodified || function () {
-		};
-	};
-
-	Notifier.prototype.notify = function (row) {
-		ASSERT(this.lists);
-
-		var list = this.lists.get(row);
-		if( list ) {
-			for( var i = 0; i !== list.length; ++i ) {
-				this.onnotify(row, list[i]);
-			}
-		}
-	};
-
-	Notifier.prototype.watched = function (row) {
-		ASSERT(this.lists);
-
-		var list = this.lists.get(row);
-		ASSERT(list === undefined || list.length >= 1);
-
-		return !!list;
-	};
-
-	Notifier.prototype.add = function (row, data) {
-		ASSERT(this.lists);
-
-		var list = this.lists.get(row);
-		if( list ) {
-			ASSERT(list.length >= 1);
-
-			list.push(data);
-		}
-		else {
-			this.lists.set(row, [ data ]);
-			this.onmodified(row, false, true);
-		}
-	};
-
-	Notifier.prototype.remove = function (row, data) {
-		ASSERT(this.lists);
-
-		var list = this.lists.get(row);
-		ASSERT(list && list.length >= 1);
-
-		if( list.length >= 2 ) {
-			var index = list.indexOf(data);
-			ASSERT(index >= 0);
-
-			list.splice(index, 1);
-		}
-		else {
-			ASSERT(list[0] === data);
-
-			this.lists.del(row);
-			this.onmodified(row, true, false);
-		}
-	};
-
-	// ----------------- WatchedColumn -----------------
-
-	var WatchedColumn = function () {
-		this.watchers = [];
-	};
-
-	WatchedColumn.prototype.addWatcher = function (callback) {
-		ASSERT(callback);
-		ASSERT(this.watchers.indexOf(callback) === -1);
-
-		this.watchers.push(callback);
-	};
-
-	WatchedColumn.prototype.removeWatcher = function (callback) {
-		ASSERT(callback);
-
-		var index = this.watchers.indexOf(callback);
-		ASSERT(index >= 0);
-
-		this.watchers.splice(index, 1);
-	};
-
-	WatchedColumn.prototype.notifyWatchers = function (row) {
-		for( var i = 0; i < this.watchers; ++i ) {
-			this.watchers[i](row);
-		}
-	};
-
-	// ----------------- CalculatedColumn -----------------
-
-	var columnValue = function() {
-		return {
-			get: function(row) {
-			},
+		var update = function(row) {
+			var prev = (storage.get(row) || 0) >= 1;
+			var curr = changes.get(row) >= 1;
 			
-			set: function(row) {
-			},
-			
-			destroy: function() {
+			if(prev !== curr) {
+				for(var i = 0; i < callbacks.length; ++i) {
+					callbacks[i](prev, curr);
+				}
 			}
 		};
-	};
-	
-	var accumulator = function(value) {
-		var dirty = column(value.table);
-		
-	};
-	
-	var binaryMap = function(combiner, arg1, arg2) {
-		ASSERT()
-
-		var get1 = arg1.get;
-		var get2 = arg2.get;
 		
 		return {
-			get: function(row) {
-				return combiner(get1(row), get2(row));
+			/**
+			 * Returns true if the committed refcount is at least one, and false
+			 * otherwise. This value is computed from the committed counters
+			 * only, and you cannot view the uncommitted changes.
+			 */
+			get: function (row) {
+				var refcount = storage.get(row);
+				ASSERT(refcount === undefined || refcount >= 1);
+
+				return !!refcount;
 			},
 
-			addWatcher: function(watcher) {
-				arg1.addWatcher(watcher);
-				arg2.addWatcher(watcher);
+			/**
+			 * Returns true if there are uncommitted changes (where the refcount
+			 * would change from false to true or vice versa).
+			 */
+			dirty: function () {
+				return !changes.empty();
+			},
+
+			/**
+			 * Commits all changes so get will reflect the new values. This will call
+			 * the registered listeners with all changes.
+			 */
+			commit: function () {
+				changes.foreach(update);
 			},
 			
-			removeWatcher: function(watcher) {
-				arg1.removeWatcher(watcher);
-				arg2.removeWatcher(watcher);
+			/**
+			 * Increases the working copy of the counter and makes this object
+			 * dirty.
+			 */
+			increase: function (row) {
+				var refcount = changes.get(row);
+				if( refcount === undefined ) {
+					refcount = storage.get(row) || 0;
+				}
+				
+				ASSERT(refcount >= 0);
+				changes.set(refcount + 1);
+			},
+
+			/**
+			 * Decreases the working copy of the counter and makes this object
+			 * dirty.
+			 */
+			decrease: function (row) {
+				var refcount = changes.get(row);
+				if( refcount === undefined ) {
+					refcount = storage.get(row);
+				}
+
+				ASSERT(refcount >= 1);
+				changes.set(refcount - 1);
 			},
 			
-			destroy: function() {
+			register: function(callback) {
+				ASSERT(typeof callback === "function");
+
+				callbacks.push(callback);
 			},
-			
-			table: arg1.table
+
+			unregister: function (callback) {
+				var index = callbacks.indexOf(callback);
+				ASSERT(index >= 0);
+
+				callbacks.splice(index, 1);
+			},
+
+			destroy: function () {
+				ASSERT(callbacks.length === 0);
+				callbacks = null;
+				
+				changes.destroy();
+				changes = null;
+
+				storage.destroy();
+				storage = null;
+			}
 		};
 	};
-	
-	// ----------------- Territory -----------------
 
-	var Territory = function (table) {
-		this.counters = table.createColumn();
-	};
+	var stagedValue = function (table, getter) {
+		ASSERT(table && table.createColumn);
 
-	Territory.prototype.addWatcher = WatchedColumn.prototype.addWatcher;
-	Territory.prototype.removeWatcher = WatchedColumn.prototype.removeWatcher;
-	Territory.prototype.notifyWatchers = WatchedColumn.prototype.notifyWatchers;
+		var callbacks = [];
+		var backup = table.createColumn();
 
-	Territory.prototype.get = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter === undefined || counter >= 1);
-
-		return counter;
-	};
-
-	Territory.prototype.load = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter === undefined || counter >= 1);
-
-		if( counter ) {
-			this.counters.set(row, 1);
-			this.notifyWatchers(row);
-		}
-		else {
-			this.counters.set(row, counter + 1);
-		}
-	};
-
-	Territory.prototype.unload = function (row) {
-		var counter = this.counters.get(row);
-		ASSERT(counter !== undefined && counter >= 1);
-
-		if( counter === 1 ) {
-			this.counters.del(row);
-			this.notifyWatchers(row, true, false);
-		}
-		else {
-			this.counters.set(row);
-		}
-	};
-
-	// ----------------- Server -----------------
-
-	var combine = function(serverData, clientTerritory) {
-		return territory && data;
-	};
-	
-	var Client = function(server) {
-		this.territory = new Territory(server.table);
-		this.territory.addWatcher(function(row, prev, curr) {
-			ASSERT((prev === false) === curr);
-			if( curr ) {
-				server.territory.load(row);
+		var notify = function (row) {
+			var previous = backup.get(row);
+			var current = getter(row);
+			for( var i = 0; i < callbacks.length; ++i ) {
+				callbacks[i](row, previous, current);
 			}
-			else {
-				server.territory.unload(row);
+		};
+
+		return {
+			table: table,
+
+			dirty: function () {
+				return !backup.empty();
+			},
+
+			update: function () {
+				backup.foreach(notify);
+			},
+
+			register: function (callback) {
+				ASSERT(typeof callback === "function");
+
+				callbacks.push(callback);
+			},
+
+			unregister: function (callback) {
+				var index = callbacks.indexOf(callback);
+				ASSERT(index >= 0);
+
+				callbacks.splice(index, 1);
+			},
+
+			destroy: function () {
+				ASSERT(callbacks.length === 0);
+				callbacks = null;
 			}
-		});
+		};
 	};
 
-	Client.prototype.destroy = function() {
-	};
-	
-	var Server = function(table) {
-		this.clients = [];
-		this.territory = new Territory(table);
-	};
-	
-	// ----------------- interface -----------------
+	var storedValue = function (table) {
 
-	return Notifier;
+		var stage = stagedValue(table);
+		var backup = stage.backup;
+
+		return {
+			get: function (row) {
+			},
+
+			set: function (row) {
+				backup(row);
+			},
+
+			dirty: stage.dirty,
+			update: stage.update,
+			register: stage.register,
+			unregister: stage.unregister
+
+		};
+	};
+
+	var createValue = function (table) {
+		return {
+			get: function (row) {
+			},
+
+			dirty: function () {
+			},
+
+			update: function () {
+			},
+
+			register: function (callback) {
+			},
+
+			unregister: function (callback) {
+			},
+
+			destroy: function () {
+			},
+
+			table: null
+		};
+	};
+
+	var unaryOp = function (calculator, argument) {
+		var backup = argument.table.createColumn();
+
+		return {
+
+			table: argument.table
+		};
+	};
 });
