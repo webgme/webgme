@@ -54,9 +54,9 @@
 	classes to the respective LI element(s)
 */
 
-.contextMenu LI.edit A { background-image: url(contextmenu/page_white_edit.png); }
-.contextMenu LI.cut A { background-image: url(contextmenu/cut.png); }
-.contextMenu LI.copy A { background-image: url(contextmenu/page_white_copy.png); }
-.contextMenu LI.paste A { background-image: url(contextmenu/page_white_paste.png); }
-.contextMenu LI.delete A { background-image: url(contextmenu/page_white_delete.png); }
-.contextMenu LI.quit A { background-image: url(contextmenu/door.png); }
+.contextMenu LI.edit A { background-image: url("../../img/edit.png"); }
+.contextMenu LI.cut A { background-image: url("../../img/cut.png"); }
+.contextMenu LI.copy A { background-image: url("../../img/copy.png"); }
+.contextMenu LI.paste A { background-image: url("../../img/paste.png"); }
+.contextMenu LI.delete A { background-image: url("../../img/delete.png"); }
+

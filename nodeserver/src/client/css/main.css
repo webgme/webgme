@@ -1,4 +1,10 @@
-body { 
+/*IMPORTS*/
+
+@import url("../lib/contextmenu/jquery.contextMenu.css");
+@import url("../lib/dynatree/ui.dynatree.css");
+
+/* OWN STYLES */
+body {
 	background-color:white;
     font-size:90%;
 	font-family:Helvetica,serif;

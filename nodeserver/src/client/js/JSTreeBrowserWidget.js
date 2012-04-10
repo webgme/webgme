@@ -1,7 +1,7 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define( ['./jquery.jstree.js' ], function() {
+define( ['jquery.jstree' ], function() {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
     var css	= document.createElement('link');
@@ -84,7 +84,7 @@ define( ['./jquery.jstree.js' ], function() {
                         "action":function (obj) {
                             editNode(obj.attr("nId"));
                         },
-                        "icon":"css/contextmenu/page_white_edit.png"
+                        "icon":"img/edit.png"
                     },
                     "copyItem":{ // The "delete" menu item
                         "label":"Copy",
@@ -92,14 +92,14 @@ define( ['./jquery.jstree.js' ], function() {
                         "action":function (obj) {
                             copyNode(obj.attr("nId"));
                         },
-                        "icon":"css/contextmenu/page_white_copy.png"
+                        "icon":"img/copy.png"
                     },
                     "pasteItem":{ // The "delete" menu item
                         "label":"Paste",
                         "action":function (obj) {
                             pasteNode(obj.attr("nId"));
                         },
-                        "icon":"css/contextmenu/page_white_paste.png"
+                        "icon":"img/paste.png"
                     },
                     "deleteItem":{ // The "delete" menu item
                         "label":"Delete",
@@ -107,7 +107,7 @@ define( ['./jquery.jstree.js' ], function() {
                         "action":function (obj) {
                             deleteNode(obj.attr("nId"));
                         },
-                        "icon":"css/contextmenu/page_white_delete.png"
+                        "icon":"img/delete.png"
                     }
                 };
             }

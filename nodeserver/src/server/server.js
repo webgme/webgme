@@ -17,13 +17,15 @@ var io = IO.listen(http);
 io.set('log level', 1); // reduce logging
 var librarian = new LI.Librarian();
 
+var _clientSourceFolder = "/../client";
+
 http.listen(8081);
 function httpGet(req, res){
 	console.log("httpGet - start - "+req.url);
 	if(req.url==='/'){
 		req.url = '/index.html';
 	}
-	FS.readFile(__dirname+req.url, function(err,data){
+	FS.readFile(__dirname + _clientSourceFolder +req.url, function(err,data){
 		if(err){
 			res.writeHead(500);
 			return res.end('Error loading ' + req.url);
