@@ -9,109 +9,221 @@ define([ "assert" ], function (ASSERT) {
 
 	// ----------------- StoredValue -----------------
 
-	var StoredValue = function (table) {
+	var storedValue = function(table) {
 		ASSERT(table && table.createColumn);
-
-		this.table = table;
-		this.listeners = [];
-		this.storage = table.createColumn();
-		this.changes = table.createColumn();
-		this.ready = true;
-	};
-
-	/**
-	 * Returns the committed value for the given row. (Uncommitted changed
-	 * cannot be viewed to force proper usage.)
-	 */
-	StoredValue.prototype.getData = function (row) {
-		ASSERT(this.ready);
-		return this.storage.get(row);
-	};
-
-	/**
-	 * Updates the current value for the given row and sets the dirty flag.
-	 */
-	StoredValue.prorotype.setData = function (row, value) {
-		ASSERT(this.ready);
-		this.changes.set(row, value);
-	};
-
-	/**
-	 * Retrieves the latest value (uncommitted changes), calls the updater
-	 * function, and sets the new value to the return value.
-	 */
-	StoredValue.prototype.updateData = function (row, updater) {
-		ASSERT(this.ready);
-
-		var value = this.changes.has(row) ? this.changes.get(row) : this.storage.get(row);
-		this.changes.set(updater(value));
-	};
-
-	/**
-	 * Returns true if there are uncommitted changes.
-	 */
-	StoredValue.prorotype.isDirty = function () {
-		ASSERT(this.ready);
-
-		return !this.changes.isEmpty();
-	};
-
-	StoredValue.prorotype.addListener = function (callback) {
-		ASSERT(this.ready);
-		ASSERT(typeof callback === "function");
-
-		this.listeners.push(callback);
-	};
-
-	StoredValue.prorotype.removeListener = function (callback) {
-		ASSERT(this.ready);
-
-		var index = this.listeners.indexOf(callback);
-		ASSERT(index >= 0);
-		this.listeners.splice(index, 1);
-	};
-
-	StoredValue.prototype.commit = function () {
-		ASSERT(this.ready);
-
-		this.ready = false;
 		
-		var storage = this.storage;
-		var changes = this.changes;
-		var listeners = this.listeners;
+		var listeners = [];
+		var storage = table.createColumn();
+		var changes = table.createColumn();
 
-		changes.removeEach(function (row) {
+		var notifyListeners = function (row) {
 			var oldData = storage.get(row);
 			var newData = changes.get(row);
 
-			for( var i = 0; i < listeners.length; ++i ) {
-				listeners[i](row, oldData, newData);
+			if( oldData !== newData ) {
+				for( var i = 0; i < listeners.length; ++i ) {
+					listeners[i](row, oldData, newData);
+				}
+
+				storage.set(row, newData);
 			}
-		});
+		};
 		
-		this.ready = true;
+		return {
+			table: table,
+			
+			/**
+			 * Returns the committed value for the given row. (Uncommitted changed
+			 * cannot be accessed)
+			 */
+			get: function (row) {
+				return storage.get(row);
+			},
+			
+			/**
+			 * Updates the current value for the given row and sets the dirty flag.
+			 */
+			set: function (row, value) {
+				changes.set(row, value);
+			},
+			
+			/**
+			 * Retrieves the latest value (uncommitted changes), calls the updater
+			 * function, and sets the new value to the return value.
+			 */
+			update: function (row, updater) {
+				var value = changes.has(row) ? changes.get(row) : storage.get(row);
+				changes.set(updater(value));
+			},
+
+			/**
+			 * Returns true if there are uncommitted changes.
+			 */
+			isDirty: function () {
+				return !changes.isEmpty();
+			},
+			
+			addListener: function (callback) {
+				ASSERT(typeof callback === "function");
+
+				listeners.push(callback);
+			},
+
+			removeListener: function (callback) {
+				var index = listeners.indexOf(callback);
+				ASSERT(index >= 0);
+				
+				listeners.splice(index, 1);
+			},
+
+			commit: function () {
+				changes.deleteEach(notifyListeners);
+			},
+
+			abort: function () {
+				changes.removeAll();
+			},
+			
+			destroy: function () {
+				ASSERT(listeners.length === 0);
+				
+				storage.destroy();
+				changes.destroy();
+				
+				table = null;
+				listeners = null;
+				storage = null;
+				changes = null;
+			}
+		};
 	};
-
-	StoredValue.prototype.abort = function () {
-		ASSERT(this.ready);
-
-		this.changes.removeAll();
-	};
-
-	// ----------------- ComputedValue -----------------
 	
-	var ComputedValue = function (map, args) {
-		ASSERT(typeof map === "function");
-		ASSERT( args.length >= 1 );
-		
-		this.table = args[0].table;
-		this.map = map;
-		
-		for(var i = 0; i < args.length; ++i) {
-		}
-	};
+	// ----------------- ComputedValue -----------------
 
+	var computedValue = function (map, arg1, arg2) {
+		ASSERT(typeof map === "function");
+		ASSERT(map.length >= 1 && map.length <= 2);
+		
+		var listeners = [];
+		
+		ASSERT(arg1 && arg1.table);
+		var backup = arg1.table.createColumn();
+
+		var getOldData, getNewData;
+		var listener1, listener2;
+		
+		if( map.length === 1 ) {
+			ASSERT(arg1.get && arg1.addListener);
+			ASSERT(arg2 === undefined);
+
+			getOldData = function(row) {
+				if( backup.has(row) ) {
+					return backup.get(row);
+				}
+
+				return map(arg1.get(row));
+			};
+			
+			getNewData = function(row) {
+				return map(arg1.get(row));
+			};
+
+			listener1 = function(row, oldInput, newInput) {
+				if( ! backup.has(row) ) {
+					backup.set(row, map(oldInput));
+				}
+			};
+			arg1.addListener(listener1);
+		}
+		else {
+			ASSERT(arg1.get && arg1.addListener);
+			ASSERT(arg2.get && arg2.addListener);
+			
+			getOldData = function(row) {
+				if( backup.has(row) ) {
+					return backup.get(row);
+				}
+
+				return map(arg1.get(row), arg2.get(row));
+			};
+			
+			getNewData = function(row) {
+				return map(arg1.get(row), arg2.get(row));
+			};
+
+			listener1 = function(row, oldInput, newInput) {
+				if( ! backup.has(row) ) {
+					backup.set(row, map(oldInput, arg2.get(row)));
+				}
+			};
+			arg1.addListener(listener1);
+			
+			listener2 = function(row, oldInput, newInput) {
+				if( ! backup.has(row) ) {
+					backup.set(row, map(arg1.get(row), oldInput));
+				}
+			};
+			arg2.addListener(listener2);
+		};
+		
+		var notifyListeners = function(row) {
+			var oldData = backup.get(row);
+			var newData = getNewData(row);
+
+			if(oldData !== newData) { 
+				for( var i = 0; i < listeners.length; ++i ) {
+					listeners[i](row, oldData, newData);
+				}
+			}
+		};
+		
+		return {
+			table: backup.table,
+
+			get: getOldData,
+			
+			isDirty: function() {
+				return !backup.isEmpty();
+			},
+
+			commit: function() {
+				backup.deleteEach(notifyListeners);
+			},
+
+			addListener: function(callback) {
+				ASSERT(typeof callback === "function");
+				listeners.push(callback);
+			},
+			
+			removeListener: function(callback) {
+				var index = listeners.indexOf(callback);
+				ASSERT(index >= 0);
+				listeners.splice(index, 1);
+			},
+			
+			destroy: function() {
+				ASSERT(listeners.length === 0);
+				
+				backup.destroy();
+
+				arg1.removeListener(listener1);
+				if( listener2 ) {
+					arg2.removeListener(listener2);
+				}
+				
+				map = null;
+				arg1 = null;
+				arg2 = null;
+				listeners = null;
+				backup = null;
+			}
+		};
+	};
+	
 	// ----------------- interface -----------------
 
-	return false;
+	return {
+		stored: storedValue,
+		computed: computedValue
+	};
 });

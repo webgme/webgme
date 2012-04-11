@@ -8,38 +8,73 @@
 <body>
 Test
 <script>
-	require(["flattable", "notifier"], function(Table, Notifier) {
+	require(["flattable", "values"], function(Table, values) {
 		var table = new Table();
-		var column = table.createColumn();
-		column.set(table.getRow("a"), "b");
-		column.set(table.getRow("c"), "d");
-		column.set(table.getRow("e"), "f");
-		column.set(table.getRow("c"), "-");
-		column.foreach(function(row) {
-			console.log(table.getId(row) + " : " + column.get(row));
-		});
-
-		console.log("");
-		column.del(table.getRow("a"));
-		column.foreach(function(row) {
-			console.log(table.getId(row) + " : " + column.get(row));
-		});
+		var refcount = values.stored(table);
+		var object = values.stored(table);
+		var selected = values.computed(function(refcount, object) {
+			return (refcount && refcount >= 1) ? object : undefined;
+		}, refcount, object);
 		
+		var row0 = table.getRow(0);
+		var row1 = table.getRow(1);
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
 		console.log("");
-		var notifier = new Notifier(table, function(row, data) {
-			console.log(table.getId(row) + " : " + data);
-		}, function(row, o, n) {
-			console.log(table.getId(row) + " : " + o + " -> " + n);
-		});
-
-		notifier.add(table.getRow("a"), "x");
-		notifier.add(table.getRow("c"), "y");
-		notifier.add(table.getRow("c"), "z");
-		notifier.remove(table.getRow("c"), "y");
 		
-		column.foreach(function(row) {
-			notifier.notify(row);
-		});
+		refcount.set(row0, 1);
+		object.set(row0, "hihi");
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
+		console.log("");
+
+		refcount.commit();
+		object.commit();
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
+		console.log("");
+		
+		selected.commit();
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
+		console.log("");
+
+		refcount.set(row0, 0);
+		refcount.commit();
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
+		console.log("");
+		
+		selected.commit();
+		console.log(refcount.get(row0));
+		console.log(refcount.isDirty());
+		console.log(object.get(row0));
+		console.log(object.isDirty());
+		console.log(selected.get(row0));
+		console.log(selected.isDirty());
+		console.log("");
+
+		console.log("done");
 	});
 	</script>
 </body>

@@ -17,12 +17,22 @@ define([ "assert" ], function (ASSERT) {
 		this.values = {};
 	};
 
-	Column.prototype.foreach = function(callback) {
+	Column.prototype.forEach = function(callback) {
 		ASSERT(this.table);
 
 		for(var row in this.values) {
 			callback(row);
 		}
+	};
+	
+	Column.prototype.deleteEach = function(callback) {
+		ASSERT(this.table);
+
+		for(var row in this.values) {
+			callback(row);
+		}
+		
+		this.values = {};
 	};
 	
 	Column.prototype.set = function (row, value) {
@@ -39,6 +49,13 @@ define([ "assert" ], function (ASSERT) {
 		return this.values[row];
 	};
 
+	Column.prototype.has = function (row) {
+		ASSERT(this.table);
+		ASSERT(typeof row === "string" || typeof row === "number");
+
+		return this.values.hasOwnProperty(row);
+	};
+	
 	Column.prototype.del = function (row) {
 		ASSERT(this.table);
 		ASSERT(typeof row === "string" || typeof row === "number");

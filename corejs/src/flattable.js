@@ -25,7 +25,7 @@ define([ "assert" ], function (ASSERT) {
 		this.id = id;
 	};
 
-	Column.prototype.foreach = function(callback) {
+	Column.prototype.forEach = function(callback) {
 		ASSERT(this.table);
 		
 		var rows = this.rows;
@@ -35,6 +35,22 @@ define([ "assert" ], function (ASSERT) {
 		}
 	};
 
+	Column.prototype.deleteEach = function(callback) {
+		ASSERT(this.table);
+		
+		var rows = this.rows;
+		var length = rows.length;
+		for(var i = 0; i < length; ++i) {
+			var row = rows[i];
+			ASSERT(row.hasOwnProperty(this.id));
+			
+			callback(row);
+			delete row[this.id];
+		}
+		
+		rows.splice(0, length);
+	};
+	
 	Column.prototype.isEmpty = function() {
 		return this.rows.length === 0;
 	};
@@ -60,6 +76,14 @@ define([ "assert" ], function (ASSERT) {
 		return row[this.id];
 	};
 
+	Column.prototype.has = function (row) {
+		ASSERT(this.table);
+		ASSERT(row instanceof Row);
+		ASSERT(this.table.rows[row.id] === row);
+
+		return row.hasOwnProperty(this.id);
+	};
+	
 	Column.prototype.del = function (row) {
 		ASSERT(this.table);
 		ASSERT(row instanceof Row);
