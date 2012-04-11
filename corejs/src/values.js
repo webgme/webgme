@@ -7,130 +7,149 @@
 define([ "assert" ], function (ASSERT) {
 	"use strict";
 
-	// ----------------- StoredValue -----------------
+	// ----------------- listener -----------------
 
-	var storedValue = function(table) {
-		ASSERT(table && table.createColumn);
-		
+	var createListeners = function () {
+
 		var listeners = [];
-		var storage = table.createColumn();
-		var changes = table.createColumn();
 
-		var notifyListeners = function (row) {
-			var oldData = storage.get(row);
-			var newData = changes.get(row);
-
-			if( oldData !== newData ) {
-				for( var i = 0; i < listeners.length; ++i ) {
-					listeners[i](row, oldData, newData);
-				}
-
-				storage.set(row, newData);
+		var updateNotifier = function () {
+			if( listeners.length === 0 ) {
+				commands.notify = function () {
+				};
+			}
+			else if( listeners.length === 1 ) {
+				commands.notify = listeners[0];
+			}
+			else if( listeners.length === 2 ) {
+				commands.notify = function (row, oldData, newData) {
+					listeners[0](row, oldData, newData);
+					listeners[1](row, oldData, newData);
+				};
+			}
+			else {
+				commands.notify = function (row, oldData, newData) {
+					for( var i = 0; i < listeners.length; ++i ) {
+						listeners[i](row, oldData, newData);
+					}
+				};
 			}
 		};
-		
-		return {
-			table: table,
-			
-			/**
-			 * Returns the committed value for the given row. (Uncommitted changed
-			 * cannot be accessed)
-			 */
-			get: function (row) {
-				return storage.get(row);
-			},
-			
-			/**
-			 * Updates the current value for the given row and sets the dirty flag.
-			 */
-			set: function (row, value) {
-				changes.set(row, value);
-			},
-			
-			/**
-			 * Retrieves the latest value (uncommitted changes), calls the updater
-			 * function, and sets the new value to the return value.
-			 */
-			update: function (row, updater) {
-				var value = changes.has(row) ? changes.get(row) : storage.get(row);
-				changes.set(updater(value));
-			},
 
-			/**
-			 * Returns true if there are uncommitted changes.
-			 */
-			isDirty: function () {
-				return !changes.isEmpty();
-			},
-			
-			addListener: function (callback) {
+		var commands = {
+			add: function (callback) {
 				ASSERT(typeof callback === "function");
 
 				listeners.push(callback);
+				updateNotifier();
 			},
 
-			removeListener: function (callback) {
+			remove: function (callback) {
 				var index = listeners.indexOf(callback);
 				ASSERT(index >= 0);
-				
+
 				listeners.splice(index, 1);
+				updateNotifier();
 			},
 
-			commit: function () {
-				changes.deleteEach(notifyListeners);
-			},
-
-			abort: function () {
-				changes.removeAll();
-			},
-			
 			destroy: function () {
 				ASSERT(listeners.length === 0);
-				
-				storage.destroy();
-				changes.destroy();
-				
-				table = null;
-				listeners = null;
-				storage = null;
-				changes = null;
 			}
 		};
+
+		updateNotifier();
+
+		return commands;
 	};
-	
-	// ----------------- ComputedValue -----------------
 
-	var computedValue = function (map, arg1, arg2) {
-		ASSERT(typeof map === "function");
-		ASSERT(map.length >= 1 && map.length <= 2);
-		
-		var listeners = [];
-		
-		ASSERT(arg1 && arg1.table);
-		var backup = arg1.table.createColumn();
+	// ----------------- stage -----------------
 
-		var getOldData, getNewData;
-		var listener1, listener2;
-		
-		if( map.length === 1 ) {
-			ASSERT(arg1.get && arg1.addListener);
-			ASSERT(arg2 === undefined);
+	var stage = function (value) {
+		ASSERT(value && value.table && value.get);
 
-			getOldData = function(row) {
+		var listeners = createListeners();
+		var backup = value.table.createColumn();
+
+		var notifier = function (row) {
+			var oldData = backup.get(row);
+			var newData = value.get(row);
+
+			if( oldData !== newData ) {
+				listeners.notify(row, oldData, newData);
+			}
+		};
+
+		var updater = function (row, oldInput, newInput) {
+			if( !backup.has(row) ) {
+				backup.set(row, oldInput);
+			}
+		};
+
+		value.addListener(updater);
+
+		return {
+			table: value.table,
+
+			get: function (row) {
 				if( backup.has(row) ) {
 					return backup.get(row);
 				}
 
-				return map(arg1.get(row));
-			};
-			
-			getNewData = function(row) {
+				return value.get(row);
+			},
+
+			isDirty: function () {
+				return !backup.isEmpty();
+			},
+
+			commit: function () {
+				backup.deleteEach(notifier);
+			},
+
+			addListeners: listeners.add,
+
+			removeListener: listeners.remove,
+
+			destroy: function () {
+				value.removeListener(updater);
+				value = null;
+
+				updater = null;
+				notifier = null;
+
+				backup.destroy();
+				backup = null;
+
+				listeners.destroy();
+				listeners = null;
+			}
+		};
+	};
+
+	// ----------------- compute -----------------
+
+	var compute = function (map, arg1, arg2) {
+		ASSERT(typeof map === "function");
+		ASSERT(map.length >= 1 && map.length <= 2);
+
+		var listeners = createListeners();
+
+		var getData, listener1, listener2;
+
+		if( map.length === 1 ) {
+			ASSERT(arg1.get && arg1.addListener);
+			ASSERT(arg2 === undefined);
+
+			getData = function (row) {
 				return map(arg1.get(row));
 			};
 
-			listener1 = function(row, oldInput, newInput) {
-				if( ! backup.has(row) ) {
-					backup.set(row, map(oldInput));
+			listener1 = function (row, oldInput, newInput) {
+				var oldData = map(oldInput);
+				var newData = map(newInput);
+
+				if( oldData !== newData ) {
+					listeners.notify(row, oldData, newData);
 				}
 			};
 			arg1.addListener(listener1);
@@ -138,92 +157,167 @@ define([ "assert" ], function (ASSERT) {
 		else {
 			ASSERT(arg1.get && arg1.addListener);
 			ASSERT(arg2.get && arg2.addListener);
-			
-			getOldData = function(row) {
-				if( backup.has(row) ) {
-					return backup.get(row);
-				}
 
-				return map(arg1.get(row), arg2.get(row));
-			};
-			
-			getNewData = function(row) {
+			getData = function (row) {
 				return map(arg1.get(row), arg2.get(row));
 			};
 
-			listener1 = function(row, oldInput, newInput) {
-				if( ! backup.has(row) ) {
-					backup.set(row, map(oldInput, arg2.get(row)));
+			listener1 = function (row, oldInput, newInput) {
+				var other = arg2.get(row);
+				var oldData = map(oldInput, other);
+				var newData = map(newInput, other);
+
+				if( oldData !== newData ) {
+					listeners.notify(row, oldData, newData);
 				}
 			};
 			arg1.addListener(listener1);
-			
-			listener2 = function(row, oldInput, newInput) {
-				if( ! backup.has(row) ) {
-					backup.set(row, map(arg1.get(row), oldInput));
+
+			listener2 = function (row, oldInput, newInput) {
+				var other = arg1.get(row);
+				var oldData = map(other, oldInput);
+				var newData = map(other, newInput);
+
+				if( oldData !== newData ) {
+					listeners.notify(row, oldData, newData);
 				}
 			};
 			arg2.addListener(listener2);
-		};
-		
-		var notifyListeners = function(row) {
-			var oldData = backup.get(row);
-			var newData = getNewData(row);
+		}
 
-			if(oldData !== newData) { 
-				for( var i = 0; i < listeners.length; ++i ) {
-					listeners[i](row, oldData, newData);
-				}
-			}
-		};
-		
 		return {
-			table: backup.table,
+			table: arg1.table,
 
-			get: getOldData,
-			
-			isDirty: function() {
-				return !backup.isEmpty();
-			},
+			get: getData,
 
-			commit: function() {
-				backup.deleteEach(notifyListeners);
-			},
+			addListener: listeners.add,
 
-			addListener: function(callback) {
-				ASSERT(typeof callback === "function");
-				listeners.push(callback);
-			},
-			
-			removeListener: function(callback) {
-				var index = listeners.indexOf(callback);
-				ASSERT(index >= 0);
-				listeners.splice(index, 1);
-			},
-			
-			destroy: function() {
-				ASSERT(listeners.length === 0);
-				
-				backup.destroy();
+			removeListener: listeners.remove,
+
+			destroy: function () {
+				listeners.destroy();
+				listeners = null;
 
 				arg1.removeListener(listener1);
+				listener1 = null;
+
 				if( listener2 ) {
 					arg2.removeListener(listener2);
+					listener2 = null;
 				}
-				
+
 				map = null;
 				arg1 = null;
 				arg2 = null;
-				listeners = null;
-				backup = null;
 			}
 		};
 	};
-	
+
+	// ----------------- create -----------------
+
+	var create = function (table) {
+
+		var listeners = createListeners();
+		var storage = table.createColumn();
+
+		return {
+			table: table,
+
+			get: function (row) {
+				return storage.get(row);
+			},
+
+			set: function (row, value) {
+				var old = storage.get(row);
+				storage.set(row, value);
+				listeners.notify(row, old, value);
+			},
+
+			update: function (row, updater) {
+				var old = storage.get(row);
+				var value = updater(old);
+				storage.set(row, value);
+				listeners.notify(row, old, value);
+			},
+
+			addListener: listeners.add,
+
+			removeListener: listeners.remove,
+
+			destroy: function () {
+				storage.destroy();
+				storage = null;
+
+				listeners.destroy();
+				listeners = null;
+
+				table = null;
+			}
+		};
+	};
+
+	// ----------------- refcount -----------------
+
+	var refcount = function (table) {
+
+		var listeners = createListeners();
+		var storage = table.createColumn();
+
+		return {
+			table: table,
+
+			get: function (row) {
+				return storage.get(row) ? true : false;
+			},
+
+			increase: function (row) {
+				var value = storage.get(row);
+				ASSERT(value === undefined || value >= 1);
+				
+				if( value !== undefined ) {
+					storage.set(value + 1);
+				}
+				else {
+					storage.set(row, 1);
+					listeners.notify(row, false, true);
+				}
+			},
+			
+			decrease: function (row) {
+				var value = storage.get(row);
+				ASSERT(value === undefined || value >= 1);
+				
+				if( value >= 2 ) {
+					storage.set(value - 1);
+				}
+				else {
+					storage.del(row);
+					listeners.notify(row, true, false);
+				}
+			},
+
+			addListener: listeners.add,
+
+			removeListener: listeners.remove,
+
+			destroy: function () {
+				storage.destroy();
+				storage = null;
+
+				listeners.destroy();
+				listeners = null;
+
+				table = null;
+			}
+		};
+	};
+
 	// ----------------- interface -----------------
 
 	return {
-		stored: storedValue,
-		computed: computedValue
+		create: create,
+		compute: compute,
+		stage: stage,
+		refcount: refcount
 	};
 });

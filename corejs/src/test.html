@@ -10,70 +10,40 @@ Test
 <script>
 	require(["flattable", "values"], function(Table, values) {
 		var table = new Table();
-		var refcount = values.stored(table);
-		var object = values.stored(table);
-		var selected = values.computed(function(refcount, object) {
-			return (refcount && refcount >= 1) ? object : undefined;
-		}, refcount, object);
+		var refcount = values.refcount(table);
+		var object = values.create(table);
+		var selected = values.stage(values.compute(function(refcount, object) {
+			return refcount ? object : undefined;
+		}, refcount, object));
 		
-		var row0 = table.getRow(0);
-		var row1 = table.getRow(1);
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
+		var row = table.getRow(0);
+		console.log(refcount.get(row));
+		console.log(object.get(row));
+		console.log(selected.get(row));
 		console.log(selected.isDirty());
 		console.log("");
 		
-		refcount.set(row0, 1);
-		object.set(row0, "hihi");
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
+		object.set(row, "hihi");
+		console.log(refcount.get(row));
+		console.log(object.get(row));
+		console.log(selected.get(row));
+		console.log(selected.isDirty());
+		console.log("");
+		
+		refcount.increase(row);
+		console.log(refcount.get(row));
+		console.log(object.get(row));
+		console.log(selected.get(row));
 		console.log(selected.isDirty());
 		console.log("");
 
-		refcount.commit();
-		object.commit();
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
-		console.log(selected.isDirty());
-		console.log("");
-		
 		selected.commit();
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
-		console.log(selected.isDirty());
-		console.log("");
-
-		refcount.set(row0, 0);
-		refcount.commit();
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
+		console.log(refcount.get(row));
+		console.log(object.get(row));
+		console.log(selected.get(row));
 		console.log(selected.isDirty());
 		console.log("");
 		
-		selected.commit();
-		console.log(refcount.get(row0));
-		console.log(refcount.isDirty());
-		console.log(object.get(row0));
-		console.log(object.isDirty());
-		console.log(selected.get(row0));
-		console.log(selected.isDirty());
-		console.log("");
-
 		console.log("done");
 	});
 	</script>
