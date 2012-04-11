@@ -30,19 +30,25 @@ Socket = function(socket, storage){
 			clipboard = msg.data;
 		}
 		else{ //paste
-			var newid = deepCopyObject(msg.data,clipboard);
             var parentid = msg.data || "root";
             var parent=that.storage.get(parentid);
-            parent.children.push(newid);
-            var updatemsg = {}; updatemsg.objects = [];
-            var msgitem = {}; msgitem.id = parentid; msgitem.object = parent;
+            for ( var i = 0; i < clipboard.length; i++ ) {
+                console.log( "\n\ndeepCopying " + clipboard[i] +"\n\n" );
+                var newid = deepCopyObject(msg.data,clipboard[i]);
+                parent.children.push(newid);
+            }
+            var updatemsg = {};
+            updatemsg.objects = [];
+            var msgitem = {};
+            msgitem.id = parentid;
+            msgitem.object = parent;
             updatemsg.objects.push(msgitem);
             that.listener.onMessage(updatemsg);
 		}
 	});
 	
 	/*private functions*/
-	deepCopyObject = function(parentid,tocopyid){
+	var deepCopyObject = function(parentid,tocopyid){
 		var newobj = {};
 		var copyobj = that.storage.get(tocopyid);
 		if(copyobj!== undefined){
@@ -268,10 +274,12 @@ SocketEnhanced = function(_socket,_readstorage){
             _clipboard = msg.data;
         }
         else{ //paste
-            var newid = deepCopyObject(msg.data,_clipboard);
             var parentid = msg.data || "root";
             var parent=_readstorage.get(parentid);
-            parent.children.push(newid);
+            for ( var i = 0; i < _clipboard.length; i++ ) {
+                var newid = deepCopyObject(msg.data,_clipboard[i]);
+                parent.children.push(newid);
+            }
             var updatemsg = {}; updatemsg.objects = [];
             var msgitem = {}; msgitem.id = parentid; msgitem.object = parent;
             updatemsg.objects.push(msgitem);
