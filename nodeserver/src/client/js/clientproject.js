@@ -92,13 +92,15 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 			return undefined;
 		}
 	}
-	Project.prototype.delNode = function(node){
-        var did = node._id || node;
-		this.storage.del(did);
+	Project.prototype.delNode = function(nodeIds){
         var message = {};
         message.objects = [];
-        var msgitem = {}; msgitem.id = did; msgitem.object = undefined;
-        message.objects.push(msgitem);
+        for ( var i = 0; i < nodeIds.length; i++ ) {
+            this.storage.del(nodeIds[i]);
+            var msgitem = {}; msgitem.id = nodeIds[i]; msgitem.object = undefined;
+            message.objects.push(msgitem);
+        }
+
         this.socket.objectUpdate(message);
 	}
 	

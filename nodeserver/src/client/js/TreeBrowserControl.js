@@ -118,9 +118,9 @@ define([], function(){
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
-        this.treeBrowser.onNodeCopy = function( nodeId ) {
-            console.log( "treeBrowser.onNodeCopy " + nodeId );
-            self.project.copyNode( nodeId );
+        this.treeBrowser.onNodeCopy = function( selectedIds ) {
+            console.log( "treeBrowser.onNodeCopy " + selectedIds );
+            self.project.copyNode( selectedIds );
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
@@ -130,9 +130,9 @@ define([], function(){
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
-        this.treeBrowser.onNodeDelete = function( nodeId ) {
-            console.log( "treeBrowser.onNodeDelete " + nodeId );
-            self.project.delNode( nodeId );
+        this.treeBrowser.onNodeDelete = function( selectedIds ) {
+            console.log( "treeBrowser.onNodeDelete " + selectedIds );
+            self.project.delNode( selectedIds );
         };
 
         //called from the TreeBrowserWidget when a node has been renamed

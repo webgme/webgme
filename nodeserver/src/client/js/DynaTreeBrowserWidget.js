@@ -1,7 +1,7 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define( ['jquery.dynatree.min', 'jquery.contextMenu' ], function() {
+define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
     var DynaTreeBrowserWidget = function ( containerId ){
 
         //save parentcontrol
@@ -119,9 +119,11 @@ define( ['jquery.dynatree.min', 'jquery.contextMenu' ], function() {
         };
 
         var copyNode = function( node ) {
-            console.log( "TreeBrowser copy " +  node.data.key );
+            var selectedIds= [];
+            selectedIds.push( node.data.key );
+            console.log( "TreeBrowser copy " +  selectedIds );
             if ($.isFunction(self.onNodeCopy)){
-                self.onNodeCopy.call(self, node.data.key);
+                self.onNodeCopy.call(self, selectedIds);
             }
         };
 
@@ -133,9 +135,11 @@ define( ['jquery.dynatree.min', 'jquery.contextMenu' ], function() {
         };
 
         var deleteNode = function( node ) {
-            console.log( "TreeBrowser delete " +  node.data.key );
+            var selectedIds= [];
+            selectedIds.push( node.data.key );
+            console.log( "TreeBrowser delete " +  selectedIds);
             if ($.isFunction(self.onNodeDelete)){
-                self.onNodeDelete.call(self, node.data.key);
+                self.onNodeDelete.call(self, selectedIds);
             }
         };
 
@@ -232,6 +236,10 @@ define( ['jquery.dynatree.min', 'jquery.contextMenu' ], function() {
 
                 bindContextMenu(span);
             }
+        });
+
+        this.treeViewE.bind("keydown", function(event){
+
         });
     }
 

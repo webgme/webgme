@@ -37,12 +37,24 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
         //add control to parent
         containerControl.append(treeViewE);
 
+        //returns the ID of each selected node in the tree
+        var getSelectedNodeIds = function() {
+            var selectedIds = [];
+
+            treeViewE.jstree("get_selected").each( function() {
+                selectedIds.push( $(this).attr("nId") );
+            } );
+
+            return selectedIds;
+        };
+
 
         //Called when the ContexMenu's 'Copy' action is selected for the node
         var copyNode = function (nodeId) {
-            console.log("TreeBrowser copy " + nodeId);
+            var selectedIds = getSelectedNodeIds();
+            console.log("TreeBrowser copy " + selectedIds);
             if ($.isFunction(self.onNodeCopy)) {
-                self.onNodeCopy.call(self, nodeId);
+                self.onNodeCopy.call(self, selectedIds);
             }
         };
 
@@ -56,9 +68,10 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
         //Called when the ContexMenu's 'Delete' action is selected for the node
         var deleteNode = function (nodeId) {
-            console.log("TreeBrowser delete " + nodeId);
+            var selectedIds = getSelectedNodeIds();
+            console.log("TreeBrowser delete " + selectedIds);
             if ($.isFunction(self.onNodeDelete)) {
-                self.onNodeDelete.call(self, nodeId);
+                self.onNodeDelete.call(self, selectedIds);
             }
         };
 
@@ -130,7 +143,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
         //contruct the tree itself using jsTree
         treeViewE.jstree({
-            "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm", "hotkeys" ],
+            "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm" ],
             "open_parents":false,
             "contextmenu":{
                 "select_node":"true",
@@ -218,6 +231,80 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 }
             }
         });
+
+        //hook up node selection event handler to properly set focus on selected node
+        treeViewE.bind("select_node.jstree", function (e, data) {
+            //find the a tag in is and set focus on that
+            var aTag = data.rslt.obj[0].children[1];
+            if ( aTag ) {
+                aTag.focus();
+            }
+        });
+
+        //hook up node selection event handler to properly set focus on last selected node (if any)
+        treeViewE.bind("deselect_node.jstree", function (e, data) {
+            //find the a tag in is and set focus on that
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            if ( o && o.length > 0 ) {
+                var aTag = o[0].children[1];
+                if ( aTag ) {
+                    aTag.focus();
+                }
+            }
+        });
+
+
+        //hook up keyboard handlers
+        treeViewE.bind('keydown', 'Ctrl+c', function() {
+            copyNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'Ctrl+v', function() {
+            pasteNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'del', function() {
+            deleteNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'f2', function() {
+            editNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'up', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            treeViewE.jstree("get_selected").each( function() {
+                jQuery.jstree._reference(treeViewE).deselect_node(this);
+            } );
+            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_prev(o));
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'shift+up', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_prev(o));
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'down', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            //deselect all selected
+            treeViewE.jstree("get_selected").each( function() {
+                jQuery.jstree._reference(treeViewE).deselect_node(this);
+            } );
+            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_next(o));
+            return false;
+        } );
+
+        treeViewE.bind('keydown', 'shift+down', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_next(o));
+            return false;
+        } );
 
         /*
          * PUBLIC METHODS
