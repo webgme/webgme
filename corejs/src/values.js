@@ -106,7 +106,7 @@ define([ "assert" ], function (ASSERT) {
 				backup.deleteEach(notifier);
 			},
 
-			addListeners: listeners.add,
+			addListener: listeners.add,
 
 			removeListener: listeners.remove,
 
@@ -275,7 +275,7 @@ define([ "assert" ], function (ASSERT) {
 				ASSERT(value === undefined || value >= 1);
 				
 				if( value !== undefined ) {
-					storage.set(value + 1);
+					storage.set(row, value + 1);
 				}
 				else {
 					storage.set(row, 1);
@@ -312,12 +312,24 @@ define([ "assert" ], function (ASSERT) {
 		};
 	};
 
+	// ----------------- readonly -----------------
+
+	var readonly = function(value) {
+		return {
+			table: value.table,
+			get: value.get,
+			addListener: value.addListener,
+			removeListener: value.removeListener
+		};
+	};
+	
 	// ----------------- interface -----------------
 
 	return {
 		create: create,
 		compute: compute,
 		stage: stage,
-		refcount: refcount
+		refcount: refcount,
+		readonly: readonly
 	};
 });

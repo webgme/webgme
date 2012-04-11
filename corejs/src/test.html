@@ -8,41 +8,41 @@
 <body>
 Test
 <script>
-	require(["flattable", "values"], function(Table, values) {
-		var table = new Table();
-		var refcount = values.refcount(table);
-		var object = values.create(table);
-		var selected = values.stage(values.compute(function(refcount, object) {
-			return refcount ? object : undefined;
-		}, refcount, object));
-		
-		var row = table.getRow(0);
-		console.log(refcount.get(row));
-		console.log(object.get(row));
-		console.log(selected.get(row));
-		console.log(selected.isDirty());
-		console.log("");
-		
-		object.set(row, "hihi");
-		console.log(refcount.get(row));
-		console.log(object.get(row));
-		console.log(selected.get(row));
-		console.log(selected.isDirty());
-		console.log("");
-		
-		refcount.increase(row);
-		console.log(refcount.get(row));
-		console.log(object.get(row));
-		console.log(selected.get(row));
-		console.log(selected.isDirty());
-		console.log("");
+	require(["flattable", "values", "services"], function(Table, values, services) {
 
-		selected.commit();
-		console.log(refcount.get(row));
-		console.log(object.get(row));
-		console.log(selected.get(row));
-		console.log(selected.isDirty());
-		console.log("");
+		var table = new Table();
+		var objects = values.create(table);
+		var query = services.query(objects);
+
+		var row0 = table.getRow("a");
+		var row1 = table.getRow("b");
+		
+		var logRow = function(row) {
+			var name = table.getId(row);
+			console.log(name + "\tpattern: " + JSON.stringify(query.patterns.get(row)));
+			console.log("\tterritory " + query.territory.get(row));
+			console.log("\tvalue: " + JSON.stringify(objects.get(row)));
+		}
+		
+		var log = function() {
+			logRow(row0);
+			logRow(row1);
+			console.log("dirty: " + query.isDirty());
+			console.log("loaded: " + query.isLoaded());
+			console.log("");
+		}
+
+		log();
+		
+		query.patterns.set(row0, {children:true});
+		log();
+		
+		objects.set(row0, {children: ["b"]});
+		objects.set(row1, {});
+		log();
+		
+		query.execute();
+		log();
 		
 		console.log("done");
 	});
