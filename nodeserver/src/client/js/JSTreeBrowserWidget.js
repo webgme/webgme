@@ -1,7 +1,7 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define( ['jquery.jstree' ], function() {
+define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
     var css	= document.createElement('link');
@@ -130,13 +130,43 @@ define( ['jquery.jstree' ], function() {
 
         //contruct the tree itself using jsTree
         treeViewE.jstree({
-            "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm" ],
+            "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm", "hotkeys" ],
             "open_parents":false,
             "contextmenu":{
                 "select_node":"true",
                 "show_at_node":"true",
                 "items":function (node) {
                     return customContextMenu(node);
+                }
+            },
+            "hotkeys" : {
+                "del" : function () {   //DELTE NODE
+                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
+                    if(o && o.length) {
+                        deleteNode(o.attr("nId"));
+                    }
+                    return false;
+                },
+                "f2" : function () {   //EDIT NODE
+                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
+                    if(o && o.length) {
+                        editNode(o.attr("nId"));
+                    }
+                    return false;
+                },
+                "ctrl+c" : function () {   //COPY NODE
+                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
+                    if(o && o.length) {
+                        copyNode(o.attr("nId"));
+                    }
+                    return false;
+                },
+                "ctrl+v" : function () {   //PASTE NODE
+                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
+                    if(o && o.length) {
+                        pasteNode(o.attr("nId"));
+                    }
+                    return false;
                 }
             }
         });
