@@ -92,16 +92,46 @@ it can connect a BasicSocket to a Project
 which finally made the BasicSocket to a Client...
  */
 var Librarian = function(_server){
-
+    var _basedir = "../projects";
+    var _projects = {};
     /*public functions*/
     this.getAvailableProjects = function(){
-
+        var directory = fs.readdirSync(_basedir);
+        var projects = [];
+        for(var i in directory){
+            if(directory[i].indexOf('.') === -1){
+                projects.push(directory[i]);
+            }
+        }
+        return projects;
     };
-    this.createProject = function(){
-
+    this.createProject = function(project){
+        try{
+            fs.mkdirSync(_basedir+"/"+project);
+            return true;
+        }
+        catch(e){
+            return false;
+        }
     };
     this.getActiveBranches = function(project){
-    	
+    	var branches = {};
+        for(var i in _projects){
+            var info = _projects[i].getProjectInfo();
+            if(info.project === project){
+                branches[info.branch] = true;
+            }
+        }
+        var directory = fs.readdirSync(_basedir+"/"+project);
+        for(var i in directory){
+            if(directory[i].indexOf(".bif") !== -1){
+                var branch = directory[i].substr(0,directory[i].indexOf(".bif"));
+                if(branches[branch] === undefined){
+                    branches[branch] = false;
+                }
+            }
+        }
+        return branches;
     };
     this.createBranch = function(){
 
@@ -117,7 +147,13 @@ var Librarian = function(_server){
 this class represents an active branch of a real project
  */
 var Project = function(){
+    _branch = "";
+    _project = "";
 
+    /*public functions*/
+    this.getProjectInfo = function(){
+        return {project:_project,branch:_branch};
+    };
 };
 /*
 this type of socket is only good for selecting a
@@ -172,7 +208,10 @@ var BasicSocket = function(_iosocket,_librarian){
     	}
     });
     _iosocket.on('listBranches',function(msg){
-    	var branches = _librarian.getActiveBranches(_project);
+    	var branches = {};
+        if(_project){
+            branches = _librarian.getActiveBranches(_project);
+        }
     	_iosocket.emit('listBranchesAck',branches);
     });
     _iosocket.on('createBranch',function(msg){
