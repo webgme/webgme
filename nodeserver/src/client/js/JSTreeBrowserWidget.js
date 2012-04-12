@@ -42,7 +42,10 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             var selectedIds = [];
 
             treeViewE.jstree("get_selected").each( function() {
-                selectedIds.push( $(this).attr("nId") );
+                //only interested in nodes that have been fully loaded and displayed
+                if ( $(this).hasClass( "gme-loading" ) !== true ) {
+                    selectedIds.push( $(this).attr("nId") );
+                }
             } );
 
             return selectedIds;
@@ -52,9 +55,11 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
         //Called when the ContexMenu's 'Copy' action is selected for the node
         var copyNode = function (nodeId) {
             var selectedIds = getSelectedNodeIds();
-            console.log("TreeBrowser copy " + selectedIds);
-            if ($.isFunction(self.onNodeCopy)) {
-                self.onNodeCopy.call(self, selectedIds);
+            if ( selectedIds.length > 0 ) {
+                console.log("TreeBrowser copy " + selectedIds);
+                if ($.isFunction(self.onNodeCopy)) {
+                    self.onNodeCopy.call(self, selectedIds);
+                }
             }
         };
 
@@ -69,9 +74,11 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
         //Called when the ContexMenu's 'Delete' action is selected for the node
         var deleteNode = function (nodeId) {
             var selectedIds = getSelectedNodeIds();
-            console.log("TreeBrowser delete " + selectedIds);
-            if ($.isFunction(self.onNodeDelete)) {
-                self.onNodeDelete.call(self, selectedIds);
+            if ( selectedIds.length > 0 ) {
+                console.log("TreeBrowser delete " + selectedIds);
+                if ($.isFunction(self.onNodeDelete)) {
+                    self.onNodeDelete.call(self, selectedIds);
+                }
             }
         };
 
@@ -141,6 +148,15 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             }
         };
 
+        //set's focus on the given node's 'a' tag (if any)
+        var focusNode = function(node) {
+            //find the 'a' tag in it and set focus on that
+            var aTag = node[0].children[1];
+            if ( aTag ) {
+                aTag.focus();
+            }
+        };
+
         //contruct the tree itself using jsTree
         treeViewE.jstree({
             "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm" ],
@@ -150,36 +166,6 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 "show_at_node":"true",
                 "items":function (node) {
                     return customContextMenu(node);
-                }
-            },
-            "hotkeys" : {
-                "del" : function () {   //DELTE NODE
-                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
-                    if(o && o.length) {
-                        deleteNode(o.attr("nId"));
-                    }
-                    return false;
-                },
-                "f2" : function () {   //EDIT NODE
-                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
-                    if(o && o.length) {
-                        editNode(o.attr("nId"));
-                    }
-                    return false;
-                },
-                "ctrl+c" : function () {   //COPY NODE
-                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
-                    if(o && o.length) {
-                        copyNode(o.attr("nId"));
-                    }
-                    return false;
-                },
-                "ctrl+v" : function () {   //PASTE NODE
-                    var o = this.data.ui.hovered || this.data.ui.last_selected || -1;
-                    if(o && o.length) {
-                        pasteNode(o.attr("nId"));
-                    }
-                    return false;
                 }
             }
         });
@@ -230,15 +216,14 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                     console.log("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
                 }
             }
+
+            //set focus back to the renamed node
+            focusNode( renamedNode );
         });
 
         //hook up node selection event handler to properly set focus on selected node
         treeViewE.bind("select_node.jstree", function (e, data) {
-            //find the a tag in is and set focus on that
-            var aTag = data.rslt.obj[0].children[1];
-            if ( aTag ) {
-                aTag.focus();
-            }
+            focusNode( data.rslt.obj );
         });
 
         //hook up node selection event handler to properly set focus on last selected node (if any)
@@ -246,35 +231,53 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             //find the a tag in is and set focus on that
             var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
             if ( o && o.length > 0 ) {
-                var aTag = o[0].children[1];
-                if ( aTag ) {
-                    aTag.focus();
-                }
+                focusNode( o );
             }
         });
 
 
         //hook up keyboard handlers
+        //CTRL+C -- copy selected node(s)
         treeViewE.bind('keydown', 'Ctrl+c', function() {
-            copyNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            var o = jQuery.jstree._reference(treeViewE)._get_node();
+            //we can paste if the selected node is not in 'Loading...' state
+            if ( $(o).hasClass( "gme-loading" ) !== true ) {
+                copyNode( o.attr("nId") );
+            }
             return false;
         } );
 
+        //CTRL+V -- paste clipboard under selected node
         treeViewE.bind('keydown', 'Ctrl+v', function() {
-            pasteNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            var o = jQuery.jstree._reference(treeViewE)._get_node();
+            //we can paste if the selected node is not in 'Loading...' state
+            if ( $(o).hasClass( "gme-loading" ) !== true ) {
+                pasteNode( o.attr("nId") );
+            }
             return false;
         } );
 
+        //DELETE -- delete selected node(s)
         treeViewE.bind('keydown', 'del', function() {
-            deleteNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            var o = jQuery.jstree._reference(treeViewE)._get_node();
+            //we can paste if the selected node is not in 'Loading...' state
+            if ( $(o).hasClass( "gme-loading" ) !== true ) {
+                deleteNode( o.attr("nId") );
+            }
             return false;
         } );
 
+        //F2 -- rename selected node
         treeViewE.bind('keydown', 'f2', function() {
-            editNode( jQuery.jstree._reference(treeViewE)._get_node().attr("nId") );
+            var o = jQuery.jstree._reference(treeViewE)._get_node();
+            //we can paste if the selected node is not in 'Loading...' state
+            if ( $(o).hasClass( "gme-loading" ) !== true ) {
+                editNode( o.attr("nId") );
+            }
             return false;
         } );
 
+        //UP -- move selection to previous node
         treeViewE.bind('keydown', 'up', function() {
             var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
             treeViewE.jstree("get_selected").each( function() {
@@ -284,12 +287,14 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             return false;
         } );
 
+        //SHIFT+UP -- move to previous node and add it to the selection range
         treeViewE.bind('keydown', 'shift+up', function() {
             var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
             jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_prev(o));
             return false;
         } );
 
+        //DOWN -- move to next node
         treeViewE.bind('keydown', 'down', function() {
             var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
             //deselect all selected
@@ -300,9 +305,30 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             return false;
         } );
 
+        //SHIFT+DOWN -- move to next node and add it to the selection range
         treeViewE.bind('keydown', 'shift+down', function() {
             var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
             jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_next(o));
+            return false;
+        } );
+
+        //LEFT -- close node if it was open
+        treeViewE.bind('keydown', 'left', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            //open if closed or go to next
+            if( o.hasClass("jstree-open") ) {
+                jQuery.jstree._reference(treeViewE).close_node(o);
+            }
+            return false;
+        } );
+
+        //RIGHT -- open node if it was closed
+        treeViewE.bind('keydown', 'right', function() {
+            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+            //close if opened or go to prev
+            if( o.hasClass("jstree-closed") ) {
+                jQuery.jstree._reference(treeViewE).open_node(o);
+            }
             return false;
         } );
 
@@ -323,11 +349,19 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             }
 
             var newNodeData = {
-                "data":objDescriptor.name,
-                "attr":{ "nId":objDescriptor.id,
-                    "class":objDescriptor.objectType || "gme-folder"
+                "data": { title : objDescriptor.name },
+                "attr":{ "nId":objDescriptor.id/*,
+                    "class":objDescriptor.objectType || "gme-folder"*/
                 }
             };
+
+            if ( objDescriptor.icon ) {
+                newNodeData[ "data" ]["icon"] = objDescriptor.icon;
+            }
+
+            if ( objDescriptor["class"] ) {
+                newNodeData[ "attr" ]["class"] =  objDescriptor["class"];
+            }
 
             if (objDescriptor.hasChildren === true) {
                 newNodeData[ "state" ] = "closed";
@@ -335,6 +369,11 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
             //using core module
             var newNode = treeViewE.jstree("create_node", parentNode, "last", newNodeData, false);
+
+            if (objDescriptor.icon) {
+                    $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
+                    $(newNode[0].children[1].children[0]).css("background-position", "0 0");
+            }
 
             //log
             console.log("New node created: " + objDescriptor.id);
@@ -392,17 +431,41 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 }
             }
 
-            //set new icon (if any)
-            if (objDescriptor.objType) {
-                if (node.hasClass(objDescriptor.objType) !== true) {
+            //remove loading if it was there
+            if (node.hasClass("gme-loading") === true) {
+                node.removeClass("gme-loading");
+            }
 
-                    //remove loading if it was there
-                    if (node.hasClass("gme-loading") === true) {
-                        node.removeClass("gme-loading");
-                    }
+            //set new class definition (if any)
+            if (objDescriptor["class"]) {
+                if (node.hasClass(objDescriptor["class"]) !== true) {
 
                     //add new class
-                    node.addClass(objDescriptor.objType);
+                    node.addClass(objDescriptor["class"]);
+
+                    //mark that change happened
+                    nodeDataChanged = true;
+                }
+            }
+
+            if (objDescriptor.icon) {
+                var currentIcon = $(node[0].children[1].children[0]).css("background-image");
+
+                if ( currentIcon ) {
+                    if ( currentIcon !== "url(" + objDescriptor.icon + ")" ) {
+
+                        $(node[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
+                        $(node[0].children[1].children[0]).css("background-position", "0 0");
+
+                        //mark that change happened
+                        nodeDataChanged = true;
+                    }
+                }
+            } else {
+                // icon set directly to null means 'remove'
+                if ( objDescriptor.icon === null ) {
+                    $(node[0].children[1].children[0]).css("background-image", "" );
+                    $(node[0].children[1].children[0]).css("background-position", "");
 
                     //mark that change happened
                     nodeDataChanged = true;
@@ -449,7 +512,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
          * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
          */
         this.onNodeTitleChanged = function (node, oldText, newText) {
-            console.log("Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, newText)");
+            console.log("Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, oldText, newText)");
             return true;
         };
 

@@ -23,7 +23,7 @@ define([], function(){
         setTimeout( function () {
 
             //create a new loading node for it in the tree
-            var loadingRootTreeNode = self.treeBrowser.createNode( null, { id: self._rootNodeId, name: "Initializing tree...", hasChildren : false, objectType :  "loading"  } );
+            var loadingRootTreeNode = self.treeBrowser.createNode( null, { id: self._rootNodeId, name: "Initializing tree...", hasChildren : false,  class :  "gme-loading" } );
 
             //store the node's info in the local hashmap
             self._nodes[ self._rootNodeId ] = { "treeNode": loadingRootTreeNode, "children" : [], "state" : self._stateLoading };
@@ -56,7 +56,8 @@ define([], function(){
                         childTreeNode = self.treeBrowser.createNode( parentNode, {  id: currentChildId,
                                                                                     name: childNode.name,
                                                                                     hasChildren : childNode.children.length > 0 ,
-                                                                                    objectType :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
+                                                                                    class :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom"
+                        } );
 
                         //store the node's info in the local hashmap
                         self._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
@@ -67,12 +68,15 @@ define([], function(){
                         //create a new node for it in the tree
                         childTreeNode = self.treeBrowser.createNode( parentNode, {  id: currentChildId,
                                                                                     name: "Loading...",
-                                                                                    hasChildren : false, objectType :  "gme-loading"  } );
+                                                                                    hasChildren : false,
+                                                                                    class :  "gme-loading"
+                        } );
 
                         //store the node's info in the local hashmap
                         self._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
                                                             "children" : [],
-                                                            "state" : self._stateLoading };
+                                                            "state" : self._stateLoading
+                        };
                     }
                 }
             }
@@ -198,7 +202,7 @@ define([], function(){
                         }
 
                         //create the node's descriptor for the treebrowser widget
-                        var nodeDescriptor = { "text" : updatedObject.name, "hasChildren" : updatedObject.children.length > 0, "objType" : objType };
+                        var nodeDescriptor = { "text" : updatedObject.name, "hasChildren" : updatedObject.children.length > 0, "class" : objType };
 
                         //update the node's representation in the tree
                         this.treeBrowser.updateNode( this._nodes[ objectId ].treeNode, nodeDescriptor  );
@@ -214,7 +218,8 @@ define([], function(){
                         //create the node's descriptor for the treebrowser widget
                         var nodeDescriptor = {
                             "text" : updatedObject.name,
-                            "hasChildren" : updatedObject.children.length > 0
+                            "hasChildren" : updatedObject.children.length > 0//,
+                            //"icon" : "http://someimage.jpg"  --- SET ICON HERE IF NEEDED
                         };
 
                         //update the node's representation in the tree
@@ -313,7 +318,7 @@ define([], function(){
                                     childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ].treeNode, {  id: currentChildId,
                                         name: childNode.name,
                                         hasChildren : childNode.children.length > 0 ,
-                                        objectType :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
+                                        class :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
 
                                     //store the node's info in the local hashmap
                                     this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
@@ -324,7 +329,8 @@ define([], function(){
                                     //create a new node for it in the tree
                                     childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ].treeNode, {  id: currentChildId,
                                         name: "Loading...",
-                                        hasChildren : false, objectType :  "gme-loading"  } );
+                                        hasChildren : false,
+                                        class :  "gme-loading"  } );
 
                                     //store the node's info in the local hashmap
                                     this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,

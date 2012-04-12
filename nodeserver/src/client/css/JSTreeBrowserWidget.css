@@ -1,42 +1,79 @@
 li.gme-folder > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") 0 0 !important;
+    background: url("../img/gmeicons.png") 0 0;
 }
 
 li.gme-model > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") -48px 0 !important;
+    background: url("../img/gmeicons.png") -48px 0;
 }
 
 li.gme-atom > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") -16px 0 !important;
+    background: url("../img/gmeicons.png") -16px 0;
 }
 
 li.gme-aspect > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") -32px 0 !important;
+    background: url("../img/gmeicons.png") -32px 0;
 }
 
 li.gme-connection > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") -64px 0 !important;
+    background: url("../img/gmeicons.png") -64px 0;
 }
 
 li.gme-root > a .jstree-icon
 {
-    background: url("../img/gmeicons.png") -80px 0 !important;
+    background: url("../img/gmeicons.png") -80px 0;
 }
 
 /* JSTREE CONTEXT MENU */
 #vakata-contextmenu {
-    font-size: 10px;
-    font-family: Verdana,serif;
-    /*margin-top: -5px !important;
-    margin-left: 5px !important;*/
+    min-width:120px !important;
 }
 
-/* Loading in progress for JSTree*/
+#vakata-contextmenu ul {
+    min-width:120px !important;
+}
+
+#vakata-contextmenu li {
+    padding: 1px !important;
+}
+
+#vakata-contextmenu li.vakata-separator {
+    padding: 0px !important;
+}
+
+#vakata-contextmenu li ins {
+    margin-left: 4px !important;
+    height: 17px !important;
+    background-position: 0px 1px !important;
+}
+
+#vakata-contextmenu li a {
+    margin-left: 18px !important;
+}
+
+#vakata-contextmenu.jstree-default-context li:hover,
+#vakata-contextmenu.jstree-default-context .vakata-hover  {
+    background:#aecff7;
+    -moz-border-radius:0px;
+    -webkit-border-radius:0px;
+    border-radius:0px;
+}
+
+#vakata-contextmenu.jstree-default-context a:hover,
+#vakata-contextmenu.jstree-default-context .vakata-hover > a {
+    padding: 1px 6px !important;
+    background:#aecff7 !important;
+    border: 0px solid #aecff7 !important;
+    -moz-border-radius: 0px;
+    -webkit-border-radius: 0px;
+    border-radius: 0px;
+}
+
+    /* Loading in progress for JSTree*/
 li.gme-loading > a
 {
     color: #aaaaaa;
@@ -45,5 +82,5 @@ li.gme-loading > a
 
 li.gme-loading > a .jstree-icon
 {
-    background: url("../img/progress.gif") 0 0 !important;
+    background: url("../img/progress.gif") 0 0;
 }
