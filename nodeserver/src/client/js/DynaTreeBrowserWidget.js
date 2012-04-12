@@ -7,10 +7,6 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
         //save parentcontrol
         this.containerControl =  $("#" + containerId );
 
-        this.containerControl.bind('onkeydown', function() {
-            alert('User clicked on "foo."');
-        });
-
         if ( this.containerControl.length === 0 ) {
             alert( "TreeBrowserWidget's container control with id:'" + containerId + "' could not be found" );
             return;
@@ -68,6 +64,12 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
         this.containerControl.append( myContextMenu );
 
         var editNode = function (nodeToEdit) {
+
+            //can not edit 'loading...' node
+            if ( nodeToEdit.data.addClass === "gme-loading" ) {
+                return;
+            }
+
             var prevTitle = nodeToEdit.data.title,
                 tree = nodeToEdit.tree;
             // Disable dynatree mouse- and key handling
@@ -119,6 +121,11 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
         };
 
         var copyNode = function( node ) {
+            //can not copy 'loading...' node
+            if ( node.data.addClass === "gme-loading" ) {
+                return;
+            }
+
             var selectedIds= [];
             selectedIds.push( node.data.key );
             console.log( "TreeBrowser copy " +  selectedIds );
@@ -128,6 +135,10 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
         };
 
         var pasteNode = function( node ) {
+            //can not paste to 'loading...' node
+            if ( node.data.addClass === "gme-loading" ) {
+                return;
+            }
             console.log( "TreeBrowser paste " +  node.data.key );
             if ($.isFunction(self.onNodePaste)){
                 self.onNodePaste.call(self, node.data.key);
@@ -135,6 +146,10 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
         };
 
         var deleteNode = function( node ) {
+            //can not delete 'loading...' node
+            if ( node.data.addClass === "gme-loading" ) {
+                return;
+            }
             var selectedIds= [];
             selectedIds.push( node.data.key );
             console.log( "TreeBrowser delete " +  selectedIds);
@@ -185,9 +200,8 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             onKeydown: function(node, event) {
                 switch( event.which ) {
                     // Handle Ctrl-C, -X and -V
-                    /*case 67:
+                    case 67:
                         if( event.ctrlKey ) { // Ctrl-C
-                            //call onNodeClose if exist
                             copyNode( node );
                             return false;
                         }
@@ -195,15 +209,66 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                     case 86:
                         if( event.ctrlKey ) { // Ctrl-V
                             pasteNode( node );
-
                             return false;
                         }
                         break;
                     case 113: //F2
                         editNode( node );
                         return false;
-                        break;*/
+                        break;
                     case 13: //ENTER
+                        return false;
+                        break;
+                    case 37: // <left>
+                        if( node.bExpanded ) {
+                            node.toggleExpand();
+                            node.focus();
+                            node._userActivate();
+                        } else if( node.parent && node.parent.parent ) {
+                            node.parent.focus();
+                            node.parent._userActivate();
+                        }
+                        return false;
+                        break;
+                    case 39: // <right>
+                        if( !node.bExpanded && (node.childList || node.data.isLazy) ) {
+                            node.toggleExpand();
+                            node.focus();
+                            node._userActivate();
+                        } else if( node.childList ) {
+                            node.childList[0].focus();
+                            node.childList[0]._userActivate();
+                        }
+                        return false;
+                        break;
+                    case 38: // <up>
+                        sib = node.getPrevSibling();
+                        while( sib && sib.bExpanded && sib.childList ){
+                            sib = sib.childList[sib.childList.length-1];
+                        }
+                        if( !sib && node.parent && node.parent.parent ){
+                            sib = node.parent;
+                        }
+                        if( sib ){
+                            sib.focus();
+                            sib._userActivate();
+                        }
+                        return false;
+                        break;
+                    case 40: // <down>
+                        if( node.bExpanded && node.childList ) {
+                            sib = node.childList[0];
+                        } else {
+                            var parents = node._parentList(false, true);
+                            for(var i=parents.length-1; i>=0; i--) {
+                                sib = parents[i].getNextSibling();
+                                if( sib ){ break; }
+                            }
+                        }
+                        if( sib ){
+                            sib.focus();
+                            sib._userActivate();
+                        }
                         return false;
                         break;
                 }
@@ -265,7 +330,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 key:objDescriptor.id,
                 isFolder:false, // objDescriptor.hasChildren,
                 isLazy:objDescriptor.hasChildren,
-                addClass:objDescriptor.objectType || ""
+                addClass:objDescriptor["class"] || ""
             });
 
 
@@ -368,9 +433,9 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             }
 
             //set new icon (if any)
-            if ( objDescriptor.objType ) {
-                if ( node.data.addClass !== objDescriptor.objType ) {
-                    node.data.addClass = objDescriptor.objType;
+            if ( objDescriptor["class"] ) {
+                if ( node.data.addClass !== objDescriptor["class"] ) {
+                    node.data.addClass = objDescriptor["class"];
                     //mark that change happened
                     nodeDataChanged = true;
                 }
