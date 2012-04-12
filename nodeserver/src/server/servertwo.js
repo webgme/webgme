@@ -100,6 +100,9 @@ var Librarian = function(_server){
     this.createProject = function(){
 
     };
+    this.getActiveBranches = function(project){
+    	
+    };
     this.createBranch = function(){
 
     };
@@ -124,8 +127,8 @@ creating a new branch or connecting to an existing one
 var BasicSocket = function(_iosocket,_librarian){
     var _login         = "";
     var _pwd           = "";
-    var _project       = "";
-    var _branch        = "";
+    var _project       = undefined;
+    var _branch        = undefined;
     var _authenticated = false;
     _iosocket.on('authenticate',function(msg){
         _login = msg.login;
@@ -139,8 +142,52 @@ var BasicSocket = function(_iosocket,_librarian){
         }
     });
     _iosocket.on('listProjects',function(msg){
-
+    	var projects = _librarian.getAvailableProjects();
+    	_iosocket.emit('listProjectsAck',projects);
     });
+    _iosocket.on('createProject',function(msg){
+    	if(_librarian.createProject(msg)){
+    		_project = msg;
+    		_branch = undefined;
+    		_iosocket.emit('createProjectAck');
+    	}
+    	else{
+    		_project = undefined;
+    		_branch = undefined;
+    		_iosocket.emit('createProjectNack');
+    	}
+    });
+    _iosocket.on('selectProject',function(msg){
+    	var projects = _librarian.getAvailableProjects();
+    	if(projects.indexOf(msg) !== -1){
+    		_project = msg;
+    		_branch = undefined;
+    		_iosocket.emit('selectProjectAck');
+    	}
+    	else{
+    		_project = undefined;
+    		_branch = undefined;
+    		_iosocket.emit('selectProjectNack');
+    	}
+    });
+    _iosocket.on('listBranches',function(msg){
+    	var branches = _librarian.getActiveBranches(_project);
+    	_iosocket.emit('listBranchesAck',branches);
+    });
+    _iosocket.on('createBranch',function(msg){
+    	if(_librarian.createBranch(project)){
+    		_branch = msg;
+    		_iosocket.emit('createBranchAck');
+    	}
+    	else{
+    		_branch = undefined;
+    		_iosocket.emit('createBranchNack');
+    	}
+    });
+    _iosocket.on('connectToBranch',function(msg){
+    	var branches = _librarian.getActiveBranches(_project);
+    })
+    
 
     /*public functions*/
     /*private functions*/
