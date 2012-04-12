@@ -59,7 +59,6 @@ Project.prototype.addClient = function(socket){
 };
 
 Project.prototype.onMessage = function(data){
-
     var self = this;
     var removeNodeRecursive = function(objectid, changequeue){
         var object = self.mystorage.get(objectid);

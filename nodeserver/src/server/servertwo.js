@@ -130,6 +130,7 @@ var BasicSocket = function(_iosocket,_librarian){
     var _project       = undefined;
     var _branch        = undefined;
     var _authenticated = false;
+    /*basic socket messages*/
     _iosocket.on('authenticate',function(msg){
         _login = msg.login;
         _pwd = msg.pwd;
@@ -186,7 +187,15 @@ var BasicSocket = function(_iosocket,_librarian){
     });
     _iosocket.on('connectToBranch',function(msg){
     	var branches = _librarian.getActiveBranches(_project);
-    })
+        var project = _librarian.connect(_project,_branch);
+        if(project){
+            project.addClient(_iosocket);
+            _iosocket.emit('connectToBranchAck');
+        }
+        else{
+            _iosocket.emit('connectToBranchNack');
+        }
+    });
     
 
     /*public functions*/

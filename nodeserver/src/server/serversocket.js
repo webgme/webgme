@@ -270,10 +270,14 @@ SocketEnhanced = function(_socket,_readstorage){
 
     });
     _socket.on('updateClipboard', function(msg){
+        var timeoutcall = function(parentid,copychildid){
+            setTimeout(addChildren(parentid,copychildid),1);
+        }
         if(msg.type === 'copy'){
             _clipboard = msg.data;
         }
         else{ //paste
+            /*
             var parentid = msg.data || "root";
             var parent=_readstorage.get(parentid);
             for ( var i = 0; i < _clipboard.length; i++ ) {
@@ -284,6 +288,11 @@ SocketEnhanced = function(_socket,_readstorage){
             var msgitem = {}; msgitem.id = parentid; msgitem.object = parent;
             updatemsg.objects.push(msgitem);
             _listener.onMessage(updatemsg);
+            */
+            var parentid = msg.data || "root";
+            for(var i in _clipboard){
+                timeoutcall(parentid,_clipboard[i]);
+            }
         }
     });
     /*public functions*/
@@ -390,6 +399,37 @@ SocketEnhanced = function(_socket,_readstorage){
             return newobj._id;
         }
         return undefined;
+    };
+    var addChildren = function(parentid,tocopyid){
+        var timeoutcall = function(newid,copychildid){
+            setTimeout(function(){
+                addChildren(newid,copychildid);
+            },1);
+        };
+        var newobj = {};
+        var copyobj = _readstorage.get(tocopyid);
+        if(copyobj){
+            for(var i in copyobj){
+                newobj[i] = copyobj[i];
+            }
+            newobj.children = [];
+            newobj.parentId = parentid;
+            newobj._id="P_"+copyobj._id;
+            var parent = _readstorage.get(parentid);
+            if(parent){
+                parent.children.push(newobj._id);
+                var updatemsg = {}; updatemsg.objects = [];
+                var msgitem = {}; msgitem.id = parent._id; msgitem.object = parent;
+                updatemsg.objects.push(msgitem);
+                msgitem = {}; msgitem.id = newobj._id; msgitem.object = newobj;
+                updatemsg.objects.push(msgitem);
+                _listener.onMessage(updatemsg);
+                /*now comes the recursive fun ;)*/
+                for(var j in copyobj.children){
+                    timeoutcall(newobj._id,copyobj.children[j]);
+                }
+            }
+        }
     };
 };
 
