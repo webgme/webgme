@@ -1,25 +1,25 @@
 package org.isis.webgme.test;
 
 import org.isis.webgme.reactive.*;
-import org.isis.webgme.reactive.Class;
+import org.isis.webgme.reactive.Table;
 
-public class Test
-{
+public class Test {
 	public static void main(String[] args) {
-		Class klass = new Class();
+		Table table = new Table();
 
-		Field<Integer> field = klass.declareField(0);
+		Field<Integer> field = table.declareField(0);
 
-		Value<Boolean> nonzero = klass.declareMethod(Unary.NONZERO, field);
-		Field<Boolean> hihi = klass.declareField(false);
-		
-		Value<Boolean> combined = klass.declareMethod(Binary.AND, nonzero, hihi);
-		
-		klass.seal();
-		
-		Object[] object = klass.newInstance();
-		field.set(object, 1);
-		hihi.set(object, true);
-		System.out.println(combined.get(object));
+		Value<Boolean> nonzero = table.declareMethod(Unary.NONZERO, field);
+		Field<Boolean> hihi = table.declareField(false);
+
+		Value<Boolean> combined = table
+				.declareMethod(Binary.AND, nonzero, hihi);
+
+		table.seal();
+
+		Object[] row = table.newInstance();
+		field.set(row, 1);
+		hihi.set(row, true);
+		System.out.println(combined.get(row));
 	};
 }

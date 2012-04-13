@@ -10,21 +10,21 @@ package org.isis.webgme.reactive;
 public class Field<Type> extends Value<Type> {
 
 	protected int index;
-	
-	protected Field(Class klass, Type defValue) {
-		super(klass);
-		
-		index = klass.addDefValue(defValue);
+
+	protected Field(Table table, Type defValue) {
+		super(table);
+
+		index = table.addDefValue(defValue);
 	}
 
-	public final Type get(Object[] object) {
-		return (Type)(object[index]);
+	public final Type get(Object[] row) {
+		return (Type) (row[index]);
 	}
-	
-	public final void set(Object[] object, Type value) {
-		Type oldValue = (Type)object[index];
-		object[index] = value;
 
-		notifyObservers(object, oldValue, value);
+	public final void set(Object[] row, Type value) {
+		Type oldValue = (Type) row[index];
+		row[index] = value;
+
+		notifyObservers(row, oldValue, value);
 	}
 };
