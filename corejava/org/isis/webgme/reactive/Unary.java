@@ -12,45 +12,61 @@ public class Unary<Type, Arg> extends Value<Type> {
 		public abstract Type compute(Arg arg);
 	};
 
-	public static final Unary.Function<Boolean, Boolean> NOT = new Unary.Function<Boolean, Boolean>() {
-		public final Boolean compute(Boolean arg)
-		{
-			if( arg == null )
+	public static final Unary.Function<Boolean, Boolean> NOT = new Function<Boolean, Boolean>() {
+		public final Boolean compute(Boolean arg) {
+			if (arg == null)
 				return null;
-			
-			return ! arg.booleanValue();
+
+			return !arg.booleanValue();
 		}
 	};
-	
-	public static final Unary.Function<Boolean, Integer> NONZERO = new Unary.Function<Boolean, Integer>() {
-		public final Boolean compute(Integer arg)
-		{
-			if( arg == null )
+
+	public static final Unary.Function<Boolean, Integer> NONZERO = new Function<Boolean, Integer>() {
+		public final Boolean compute(Integer arg) {
+			if (arg == null)
 				return null;
-			
+
 			return arg.intValue() != 0;
 		}
 	};
+
+	public static <Type> Unary.Function<Boolean, Type[]> CONTAINS(Type fixed) {
+		final Type fix = fixed;
+		return new Function<Boolean, Type[]>() {
+			public Boolean compute(Type[] arg) {
+				if (arg == null)
+					return false;
+
+				for (Type value : arg) {
+					if (fix.equals(value))
+						return true;
+				}
+
+				return false;
+			}
+		};
+	}
 
 	protected final Function<Type, Arg> func;
 	protected final Value<Arg> arg;
 
 	protected final Observer<Arg> observer = new Observer<Arg>() {
-		public final void modified(Object[] object, Arg oldValue, Arg newValue) {
-			notifyObservers(object, func.compute(oldValue), func.compute(newValue));
+		public final void modified(Object[] row, Arg oldValue, Arg newValue) {
+			notifyObservers(row, func.compute(oldValue),
+					func.compute(newValue));
 		}
 	};
-	
-	protected Unary(Class klass, Function<Type, Arg> function, Value<Arg> arg) {
-		super(klass);
+
+	protected Unary(Table table, Function<Type, Arg> function, Value<Arg> arg) {
+		super(table);
 
 		this.func = function;
 		this.arg = arg;
-		
+
 		arg.registerObserver(observer);
 	}
 
-	public final Type get(Object[] object) {
-		return func.compute(arg.get(object));
+	public final Type get(Object[] row) {
+		return func.compute(arg.get(row));
 	}
 };

@@ -6,46 +6,48 @@
 
 package org.isis.webgme.reactive;
 
-@SuppressWarnings("rawtypes")
+@SuppressWarnings("unchecked")
 public abstract class Value<Type> {
 
 	public interface Observer<Type> {
-		public void modified(Object[] object, Type oldValue, Type newValue);
+		public void modified(Object[] row, Type oldValue, Type newValue);
 	};
-	
-	protected final Class klass;
 
-	protected Observer[] observers = new Observer[0];
+	protected final Table table;
 
-	protected Value(Class klass) {
-		this.klass = klass;
+	protected Observer<Type>[] observers = (Observer<Type>[]) new Observer[0];
+
+	protected Value(Table table) {
+		this.table = table;
 	}
 
-	public Class getDeclaringClass() {
-		return klass;
+	public Table getDeclaringClass() {
+		return table;
 	}
 
 	public void registerObserver(Observer<Type> observer) {
-		Observer[] old  = observers;
-		
-		observers = new Observer[old.length + 1];
-		System.arraycopy(old,  0, observers, 0, old.length);
+		Observer<Type>[] old = observers;
+
+		observers = (Observer<Type>[]) new Observer[old.length + 1];
+		System.arraycopy(old, 0, observers, 0, old.length);
 
 		observers[old.length] = observer;
 	}
 
-	public abstract Type get(Object[] object);
+	public abstract Type get(Object[] row);
 
 	public final boolean hasChanged(Type oldValue, Type newValue) {
-		return oldValue != newValue && (oldValue == null || !oldValue.equals(newValue)); 
+		return oldValue != newValue
+				&& (oldValue == null || !oldValue.equals(newValue));
 	};
-	
-	protected final void notifyObservers(Object[] object, Type oldValue, Type newValue) {
-		assert(newValue == get(object));
-		
-		if( hasChanged(oldValue, newValue) ) {
-			for(Observer<Type> observer : observers) {
-				observer.modified(object, oldValue, newValue);
+
+	protected final void notifyObservers(Object[] row, Type oldValue,
+			Type newValue) {
+		assert (newValue == get(row));
+
+		if (hasChanged(oldValue, newValue)) {
+			for (Observer<Type> observer : observers) {
+				observer.modified(row, oldValue, newValue);
 			}
 		}
 	}
