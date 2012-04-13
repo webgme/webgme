@@ -48,5 +48,14 @@ socket.on('createBranchAck',function(msg){
 });
 socket.on('createBranchNack',function(msg){
     console.log("createBranchNack");
+    socket.emit('connectToBranch',"test");
+});
+socket.on('connectToBranchAck',function(msg){
+    console.log("selectBranchAck");
     process.exit(0);
-})
+});
+socket.on('connectToBranchNack',function(msg){
+    console.log("selectBranchNack");
+    process.exit(0);
+});
+
