@@ -180,15 +180,36 @@ this class represents an active branch of a real project
  */
 var Project = function(_project,_branch){
     var _clients = {};
+    var _territories = {};
+    var _transactionQ = new TransactionQueue(this);
+    var _storage = new Storage();
 
     /*public functions*/
     this.getProjectInfo = function(){
         return {project:_project,branch:_branch};
     };
-    this.addClient = function(socket){
-        var client = new Client(socket);
-        _clients.push(client);
+    this.addClient = function(socket,id){
+        var client = new Client(socket,id,this);
+        _clients[id] = client;
         return true;
+    };
+
+    /*message handling*/
+    this.onClientMessage = function(msg){
+        _transactionQ.onClientMessage(msg);
+    };
+    this.onProcessMessage = function(msg,cb){
+        setTimeout(function(){
+            cb(msg);
+        },1000);
+    };
+    this.onUpdateTerritory = function(cid,tid,newpatterns){
+        if(_territories[tid] === undefined){
+            var territory = new Territory(_clients[cid],tid);
+            territory.attachStorage(new ReadStorage(_storage));
+            _territories[tid] = territory;
+        }
+        _territories[tid].updatePatterns(newpatterns);
     };
 };
 /*
@@ -196,7 +217,7 @@ this type of socket is only good for selecting a
 project and connecting to it
 creating a new branch or connecting to an existing one
  */
-var BasicSocket = function(_iosocket,_librarian){
+var BasicSocket = function(_iosocket,_librarian,_id){
     var _login         = "";
     var _pwd           = "";
     var _project       = undefined;
@@ -261,10 +282,10 @@ var BasicSocket = function(_iosocket,_librarian){
     	}
     });
     _iosocket.on('connectToBranch',function(msg){
-    	var branches = _librarian.getActiveBranches(_project);
+        _branch = msg;
         var project = _librarian.connectToBranch(_project,_branch);
         if(project){
-            if(project.addClient(_iosocket)){
+            if(project.addClient(_iosocket,_id)){
                 _iosocket.emit('connectToBranchAck');
             }
             else{
@@ -278,6 +299,9 @@ var BasicSocket = function(_iosocket,_librarian){
     
 
     /*public functions*/
+    this.getId = function(){
+        return _id;
+    };
     /*private functions*/
     var authenticate = function(){
         _authenticated = true;
@@ -287,7 +311,79 @@ var BasicSocket = function(_iosocket,_librarian){
 this class represents the attached socket
 it is directly related to a given Project
  */
-var Client = function(_iosocket){
+var Client = function(_iosocket,_id,_project){
+    var _objects = {};
+    /*message handlings*/
+    _iosocket.on('clientMessage',function(msg){
+        /*you have to simply put it into the transaction queue*/
+        _project.onClientMessage(msg);
+        _iosocket.emit('clientMessageAck');
+    });
+    _iosocket.on('serverMessageAck',function(msg){
+        /*we are happy :)*/
+    });
+    _iosocket.on('serverMessageNack',function(msg){
+        /*we are not that happy but cannot do much*/
+        console.log("client: "+_id+" - serverMessageNack");
+    });
+
+    /*public functions*/
+    this.onUpdateTerritory = function(added,removed){
+        var msg = [];
+        for(var i in added){
+            if(_objects[i] === undefined){
+                _objects[i] = 1;
+                var additem = {}; additem.type = 'load'; additem.id = i; additem.object = added[i];
+                msg.push(additem);
+            }
+            _objects[i]++;
+        }
+        for(var i in removed){
+            if(_objects[i] === undefined){
+                /*was already removed*/
+            }
+            else{
+                _objects[i]--;
+                if(objects[i]<=0){
+                    delete objects[i];
+                    var delitem = {}; delitem.type = 'unload'; delitem.id = i;
+                    msg.push(delitem);
+                }
+            }
+        }
+        _iosocket.emit('serverMessage',msg);
+    };
+};
+/*
+this class represents the transaction queue of a
+project, it queues all the requests from all the clients
+and serialize them, then proccess them one by one
+ */
+var TransactionQueue = function(_project){
+    var _queue = [];
+    var _canwork = true;
+    //var _sequence = 0;
+
+    /*public functions*/
+    this.onClientMessage = function(msg){
+        /*we simply put the message into the queue*/
+        _queue.push(msg);
+    };
+
+    /*private functions*/
+    var processNextMessage = function(){
+        if(_canwork && _queue.length>0){
+            _project.onProcessMessage(_queue[0],messageHandled);
+            _canwork = false;
+        }
+    };
+    var messageHandled = function(data){
+        /*this is the callback function of the message procesing*/
+        /*the data should contain evrything which needed for responding*/
+        _queue.shift();
+        _canwork = true;
+        processNextMessage();
+    }
 
 };
 /*
@@ -297,40 +393,14 @@ which exact objects are important to the given
 requestor...
 Every client can have many Territory
  */
-var Territory = function(){
+var Territory = function(_client,_id){
     var _patterns = {};
     var _previouslist = [];
     var _currentlist = [];
     var _readstorage = undefined;
 
     /*public functions*/
-    this.attachStorage = function(storage){
-        _readstorage = storage;
-    };
-    this.detachStorage = function(){
-        _readstorage = undefined;
-    }
-    this.updatePtterns = function(newpatterns){
-        /*if it called without parameter
-        it means a simple refresh
-         */
-        if(newpatterns){
-            _patterns = newpatterns;
-        }
-        /* we copy the currentlist to
-        the previouslist
-         */
-        _previouslist = [];
-        while(_currentlist.length>0){
-            _previouslist.push(_currentlist.shift());
-        }
-
-        /*
-        now we should go through every pattern
-        and should calculate its territory
-         */
-
-    };
+    /*synchronous functions*/
     this.getLoadList = function(){
         var loadlist = [];
         for(var i in _currentlist){
@@ -351,6 +421,65 @@ var Territory = function(){
     };
     this.inTerritory = function(id){
         return (_currentlist.indexOf(id) !== -1);
+    };
+    this.getId = function(){
+        return _id;
+    };
+    this.attachStorage = function(storage){
+        _readstorage = storage;
+    };
+    this.detachStorage = function(){
+        _readstorage = undefined;
+    };
+    /*asynchronous functions*/
+    this.updatePatterns = function(newpatterns){
+        /*if it called without parameter
+        it means a simple refresh
+         */
+        if(newpatterns){
+            _patterns = newpatterns;
+        }
+        /* we copy the currentlist to
+        the previouslist
+         */
+        _previouslist = [];
+        while(_currentlist.length>0){
+            _previouslist.push(_currentlist.shift());
+        }
+
+        var patternProcessed = function(pid){
+            completed[pid] = true;
+
+            /*check if every pattern have been processed*/
+            for(var i in completed){
+                if(completed[i] === false){
+                    return;
+                }
+            }
+            /*we are ready, so we can call the callback ;)*/
+            var removedids = this.getUnloadList();
+            for(var i in removedids){
+                removed[removedids[i]] = null;
+            }
+            _client.onUpdateTerritory(added,removed);
+        };
+        var ruleProcessed = function(){
+
+        };
+
+
+        /*the real processing*/
+        var completed = {};
+        var added = {};
+        var removed = {};
+
+        for(var i in _patterns){
+            completed[i] = false;
+        };
+        for(var i in _patterns){
+        }
+
+
     };
     /*private functions*/
     var processPattern = function(pattern){
@@ -415,7 +544,7 @@ var Storage = function(){
 
     /*public functions*/
     this.get = function(id,cb){
-      cb(null,_objects[id]);
+      setTimeout(cb(null,_objects[id]),1000);
     };
     this.save = function(cb){
         _save = {};
@@ -423,15 +552,22 @@ var Storage = function(){
             var temp = JSON.stringify(_objects[i]);
             _save[i] = JSON.parse(temp);
         }
-        cb();
+        setTimeout(cb(),1000);
         /*now we can start the real saving*/
     };
     this.set = function(id,object,cb){
         _objects[id] = object;
-        cb();
+        setTimeout(cb(),1000);
     }
     /*private functions*/
 };
+var ReadStorage = function(_storage){
+    /*interface type object for read-only clients*/
+    /*public functions*/
+    this.get = function(id,cb){
+        _storage.get(id,cb);
+    };
+}
 
 
 /*MAIN*/
