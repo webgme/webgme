@@ -1,13 +1,12 @@
 package org.isis.webgme.core;
 
 import org.isis.webgme.reactive.*;
-import org.isis.webgme.reactive.Table;
 
 public class Query {
 	protected Table table = new Table();
 	protected Field<Object> data;
 	protected Field<String[]> patterns;
-	protected Counter territory;
+	protected RefCount territory;
 
 	public Query() {
 		table = new Table();
@@ -22,12 +21,21 @@ public class Query {
 
 		Value<Boolean> childrenPatterns = table.declareMethod(
 				Unary.CONTAINS("children"), patterns);
+		Value<Object[][]> childrenList = table.declareMethod(new Binary.Function<Object[][], Object, Boolean>() {
+			public Object[][] compute(Object arg1, Boolean arg2) {
+				if( ! arg2 )
+					return null;
+				
+				return null;
+			}
+		}, data, childrenPatterns); 
+		territory.declareBooleanSummand(childrenPatterns);
+		territory.declareListSummand(childrenList);
 
-		Counter ancestorPatterns = table.declateCounter();
+		RefCount ancestorPatterns = table.declateCounter();
 		ancestorPatterns.declareBooleanSummand(table.declareMethod(
 				Unary.CONTAINS("ancestor"), patterns));
-		territory.declareBooleanSummand(table.declareMethod(Unary.NONZERO,
-				ancestorPatterns));
+		territory.declareBooleanSummand(ancestorPatterns);
 
 	}
 }

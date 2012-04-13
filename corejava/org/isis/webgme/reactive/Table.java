@@ -52,10 +52,10 @@ public class Table {
 		return new Stage<Type>(this, value);
 	}
 
-	public Counter declateCounter() {
+	public RefCount declateCounter() {
 		assert (!isSealed());
 
-		return new Counter(this);
+		return new RefCount(this);
 	}
 
 	protected boolean sealed = false;

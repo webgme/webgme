@@ -12,7 +12,7 @@ public class Unary<Type, Arg> extends Value<Type> {
 		public abstract Type compute(Arg arg);
 	};
 
-	public static final Unary.Function<Boolean, Boolean> NOT = new Function<Boolean, Boolean>() {
+	public static final Function<Boolean, Boolean> NOT = new Function<Boolean, Boolean>() {
 		public final Boolean compute(Boolean arg) {
 			if (arg == null)
 				return null;
@@ -21,7 +21,7 @@ public class Unary<Type, Arg> extends Value<Type> {
 		}
 	};
 
-	public static final Unary.Function<Boolean, Integer> NONZERO = new Function<Boolean, Integer>() {
+	public static final Function<Boolean, Integer> NONZERO = new Function<Boolean, Integer>() {
 		public final Boolean compute(Integer arg) {
 			if (arg == null)
 				return null;
@@ -30,7 +30,7 @@ public class Unary<Type, Arg> extends Value<Type> {
 		}
 	};
 
-	public static <Type> Unary.Function<Boolean, Type[]> CONTAINS(Type fixed) {
+	public static <Type> Function<Boolean, Type[]> CONTAINS(Type fixed) {
 		final Type fix = fixed;
 		return new Function<Boolean, Type[]>() {
 			public Boolean compute(Type[] arg) {

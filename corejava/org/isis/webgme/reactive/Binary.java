@@ -12,7 +12,7 @@ public class Binary<Type, Arg1, Arg2> extends Value<Type> {
 		public abstract Type compute(Arg1 arg1, Arg2 arg2);
 	};
 
-	public static final Binary.Function<Boolean, Boolean, Boolean> AND = new Function<Boolean, Boolean, Boolean>() {
+	public static final Function<Boolean, Boolean, Boolean> AND = new Function<Boolean, Boolean, Boolean>() {
 		public final Boolean compute(Boolean arg1, Boolean arg2) {
 			if (arg1 == null || arg2 == null)
 				return null;
@@ -21,7 +21,7 @@ public class Binary<Type, Arg1, Arg2> extends Value<Type> {
 		}
 	};
 
-	public static final Binary.Function<Boolean, Boolean, Boolean> OR = new Function<Boolean, Boolean, Boolean>() {
+	public static final Function<Boolean, Boolean, Boolean> OR = new Function<Boolean, Boolean, Boolean>() {
 		public final Boolean compute(Boolean arg1, Boolean arg2) {
 			if (arg1 == null || arg2 == null)
 				return null;
