@@ -93,7 +93,7 @@ which finally made the BasicSocket to a Client...
  */
 var Librarian = function(_server){
     var _basedir = "../projects";
-    var _projects = {};
+    var _projects = [];
     /*public functions*/
     this.getAvailableProjects = function(){
         var directory = fs.readdirSync(_basedir);
@@ -133,26 +133,62 @@ var Librarian = function(_server){
         }
         return branches;
     };
-    this.createBranch = function(){
+    this.createBranch = function(project,branch){
+        var branches = this.getActiveBranches(project);
+        if(branches[branch] === undefined){
+            var file = fs.openSync(_basedir+"/"+project+"/"+branch+".bif",'w');
+            if(file){
+                fs.closeSync(file);
+                return true;
+            }
+            else{
+                return false;
+            }
 
+        }
+        else{
+            return false;
+        }
     };
-    this.connectToBranch = function(){
-
+    this.connectToBranch = function(project,branch){
+        for(var i in _projects){
+            var info = _projects[i].getProjectInfo();
+            if(info.project === project && info.branch === branch){
+                return _projects[i];
+            }
+        }
+        var branches = this.getActiveBranches(project);
+        if(branches[branch] === undefined){
+            return undefined;
+        }
+        /*create a new project*/
+        var project = createProject(project,branch);
+        return project;
     };
     this.disconnect = function(){
 
+    };
+    /*private functions*/
+    var createProject = function(project,branch){
+        var project = new Project(project,branch);
+        _projects.push(project);
+        return project;
     };
 };
 /*
 this class represents an active branch of a real project
  */
-var Project = function(){
-    _branch = "";
-    _project = "";
+var Project = function(_project,_branch){
+    var _clients = {};
 
     /*public functions*/
     this.getProjectInfo = function(){
         return {project:_project,branch:_branch};
+    };
+    this.addClient = function(socket){
+        var client = new Client(socket);
+        _clients.push(client);
+        return true;
     };
 };
 /*
@@ -215,7 +251,7 @@ var BasicSocket = function(_iosocket,_librarian){
     	_iosocket.emit('listBranchesAck',branches);
     });
     _iosocket.on('createBranch',function(msg){
-    	if(_librarian.createBranch(project)){
+    	if(_librarian.createBranch(_project,msg)){
     		_branch = msg;
     		_iosocket.emit('createBranchAck');
     	}
@@ -226,10 +262,14 @@ var BasicSocket = function(_iosocket,_librarian){
     });
     _iosocket.on('connectToBranch',function(msg){
     	var branches = _librarian.getActiveBranches(_project);
-        var project = _librarian.connect(_project,_branch);
+        var project = _librarian.connectToBranch(_project,_branch);
         if(project){
-            project.addClient(_iosocket);
-            _iosocket.emit('connectToBranchAck');
+            if(project.addClient(_iosocket)){
+                _iosocket.emit('connectToBranchAck');
+            }
+            else{
+                _iosocket.emit('connectToBranchNack');
+            }
         }
         else{
             _iosocket.emit('connectToBranchNack');
@@ -247,7 +287,7 @@ var BasicSocket = function(_iosocket,_librarian){
 this class represents the attached socket
 it is directly related to a given Project
  */
-var Client = function(){
+var Client = function(_iosocket){
 
 };
 /*

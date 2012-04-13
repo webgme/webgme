@@ -32,7 +32,7 @@ socket.on('createProjectAck',function(msg){
 });
 socket.on('listBranchesAck',function(msg){
     console.log("listBranchesAck "+JSON.stringify(msg));
-    process.exit(0);
+    socket.emit('createBranch',"test");
 });
 socket.on('selectProjectAck',function(msg){
     console.log("selectProjectAck");
@@ -42,3 +42,11 @@ socket.on('selectProjectNack',function(msg){
     console.log("selectProjectNack");
     process.exit(0);
 });
+socket.on('createBranchAck',function(msg){
+    console.log("createBranchAck");
+    process.exit(0);
+});
+socket.on('createBranchNack',function(msg){
+    console.log("createBranchNack");
+    process.exit(0);
+})
