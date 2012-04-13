@@ -52,7 +52,7 @@ public class Table {
 		return new Stage<Type>(this, value);
 	}
 
-	public RefCount declateCounter() {
+	public RefCount declareRefCount() {
 		assert (!isSealed());
 
 		return new RefCount(this);

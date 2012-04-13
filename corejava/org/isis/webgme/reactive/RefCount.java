@@ -76,7 +76,8 @@ public class RefCount extends Value<Boolean> {
 	protected final Observer<Object[][]> listObserver = new Observer<Object[][]>() {
 		public final void modified(Object[] row, Object[][] oldValue,
 				Object[][] newValue) {
-
+			//TODO: it might be better to compare the lists and not access the embedded objects
+			
 			if (newValue != null) {
 				for (Object[] r : newValue)
 					increase(r);
