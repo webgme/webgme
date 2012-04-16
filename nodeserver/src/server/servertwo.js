@@ -3,13 +3,36 @@
  *
  * Author: Tamas Kecskes
  */
+/*
+ * Server client message interface description:
+ *
+ * pattern:{id:"basenodeid",'referencename':(0-10)/"r"} - referencename is the name of the attribute which should be followed
+ * command:
+ *  territoryCommand:{type:"territory",id:"territoryid",patterns:["pattern"]}
+ *  copyCommand:{type:"copy",id:["objectids"]}
+ *  pasteCommand:{type:"paste",id:"parentid"}
+ *
+ *
+ * clientMessage:{ commands:["command"]}
+ * transactionMsg:{client:"client's id", msg: "clientMessage"}
+ *
+ */
 /*COMMON FUNCTIONS*/
+/*
+simply add the item to the list
+whatching that items should be exclusive
+it return true if it was a new item
+flase if it was already there
+ */
 var insertIntoArray = function(list,item){
     if (list instanceof Array){
         if(list.indexOf(item) === -1){
             list.push(item);
+            return true;
         }
+        return false;
     }
+    return false;
 };
 var removeFromArray = function(list,item){
     if (list instanceof Array){
@@ -31,6 +54,13 @@ var mergeArrays = function(one,two){
     }
     return three;
 };
+var numberToDword = function(number){
+    var str = number.toString(16);
+    while(str.length<8){
+        str = "0"+str;
+    }
+    return str;
+}
 
 /*COMMON INCLUDES*/
 var fs = require('fs');
@@ -82,7 +112,7 @@ var Server = function(_port){
     };
 
     io.sockets.on('connection', function(socket){
-        _connectedsockets.push(new BasicSocket(socket,_librarian));
+        _connectedsockets.push(new BasicSocket(socket,_librarian,socket.handshake.query.t));
     });
 };
 /*
@@ -136,15 +166,12 @@ var Librarian = function(_server){
     this.createBranch = function(project,branch){
         var branches = this.getActiveBranches(project);
         if(branches[branch] === undefined){
-            var file = fs.openSync(_basedir+"/"+project+"/"+branch+".bif",'w');
-            if(file){
-                fs.closeSync(file);
+            if(fs.writeFileSync(_basedir+"/"+project+"/"+branch+".bif","{}")){
                 return true;
             }
             else{
                 return false;
             }
-
         }
         else{
             return false;
@@ -170,7 +197,8 @@ var Librarian = function(_server){
     };
     /*private functions*/
     var createProject = function(project,branch){
-        var project = new Project(project,branch);
+        var basedir = _basedir+"/"+project;
+        var project = new Project(project,branch,basedir);
         _projects.push(project);
         return project;
     };
@@ -178,11 +206,11 @@ var Librarian = function(_server){
 /*
 this class represents an active branch of a real project
  */
-var Project = function(_project,_branch){
+var Project = function(_project,_branch,_basedir){
     var _clients = {};
     var _territories = {};
     var _transactionQ = new TransactionQueue(this);
-    var _storage = new Storage();
+    var _storage = new Storage(_project,_branch,_basedir);
 
     /*public functions*/
     this.getProjectInfo = function(){
@@ -198,9 +226,9 @@ var Project = function(_project,_branch){
     this.onClientMessage = function(msg){
         _transactionQ.onClientMessage(msg);
     };
-    this.onProcessMessage = function(msg,cb){
+    this.onProcessMessage = function(cid,commands,cb){
         setTimeout(function(){
-            cb(msg);
+            cb("");
         },1000);
     };
     this.onUpdateTerritory = function(cid,tid,newpatterns){
@@ -316,7 +344,8 @@ var Client = function(_iosocket,_id,_project){
     /*message handlings*/
     _iosocket.on('clientMessage',function(msg){
         /*you have to simply put it into the transaction queue*/
-        _project.onClientMessage(msg);
+        var clientmsg = {}; clientmsg.client = _id; clientmsg.msg = msg;
+        _project.onClientMessage(clientmsg);
         _iosocket.emit('clientMessageAck');
     });
     _iosocket.on('serverMessageAck',function(msg){
@@ -329,6 +358,8 @@ var Client = function(_iosocket,_id,_project){
 
     /*public functions*/
     this.onUpdateTerritory = function(added,removed){
+        console.log("kecso "+JSON.stringify(added));
+        console.log("kecso "+JSON.stringify(removed));
         var msg = [];
         for(var i in added){
             if(_objects[i] === undefined){
@@ -336,7 +367,9 @@ var Client = function(_iosocket,_id,_project){
                 var additem = {}; additem.type = 'load'; additem.id = i; additem.object = added[i];
                 msg.push(additem);
             }
-            _objects[i]++;
+            else{
+                _objects[i]++;
+            }
         }
         for(var i in removed){
             if(_objects[i] === undefined){
@@ -344,14 +377,16 @@ var Client = function(_iosocket,_id,_project){
             }
             else{
                 _objects[i]--;
-                if(objects[i]<=0){
-                    delete objects[i];
+                if(_objects[i]<=0){
+                    delete _objects[i];
                     var delitem = {}; delitem.type = 'unload'; delitem.id = i;
                     msg.push(delitem);
                 }
             }
         }
-        _iosocket.emit('serverMessage',msg);
+        if(msg.length>0){
+            _iosocket.emit('serverMessage',msg);
+        }
     };
 };
 /*
@@ -368,13 +403,40 @@ var TransactionQueue = function(_project){
     this.onClientMessage = function(msg){
         /*we simply put the message into the queue*/
         _queue.push(msg);
+        processNextMessage();
     };
 
     /*private functions*/
     var processNextMessage = function(){
         if(_canwork && _queue.length>0){
-            _project.onProcessMessage(_queue[0],messageHandled);
-            _canwork = false;
+            /*
+            we go throuhg the message and search for the territory update
+            items, as they are only readings they can go paralelly
+            so we send them each to the proper place...
+             */
+            var territorymsg = _queue[0];
+            var cid = territorymsg.client;
+            var updatecommands = [];
+            for(var i in territorymsg.msg.commands){
+                /*
+                TODO
+                we should collect the same territory updates as they overwrite
+                each other but they should be not that many ;)
+                 */
+                if(territorymsg.msg.commands[i].type === 'territory'){
+                    _project.onUpdateTerritory(cid,territorymsg.msg.commands[i].id,territorymsg.msg.commands[i].patterns);
+                }
+                else{
+                    updatecommands.push(territorymsg.msg.commands[i]);
+                }
+            }
+            if(updatecommands.length>0){
+                _project.onProcessMessage(cid,updatecommands,messageHandled);
+                _canwork = false;
+            }
+            else{
+                messageHandled(); /*this message contained only reading, so we finished processing ;)*/
+            }
         }
     };
     var messageHandled = function(data){
@@ -433,133 +495,272 @@ var Territory = function(_client,_id){
     };
     /*asynchronous functions*/
     this.updatePatterns = function(newpatterns){
-        /*if it called without parameter
-        it means a simple refresh
-         */
-        if(newpatterns){
-            _patterns = newpatterns;
+        var clist = [];
+        var plist = [];
+        var added = {};
+        var removed = {};
+        for(var i in _currentlist){
+            plist.push(_currentlist[i]);
         }
-        /* we copy the currentlist to
-        the previouslist
-         */
-        _previouslist = [];
-        while(_currentlist.length>0){
-            _previouslist.push(_currentlist.shift());
+        if(newpatterns === undefined){
+            newpatterns={};
+            for(var i in _patterns){
+                var rule = {};
+                for(var j in _patterns[i]){
+                    rule[j] = _patterns[i][j];
+                }
+                newpatterns[i] = rule;
+            }
         }
-
-        var patternProcessed = function(pid){
-            completed[pid] = true;
-
-            /*check if every pattern have been processed*/
-            for(var i in completed){
-                if(completed[i] === false){
-                    return;
+        else{
+            for(var i in newpatterns){
+                for(var j in newpatterns[i]){
+                    if(newpatterns[i][j] !== 'r'){
+                        newpatterns[i][j]++;
+                    }
                 }
             }
-            /*we are ready, so we can call the callback ;)*/
-            var removedids = this.getUnloadList();
-            for(var i in removedids){
-                removed[removedids[i]] = null;
+        }
+        var progress = {};
+        for(var i in newpatterns){
+            progress[i] = false;
+        }
+
+
+        /*inner functions for handling patterns and rules*/
+        var updateComplete = function(){
+            /*
+            this is the function which called when the whole
+            update process is completed
+            at this point the clist complete
+            and the added list are complete as well
+             */
+            _previouslist = plist;
+            _currentlist = clist;
+            _patterns = newpatterns;
+            for(var i in plist){
+                if(clist.indexOf(plist[i]) === -1){
+                    removed[plist[i]] = null; /*no need for the object itself to unload*/
+                }
             }
             _client.onUpdateTerritory(added,removed);
         };
-        var ruleProcessed = function(){
-
-        };
-
-
-        /*the real processing*/
-        var completed = {};
-        var added = {};
-        var removed = {};
-
-        for(var i in _patterns){
-            completed[i] = false;
-        };
-        for(var i in _patterns){
-        }
-
-
-    };
-    /*private functions*/
-    var processPattern = function(pattern){
-        var patternobjects = [];
-        for(var i in pattern){
-            if(i !== 'id' && i!== 'self'){
-                var rule = {}; rule[i] = pattern[i];
-                var ruleobjects =[];
-                processRule(pattern.id,rule,ruleobjects);
-                patternobjects = mergeArrays(patternobjects,ruleobjects);
+        var patternComplete = function(id){
+            /*
+            this function called when a single pattern
+            have been fully processed
+            it is called with the basenodeid, so the
+            progress can be updated and if every pattern have been
+            updated it can call the updateComplete function
+             */
+            progress[id] = true;
+            for(var i in progress){
+                if(progress[i] === false){
+                    return;
+                }
             }
-        }
-    };
-    var processRule = function(currentid,rule,objectssofar){
-        /*first we check if we found a loop*/
-        if(objectssofar.indexOf(currentid) !== -1){
-            return;
-        }
-        /*get the object*/
-        _readstorage.get(currentid,function(err,object){
-            if(err){
-                console.log("shit happens "+err);
+            updateComplete();
+        };
+        var processPattern = function(basenodeid, rule){
+            /*
+            this is not the recurse real proessing function
+            as we need namespace for our pattern related data
+            to count when we really processed all the rules
+             */
+            var patterncounter = 0;
+            var rulechains = {}; /*we will check for the loops with the help of this*/
+            for(var i in rule){
+                rulechains[i] = [];
             }
-            else{
-                objectssofar.push(object._id);
-                for(var i in rule){
-                    if(rule[i] instanceof Number){
-                        if(rule[i] === 0){
-                            return;
-                        }
-                        else{
-                            rule[i]--;
+
+            var processing = function(id,rulename,innerrule){
+                /*
+                this is the recursive call
+                 */
+                patterncounter++;
+                _readstorage.get(id,function(error,object){
+                    if(error){
+                        /*
+                        we stop as some error encountered
+                         */
+                        if(--patterncounter === 0){
+                            patternComplete(basenodeid);
                         }
                     }
                     else{
-                        /*the default is the R which means recursive*/
-                    }
-
-                    if(object[i]){
-                        if(object[i] instanceof Array){
-                            for(var j in object[i]){
-                                processRule(object[i][j],rule,objectssofar);
+                        /*check if we should put this object to added*/
+                        insertIntoArray(clist,object._id);
+                        if(plist.indexOf(object._id) === -1){
+                            added[object._id] = object;
+                        }
+                        if(insertIntoArray(rulechains[rulename],object._id)){
+                            /*no loop yet we can go on*/
+                            var myrule = {};
+                            myrule[rulename] = innerrule[rulename];
+                            if(myrule[rulename] !== 'r'){
+                                myrule[rulename]--;
+                            }
+                            /*check if we reached the end*/
+                            if(myrule[rulename] === 0){
+                                if(--patterncounter === 0){
+                                    patternComplete(basenodeid);
+                                }
+                            }
+                            else{
+                                /*we should follow the rule still*/
+                                if(object[rulename]){
+                                    if(object[rulename] instanceof Array){
+                                        /*we should call all 'children' recursively*/
+                                        var haselement = false;
+                                        for(var child in object[rulename]){
+                                            haselement = true;
+                                            processing(object[rulename][child],rulename,myrule);
+                                        }
+                                        if(!haselement){
+                                            /*this is the end of the chain*/
+                                            if(--patterncounter === 0){
+                                                patternComplete(basenodeid);
+                                            }
+                                        }
+                                        else{
+                                            --patterncounter;
+                                        }
+                                    }
+                                    else{
+                                        process(object[rulename],rulename,myrule);
+                                        --patterncounter;
+                                    }
+                                }
+                                else{
+                                    /*this is the end of the chain*/
+                                    if(--patterncounter === 0){
+                                        patternComplete(basenodeid);
+                                    }
+                                }
                             }
                         }
                         else{
-                            processRule(object[i],rule,objectssofar);
+                            /*there is a loop so we finished with this chain*/
+                            if(--patterncounter === 0){
+                                patternComplete(basenodeid);
+                            }
                         }
-                    }
-                }
-            }
 
-        });
+                    }
+                });
+            };
+
+            for(var i in rule){
+                /*we should follow all the different rules*/
+                processing(basenodeid,i,rule);
+            }
+        };
+
+        /*main*/
+        for(var i in newpatterns){
+            processPattern(i,newpatterns[i]);
+        }
     };
+    /*private functions*/
 };
 /*
 this is the storage class
 every active Project has one...
  */
-var Storage = function(){
+var Storage = function(_projectname,_branchname,_basedir){
     var _objects = {};
-    var _save = {};
+    var _branch = undefined;
+    var _current = undefined;
 
     /*public functions*/
     this.get = function(id,cb){
-      setTimeout(cb(null,_objects[id]),1000);
+        setTimeout(function(){
+            if(_objects[id]){
+                cb(null,_objects[id]);
+            }
+            else{
+                cb("noitemfound",null);
+            }
+        },1000);
     };
     this.save = function(cb){
-        _save = {};
-        for(var i in _objects){
-            var temp = JSON.stringify(_objects[i]);
-            _save[i] = JSON.parse(temp);
-        }
+        saveRevision(true);
         setTimeout(cb(),1000);
         /*now we can start the real saving*/
     };
     this.set = function(id,object,cb){
         _objects[id] = object;
         setTimeout(cb(),1000);
-    }
+    };
     /*private functions*/
+    var initialize = function(){
+        _branch = fs.readFileSync(_basedir+"/"+_branchname+".bif");
+        _branch = JSON.parse(_branch) || {};
+        if(_branch.revisions && _branch.revisions.length > 0){
+            loadRevision(_branch.revisions[_branch.revisions.length-1]);
+            reserveRevision();
+        }
+        else{
+            _branch.revisions = [];
+            _objects = {};
+            reserveRevision();
+        }
+    };
+    var reserveRevision = function(){
+        var directory = fs.readdirSync(_basedir);
+        var maxrevision = 0;
+        for(var i in directory){
+            if(directory[i].indexOf(".rdf") !== -1){
+                if(maxrevision<Number("0x"+directory[i].substr(0,8))){
+                    maxrevision = Number("0x"+directory[i].substr(0,8));
+                }
+            }
+        }
+        maxrevision++;
+        if(fs.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects))){
+            /*fine*/
+            _current = maxrevision;
+            updateBranchInfo();
+        }
+        else{
+            /*shit happens*/
+        }
+    };
+    var loadRevision = function(revision){
+        _objects = fs.readFileSync(_basedir+"/"+numberToDword(revision)+".rdf");
+        _objects = JSON.parse(_objects) || {};
+    };
+    var updateBranchInfo = function(){
+        if(_branch.revisions === undefined){
+            _branch.revisions = [];
+        }
+        _branch.revisions.push(_current);
+        if(fs.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch))){
+            /*fine*/
+        }
+        else{
+            /*shit happens*/
+        }
+    };
+    var saveRevision = function(neednew){
+        if(_current === undefined){
+            return;
+        }
+        /*first saving the data file*/
+        if(fs.writeFilesync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects))){
+            if(neednew){
+                reserveRevision();
+            }
+        }
+        else{
+            /*shit happens*/
+        }
+
+    };
+
+    /*main*/
+    initialize();
+    setInterval(saveRevision,5000); /*timed savings*/
 };
 var ReadStorage = function(_storage){
     /*interface type object for read-only clients*/

@@ -8,6 +8,7 @@
 
 /*MAIN*/
 var io = require('socket.io-client');
+var helper = 0;
 
 var socket = io.connect('http://localhost:8081');
 socket.on('connect', function(){
@@ -52,10 +53,36 @@ socket.on('createBranchNack',function(msg){
 });
 socket.on('connectToBranchAck',function(msg){
     console.log("selectBranchAck");
-    process.exit(0);
+    socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:"r"}}}]});
 });
 socket.on('connectToBranchNack',function(msg){
     console.log("selectBranchNack");
     process.exit(0);
+});
+socket.on('clientMessageAck',function(msg){
+    console.log('clientMessageAck');
+});
+socket.on('clientMessageNack',function(msg){
+    console.log('clientMessageNack');
+    process.exit(0);
+});
+
+/*now we can test real data ;)*/
+socket.on('serverMessage',function(msg){
+    console.log("serverMessage "+JSON.stringify(msg));
+    socket.emit('serverMessageAck');
+    helper++;
+    if(helper === 1){
+        socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:1}}}]});
+    }
+    else if(helper === 2){
+        socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:0}}}]});
+    }
+    else if(helper === 3){
+        socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:"r"}}}]});
+    }
+    else{
+        process.exit(0);
+    }
 });
 
