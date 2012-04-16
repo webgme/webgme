@@ -717,14 +717,9 @@ var Storage = function(_projectname,_branchname,_basedir){
             }
         }
         maxrevision++;
-        if(fs.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects))){
-            /*fine*/
-            _current = maxrevision;
-            updateBranchInfo();
-        }
-        else{
-            /*shit happens*/
-        }
+        fs.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects));
+        _current = maxrevision;
+        updateBranchInfo();
     };
     var loadRevision = function(revision){
         _objects = fs.readFileSync(_basedir+"/"+numberToDword(revision)+".rdf");
@@ -735,32 +730,24 @@ var Storage = function(_projectname,_branchname,_basedir){
             _branch.revisions = [];
         }
         _branch.revisions.push(_current);
-        if(fs.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch))){
-            /*fine*/
-        }
-        else{
-            /*shit happens*/
-        }
+        fs.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch));
     };
     var saveRevision = function(neednew){
         if(_current === undefined){
             return;
         }
         /*first saving the data file*/
-        if(fs.writeFilesync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects))){
-            if(neednew){
-                reserveRevision();
-            }
+        fs.writeFileSync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects));
+        if(neednew === true){
+            reserveRevision();
         }
-        else{
-            /*shit happens*/
-        }
-
     };
 
     /*main*/
     initialize();
-    setInterval(saveRevision,5000); /*timed savings*/
+    setInterval(function(){
+        saveRevision(false);
+    },5000); /*timed savings*/
 };
 var ReadStorage = function(_storage){
     /*interface type object for read-only clients*/
