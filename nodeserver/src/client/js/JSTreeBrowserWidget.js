@@ -148,7 +148,9 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             }
         };
 
-        //set's focus on the given node's 'a' tag (if any)
+        /*
+         * set's focus on the given node's 'a' tag (if any)
+         */
         var focusNode = function(node) {
             //find the 'a' tag in it and set focus on that
             var aTag = node[0].children[1];
@@ -156,6 +158,11 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 aTag.focus();
             }
         };
+
+        /*
+         * local variale for the last selected node (node double click for edit node handler helper)
+         */
+        var lastSelection = { "nodeId" :  null, "time" : null };
 
         //contruct the tree itself using jsTree
         treeViewE.jstree({
@@ -223,7 +230,24 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
         //hook up node selection event handler to properly set focus on selected node
         treeViewE.bind("select_node.jstree", function (e, data) {
+            //fisrt focus the node
             focusNode( data.rslt.obj );
+
+            //save current selection
+            var currentSelection = { "nodeId" : data.rslt.obj.attr("nId"), "time" : new Date() };
+
+            //compare with saved last selection info to see if edit node criteria is met or not
+            if ( ( lastSelection.nodeId === currentSelection.nodeId ) && ( currentSelection.time - lastSelection.time <= 500 ) ) {
+                //edit node
+                editNode( lastSelection.nodeId );
+
+                //clear last selection
+                lastSelection = { "nodeId" :  null, "time" : null };
+            } else {
+                //save this selection as last
+                lastSelection = { "nodeId" :  currentSelection.nodeId, "time" : currentSelection.time };
+            }
+
         });
 
         //hook up node selection event handler to properly set focus on last selected node (if any)
