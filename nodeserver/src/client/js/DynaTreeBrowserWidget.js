@@ -106,7 +106,9 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                         }
 
                         if (changeAllowed === true) {
-                            self.renameNode(nodeToEdit, title);
+                            setTimeout( function() {
+                                self.updateNode(nodeToEdit, { "text" : title } );
+                            }, 1);
                         } else {
                             nodeToEdit.setTitle(prevTitle);
                             console.log("TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
@@ -116,6 +118,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                     }
                     // Re-enable mouse and keyboard handlling
                     tree.$widget.bind();
+                    nodeToEdit.select(true);
                     nodeToEdit.focus();
                 });
         };
@@ -126,8 +129,15 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 return;
             }
 
-            var selectedIds= [];
-            selectedIds.push( node.data.key );
+            var selectedIds = [];
+
+            var selNodes = self.treeViewE.dynatree("getTree").getSelectedNodes();
+            for ( var i = 0; i < selNodes.length; i++ ) {
+                if ( selNodes[i].data.addClass !== "gme-loading" ) {
+                    selectedIds.push( selNodes[i].data.key );
+                }
+            }
+
             console.log( "TreeBrowser copy " +  selectedIds );
             if ($.isFunction(self.onNodeCopy)){
                 self.onNodeCopy.call(self, selectedIds);
@@ -150,16 +160,39 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             if ( node.data.addClass === "gme-loading" ) {
                 return;
             }
+
             var selectedIds= [];
-            selectedIds.push( node.data.key );
+
+            var selNodes = self.treeViewE.dynatree("getTree").getSelectedNodes();
+            for ( var i = 0; i < selNodes.length; i++ ) {
+                if ( selNodes[i].data.addClass !== "gme-loading" ) {
+                    selectedIds.push( selNodes[i].data.key );
+                }
+            }
+
             console.log( "TreeBrowser delete " +  selectedIds);
             if ($.isFunction(self.onNodeDelete)){
                 self.onNodeDelete.call(self, selectedIds);
             }
         };
 
+        /*
+         * Deselec all the selectec nodes in the tree
+         */
+        var deselectSelectedNodes = function() {
+            //deselect everyone else
+            var selNodes = self.treeViewE.dynatree("getTree").getSelectedNodes();
+
+            for ( var i = 0; i < selNodes.length; i++ ) {
+                selNodes[i].select(false);
+            }
+        };
+
         //create tree using DynaTree
         this.treeViewE.dynatree( {
+            checkbox: false,
+            selectMode: 2,
+            imagePath : "../",
             /*debugLevel: 2,*/
             onLazyRead : function (node) {
                 console.log( "onLazyRead node:" + node.data.key );
@@ -189,15 +222,53 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
 
             onClick: function(node, event) {
                 //single click on the title means rename if the node is already selected
-                if ( ( node.getEventTargetType(event) === "title" ) && ( node.isActive() ) ) {
+                if ( node.getEventTargetType(event) === "title" ) {
 
-                    editNode( node );
-
-                    return false;// Prevent default processing
+                    //if node was already selected and
+                    // if Ctrl is pressed, alter range selection, toggle this node's selection status
+                    if ( event.ctrlKey === true ) {
+                        node.toggleSelect();
+                        node.focus();
+                        return false;// Prevent default processing
+                    } else {
+                        //if node is already selected and clicked again, enter edit mode
+                        //if node was not selected, then select it and deselect everyone else
+                        if ( node.isSelected() === true ) {
+                            editNode( node);
+                            return false; // Prevent default processing
+                        } else {
+                            deselectSelectedNodes();
+                            //finally select this node
+                            node.select(true);
+                            node.focus();
+                            return false;
+                        }
+                    }
+                } else {
+                    //if the click does not happen on the title or expander, don't handle it
+                    if ( node.getEventTargetType(event) !== "expander" ) {
+                        return false;
+                    }
                 }
             },
 
+            onSelect: function(select, node) {
+                // Display list of selected nodes
+                /* var selNodes = node.tree.getSelectedNodes();
+                 // convert to title/key array
+                 var selKeys = $.map(selNodes, function(node){
+                 return "[" + node.data.key + "]: '" + node.data.title + "'";
+                 });
+                 console.log(selKeys.join(", "));*/
+            },
+
+            //we don't need an activation here, it just messes up the UI
+            onQueryActivate: function(flag, dtnode) {
+                return false;
+            },
+
             onKeydown: function(node, event) {
+                var sib = null;
                 switch( event.which ) {
                     // Handle Ctrl-C, -X and -V
                     case 67:
@@ -223,10 +294,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                         if( node.bExpanded ) {
                             node.toggleExpand();
                             node.focus();
-                            node._userActivate();
-                        } else if( node.parent && node.parent.parent ) {
-                            node.parent.focus();
-                            node.parent._userActivate();
+                            node.select(true);
                         }
                         return false;
                         break;
@@ -234,14 +302,14 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                         if( !node.bExpanded && (node.childList || node.data.isLazy) ) {
                             node.toggleExpand();
                             node.focus();
-                            node._userActivate();
-                        } else if( node.childList ) {
-                            node.childList[0].focus();
-                            node.childList[0]._userActivate();
+                            node.select(true);
                         }
                         return false;
                         break;
                     case 38: // <up>
+                        if ( event.shiftKey !== true ) {
+                            deselectSelectedNodes();
+                        }
                         sib = node.getPrevSibling();
                         while( sib && sib.bExpanded && sib.childList ){
                             sib = sib.childList[sib.childList.length-1];
@@ -251,11 +319,14 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                         }
                         if( sib ){
                             sib.focus();
-                            sib._userActivate();
+                            sib.select(true);
                         }
                         return false;
                         break;
                     case 40: // <down>
+                        if ( event.shiftKey !== true ) {
+                            deselectSelectedNodes();
+                        }
                         if( node.bExpanded && node.childList ) {
                             sib = node.childList[0];
                         } else {
@@ -267,7 +338,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                         }
                         if( sib ){
                             sib.focus();
-                            sib._userActivate();
+                            sib.select(true);
                         }
                         return false;
                         break;
@@ -302,11 +373,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 bindContextMenu(span);
             }
         });
-
-        this.treeViewE.bind("keydown", function(event){
-
-        });
-    }
+    };
 
     DynaTreeBrowserWidget.prototype = {
 
@@ -330,9 +397,9 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 key:objDescriptor.id,
                 isFolder:false, // objDescriptor.hasChildren,
                 isLazy:objDescriptor.hasChildren,
-                addClass:objDescriptor["class"] || ""
+                addClass:objDescriptor["class"] || "",
+                icon : objDescriptor.icon || null
             });
-
 
             //log
             console.log("New node created: " + newNode);
@@ -367,31 +434,10 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             if (!node)
                 return;
 
-            if (node) {
-                //get its parent
-                //var parent = node.getParent();
+            node.remove();
 
-                node.remove();
-
-                //the parent has no more children
-                /*if (parent.hasChildren() !== true) {
-                    //close parent and update it's lazyLoad status and remove expand icon
-                    this.updateNode(parent, null, false, true);
-                }*/
-
-                //log
-                console.log("Node removed: " + node.data.key);
-            }
-        },
-
-        /**
-         * Resets the given nodes text tp the given value
-         * @param node
-         * @param text
-         */
-        renameNode:function (node, text) {
-
-            this.updateNode(node, { "text" : text } );
+            //log
+            console.log("Node removed: " + node.data.key);
         },
 
         /*
@@ -432,10 +478,19 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 }
             }
 
-            //set new icon (if any)
+            //set new class (if any)
             if ( objDescriptor["class"] ) {
                 if ( node.data.addClass !== objDescriptor["class"] ) {
                     node.data.addClass = objDescriptor["class"];
+                    //mark that change happened
+                    nodeDataChanged = true;
+                }
+            }
+
+            if (objDescriptor.icon) {
+                if ( node.data.icon !== objDescriptor.icon ) {
+                    node.data.icon = objDescriptor.icon;
+
                     //mark that change happened
                     nodeDataChanged = true;
                 }
