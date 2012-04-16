@@ -28,6 +28,9 @@ li.gme-root > a .jstree-icon
     background: url("../img/gmeicons.png") -80px 0;
 }
 
+/* smaller space after the expander icon */
+.jstree ins { width:16px !important; }
+
 /* JSTREE CONTEXT MENU */
 #vakata-contextmenu {
     min-width:120px !important;
@@ -42,13 +45,13 @@ li.gme-root > a .jstree-icon
 }
 
 #vakata-contextmenu li.vakata-separator {
-    padding: 0px !important;
+    padding: 0 !important;
 }
 
 #vakata-contextmenu li ins {
     margin-left: 4px !important;
     height: 17px !important;
-    background-position: 0px 1px !important;
+    background-position: 0 1px !important;
 }
 
 #vakata-contextmenu li a {
@@ -58,19 +61,19 @@ li.gme-root > a .jstree-icon
 #vakata-contextmenu.jstree-default-context li:hover,
 #vakata-contextmenu.jstree-default-context .vakata-hover  {
     background:#aecff7;
-    -moz-border-radius:0px;
-    -webkit-border-radius:0px;
-    border-radius:0px;
+    -moz-border-radius:0;
+    -webkit-border-radius:0;
+    border-radius:0;
 }
 
 #vakata-contextmenu.jstree-default-context a:hover,
 #vakata-contextmenu.jstree-default-context .vakata-hover > a {
     padding: 1px 6px !important;
     background:#aecff7 !important;
-    border: 0px solid #aecff7 !important;
-    -moz-border-radius: 0px;
-    -webkit-border-radius: 0px;
-    border-radius: 0px;
+    border: 0 solid #aecff7 !important;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    border-radius: 0;
 }
 
     /* Loading in progress for JSTree*/

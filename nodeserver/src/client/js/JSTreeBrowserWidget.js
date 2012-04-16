@@ -174,6 +174,9 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 "items":function (node) {
                     return customContextMenu(node);
                 }
+            },
+            "themes" : {
+                "dots" : false
             }
         });
 
