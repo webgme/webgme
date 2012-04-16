@@ -23,7 +23,7 @@ define([], function(){
         setTimeout( function () {
 
             //create a new loading node for it in the tree
-            var loadingRootTreeNode = self.treeBrowser.createNode( null, { id: self._rootNodeId, name: "Initializing tree...", hasChildren : false,  class :  "gme-loading" } );
+            var loadingRootTreeNode = self.treeBrowser.createNode( null, { id: self._rootNodeId, name: "Initializing tree...", hasChildren : false,  "class" :  "gme-loading" } );
 
             //store the node's info in the local hashmap
             self._nodes[ self._rootNodeId ] = { "treeNode": loadingRootTreeNode, "children" : [], "state" : self._stateLoading };
@@ -40,7 +40,7 @@ define([], function(){
 
             if ( parent ) {
 
-                var parentNode = self._nodes[ nodeId ].treeNode;
+                var parentNode = self._nodes[ nodeId ]["treeNode"];
 
                 for( var i = 0; i < parent.children.length; i++ ) {
                     var currentChildId = parent.children[i];
@@ -53,10 +53,10 @@ define([], function(){
                     //check if the node could be retreived from the project
                     if ( childNode ) {
                         //the node was present on the client side, render ist full data
-                        childTreeNode = self.treeBrowser.createNode( parentNode, {  id: currentChildId,
-                                                                                    name: childNode.name,
-                                                                                    hasChildren : childNode.children.length > 0 ,
-                                                                                    class :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom"
+                        childTreeNode = self.treeBrowser.createNode( parentNode, {  "id": currentChildId,
+                                                                                    "name": childNode.name,
+                                                                                    "hasChildren" : childNode.children.length > 0 ,
+                                                                                    "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom"
                         } );
 
                         //store the node's info in the local hashmap
@@ -66,10 +66,10 @@ define([], function(){
                     } else {
                         //the node is not present on the client side, render a loading node instead
                         //create a new node for it in the tree
-                        childTreeNode = self.treeBrowser.createNode( parentNode, {  id: currentChildId,
-                                                                                    name: "Loading...",
-                                                                                    hasChildren : false,
-                                                                                    class :  "gme-loading"
+                        childTreeNode = self.treeBrowser.createNode( parentNode, {  "id": currentChildId,
+                                                                                    "name": "Loading...",
+                                                                                    "hasChildren" : false,
+                                                                                    "class" :  "gme-loading"
                         } );
 
                         //store the node's info in the local hashmap
@@ -143,7 +143,7 @@ define([], function(){
         this.treeBrowser.onNodeTitleChanged = function (nodeId, oldText, newText) {
 
             //send name update to the server
-            //TODO: fixme (no good this way...)
+            //TODO: fixme (no good this way..., changes should be made property wise with commands)
             var currentNode = self.project.getNode(nodeId);
             currentNode.name = newText;
             self.project.setNode(currentNode);
@@ -154,6 +154,7 @@ define([], function(){
     };
 
     ListerCtrl.prototype.onRefresh2 = function( eventType, objectId ) {
+        var nodeDescriptor = null, currentChildId = null, j = 0, self = this;
 
         //HANDLE INSERT
         //object got inserted into the territory
@@ -202,10 +203,12 @@ define([], function(){
                         }
 
                         //create the node's descriptor for the treebrowser widget
-                        var nodeDescriptor = { "text" : updatedObject.name, "hasChildren" : updatedObject.children.length > 0, "class" : objType /*, "icon" : "img/temp/icon1.png"*/ };
+                        nodeDescriptor = {  "text" : updatedObject.name,
+                                            "hasChildren" : updatedObject.children.length > 0,
+                                            "class" : objType };
 
                         //update the node's representation in the tree
-                        this.treeBrowser.updateNode( this._nodes[ objectId ].treeNode, nodeDescriptor  );
+                        this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
 
                         //update the object's children list in the local hashmap
                         this._nodes[ objectId ].children = updatedObject.children;
@@ -216,19 +219,19 @@ define([], function(){
                         //object is already loaded here, let's see what changed in it
 
                         //create the node's descriptor for the treebrowser widget
-                        var nodeDescriptor = {
+                        nodeDescriptor = {
                             "text" : updatedObject.name,
                             "hasChildren" : updatedObject.children.length > 0//,
                             //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
                         };
 
                         //update the node's representation in the tree
-                        this.treeBrowser.updateNode( this._nodes[ objectId ].treeNode, nodeDescriptor  );
+                        this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
 
-                        //TODO: let's see if children has been added / removed from the object and update the tree and territory accordingly
                         var oldChildren = this._nodes[ objectId ].children;
                         var currentChildren = updatedObject.children;
 
+                        //computes the differences of two array
                         var arrayMinus = function( arrayA, arrayB ) {
                             var result = [];
                             for ( var i = 0; i < arrayA.length; i++ ) {
@@ -244,7 +247,7 @@ define([], function(){
                         };
 
                         //the concrete child deletion is important only if the node is open in the tree
-                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ].treeNode ) ) {
+                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
                             //figure out what are the deleted children's IDs
                             var childrenDeleted = arrayMinus( oldChildren, currentChildren );
 
@@ -255,9 +258,9 @@ define([], function(){
 
                             //handle deleted children
                             var removeFromTerritory = [];
-                            for ( var j = 0; j < childrenDeleted.length; j++ ) {
+                            for ( j = 0; j < childrenDeleted.length; j++ ) {
 
-                                var currentChildId = childrenDeleted[j];
+                                currentChildId = childrenDeleted[j];
 
                                 if ( this._nodes[ currentChildId ] ) {
 
@@ -265,10 +268,10 @@ define([], function(){
                                     //and remove them from this._nodes
 
                                     //call the node deletion in the treebrowser widget
-                                    this.treeBrowser.deleteNode( this._nodes[ currentChildId ].treeNode );
+                                    this.treeBrowser.deleteNode( this._nodes[ currentChildId ]["treeNode"] );
 
                                     //local array to hold all the (nested) children ID to remove from the territory
-                                    var self = this;
+
 
                                     //removes all the (nested)childrendIDs from the local hashmap accounting the currently opened nodes's info
                                     var deleteNodeAndChildrenFromLocalHash = function ( childNodeId ) {
@@ -276,7 +279,7 @@ define([], function(){
                                         //if the given node is in this hashmap itself, go forward with its children's ID recursively
                                         if (self._nodes[ childNodeId ]) {
                                             for (var xx = 0; xx < self._nodes[ childNodeId ].children.length; xx++) {
-                                                deleteNodeAndChildrenFromLocalHash(self._nodes[ childNodeId ].children[xx], true);
+                                                deleteNodeAndChildrenFromLocalHash( self._nodes[ childNodeId ].children[xx] );
                                             }
 
                                             //finally delete the nodeId itself (if needed)
@@ -288,24 +291,19 @@ define([], function(){
                                     };
 
                                     //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
-                                    deleteNodeAndChildrenFromLocalHash( currentChildId, false );
+                                    deleteNodeAndChildrenFromLocalHash( currentChildId );
                                 }
-                            }
-
-                            //if there is anythign to remove from the territory, do so
-                            if ( removeFromTerritory.length > 0 )  {
-                                this.query.deletePatterns( removeFromTerritory );
                             }
                         }
 
                         //the concrete child addition is important only if the node is open in the tree
-                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ].treeNode ) ) {
+                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
                             //figure out what are the new children's IDs
                             var childrenAdded = arrayMinus( currentChildren, oldChildren );
 
                             //handle added children
-                            for ( var j = 0; j < childrenAdded.length; j++ ) {
-                                var currentChildId = childrenAdded[j];
+                            for ( j = 0; j < childrenAdded.length; j++ ) {
+                                currentChildId = childrenAdded[j];
 
                                 var childNode = this.project.getNode( currentChildId );
 
@@ -315,10 +313,10 @@ define([], function(){
                                 //check if the node could be retreived from the project
                                 if ( childNode ) {
                                     //the node was present on the client side, render ist full data
-                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ].treeNode, {  id: currentChildId,
-                                        name: childNode.name,
-                                        hasChildren : childNode.children.length > 0 ,
-                                        class :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
+                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
+                                        "name": childNode.name,
+                                        "hasChildren" : childNode.children.length > 0 ,
+                                        "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
 
                                     //store the node's info in the local hashmap
                                     this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
@@ -327,10 +325,10 @@ define([], function(){
                                 } else {
                                     //the node is not present on the client side, render a loading node instead
                                     //create a new node for it in the tree
-                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ].treeNode, {  id: currentChildId,
-                                        name: "Loading...",
-                                        hasChildren : false,
-                                        class :  "gme-loading"  } );
+                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
+                                        "name": "Loading...",
+                                        "hasChildren" : false,
+                                        "class" :  "gme-loading"  } );
 
                                     //store the node's info in the local hashmap
                                     this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
@@ -348,8 +346,12 @@ define([], function(){
 
                         //if there is no more children of the current node, remove it from the territory
                         if ( updatedObject.children.length === 0 ) {
-                            //TODO : adjust the territory accordingly
-                            //removeFromTerritory.push( { nodeid : updatedNodeId } );
+                            removeFromTerritory.push( { nodeid : objectId } );
+                        }
+
+                        //if there is anythign to remove from the territory, do so
+                        if ( removeFromTerritory.length > 0 )  {
+                            this.query.deletePatterns( removeFromTerritory );
                         }
                     }
                 } else {
@@ -366,20 +368,20 @@ define([], function(){
     /*
      * Called from its query when any object in its territory has been modified
      */
-    ListerCtrl.prototype.onRefresh = function( updatedata ){
-
+    ListerCtrl.prototype.onRefresh = function( updatedata ) {
+        var i;
         //updatedata contains:
         //ilist for inserted nodes
         //mlist for updated nodes
         //dlist for deleted ndoes
 
         //since it will be overwritten to different individual events, let's do this here
-        for ( var i = 0; i < updatedata.ilist.length; i++ ) {
-            this.onRefresh2( "insert",  updatedata.ilist[i] );
+        for ( i = 0; i < updatedata.ilist.length; i++ ) {
+            this.onRefresh2( "insert", updatedata.ilist[i] );
         }
 
-        for ( var i = 0; i < updatedata.mlist.length; i++ ) {
-            this.onRefresh2( "update",  updatedata.mlist[i] );
+        for ( i = 0; i < updatedata.mlist.length; i++ ) {
+            this.onRefresh2( "update", updatedata.mlist[i] );
         }
     };
 
