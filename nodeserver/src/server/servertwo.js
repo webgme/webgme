@@ -8,14 +8,23 @@
  *
  * pattern:{id:"basenodeid",'referencename':(0-10)/"r"} - referencename is the name of the attribute which should be followed
  * command:
- *  territoryCommand:{type:"territory",id:"territoryid",patterns:["pattern"]}
- *  copyCommand:{type:"copy",id:["objectids"]}
- *  pasteCommand:{type:"paste",id:"parentid"}
- *
+ *  territoryCommand:{cid:"commands id",type:"territory",id:"territoryid",patterns:["pattern"]}
+ *  copyCommand:{cid:"commands id",type:"copy",ids:["objectids"]}
+ *  pasteCommand:{cid:"commands id",type:"paste",id:"parentid"}
+ *  modifyCommand:{cid:"commands id",type:"modify",id:"objectid",['attbiute':'newvalue']}
+ *  deleteCommand:{cid:"commands id",type:"delete",id:"objectid"}
+ *  saveCommand:{cid:"commands id",type:"save"}
  *
  * clientMessage:{ commands:["command"]}
  * transactionMsg:{client:"client's id", msg: "clientMessage"}
  *
+ * serverMessageItem:
+ *  loadItem:{type:"load",id:"objects id",object:{}}
+ *  unloadItem:{type:"unload",id:"objects id"}
+ *  commandItem:{type:"command",cid:"command id",success:"true/false"}
+ *  deleteItem:{type:"delete",id:"objects id"}
+ *  modifyItem:{type:"modify",id:"objects id",object:{}}
+ * serverMessage:[serverMessageItem]
  */
 /*COMMON FUNCTIONS*/
 /*
@@ -64,6 +73,11 @@ var numberToDword = function(number){
 
 /*COMMON INCLUDES*/
 var fs = require('fs');
+
+/*COMMON VARIABLES*/
+var STORAGELATENCY = 1;
+
+
 /*
 represents the static HTTP server and the socket.io server
 it accepts the connections
@@ -229,7 +243,7 @@ var Project = function(_project,_branch,_basedir){
     this.onProcessMessage = function(cid,commands,cb){
         setTimeout(function(){
             cb("");
-        },1000);
+        },STORAGELATENCY);
     };
     this.onUpdateTerritory = function(cid,tid,newpatterns){
         if(_territories[tid] === undefined){
@@ -341,6 +355,7 @@ it is directly related to a given Project
  */
 var Client = function(_iosocket,_id,_project){
     var _objects = {};
+    var _clipboard = []; /*it has to be on client level*/
     /*message handlings*/
     _iosocket.on('clientMessage',function(msg){
         /*you have to simply put it into the transaction queue*/
@@ -358,8 +373,6 @@ var Client = function(_iosocket,_id,_project){
 
     /*public functions*/
     this.onUpdateTerritory = function(added,removed){
-        console.log("kecso "+JSON.stringify(added));
-        console.log("kecso "+JSON.stringify(removed));
         var msg = [];
         for(var i in added){
             if(_objects[i] === undefined){
@@ -388,6 +401,21 @@ var Client = function(_iosocket,_id,_project){
             _iosocket.emit('serverMessage',msg);
         }
     };
+    this.copy = function(objects){
+        _clipboard = objects;
+    };
+    this.getCopyList = function(){
+        return _clipboard;
+    };
+    this.sendMessage = function(msg){
+        _iosocket.emit('serverMesssage',msg);
+    };
+    this.interestedInObject = function(objectid){
+        if(_objects[objectid]){
+            return true;
+        }
+        return false;
+    }
 };
 /*
 this class represents the transaction queue of a
@@ -502,7 +530,7 @@ var Territory = function(_client,_id){
         for(var i in _currentlist){
             plist.push(_currentlist[i]);
         }
-        if(newpatterns === undefined){
+        if(newpatterns === undefined || newpatterns === null){
             newpatterns={};
             for(var i in _patterns){
                 var rule = {};
@@ -664,6 +692,114 @@ var Territory = function(_client,_id){
     /*private functions*/
 };
 /*
+this is the class which handles a message of modifications
+from the client
+ */
+var Commander = function(_storage,_clients,_cid,_territories,_commands){
+
+    var processCommand = function(command){
+        if(command.type === "copy"){
+            copyCommand(command);
+        }
+        else if(command.type === "modify"){
+            modifyCommand(command);
+        }
+        else if(command.type == "delete"){
+            deleteCommand(command);
+        }
+    };
+    var commandProcessed = function(){
+        _commands.shift();
+        if(_commands.length>0){
+            processCommand(_commands[0]);
+        }
+        else{
+            /*
+            all commands have been updated to the database
+            we should send the modify messages to affected clients
+            and then order refreshes of the territories
+             */
+        }
+    };
+
+    /*command handling messages*/
+    var copyCommand = function(copycommand){
+        _clients[cid].copy(copycommand.ids);
+        var msg = [];
+        var commanditem = {type:"command",cid:copycommand.cid,success:true};
+        msg.push(commanditem);
+        _clients[_cid].sendMessage(msg);
+        commandProcessed();
+    };
+    var modifyCommand = function(modifycommand){
+        var myobject = undefined;
+        var commanditem = {type:"command",cid:modifycommand.cid,success:true};
+        var msg = [];
+        _storage.get(modifycommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                _clients[_cid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                myobject = object;
+                for(var i in modifycommand){
+                    if(i!=="id" && i!=="type" && i!=="cid"){
+                        myobject[i] = modifycommand[i];
+                    }
+                }
+                _storage.set(modifycommand.id,myobject,function(error){
+                    if(error){
+                        commanditem.success = false;
+                        msg.push(commanditem);
+                        _clients[_cid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                    else{
+                        /*sending the new object to all affected client*/
+                        var modifyitem = {type:"modify",id:modifycommand.id,object:myobject};
+                        msg.push(modifyitem);
+                        for(var i in _clients){
+                            if(i!=_cid){
+                                if(_clients[i].interestedInObject(modifycommand.id)){
+                                    _clients[i].sendMessage(msg);
+                                }
+                            }
+                        }
+
+                        msg.push(commanditem);
+                        _clients[_cid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                });
+            }
+        });
+    };
+    var deleteCommand = function(deletecommand){
+        var deletedids = [];
+        var counter = 0;
+        var commanditem = {type:"command",cid:deletecommand.cid,success:true};
+        var msg = [];
+
+        var processing = function(objectid){
+            counter++;
+            _storage.get(objectid,function(error,object){
+                if(error){
+                    /*TODO*/
+                }
+                else{
+                    if(object.children instanceof Array){
+                        for(var i in object.children){
+                            
+                        }
+                    }
+                }
+            })
+        }
+    };
+};
+/*
 this is the storage class
 every active Project has one...
  */
@@ -681,17 +817,21 @@ var Storage = function(_projectname,_branchname,_basedir){
             else{
                 cb("noitemfound",null);
             }
-        },1000);
+        },STORAGELATENCY);
     };
     this.save = function(cb){
         saveRevision(true);
-        setTimeout(cb(),1000);
+        setTimeout(cb(),STORAGELATENCY);
         /*now we can start the real saving*/
     };
     this.set = function(id,object,cb){
         _objects[id] = object;
-        setTimeout(cb(),1000);
+        setTimeout(cb(),STORAGELATENCY);
     };
+    this.del = function(id,cb){
+        delete _objects[id];
+        setTimeout(cb(),STORAGELATENCY);
+    }
     /*private functions*/
     var initialize = function(){
         _branch = fs.readFileSync(_basedir+"/"+_branchname+".bif");
