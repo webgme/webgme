@@ -1,0 +1,35 @@
+Clients:
+	clientid
+
+	
+Objects:
+	objectid
+
+	data
+	loaded
+
+	parent
+	children = inverse of parent
+	
+	territory
+	
+	
+ClientObjects:
+	clientid
+	objectid
+
+	territory = count(inverse of load_parent) > 0 
+
+	parent = getClientObject(getObject(obejctid).parent, clientid)
+	basetype = getClientObject(getObject(objectid)).basetype, clientid)
+
+	request_ancestor := patterns.contains("ancestor") 
+		or count(inverse of requested_ancestor_parent) > 0 
+		or count(inverse of requested_ancestor_type) > 0
+		
+	requested_ancestor_parent := request_ancestor ? parent : null
+	requested_ancestor_basetype := request_ancestor ? basetype : null
+
+	request_children := patterns.contains("children")
+	requested_children_parent := parent ? request_children[parent] : false  
+	

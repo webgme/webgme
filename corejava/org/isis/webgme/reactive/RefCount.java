@@ -50,7 +50,7 @@ public class RefCount extends Value<Boolean> {
 
 	public void declareBooleanSummand(Value<Boolean> value) {
 		assert (!table.isSealed());
-		assert (value.getDeclaringClass() == table);
+		assert (value.getDeclaringTable() == table);
 
 		value.registerObserver(boolObserver);
 	}
@@ -69,7 +69,7 @@ public class RefCount extends Value<Boolean> {
 
 	public void declareIntegerSummand(Value<Integer> value) {
 		assert (!table.isSealed());
-		assert (value.getDeclaringClass() == table);
+		assert (value.getDeclaringTable() == table);
 		value.registerObserver(intObserver);
 	}
 
@@ -92,7 +92,7 @@ public class RefCount extends Value<Boolean> {
 
 	public void declareListSummand(Value<Object[][]> value) {
 		assert (!table.isSealed());
-		assert (value.getDeclaringClass() == table);
+		assert (value.getDeclaringTable() == table);
 		value.registerObserver(listObserver);
 	}
 

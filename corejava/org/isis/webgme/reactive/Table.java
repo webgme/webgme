@@ -30,7 +30,7 @@ public class Table {
 	public <Type, Arg> Value<Type> declareMethod(
 			Unary.Function<Type, Arg> function, Value<Arg> arg) {
 		assert (!isSealed());
-		assert (arg.getDeclaringClass() == this);
+		assert (arg.getDeclaringTable() == this);
 
 		return new Unary<Type, Arg>(this, function, arg);
 	}
@@ -39,15 +39,15 @@ public class Table {
 			Binary.Function<Type, Arg1, Arg2> function, Value<Arg1> arg1,
 			Value<Arg2> arg2) {
 		assert (!isSealed());
-		assert (arg1.getDeclaringClass() == this);
-		assert (arg2.getDeclaringClass() == this);
+		assert (arg1.getDeclaringTable() == this);
+		assert (arg2.getDeclaringTable() == this);
 
 		return new Binary<Type, Arg1, Arg2>(this, function, arg1, arg2);
 	}
 
 	public <Type> Stage<Type> declateStage(Value<Type> value) {
 		assert (!isSealed());
-		assert (value.getDeclaringClass() == this);
+		assert (value.getDeclaringTable() == this);
 
 		return new Stage<Type>(this, value);
 	}
@@ -58,6 +58,20 @@ public class Table {
 		return new RefCount(this);
 	}
 
+	protected Collection declareCollection() {
+		assert(!isSealed());
+		
+		return new Collection(this);
+	}
+	
+	public Pointer declarePointer(Table target) {
+		assert(!isSealed());
+		assert(target != null);
+		
+		Collection collection = target.declareCollection();
+		return new Pointer(this, collection);
+	}
+	
 	protected boolean sealed = false;
 
 	public boolean isSealed() {

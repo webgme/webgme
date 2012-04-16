@@ -30,6 +30,17 @@ public class Binary<Type, Arg1, Arg2> extends Value<Type> {
 		}
 	};
 
+	public static <Type> Function<Type, Boolean, Type> IF() {
+		return new Function<Type, Boolean, Type>() {
+			public Type compute(Boolean cond, Type arg) {
+				if (cond == null || cond == false)
+					return null;
+
+				return arg;
+			}
+		};
+	}
+
 	protected final Function<Type, Arg1, Arg2> func;
 	protected final Value<Arg1> arg1;
 	protected final Value<Arg2> arg2;

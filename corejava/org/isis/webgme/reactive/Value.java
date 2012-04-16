@@ -21,7 +21,7 @@ public abstract class Value<Type> {
 		this.table = table;
 	}
 
-	public Table getDeclaringClass() {
+	public Table getDeclaringTable() {
 		return table;
 	}
 
