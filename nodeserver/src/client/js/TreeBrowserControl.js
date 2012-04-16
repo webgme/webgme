@@ -202,7 +202,7 @@ define([], function(){
                         }
 
                         //create the node's descriptor for the treebrowser widget
-                        var nodeDescriptor = { "text" : updatedObject.name, "hasChildren" : updatedObject.children.length > 0, "class" : objType };
+                        var nodeDescriptor = { "text" : updatedObject.name, "hasChildren" : updatedObject.children.length > 0, "class" : objType /*, "icon" : "img/temp/icon1.png"*/ };
 
                         //update the node's representation in the tree
                         this.treeBrowser.updateNode( this._nodes[ objectId ].treeNode, nodeDescriptor  );
@@ -219,7 +219,7 @@ define([], function(){
                         var nodeDescriptor = {
                             "text" : updatedObject.name,
                             "hasChildren" : updatedObject.children.length > 0//,
-                            //"icon" : "http://someimage.jpg"  --- SET ICON HERE IF NEEDED
+                            //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
                         };
 
                         //update the node's representation in the tree

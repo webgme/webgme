@@ -26,13 +26,25 @@ div.ObjectBrowser {
 .dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
 {
     background-position: 0 0;
-    background-image: url("../img/progress.gif") !important;
+    background-image: url("../img/progress.gif");
 }
 
-/*li.jstree-openProgress > a .jstree-icon
+span.dynatree-node a
 {
-    background:url("../img/progress.gif") 0 0 no-repeat !important;
-}*/
+     /*	color: green; */
+     /*border:1px solid transparent;*/
+}
+
+span.dynatree-selected a
+{
+     /*	color: green; */
+     font-style: normal;
+     background:#beebff;
+     border:1px solid #99defd;
+
+}
+
+
 
 /* Remove blue color and underline from title links */
 ul.dynatree-container span.dynatree-title
@@ -52,7 +64,7 @@ span.dynatree-active span.dynatree-title
 
 span.dynatree-icon {
     margin-left: 0;
-    background: url("../img/gmeicons.png") 0 0 !important;
+    background: url("../img/gmeicons.png") 0 0;
 }
 
 span.gme-model span.dynatree-icon  {
@@ -81,6 +93,6 @@ span.gme-loading a.dynatree-title {
 }
 
 span.gme-loading span.dynatree-icon  {
-    background: url("../img/progress.gif") 0 0 !important;
+    background: url("../img/progress.gif") 0 0;
 }
 
