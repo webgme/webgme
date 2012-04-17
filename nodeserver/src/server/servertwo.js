@@ -241,9 +241,7 @@ var Project = function(_project,_branch,_basedir){
         _transactionQ.onClientMessage(msg);
     };
     this.onProcessMessage = function(cid,commands,cb){
-        setTimeout(function(){
-            cb("");
-        },STORAGELATENCY);
+        new Commander(_storage,_clients,cid,_territories,commands,cb);
     };
     this.onUpdateTerritory = function(cid,tid,newpatterns){
         if(_territories[tid] === undefined){
@@ -408,7 +406,7 @@ var Client = function(_iosocket,_id,_project){
         return _clipboard;
     };
     this.sendMessage = function(msg){
-        _iosocket.emit('serverMesssage',msg);
+        _iosocket.emit('serverMessage',msg);
     };
     this.interestedInObject = function(objectid){
         if(_objects[objectid]){
@@ -467,9 +465,7 @@ var TransactionQueue = function(_project){
             }
         }
     };
-    var messageHandled = function(data){
-        /*this is the callback function of the message procesing*/
-        /*the data should contain evrything which needed for responding*/
+    var messageHandled = function(){
         _queue.shift();
         _canwork = true;
         processNextMessage();
@@ -695,7 +691,7 @@ var Territory = function(_client,_id){
 this is the class which handles a message of modifications
 from the client
  */
-var Commander = function(_storage,_clients,_cid,_territories,_commands){
+var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
 
     var processCommand = function(command){
         if(command.type === "copy"){
@@ -715,10 +711,14 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands){
         }
         else{
             /*
-            all commands have been updated to the database
-            we should send the modify messages to affected clients
-            and then order refreshes of the territories
+            the modifications were already sent
+            so we only have to call the territory updates
              */
+            /*TODO*/
+            for(var i in _territories){
+                _territories[i].updatePatterns();
+            }
+            _cb();
         }
     };
 
@@ -778,26 +778,107 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands){
     };
     var deleteCommand = function(deletecommand){
         var deletedids = [];
+        var modifiedparent = undefined;
         var counter = 0;
         var commanditem = {type:"command",cid:deletecommand.cid,success:true};
         var msg = [];
 
+        var finishing = function(){
+            /*we have to send the delete events to affected clients*/
+            for(var i in _clients){
+                msg = [];
+                if(modifiedparent && _clients[i].interestedInObject(modifiedparent._id)){
+                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
+                }
+                for(var j in deletedids){
+                    if(_clients[i].interestedInObject(deletedids[j])){
+                       msg.push({type:"delete",id:deletedids[j]});
+                    }
+                }
+                if( i === _cid){
+                    msg.push(commanditem);
+                }
+                _clients[i].sendMessage(msg);
+            }
+            commandProcessed();
+        };
         var processing = function(objectid){
             counter++;
             _storage.get(objectid,function(error,object){
                 if(error){
-                    /*TODO*/
+                    commanditem.success = false;
+                    msg.push(commanditem);
+                    _clients[_cid].sendMessage(msg);
+                    commandProcessed();
                 }
                 else{
                     if(object.children instanceof Array){
                         for(var i in object.children){
-                            
+                            processing(object.children[i]);
                         }
                     }
+                    _storage.del(objectid,function(error){
+                        if(error){
+                          /*TODO*/
+                        }
+                        else{
+                            deletedids.push(objectid);
+                            if(--counter == 0){
+                                finishing();
+                            }
+                        }
+                    });
                 }
-            })
-        }
+            });
+        };
+
+        /*main*/
+        _storage.get(deletecommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                _clients[_cid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                if(object.parent){
+                    _storage.get(object.parent,function(error,parent){
+                        if(error){
+                            commanditem.success = false;
+                            msg.push(commanditem);
+                            _clients[_cid].sendMessage(msg);
+                            commandProcessed();
+                        }
+                        else{
+                            if(parent.children instanceof Array){
+                                if(parent.children.indexOf(deletecommand.id) !== -1){
+                                    parent.children.splice(parent.children.indexOf(deletecommand.id),1);
+                                }
+                            }
+                            _storage.set(parent._id,parent,function(error){
+                                if(error){
+                                    commanditem.success = false;
+                                    msg.push(commanditem);
+                                    _clients[_cid].sendMessage(msg);
+                                    commandProcessed();
+                                }
+                                else{
+                                    modifiedparent = parent;
+                                    processing(deletecommand.id);
+                                }
+                            });
+                        }
+                    });
+                }
+                else{
+                    processing(deletecommand.id);
+                }
+            }
+        });
     };
+
+    /*main*/
+    processCommand(_commands[0]);
 };
 /*
 this is the storage class

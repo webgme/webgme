@@ -81,6 +81,21 @@ socket.on('serverMessage',function(msg){
     else if(helper === 3){
         socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:"r"}}}]});
     }
+    else if(helper === 4){
+        socket.emit('clientMessage',{commands:[{cid:"egy", type:"delete", id:"id0424"}]});
+    }
+    else if(helper === 5){
+        console.log("territory update should come as well");
+    }
+    else if(helper === 6){
+        socket.emit('clientMessage',{commands:[{cid:"masik",type:"modify",id:"root",name:"csunya"}]});
+    }
+    else if(helper === 7){
+        socket.emit('clientMessage',{commands:[{cid:"ketto", type:"delete", id:"root"}]});
+    }
+    else if(helper === 8){
+        console.log("wait for territory update again");
+    }
     else{
         process.exit(0);
     }
