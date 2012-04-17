@@ -8,7 +8,11 @@
  */
 var ST = require('./serverstorage.js');
 var SO = require('./serversocket.js');
+var LOGMANAGER = require('./../common/logmanager.js');
+
 Project = function(){
+    var logger = LOGMANAGER.create( "ServerProject" );
+
 	this.mystorage = new ST.Storage();
 	this.mysockets = [];
 	//this.mystorage.set("root",{_id: "root", name:"gyoker", children:[], size:"big"});
@@ -19,11 +23,11 @@ Project = function(){
     var topLevelItems = 30;
     var entityIds = [];
 
-    console.log( "Generating " + itemNum + " objects..." );
+    logger.debug( "Generating " + itemNum + " objects..." );
     for ( var i = 0; i < itemNum; i++ ) {
         //generate obejct
         var myId = "id" + i;
-        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : "root" };
+        var myObject = { _id: myId, name: "Object" + i, children: [], parentId : "root", attr : { "posX" : Math.random() * 1000, "posY": Math.random() * 1000 } };
 
         if ( i > topLevelItems  ) {
             //pick a parent for it randomly
@@ -44,7 +48,7 @@ Project = function(){
         this.mystorage.set( myId, myObject );
         entityIds.push( myId );
     }
-    console.log( "DONE" );
+    logger.debug( "DONE" );
 
     this.mystorage.set( "root" ,{_id: "root", name:"RootFolder", children: rootChildren , size:"big"});
 };

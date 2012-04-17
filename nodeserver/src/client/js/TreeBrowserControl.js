@@ -1,5 +1,10 @@
-define([], function(){
-    var ListerCtrl = function(project, treeBrowser ){
+define(['/common/logmanager.js'], function( logManager ){
+
+    var TreeBrowserControl = function(project, treeBrowser ){
+
+        //get logger instance for this component
+        var logger = logManager.create("TreeBrowserControl");
+
         this.project = project;
 
         this._rootNodeId = "root";
@@ -123,19 +128,16 @@ define([], function(){
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
         this.treeBrowser.onNodeCopy = function( selectedIds ) {
-            console.log( "treeBrowser.onNodeCopy " + selectedIds );
             self.project.copyNode( selectedIds );
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
         this.treeBrowser.onNodePaste = function( nodeId ) {
-            console.log( "treeBrowser.onNodePaste " + nodeId );
             self.project.pasteTo( nodeId );
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         this.treeBrowser.onNodeDelete = function( selectedIds ) {
-            console.log( "treeBrowser.onNodeDelete " + selectedIds );
             self.project.delNode( selectedIds );
         };
 
@@ -151,240 +153,239 @@ define([], function(){
             //accept namechange
             return false;
         };
-    };
 
-    ListerCtrl.prototype.onRefresh2 = function( eventType, objectId ) {
-        var nodeDescriptor = null, currentChildId = null, j = 0, self = this;
+        this.onRefresh2 = function( eventType, objectId ) {
+            var nodeDescriptor = null, currentChildId = null, j = 0, self = this;
 
-        //HANDLE INSERT
-        //object got inserted into the territory
-        if ( eventType === "insert" ) {
-            //check if this control shows any interest for this object
-            if ( this._nodes[ objectId ] ) {
+            //HANDLE INSERT
+            //object got inserted into the territory
+            if ( eventType === "insert" ) {
+                //check if this control shows any interest for this object
+                if ( this._nodes[ objectId ] ) {
 
-                //if the object is in "loading" state according to the local hashmap
-                //update the "loading" node accordingly
-                if ( this._nodes[ objectId ].state === this._stateLoading ) {
-                    //set eventType to "update" and let it go and be handled by "update" event
-                    eventType = "update";
-                } else {
-                    //object is not in Loading state, don't do anything
-                }
-            } else {
-                //so far this control does not know anything about this node...
-                //don't do anything with it, most probably it has become part of the query
-                //because of some weird rule but this control is not even interested in it
-            }
-        }
-        //ENDOF : HANDLE INSERT
-
-        //HANDLE UPDATE
-        //object got updated in the territory
-        if ( eventType === "update" ) {
-            //check if this control shows any interest for this object
-            if ( this._nodes[ objectId ] ) {
-                console.log( "Update id: " + objectId );
-                //get the node from the project
-                var updatedObject = this.project.getNode( objectId );
-
-                if ( updatedObject ) {
-
-                    //check what state the object is in according to the local hashmap
+                    //if the object is in "loading" state according to the local hashmap
+                    //update the "loading" node accordingly
                     if ( this._nodes[ objectId ].state === this._stateLoading ) {
-                        //if the object is in "loading" state, meaning we were waiting for it
-                        //render it's real data
-
-                        //specify the icon for the treenode
-                        //TODO: fixme (determine the type based on the 'kind' of the object)
-                        var objType = (updatedObject.children.length > 0 ) ? "gme-model" : "gme-atom";
-                        //for root node let's specify specific type
-                        if ( objectId === this._rootNodeId ) {
-                            objType = "gme-root";
-                        }
-
-                        //create the node's descriptor for the treebrowser widget
-                        nodeDescriptor = {  "text" : updatedObject.name,
-                                            "hasChildren" : updatedObject.children.length > 0,
-                                            "class" : objType };
-
-                        //update the node's representation in the tree
-                        this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
-
-                        //update the object's children list in the local hashmap
-                        this._nodes[ objectId ].children = updatedObject.children;
-
-                        //finally update the object's state showing loaded
-                        this._nodes[ objectId ].state = this._stateLoaded;
+                        //set eventType to "update" and let it go and be handled by "update" event
+                        eventType = "update";
                     } else {
-                        //object is already loaded here, let's see what changed in it
+                        //object is not in Loading state, don't do anything
+                    }
+                } else {
+                    //so far this control does not know anything about this node...
+                    //don't do anything with it, most probably it has become part of the query
+                    //because of some weird rule but this control is not even interested in it
+                }
+            }
+            //ENDOF : HANDLE INSERT
 
-                        //create the node's descriptor for the treebrowser widget
-                        nodeDescriptor = {
-                            "text" : updatedObject.name,
-                            "hasChildren" : updatedObject.children.length > 0//,
-                            //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
-                        };
+            //HANDLE UPDATE
+            //object got updated in the territory
+            if ( eventType === "update" ) {
+                //handle deleted children
+                var removeFromTerritory = [];
+                //check if this control shows any interest for this object
+                if ( this._nodes[ objectId ] ) {
+                    logger.debug( "Update object with id: " + objectId );
+                    //get the node from the project
+                    var updatedObject = this.project.getNode( objectId );
 
-                        //update the node's representation in the tree
-                        this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
+                    if ( updatedObject ) {
 
-                        var oldChildren = this._nodes[ objectId ].children;
-                        var currentChildren = updatedObject.children;
+                        //check what state the object is in according to the local hashmap
+                        if ( this._nodes[ objectId ].state === this._stateLoading ) {
+                            //if the object is in "loading" state, meaning we were waiting for it
+                            //render it's real data
 
-                        //computes the differences of two array
-                        var arrayMinus = function( arrayA, arrayB ) {
-                            var result = [];
-                            for ( var i = 0; i < arrayA.length; i++ ) {
-                                if ( arrayA[i] ) {
-                                    var val = arrayA[i];
-                                    if ( arrayB.indexOf( val ) === -1 ) {
-                                        result.push( val );
+                            //specify the icon for the treenode
+                            //TODO: fixme (determine the type based on the 'kind' of the object)
+                            var objType = (updatedObject.children.length > 0 ) ? "gme-model" : "gme-atom";
+                            //for root node let's specify specific type
+                            if ( objectId === this._rootNodeId ) {
+                                objType = "gme-root";
+                            }
+
+                            //create the node's descriptor for the treebrowser widget
+                            nodeDescriptor = {  "text" : updatedObject.name,
+                                "hasChildren" : updatedObject.children.length > 0,
+                                "class" : objType };
+
+                            //update the node's representation in the tree
+                            this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
+
+                            //update the object's children list in the local hashmap
+                            this._nodes[ objectId ].children = updatedObject.children;
+
+                            //finally update the object's state showing loaded
+                            this._nodes[ objectId ].state = this._stateLoaded;
+                        } else {
+                            //object is already loaded here, let's see what changed in it
+
+                            //create the node's descriptor for the treebrowser widget
+                            nodeDescriptor = {
+                                "text" : updatedObject.name,
+                                "hasChildren" : updatedObject.children.length > 0//,
+                                //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
+                            };
+
+                            //update the node's representation in the tree
+                            this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
+
+                            var oldChildren = this._nodes[ objectId ].children;
+                            var currentChildren = updatedObject.children;
+
+                            //computes the differences of two array
+                            var arrayMinus = function( arrayA, arrayB ) {
+                                var result = [];
+                                for ( var i = 0; i < arrayA.length; i++ ) {
+                                    if ( arrayA[i] ) {
+                                        var val = arrayA[i];
+                                        if ( arrayB.indexOf( val ) === -1 ) {
+                                            result.push( val );
+                                        }
+                                    }
+                                }
+
+                                return result;
+                            };
+
+                            //the concrete child deletion is important only if the node is open in the tree
+                            if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
+                                //figure out what are the deleted children's IDs
+                                var childrenDeleted = arrayMinus( oldChildren, currentChildren );
+
+                                //if all the children has been removed, it's already handled with the node's update itself
+                                /*if ( ( childrenDeleted.length === oldChildren.length ) && ( currentChildren.length === 0 ) ) {
+                                 return;
+                                 }*/
+
+                                for ( j = 0; j < childrenDeleted.length; j++ ) {
+
+                                    currentChildId = childrenDeleted[j];
+
+                                    if ( this._nodes[ currentChildId ] ) {
+
+                                        //get all the children that have been removed with this node deletion
+                                        //and remove them from this._nodes
+
+                                        //call the node deletion in the treebrowser widget
+                                        this.treeBrowser.deleteNode( this._nodes[ currentChildId ]["treeNode"] );
+
+                                        //local array to hold all the (nested) children ID to remove from the territory
+
+
+                                        //removes all the (nested)childrendIDs from the local hashmap accounting the currently opened nodes's info
+                                        var deleteNodeAndChildrenFromLocalHash = function ( childNodeId ) {
+
+                                            //if the given node is in this hashmap itself, go forward with its children's ID recursively
+                                            if (self._nodes[ childNodeId ]) {
+                                                for (var xx = 0; xx < self._nodes[ childNodeId ].children.length; xx++) {
+                                                    deleteNodeAndChildrenFromLocalHash( self._nodes[ childNodeId ].children[xx] );
+                                                }
+
+                                                //finally delete the nodeId itself (if needed)
+                                                delete self._nodes[ childNodeId ];
+
+                                                //and collect the nodeId from territory removal
+                                                removeFromTerritory.push( { nodeid: childNodeId  });
+                                            }
+                                        };
+
+                                        //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
+                                        deleteNodeAndChildrenFromLocalHash( currentChildId );
                                     }
                                 }
                             }
 
-                            return result;
-                        };
+                            //the concrete child addition is important only if the node is open in the tree
+                            if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
+                                //figure out what are the new children's IDs
+                                var childrenAdded = arrayMinus( currentChildren, oldChildren );
 
-                        //the concrete child deletion is important only if the node is open in the tree
-                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
-                            //figure out what are the deleted children's IDs
-                            var childrenDeleted = arrayMinus( oldChildren, currentChildren );
+                                //handle added children
+                                for ( j = 0; j < childrenAdded.length; j++ ) {
+                                    currentChildId = childrenAdded[j];
 
-                            //if all the children has been removed, it's already handled with the node's update itself
-                            /*if ( ( childrenDeleted.length === oldChildren.length ) && ( currentChildren.length === 0 ) ) {
-                                return;
-                            }*/
+                                    var childNode = this.project.getNode( currentChildId );
 
-                            //handle deleted children
-                            var removeFromTerritory = [];
-                            for ( j = 0; j < childrenDeleted.length; j++ ) {
+                                    //local variable for the created treenode of the child node (loading or full)
+                                    var childTreeNode = null;
 
-                                currentChildId = childrenDeleted[j];
+                                    //check if the node could be retreived from the project
+                                    if ( childNode ) {
+                                        //the node was present on the client side, render ist full data
+                                        childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
+                                            "name": childNode.name,
+                                            "hasChildren" : childNode.children.length > 0 ,
+                                            "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
 
-                                if ( this._nodes[ currentChildId ] ) {
+                                        //store the node's info in the local hashmap
+                                        this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
+                                            "children" : childNode.children,
+                                            "state" : this._stateLoaded };
+                                    } else {
+                                        //the node is not present on the client side, render a loading node instead
+                                        //create a new node for it in the tree
+                                        childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
+                                            "name": "Loading...",
+                                            "hasChildren" : false,
+                                            "class" :  "gme-loading"  } );
 
-                                    //get all the children that have been removed with this node deletion
-                                    //and remove them from this._nodes
-
-                                    //call the node deletion in the treebrowser widget
-                                    this.treeBrowser.deleteNode( this._nodes[ currentChildId ]["treeNode"] );
-
-                                    //local array to hold all the (nested) children ID to remove from the territory
-
-
-                                    //removes all the (nested)childrendIDs from the local hashmap accounting the currently opened nodes's info
-                                    var deleteNodeAndChildrenFromLocalHash = function ( childNodeId ) {
-
-                                        //if the given node is in this hashmap itself, go forward with its children's ID recursively
-                                        if (self._nodes[ childNodeId ]) {
-                                            for (var xx = 0; xx < self._nodes[ childNodeId ].children.length; xx++) {
-                                                deleteNodeAndChildrenFromLocalHash( self._nodes[ childNodeId ].children[xx] );
-                                            }
-
-                                            //finally delete the nodeId itself (if needed)
-                                            delete self._nodes[ childNodeId ];
-
-                                            //and collect the nodeId from territory removal
-                                            removeFromTerritory.push( { nodeid: childNodeId  });
-                                        }
-                                    };
-
-                                    //call the cleanup recursively and mark this node (being closed) as non removable (from local hashmap neither from territory)
-                                    deleteNodeAndChildrenFromLocalHash( currentChildId );
+                                        //store the node's info in the local hashmap
+                                        this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
+                                            "children" : [],
+                                            "state" : this._stateLoading };
+                                    }
                                 }
                             }
-                        }
 
-                        //the concrete child addition is important only if the node is open in the tree
-                        if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
-                            //figure out what are the new children's IDs
-                            var childrenAdded = arrayMinus( currentChildren, oldChildren );
+                            //update the object's children list in the local hashmap
+                            this._nodes[ objectId ].children = updatedObject.children;
 
-                            //handle added children
-                            for ( j = 0; j < childrenAdded.length; j++ ) {
-                                currentChildId = childrenAdded[j];
+                            //finally update the object's state showing loaded
+                            this._nodes[ objectId ].state = this._stateLoaded;
 
-                                var childNode = this.project.getNode( currentChildId );
+                            //if there is no more children of the current node, remove it from the territory
+                            if ( updatedObject.children.length === 0 ) {
+                                removeFromTerritory.push( { nodeid : objectId } );
+                            }
 
-                                //local variable for the created treenode of the child node (loading or full)
-                                var childTreeNode = null;
-
-                                //check if the node could be retreived from the project
-                                if ( childNode ) {
-                                    //the node was present on the client side, render ist full data
-                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
-                                        "name": childNode.name,
-                                        "hasChildren" : childNode.children.length > 0 ,
-                                        "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
-
-                                    //store the node's info in the local hashmap
-                                    this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
-                                        "children" : childNode.children,
-                                        "state" : this._stateLoaded };
-                                } else {
-                                    //the node is not present on the client side, render a loading node instead
-                                    //create a new node for it in the tree
-                                    childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
-                                        "name": "Loading...",
-                                        "hasChildren" : false,
-                                        "class" :  "gme-loading"  } );
-
-                                    //store the node's info in the local hashmap
-                                    this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
-                                        "children" : [],
-                                        "state" : this._stateLoading };
-                                }
+                            //if there is anythign to remove from the territory, do so
+                            if ( removeFromTerritory.length > 0 )  {
+                                this.query.deletePatterns( removeFromTerritory );
                             }
                         }
-
-                        //update the object's children list in the local hashmap
-                        this._nodes[ objectId ].children = updatedObject.children;
-
-                        //finally update the object's state showing loaded
-                        this._nodes[ objectId ].state = this._stateLoaded;
-
-                        //if there is no more children of the current node, remove it from the territory
-                        if ( updatedObject.children.length === 0 ) {
-                            removeFromTerritory.push( { nodeid : objectId } );
-                        }
-
-                        //if there is anythign to remove from the territory, do so
-                        if ( removeFromTerritory.length > 0 )  {
-                            this.query.deletePatterns( removeFromTerritory );
-                        }
+                    } else {
+                        //we got an update about an object that we cannot get from the project
+                        //something is very very bad here...
                     }
                 } else {
-                    //we got an update about an object that we cannot get from the project
-                    //something is very very bad here...
+                    //so far this control does not know anything about this node...
                 }
-            } else {
-                //so far this control does not know anything about this node...
             }
-        }
-        //ENDOF : HANDLE UPDATE
+            //ENDOF : HANDLE UPDATE
+        };
+
+        /*
+         * Called from its query when any object in its territory has been modified
+         */
+        this.onRefresh = function( updatedata ) {
+            var i;
+            //updatedata contains:
+            //ilist for inserted nodes
+            //mlist for updated nodes
+            //dlist for deleted ndoes
+
+            //since it will be overwritten to different individual events, let's do this here
+            for ( i = 0; i < updatedata.ilist.length; i++ ) {
+                this.onRefresh2( "insert", updatedata.ilist[i] );
+            }
+
+            for ( i = 0; i < updatedata.mlist.length; i++ ) {
+                this.onRefresh2( "update", updatedata.mlist[i] );
+            }
+        };
     };
 
-    /*
-     * Called from its query when any object in its territory has been modified
-     */
-    ListerCtrl.prototype.onRefresh = function( updatedata ) {
-        var i;
-        //updatedata contains:
-        //ilist for inserted nodes
-        //mlist for updated nodes
-        //dlist for deleted ndoes
-
-        //since it will be overwritten to different individual events, let's do this here
-        for ( i = 0; i < updatedata.ilist.length; i++ ) {
-            this.onRefresh2( "insert", updatedata.ilist[i] );
-        }
-
-        for ( i = 0; i < updatedata.mlist.length; i++ ) {
-            this.onRefresh2( "update", updatedata.mlist[i] );
-        }
-    };
-
-
-    return ListerCtrl;
+    return TreeBrowserControl;
 });

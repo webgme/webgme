@@ -1,8 +1,15 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
+define( [ './util.js', '/common/logmanager.js', 'jquery.dynatree', 'jquery.contextMenu' ], function( util, logManager ) {
+
+    //load its own CSS file (css/DynaTreeBrowserWidget.css)
+    util.loadCSS( 'css/DynaTreeBrowserWidget.css' );
+
     var DynaTreeBrowserWidget = function ( containerId ){
+
+        //get logger instance for this component
+        var logger = logManager.create("DynaTreeBrowserWidget");
 
         //save parentcontrol
         this.containerControl =  $("#" + containerId );
@@ -111,7 +118,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                             }, 1);
                         } else {
                             nodeToEdit.setTitle(prevTitle);
-                            console.log("TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
+                            logger.debug("TreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
                         }
                     } else {
                         nodeToEdit.setTitle(title);
@@ -138,7 +145,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 }
             }
 
-            console.log( "TreeBrowser copy " +  selectedIds );
+            logger.debug( "Copy " +  selectedIds );
             if ($.isFunction(self.onNodeCopy)){
                 self.onNodeCopy.call(self, selectedIds);
             }
@@ -149,7 +156,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             if ( node.data.addClass === "gme-loading" ) {
                 return;
             }
-            console.log( "TreeBrowser paste " +  node.data.key );
+            logger.debug( "Paste " +  node.data.key );
             if ($.isFunction(self.onNodePaste)){
                 self.onNodePaste.call(self, node.data.key);
             }
@@ -170,7 +177,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 }
             }
 
-            console.log( "TreeBrowser delete " +  selectedIds);
+            logger.debug( "Delete " +  selectedIds);
             if ($.isFunction(self.onNodeDelete)){
                 self.onNodeDelete.call(self, selectedIds);
             }
@@ -193,9 +200,9 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             checkbox: false,
             selectMode: 2,
             imagePath : "../",
-            /*debugLevel: 2,*/
+            debugLevel: 0,
             onLazyRead : function (node) {
-                console.log( "onLazyRead node:" + node.data.key );
+                logger.debug( "Expanding node:" + node.data.key );
                 if ($.isFunction(self.onNodeOpen)){
                     self.onNodeOpen.call(self, node.data.key);
                 }
@@ -209,7 +216,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                      window.logMessage( "expanding node:" + node.data.key );
                      */
                 } else {
-                    console.log( "collapsing node:" + node.data.key );
+                    logger.debug( "Collapsing node:" + node.data.key );
                     //remove all children from DOM
                     node.removeChildren();
 
@@ -259,7 +266,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                  var selKeys = $.map(selNodes, function(node){
                  return "[" + node.data.key + "]: '" + node.data.title + "'";
                  });
-                 console.log(selKeys.join(", "));*/
+                 logger.debug(selKeys.join(", "));*/
             },
 
             //we don't need an activation here, it just messes up the UI
@@ -373,16 +380,13 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 bindContextMenu(span);
             }
         });
-    };
-
-    DynaTreeBrowserWidget.prototype = {
 
         /**
          * Creates a new node in the treebrowser under parentNode with the given parameters
          * @param parentNode
          * @param objDescriptor
          */
-        createNode : function( parentNode, objDescriptor ) {
+        this.createNode = function( parentNode, objDescriptor ) {
             //check if the parentNode is null or not
             //when null, the new node belongs to the root
             if (parentNode === null) {
@@ -402,16 +406,16 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             });
 
             //log
-            console.log("New node created: " + newNode);
+            logger.debug("New node created: " + newNode.data.key );
 
             //a bit of visual effect
             this.animateNode( newNode );
 
             //return the newly created node
             return newNode;
-        },
+        };
 
-        animateNode : function(node) {
+        this.animateNode = function(node) {
 
             //if animation is enabled for the widget
             if (this._animation === true) {
@@ -422,13 +426,12 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 jQureyNode.hide();
                 jQureyNode.fadeIn('fast');
             }
-        },
+        };
 
-        /**
-         * Deletes the node from the tree
-         * @param node
-         */
-        deleteNode : function(node) {
+        /* Deletes the node from the tree
+        * @param node
+        */
+        this.deleteNode = function(node) {
             //if no valid node, return
             //otherwise delete node
             if (!node)
@@ -437,15 +440,15 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             node.remove();
 
             //log
-            console.log("Node removed: " + node.data.key);
-        },
+            logger.debug("Node deleted: " + node.data.key);
+        };
 
         /*
          * Resets the given nodes text tp the given value
          * @param node
          * @param text
          */
-        updateNode:function (node, objDescriptor ) {
+        this.updateNode = function (node, objDescriptor ) {
 
             //check if valid node
             if (!node)
@@ -504,43 +507,43 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
                 this.animateNode( node );
 
                 //log
-                console.log("Node updated: " + node.data.key);
+                logger.debug("Node updated: " + node.data.key);
             }
-        },
+        };
 
         /**
          * Called when a node is opened in the tree
          * PLEASE OVERIDDE TO FILL THE NODES CHILDREN
          * @param nodeId
          */
-        onNodeOpen:function (nodeId) {
-            console.log("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
-        },
+        this.onNodeOpen = function (nodeId) {
+            logger.warning("Default onNodeOpen for node " + nodeId + " called, doing nothing. Please override onNodeOpen(nodeId)");
+        };
 
         /*
          * Called when a node's title is changed in the reeview
          * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
          */
-        onNodeTitleChanged:function (nodeId, oldText, newText) {
-            console.log("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
+        this.onNodeTitleChanged = function (nodeId, oldText, newText) {
+            logger.warning("Default onNodeTitleChanged for node " + nodeId + " called, doing nothing. Please override onNodeTitleChanged(nodeId, oldText, newText)");
             return true;
-        },
+        };
 
         /*
          * Collapses the given node
          */
-        collapse:function (node) {
+        this.collapse = function (node) {
             node.expand(false);
-        },
+        };
 
         /*
          * Expands the given node
          */
-        expand:function (node) {
+        this.expand = function (node) {
             node.expand(true);
-        },
+        };
 
-        isExpanded : function( node ) {
+        this.isExpanded = function( node ) {
             //if the node is null its most propably represents the root
             //and the root is always expanded (since is not shown in the tree)
             if ( node === null ) {
@@ -548,7 +551,7 @@ define( ['jquery.dynatree', 'jquery.contextMenu' ], function() {
             }
 
             return node.isExpanded();
-        }
+        };
     };
 
     return DynaTreeBrowserWidget;

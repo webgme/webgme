@@ -1,19 +1,17 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
+define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree' ], function( util, logManager ) {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
-    var css	= document.createElement('link');
-    css.rel		= 'stylesheet';
-    css.type	= 'text/css';
-    css.media	= 'all';
-    css.href	= 'css/JSTreeBrowserWidget.css';
-    document.getElementsByTagName("head")[0].appendChild(css);
+    util.loadCSS( 'css/JSTreeBrowserWidget.css' );
 
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
         var self = this;
+
+        //get logger instance for this component
+        var logger = logManager.create("JSTreeBrowserWidget");
 
         //by default use visual animation to reflect changes in the three
         var animation = true;
@@ -56,7 +54,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
         var copyNode = function (nodeId) {
             var selectedIds = getSelectedNodeIds();
             if ( selectedIds.length > 0 ) {
-                console.log("TreeBrowser copy " + selectedIds);
+                logger.debug( "Copy " + selectedIds );
                 if ($.isFunction(self.onNodeCopy)) {
                     self.onNodeCopy.call(self, selectedIds);
                 }
@@ -65,7 +63,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
         //Called when the ContexMenu's 'Paste' action is selected for the node
         var pasteNode = function (nodeId) {
-            console.log("TreeBrowser paste " + nodeId);
+            logger.debug( "Paste " + nodeId );
             if ($.isFunction(self.onNodePaste)) {
                 self.onNodePaste.call(self, nodeId);
             }
@@ -75,7 +73,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
         var deleteNode = function (nodeId) {
             var selectedIds = getSelectedNodeIds();
             if ( selectedIds.length > 0 ) {
-                console.log("TreeBrowser delete " + selectedIds);
+                logger.debug("Delete " + selectedIds);
                 if ($.isFunction(self.onNodeDelete)) {
                     self.onNodeDelete.call(self, selectedIds);
                 }
@@ -84,7 +82,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
         //Called when the ContexMenu's 'Rename' action is selected for the node
         var editNode = function (nodeId) {
-            console.log("TreeBrowser edit " + nodeId);
+            logger.debug("Edit " + nodeId);
             treeViewE.jstree("rename", null);
         };
 
@@ -223,7 +221,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
 
                 if (changeAllowed !== true) {
                     self.updateNode(renamedNode, { "text":oldName });
-                    console.log("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not alloweed");
+                    logger.debug("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not allowed");
                 }
             }
 
@@ -398,12 +396,12 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             var newNode = treeViewE.jstree("create_node", parentNode, "last", newNodeData, false);
 
             if (objDescriptor.icon) {
-                    $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
-                    $(newNode[0].children[1].children[0]).css("background-position", "0 0");
+                $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
+                $(newNode[0].children[1].children[0]).css("background-position", "0 0");
             }
 
             //log
-            console.log("New node created: " + objDescriptor.id);
+            logger.debug("New node created: " + objDescriptor.id);
 
             //a bit of visual effect
             animateNode(newNode);
@@ -505,7 +503,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
                 animateNode(node);
 
                 //log
-                console.log("Node updated: " + node.attr("nId"));
+                logger.debug("Node updated: " + node.attr("nId"));
             }
         };
 
@@ -522,7 +520,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
             jQuery.jstree._reference(treeViewE).delete_node(node);
 
             //log
-            console.log("Node removed: " + node.attr("nId"));
+            logger.debug("Node removed: " + node.attr("nId"));
         };
 
         /**
@@ -531,7 +529,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
          * @param node
          */
         this.onNodeOpen = function (node) {
-            console.log("Default onNodeOpen called, doing nothing. Please override onNodeOpen(node)");
+            logger.warning("Default onNodeOpen called, doing nothing. Please override onNodeOpen(node)");
         };
 
         /*
@@ -539,7 +537,7 @@ define( [ 'jquery.hotkeys', 'jquery.jstree' ], function() {
          * PLEASE OVERIDDE TO HANDLE TITLE CHANGE FOR YOURSELF
          */
         this.onNodeTitleChanged = function (node, oldText, newText) {
-            console.log("Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, oldText, newText)");
+            logger.warning("Default onNodeTitleChanged called, doing nothing. Please override onNodeTitleChanged(node, oldText, newText)");
             return true;
         };
 

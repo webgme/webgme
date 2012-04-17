@@ -33,7 +33,6 @@ Socket = function(socket, storage){
             var parentid = msg.data || "root";
             var parent=that.storage.get(parentid);
             for ( var i = 0; i < clipboard.length; i++ ) {
-                console.log( "\n\ndeepCopying " + clipboard[i] +"\n\n" );
                 var newid = deepCopyObject(msg.data,clipboard[i]);
                 parent.children.push(newid);
             }
@@ -191,9 +190,9 @@ sendMessage = function(socket,data){
     if(address!==undefined){
         console.log( "Sending " + data.objects.length + " to client :" + address.address + ":" + address.port + " client id " + socket.id );
     }
-    else {*/
+    else {
         console.log( "Sending " + data.objects.length + " to client : UNKNOWN");
-    /*}*/
+    }*/
 	socket.emit('updateObjects',data);
 };
 
