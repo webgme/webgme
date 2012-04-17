@@ -106,6 +106,9 @@ socket.on('serverMessage',function(msg){
     else if(helper === 11){
         console.log("wait for territory update again");
     }
+    else if(helper === 12){
+        socket.emit('clientMessage',{commands:[{cid:"mentes",type:"save"}]});
+    }
     else{
         process.exit(0);
     }

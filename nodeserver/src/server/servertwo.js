@@ -433,9 +433,7 @@ var TransactionQueue = function(_project){
 
     /*private functions*/
     var processNextMessage = function(){
-        console.log("kecso +"+JSON.stringify(_queue)+ " cw "+_canwork);
         if(_canwork === true && _queue.length>0){
-            console.log("kecso heee?");
             /*
             we go throuhg the message and search for the territory update
             items, as they are only readings they can go paralelly
@@ -459,7 +457,7 @@ var TransactionQueue = function(_project){
             }
             if(updatecommands.length>0){
                 _project.onProcessMessage(cid,updatecommands,messageHandled);
-                _canwork = false;
+                //_canwork = false;
             }
             else{
                 messageHandled(); /*this message contained only reading, so we finished processing ;)*/
@@ -467,10 +465,8 @@ var TransactionQueue = function(_project){
         }
     };
     var messageHandled = function(){
-        console.log("kecso -"+JSON.stringify(_queue));
         _queue.shift();
         _canwork = true;
-        console.log("kecso a "+_canwork);
         processNextMessage();
     }
 
@@ -709,6 +705,9 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
         else if(command.type === "paste"){
             pasteCommand(command);
         }
+        else if(command.type === "save"){
+            saveCommand(command);
+        }
     };
     var commandProcessed = function(){
         _commands.shift();
@@ -895,6 +894,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                 if(_clients[i].interestedInObject(modifiedparent._id)){
                     msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
                 }
+
                 for(var j in createdobjects){
                     if(_clients[i].interestedInObject(j)){
                         msg.push({type:"crete",id:j,object:createdobjects[j]});
@@ -907,15 +907,13 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                     _clients[i].sendMessage(msg);
                 }
             }
+            commandProcessed();
         };
         var copyobject = function(parentid,tocopyid){
             counter++;
             _storage.get(tocopyid,function(error,object){
                 if(error){
-                    commanditem.success = false;
-                    msg.push(commanditem);
-                    _clients[_cid].sendMessage(msg);
-                    commandProcessed();
+                    /*TODO*/
                 }
                 else{
                     var newobj = {};
@@ -925,22 +923,23 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                     newobj.parent = parentid;
                     newobj.children = [];
                     for(var i in object.children){
-                        newobj.children.push("p"+object.children[i]);
+                        if(createdobjects[object.children[i]] === undefined){
+                            newobj.children.push("p"+object.children[i]);
+                        }
                     }
                     newobj._id = "p"+newobj._id;
 
                     _storage.set(newobj._id,newobj,function(error){
                         if(error){
-                            commanditem.success = false;
-                            msg.push(commanditem);
-                            _clients[_cid].sendMessage(msg);
-                            commandProcessed();
+                            /*TODO*/
                         }
                         else{
                             createdobjects[newobj._id] = newobj;
                             if(newobj.children.length>0){
-                                for(var i in newobj.children){
-                                    copyobject(newobj._id,newobj.children[i])
+                                for(var i in object.children){
+                                    if(createdobjects[object.children[i]] === undefined){
+                                        copyobject(newobj._id,object.children[i]);
+                                    }
                                 }
                             }
                             if(--counter === 0){
@@ -981,7 +980,18 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                 });
             }
         });
-    }
+    };
+    var saveCommand = function(savecommand){
+        _storage.save(function(error){
+            if(error){
+                _clients[_cid].sendMessage([{type:"command",cid:savecommand.cid,success:false}]);
+            }
+            else{
+                _clients[_cid].sendMessage([{type:"command",cid:savecommand.cid,success:true}]);
+            }
+            commandProcessed();
+        });
+    };
 
     /*main*/
     processCommand(_commands[0]);
