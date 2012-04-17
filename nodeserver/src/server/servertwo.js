@@ -423,7 +423,6 @@ and serialize them, then proccess them one by one
 var TransactionQueue = function(_project){
     var _queue = [];
     var _canwork = true;
-    //var _sequence = 0;
 
     /*public functions*/
     this.onClientMessage = function(msg){
@@ -434,7 +433,9 @@ var TransactionQueue = function(_project){
 
     /*private functions*/
     var processNextMessage = function(){
-        if(_canwork && _queue.length>0){
+        console.log("kecso +"+JSON.stringify(_queue)+ " cw "+_canwork);
+        if(_canwork === true && _queue.length>0){
+            console.log("kecso heee?");
             /*
             we go throuhg the message and search for the territory update
             items, as they are only readings they can go paralelly
@@ -466,8 +467,10 @@ var TransactionQueue = function(_project){
         }
     };
     var messageHandled = function(){
+        console.log("kecso -"+JSON.stringify(_queue));
         _queue.shift();
         _canwork = true;
+        console.log("kecso a "+_canwork);
         processNextMessage();
     }
 
@@ -700,8 +703,11 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
         else if(command.type === "modify"){
             modifyCommand(command);
         }
-        else if(command.type == "delete"){
+        else if(command.type === "delete"){
             deleteCommand(command);
+        }
+        else if(command.type === "paste"){
+            pasteCommand(command);
         }
     };
     var commandProcessed = function(){
@@ -724,7 +730,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
 
     /*command handling messages*/
     var copyCommand = function(copycommand){
-        _clients[cid].copy(copycommand.ids);
+        _clients[_cid].copy(copycommand.ids);
         var msg = [];
         var commanditem = {type:"command",cid:copycommand.cid,success:true};
         msg.push(commanditem);
@@ -876,6 +882,106 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             }
         });
     };
+    var pasteCommand = function(pastecommand){
+        var msg = [];
+        var commanditem = {type:"command",cid:pastecommand.cid,success:true};
+        var modifiedparent = undefined;
+        var createdobjects = {};
+        var counter = 0;
+
+        var finishing = function(){
+            for(var i in _clients){
+                msg = [];
+                if(_clients[i].interestedInObject(modifiedparent._id)){
+                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
+                }
+                for(var j in createdobjects){
+                    if(_clients[i].interestedInObject(j)){
+                        msg.push({type:"crete",id:j,object:createdobjects[j]});
+                    }
+                }
+                if(i === _cid){
+                    msg.push(commanditem);
+                }
+                if(msg.length>0){
+                    _clients[i].sendMessage(msg);
+                }
+            }
+        };
+        var copyobject = function(parentid,tocopyid){
+            counter++;
+            _storage.get(tocopyid,function(error,object){
+                if(error){
+                    commanditem.success = false;
+                    msg.push(commanditem);
+                    _clients[_cid].sendMessage(msg);
+                    commandProcessed();
+                }
+                else{
+                    var newobj = {};
+                    for(var i in object){
+                        newobj[i] = object[i];
+                    }
+                    newobj.parent = parentid;
+                    newobj.children = [];
+                    for(var i in object.children){
+                        newobj.children.push("p"+object.children[i]);
+                    }
+                    newobj._id = "p"+newobj._id;
+
+                    _storage.set(newobj._id,newobj,function(error){
+                        if(error){
+                            commanditem.success = false;
+                            msg.push(commanditem);
+                            _clients[_cid].sendMessage(msg);
+                            commandProcessed();
+                        }
+                        else{
+                            createdobjects[newobj._id] = newobj;
+                            if(newobj.children.length>0){
+                                for(var i in newobj.children){
+                                    copyobject(newobj._id,newobj.children[i])
+                                }
+                            }
+                            if(--counter === 0){
+                                finishing();
+                            }
+                        }
+                    });
+                }
+            });
+        };
+        /*main*/
+        _storage.get(pastecommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                _clients[_cid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                var copyarray = _clients[_cid].getCopyList();
+                for(var i in copyarray){
+                    object.children.push("p"+copyarray[i]);
+                }
+                _storage.set(object._id,object,function(error){
+                    if(error){
+                        commanditem.success = false;
+                        msg.push(commanditem);
+                        _clients[_cid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                    else{
+                        modifiedparent = object;
+                        for(var i in copyarray){
+                            copyobject(modifiedparent._id,copyarray[i]);
+                        }
+                    }
+
+                });
+            }
+        });
+    }
 
     /*main*/
     processCommand(_commands[0]);

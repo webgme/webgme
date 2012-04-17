@@ -88,12 +88,22 @@ socket.on('serverMessage',function(msg){
         console.log("territory update should come as well");
     }
     else if(helper === 6){
-        socket.emit('clientMessage',{commands:[{cid:"masik",type:"modify",id:"root",name:"csunya"}]});
+        socket.emit('clientMessage',{commands:[{cid:"mostcopy",type:"copy",ids:["root","id0324"]}]});
     }
     else if(helper === 7){
-        socket.emit('clientMessage',{commands:[{cid:"ketto", type:"delete", id:"root"}]});
+        console.log("kuldom");
+        socket.emit('clientMessage',{commands:[{cid:"mostpaste",type:"paste",id:["id0024"]}]});
     }
     else if(helper === 8){
+        console.log("there should be a separate territory update message as well");
+    }
+    else if(helper === 9){
+        socket.emit('clientMessage',{commands:[{cid:"masik",type:"modify",id:"root",name:"csunya"}]});
+    }
+    else if(helper === 10){
+        socket.emit('clientMessage',{commands:[{cid:"ketto", type:"delete", id:"root"}]});
+    }
+    else if(helper === 11){
         console.log("wait for territory update again");
     }
     else{
