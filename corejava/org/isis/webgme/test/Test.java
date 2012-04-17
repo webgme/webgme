@@ -1,7 +1,6 @@
 package org.isis.webgme.test;
 
-import org.isis.webgme.reactive.*;
-import org.isis.webgme.reactive.Table;
+import org.isis.reactive.*;
 
 public class Test {
 	public static void main(String[] args) {

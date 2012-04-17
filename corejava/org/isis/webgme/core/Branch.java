@@ -1,6 +1,6 @@
 package org.isis.webgme.core;
 
-import org.isis.webgme.reactive.*;
+import org.isis.reactive.*;
 
 public class Branch {
 	public Table table;

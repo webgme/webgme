@@ -1,9 +1,8 @@
 Clients:
-	clientid
-
+	clientobjects = inverse of client
 	
 Objects:
-	objectid
+	clientobjects = inverse of object
 
 	data
 	loaded
@@ -15,21 +14,46 @@ Objects:
 	
 	
 ClientObjects:
-	clientid
-	objectid
+	client
+	object
 
-	territory = count(inverse of load_parent) > 0 
-
-	parent = getClientObject(getObject(obejctid).parent, clientid)
-	basetype = getClientObject(getObject(objectid)).basetype, clientid)
-
-	request_ancestor := patterns.contains("ancestor") 
-		or count(inverse of requested_ancestor_parent) > 0 
-		or count(inverse of requested_ancestor_type) > 0
-		
-	requested_ancestor_parent := request_ancestor ? parent : null
-	requested_ancestor_basetype := request_ancestor ? basetype : null
-
-	request_children := patterns.contains("children")
-	requested_children_parent := parent ? request_children[parent] : false  
+	parent = getClientObject(object.import(parent),client)
+	children = inverse of parent
 	
+	basetype = getClientObject(object.import(basetype)),client)
+	subtypes = inverse of basetype
+
+	patterns
+	selfPattern = patterns.contains("self")
+	childrenPattern = patterns.contains("children")
+	ancestorPattern = patterns.contains("ancestor")
+	
+	ancestorRequest = ancestorPattern 
+		OR children.import(ancestorRequest) 
+		OR subtypes.import(ancestorRequest)
+
+	territory = selfPattern OR ancestorRequest OR parent.import(childrenPattern)
+
+-----------------------------
+
+
+Clients := Set
+Objects := Set
+
+parent : Objects -> Objects
+
+PatternTypes = {"self", "children", "ancestor"}
+patterns : Clients x Obejcts -> P(PatternTypes)
+
+ancestorRequest : Clients x Objects -> {true, false}
+ancestorRequest(c,o) = "ancestor" in patterns(c,o)
+	OR (exists oo)(parent(oo) = o AND ancestorRequest(c,oo))
+	OR (exists oo)(basetype(oo) = 0 AND ancestorRequest(c,oo))
+
+clientTerritory : Clients x Objects -> {true, false}
+	clientTerritory(c,o) = "self" in patterns(c,o)
+	OR "children" in patterns(c,o)
+	OR (exists oo)(parent(o) = oo AND "children" in patterns(c,oo))
+	OR ancestorRequest(c,o)
+
+
