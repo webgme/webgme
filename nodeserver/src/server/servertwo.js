@@ -72,10 +72,15 @@ var numberToDword = function(number){
 }
 
 /*COMMON INCLUDES*/
-var fs = require('fs');
+var FS = require('fs');
+var LOGMANAGER = require('./../common/logmanager.js');
 
 /*COMMON VARIABLES*/
 var STORAGELATENCY = 1;
+LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL );
+LOGMANAGER.useColors( true );
+var logger = LOGMANAGER.create( "server" );
+
 
 
 /*
@@ -96,23 +101,35 @@ var Server = function(_port){
 
     http.listen(_port);
     function httpGet(req, res){
-        console.log("httpGet - start - "+req.url);
+        logger.debug("HTTP REQ - "+req.url);
+
         if(req.url==='/'){
             req.url = '/index.html';
         }
-        fs.readFile(__dirname + _clientSourceFolder +req.url, function(err,data){
+
+        if (req.url.indexOf('/common/') === 0 ) {
+            _clientSourceFolder = "/..";
+        } else {
+            _clientSourceFolder = "/../client";
+        }
+
+        FS.readFile(__dirname + _clientSourceFolder +req.url, function(err,data){
             if(err){
                 res.writeHead(500);
+                logger.error("Error getting the file:" +__dirname + _clientSourceFolder +req.url);
                 return res.end('Error loading ' + req.url);
             }
+
+
+
             if(req.url.indexOf('.js')>0){
-                console.log("sending back js :"+req.url);
+                logger.debug("HTTP RESP - "+req.url);
                 res.writeHead(200, {
                     'Content-Length': data.length,
                     'Content-Type': 'application/x-javascript' });
 
             } else if (req.url.indexOf('.css')>0) {
-                console.log("sending back css :"+req.url);
+                logger.debug("HTTP RESP - "+req.url);
                 res.writeHead(200, {
                     'Content-Length': data.length,
                     'Content-Type': 'text/css' });
@@ -126,6 +143,7 @@ var Server = function(_port){
     };
 
     io.sockets.on('connection', function(socket){
+        logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.handshake));
         _connectedsockets.push(new BasicSocket(socket,_librarian,socket.handshake.query.t));
     });
 };
@@ -140,7 +158,7 @@ var Librarian = function(_server){
     var _projects = [];
     /*public functions*/
     this.getAvailableProjects = function(){
-        var directory = fs.readdirSync(_basedir);
+        var directory = FS.readdirSync(_basedir);
         var projects = [];
         for(var i in directory){
             if(directory[i].indexOf('.') === -1){
@@ -151,7 +169,7 @@ var Librarian = function(_server){
     };
     this.createProject = function(project){
         try{
-            fs.mkdirSync(_basedir+"/"+project);
+            FS.mkdirSync(_basedir+"/"+project);
             return true;
         }
         catch(e){
@@ -166,7 +184,7 @@ var Librarian = function(_server){
                 branches[info.branch] = true;
             }
         }
-        var directory = fs.readdirSync(_basedir+"/"+project);
+        var directory = FS.readdirSync(_basedir+"/"+project);
         for(var i in directory){
             if(directory[i].indexOf(".bif") !== -1){
                 var branch = directory[i].substr(0,directory[i].indexOf(".bif"));
@@ -180,7 +198,7 @@ var Librarian = function(_server){
     this.createBranch = function(project,branch){
         var branches = this.getActiveBranches(project);
         if(branches[branch] === undefined){
-            if(fs.writeFileSync(_basedir+"/"+project+"/"+branch+".bif","{}")){
+            if(FS.writeFileSync(_basedir+"/"+project+"/"+branch+".bif","{}")){
                 return true;
             }
             else{
@@ -238,13 +256,15 @@ var Project = function(_project,_branch,_basedir){
 
     /*message handling*/
     this.onClientMessage = function(msg){
+        logger.debug("Project.onClientMessage "+JSON.stringify(msg));
         _transactionQ.onClientMessage(msg);
     };
     this.onProcessMessage = function(cid,commands,cb){
         new Commander(_storage,_clients,cid,_territories,commands,cb);
     };
     this.onUpdateTerritory = function(cid,tid,newpatterns){
-        if(_territories[tid] === undefined){
+        logger.debug("Project.onUpdateTerritory "+JSON.stringify(cid)+","+JSON.stringify(tid)+","+JSON.stringify(newpatterns));
+        if(_territories[tid] === undefined || _territories[tid] === null){
             var territory = new Territory(_clients[cid],tid);
             territory.attachStorage(new ReadStorage(_storage));
             _territories[tid] = territory;
@@ -371,6 +391,7 @@ var Client = function(_iosocket,_id,_project){
 
     /*public functions*/
     this.onUpdateTerritory = function(added,removed){
+        logger.debug("Client.onUpdateTerritory "+JSON.stringify(added)+","+JSON.stringify(removed));
         var msg = [];
         for(var i in added){
             if(_objects[i] === undefined){
@@ -427,6 +448,7 @@ var TransactionQueue = function(_project){
     /*public functions*/
     this.onClientMessage = function(msg){
         /*we simply put the message into the queue*/
+        logger.debug("put commands to queue "+JSON.stringify(msg));
         _queue.push(msg);
         processNextMessage();
     };
@@ -518,6 +540,7 @@ var Territory = function(_client,_id){
     };
     /*asynchronous functions*/
     this.updatePatterns = function(newpatterns){
+        logger.debug("Territory.updatePatterns "+JSON.stringify(newpatterns));
         var clist = [];
         var plist = [];
         var added = {};
@@ -703,7 +726,8 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             deleteCommand(command);
         }
         else if(command.type === "paste"){
-            pasteCommand(command);
+            var date = new Date();
+            pasteCommand(command,"p"+(Date.parse(date)+date.getMilliseconds()));
         }
         else if(command.type === "save"){
             saveCommand(command);
@@ -881,7 +905,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             }
         });
     };
-    var pasteCommand = function(pastecommand){
+    var pasteCommand = function(pastecommand,prefix){
         var msg = [];
         var commanditem = {type:"command",cid:pastecommand.cid,success:true};
         var modifiedparent = undefined;
@@ -924,10 +948,10 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                     newobj.children = [];
                     for(var i in object.children){
                         if(createdobjects[object.children[i]] === undefined){
-                            newobj.children.push("p"+object.children[i]);
+                            newobj.children.push(prefix+object.children[i]);
                         }
                     }
-                    newobj._id = "p"+newobj._id;
+                    newobj._id = prefix+newobj._id;
 
                     _storage.set(newobj._id,newobj,function(error){
                         if(error){
@@ -961,7 +985,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             else{
                 var copyarray = _clients[_cid].getCopyList();
                 for(var i in copyarray){
-                    object.children.push("p"+copyarray[i]);
+                    object.children.push(prefix+copyarray[i]);
                 }
                 _storage.set(object._id,object,function(error){
                     if(error){
@@ -1031,7 +1055,7 @@ var Storage = function(_projectname,_branchname,_basedir){
     }
     /*private functions*/
     var initialize = function(){
-        _branch = fs.readFileSync(_basedir+"/"+_branchname+".bif");
+        _branch = FS.readFileSync(_basedir+"/"+_branchname+".bif");
         _branch = JSON.parse(_branch) || {};
         if(_branch.revisions && _branch.revisions.length > 0){
             loadRevision(_branch.revisions[_branch.revisions.length-1]);
@@ -1044,7 +1068,7 @@ var Storage = function(_projectname,_branchname,_basedir){
         }
     };
     var reserveRevision = function(){
-        var directory = fs.readdirSync(_basedir);
+        var directory = FS.readdirSync(_basedir);
         var maxrevision = 0;
         for(var i in directory){
             if(directory[i].indexOf(".rdf") !== -1){
@@ -1054,12 +1078,12 @@ var Storage = function(_projectname,_branchname,_basedir){
             }
         }
         maxrevision++;
-        fs.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects));
+        FS.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects));
         _current = maxrevision;
         updateBranchInfo();
     };
     var loadRevision = function(revision){
-        _objects = fs.readFileSync(_basedir+"/"+numberToDword(revision)+".rdf");
+        _objects = FS.readFileSync(_basedir+"/"+numberToDword(revision)+".rdf");
         _objects = JSON.parse(_objects) || {};
     };
     var updateBranchInfo = function(){
@@ -1067,14 +1091,14 @@ var Storage = function(_projectname,_branchname,_basedir){
             _branch.revisions = [];
         }
         _branch.revisions.push(_current);
-        fs.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch));
+        FS.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch));
     };
     var saveRevision = function(neednew){
         if(_current === undefined){
             return;
         }
         /*first saving the data file*/
-        fs.writeFileSync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects));
+        FS.writeFileSync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects));
         if(neednew === true){
             reserveRevision();
         }

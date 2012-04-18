@@ -1,17 +1,16 @@
 define(['/common/logmanager.js'], function( logManager ){
 
-    var TreeBrowserControl = function(project, treeBrowser ){
+    var TreeBrowserControl = function(_client, treeBrowser ){
 
         //get logger instance for this component
         var logger = logManager.create("TreeBrowserControl");
-
-        this.project = project;
+        var _territoryId = "T_TBCtrlTwo_"+Date.parse(new Date());
 
         this._rootNodeId = "root";
         this._stateLoading = 0;
         this._stateLoaded = 1;
 
-        this.queryid = this.project.reserveTerritory(this);
+        _client.reserveTerritory(_territoryId,this);
 
         //local container for accounting the currently opened node list
         //its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
@@ -33,39 +32,39 @@ define(['/common/logmanager.js'], function( logManager ){
             self._nodes[ self._rootNodeId ] = { "treeNode": loadingRootTreeNode, "children" : [], "state" : self._stateLoading };
 
             //add the root to the query
-            self.query.addPattern( "root", {self:true, children:true} );
+            _client.addPatterns(_territoryId,{"root":{children:1}} );
         } , 1 );
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
         this.treeBrowser.onNodeOpen = function( nodeId ) {
 
             //first create dummy elements under the parent representing the childrend being loaded
-            var parent = self.project.getNode( nodeId );
+            var parent = _client.getNode( nodeId );
 
             if ( parent ) {
 
                 var parentNode = self._nodes[ nodeId ]["treeNode"];
+                var children = parent.getAttribute("children");
+                for( var i = 0; i < children.length; i++ ) {
+                    var currentChildId = children[i];
 
-                for( var i = 0; i < parent.children.length; i++ ) {
-                    var currentChildId = parent.children[i];
-
-                    var childNode = self.project.getNode( currentChildId );
+                    var childNode = _client.getNode( currentChildId );
 
                     //local variable for the created treenode of the child node (loading or full)
                     var childTreeNode = null;
 
-                    //check if the node could be retreived from the project
+                    //check if the node could be retreived from the _client
                     if ( childNode ) {
                         //the node was present on the client side, render ist full data
                         childTreeNode = self.treeBrowser.createNode( parentNode, {  "id": currentChildId,
-                            "name": childNode.name,
-                            "hasChildren" : childNode.children.length > 0 ,
-                            "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom"
+                            "name": childNode.getAttribute("name"),
+                            "hasChildren" : (childNode.getAttribute("children")).length > 0 ,
+                            "class" :  ((childNode.getAttribute("children")).length > 0 ) ? "gme-model" : "gme-atom"
                         } );
 
                         //store the node's info in the local hashmap
                         self._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
-                            "children" : childNode.children,
+                            "children" : childNode.getAttribute("children"),
                             "state" : self._stateLoaded };
                     } else {
                         //the node is not present on the client side, render a loading node instead
@@ -86,7 +85,9 @@ define(['/common/logmanager.js'], function( logManager ){
             }
 
             //need to expand the territory
-            self.query.addPattern( nodeId, {self:true, children:true} );
+            var newpattern = {};
+            newpattern[nodeId] = {children:1};
+            _client.addPatterns(_territoryId, newpattern );
         };
 
         //called from the TreeBrowserWidget when a node has been closed by its collapse icon
@@ -121,23 +122,25 @@ define(['/common/logmanager.js'], function( logManager ){
 
             //if there is anything to remove from the territory, do it
             if ( removeFromTerritory.length > 0 )  {
-                self.query.deletePatterns( removeFromTerritory );
+                _client.removePatterns( _territoryId, removeFromTerritory );
             }
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
         this.treeBrowser.onNodeCopy = function( selectedIds ) {
-            self.project.copyNode( selectedIds );
+            _client.copy( selectedIds );
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
         this.treeBrowser.onNodePaste = function( nodeId ) {
-            self.project.pasteTo( nodeId );
+            _client.paste( nodeId );
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         this.treeBrowser.onNodeDelete = function( selectedIds ) {
-            self.project.delNode( selectedIds );
+            for(var i in selectedIds){
+                _client.delNode( selectedIds[i] );
+            }
         };
 
         //called from the TreeBrowserWidget when a node has been renamed
@@ -145,15 +148,15 @@ define(['/common/logmanager.js'], function( logManager ){
 
             //send name update to the server
             //TODO: fixme (no good this way..., changes should be made property wise with commands)
-            var currentNode = self.project.getNode(nodeId);
-            currentNode.name = newText;
-            self.project.setNode(currentNode);
+            var currentNode = _client.getNode(nodeId);
+            currentNode.setAttribute("name",newText);
 
             //accept namechange
             return false;
         };
 
         this.onRefresh2 = function( eventType, objectId ) {
+            logger.debug("TBCtrlTwo.onRefresh2 "+eventType+","+objectId);
             var nodeDescriptor = null, currentChildId = null, j = 0, self = this;
 
             //HANDLE INSERT
@@ -186,8 +189,8 @@ define(['/common/logmanager.js'], function( logManager ){
                 //check if this control shows any interest for this object
                 if ( this._nodes[ objectId ] ) {
                     logger.debug( "Update object with id: " + objectId );
-                    //get the node from the project
-                    var updatedObject = this.project.getNode( objectId );
+                    //get the node from the _client
+                    var updatedObject = _client.getNode( objectId );
 
                     if ( updatedObject ) {
 
@@ -198,22 +201,22 @@ define(['/common/logmanager.js'], function( logManager ){
 
                             //specify the icon for the treenode
                             //TODO: fixme (determine the type based on the 'kind' of the object)
-                            var objType = (updatedObject.children.length > 0 ) ? "gme-model" : "gme-atom";
+                            var objType = ((updatedObject.getAttribute("children")).length > 0 ) ? "gme-model" : "gme-atom";
                             //for root node let's specify specific type
                             if ( objectId === this._rootNodeId ) {
                                 objType = "gme-root";
                             }
 
                             //create the node's descriptor for the treebrowser widget
-                            nodeDescriptor = {  "text" : updatedObject.name,
-                                "hasChildren" : updatedObject.children.length > 0,
+                            nodeDescriptor = {  "text" : updatedObject.getAttribute("name"),
+                                "hasChildren" : (updatedObject.getAttribute("children")).length > 0,
                                 "class" : objType };
 
                             //update the node's representation in the tree
                             this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
 
                             //update the object's children list in the local hashmap
-                            this._nodes[ objectId ].children = updatedObject.children;
+                            this._nodes[ objectId ].children = updatedObject.getAttribute("children");
 
                             //finally update the object's state showing loaded
                             this._nodes[ objectId ].state = this._stateLoaded;
@@ -222,8 +225,8 @@ define(['/common/logmanager.js'], function( logManager ){
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
-                                "text" : updatedObject.name,
-                                "hasChildren" : updatedObject.children.length > 0//,
+                                "text" : updatedObject.getAttribute("name"),
+                                "hasChildren" : (updatedObject.getAttribute("children")).length > 0//,
                                 //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
                             };
 
@@ -231,7 +234,7 @@ define(['/common/logmanager.js'], function( logManager ){
                             this.treeBrowser.updateNode( this._nodes[ objectId ]["treeNode"], nodeDescriptor  );
 
                             var oldChildren = this._nodes[ objectId ].children;
-                            var currentChildren = updatedObject.children;
+                            var currentChildren = updatedObject.getAttribute("children");
 
                             //computes the differences of two array
                             var arrayMinus = function( arrayA, arrayB ) {
@@ -305,22 +308,22 @@ define(['/common/logmanager.js'], function( logManager ){
                                 for ( j = 0; j < childrenAdded.length; j++ ) {
                                     currentChildId = childrenAdded[j];
 
-                                    var childNode = this.project.getNode( currentChildId );
+                                    var childNode = _client.getNode( currentChildId );
 
                                     //local variable for the created treenode of the child node (loading or full)
                                     var childTreeNode = null;
 
-                                    //check if the node could be retreived from the project
+                                    //check if the node could be retreived from the _client
                                     if ( childNode ) {
                                         //the node was present on the client side, render ist full data
                                         childTreeNode = this.treeBrowser.createNode( this._nodes[ objectId ]["treeNode"], {  "id": currentChildId,
                                             "name": childNode.name,
-                                            "hasChildren" : childNode.children.length > 0 ,
-                                            "class" :  (childNode.children.length > 0 ) ? "gme-model" : "gme-atom" } );
+                                            "hasChildren" : (childNode.getAttribute("children")).length > 0 ,
+                                            "class" :  ((childNode.getAttribute("children")).length > 0 ) ? "gme-model" : "gme-atom" } );
 
                                         //store the node's info in the local hashmap
                                         this._nodes[ currentChildId ] = {   "treeNode": childTreeNode,
-                                            "children" : childNode.children,
+                                            "children" : childNode.getAttribute("children"),
                                             "state" : this._stateLoaded };
                                     } else {
                                         //the node is not present on the client side, render a loading node instead
@@ -339,23 +342,23 @@ define(['/common/logmanager.js'], function( logManager ){
                             }
 
                             //update the object's children list in the local hashmap
-                            this._nodes[ objectId ].children = updatedObject.children;
+                            this._nodes[ objectId ].children = updatedObject.getAttribute("children");
 
                             //finally update the object's state showing loaded
                             this._nodes[ objectId ].state = this._stateLoaded;
 
                             //if there is no more children of the current node, remove it from the territory
-                            if ( updatedObject.children.length === 0 ) {
+                            if ( (updatedObject.getAttribute("children")).length === 0 ) {
                                 removeFromTerritory.push( { nodeid : objectId } );
                             }
 
                             //if there is anythign to remove from the territory, do so
                             if ( removeFromTerritory.length > 0 )  {
-                                this.query.deletePatterns( removeFromTerritory );
+                                _client.removePatterns( _territoryId, removeFromTerritory );
                             }
                         }
                     } else {
-                        //we got an update about an object that we cannot get from the project
+                        //we got an update about an object that we cannot get from the _client
                         //something is very very bad here...
                     }
                 } else {
@@ -382,6 +385,23 @@ define(['/common/logmanager.js'], function( logManager ){
 
             for ( i = 0; i < updatedata.mlist.length; i++ ) {
                 this.onRefresh2( "update", updatedata.mlist[i] );
+            }
+        };
+
+        this.onEvent = function(etype,eid){
+            logger.debug("TBCtrlTwo.onEvent "+etype+","+eid);
+            switch(etype){
+                case "load":
+                    self.onRefresh2("insert",eid);
+                    break;
+                case "modify":
+                    self.onRefresh2("update",eid);
+                    break;
+                case "create":
+                    self.onRefresh2("insert",eid);
+                    break;
+                case "delete":
+                    self.onRefresh2("update",eid);
             }
         };
     };

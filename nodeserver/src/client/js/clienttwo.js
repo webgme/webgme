@@ -1,4 +1,7 @@
-define(['/socket.io/socket.io.js'],function(){
+define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
+    LogManager.setLogLevel( LogManager.logLevels.ALL );
+    LogManager.useColors( true );
+    var logger = LogManager.create("Client");
     /*
     this is the main class
     it contains all the information
@@ -14,78 +17,90 @@ define(['/socket.io/socket.io.js'],function(){
         var _password = undefined;
         var _territories ={};
         var _commandsequence = 0;
-
-        /*socket communication*/
-        _socket.on('serverMessage',function(msg){
-            for(var i in msg){
-                var event = msg[i];
-                if(event.type = "command"){
-                    _queue.commandResult(event.cid,event.success);
-                }
-                else if(event.type = "load"){
-
-                }
-            }
-
-        });
-        _socket.on('clientMessageAck',function(){
-
-        });
-        _socket.on('clientMessageNack',function(error){
-
-        });
-
-        _socket.on('connect', function(){
-            console.log("connect");
-        });
-        _socket.on('listProjectsAck',function(msg){
-            console.log("listProjectsAck");
-        });
-        _socket.on('createProjectNack',function(msg){
-            console.log("createProjectNack");
-        });
-        _socket.on('createProjectAck',function(msg){
-            console.log("createProjectAck");
-        });
-        _socket.on('listBranchesAck',function(msg){
-            console.log("listBranchesAck");
-        });
-        _socket.on('selectProjectAck',function(msg){
-            console.log("selectProjectAck");
-        });
-        _socket.on('selectProjectNack',function(msg){
-            console.log("selectProjectNack");
-        });
-        _socket.on('createBranchAck',function(msg){
-            console.log("createBranchAck");
-        });
-        _socket.on('createBranchNack',function(msg){
-            console.log("createBranchNack");
-        });
-        _socket.on('connectToBranchAck',function(msg){
-            console.log("selectBranchAck");
-        });
-        _socket.on('connectToBranchNack',function(msg){
-            console.log("selectBranchNack");
-        });
-
+        var _self = this;
 
         /*public interface*/
         /*message sending*/
         this.sendMessage = function(msg){
+            logger.debug("clientMessage "+JSON.stringify(msg));
             _socket.emit('clientMessage',msg);
         };
 
         /*project selection and upper level functions*/
         this.connect = function(cb){
+
+
+            /*main*/
+            if(_socket === undefined){
+                _socket = io.connect(/*_serverlocation*/);
+            }
+
+            /*socket communication*/
             _socket.on('connect', function(msg){
                 cb();
             });
 
-            /*main*/
-            if(_socket === undefined){
-                _socket = io.connect(_serverlocation);
-            }
+            _socket.on('serverMessage',function(msg){
+                logger.debug("serverMessage "+JSON.stringify(msg));
+                for(var i in msg){
+                    var event = msg[i];
+                    logger.debug("event "+JSON.stringify(event));
+                    if(event.type === "command"){
+                        _queue.commandResult(event.cid,event.success);
+                    }
+                    else if(event.type === "load"){
+                        _storage.set(event.id,event.object);
+                        shootEvent("load",event.id);
+                    }
+                    else if(event.type === "unload"){
+                        _storage.set(event.id, undefined);
+                        shootEvent("unload",event.id);
+                    }
+                    else if(event.type === "modify"){
+                        _storage.set(event.id,event.object);
+                        shootEvent("modify",event.id);
+                    }
+                    else if(event.type === "delete"){
+                        _storage.set(event.id,null);
+                        shootEvent("delete",event.id);
+                    }
+                }
+
+            });
+            _socket.on('clientMessageAck',function(){
+            });
+            _socket.on('clientMessageNack',function(error){
+            });
+            _socket.on('listProjectsAck',function(msg){
+                console.log("listProjectsAck");
+            });
+            _socket.on('createProjectNack',function(msg){
+                console.log("createProjectNack");
+            });
+            _socket.on('createProjectAck',function(msg){
+                console.log("createProjectAck");
+            });
+            _socket.on('listBranchesAck',function(msg){
+                console.log("listBranchesAck");
+            });
+            _socket.on('selectProjectAck',function(msg){
+                console.log("selectProjectAck");
+            });
+            _socket.on('selectProjectNack',function(msg){
+                console.log("selectProjectNack");
+            });
+            _socket.on('createBranchAck',function(msg){
+                console.log("createBranchAck");
+            });
+            _socket.on('createBranchNack',function(msg){
+                console.log("createBranchNack");
+            });
+            _socket.on('connectToBranchAck',function(msg){
+                console.log("selectBranchAck");
+            });
+            _socket.on('connectToBranchNack',function(msg){
+                console.log("selectBranchNack");
+            });
         };
         this.authenticate = function(login,pwd,cb){
             _socket.on('authenticateAck',function(){
@@ -112,6 +127,11 @@ define(['/socket.io/socket.io.js'],function(){
             _socket.emit('listProjects');
         };
         /*this is just for test purpose till we implement the project selection widget...*/
+        this.makeconnect = function(cb){
+            _self.authenticate("kecso","turoburo",function(){
+                _self.shortcut(cb);
+            });
+        };
         this.shortcut = function(cb){
             _socket.on('selectProjectAck',function(msg){
                 _socket.on('connectToBranchAck',function(){
@@ -126,16 +146,19 @@ define(['/socket.io/socket.io.js'],function(){
 
         /*storage like operations*/
         this.getNode = function(id){
-            return new ClientNode(this,_storage.get(id));
+            if(_storage.get(id) !== undefined && _storage.get(id) !== null){
+                return new ClientNode(this,_storage.get(id));
+            }
+            return _storage.get(id);
         };
         this.delNode = function(id){
-
+            _queue.push({cid:"c"+(_commandsequence++),type:"delete",id:id});
         };
 
         /*territory functions*/
         /*used by the ui*/
         this.reserveTerritory = function(tid,ui){
-            _territories[tid] = new Territory(this,tid,ui);
+            _territories[tid] = new Territory(_self,tid,ui);
         };
         this.addPatterns = function(tid,patterns){
             _territories[tid].addPatterns(patterns);
@@ -170,6 +193,13 @@ define(['/socket.io/socket.io.js'],function(){
             command[attributename] = newvalue;
             _queue.push(command);
         };
+
+        /*private functions*/
+        var shootEvent = function(etype,eid){
+            for(var i in _territories){
+                _territories[i].onEvent(etype,eid);
+            }
+        }
     };
     /*
     this class represent the queue for the commands
@@ -186,6 +216,11 @@ define(['/socket.io/socket.io.js'],function(){
 
         /*public functions*/
         this.push = function(command){
+            if(command.type === "territory"){
+                /*these can go paralelly without cid*/
+                _client.sendMessage({commands:[command]});
+                return;
+            }
             _queue[command.cid] = command;
             setTimeout(function(){
                 commandTimeout(command.cid);
@@ -195,22 +230,32 @@ define(['/socket.io/socket.io.js'],function(){
         this.commandResult = function(cid,success){
             /*TODO success*/
             delete _sent[cid];
-            var counter = 0;
-            for(var i in _sent){
-                counter++;
-            }
-            if(counter===0){
+
+            if(isSentEmpty()){
                 _cansend = true;
                 sendNextClientMessage();
             }
         };
+        var isSentEmpty = function(){
+            var counter = 0;
+            for(var i in _sent){
+                counter++;
+            }
+            if(counter === 0){
+                return true;
+            }
+            return false;
+        }
         var sendNextClientMessage = function(){
-            if(_cansend){
+            logger.debug("trying to send next command message to server (cansend="+_cansend+",sentisempty="+isSentEmpty());
+            if(_cansend ===true || isSentEmpty()){
+                _cansend = true;
                 var msg = {commands:[]};
                 for(var i in _queue){
                     msg.commands.push(_queue[i]);
                 }
-                if(msg.length>0){
+                logger.debug("next command message to server "+JSON.stringify(msg));
+                if(msg.commands.length>0){
                     _client.sendMessage(msg);
                     _cansend = false;
                     _sent = _queue;
@@ -224,6 +269,11 @@ define(['/socket.io/socket.io.js'],function(){
             }
             delete _queue[cid];
             delete _sent[cid];
+
+            if(isSentEmpty()){
+                _cansend = true;
+                sendNextClientMessage();
+            }
         };
     };
     /*
@@ -235,9 +285,11 @@ define(['/socket.io/socket.io.js'],function(){
 
         /*public functions*/
         this.get = function(id){
+            logger.debug("Storage.get "+id);
             return _objects[id];
         };
         this.set = function(id,object){
+            logger.debug("Storage.set "+id+","+JSON.stringify(object));
             _objects[id] = object;
         };
     };
@@ -258,6 +310,7 @@ define(['/socket.io/socket.io.js'],function(){
             return false;
         };
         this.getAttribute = function(name){
+            logger.debug("ClientNode.getAttribute "+name);
             if(_data[name]){
                 var retval = JSON.stringify(_data[name]);
                 return JSON.parse(retval);
@@ -266,6 +319,7 @@ define(['/socket.io/socket.io.js'],function(){
 
         };
         this.setAttribute = function(name,value){
+            logger.debug("ClientNode.setAttribute "+name+","+value);
             /*TODO*/
             _client.modifyNode(_data._id,name,value);
         };
@@ -278,7 +332,7 @@ define(['/socket.io/socket.io.js'],function(){
         this.addPatterns = function(patterns){
             var modified = false;
             for(var i in patterns){
-                if(_patterns[i] === undefined){
+                if(_patterns[i] === undefined || _patterns[i]===null){
                     modified = true;
                     _patterns[i] = patterns[i];
                 }
@@ -312,7 +366,10 @@ define(['/socket.io/socket.io.js'],function(){
                 return true;
             }
             return false;
-        }
+        };
+        this.onEvent = function(etype,eid){
+            _ui.onEvent(etype,eid);
+        };
     };
 
     return Client;

@@ -15,9 +15,11 @@ require([ 'order!jquery.min', 'order!jquery-ui.min', 'domReady', 'order!./js/cli
         var tJSTree = undefined;
         var delayer = undefined;
         var connect = function(){
-            client = new ClientProject("localhost:8081");
+            client = new Client("localhost:8081");
             client.connect(function(){
-                tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget( "tbJSTree" ) );
+                client.makeconnect(function(){
+                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget( "tbJSTree" ) );
+                });
             });
         };
 
