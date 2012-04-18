@@ -13,14 +13,14 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree
         //get logger instance for this component
         var logger = logManager.create("JSTreeBrowserWidget");
 
-        //by default use visual animation to reflect changes in the three
+        //by default use visual animation to reflect changes in the tree
         var animation = true;
 
         //save parentcontrol
         var containerControl = $("#" + containerId);
 
         if (containerControl.length === 0) {
-            alert("JSTreeBrowserWidget's container control with id:'" + containerId + "' could not be found");
+            logger.error("JSTreeBrowserWidget's container control with id:'" + containerId + "' could not be found");
             return undefined;
         }
 

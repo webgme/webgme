@@ -15,14 +15,14 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.dynatree', 'jquery.conte
         this.containerControl =  $("#" + containerId );
 
         if ( this.containerControl.length === 0 ) {
-            alert( "TreeBrowserWidget's container control with id:'" + containerId + "' could not be found" );
+            logger.error( "DynaTreeBrowserWidget's container control with id:'" + containerId + "' could not be found" );
             return;
         }
 
         //generate unique id for control
         this.guid = "TreeBrowserWidgetDynaTree";
 
-        //by default use visual animations to reflect changes in the three
+        //by default use visual animations to reflect changes in the tree
         this._animation = true;
 
         //generate control dynamically
