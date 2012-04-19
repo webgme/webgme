@@ -1,5 +1,12 @@
-define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.io/socket.io.js'], function(QU, ST, SO){
+define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/common/EventDispatcher.js', '/socket.io/socket.io.js' ], function(QU, ST, SO, EventDispatcher){
 	var Project = function(projid) {
+
+        $.extend(this, new EventDispatcher());
+
+        this.events = {
+            "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
+        };
+
 		this.id = projid;
 		this.queries = {};
 		this.querycount = 0;
@@ -37,6 +44,16 @@ define(['./clientquery.js', './clientstorage.js','./clientsocket.js', '/socket.i
 			var cmsg = {}; cmsg.tpye='paste'; cmsg.data = parentid;
 			self.socket.clipboardUpdate(cmsg);
 		}
+
+        var selectedObjectId = null;
+
+        this.setSelectedObjectId = function ( objectId ) {
+            if ( objectId !== selectedObjectId ) {
+                selectedObjectId = objectId;
+
+                self.dispatchEvent( self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
+            }
+        }
 	};
 
 	Project.prototype.open = function () {

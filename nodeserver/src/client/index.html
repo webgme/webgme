@@ -1,6 +1,7 @@
+<!DOCTYPE html>
 <html>
 	<head>
-		<title>webgme trial page</title>
+		<title> -= YourProject =- WebGME (beta)</title>
 
         <!-- CSS libraries -->
         <link href="css/main.css" type="text/css" rel="stylesheet"/>
@@ -9,10 +10,35 @@
         <script data-main="js/main" src="../lib/require.js"></script>
 	</head>
 	<body>
-		<div>
-        	<div id="tbDynaTree" class="ObjectBrowser" style="float:left;"></div>
-        	<div id="delaycontrol" ></div>
-            <div id="tbJSTree" class="ObjectBrowser" style="float:left;"></div>
+        <div id="headerBar">
+            <div class="navbar-inner">
+                <span class="brand" href="#">#YourProject#</span>
+            </div>
+        </div>
+        <div id="contentContainer">
+            <div id="leftPane" class="pull-left">
+                <div class="sidePaneWidget">
+                    <div class="header">SOCKET OPTIONS</div>
+                    <div id="socketDelayer"></div>
+                </div>
+                <div class="sidePaneWidget">
+                    <div class="header">Object Browser #1</div>
+                    <div id="tbDynaTree"></div>
+                </div>
+            </div>
+            <div id="middlePane" class="pull-left">
+                    <div id="modelEditorSVG"></div>
+            </div>
+            <div id="rightPane" class="pull-right">
+                <div class="sidePaneWidget">
+                    <div class="header">Object Browser #2</div>
+                    <div id="tbJSTree"></div>
+                </div>
+            </div>
+        </div>
+        <div id="footerBar">
+            <div class="navbar-inner">
+            </div>
         </div>
 	</body>
 </html>

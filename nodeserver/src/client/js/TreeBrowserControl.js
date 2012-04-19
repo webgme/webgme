@@ -1,4 +1,4 @@
-define(['/common/logmanager.js'], function( logManager ){
+define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], function( logManager, EventDispatcher, util ){
 
     var TreeBrowserControl = function(project, treeBrowser ){
 
@@ -154,6 +154,12 @@ define(['/common/logmanager.js'], function( logManager ){
             return false;
         };
 
+        //called when the user double-cliked on a node in the tree
+        this.treeBrowser.onNodeDoubleClicked = function( nodeId ) {
+            logger.debug( "Firing onNodeDoubleClicked with nodeId: " + nodeId );
+            self.project.setSelectedObjectId( nodeId );
+        };
+
         this.onRefresh2 = function( eventType, objectId ) {
             var nodeDescriptor = null, currentChildId = null, j = 0, self = this;
 
@@ -235,7 +241,7 @@ define(['/common/logmanager.js'], function( logManager ){
                             var currentChildren = updatedObject.children;
 
                             //computes the differences of two array
-                            var arrayMinus = function( arrayA, arrayB ) {
+                            /*var arrayMinus = function( arrayA, arrayB ) {
                                 var result = [];
                                 for ( var i = 0; i < arrayA.length; i++ ) {
                                     if ( arrayA[i] ) {
@@ -247,12 +253,12 @@ define(['/common/logmanager.js'], function( logManager ){
                                 }
 
                                 return result;
-                            };
+                            };*/
 
                             //the concrete child deletion is important only if the node is open in the tree
                             if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
                                 //figure out what are the deleted children's IDs
-                                var childrenDeleted = arrayMinus( oldChildren, currentChildren );
+                                var childrenDeleted = util.arrayMinus( oldChildren, currentChildren );
 
                                 //if all the children has been removed, it's already handled with the node's update itself
                                 /*if ( ( childrenDeleted.length === oldChildren.length ) && ( currentChildren.length === 0 ) ) {
@@ -300,7 +306,7 @@ define(['/common/logmanager.js'], function( logManager ){
                             //the concrete child addition is important only if the node is open in the tree
                             if ( this.treeBrowser.isExpanded(  this._nodes[ objectId ]["treeNode"] ) ) {
                                 //figure out what are the new children's IDs
-                                var childrenAdded = arrayMinus( currentChildren, oldChildren );
+                                var childrenAdded = util.arrayMinus( currentChildren, oldChildren );
 
                                 //handle added children
                                 for ( j = 0; j < childrenAdded.length; j++ ) {

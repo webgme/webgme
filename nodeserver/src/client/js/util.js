@@ -28,6 +28,20 @@ define( [], function(){
             return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
         },
 
+        arrayMinus : function( arrayA, arrayB ) {
+            var result = [];
+            for ( var i = 0; i < arrayA.length; i++ ) {
+                if ( arrayA[i] ) {
+                    var val = arrayA[i];
+                    if ( arrayB.indexOf( val ) === -1 ) {
+                        result.push( val );
+                    }
+                }
+            }
+
+            return result;
+        },
+
         /*
          * Loads a CSS file dinamically
          */
