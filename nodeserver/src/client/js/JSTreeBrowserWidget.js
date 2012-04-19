@@ -24,8 +24,11 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree
             return undefined;
         }
 
+        //clear container content
+        containerControl.html("");
+
         //generate unique id for control
-        var guid = "TreeBrowserWidgetjsTree";
+        var guid = util.guid();
 
         //generate control dynamically
         var treeViewE = $('<div/>', {
@@ -231,6 +234,11 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree
 
         //hook up node selection event handler to properly set focus on selected node
         treeViewE.bind("select_node.jstree", function (e, data) {
+
+            if (data.rslt.obj.hasClass("gme-loading") === true) {
+                return;
+            }
+
             //fisrt focus the node
             focusNode( data.rslt.obj );
 
@@ -238,12 +246,26 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree
             var currentSelection = { "nodeId" : data.rslt.obj.attr("nId"), "time" : new Date() };
 
             //compare with saved last selection info to see if edit node criteria is met or not
-            if ( ( lastSelection.nodeId === currentSelection.nodeId ) && ( currentSelection.time - lastSelection.time <= 500 ) ) {
-                //edit node
-                editNode( lastSelection.nodeId );
+            if ( lastSelection.nodeId === currentSelection.nodeId ) {
+                var delta = currentSelection.time - lastSelection.time;
 
-                //clear last selection
-                lastSelection = { "nodeId" :  null, "time" : null };
+                if ( delta <= 500 ) {
+                    //consider as double click and propagate node selection to upper contorol
+                    if ($.isFunction(self.onNodeDoubleClicked)) {
+                        logger.debug( "Node double-click: " + currentSelection.nodeId );
+                        self.onNodeDoubleClicked.call( self, currentSelection.nodeId );
+                    }
+                } else if ( (delta > 500) && (delta <= 1000) ) {
+                    //consider as two slow click --> edit node
+
+                    //edit node
+                    editNode( lastSelection.nodeId );
+
+                    //clear last selection
+                    lastSelection = { "nodeId" :  null, "time" : null };
+                } else {
+                    lastSelection["time"] = new Date();
+                }
             } else {
                 //save this selection as last
                 lastSelection = { "nodeId" :  currentSelection.nodeId, "time" : currentSelection.time };

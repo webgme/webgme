@@ -19,8 +19,11 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.dynatree', 'jquery.conte
             return;
         }
 
+        //clear container content
+        this.containerControl.html("");
+
         //generate unique id for control
-        this.guid = "TreeBrowserWidgetDynaTree";
+        this.guid = util.guid();
 
         //by default use visual animations to reflect changes in the tree
         this._animation = true;

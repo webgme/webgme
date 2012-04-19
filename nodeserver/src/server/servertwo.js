@@ -727,7 +727,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
         }
         else if(command.type === "paste"){
             var date = new Date();
-            pasteCommand(command,"p"+(Date.parse(date)+date.getMilliseconds()));
+            pasteCommand(command,"p_"+_cid+"_"+"_"+command.cid+"_");
         }
         else if(command.type === "save"){
             saveCommand(command);
@@ -944,14 +944,14 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
                     for(var i in object){
                         newobj[i] = object[i];
                     }
+                    newobj._id = prefix+newobj._id;
                     newobj.parent = parentid;
                     newobj.children = [];
                     for(var i in object.children){
-                        if(createdobjects[object.children[i]] === undefined){
+                        if(createdobjects[object.children[i]] === undefined && object.children[i] !== newobj._id){
                             newobj.children.push(prefix+object.children[i]);
                         }
                     }
-                    newobj._id = prefix+newobj._id;
 
                     _storage.set(newobj._id,newobj,function(error){
                         if(error){
