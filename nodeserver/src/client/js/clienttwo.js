@@ -138,7 +138,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                     cb();
                 });
 
-                _socket.emit('connectToBranch',"test");
+                _socket.emit('connectToBranch',"testtwo");
             });
             /*main*/
             _socket.emit('selectProject',"testproject");
