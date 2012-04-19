@@ -32,7 +32,7 @@ define(['/common/logmanager.js'], function( logManager ){
             self._nodes[ self._rootNodeId ] = { "treeNode": loadingRootTreeNode, "children" : [], "state" : self._stateLoading };
 
             //add the root to the query
-            _client.addPatterns(_territoryId,{"root":{children:1}} );
+            _client.addPatterns(_territoryId,{"root":{children:1,base:3}} );
         } , 1 );
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
@@ -57,7 +57,7 @@ define(['/common/logmanager.js'], function( logManager ){
                     if ( childNode ) {
                         //the node was present on the client side, render ist full data
                         childTreeNode = self.treeBrowser.createNode( parentNode, {  "id": currentChildId,
-                            "name": childNode.getAttribute("name"),
+                            "name": childNode.getAttribute("name")+":"+childNode.getAttribute("object"),
                             "hasChildren" : (childNode.getAttribute("children")).length > 0 ,
                             "class" :  ((childNode.getAttribute("children")).length > 0 ) ? "gme-model" : "gme-atom"
                         } );
@@ -86,7 +86,7 @@ define(['/common/logmanager.js'], function( logManager ){
 
             //need to expand the territory
             var newpattern = {};
-            newpattern[nodeId] = {children:1};
+            newpattern[nodeId] = {children:1,base:3};
             _client.addPatterns(_territoryId, newpattern );
         };
 
@@ -208,7 +208,7 @@ define(['/common/logmanager.js'], function( logManager ){
                             }
 
                             //create the node's descriptor for the treebrowser widget
-                            nodeDescriptor = {  "text" : updatedObject.getAttribute("name"),
+                            nodeDescriptor = {  "text" : updatedObject.getAttribute("name")+":"+updatedObject.getAttribute("object"),
                                 "hasChildren" : (updatedObject.getAttribute("children")).length > 0,
                                 "class" : objType };
 
@@ -225,7 +225,7 @@ define(['/common/logmanager.js'], function( logManager ){
 
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
-                                "text" : updatedObject.getAttribute("name"),
+                                "text" : updatedObject.getAttribute("name")+":"+updatedObject.getAttribute("object"),
                                 "hasChildren" : (updatedObject.getAttribute("children")).length > 0//,
                                 //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
                             };

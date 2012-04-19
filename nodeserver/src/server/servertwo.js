@@ -346,7 +346,7 @@ var BasicSocket = function(_iosocket,_librarian,_id){
         var project = _librarian.connectToBranch(_project,_branch);
         if(project){
             if(project.addClient(_iosocket,_id)){
-                _iosocket.emit('connectToBranchAck');
+                _iosocket.emit('connectToBranchAck',_id);
             }
             else{
                 _iosocket.emit('connectToBranchNack');
@@ -654,6 +654,7 @@ var Territory = function(_client,_id){
                             }
                             else{
                                 /*we should follow the rule still*/
+                                console.log("kecso "+rulename+" "+myrule[rulename]);
                                 if(object[rulename]){
                                     if(object[rulename] instanceof Array){
                                         /*we should call all 'children' recursively*/
@@ -673,7 +674,7 @@ var Territory = function(_client,_id){
                                         }
                                     }
                                     else{
-                                        process(object[rulename],rulename,myrule);
+                                        processing(object[rulename],rulename,myrule);
                                         --patterncounter;
                                     }
                                 }
@@ -696,6 +697,7 @@ var Territory = function(_client,_id){
                 });
             };
 
+            /*main*/
             for(var i in rule){
                 /*we should follow all the different rules*/
                 processing(basenodeid,i,rule);
@@ -726,7 +728,6 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             deleteCommand(command);
         }
         else if(command.type === "paste"){
-            var date = new Date();
             pasteCommand(command,"p_"+_cid+"_"+"_"+command.cid+"_");
         }
         else if(command.type === "save"){

@@ -11,13 +11,14 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
     var Client = function(_serverlocation){
 
         var _storage = new Storage(this);
-        var _queue = new CommandQueue(this);
+        var _queue = new CommandQueue(this,_storage);
         var _socket = undefined;
         var _login = undefined;
         var _password = undefined;
         var _territories ={};
         var _commandsequence = 0;
         var _self = this;
+        var _id = "";
 
         /*public interface*/
         /*message sending*/
@@ -96,6 +97,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                 console.log("createBranchNack");
             });
             _socket.on('connectToBranchAck',function(msg){
+                _id = msg;
                 console.log("selectBranchAck");
             });
             _socket.on('connectToBranchNack',function(msg){
@@ -138,7 +140,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                     cb();
                 });
 
-                _socket.emit('connectToBranch',"testtwo");
+                _socket.emit('connectToBranch',"basetest");
             });
             /*main*/
             _socket.emit('selectProject',"testproject");
@@ -147,7 +149,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
         /*storage like operations*/
         this.getNode = function(id){
             if(_storage.get(id) !== undefined && _storage.get(id) !== null){
-                return new ClientNode(this,_storage.get(id));
+                return new ClientNode(this,id,_storage);
             }
             return _storage.get(id);
         };
@@ -194,6 +196,14 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
             _queue.push(command);
         };
 
+        /*client side commander functions*/
+        this.transmitEvent = function(etype,eid){
+            logger.debug("Client.transmitEvent "+etype+","+eid);
+            shootEvent(etype,eid);
+        };
+        this.getClientId = function(){
+            return _id;
+        }
         /*private functions*/
         var shootEvent = function(etype,eid){
             for(var i in _territories){
@@ -208,14 +218,16 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
     it also controls the speed of message sending
     and it collects the command requests
      */
-    var CommandQueue = function(_client){
+    var CommandQueue = function(_client,_storage){
         var _queue = {};
         var _sent = {};
         var _timer = 10000;
         var _cansend = true;
+        var _commander = new LocalCommander(_client,_storage);
 
         /*public functions*/
         this.push = function(command){
+            _commander.handleCommand(command);
             if(command.type === "territory"){
                 /*these can go paralelly without cid*/
                 _client.sendMessage({commands:[command]});
@@ -245,7 +257,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                 return true;
             }
             return false;
-        }
+        };
         var sendNextClientMessage = function(){
             logger.debug("trying to send next command message to server (cansend="+_cansend+",sentisempty="+isSentEmpty());
             if(_cansend ===true || isSentEmpty()){
@@ -277,6 +289,67 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
         };
     };
     /*
+    this class will represent the clients'
+    commander which means it will try to do
+    the given command before the real answer arrives
+    TODO: it should also handle the reversing of the command
+    if for some reason it fails on the server side...
+     */
+    var LocalCommander = function(_client,_storage){
+        _clipboard = [];
+        /*public functions*/
+        this.handleCommand = function(command){
+            logger.debug("LocalCommander.handleCommand "+JSON.stringify(command));
+            if(command.type === "copy"){
+                copyCommand(command);
+            }
+            else if(command.type === "modify"){
+                modifyCommand(command);
+            }
+            else if(command.type === "delete"){
+                deleteCommand(command);
+            }
+            else if(command.type === "paste"){
+                pasteCommand(command);
+            }
+            else if(command.type === "save"){
+                saveCommand(command);
+            }
+        };
+
+        /*private functions*/
+        var copyCommand = function(copycommand){
+            _clipboard = copycommand.ids;
+        };
+        var modifyCommand = function(modifycommand){
+            var myobject = _storage.get(modifycommand.id);
+            if(myobject){
+                for(var i in modifycommand){
+                    if(i!=="id" && i!=="type" && i!=="cid"){
+                        myobject[i] = modifycommand[i];
+                    }
+                }
+                _storage.set(modifycommand.id,myobject);
+                _client.transmitEvent("modify",modifycommand.id);
+            }
+        };
+        var deleteCommand = function(deletecommand){
+            _storage.set(deletecommand.id,null);
+            _client.transmitEvent("delete",deletecommand.id);
+        };
+        var pasteCommand = function(pastecommand){
+            var prefix = "p_"+_client.getClientId()+"_"+pastecommand.cid+"_";
+            var parent = _storage.get(pastecommand.id);
+            if(parent){
+                for(var i in _clipboard){
+                    parent.children.push(prefix+_clipboard[i]);
+                }
+                _storage.set(pastecommand.id,parent);
+                _client.transmitEvent("modify",pastecommand.id);
+            }
+        };
+    }
+    /*
     basic storage class
     it is not used directly by the widgets
      */
@@ -300,28 +373,50 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
     but only through functions
     this way all modifications will be visible
      */
-    var ClientNode = function(_client,_data){
+    var ClientNode = function(_client,_id,_storage){
 
         /*public interface*/
         this.isDeleted = function(){
-            if(_data === null){
+            if(_storage.get(_id) === null){
                 return true;
             }
             return false;
         };
         this.getAttribute = function(name){
             logger.debug("ClientNode.getAttribute "+name);
-            if(_data[name]){
+            /*var object = _storage.get(_id);
+            if(object[name]){
                 var retval = JSON.stringify(_data[name]);
                 return JSON.parse(retval);
             }
-            return _data[name];
+            else if(object["base"])
+            return _data[name];*/
+            return recursiveGetAttribute(name,_id);
 
         };
         this.setAttribute = function(name,value){
             logger.debug("ClientNode.setAttribute "+name+","+value);
-            /*TODO*/
-            _client.modifyNode(_data._id,name,value);
+            _client.modifyNode(_id,name,value);
+        };
+
+        /*private functions*/
+        var recursiveGetAttribute = function(name,id){
+            var object = _storage.get(id);
+            if(object){
+                if(object[name]){
+                    var retval = JSON.stringify(object[name]);
+                    return JSON.parse(retval);
+                }
+                else if(object.base){
+                    return recursiveGetAttribute(name,object.base);
+                }
+                else{
+                    return null;
+                }
+            }
+            else{
+                return undefined;
+            }
         };
     };
 
