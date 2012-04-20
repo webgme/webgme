@@ -179,6 +179,9 @@ var Librarian = function(_server){
     };
     this.getActiveBranches = function(project){
     	var branches = {};
+        if(project === undefined || project === null || project === ""){
+            return branches;
+        }
         for(var i in _projects){
             var info = _projects[i].getProjectInfo();
             if(info.project === project){
@@ -250,10 +253,29 @@ var Project = function(_project,_branch,_basedir){
         return {project:_project,branch:_branch};
     };
     this.addClient = function(socket,id){
-        var client = new Client(socket,id,this);
-        _clients[id] = client;
+        logger.debug("Project.addClient "+id);
+        if(_clients[id] === undefined){
+            var client = new Client(socket,id,this);
+            _clients[id] = client;
+        }
+
+        var clientids = "";
+        for(var i in _clients){
+            clientids += i +" : ";
+        }
+        console.log("kecso 0"+clientids);
+
         return true;
     };
+    this.deleteClient = function(id){
+        logger.debug("Project.deleteClient "+id);
+        delete _clients[id];
+        var clientids = "";
+        for(var i in _clients){
+            clientids += i +" : ";
+        }
+        console.log("kecso 1"+clientids);
+    }
 
     /*message handling*/
     this.onClientMessage = function(msg){
@@ -287,6 +309,10 @@ var BasicSocket = function(_iosocket,_librarian,_id){
     /*basic socket messages*/
     _iosocket.on('disconnect',function(msg){
         logger.debug("BasicSocket.on.disconnect "+_id);
+        var project = _librarian.connectToBranch(_project,_branch);
+        if(project){
+            project.deleteClient(_id);
+        }
     });
     _iosocket.on('authenticate',function(msg){
         logger.debug("BasicSocket.on.authenticate "+_id);
@@ -415,7 +441,7 @@ var Client = function(_iosocket,_id,_project){
 
     /*public functions*/
     this.onUpdateTerritory = function(added,removed){
-        logger.debug("Client.onUpdateTerritory "+JSON.stringify(added)+","+JSON.stringify(removed));
+        logger.debug("Client.onUpdateTerritory "/*+JSON.stringify(added)+","+JSON.stringify(removed)*/);
         var msg = [];
         for(var i in added){
             if(_objects[i] === undefined){
