@@ -18,13 +18,23 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
         var _territories ={};
         var _commandsequence = 0;
         var _self = this;
-        var _id = "";
+        var _project = undefined;
+        var _branch = undefined;
+        var _connected = false;
+        var _first = true;
+        var _reconnecting = false;
+        var _fakereconnect = true;
 
         /*public interface*/
         /*message sending*/
         this.sendMessage = function(msg){
-            logger.debug("clientMessage "+JSON.stringify(msg));
-            _socket.emit('clientMessage',msg);
+            if(_connected){
+                logger.debug("clientMessage "+JSON.stringify(msg));
+                _socket.emit('clientMessage',msg);
+            }
+            else{
+                logger.debug("clientMessage not sent as server is not reachable");
+            }
         };
 
         /*project selection and upper level functions*/
@@ -34,12 +44,45 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
             /*main*/
             if(_socket === undefined){
                 _socket = io.connect(/*_serverlocation*/);
+
+                /*socket handling functions*/
+
             }
 
             /*socket communication*/
             _socket.on('connect', function(msg){
-                cb();
+                console.log("kecso conn +"+_socket.socket.sessionid);
+                if(_project !== undefined && _branch !== undefined && _reconnecting === false){
+                    _reconnecting = true;
+                    /*this is a recconection, so we have to act accordingly*/
+                    reconnectToServer(function(error){
+                        console.log("kecso conn -"+_socket.socket.sessionid);
+                        if(error === true){
+                            console.log("recconection failure :(");
+                        }
+                        else{
+                            _connected = true;
+                            /*we should send to the server our territories again!!!*/
+                            resendAllTerritories();
+                            _reconnecting = false;
+                            _fakereconnect = true;
+                        }
+
+                    });
+                }
+
+                if(_first){
+                    _first = false;
+                    cb();
+                }
             });
+            _socket.on('error',function(msg){
+                console.log("kecso error "+JSON.stringify(msg));
+            });
+            _socket.on('reconnecting',function(msg){
+                _connected = false;
+                console.log("kecso reconn "+JSON.stringify(msg));
+            })
 
             _socket.on('serverMessage',function(msg){
                 logger.debug("serverMessage "+JSON.stringify(msg));
@@ -97,7 +140,6 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                 console.log("createBranchNack");
             });
             _socket.on('connectToBranchAck',function(msg){
-                _id = msg;
                 console.log("selectBranchAck");
             });
             _socket.on('connectToBranchNack',function(msg){
@@ -136,11 +178,18 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
         };
         this.shortcut = function(cb){
             _socket.on('selectProjectAck',function(msg){
-                _socket.on('connectToBranchAck',function(){
-                    cb();
-                });
+                if(_project === undefined && _branch === undefined){
+                    _socket.on('connectToBranchAck',function(){
+                        if(_project === undefined && _branch === undefined){
+                            _project = "testproject";
+                            _branch = "basetest";
+                            _connected = true;
+                            cb();
+                        }
+                    });
 
-                _socket.emit('connectToBranch',"basetest");
+                    _socket.emit('connectToBranch',"basetest");
+                }
             });
             /*main*/
             _socket.emit('selectProject',"testproject");
@@ -202,12 +251,36 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
             shootEvent(etype,eid);
         };
         this.getClientId = function(){
-            return _id;
+            return _socket.socket.sessionid;
         }
         /*private functions*/
         var shootEvent = function(etype,eid){
             for(var i in _territories){
                 _territories[i].onEvent(etype,eid);
+            }
+        };
+        var reconnectToServer = function(cb){
+            _socket.on('selectProjectAck',function(msg){
+                _socket.emit('connectToBranch',_branch);
+            });
+            _socket.on('connectToBranchAck',function(msg){
+                cb();
+            });
+            _socket.on('authenticateNack',function(error){
+                cb(true);
+            });
+            _socket.on('selectProjectNack',function(error){
+                cb(true);
+            });
+
+            /*main*/
+            _self.authenticate(_login,_password,function(){
+                _socket.emit('selectProject',_project);
+            });
+        };
+        var resendAllTerritories = function(){
+            for(var i in _territories){
+                _territories[i].reSend();
             }
         }
     };
@@ -464,6 +537,9 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
         };
         this.onEvent = function(etype,eid){
             _ui.onEvent(etype,eid);
+        };
+        this.reSend = function(){
+            _client.updateTerritory(_tid,_patterns);
         };
     };
 

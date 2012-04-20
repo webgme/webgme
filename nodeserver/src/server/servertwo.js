@@ -143,8 +143,8 @@ var Server = function(_port){
     };
 
     io.sockets.on('connection', function(socket){
-        logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.handshake));
-        _connectedsockets.push(new BasicSocket(socket,_librarian,socket.handshake.query.t));
+        logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
+        _connectedsockets.push(new BasicSocket(socket,_librarian,socket.id));
     });
 };
 /*
@@ -267,9 +267,9 @@ var Project = function(_project,_branch,_basedir){
         if(_territories[tid] === undefined || _territories[tid] === null){
             var territory = new Territory(_clients[cid],tid);
             territory.attachStorage(new ReadStorage(_storage));
-            _territories[tid] = territory;
+            _territories[cid+tid] = territory;
         }
-        _territories[tid].updatePatterns(newpatterns);
+        _territories[cid+tid].updatePatterns(newpatterns);
     };
 };
 /*
@@ -284,75 +284,98 @@ var BasicSocket = function(_iosocket,_librarian,_id){
     var _branch        = undefined;
     var _authenticated = false;
     /*basic socket messages*/
+    _iosocket.on('disconnect',function(msg){
+        logger.debug("BasicSocket.on.disconnect "+_id);
+    });
     _iosocket.on('authenticate',function(msg){
+        logger.debug("BasicSocket.on.authenticate "+_id);
         _login = msg.login;
         _pwd = msg.pwd;
         authenticate();
         if(_authenticated){
+            logger.debug("BasicSocket.emit.AuthenticateAck "+_id);
             _iosocket.emit('authenticateAck');
         }
         else{
+            logger.debug("BasicSocket.emit.AuthenticateNack "+_id);
             _iosocket.emit('authenticateNack');
         }
     });
     _iosocket.on('listProjects',function(msg){
+        logger.debug("BasicSocket.on.listProjects "+_id);
     	var projects = _librarian.getAvailableProjects();
+        logger.debug("BasicSocket.emit.listProjectsAck "+_id);
     	_iosocket.emit('listProjectsAck',projects);
     });
     _iosocket.on('createProject',function(msg){
+        logger.debug("BasicSocket.on.createProject "+_id);
     	if(_librarian.createProject(msg)){
     		_project = msg;
     		_branch = undefined;
+            logger.debug("BasicSocket.emit.createProjectAck "+_id);
     		_iosocket.emit('createProjectAck');
     	}
     	else{
     		_project = undefined;
     		_branch = undefined;
+            logger.debug("BasicSocket.emit.createProjectNack "+_id);
     		_iosocket.emit('createProjectNack');
     	}
     });
     _iosocket.on('selectProject',function(msg){
+        logger.debug("BasicSocket.on.selectProject "+_id);
     	var projects = _librarian.getAvailableProjects();
     	if(projects.indexOf(msg) !== -1){
     		_project = msg;
     		_branch = undefined;
+            logger.debug("BasicSocket.emit.selectProjectAck "+_id);
     		_iosocket.emit('selectProjectAck');
     	}
     	else{
     		_project = undefined;
     		_branch = undefined;
+            logger.debug("BasicSocket.emit.selectProjectNack "+_id);
     		_iosocket.emit('selectProjectNack');
     	}
     });
     _iosocket.on('listBranches',function(msg){
+        logger.debug("BasicSocket.on.listBranches "+_id);
     	var branches = {};
         if(_project){
             branches = _librarian.getActiveBranches(_project);
         }
+        logger.debug("BasicSocket.emit.listBranchesAck "+_id);
     	_iosocket.emit('listBranchesAck',branches);
     });
     _iosocket.on('createBranch',function(msg){
+        logger.debug("BasicSocket.on.createBranch "+_id);
     	if(_librarian.createBranch(_project,msg)){
     		_branch = msg;
+            logger.debug("BasicSocket.emit.createBranchAck "+_id);
     		_iosocket.emit('createBranchAck');
     	}
     	else{
     		_branch = undefined;
+            logger.debug("BasicSocket.emit.createBranchNack "+_id);
     		_iosocket.emit('createBranchNack');
     	}
     });
     _iosocket.on('connectToBranch',function(msg){
+        logger.debug("BasicSocket.on.connectToBranch "+_id);
         _branch = msg;
         var project = _librarian.connectToBranch(_project,_branch);
         if(project){
             if(project.addClient(_iosocket,_id)){
+                logger.debug("BasicSocket.emit.connectToBranchAck "+_id);
                 _iosocket.emit('connectToBranchAck',_id);
             }
             else{
+                logger.debug("BasicSocket.emit.connectToBranchNack "+_id);
                 _iosocket.emit('connectToBranchNack');
             }
         }
         else{
+            logger.debug("BasicSocket.emit.connectToBranchNack "+_id);
             _iosocket.emit('connectToBranchNack');
         }
     });
@@ -654,7 +677,6 @@ var Territory = function(_client,_id){
                             }
                             else{
                                 /*we should follow the rule still*/
-                                console.log("kecso "+rulename+" "+myrule[rulename]);
                                 if(object[rulename]){
                                     if(object[rulename] instanceof Array){
                                         /*we should call all 'children' recursively*/
@@ -817,7 +839,7 @@ var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
             /*we have to send the delete events to affected clients*/
             for(var i in _clients){
                 msg = [];
-                if(modifiedparent && _clients[i].interestedInObject(modifiedparent._id)){
+                if(modifiedparent !== undefined && _clients[i].interestedInObject(modifiedparent._id)){
                     msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
                 }
                 for(var j in deletedids){
@@ -1121,4 +1143,4 @@ var ReadStorage = function(_storage){
 
 
 /*MAIN*/
-var server = new Server(8081);
+var server = new Server(80);
