@@ -14,38 +14,33 @@ public class Table<RecordType extends Table.Record> {
 	protected static class Record {
 	};
 
-	public static abstract class Collator<ValueType> {
-		public abstract class Observer {
-			public abstract void added(ValueType oldValue);
-			public abstract void removed(ValueType oldValue);
-		};
-	}
-
 	public abstract class Value<ValueType> {
 		public abstract ValueType get(RecordType record);
 
 		public abstract class Observer {
-			public abstract void modified(RecordType record, ValueType oldValue, ValueType newValue);
+			public abstract void modified(RecordType record,
+					ValueType oldValue, ValueType newValue);
 		};
-		
+
 		protected List<Observer> observers = new ArrayList<Observer>();
-		
+
 		public void registerObserver(Observer observer) {
-			assert(!observers.contains(observer));
+			assert (!observers.contains(observer));
 			observers.add(observer);
 		}
-		
+
 		public void unregisterObserver(Observer observer) {
-			assert(observers.contains(observer));
+			assert (observers.contains(observer));
 			observers.remove(observer);
 		}
-		
+
 		protected boolean hasChanged(ValueType oldValue, ValueType newValue) {
 			return oldValue != newValue
 					&& (oldValue == null || !oldValue.equals(newValue));
 		};
-	
-		protected void notifyObservers(RecordType record, ValueType oldValue, ValueType newValue) {
+
+		protected void notifyObservers(RecordType record, ValueType oldValue,
+				ValueType newValue) {
 			assert (newValue == get(record));
 
 			if (hasChanged(oldValue, newValue)) {
@@ -55,7 +50,7 @@ public class Table<RecordType extends Table.Record> {
 			}
 		}
 	};
-	
+
 	public abstract class Field<ValueType> extends Value<ValueType> {
 		protected abstract void rawSet(RecordType record, ValueType value);
 
@@ -66,36 +61,89 @@ public class Table<RecordType extends Table.Record> {
 		}
 	}
 
-	// TODO: add notification from target table
-	public class Import<TargetType extends Record, ValueType> extends Value<ValueType> {
+	public abstract class Collection<TargetType extends Table.Record> {
+		protected abstract List<TargetType> getList(RecordType record);
 
-		protected Value<TargetType> pointer;
-		protected Table<TargetType>.Value<ValueType> value;
+		protected Table<TargetType>.Value<RecordType> pointer;
 
-		public Import(Value<TargetType> pointer, Table<TargetType>.Value<ValueType> value) {
+		public void registerPointer(Table<TargetType>.Value<RecordType> pointer) {
+			assert (this.pointer == null && pointer != null);
 			this.pointer = pointer;
-			this.value = value;
-			
-			pointer.registerObserver(pointer.new Observer() {
-				public void modified(RecordType record, TargetType oldTarget,
-						TargetType newTarget) {
-					
-					ValueType oldValue = Import.this.value.get(oldTarget);
-					ValueType newValue = Import.this.value.get(newTarget);
 
-					Import.this.notifyObservers(record, oldValue, newValue);
+			pointer.registerObserver(pointer.new Observer() {
+				public void modified(TargetType record, RecordType oldValue,
+						RecordType newValue) {
+					
+					List<TargetType> list;
+					
+					if( oldValue != null ) {
+						list = getList(oldValue);
+						assert(list.contains(record));
+						list.remove(record);
+					}
+
+					if( newValue != null ) {
+						list = getList(newValue);
+						assert(! list.contains(record));
+						list.add(record);
+					}
 				}
 			});
 		}
-		
-		public ValueType get(RecordType record) {
-			TargetType target = pointer.get(record);
 
-			if(target == null)
-				return null;
-			
-			return value.get(target);
+		public Collection() {
 		}
-	}
-	
+
+		public Collection(Table<TargetType>.Value<RecordType> pointer) {
+			this.pointer = pointer;
+		}
+
+		protected class ExportValue<ValueType> extends
+				Table<TargetType>.Value<ValueType> {
+
+			protected Value<ValueType> value;
+
+			public ExportValue(Value<ValueType> value) {
+				this.value = value;
+
+				pointer.registerObserver(pointer.new Observer() {
+					public void modified(TargetType record,
+							RecordType oldTarget, RecordType newTarget) {
+
+						ValueType oldValue = ExportValue.this.value
+								.get(oldTarget);
+						ValueType newValue = ExportValue.this.value
+								.get(newTarget);
+
+						notifyObservers(record, oldValue, newValue);
+					}
+				});
+
+				value.registerObserver(value.new Observer() {
+					public void modified(RecordType record, ValueType oldValue,
+							ValueType newValue) {
+
+						List<TargetType> list = getList(record);
+
+						for (TargetType target : list)
+							notifyObservers(target, oldValue, newValue);
+					}
+				});
+			}
+
+			public ValueType get(TargetType target) {
+				RecordType record = pointer.get(target);
+
+				if (record == null)
+					return null;
+
+				return value.get(record);
+			}
+		}
+
+		public <ValueType> Table<TargetType>.Value<ValueType> export(
+				Value<ValueType> value) {
+			return new ExportValue<ValueType>(value);
+		}
+	};
 };

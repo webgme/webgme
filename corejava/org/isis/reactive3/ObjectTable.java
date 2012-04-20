@@ -1,11 +1,15 @@
 package org.isis.reactive3;
 
+import java.util.*;
+
 public class ObjectTable extends Table<ObjectTable.Record> {
 
 	protected static class Record extends Table.Record {
 		int value;
 
 		Record parent;
+		List<Record> children = new ArrayList<Record>();
+		
 		Record basetype;
 		
 		boolean loadChildren;
@@ -30,6 +34,12 @@ public class ObjectTable extends Table<ObjectTable.Record> {
 		}
 	};
 
+	public Collection<Record> children = new Collection<Record>(parent) {
+	    protected List<Record> getList(Record record) {
+		return record.children;
+	    }
+	};
+	
 	public Field<Boolean> loadChildren = new Field<Boolean>() {
 		public Boolean get(Record record) {
 			return record.loadChildren;
@@ -39,7 +49,5 @@ public class ObjectTable extends Table<ObjectTable.Record> {
 		}
 	};
 	
-	public Value<Boolean> descendantRefCount;
-	
-	public Value<Boolean> parentLoadChildren = new Import<Record, Boolean>(parent, loadChildren);
+	public Value<Boolean> parentLoadChildren = children.export(loadChildren);
 }
