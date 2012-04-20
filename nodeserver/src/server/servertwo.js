@@ -74,6 +74,7 @@ var numberToDword = function(number){
 /*COMMON INCLUDES*/
 var FS = require('fs');
 var LOGMANAGER = require('./../common/logmanager.js');
+var commonUtil = require('./../common/CommonUtil.js');
 
 /*COMMON VARIABLES*/
 var STORAGELATENCY = 1;
@@ -1121,4 +1122,4 @@ var ReadStorage = function(_storage){
 
 
 /*MAIN*/
-var server = new Server(8081);
+var server = new Server( commonUtil.ServerPort );
