@@ -7,11 +7,10 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
 
         var project = myProject;
 
+        var territoryId = project.reserveTerritory( this );
+
         var _stateLoading = 0;
         var _stateLoaded = 1;
-
-        var query = project.createQuery();
-        query.addUI(this);
 
         //local container for accounting the currently opened node list
         //its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
@@ -20,30 +19,37 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
         //create the tree using our custom widget
         var modelEditor = myModelEditor;
 
-        //save "this" for later
-        var self = this;
-
+        //local variable holding info about the currently opened node
         var currentNodeInfo = { "id": null, "children" : [] };
 
         project.addEventListener( project.events.SELECTEDOBJECT_CHANGED, function( project, nodeId ) {
+            //delete everything from modeleditor
             modelEditor.clear();
 
+            //clean up local hashmap
+            _nodes = {};
+
             if ( currentNodeInfo.id ) {
-                query.deletePattern( currentNodeInfo.id );
+                project.removePatterns( territoryId, { "nodeid": currentNodeInfo.id  } );
             }
 
             currentNodeInfo = { "id": null, "children" : [] };
 
-            query.addPattern( nodeId, {self:true, children:true} );
+            var newpattern = {};
+            newpattern[nodeId] = { "children": 1 };
+            project.addPatterns( territoryId, newpattern );
 
             var selectedNode = project.getNode( nodeId );
 
             if ( selectedNode ) {
-                modelEditor.setTitle( selectedNode.name );
+                modelEditor.setTitle( selectedNode.getAttribute("name") );
 
-                for( var i = 0; i < selectedNode.children.length; i++ ) {
+                //get the children IDs of the parent
+                var childrenIDs = selectedNode.getAttribute("children");
 
-                    var currentChildId = selectedNode.children[i];
+                for( var i = 0; i <childrenIDs.length; i++ ) {
+
+                    var currentChildId = childrenIDs[i];
 
                     var childNode = project.getNode( currentChildId );
 
@@ -59,9 +65,9 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
                         "title": "Loading..."  };
 
                     if ( childNode ) {
-                        childDescriptor["posX"] = childNode.attr.posX;
-                        childDescriptor["posY"] = childNode.attr.posY;
-                        childDescriptor["title"] =  childNode.name;
+                        childDescriptor["posX"] = childNode.getAttribute("attr").posX;
+                        childDescriptor["posY"] = childNode.getAttribute("attr").posY;
+                        childDescriptor["title"] =  childNode.getAttribute("name");
 
                         //store the node's info in the local hashmap
                         _nodes[ currentChildId ]["state"] = _stateLoaded;
@@ -72,32 +78,12 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
 
                 //save the given nodeId as the currently handled one
                 currentNodeInfo.id = nodeId;
-                currentNodeInfo.children = selectedNode.children;
+                currentNodeInfo.children = childrenIDs;
             }
         } );
 
-        /*
-         * Called from its query when any object in its territory has been modified
-         */
-        this.onRefresh = function( updatedata ) {
-            var i;
-            //updatedata contains:
-            //ilist for inserted nodes
-            //mlist for updated nodes
-            //dlist for deleted ndoes
-
-            //since it will be overwritten to different individual events, let's do this here
-            for ( i = 0; i < updatedata.ilist.length; i++ ) {
-                self.onRefresh2( "insert", updatedata.ilist[i] );
-            }
-
-            for ( i = 0; i < updatedata.mlist.length; i++ ) {
-                self.onRefresh2( "update", updatedata.mlist[i] );
-            }
-        };
-
-        this.onRefresh2 = function( eventType, objectId ) {
-            var nodeDescriptor = null;
+        var refresh = function( eventType, objectId ) {
+            var nodeDescriptor = null, j;
 
             //HANDLE INSERT
             //object got inserted into the territory
@@ -126,32 +112,8 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
             if ( eventType === "update" ) {
                 //handle deleted children
 
-                //check if this control shows any interest for this object
-                if ( _nodes[ objectId ] ) {
-                    logger.debug( "Update object with id: " + objectId );
-                    //get the node from the project
-                    var updatedObject = project.getNode( objectId );
-
-                    if ( updatedObject ) {
-
-                        //create the node's descriptor for the treebrowser widget
-                        nodeDescriptor = {   "id" : objectId,
-                            "posX": updatedObject.attr.posX,
-                            "posY": updatedObject.attr.posY,
-                            "title": updatedObject.name };
-
-                        //check what state the object is in according to the local hashmap
-                        if ( _nodes[ objectId ].state === _stateLoading ) {
-                            _nodes[ objectId ].state = _stateLoaded;
-                        }
-
-                        //update the node's representation in the tree
-                        modelEditor.updateObject( _nodes[ objectId ]["modelObject"], nodeDescriptor  );
-                    } else {
-                        //we got an update about an object that we cannot get from the project
-                        //something is very very bad here...
-                    }
-                } else if ( objectId === currentNodeInfo.id ) {
+                //check if the updated object is the opened node
+                if ( objectId === currentNodeInfo.id ) {
                     //the updated object is the parent whose children are drawn here
                     //the only interest about the parent are the new and deleted children
                     var parentNode = project.getNode( objectId );
@@ -159,12 +121,12 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
                     var oldChildren = currentNodeInfo.children;
                     var currentChildren = [];
                     if ( parentNode ) {
-                        currentChildren = parentNode.children;
+                        currentChildren = parentNode.getAttribute("children");
                     }
 
                     //Handle children deletion
                     var childrenDeleted = util.arrayMinus( oldChildren, currentChildren );
-                    var j = 0;
+
 
                     for ( j = 0; j < childrenDeleted.length; j++ ) {
                         var deletedChildId = childrenDeleted[j];
@@ -191,9 +153,9 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
                             "title": "Loading..."  };
 
                         if ( childNode ) {
-                            childDescriptor["posX"] = childNode.attr.posX;
-                            childDescriptor["posY"] = childNode.attr.posY;
-                            childDescriptor["title"] =  childNode.name;
+                            childDescriptor["posX"] = childNode.getAttribute("attr").posX;
+                            childDescriptor["posY"] = childNode.getAttribute("attr").posY;
+                            childDescriptor["title"] =  childNode.getAttribute("name");
 
                             //store the node's info in the local hashmap
                             _nodes[ addedChildId ]["state"] = _stateLoaded;
@@ -205,11 +167,53 @@ define(['/common/logmanager.js', '/common/EventDispatcher.js', './util.js'], fun
                     //finally store the actual children info for the parent
                     currentNodeInfo.children = currentChildren;
 
+                } else if ( _nodes[ objectId ] ) {
+                    //this control shows an interest for this object
+                    logger.debug( "Update object with id: " + objectId );
+                    //get the node from the project
+                    var updatedObject = project.getNode( objectId );
+
+                    if ( updatedObject ) {
+
+                        //create the node's descriptor for the widget
+                        nodeDescriptor = {   "id" : objectId,
+                            "posX": updatedObject.getAttribute("attr").posX,
+                            "posY": updatedObject.getAttribute("attr").posY,
+                            "title": updatedObject.getAttribute("name") };
+
+                        //check what state the object is in according to the local hashmap
+                        if ( _nodes[ objectId ].state === _stateLoading ) {
+                            _nodes[ objectId ].state = _stateLoaded;
+                        }
+
+                        //update the node's representation in the tree
+                        modelEditor.updateObject( _nodes[ objectId ]["modelObject"], nodeDescriptor  );
+                    } else {
+                        //we got an update about an object that we cannot get from the project
+                        //something is very very bad here...
+                    }
                 } else {
                     //so far this control does not know anything about this node...
                 }
             }
             //ENDOF : HANDLE UPDATE
+        };
+
+        // PUBLIC METHODS
+        this.onEvent = function(etype,eid){
+            switch(etype){
+                case "load":
+                    refresh( "insert", eid );
+                    break;
+                case "modify":
+                    refresh( "update", eid );
+                    break;
+                case "create":
+                    refresh( "insert", eid );
+                    break;
+                case "delete":
+                    refresh( "update", eid );
+            }
         };
     };
 

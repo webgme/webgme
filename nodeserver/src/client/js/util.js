@@ -7,27 +7,8 @@ define( [], function(){
     //return utility functions
     return {
         /*
-         * Determines if the app runs in debug or release mode
+         * Computes the differenc between two arrays
          */
-        DEBUG : false,
-
-        /*
-         * Port number of socket.io server
-         */
-        ServerPort : 8081,
-
-        /*
-         * Generated a GUID
-         */
-        guid: function() {
-            var S4 = function() {
-                return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
-            };
-
-            //return GUID
-            return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
-        },
-
         arrayMinus : function( arrayA, arrayB ) {
             var result = [];
             for ( var i = 0; i < arrayA.length; i++ ) {

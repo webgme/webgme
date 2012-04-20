@@ -1,20 +1,14 @@
 /*
  * WIDGET ModelEditor based on SVG
  */
-define( [ './util.js', '/common/logmanager.js', 'raphael.amd' ], function( util, logManager ) {
+define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'raphael.amd' ], function( util, logManager, commonUtil ) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     //util.loadCSS( 'css/ModelEditorSVGWidget.css' );
 
     var ModelEditorSVGWidget = function (containerId) {
-        //save this for later use
-        var self = this;
-
         //get logger instance for this component
         var logger = logManager.create("ModelEditorSVGWidget");
-
-        //by default use visual animation to reflect changes in the editor
-        var animation = true;
 
         //save parentcontrol
         var containerControl = $("#" + containerId);
@@ -24,8 +18,11 @@ define( [ './util.js', '/common/logmanager.js', 'raphael.amd' ], function( util,
             return undefined;
         }
 
+        //clear container content
+        containerControl.html("");
+
         //generate unique id for control
-        var guid = util.guid();
+        var guid = commonUtil.guid();
 
         //generate control dynamically
         var modelEditorE = $('<div/>', {
@@ -38,7 +35,7 @@ define( [ './util.js', '/common/logmanager.js', 'raphael.amd' ], function( util,
         //create Raphael paper
         var paper = Raphael( modelEditorE.attr("id"), 2000, 1500 );
 
-        var paperCanvas = $(paper.canvas);
+        //var paperCanvas = $(paper.canvas);
 
         var titleText = null;
 
@@ -56,7 +53,7 @@ define( [ './util.js', '/common/logmanager.js', 'raphael.amd' ], function( util,
             titleText.attr("font-size", 16 );
             titleText.attr("font-weight", "bold" );
             titleText.attr("fill", "#ff0000" );
-        }
+        };
 
         this.createObject = function( objDescriptor ) {
             logger.debug( "Creating object with parameters: " + JSON.stringify( objDescriptor ) );
@@ -109,8 +106,6 @@ define( [ './util.js', '/common/logmanager.js', 'raphael.amd' ], function( util,
             modelObject.forEach( function(obj) {
                 obj.remove();
             }, null );
-
-            delete modelObject;
         };
     };
 

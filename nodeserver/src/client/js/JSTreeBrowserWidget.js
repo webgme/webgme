@@ -1,7 +1,7 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree' ], function( util, logManager ) {
+define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery.hotkeys', 'jquery.jstree' ], function( util, logManager, commonUtil ) {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
     util.loadCSS( 'css/JSTreeBrowserWidget.css' );
@@ -28,7 +28,7 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.hotkeys', 'jquery.jstree
         containerControl.html("");
 
         //generate unique id for control
-        var guid = util.guid();
+        var guid = commonUtil.guid();
 
         //generate control dynamically
         var treeViewE = $('<div/>', {

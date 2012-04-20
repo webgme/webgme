@@ -1,6 +1,4 @@
-define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
-    LogManager.setLogLevel( LogManager.logLevels.ALL );
-    LogManager.useColors( true );
+define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket.io.js'],function(LogManager, EventDispatcher){
     var logger = LogManager.create("Client");
     /*
     this is the main class
@@ -9,6 +7,12 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
     and it serves the widgets - of course not directly ;)
      */
     var Client = function(_serverlocation){
+
+        $.extend(this, new EventDispatcher());
+
+        this.events = {
+            "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
+        };
 
         var _storage = new Storage(this);
         var _queue = new CommandQueue(this,_storage);
@@ -43,7 +47,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
 
             /*main*/
             if(_socket === undefined){
-                _socket = io.connect(/*_serverlocation*/);
+                _socket = io.connect( _serverlocation );
 
                 /*socket handling functions*/
 
@@ -188,7 +192,7 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
                         }
                     });
 
-                    _socket.emit('connectToBranch',"basetest");
+                _socket.emit('connectToBranch',"testtwo");
                 }
             });
             /*main*/
@@ -206,10 +210,23 @@ define(['/common/logmanager.js','/socket.io/socket.io.js'],function(LogManager){
             _queue.push({cid:"c"+(_commandsequence++),type:"delete",id:id});
         };
 
+        /* Maintain currently selected node id */
+        var selectedObjectId = null;
+        this.setSelectedObjectId = function ( objectId ) {
+            if ( objectId !== selectedObjectId ) {
+                selectedObjectId = objectId;
+
+                _self.dispatchEvent( _self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
+            }
+        };
+
         /*territory functions*/
         /*used by the ui*/
-        this.reserveTerritory = function(tid,ui){
-            _territories[tid] = new Territory(_self,tid,ui);
+        var _territoryCounter = 0;
+        this.reserveTerritory = function(ui){
+            _territoryCounter += 1;
+            _territories[_territoryCounter] = new Territory(_self,_territoryCounter,ui);
+            return _territoryCounter;
         };
         this.addPatterns = function(tid,patterns){
             _territories[tid].addPatterns(patterns);
