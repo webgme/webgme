@@ -28,7 +28,7 @@ define( [], function(){
         "INFO" : "36",
         "WARNING" : "33",
         "ERROR" : "31"
-    }
+    };
 
     var currentLogLevel = logLevels.ERROR;
 
