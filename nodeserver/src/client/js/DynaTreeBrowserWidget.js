@@ -1,7 +1,7 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define( [ './util.js', '/common/logmanager.js', 'jquery.dynatree', 'jquery.contextMenu' ], function( util, logManager ) {
+define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery.dynatree', 'jquery.contextMenu' ], function( util, logManager, commonUtil ) {
 
     //load its own CSS file (css/DynaTreeBrowserWidget.css)
     util.loadCSS( 'css/DynaTreeBrowserWidget.css' );
@@ -23,7 +23,7 @@ define( [ './util.js', '/common/logmanager.js', 'jquery.dynatree', 'jquery.conte
         this.containerControl.html("");
 
         //generate unique id for control
-        this.guid = util.guid();
+        this.guid = commonUtil.guid();
 
         //by default use visual animations to reflect changes in the tree
         this._animation = true;
