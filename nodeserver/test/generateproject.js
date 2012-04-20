@@ -17,7 +17,7 @@ for ( var i = 0; i < itemNum; i++ ) {
         var parentEntityId = entityIds[ rndParentPos ];
 
         //set its parent
-        myObject.parentId = parentEntityId;
+        myObject.parent = parentEntityId;
 
         //add it to its parent's children list
         storage[ parentEntityId ].children.push(myId);
