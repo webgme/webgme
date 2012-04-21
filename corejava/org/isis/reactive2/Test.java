@@ -102,21 +102,21 @@ public class Test {
 		PulledBag<Node, Query> nodeQueries = new StoredInverse<Node, Query>(
 				Node.queries, queryNode);
 
-		PushedValue<Query, String> queryNodeName = new PushedImportValue<Query, String, Node>(
-				nodeQueries, nodeName);
+		PushedValue<Query, String> queryNodeName = new ExportValue<Query, String, Node>(
+				nodeName, nodeQueries);
 
-		PulledValue<Query, Node> queryNodeParent = new PulledImportValue<Query, Node, Node>(queryNode, nodeQueries, nodeParent);
+		PulledValue<Query, Node> queryNodeParent = new ImportValue<Query, Node, Node>(
+				queryNode, nodeQueries, nodeParent);
 		
-		PushedBag<Node, String> nodeChildrenNames = new PushedImportBag<Node, String, Node>(
-				nodeParent, nodeName);
+		PushedBag<Node, String> nodeChildrenNames = new ExportBag1<Node, String, Node>(
+				nodeName, nodeParent);
 		
-		PushedBag<Query, Node> queryNodeChildren = new PushedImportBag<Query, Node, Node>(
-				queryNode, nodeChildren);
+		PushedBag<Query, Node> queryNodeChildren = new ExportBag2<Query, Node, Node>(
+				nodeChildren, nodeQueries);
 
 		StoredValue<Query, Client> queryClient = new StoredValue<Query, Client>(
 				Query.client);
 		
 		StoredCounter<Client> clientQueries = new StoredCounter<Client>(Client.queries);
-
 	};
 }

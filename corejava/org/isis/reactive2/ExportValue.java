@@ -8,19 +8,20 @@ package org.isis.reactive2;
 
 import java.util.*;
 
-public class PushedImportValue<RecordType extends Record, ValueType, TargetType extends Record>
+public class ExportValue<RecordType extends Record, ValueType, TargetType extends Record>
 		extends PushedValue<RecordType, ValueType> {
 
-	protected PulledBag<TargetType, RecordType> inverse;
 	protected PulledValue<TargetType, ValueType> field;
+	protected PulledBag<TargetType, RecordType> inverse;
 
-	public PushedImportValue(PulledBag<TargetType, RecordType> inverse,
-			PulledValue<TargetType, ValueType> field) {
+	public ExportValue(PulledValue<TargetType, ValueType> field,
+			PulledBag<TargetType, RecordType> inverse) {
 
 		this.field = field;
 		this.inverse = inverse;
 
 		field.registerObserver(new ValueObserver());
+		inverse.registerObserver(new InverseObserver());
 	}
 
 	protected class ValueObserver implements
@@ -37,16 +38,16 @@ public class PushedImportValue<RecordType extends Record, ValueType, TargetType 
 	};
 
 	protected class InverseObserver implements
-			PushedBag.Observer<RecordType, TargetType> {
-		public void added(RecordType record, TargetType target) {
-			if( target != null ) {
+			PushedBag.Observer<TargetType, RecordType> {
+		public void added(TargetType target, RecordType record) {
+			if( record != null ) {
 				ValueType value = field.get(target); 
 				signalModified(record, null, value);
 			}
 		}
 
-		public void removed(RecordType record, TargetType target) {
-			if( target != null ) {
+		public void removed(TargetType target, RecordType record) {
+			if( record != null ) {
 				ValueType value = field.get(target); 
 				signalModified(record, value, null);
 			}

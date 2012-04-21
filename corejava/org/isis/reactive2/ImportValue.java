@@ -8,14 +8,14 @@ package org.isis.reactive2;
 
 import java.util.*;
 
-public class PulledImportValue<RecordType extends Record, ValueType, TargetType extends Record>
+public class ImportValue<RecordType extends Record, ValueType, TargetType extends Record>
 		extends PulledValue<RecordType, ValueType> {
 
 	protected PulledValue<RecordType, TargetType> pointer;
 	protected PulledBag<TargetType, RecordType> inverse;
 	protected PulledValue<TargetType, ValueType> field;
 
-	public PulledImportValue(PulledValue<RecordType, TargetType> pointer,
+	public ImportValue(PulledValue<RecordType, TargetType> pointer,
 			PulledBag<TargetType, RecordType> inverse,
 			PulledValue<TargetType, ValueType> field) {
 
