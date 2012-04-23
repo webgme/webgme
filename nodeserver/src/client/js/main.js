@@ -1,3 +1,5 @@
+"use strict";
+
 // set the baseUrl for module lookup to '/lib' folder
 require.config({
     baseUrl: "/lib"
@@ -7,15 +9,15 @@ require.config({
 require([   'order!jquery.min',
             'order!jquery-ui.min',
             'domReady',
-            'order!./js/clienttwo.js',
-            'order!./js/TreeBrowserControl.js',
-            'order!./js/JSTreeBrowserWidget.js',
-            'order!./js/delayctrl.js',
-            'order!./js/DynaTreeBrowserWidget.js',
-            '/common/logmanager.js',
-            '/common/CommonUtil.js',
-            './js/ModelEditorControl.js',
-            './js/ModelEditorSVGWidget.js' ], function( jquery,
+            'order!./../js/clienttwo.js',
+            'order!./../js/TreeBrowserControl.js',
+            'order!./../js/JSTreeBrowserWidget.js',
+            'order!./../js/delayctrl.js',
+            'order!./../js/DynaTreeBrowserWidget.js',
+            './../../common/LogManager.js',
+            './../../common/CommonUtil.js',
+            './../js/ModelEditorControl.js',
+            './../js/ModelEditorSVGWidget.js' ], function (jquery,
                                                         jqueryUI,
                                                         domReady,
                                                         Client,
@@ -26,40 +28,42 @@ require([   'order!jquery.min',
                                                         logManager,
                                                         commonUtil,
                                                         ModelEditorControl,
-                                                        ModelEditorSVGWidget ) {
+                                                        ModelEditorSVGWidget) {
     domReady(function () {
 
         //if ( commonUtil.DEBUG === true ) {
-            logManager.setLogLevel( logManager.logLevels.ALL );
+        logManager.setLogLevel(logManager.logLevels.ALL);
         //}
 
-        var client = undefined;
-        var tDynaTree = undefined;
-        var tJSTree = undefined;
+        var client,
+            tDynaTree,
+            tJSTree,
+            modelEditor,
+            doConnect,
+            lastContainerWidth = 0,
+            resizeMiddlePane;
         //var delayer = undefined;
-        var modelEditor = undefined;
 
-        var doConnect = function(){
+        doConnect = function () {
 
             //figure out the server to connect to
-            var serverLocation = undefined;
+            var serverLocation;
 
             //by default serverlocation is the same server the page loaded from
-            if ( commonUtil.ServerIP === "self" )
-            {
+            if (commonUtil.ServerIP === "self") {
                 serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.ServerPort;
             } else {
                 serverLocation = 'http://' + commonUtil.ServerIP + ':' + commonUtil.ServerPort;
             }
 
-            client = new Client( serverLocation );
-            client.connect(function(){
-                client.makeconnect(function(){
-                    tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget( "tbDynaTree" ) );
+            client = new Client(serverLocation);
+            client.connect(function () {
+                client.makeconnect(function () {
+                    tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
                     //delayer = new DelayControl(client.socket, document.getElementById("socketDelayer"));
-                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget( "tbJSTree" ) );
+                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
-                    modelEditor = new ModelEditorControl(client, new ModelEditorSVGWidget( "modelEditorSVG" ));
+                    modelEditor = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
                 });
             });
         };
@@ -68,19 +72,19 @@ require([   'order!jquery.min',
         doConnect();
 
         /*
-         * Compute the size of the middle pane window
+         * Compute the size of the middle pane window based on current browser size
          */
-        var lastContainerWidth = 0;
-        var resizeMiddlePane = function() {
+        lastContainerWidth = 0;
+        resizeMiddlePane = function () {
             var cW = $("#contentContainer").width();
-            if ( cW != lastContainerWidth ) {
-                $("#middlePane").outerWidth( cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth() );
+            if (cW !== lastContainerWidth) {
+                $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
                 lastContainerWidth = cW;
             }
         };
 
         //hook up windows resize event
-        $(window).resize(function(){
+        $(window).resize(function () {
             resizeMiddlePane();
         });
 

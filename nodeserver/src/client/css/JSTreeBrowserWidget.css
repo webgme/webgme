@@ -87,3 +87,8 @@ li.gme-loading > a .jstree-icon
 {
     background: url("../img/progress.gif") 0 0;
 }
+
+.jstree-closed > ins,
+.jstree-open > ins {
+    cursor: pointer;
+}
