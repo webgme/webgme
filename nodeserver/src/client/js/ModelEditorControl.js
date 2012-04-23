@@ -22,6 +22,12 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         //local variable holding info about the currently opened node
         currentNodeInfo = { "id": null, "children" : [] };
 
+        myModelEditor.onObjectPositionChanged = function (nodeId, position) {
+            var selectedNode = project.getNode(nodeId);
+            logger.debug("Object position changed for id:'" + nodeId + "', new pos:[" + position.posX + ", " + position.posY + "]");
+            selectedNode.setAttribute("attr", { "posX": position.posX, "posY": position.posY });
+        };
+
         project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
             var newPattern = {},
                 selectedNode,
