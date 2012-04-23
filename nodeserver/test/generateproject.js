@@ -8,7 +8,7 @@ var rootChildren = [];
 for ( var i = 0; i < itemNum; i++ ) {
     //generate obejct
     var myId = "id" + i;
-    var myObject = { _id: myId, name: "Object" + i, children: [], parent : "root", attr : { "posX" : Math.random() * 1000, "posY": Math.random() * 1000 }, base:"simplemodel" };
+    var myObject = { _id: myId, name: "Object" + i, children: [], parent : "root", attr : { "posX" :  Math.round(Math.random() * 1000), "posY":  Math.round(Math.random() * 1000) }, base:"simplemodel" };
 
     if ( i > topLevel  ) {
         //pick a parent for it randomly
