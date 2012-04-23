@@ -116,7 +116,10 @@ public class Test {
 
 		StoredValue<Query, Client> queryClient = new StoredValue<Query, Client>(
 				Query.client);
-		
+
+		PushedBag<Node, Client> nodeQueriesClient = new ExportBag1<Node, Client, Query>(
+				queryClient, queryNode);
+
 		StoredCounter<Client> clientQueries = new StoredCounter<Client>(Client.queries);
 	};
 }
