@@ -1,23 +1,35 @@
+"use strict";
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery.hotkeys', 'jquery.jstree' ], function( util, logManager, commonUtil ) {
+define(['./util.js', './../../common/LogManager.js', './../../common/CommonUtil.js', 'jquery.hotkeys', 'jquery.jstree'], function (util, logManager, commonUtil) {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
-    util.loadCSS( 'css/JSTreeBrowserWidget.css' );
+    util.loadCSS('css/JSTreeBrowserWidget.css');
 
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
-        var self = this;
+        var self = this,
+            logger,
+            animation = true, //by default use visual animation to reflect changes in the tree
+            containerControl,
+            guid,
+            treeViewE,
+            getSelectedNodeIds,
+            copyNode,
+            pasteNode,
+            deleteNode,
+            editNode,
+            customContextMenu,
+            animateNode,
+            focusNode,
+            lastSelection;
 
         //get logger instance for this component
-        var logger = logManager.create("JSTreeBrowserWidget");
+        logger = logManager.create("JSTreeBrowserWidget");
 
-        //by default use visual animation to reflect changes in the tree
-        var animation = true;
-
-        //save parentcontrol
-        var containerControl = $("#" + containerId);
+        //save parent control
+        containerControl = $("#" + containerId);
 
         if (containerControl.length === 0) {
             logger.error("JSTreeBrowserWidget's container control with id:'" + containerId + "' could not be found");
@@ -28,36 +40,36 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         containerControl.html("");
 
         //generate unique id for control
-        var guid = commonUtil.guid();
+        guid = commonUtil.guid();
 
         //generate control dynamically
-        var treeViewE = $('<div/>', {
-            id:"jstree_" + guid
+        treeViewE = $('<div/>', {
+            "id": "jstree_" + guid
         });
 
         //add control to parent
         containerControl.append(treeViewE);
 
         //returns the ID of each selected node in the tree
-        var getSelectedNodeIds = function() {
+        getSelectedNodeIds = function () {
             var selectedIds = [];
 
-            treeViewE.jstree("get_selected").each( function() {
+            treeViewE.jstree("get_selected").each(function () {
                 //only interested in nodes that have been fully loaded and displayed
-                if ( $(this).hasClass( "gme-loading" ) !== true ) {
-                    selectedIds.push( $(this).attr("nId") );
+                if ($(this).hasClass("gme-loading") !== true) {
+                    selectedIds.push($(this).attr("nId"));
                 }
-            } );
+            });
 
             return selectedIds;
         };
 
 
         //Called when the ContexMenu's 'Copy' action is selected for the node
-        var copyNode = function (nodeId) {
+        copyNode = function () {
             var selectedIds = getSelectedNodeIds();
-            if ( selectedIds.length > 0 ) {
-                logger.debug( "Copy " + selectedIds );
+            if (selectedIds.length > 0) {
+                logger.debug("Copy " + selectedIds);
                 if ($.isFunction(self.onNodeCopy)) {
                     self.onNodeCopy.call(self, selectedIds);
                 }
@@ -65,17 +77,17 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         };
 
         //Called when the ContexMenu's 'Paste' action is selected for the node
-        var pasteNode = function (nodeId) {
-            logger.debug( "Paste " + nodeId );
+        pasteNode = function (nodeId) {
+            logger.debug("Paste " + nodeId);
             if ($.isFunction(self.onNodePaste)) {
                 self.onNodePaste.call(self, nodeId);
             }
         };
 
         //Called when the ContexMenu's 'Delete' action is selected for the node
-        var deleteNode = function (nodeId) {
+        deleteNode = function () {
             var selectedIds = getSelectedNodeIds();
-            if ( selectedIds.length > 0 ) {
+            if (selectedIds.length > 0) {
                 logger.debug("Delete " + selectedIds);
                 if ($.isFunction(self.onNodeDelete)) {
                     self.onNodeDelete.call(self, selectedIds);
@@ -84,14 +96,14 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         };
 
         //Called when the ContexMenu's 'Rename' action is selected for the node
-        var editNode = function (nodeId) {
+        editNode = function (nodeId) {
             logger.debug("Edit " + nodeId);
             treeViewE.jstree("rename", null);
         };
 
         //Called when the user right-clicks on a node and
         //the customized context menu has to be displayed
-        var customContextMenu = function (node) {
+        customContextMenu = function (node) {
             //the object will hold the available context menu actions
             var items = {};
 
@@ -100,35 +112,35 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
 
                 // The default set of available items :  Rename, Copy, Paste, Delete
                 items = {
-                    "renameItem":{ // The "rename" menu item
-                        "label":"Rename",
-                        "action":function (obj) {
+                    "renameItem": { // The "rename" menu item
+                        "label": "Rename",
+                        "action": function (obj) {
                             editNode(obj.attr("nId"));
                         },
-                        "icon":"img/edit.png"
+                        "icon": "img/edit.png"
                     },
-                    "copyItem":{ // The "delete" menu item
-                        "label":"Copy",
-                        "separator_before":true,
-                        "action":function (obj) {
+                    "copyItem": { // The "delete" menu item
+                        "label": "Copy",
+                        "separator_before": true,
+                        "action": function (obj) {
                             copyNode(obj.attr("nId"));
                         },
-                        "icon":"img/copy.png"
+                        "icon": "img/copy.png"
                     },
-                    "pasteItem":{ // The "delete" menu item
-                        "label":"Paste",
-                        "action":function (obj) {
+                    "pasteItem": { // The "delete" menu item
+                        "label": "Paste",
+                        "action": function (obj) {
                             pasteNode(obj.attr("nId"));
                         },
-                        "icon":"img/paste.png"
+                        "icon": "img/paste.png"
                     },
-                    "deleteItem":{ // The "delete" menu item
-                        "label":"Delete",
-                        "separator_before":true,
-                        "action":function (obj) {
+                    "deleteItem": { // The "delete" menu item
+                        "label": "Delete",
+                        "separator_before": true,
+                        "action": function (obj) {
                             deleteNode(obj.attr("nId"));
                         },
-                        "icon":"img/delete.png"
+                        "icon": "img/delete.png"
                     }
                 };
             }
@@ -140,7 +152,7 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         /*
          * Applies a visual animation to the specfied node to get user's attention
          */
-        var animateNode = function (node) {
+        animateNode = function (node) {
             //if animation is enabled for the widget
             if (animation === true) {
                 var nodePartToAnimate = $(node[0].children[1]);
@@ -152,10 +164,10 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         /*
          * set's focus on the given node's 'a' tag (if any)
          */
-        var focusNode = function(node) {
+        focusNode = function (node) {
             //find the 'a' tag in it and set focus on that
             var aTag = node[0].children[1];
-            if ( aTag ) {
+            if (aTag) {
                 aTag.focus();
             }
         };
@@ -163,16 +175,16 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         /*
          * local variale for the last selected node (node double click for edit node handler helper)
          */
-        var lastSelection = { "nodeId" :  null, "time" : null };
+        lastSelection = { "nodeId" :  null, "time" : null };
 
-        //contruct the tree itself using jsTree
+        //construct the tree itself using jsTree
         treeViewE.jstree({
-            "plugins":[ "themes", "html_data", "contextmenu", "ui", "crrm" ],
-            "open_parents":false,
-            "contextmenu":{
-                "select_node":"true",
-                "show_at_node":"true",
-                "items":function (node) {
+            "plugins": ["themes", "html_data", "contextmenu", "ui", "crrm"],
+            "open_parents": false,
+            "contextmenu": {
+                "select_node": "true",
+                "show_at_node": "true",
+                "items": function (node) {
                     return customContextMenu(node);
                 }
             },
@@ -211,60 +223,61 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         //hook up close open eventhandler
         treeViewE.bind("rename.jstree", function (e, data) {
             //get the node which is about to open
-            var renamedNode = data.rslt.obj;
-            var oldName = data.rslt.old_name;
-            var newName = data.rslt.new_name;
+            var renamedNode = data.rslt.obj,
+                oldName = data.rslt.old_name,
+                newName = data.rslt.new_name,
+                changeAllowed = true;
 
             if (oldName !== newName) {
-                var changeAllowed = true;
-
                 if ($.isFunction(self.onNodeTitleChanged)) {
                     changeAllowed = self.onNodeTitleChanged.call(self, renamedNode.attr("nId"), oldName, newName);
                 }
 
                 if (changeAllowed !== true) {
-                    self.updateNode(renamedNode, { "text":oldName });
+                    self.updateNode(renamedNode, { "text": oldName });
                     logger.debug("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not allowed");
                 }
             }
 
             //set focus back to the renamed node
-            focusNode( renamedNode );
+            focusNode(renamedNode);
         });
 
         //hook up node selection event handler to properly set focus on selected node
         treeViewE.bind("select_node.jstree", function (e, data) {
+            var delta,
+                currentSelection;
 
             if (data.rslt.obj.hasClass("gme-loading") === true) {
                 return;
             }
 
             //fisrt focus the node
-            focusNode( data.rslt.obj );
+            focusNode(data.rslt.obj);
 
             //save current selection
-            var currentSelection = { "nodeId" : data.rslt.obj.attr("nId"), "time" : new Date() };
+            currentSelection = { "nodeId" : data.rslt.obj.attr("nId"), "time" : new Date() };
 
             //compare with saved last selection info to see if edit node criteria is met or not
-            if ( lastSelection.nodeId === currentSelection.nodeId ) {
-                var delta = currentSelection.time - lastSelection.time;
+            if (lastSelection.nodeId === currentSelection.nodeId) {
+                delta = currentSelection.time - lastSelection.time;
 
-                if ( delta <= 500 ) {
+                if (delta <= 500) {
                     //consider as double click and propagate node selection to upper contorol
                     if ($.isFunction(self.onNodeDoubleClicked)) {
-                        logger.debug( "Node double-click: " + currentSelection.nodeId );
-                        self.onNodeDoubleClicked.call( self, currentSelection.nodeId );
+                        logger.debug("Node double-click: " + currentSelection.nodeId);
+                        self.onNodeDoubleClicked.call(self, currentSelection.nodeId);
                     }
-                } else if ( (delta > 500) && (delta <= 1000) ) {
+                } else if ((delta > 500) && (delta <= 1000)) {
                     //consider as two slow click --> edit node
 
                     //edit node
-                    editNode( lastSelection.nodeId );
+                    editNode(lastSelection.nodeId);
 
                     //clear last selection
                     lastSelection = { "nodeId" :  null, "time" : null };
                 } else {
-                    lastSelection["time"] = new Date();
+                    lastSelection.time = new Date();
                 }
             } else {
                 //save this selection as last
@@ -274,110 +287,110 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         });
 
         //hook up node selection event handler to properly set focus on last selected node (if any)
-        treeViewE.bind("deselect_node.jstree", function (e, data) {
+        treeViewE.bind("deselect_node.jstree", function () {
             //find the a tag in is and set focus on that
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
-            if ( o && o.length > 0 ) {
-                focusNode( o );
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
+            if (o && o.length > 0) {
+                focusNode(o);
             }
         });
 
 
         //hook up keyboard handlers
         //CTRL+C -- copy selected node(s)
-        treeViewE.bind('keydown', 'Ctrl+c', function() {
-            var o = jQuery.jstree._reference(treeViewE)._get_node();
+        treeViewE.bind('keydown', 'Ctrl+c', function () {
+            var o = $.jstree._reference(treeViewE)._get_node();
             //we can paste if the selected node is not in 'Loading...' state
-            if ( $(o).hasClass( "gme-loading" ) !== true ) {
-                copyNode( o.attr("nId") );
+            if ($(o).hasClass("gme-loading") !== true) {
+                copyNode(o.attr("nId"));
             }
             return false;
-        } );
+        });
 
         //CTRL+V -- paste clipboard under selected node
-        treeViewE.bind('keydown', 'Ctrl+v', function() {
-            var o = jQuery.jstree._reference(treeViewE)._get_node();
+        treeViewE.bind('keydown', 'Ctrl+v', function () {
+            var o = $.jstree._reference(treeViewE)._get_node();
             //we can paste if the selected node is not in 'Loading...' state
-            if ( $(o).hasClass( "gme-loading" ) !== true ) {
-                pasteNode( o.attr("nId") );
+            if ($(o).hasClass("gme-loading") !== true) {
+                pasteNode(o.attr("nId"));
             }
             return false;
-        } );
+        });
 
         //DELETE -- delete selected node(s)
-        treeViewE.bind('keydown', 'del', function() {
-            var o = jQuery.jstree._reference(treeViewE)._get_node();
+        treeViewE.bind('keydown', 'del', function () {
+            var o = $.jstree._reference(treeViewE)._get_node();
             //we can paste if the selected node is not in 'Loading...' state
-            if ( $(o).hasClass( "gme-loading" ) !== true ) {
-                deleteNode( o.attr("nId") );
+            if ($(o).hasClass("gme-loading") !== true) {
+                deleteNode(o.attr("nId"));
             }
             return false;
-        } );
+        });
 
         //F2 -- rename selected node
-        treeViewE.bind('keydown', 'f2', function() {
-            var o = jQuery.jstree._reference(treeViewE)._get_node();
+        treeViewE.bind('keydown', 'f2', function () {
+            var o = $.jstree._reference(treeViewE)._get_node();
             //we can paste if the selected node is not in 'Loading...' state
-            if ( $(o).hasClass( "gme-loading" ) !== true ) {
-                editNode( o.attr("nId") );
+            if ($(o).hasClass("gme-loading") !== true) {
+                editNode(o.attr("nId"));
             }
             return false;
-        } );
+        });
 
         //UP -- move selection to previous node
-        treeViewE.bind('keydown', 'up', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
-            treeViewE.jstree("get_selected").each( function() {
-                jQuery.jstree._reference(treeViewE).deselect_node(this);
-            } );
-            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_prev(o));
+        treeViewE.bind('keydown', 'up', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
+            treeViewE.jstree("get_selected").each(function () {
+                $.jstree._reference(treeViewE).deselect_node(this);
+            });
+            $.jstree._reference(treeViewE).select_node($.jstree._reference(treeViewE)._get_prev(o));
             return false;
-        } );
+        });
 
         //SHIFT+UP -- move to previous node and add it to the selection range
-        treeViewE.bind('keydown', 'shift+up', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
-            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_prev(o));
+        treeViewE.bind('keydown', 'shift+up', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
+            $.jstree._reference(treeViewE).select_node($.jstree._reference(treeViewE)._get_prev(o));
             return false;
-        } );
+        });
 
         //DOWN -- move to next node
-        treeViewE.bind('keydown', 'down', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+        treeViewE.bind('keydown', 'down', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
             //deselect all selected
-            treeViewE.jstree("get_selected").each( function() {
-                jQuery.jstree._reference(treeViewE).deselect_node(this);
-            } );
-            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_next(o));
+            treeViewE.jstree("get_selected").each(function () {
+                $.jstree._reference(treeViewE).deselect_node(this);
+            });
+            $.jstree._reference(treeViewE).select_node($.jstree._reference(treeViewE)._get_next(o));
             return false;
-        } );
+        });
 
         //SHIFT+DOWN -- move to next node and add it to the selection range
-        treeViewE.bind('keydown', 'shift+down', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
-            jQuery.jstree._reference(treeViewE).select_node(jQuery.jstree._reference(treeViewE)._get_next(o));
+        treeViewE.bind('keydown', 'shift+down', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
+            $.jstree._reference(treeViewE).select_node($.jstree._reference(treeViewE)._get_next(o));
             return false;
-        } );
+        });
 
         //LEFT -- close node if it was open
-        treeViewE.bind('keydown', 'left', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+        treeViewE.bind('keydown', 'left', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
             //open if closed or go to next
-            if( o.hasClass("jstree-open") ) {
-                jQuery.jstree._reference(treeViewE).close_node(o);
+            if (o.hasClass("jstree-open")) {
+                $.jstree._reference(treeViewE).close_node(o);
             }
             return false;
-        } );
+        });
 
         //RIGHT -- open node if it was closed
-        treeViewE.bind('keydown', 'right', function() {
-            var o = jQuery.jstree._reference(treeViewE).data.ui.last_selected;
+        treeViewE.bind('keydown', 'right', function () {
+            var o = $.jstree._reference(treeViewE).data.ui.last_selected;
             //close if opened or go to prev
-            if( o.hasClass("jstree-closed") ) {
-                jQuery.jstree._reference(treeViewE).open_node(o);
+            if (o.hasClass("jstree-closed")) {
+                $.jstree._reference(treeViewE).open_node(o);
             }
             return false;
-        } );
+        });
 
         /*
          * PUBLIC METHODS
@@ -387,6 +400,8 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
          * Creates a node in the tree with the given parameters
          */
         this.createNode = function (parentNode, objDescriptor) {
+            var newNode,
+                newNodeData;
 
             //check if the parentNode is null or not
             //when null, the new node belongs to the root
@@ -395,30 +410,28 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
                 parentNode = -1;
             }
 
-            var newNodeData = {
+            newNodeData = {
                 "data": { title : objDescriptor.name },
-                "attr":{ "nId":objDescriptor.id/*,
-                    "class":objDescriptor.objectType || "gme-folder"*/
-                }
+                "attr": { "nId": objDescriptor.id }
             };
 
-            if ( objDescriptor.icon ) {
-                newNodeData[ "data" ]["icon"] = objDescriptor.icon;
+            if (objDescriptor.icon) {
+                newNodeData.data.icon = objDescriptor.icon;
             }
 
-            if ( objDescriptor["class"] ) {
-                newNodeData[ "attr" ]["class"] =  objDescriptor["class"];
+            if (objDescriptor["class"]) {
+                newNodeData.attr["class"] = objDescriptor["class"];
             }
 
             if (objDescriptor.hasChildren === true) {
-                newNodeData[ "state" ] = "closed";
+                newNodeData.state = "closed";
             }
 
             //using core module
-            var newNode = treeViewE.jstree("create_node", parentNode, "last", newNodeData, false);
+            newNode = treeViewE.jstree("create_node", parentNode, "last", newNodeData, false);
 
             if (objDescriptor.icon) {
-                $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
+                $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")");
                 $(newNode[0].children[1].children[0]).css("background-position", "0 0");
             }
 
@@ -436,17 +449,20 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
          * Updates a node in the tree with the given parameters
          */
         this.updateNode = function (node, objDescriptor) {
-            //check if valid node
-            if (!node)
-                return;
+            var currentIcon,
+                currentlyHasChildren,
+                currentText,
+                nodeDataChanged = false; //by default there is nothing to update
 
-            //by default we say there is nothing to update
-            var nodeDataChanged = false;
+            //check if valid node
+            if (!node) {
+                return;
+            }
 
             //set new text value (if any)
             if (objDescriptor.text) {
 
-                var currentText = treeViewE.jstree("get_text", node);
+                currentText = treeViewE.jstree("get_text", node);
 
                 if (currentText !== objDescriptor.text) {
                     treeViewE.jstree("set_text", node, objDescriptor.text);
@@ -458,9 +474,9 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
 
             if (objDescriptor.hasChildren === true || objDescriptor.hasChildren === false) {
 
-                //set new childrend value (if any)
+                //set new children value (if any)
                 //check if parent has any children
-                var currentlyHasChildren = !treeViewE.jstree("is_leaf", node);
+                currentlyHasChildren = !treeViewE.jstree("is_leaf", node);
 
                 if (objDescriptor.hasChildren !== currentlyHasChildren) {
 
@@ -496,12 +512,12 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
             }
 
             if (objDescriptor.icon) {
-                var currentIcon = $(node[0].children[1].children[0]).css("background-image");
+                currentIcon = $(node[0].children[1].children[0]).css("background-image");
 
-                if ( currentIcon ) {
-                    if ( currentIcon !== "url(" + objDescriptor.icon + ")" ) {
+                if (currentIcon) {
+                    if (currentIcon !== "url(" + objDescriptor.icon + ")") {
 
-                        $(node[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")" );
+                        $(node[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")");
                         $(node[0].children[1].children[0]).css("background-position", "0 0");
 
                         //mark that change happened
@@ -510,8 +526,8 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
                 }
             } else {
                 // icon set directly to null means 'remove'
-                if ( objDescriptor.icon === null ) {
-                    $(node[0].children[1].children[0]).css("background-image", "" );
+                if (objDescriptor.icon === null) {
+                    $(node[0].children[1].children[0]).css("background-image", "");
                     $(node[0].children[1].children[0]).css("background-position", "");
 
                     //mark that change happened
@@ -535,11 +551,12 @@ define( [ './util.js', '/common/logmanager.js', '/common/CommonUtil.js', 'jquery
         this.deleteNode = function (node) {
             //if no valid node, return
             //otherwise delete node
-            if (!node)
+            if (!node) {
                 return;
+            }
 
             //delete the given node
-            jQuery.jstree._reference(treeViewE).delete_node(node);
+            $.jstree._reference(treeViewE).delete_node(node);
 
             //log
             logger.debug("Node removed: " + node.attr("nId"));

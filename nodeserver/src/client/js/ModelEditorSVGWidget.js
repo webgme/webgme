@@ -1,9 +1,8 @@
+"use strict";
 /*
  * WIDGET ModelEditor based on SVG
  */
 define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil.js', 'raphael.amd' ], function (util, logManager, commonUtil) {
-    "use strict";
-
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     //util.loadCSS( 'css/ModelEditorSVGWidget.css' );
 
@@ -57,7 +56,10 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         };
 
         this.createObject = function (objDescriptor) {
-            var st, rect, text;
+            var st,
+                rect,
+                text;
+
             logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
 
             st = paper.set();
