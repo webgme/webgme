@@ -94,7 +94,7 @@ var Server = function(_port){
     var http = require('http').createServer(httpGet);
     var io = require('socket.io').listen(http);
     io.set('log level', 1); // reduce logging
-    var _librarian = new Librarian();
+    var _librarian = new TestLibrarian();
     var _server = this;
 
 
@@ -145,7 +145,7 @@ var Server = function(_port){
 
     io.sockets.on('connection', function(socket){
         logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
-        _connectedsockets.push(new BasicSocket(socket,_librarian,socket.id));
+        _connectedsockets.push(new TestBasicSocket(socket,_librarian,socket.id));
     });
 };
 /*
@@ -154,7 +154,7 @@ projects and all the branches on the server
 it can connect a BasicSocket to a Project
 which finally made the BasicSocket to a Client...
  */
-var Librarian = function(_server){
+var Librarian = function(){
     var _basedir = "../projects";
     var _projects = [];
     /*public functions*/
@@ -240,13 +240,183 @@ var Librarian = function(_server){
     };
 };
 /*
+similar to the Librarian but it operates on the mongoDB
+ */
+var MongoLibrarian = function(){
+    var _info = undefined;
+    var _users = undefined;
+    var _projects = [];
+
+    /*mongo related stuffa*/
+    var _HOST = 'localhost';
+    var _PORT = 27017;
+    var _MONGO = require('mongodb');
+    var _DB = new _MONGO.Db('Librarian', new _MONGO.Server(_HOST, _PORT, {},{}));
+
+    /*public functions*/
+    this.authenticateUser = function(login,pwd,cb){
+        if(_users){
+            _users.findOne({_id:login},function(err,result){
+                if(err){
+                    cb(err);
+                }
+                else{
+                    if(result.pwd === pwd){
+                        cb(null);
+                    }
+                    else{
+                        cb(2);
+                    }
+                }
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.getAvailableProjects = function(cb){
+        if(_info){
+            _info.findOne({_id:"aProjects"},function(err,result){
+                if(err){
+                    cb(err);
+                }
+                else{
+                    cb(null,result.aProjects);
+                }
+            });
+        }
+        else{
+            return cb(1,null);
+        }
+    };
+    this.createProject = function(project,cb){
+        /*TODO*/
+    };
+    this.getActiveBranches = function(project,cb){
+        if(_info){
+            _info.findOne({_id:project},function(err,result){
+                if(err){
+                    cb(err);
+                }
+                else{
+                    var branches = {};
+                    for(var i=0;i<result.branches.length;i++){
+                        branches[result.branches[i]] = false;
+                    }
+                    for(var i=0;i<_projects.length;i++){
+                        var info = _projects[i].getProjectInfo();
+                        if(info){
+                            if(info.project === project){
+                                branches[info.branch] = true;
+                            }
+                        }
+                    }
+                    cb(null,branches);
+                }
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.createBranch = function(project,branch,cb){
+        /*TODO*/
+    };
+    this.connectToBranch = function(project,branch,cb){
+        for(var i=0;i<_projects.length;i++){
+            var info = _projects[i].getProjectInfo();
+            if(info && info.project === project && info.branch === branch){
+                cb(null,_projects[i]);
+                return;
+            }
+        }
+        this.getActiveBranches(project,function(err,branches){
+            if(err){
+                cb(err);
+                return;
+            }
+            else{
+                for(var i in branches){
+                    if(i === branch){
+                        if(branches[i] === true){
+                            cb(1);
+                            return;
+                        }
+                        else{
+                            var newproject = new Project(project,branch);
+                            _projects.push(newproject);
+                            cb(null,newproject);
+                            return;
+                        }
+                    }
+                }
+                cb(2);
+                return;
+            }
+        });
+    };
+    this.disconnect = function(){
+        /*TODO*/
+    };
+
+    /*private functions*/
+
+    /*main*/
+    _DB.open(function(){
+        _DB.collection('info',function(err,result){
+            if(err){
+                console.log("ejnye-bejnye info nelkul nehez lesz!!!");
+            }
+            else{
+                _info = result;
+            }
+        });
+        _DB.collection('users',function(err,result){
+            if(err){
+                console.log("ejnye-bejnye users nelkul is nehez lesz!!!");
+            }
+            else{
+                _users = result;
+            }
+        });
+    });
+};
+/*
+this librarian has a simplified interface
+it can only stores the open projects
+and can give them back to the connectToBranch request
+ */
+var TestLibrarian = function(){
+    var _projects = [];
+
+    /*public functions*/
+    this.connectToBranch = function(project,branch,cb){
+        for(var i=0;i<_projects.length;i++){
+            var info = _projects[i].getProjectInfo();
+            if(info && info.project === project && info.branch === branch){
+                cb(null,_projects[i]);
+            }
+        }
+        var newproject = new Project(project,branch);
+        _projects.push(newproject);
+        cb(null,newproject);
+    };
+};
+
+/*
 this class represents an active branch of a real project
  */
 var Project = function(_project,_branch,_basedir){
     var _clients = {};
     var _territories = {};
     var _transactionQ = new TransactionQueue(this);
-    var _storage = new Storage(_project,_branch,_basedir);
+    var _storage = undefined;
+    if(commonUtil.StorageType === "test"){
+        _storage = new TestStorage(_project,_branch);
+    }
+    else if(commonUtil.StorageType === "mongodirty"){
+        _storage = new DirtyStorage(_project,_branch);
+    }
 
     /*public functions*/
     this.getProjectInfo = function(){
@@ -263,7 +433,6 @@ var Project = function(_project,_branch,_basedir){
         for(var i in _clients){
             clientids += i +" : ";
         }
-        console.log("kecso 0"+clientids);
 
         return true;
     };
@@ -274,8 +443,7 @@ var Project = function(_project,_branch,_basedir){
         for(var i in _clients){
             clientids += i +" : ";
         }
-        console.log("kecso 1"+clientids);
-    }
+    };
 
     /*message handling*/
     this.onClientMessage = function(msg){
@@ -416,6 +584,59 @@ var BasicSocket = function(_iosocket,_librarian,_id){
     var authenticate = function(){
         _authenticated = true;
     };
+};
+/*
+simplified basic socket without authentication
+and without complicated selection method...
+the project is always "testproject"
+ */
+var TestBasicSocket = function(_iosocket,_librarian,_id){
+    var _project       = "testproject";
+    var _branch        = undefined;
+
+    /*basic socket messages*/
+    _iosocket.on('disconnect',function(msg){
+        logger.debug("TestBasicSocket.on.disconnect "+_id);
+        _librarian.connectToBranch(_project,_branch,function(project){
+            if(project){
+                project.deleteClient(_id);
+            }
+        });
+    });
+    _iosocket.on('connectToBranch',function(msg){
+        logger.debug("TestBasicSocket.on.connectToBranch "+_id);
+        _branch = msg;
+
+        _librarian.connectToBranch(_project,_branch,function(err,project){
+            if(err){
+                logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
+                _iosocket.emit('connectToBranchNack');
+                return;
+            }
+
+            if(project){
+                if(project.addClient(_iosocket,_id)){
+                    logger.debug("TestBasicSocket.emit.connectToBranchAck "+_id);
+                    _iosocket.emit('connectToBranchAck',_id);
+                }
+                else{
+                    logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
+                    _iosocket.emit('connectToBranchNack');
+                }
+            }
+            else{
+                logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
+                _iosocket.emit('connectToBranchNack');
+            }
+        });
+    });
+
+
+    /*public functions*/
+    this.getId = function(){
+        return _id;
+    };
+    /*private functions*/
 };
 /*
 this class represents the attached socket
@@ -1160,13 +1381,115 @@ var Storage = function(_projectname,_branchname,_basedir){
         saveRevision(false);
     },5000); /*timed savings*/
 };
+/*
+this type of storage is only for testing
+it reads a simple file (_projectname+"_"+_branchname+".tpf")
+builds a memory storage from it and uses that
+-it never saves a thing!!!
+ */
+var TestStorage = function(_projectname,_branchname){
+    var _objects = {};
+
+    /*public functions*/
+    this.get = function(id,cb){
+        setTimeout(function(){
+            if(_objects[id]){
+                cb(null,_objects[id]);
+            }
+            else{
+                cb(1);
+            }
+        },1);
+    };
+    this.set = function(id,object,cb){
+        setTimeout(function(){
+            _objects[id] = object;
+            cb();},1);
+    };
+    this.del = function(id,cb){
+        setTimeout(function(){
+            _objects[id] = null;
+            cb();},1);
+    };
+
+    /*private functions*/
+
+    /*main*/
+    var fs=require('fs');
+    _objects = fs.readFileSync("../test/"+_projectname+"_"+_branchname+".tpf");
+    _objects = JSON.parse(_objects) || {};
+};
+/*
+this type of storage is use mongoDB
+but it doesn't make any versioning
+it only use the db=_projectname and coll=_branchname
+as a basis
+ */
+var DirtyStorage = function(_projectname,_branchname){
+    var _objects = undefined;
+
+    /*mongo stuffa*/
+    var _MONGO = require('mongodb');
+    var _DB = new _MONGO.Db(_projectname, new _MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
+
+    /*public functions*/
+    this.get = function(id,cb){
+        if(_objects){
+            _objects.findOne({_id:id},function(err,result){
+                if(err){
+                    cb(err);
+                }
+                else{
+                    cb(null,result.object);
+                }
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.set = function(id,object,cb){
+        if(_objects){
+            _objects.save(object,function(err){
+                cb(err);
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.del = function(id,cb){
+        if(_objects){
+            _objects.save({_id:id,object:null},function(err){
+                cb(err);
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    /*private functions*/
+
+    /*main*/
+    _DB.open(function(){
+        _DB.collection(_branchname,function(err,result){
+            if(err){
+                console.log("something wrong with the given branch!!!");
+            }
+            else{
+                _objects = result;
+            }
+        });
+    });
+};
+
 var ReadStorage = function(_storage){
     /*interface type object for read-only clients*/
     /*public functions*/
     this.get = function(id,cb){
         _storage.get(id,cb);
     };
-}
+};
 
 
 /*MAIN*/

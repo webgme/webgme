@@ -26,6 +26,19 @@ define( [], function(){
         ServerPort : 8081,
 
         /*
+         * Type of storage used by the server, possible values are:
+         * "test" - mean that it will open the test project file and never saves anything to that
+         * "mongodirty" - means that it will use the mongo as source of data, but it will simply left out the versioning
+         */
+        StorageType : "test",
+
+        /*
+         * location of the mongoDB server
+         */
+        MongoDBLocation : 'localhost',
+        MongoDBPort : 27017,
+
+        /*
          * Generated a GUID
          */
         guid: function() {

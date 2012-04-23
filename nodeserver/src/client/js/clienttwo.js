@@ -55,12 +55,10 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
 
             /*socket communication*/
             _socket.on('connect', function(msg){
-                console.log("kecso conn +"+_socket.socket.sessionid);
                 if(_project !== undefined && _branch !== undefined && _reconnecting === false){
                     _reconnecting = true;
                     /*this is a recconection, so we have to act accordingly*/
                     reconnectToServer(function(error){
-                        console.log("kecso conn -"+_socket.socket.sessionid);
                         if(error === true){
                             console.log("recconection failure :(");
                         }
@@ -81,12 +79,10 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
                 }
             });
             _socket.on('error',function(msg){
-                console.log("kecso error "+JSON.stringify(msg));
             });
             _socket.on('reconnecting',function(msg){
                 _connected = false;
-                console.log("kecso reconn "+JSON.stringify(msg));
-            })
+            });
 
             _socket.on('serverMessage',function(msg){
                 logger.debug("serverMessage "+JSON.stringify(msg));
@@ -115,10 +111,12 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
                 }
 
             });
+
             _socket.on('clientMessageAck',function(){
             });
             _socket.on('clientMessageNack',function(error){
             });
+            /*
             _socket.on('listProjectsAck',function(msg){
                 console.log("listProjectsAck");
             });
@@ -149,6 +147,9 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             _socket.on('connectToBranchNack',function(msg){
                 console.log("selectBranchNack");
             });
+
+            temporary removed as we skip project selection
+            */
         };
         this.authenticate = function(login,pwd,cb){
             _socket.on('authenticateAck',function(){
@@ -176,27 +177,12 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
         };
         /*this is just for test purpose till we implement the project selection widget...*/
         this.makeconnect = function(cb){
-            _self.authenticate("kecso","turoburo",function(){
-                _self.shortcut(cb);
+            _socket.on('connectToBranchAck',function(){
+                _connected = true;
+                cb();
+                return;
             });
-        };
-        this.shortcut = function(cb){
-            _socket.on('selectProjectAck',function(msg){
-                if(_project === undefined && _branch === undefined){
-                    _socket.on('connectToBranchAck',function(){
-                        if(_project === undefined && _branch === undefined){
-                            _project = "testproject";
-                            _branch = "basetest";
-                            _connected = true;
-                            cb();
-                        }
-                    });
-
-                _socket.emit('connectToBranch',"testtwo");
-                }
-            });
-            /*main*/
-            _socket.emit('selectProject',"testproject");
+            _socket.emit('connectToBranch',"test");
         };
 
         /*storage like operations*/
