@@ -282,6 +282,7 @@ define(['./util.js', './../../common/LogManager.js', './../../common/CommonUtil.
                             } else {
                                 lastSelection.time = new Date();
                             }
+                            event.preventDefault();
                             return false; // Prevent default processing
                         } else {
                             deselectSelectedNodes();
@@ -289,6 +290,7 @@ define(['./util.js', './../../common/LogManager.js', './../../common/CommonUtil.
                             node.select(true);
                             node.focus();
                             lastSelection = { "nodeId" :  node.data.key, "time" : new Date() };
+                            event.preventDefault();
                             return false;
                         }
                     }

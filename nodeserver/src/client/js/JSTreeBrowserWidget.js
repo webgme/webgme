@@ -284,6 +284,7 @@ define(['./util.js', './../../common/LogManager.js', './../../common/CommonUtil.
                 lastSelection = { "nodeId" :  currentSelection.nodeId, "time" : currentSelection.time };
             }
 
+            e.preventDefault();
         });
 
         //hook up node selection event handler to properly set focus on last selected node (if any)
