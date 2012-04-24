@@ -34,6 +34,7 @@ it return true if it was a new item
 flase if it was already there
  */
 var insertIntoArray = function(list,item){
+    "use strict";
     if (list instanceof Array){
         if(list.indexOf(item) === -1){
             list.push(item);
@@ -43,6 +44,7 @@ var insertIntoArray = function(list,item){
     }
     return false;
 };
+/*
 var removeFromArray = function(list,item){
     if (list instanceof Array){
         var position = list.indexOf(item);
@@ -51,12 +53,14 @@ var removeFromArray = function(list,item){
         }
     }
 };
+*/
 var mergeArrays = function(one,two){
-    var three = [];
-    for(var i in one){
+    "use strict";
+    var three = [],i;
+    for(i in one){
         three.push(one[i]);
     }
-    for(var i in two){
+    for(i in two){
         if(one.indexOf(two[i]) === -1){
             three.push(two[i]);
         }
@@ -64,6 +68,7 @@ var mergeArrays = function(one,two){
     return three;
 };
 var numberToDword = function(number){
+    "use strict";
     var str = number.toString(16);
     while(str.length<8){
         str = "0"+str;
@@ -71,6 +76,7 @@ var numberToDword = function(number){
     return str;
 };
 var copyObject = function(object){
+    "use strict";
     var copyobject = JSON.stringify(object);
     copyobject = JSON.parse(copyobject);
     return copyobject;
@@ -87,25 +93,711 @@ LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
 
+/*
+ simplified basic socket without authentication
+ and without complicated selection method...
+ the project is always "testproject"
+ */
+var TestBasicSocket = function(CIoSocket,cLibrarian,CId){
+    "use strict";
+    var cProject = "testproject",
+        cBranch;
+
+    /*basic socket messages*/
+    CIoSocket.on('disconnect',function(msg){
+        logger.debug("TestBasicSocket.on.disconnect "+CId);
+        if(cProject !== undefined && cBranch !== undefined){
+            cLibrarian.connectToBranch(cProject,cBranch,function(project){
+                if(project){
+                    project.deleteClient(CId);
+                }
+            });
+        }
+    });
+    CIoSocket.on('connectToBranch',function(msg){
+        logger.debug("TestBasicSocket.on.connectToBranch "+CId);
+        cBranch = msg;
+
+        cLibrarian.connectToBranch(cProject,cBranch,function(err,project){
+            if(err){
+                logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
+                CIoSocket.emit('connectToBranchNack');
+                return;
+            }
+
+            if(project){
+                if(project.addClient(CIoSocket,CId)){
+                    logger.debug("TestBasicSocket.emit.connectToBranchAck "+CId);
+                    CIoSocket.emit('connectToBranchAck',CId);
+                }
+                else{
+                    logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
+                    CIoSocket.emit('connectToBranchNack');
+                }
+            }
+            else{
+                logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
+                CIoSocket.emit('connectToBranchNack');
+            }
+        });
+    });
 
 
+    /*public functions*/
+    this.getId = function(){
+        return CId;
+    };
+    this.getSocket = function(){
+        return CIoSocket;
+    };
+    /*private functions*/
+};
+/*
+ this type of storage is only for testing
+ it reads a simple file (_projectname+"_"+_branchname+".tpf")
+ builds a memory storage from it and uses that
+ -it never saves a thing!!!
+ */
+var TestStorage = function(cProjectName,cBranchName){
+    "use strict";
+    var cObjects = {},
+        fs=require('fs');
+
+
+    /*public functions*/
+    this.get = function(id,cb){
+        setTimeout(function(){
+            if(cObjects[id]){
+                cb(null,cObjects[id]);
+            }
+            else{
+                cb(1);
+            }
+        },1);
+    };
+    this.set = function(id,object,cb){
+        setTimeout(function(){
+            cObjects[id] = object;
+            cb();},1);
+    };
+    this.del = function(id,cb){
+        setTimeout(function(){
+            cObjects[id] = null;
+            cb();},1);
+    };
+
+    /*private functions*/
+
+    /*main*/
+    cObjects = fs.readFileSync("../test/"+cProjectName+"_"+cBranchName+".tpf");
+    cObjects = JSON.parse(cObjects) || {};
+};
+/*
+ this type of storage is use mongoDB
+ but it doesn't make any versioning
+ it only use the db=_projectname and coll=_branchname
+ as a basis
+ */
+var DirtyStorage = function(cProjectName,cBranchName){
+    "use strict";
+    var cObjects,
+        MONGO = require('mongodb'),
+        DB = new MONGO.Db(cProjectName, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
+
+    /*public functions*/
+    this.get = function(id,cb){
+        if(cObjects){
+            cObjects.findOne({"_id":id},function(err,result){
+                if(err){
+                    cb(err);
+                }
+                else{
+                    cb(null,result.object);
+                }
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.set = function(id,object,cb){
+        if(cObjects){
+            cObjects.save({"_id":id,object:object},function(err){
+                cb(err);
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    this.del = function(id,cb){
+        if(cObjects){
+            cObjects.save({"_id":id,object:null},function(err){
+                cb(err);
+            });
+        }
+        else{
+            cb(1);
+        }
+    };
+    /*private functions*/
+
+    /*main*/
+    DB.open(function(){
+        DB.collection(cBranchName,function(err,result){
+            if(err){
+                console.log("something wrong with the given branch!!!");
+            }
+            else{
+                cObjects = result;
+            }
+        });
+    });
+};
+/*
+ reading interface for the storage classes
+ */
+var ReadStorage = function(cStorage){
+    /*interface type object for read-only clients*/
+    /*public functions*/
+    this.get = function(id,cb){
+        cStorage.get(id,cb);
+    };
+};
+/*
+ this class represents the transaction queue of a
+ project, it queues all the requests from all the clients
+ and serialize them, then proccess them one by one
+ */
+var TransactionQueue = function(cProject){
+    "use strict";
+    var cQueue   = [],
+        cCanWork = true,
+        messageHandled,
+        processNextMessage;
+
+    messageHandled = function(){
+        cQueue.shift();
+        cCanWork = true;
+        processNextMessage();
+    };
+    processNextMessage = function(){
+        if(cCanWork === true && cQueue.length>0){
+            /*
+             we go throuhg the message and search for the territory update
+             items, as they are only readings they can go paralelly
+             so we send them each to the proper place...
+             */
+            var territorymsg = cQueue[0],
+                cid = territorymsg.client,
+                updatecommands = [],
+                i;
+            for(i in territorymsg.msg.commands){
+                /*
+                 TODO
+                 we should collect the same territory updates as they overwrite
+                 each other but they should be not that many ;)
+                 */
+                if(territorymsg.msg.commands[i].type === 'territory'){
+                    cProject.onUpdateTerritory(cid,territorymsg.msg.commands[i].id,territorymsg.msg.commands[i].patterns);
+                }
+                else{
+                    updatecommands.push(territorymsg.msg.commands[i]);
+                }
+            }
+            if(updatecommands.length>0){
+                cProject.onProcessMessage(cid,updatecommands,messageHandled);
+                //_canwork = false;
+            }
+            else{
+                messageHandled(); /*this message contained only reading, so we finished processing ;)*/
+            }
+        }
+    };
+
+    /*public functions*/
+    this.onClientMessage = function(msg){
+        /*we simply put the message into the queue*/
+        logger.debug("TransactionQueue.onClientMessage "+JSON.stringify(msg));
+        cQueue.push(copyObject(msg));
+        processNextMessage();
+    };
+};
+/*
+ this is the class which handles a message of modifications
+ from the client
+ */
+var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
+    "use strict";
+    var processCommand,copyCommand,modifyCommand,deleteCommand,pasteCommand,saveCommand,
+        commandProcessed;
+    processCommand = function(command){
+        if(command.type === "copy"){
+            copyCommand(command);
+        }
+        else if(command.type === "modify"){
+            modifyCommand(command);
+        }
+        else if(command.type === "delete"){
+            deleteCommand(command);
+        }
+        else if(command.type === "paste"){
+            pasteCommand(command,"p_"+cCid+"_"+"_"+command.cid+"_");
+        }
+        else if(command.type === "save"){
+            saveCommand(command);
+        }
+    };
+    commandProcessed = function(){
+        cCommands.shift();
+        if(cCommands.length>0){
+            processCommand(cCommands[0]);
+        }
+        else{
+            /*
+             the modifications were already sent
+             so we only have to call the territory updates
+             */
+            /*TODO*/
+            for(var i in cTerritories){
+                cTerritories[i].updatePatterns();
+            }
+            CB();
+        }
+    };
+
+    /*command handling messages*/
+    copyCommand = function(copycommand){
+        cClients[cCid].copy(copycommand.ids);
+        var msg = [];
+        var commanditem = {type:"command",cid:copycommand.cid,success:true};
+        msg.push(commanditem);
+        cClients[cCid].sendMessage(msg);
+        commandProcessed();
+    };
+    modifyCommand = function(modifycommand){
+        var myobject = undefined;
+        var commanditem = {type:"command",cid:modifycommand.cid,success:true};
+        var msg = [];
+        cStorage.get(modifycommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                cClients[cCid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                myobject = object;
+                for(var i in modifycommand){
+                    if(i!=="id" && i!=="type" && i!=="cid"){
+                        myobject[i] = modifycommand[i];
+                    }
+                }
+                cStorage.set(modifycommand.id,myobject,function(error){
+                    if(error){
+                        commanditem.success = false;
+                        msg.push(commanditem);
+                        cClients[cCid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                    else{
+                        /*sending the new object to all affected client*/
+                        var modifyitem = {type:"modify",id:modifycommand.id,object:myobject};
+                        msg.push(modifyitem);
+                        for(var i in cClients){
+                            if(i!=cCid){
+                                if(cClients[i].interestedInObject(modifycommand.id)){
+                                    cClients[i].sendMessage(msg);
+                                }
+                            }
+                        }
+
+                        msg.push(commanditem);
+                        cClients[cCid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                });
+            }
+        });
+    };
+    deleteCommand = function(deletecommand){
+        var deletedids = [];
+        var modifiedparent = undefined;
+        var counter = 0;
+        var commanditem = {type:"command",cid:deletecommand.cid,success:true};
+        var msg = [];
+
+        var finishing = function(){
+            /*we have to send the delete events to affected clients*/
+            for(var i in cClients){
+                msg = [];
+                if(modifiedparent !== undefined && cClients[i].interestedInObject(modifiedparent._id)){
+                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
+                }
+                for(var j in deletedids){
+                    if(cClients[i].interestedInObject(deletedids[j])){
+                        msg.push({type:"delete",id:deletedids[j]});
+                    }
+                }
+                if( i === cCid){
+                    msg.push(commanditem);
+                }
+                cClients[i].sendMessage(msg);
+            }
+            commandProcessed();
+        };
+        var processing = function(objectid){
+            counter++;
+            cStorage.get(objectid,function(error,object){
+                if(error){
+                    commanditem.success = false;
+                    msg.push(commanditem);
+                    cClients[cCid].sendMessage(msg);
+                    commandProcessed();
+                }
+                else{
+                    if(object.children instanceof Array){
+                        for(var i in object.children){
+                            processing(object.children[i]);
+                        }
+                    }
+                    cStorage.del(objectid,function(error){
+                        if(error){
+                            /*TODO*/
+                        }
+                        else{
+                            deletedids.push(objectid);
+                            if(--counter == 0){
+                                finishing();
+                            }
+                        }
+                    });
+                }
+            });
+        };
+
+        /*main*/
+        cStorage.get(deletecommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                cClients[cCid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                if(object.parent){
+                    cStorage.get(object.parent,function(error,parent){
+                        if(error){
+                            commanditem.success = false;
+                            msg.push(commanditem);
+                            cClients[cCid].sendMessage(msg);
+                            commandProcessed();
+                        }
+                        else{
+                            if(parent.children instanceof Array){
+                                if(parent.children.indexOf(deletecommand.id) !== -1){
+                                    parent.children.splice(parent.children.indexOf(deletecommand.id),1);
+                                }
+                            }
+                            cStorage.set(parent._id,parent,function(error){
+                                if(error){
+                                    commanditem.success = false;
+                                    msg.push(commanditem);
+                                    cClients[cCid].sendMessage(msg);
+                                    commandProcessed();
+                                }
+                                else{
+                                    modifiedparent = parent;
+                                    processing(deletecommand.id);
+                                }
+                            });
+                        }
+                    });
+                }
+                else{
+                    processing(deletecommand.id);
+                }
+            }
+        });
+    };
+    pasteCommand = function(pastecommand,prefix){
+        var msg = [];
+        var commanditem = {type:"command",cid:pastecommand.cid,success:true};
+        var modifiedparent = undefined;
+        var createdobjects = {};
+        var counter = 0;
+
+        var finishing = function(){
+            for(var i in cClients){
+                msg = [];
+                if(cClients[i].interestedInObject(modifiedparent._id)){
+                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
+                }
+
+                for(var j in createdobjects){
+                    if(cClients[i].interestedInObject(j)){
+                        msg.push({type:"crete",id:j,object:createdobjects[j]});
+                    }
+                }
+                if(i === cCid){
+                    msg.push(commanditem);
+                }
+                if(msg.length>0){
+                    cClients[i].sendMessage(msg);
+                }
+            }
+            commandProcessed();
+        };
+        var copyobject = function(parentid,tocopyid){
+            counter++;
+            cStorage.get(tocopyid,function(error,object){
+                if(error){
+                    /*TODO*/
+                }
+                else{
+                    var newobj = {};
+                    for(var i in object){
+                        newobj[i] = object[i];
+                    }
+                    newobj._id = prefix+newobj._id;
+                    newobj.parent = parentid;
+                    newobj.children = [];
+                    for(var i in object.children){
+                        if(createdobjects[object.children[i]] === undefined && object.children[i] !== newobj._id){
+                            newobj.children.push(prefix+object.children[i]);
+                        }
+                    }
+
+                    cStorage.set(newobj._id,newobj,function(error){
+                        if(error){
+                            /*TODO*/
+                        }
+                        else{
+                            createdobjects[newobj._id] = newobj;
+                            if(newobj.children.length>0){
+                                for(var i in object.children){
+                                    if(createdobjects[object.children[i]] === undefined){
+                                        copyobject(newobj._id,object.children[i]);
+                                    }
+                                }
+                            }
+                            if(--counter === 0){
+                                finishing();
+                            }
+                        }
+                    });
+                }
+            });
+        };
+        /*main*/
+        cStorage.get(pastecommand.id,function(error,object){
+            if(error){
+                commanditem.success = false;
+                msg.push(commanditem);
+                cClients[cCid].sendMessage(msg);
+                commandProcessed();
+            }
+            else{
+                var copyarray = cClients[cCid].getCopyList();
+                for(var i in copyarray){
+                    object.children.push(prefix+copyarray[i]);
+                }
+                cStorage.set(object._id,object,function(error){
+                    if(error){
+                        commanditem.success = false;
+                        msg.push(commanditem);
+                        cClients[cCid].sendMessage(msg);
+                        commandProcessed();
+                    }
+                    else{
+                        modifiedparent = object;
+                        for(var i in copyarray){
+                            copyobject(modifiedparent._id,copyarray[i]);
+                        }
+                    }
+
+                });
+            }
+        });
+    };
+    saveCommand = function(savecommand){
+        cStorage.save(function(error){
+            if(error){
+                cClients[cCid].sendMessage([{type:"command",cid:savecommand.cid,success:false}]);
+            }
+            else{
+                cClients[cCid].sendMessage([{type:"command",cid:savecommand.cid,success:true}]);
+            }
+            commandProcessed();
+        });
+    };
+
+    /*main*/
+    processCommand(cCommands[0]);
+};
+/*
+ this class represents the attached socket
+ it is directly related to a given Project
+ */
+var Client = function(cIoSocket,cId,cProject){
+    "use strict";
+    var cObjects = {},
+        cClipboard = []; /*it has to be on client level*/
+    /*message handlings*/
+    cIoSocket.on('clientMessage',function(msg){
+        /*you have to simply put it into the transaction queue*/
+        var clientmsg = {}; clientmsg.client = cId; clientmsg.msg = msg;
+        cProject.onClientMessage(clientmsg);
+        cIoSocket.emit('clientMessageAck');
+    });
+    cIoSocket.on('serverMessageAck',function(msg){
+        /*we are happy :)*/
+    });
+    cIoSocket.on('serverMessageNack',function(msg){
+        /*we are not that happy but cannot do much*/
+        console.log("client: "+cId+" - serverMessageNack");
+    });
+
+    /*public functions*/
+    this.onUpdateTerritory = function(added,removed){
+        logger.debug("Client.onUpdateTerritory "/*+JSON.stringify(added)+","+JSON.stringify(removed)*/);
+        var msg = [],i,additem,delitem;
+        for(i in added){
+            if(cObjects[i] === undefined){
+                cObjects[i] = 1;
+                additem = {}; additem.type = 'load'; additem.id = i; additem.object = added[i];
+                msg.push(additem);
+            }
+            else{
+                cObjects[i]++;
+            }
+        }
+        for(i in removed){
+            if(cObjects[i] === undefined){
+                /*was already removed*/
+            }
+            else{
+                cObjects[i]--;
+                if(cObjects[i]<=0){
+                    delete cObjects[i];
+                    delitem = {}; delitem.type = 'unload'; delitem.id = i;
+                    msg.push(delitem);
+                }
+            }
+        }
+        if(msg.length>0){
+            cIoSocket.emit('serverMessage',msg);
+        }
+    };
+    this.copy = function(objects){
+        cClipboard = objects;
+    };
+    this.getCopyList = function(){
+        return cClipboard;
+    };
+    this.sendMessage = function(msg){
+        cIoSocket.emit('serverMessage',msg);
+    };
+    this.interestedInObject = function(objectid){
+        if(cObjects[objectid]){
+            return true;
+        }
+        return false;
+    };
+};
+/*
+ this class represents an active branch of a real project
+ */
+var Project = function(cProject,cBranch){
+    "use strict";
+    var cClients = {},
+        cTerritories = {},
+        cTransactionQ = new TransactionQueue(this),
+        cStorage;
+    if(commonUtil.StorageType === "test"){
+        cStorage = new TestStorage(cProject,cBranch);
+    }
+    else if(commonUtil.StorageType === "mongodirty"){
+        cStorage = new DirtyStorage(cProject,cBranch);
+    }
+
+    /*public functions*/
+    this.getProjectInfo = function(){
+        return {project:cProject,branch:cBranch};
+    };
+    this.addClient = function(socket,id){
+        logger.debug("Project.addClient "+id);
+        var client,i;
+        if(cClients[id] === undefined){
+            client = new Client(socket,id,this);
+            cClients[id] = client;
+        }
+        return true;
+    };
+    this.deleteClient = function(id){
+        logger.debug("Project.deleteClient "+id);
+        delete cClients[id];
+    };
+
+    /*message handling*/
+    this.onClientMessage = function(msg){
+        logger.debug("Project.onClientMessage "+JSON.stringify(msg));
+        cTransactionQ.onClientMessage(msg);
+    };
+    this.onProcessMessage = function(cid,commands,cb){
+        new Commander(cStorage,cClients,cid,cTerritories,commands,cb);
+    };
+    this.onUpdateTerritory = function(cid,tid,newpatterns){
+        logger.debug("Project.onUpdateTerritory "+JSON.stringify(cid)+","+JSON.stringify(tid)+","+JSON.stringify(newpatterns));
+        if(cTerritories[tid] === undefined || cTerritories[tid] === null){
+            var territory = new Territory(cClients[cid],tid);
+            territory.attachStorage(new ReadStorage(cStorage));
+            cTerritories[cid+tid] = territory;
+        }
+        cTerritories[cid+tid].updatePatterns(newpatterns);
+    };
+};
+/*
+ this librarian has a simplified interface
+ it can only stores the open projects
+ and can give them back to the connectToBranch request
+ */
+var TestLibrarian = function(){
+    "use strict";
+    var CProjects = [];
+
+    /*public functions*/
+    this.connectToBranch = function(project,branch,cb){
+        var i,info,newproject;
+        for(i=0;i<CProjects.length;i++){
+            info = CProjects[i].getProjectInfo();
+            if(info && info.project === project && info.branch === branch){
+                cb(null,CProjects[i]);
+                return;
+            }
+        }
+        newproject = new Project(project,branch);
+        CProjects.push(newproject);
+        cb(null,newproject);
+    };
+};
 /*
 represents the static HTTP server and the socket.io server
 it accepts the connections
 serves the static file requests
  */
-var Server = function(_port){
-    var _connectedsockets = [];
-    var http = require('http').createServer(httpGet);
-    var io = require('socket.io').listen(http);
+var Server = function(cPort){
+    "use strict";
+    var cConnectedSockets = [],
+         http = require('http').createServer(httpGet),
+         io = require('socket.io').listen(http),
+         cLibrarian = new TestLibrarian(),
+         cServer = this,
+         cClientSourceFolder = "/../client";
     io.set('log level', 1); // reduce logging
-    var _librarian = new TestLibrarian();
-    var _server = this;
 
 
-    var _clientSourceFolder = "/../client";
-
-    http.listen(_port);
+    http.listen(cPort);
     function httpGet(req, res){
         logger.debug("HTTP REQ - "+req.url);
 
@@ -114,19 +806,17 @@ var Server = function(_port){
         }
 
         if (req.url.indexOf('/common/') === 0 ) {
-            _clientSourceFolder = "/..";
+            cClientSourceFolder = "/..";
         } else {
-            _clientSourceFolder = "/../client";
+            cClientSourceFolder = "/../client";
         }
 
-        FS.readFile(__dirname + _clientSourceFolder +req.url, function(err,data){
+        FS.readFile(__dirname + cClientSourceFolder +req.url, function(err,data){
             if(err){
                 res.writeHead(500);
-                logger.error("Error getting the file:" +__dirname + _clientSourceFolder +req.url);
+                logger.error("Error getting the file:" +__dirname + cClientSourceFolder +req.url);
                 return res.end('Error loading ' + req.url);
             }
-
-
 
             if(req.url.indexOf('.js')>0){
                 logger.debug("HTTP RESP - "+req.url);
@@ -146,11 +836,11 @@ var Server = function(_port){
             }
             res.end(data);
         });
-    };
+    }
 
     io.sockets.on('connection', function(socket){
         logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
-        _connectedsockets.push(new TestBasicSocket(socket,_librarian,socket.id));
+        cConnectedSockets.push(new TestBasicSocket(socket,cLibrarian,socket.id));
     });
 };
 /*
@@ -159,10 +849,11 @@ projects and all the branches on the server
 it can connect a BasicSocket to a Project
 which finally made the BasicSocket to a Client...
  */
+/*
 var Librarian = function(){
     var _basedir = "../projects";
     var _projects = [];
-    /*public functions*/
+
     this.getAvailableProjects = function(){
         var directory = FS.readdirSync(_basedir);
         var projects = [];
@@ -229,14 +920,14 @@ var Librarian = function(){
         if(branches[branch] === undefined){
             return undefined;
         }
-        /*create a new project*/
+
         var project = createProject(project,branch);
         return project;
     };
     this.disconnect = function(){
 
     };
-    /*private functions*/
+
     var createProject = function(project,branch){
         var basedir = _basedir+"/"+project;
         var project = new Project(project,branch,basedir);
@@ -244,21 +935,22 @@ var Librarian = function(){
         return project;
     };
 };
+*/
 /*
 similar to the Librarian but it operates on the mongoDB
  */
+/*
 var MongoLibrarian = function(){
     var _info = undefined;
     var _users = undefined;
     var _projects = [];
 
-    /*mongo related stuffa*/
     var _HOST = 'localhost';
     var _PORT = 27017;
     var _MONGO = require('mongodb');
     var _DB = new _MONGO.Db('Librarian', new _MONGO.Server(_HOST, _PORT, {},{}));
 
-    /*public functions*/
+
     this.authenticateUser = function(login,pwd,cb){
         if(_users){
             _users.findOne({_id:login},function(err,result){
@@ -295,7 +987,6 @@ var MongoLibrarian = function(){
         }
     };
     this.createProject = function(project,cb){
-        /*TODO*/
     };
     this.getActiveBranches = function(project,cb){
         if(_info){
@@ -325,7 +1016,6 @@ var MongoLibrarian = function(){
         }
     };
     this.createBranch = function(project,branch,cb){
-        /*TODO*/
     };
     this.connectToBranch = function(project,branch,cb){
         for(var i=0;i<_projects.length;i++){
@@ -361,12 +1051,8 @@ var MongoLibrarian = function(){
         });
     };
     this.disconnect = function(){
-        /*TODO*/
     };
 
-    /*private functions*/
-
-    /*main*/
     _DB.open(function(){
         _DB.collection('info',function(err,result){
             if(err){
@@ -386,96 +1072,20 @@ var MongoLibrarian = function(){
         });
     });
 };
-/*
-this librarian has a simplified interface
-it can only stores the open projects
-and can give them back to the connectToBranch request
- */
-var TestLibrarian = function(){
-    var _projects = [];
-
-    /*public functions*/
-    this.connectToBranch = function(project,branch,cb){
-        for(var i=0;i<_projects.length;i++){
-            var info = _projects[i].getProjectInfo();
-            if(info && info.project === project && info.branch === branch){
-                cb(null,_projects[i]);
-            }
-        }
-        var newproject = new Project(project,branch);
-        _projects.push(newproject);
-        cb(null,newproject);
-    };
-};
-
-/*
-this class represents an active branch of a real project
- */
-var Project = function(_project,_branch,_basedir){
-    var _clients = {};
-    var _territories = {};
-    var _transactionQ = new TransactionQueue(this);
-    var _storage = undefined;
-    if(commonUtil.StorageType === "test"){
-        _storage = new TestStorage(_project,_branch);
-    }
-    else if(commonUtil.StorageType === "mongodirty"){
-        _storage = new DirtyStorage(_project,_branch);
-    }
-
-    /*public functions*/
-    this.getProjectInfo = function(){
-        return {project:_project,branch:_branch};
-    };
-    this.addClient = function(socket,id){
-        logger.debug("Project.addClient "+id);
-        if(_clients[id] === undefined){
-            var client = new Client(socket,id,this);
-            _clients[id] = client;
-        }
-
-        var clientids = "";
-        for(var i in _clients){
-            clientids += i +" : ";
-        }
-
-        return true;
-    };
-    this.deleteClient = function(id){
-        logger.debug("Project.deleteClient "+id);
-        delete _clients[id];
-    };
-
-    /*message handling*/
-    this.onClientMessage = function(msg){
-        logger.debug("Project.onClientMessage "+JSON.stringify(msg));
-        _transactionQ.onClientMessage(msg);
-    };
-    this.onProcessMessage = function(cid,commands,cb){
-        new Commander(_storage,_clients,cid,_territories,commands,cb);
-    };
-    this.onUpdateTerritory = function(cid,tid,newpatterns){
-        logger.debug("Project.onUpdateTerritory "+JSON.stringify(cid)+","+JSON.stringify(tid)+","+JSON.stringify(newpatterns));
-        if(_territories[tid] === undefined || _territories[tid] === null){
-            var territory = new Territory(_clients[cid],tid);
-            territory.attachStorage(new ReadStorage(_storage));
-            _territories[cid+tid] = territory;
-        }
-        _territories[cid+tid].updatePatterns(newpatterns);
-    };
-};
+*/
 /*
 this type of socket is only good for selecting a
 project and connecting to it
 creating a new branch or connecting to an existing one
  */
+/*
 var BasicSocket = function(_iosocket,_librarian,_id){
     var _login         = "";
     var _pwd           = "";
     var _project       = undefined;
     var _branch        = undefined;
     var _authenticated = false;
-    /*basic socket messages*/
+
     _iosocket.on('disconnect',function(msg){
         logger.debug("BasicSocket.on.disconnect "+_id);
         var project = _librarian.connectToBranch(_project,_branch);
@@ -577,199 +1187,16 @@ var BasicSocket = function(_iosocket,_librarian,_id){
     });
     
 
-    /*public functions*/
+
     this.getId = function(){
         return _id;
     };
-    /*private functions*/
+
     var authenticate = function(){
         _authenticated = true;
     };
 };
-/*
-simplified basic socket without authentication
-and without complicated selection method...
-the project is always "testproject"
- */
-var TestBasicSocket = function(_iosocket,_librarian,_id){
-    var _project       = "testproject";
-    var _branch        = undefined;
-
-    /*basic socket messages*/
-    _iosocket.on('disconnect',function(msg){
-        logger.debug("TestBasicSocket.on.disconnect "+_id);
-        if(_project !== undefined && _branch !== undefined){
-            _librarian.connectToBranch(_project,_branch,function(project){
-                if(project){
-                    project.deleteClient(_id);
-                }
-            });
-        }
-    });
-    _iosocket.on('connectToBranch',function(msg){
-        logger.debug("TestBasicSocket.on.connectToBranch "+_id);
-        _branch = msg;
-
-        _librarian.connectToBranch(_project,_branch,function(err,project){
-            if(err){
-                logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
-                _iosocket.emit('connectToBranchNack');
-                return;
-            }
-
-            if(project){
-                if(project.addClient(_iosocket,_id)){
-                    logger.debug("TestBasicSocket.emit.connectToBranchAck "+_id);
-                    _iosocket.emit('connectToBranchAck',_id);
-                }
-                else{
-                    logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
-                    _iosocket.emit('connectToBranchNack');
-                }
-            }
-            else{
-                logger.debug("TestBasicSocket.emit.connectToBranchNack "+_id);
-                _iosocket.emit('connectToBranchNack');
-            }
-        });
-    });
-
-
-    /*public functions*/
-    this.getId = function(){
-        return _id;
-    };
-    this.getSocket = function(){
-        return _iosocket;
-    };
-    /*private functions*/
-};
-/*
-this class represents the attached socket
-it is directly related to a given Project
- */
-var Client = function(_iosocket,_id,_project){
-    var _objects = {};
-    var _clipboard = []; /*it has to be on client level*/
-    /*message handlings*/
-    _iosocket.on('clientMessage',function(msg){
-        /*you have to simply put it into the transaction queue*/
-        var clientmsg = {}; clientmsg.client = _id; clientmsg.msg = msg;
-        _project.onClientMessage(clientmsg);
-        _iosocket.emit('clientMessageAck');
-    });
-    _iosocket.on('serverMessageAck',function(msg){
-        /*we are happy :)*/
-    });
-    _iosocket.on('serverMessageNack',function(msg){
-        /*we are not that happy but cannot do much*/
-        console.log("client: "+_id+" - serverMessageNack");
-    });
-
-    /*public functions*/
-    this.onUpdateTerritory = function(added,removed){
-        logger.debug("Client.onUpdateTerritory "/*+JSON.stringify(added)+","+JSON.stringify(removed)*/);
-        var msg = [];
-        for(var i in added){
-            if(_objects[i] === undefined){
-                _objects[i] = 1;
-                var additem = {}; additem.type = 'load'; additem.id = i; additem.object = added[i];
-                msg.push(additem);
-            }
-            else{
-                _objects[i]++;
-            }
-        }
-        for(var i in removed){
-            if(_objects[i] === undefined){
-                /*was already removed*/
-            }
-            else{
-                _objects[i]--;
-                if(_objects[i]<=0){
-                    delete _objects[i];
-                    var delitem = {}; delitem.type = 'unload'; delitem.id = i;
-                    msg.push(delitem);
-                }
-            }
-        }
-        if(msg.length>0){
-            _iosocket.emit('serverMessage',msg);
-        }
-    };
-    this.copy = function(objects){
-        _clipboard = objects;
-    };
-    this.getCopyList = function(){
-        return _clipboard;
-    };
-    this.sendMessage = function(msg){
-        _iosocket.emit('serverMessage',msg);
-    };
-    this.interestedInObject = function(objectid){
-        if(_objects[objectid]){
-            return true;
-        }
-        return false;
-    }
-};
-/*
-this class represents the transaction queue of a
-project, it queues all the requests from all the clients
-and serialize them, then proccess them one by one
- */
-var TransactionQueue = function(_project){
-    var _queue = [];
-    var _canwork = true;
-
-    /*public functions*/
-    this.onClientMessage = function(msg){
-        /*we simply put the message into the queue*/
-        logger.debug("TransactionQueue.onClientMessage "+JSON.stringify(msg));
-        _queue.push(copyObject(msg));
-        processNextMessage();
-    };
-
-    /*private functions*/
-    var processNextMessage = function(){
-        if(_canwork === true && _queue.length>0){
-            /*
-            we go throuhg the message and search for the territory update
-            items, as they are only readings they can go paralelly
-            so we send them each to the proper place...
-             */
-            var territorymsg = _queue[0];
-            var cid = territorymsg.client;
-            var updatecommands = [];
-            for(var i in territorymsg.msg.commands){
-                /*
-                TODO
-                we should collect the same territory updates as they overwrite
-                each other but they should be not that many ;)
-                 */
-                if(territorymsg.msg.commands[i].type === 'territory'){
-                    _project.onUpdateTerritory(cid,territorymsg.msg.commands[i].id,territorymsg.msg.commands[i].patterns);
-                }
-                else{
-                    updatecommands.push(territorymsg.msg.commands[i]);
-                }
-            }
-            if(updatecommands.length>0){
-                _project.onProcessMessage(cid,updatecommands,messageHandled);
-                //_canwork = false;
-            }
-            else{
-                messageHandled(); /*this message contained only reading, so we finished processing ;)*/
-            }
-        }
-    };
-    var messageHandled = function(){
-        _queue.shift();
-        _canwork = true;
-        processNextMessage();
-    }
-
-};
+*/
 /*
 this class shows some objects and the
 rules from which the server can figure out
@@ -777,43 +1204,44 @@ which exact objects are important to the given
 requestor...
 Every client can have many Territory
  */
-var Territory = function(_client,_id){
-    var _patterns = {};
-    var _previouslist = [];
-    var _currentlist = [];
-    var _readstorage = undefined;
+var Territory = function(cClient,cId){
+    "use strict";
+    var cPatterns = {},
+        cPreviousList = [],
+        cCurrentList = [],
+        cReadStorage;
 
     /*public functions*/
     /*synchronous functions*/
     this.getLoadList = function(){
-        var loadlist = [];
-        for(var i in _currentlist){
-            if(_previouslist.indexOf(_currentlist[i]) === -1){
-                loadlist.push(_currentlist[i]);
+        var loadlist = [],i;
+        for(i in cCurrentList){
+            if(cPreviousList.indexOf(cCurrentList[i]) === -1){
+                loadlist.push(cCurrentList[i]);
             }
         }
         return loadlist;
     };
     this.getUnloadList = function(){
-        var unloadlist = [];
-        for(var i in _previouslist){
-            if(_currentlist.indexOf(_previouslist[i]) === -1){
-                unloadlist.push(_previouslist[i]);
+        var unloadlist = [],i;
+        for(i in cPreviousList){
+            if(cCurrentList.indexOf(cPreviousList[i]) === -1){
+                unloadlist.push(cPreviousList[i]);
             }
         }
         return unloadlist;
     };
     this.inTerritory = function(id){
-        return (_currentlist.indexOf(id) !== -1);
+        return (cCurrentList.indexOf(id) !== -1);
     };
     this.getId = function(){
-        return _id;
+        return cId;
     };
     this.attachStorage = function(storage){
-        _readstorage = storage;
+        cReadStorage = storage;
     };
     this.detachStorage = function(){
-        _readstorage = undefined;
+        cReadStorage = undefined;
     };
     /*asynchronous functions*/
     this.updatePatterns = function(newpatterns){
@@ -822,15 +1250,15 @@ var Territory = function(_client,_id){
         var plist = [];
         var added = {};
         var removed = {};
-        for(var i in _currentlist){
-            plist.push(_currentlist[i]);
+        for(var i in cCurrentList){
+            plist.push(cCurrentList[i]);
         }
         if(newpatterns === undefined || newpatterns === null){
             newpatterns={};
-            for(var i in _patterns){
+            for(var i in cPatterns){
                 var rule = {};
-                for(var j in _patterns[i]){
-                    rule[j] = _patterns[i][j];
+                for(var j in cPatterns[i]){
+                    rule[j] = cPatterns[i][j];
                 }
                 newpatterns[i] = rule;
             }
@@ -858,15 +1286,15 @@ var Territory = function(_client,_id){
             at this point the clist complete
             and the added list are complete as well
              */
-            _previouslist = plist;
-            _currentlist = clist;
-            _patterns = newpatterns;
+            cPreviousList = plist;
+            cCurrentList = clist;
+            cPatterns = newpatterns;
             for(var i in plist){
                 if(clist.indexOf(plist[i]) === -1){
                     removed[plist[i]] = null; /*no need for the object itself to unload*/
                 }
             }
-            _client.onUpdateTerritory(added,removed);
+            cClient.onUpdateTerritory(added,removed);
         };
         var patternComplete = function(id){
             /*
@@ -901,7 +1329,7 @@ var Territory = function(_client,_id){
                 this is the recursive call
                  */
                 patterncounter++;
-                _readstorage.get(id,function(error,object){
+                cReadStorage.get(id,function(error,object){
                     if(error){
                         /*
                         we stop as some error encountered
@@ -985,332 +1413,24 @@ var Territory = function(_client,_id){
             processPattern(i,newpatterns[i]);
         }
     };
-    /*private functions*/
-};
-/*
-this is the class which handles a message of modifications
-from the client
- */
-var Commander = function(_storage,_clients,_cid,_territories,_commands,_cb){
 
-    var processCommand = function(command){
-        if(command.type === "copy"){
-            copyCommand(command);
-        }
-        else if(command.type === "modify"){
-            modifyCommand(command);
-        }
-        else if(command.type === "delete"){
-            deleteCommand(command);
-        }
-        else if(command.type === "paste"){
-            pasteCommand(command,"p_"+_cid+"_"+"_"+command.cid+"_");
-        }
-        else if(command.type === "save"){
-            saveCommand(command);
-        }
-    };
-    var commandProcessed = function(){
-        _commands.shift();
-        if(_commands.length>0){
-            processCommand(_commands[0]);
-        }
-        else{
-            /*
-            the modifications were already sent
-            so we only have to call the territory updates
-             */
-            /*TODO*/
-            for(var i in _territories){
-                _territories[i].updatePatterns();
-            }
-            _cb();
-        }
-    };
-
-    /*command handling messages*/
-    var copyCommand = function(copycommand){
-        _clients[_cid].copy(copycommand.ids);
-        var msg = [];
-        var commanditem = {type:"command",cid:copycommand.cid,success:true};
-        msg.push(commanditem);
-        _clients[_cid].sendMessage(msg);
-        commandProcessed();
-    };
-    var modifyCommand = function(modifycommand){
-        var myobject = undefined;
-        var commanditem = {type:"command",cid:modifycommand.cid,success:true};
-        var msg = [];
-        _storage.get(modifycommand.id,function(error,object){
-            if(error){
-                commanditem.success = false;
-                msg.push(commanditem);
-                _clients[_cid].sendMessage(msg);
-                commandProcessed();
-            }
-            else{
-                myobject = object;
-                for(var i in modifycommand){
-                    if(i!=="id" && i!=="type" && i!=="cid"){
-                        myobject[i] = modifycommand[i];
-                    }
-                }
-                _storage.set(modifycommand.id,myobject,function(error){
-                    if(error){
-                        commanditem.success = false;
-                        msg.push(commanditem);
-                        _clients[_cid].sendMessage(msg);
-                        commandProcessed();
-                    }
-                    else{
-                        /*sending the new object to all affected client*/
-                        var modifyitem = {type:"modify",id:modifycommand.id,object:myobject};
-                        msg.push(modifyitem);
-                        for(var i in _clients){
-                            if(i!=_cid){
-                                if(_clients[i].interestedInObject(modifycommand.id)){
-                                    _clients[i].sendMessage(msg);
-                                }
-                            }
-                        }
-
-                        msg.push(commanditem);
-                        _clients[_cid].sendMessage(msg);
-                        commandProcessed();
-                    }
-                });
-            }
-        });
-    };
-    var deleteCommand = function(deletecommand){
-        var deletedids = [];
-        var modifiedparent = undefined;
-        var counter = 0;
-        var commanditem = {type:"command",cid:deletecommand.cid,success:true};
-        var msg = [];
-
-        var finishing = function(){
-            /*we have to send the delete events to affected clients*/
-            for(var i in _clients){
-                msg = [];
-                if(modifiedparent !== undefined && _clients[i].interestedInObject(modifiedparent._id)){
-                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
-                }
-                for(var j in deletedids){
-                    if(_clients[i].interestedInObject(deletedids[j])){
-                       msg.push({type:"delete",id:deletedids[j]});
-                    }
-                }
-                if( i === _cid){
-                    msg.push(commanditem);
-                }
-                _clients[i].sendMessage(msg);
-            }
-            commandProcessed();
-        };
-        var processing = function(objectid){
-            counter++;
-            _storage.get(objectid,function(error,object){
-                if(error){
-                    commanditem.success = false;
-                    msg.push(commanditem);
-                    _clients[_cid].sendMessage(msg);
-                    commandProcessed();
-                }
-                else{
-                    if(object.children instanceof Array){
-                        for(var i in object.children){
-                            processing(object.children[i]);
-                        }
-                    }
-                    _storage.del(objectid,function(error){
-                        if(error){
-                          /*TODO*/
-                        }
-                        else{
-                            deletedids.push(objectid);
-                            if(--counter == 0){
-                                finishing();
-                            }
-                        }
-                    });
-                }
-            });
-        };
-
-        /*main*/
-        _storage.get(deletecommand.id,function(error,object){
-            if(error){
-                commanditem.success = false;
-                msg.push(commanditem);
-                _clients[_cid].sendMessage(msg);
-                commandProcessed();
-            }
-            else{
-                if(object.parent){
-                    _storage.get(object.parent,function(error,parent){
-                        if(error){
-                            commanditem.success = false;
-                            msg.push(commanditem);
-                            _clients[_cid].sendMessage(msg);
-                            commandProcessed();
-                        }
-                        else{
-                            if(parent.children instanceof Array){
-                                if(parent.children.indexOf(deletecommand.id) !== -1){
-                                    parent.children.splice(parent.children.indexOf(deletecommand.id),1);
-                                }
-                            }
-                            _storage.set(parent._id,parent,function(error){
-                                if(error){
-                                    commanditem.success = false;
-                                    msg.push(commanditem);
-                                    _clients[_cid].sendMessage(msg);
-                                    commandProcessed();
-                                }
-                                else{
-                                    modifiedparent = parent;
-                                    processing(deletecommand.id);
-                                }
-                            });
-                        }
-                    });
-                }
-                else{
-                    processing(deletecommand.id);
-                }
-            }
-        });
-    };
-    var pasteCommand = function(pastecommand,prefix){
-        var msg = [];
-        var commanditem = {type:"command",cid:pastecommand.cid,success:true};
-        var modifiedparent = undefined;
-        var createdobjects = {};
-        var counter = 0;
-
-        var finishing = function(){
-            for(var i in _clients){
-                msg = [];
-                if(_clients[i].interestedInObject(modifiedparent._id)){
-                    msg.push({type:"modify",id:modifiedparent._id,object:modifiedparent});
-                }
-
-                for(var j in createdobjects){
-                    if(_clients[i].interestedInObject(j)){
-                        msg.push({type:"crete",id:j,object:createdobjects[j]});
-                    }
-                }
-                if(i === _cid){
-                    msg.push(commanditem);
-                }
-                if(msg.length>0){
-                    _clients[i].sendMessage(msg);
-                }
-            }
-            commandProcessed();
-        };
-        var copyobject = function(parentid,tocopyid){
-            counter++;
-            _storage.get(tocopyid,function(error,object){
-                if(error){
-                    /*TODO*/
-                }
-                else{
-                    var newobj = {};
-                    for(var i in object){
-                        newobj[i] = object[i];
-                    }
-                    newobj._id = prefix+newobj._id;
-                    newobj.parent = parentid;
-                    newobj.children = [];
-                    for(var i in object.children){
-                        if(createdobjects[object.children[i]] === undefined && object.children[i] !== newobj._id){
-                            newobj.children.push(prefix+object.children[i]);
-                        }
-                    }
-
-                    _storage.set(newobj._id,newobj,function(error){
-                        if(error){
-                            /*TODO*/
-                        }
-                        else{
-                            createdobjects[newobj._id] = newobj;
-                            if(newobj.children.length>0){
-                                for(var i in object.children){
-                                    if(createdobjects[object.children[i]] === undefined){
-                                        copyobject(newobj._id,object.children[i]);
-                                    }
-                                }
-                            }
-                            if(--counter === 0){
-                                finishing();
-                            }
-                        }
-                    });
-                }
-            });
-        };
-        /*main*/
-        _storage.get(pastecommand.id,function(error,object){
-            if(error){
-                commanditem.success = false;
-                msg.push(commanditem);
-                _clients[_cid].sendMessage(msg);
-                commandProcessed();
-            }
-            else{
-                var copyarray = _clients[_cid].getCopyList();
-                for(var i in copyarray){
-                    object.children.push(prefix+copyarray[i]);
-                }
-                _storage.set(object._id,object,function(error){
-                    if(error){
-                        commanditem.success = false;
-                        msg.push(commanditem);
-                        _clients[_cid].sendMessage(msg);
-                        commandProcessed();
-                    }
-                    else{
-                        modifiedparent = object;
-                        for(var i in copyarray){
-                            copyobject(modifiedparent._id,copyarray[i]);
-                        }
-                    }
-
-                });
-            }
-        });
-    };
-    var saveCommand = function(savecommand){
-        _storage.save(function(error){
-            if(error){
-                _clients[_cid].sendMessage([{type:"command",cid:savecommand.cid,success:false}]);
-            }
-            else{
-                _clients[_cid].sendMessage([{type:"command",cid:savecommand.cid,success:true}]);
-            }
-            commandProcessed();
-        });
-    };
-
-    /*main*/
-    processCommand(_commands[0]);
 };
 /*
 this is the storage class
 every active Project has one...
  */
-var Storage = function(_projectname,_branchname,_basedir){
-    var _objects = {};
-    var _branch = undefined;
-    var _current = undefined;
+/*
+var Storage = function(cProjectName,cBranchName,cBaseDir){
+    "use strict";
+    var cObjects = {},
+        cBranch,
+        cCurrent;
 
-    /*public functions*/
+
     this.get = function(id,cb){
         setTimeout(function(){
-            if(_objects[id]){
-                cb(null,_objects[id]);
+            if(cObjects[id]){
+                cb(null,cObjects[id]);
             }
             else{
                 cb("noitemfound",null);
@@ -1320,32 +1440,32 @@ var Storage = function(_projectname,_branchname,_basedir){
     this.save = function(cb){
         saveRevision(true);
         setTimeout(cb(),STORAGELATENCY);
-        /*now we can start the real saving*/
+
     };
     this.set = function(id,object,cb){
-        _objects[id] = object;
+        cObjects[id] = object;
         setTimeout(cb(),STORAGELATENCY);
     };
     this.del = function(id,cb){
-        delete _objects[id];
+        delete cObjects[id];
         setTimeout(cb(),STORAGELATENCY);
     }
-    /*private functions*/
+
     var initialize = function(){
-        _branch = FS.readFileSync(_basedir+"/"+_branchname+".bif");
-        _branch = JSON.parse(_branch) || {};
-        if(_branch.revisions && _branch.revisions.length > 0){
-            loadRevision(_branch.revisions[_branch.revisions.length-1]);
+        cBranch = FS.readFileSync(cBaseDir+"/"+cBranchName+".bif");
+        cBranch = JSON.parse(cBranch) || {};
+        if(cBranch.revisions && cBranch.revisions.length > 0){
+            loadRevision(cBranch.revisions[cBranch.revisions.length-1]);
             reserveRevision();
         }
         else{
-            _branch.revisions = [];
-            _objects = {};
+            cBranch.revisions = [];
+            cObjects = {};
             reserveRevision();
         }
     };
     var reserveRevision = function(){
-        var directory = FS.readdirSync(_basedir);
+        var directory = FS.readdirSync(cBaseDir);
         var maxrevision = 0;
         for(var i in directory){
             if(directory[i].indexOf(".rdf") !== -1){
@@ -1355,147 +1475,39 @@ var Storage = function(_projectname,_branchname,_basedir){
             }
         }
         maxrevision++;
-        FS.writeFileSync(_basedir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(_objects));
-        _current = maxrevision;
+        FS.writeFileSync(cBaseDir+"/"+numberToDword(maxrevision)+".rdf",JSON.stringify(cObjects));
+        cCurrent = maxrevision;
         updateBranchInfo();
     };
     var loadRevision = function(revision){
-        _objects = FS.readFileSync(_basedir+"/"+numberToDword(revision)+".rdf");
-        _objects = JSON.parse(_objects) || {};
+        cObjects = FS.readFileSync(cBaseDir+"/"+numberToDword(revision)+".rdf");
+        cObjects = JSON.parse(cObjects) || {};
     };
     var updateBranchInfo = function(){
-        if(_branch.revisions === undefined){
-            _branch.revisions = [];
+        if(cBranch.revisions === undefined){
+            cBranch.revisions = [];
         }
-        _branch.revisions.push(_current);
-        FS.writeFileSync(_basedir+"/"+_branchname+".bif",JSON.stringify(_branch));
+        cBranch.revisions.push(cCurrent);
+        FS.writeFileSync(cBaseDir+"/"+cBranchName+".bif",JSON.stringify(cBranch));
     };
     var saveRevision = function(neednew){
-        if(_current === undefined){
+        if(cCurrent === undefined){
             return;
         }
-        /*first saving the data file*/
-        FS.writeFileSync(_basedir+"/"+numberToDword(_current)+".rdf",JSON.stringify(_objects));
+
+        FS.writeFileSync(cBaseDir+"/"+numberToDword(cCurrent)+".rdf",JSON.stringify(cObjects));
         if(neednew === true){
             reserveRevision();
         }
     };
 
-    /*main*/
+
     initialize();
     setInterval(function(){
         saveRevision(false);
-    },5000); /*timed savings*/
+    },5000);
 };
-/*
-this type of storage is only for testing
-it reads a simple file (_projectname+"_"+_branchname+".tpf")
-builds a memory storage from it and uses that
--it never saves a thing!!!
- */
-var TestStorage = function(_projectname,_branchname){
-    var _objects = {};
-
-    /*public functions*/
-    this.get = function(id,cb){
-        setTimeout(function(){
-            if(_objects[id]){
-                cb(null,_objects[id]);
-            }
-            else{
-                cb(1);
-            }
-        },1);
-    };
-    this.set = function(id,object,cb){
-        setTimeout(function(){
-            _objects[id] = object;
-            cb();},1);
-    };
-    this.del = function(id,cb){
-        setTimeout(function(){
-            _objects[id] = null;
-            cb();},1);
-    };
-
-    /*private functions*/
-
-    /*main*/
-    var fs=require('fs');
-    _objects = fs.readFileSync("../test/"+_projectname+"_"+_branchname+".tpf");
-    _objects = JSON.parse(_objects) || {};
-};
-/*
-this type of storage is use mongoDB
-but it doesn't make any versioning
-it only use the db=_projectname and coll=_branchname
-as a basis
- */
-var DirtyStorage = function(_projectname,_branchname){
-    var _objects = undefined;
-
-    /*mongo stuffa*/
-    var _MONGO = require('mongodb');
-    var _DB = new _MONGO.Db(_projectname, new _MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
-
-    /*public functions*/
-    this.get = function(id,cb){
-        if(_objects){
-            _objects.findOne({_id:id},function(err,result){
-                if(err){
-                    cb(err);
-                }
-                else{
-                    cb(null,result.object);
-                }
-            });
-        }
-        else{
-            cb(1);
-        }
-    };
-    this.set = function(id,object,cb){
-        if(_objects){
-            _objects.save({_id:id,object:object},function(err){
-                cb(err);
-            });
-        }
-        else{
-            cb(1);
-        }
-    };
-    this.del = function(id,cb){
-        if(_objects){
-            _objects.save({_id:id,object:null},function(err){
-                cb(err);
-            });
-        }
-        else{
-            cb(1);
-        }
-    };
-    /*private functions*/
-
-    /*main*/
-    _DB.open(function(){
-        _DB.collection(_branchname,function(err,result){
-            if(err){
-                console.log("something wrong with the given branch!!!");
-            }
-            else{
-                _objects = result;
-            }
-        });
-    });
-};
-
-var ReadStorage = function(_storage){
-    /*interface type object for read-only clients*/
-    /*public functions*/
-    this.get = function(id,cb){
-        _storage.get(id,cb);
-    };
-};
+*/
 
 
 /*MAIN*/
