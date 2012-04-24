@@ -64,7 +64,7 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             resizeSVG(this.getBoundingBox(), true);
 
             if ($.isFunction(self.onObjectPositionChanged)) {
-                self.onObjectPositionChanged.call(self, this.id, this.getPosition());
+                self.onObjectPositionChanged.call(self, this.getId(), this.getPosition());
             }
         };
 
@@ -114,7 +114,7 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         };
 
         this.createObject = function (objDescriptor) {
-            var newComponent, draggableComponent;
+            var newComponent, draggableComponents, i, hookUpDrag;
 
             logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
 
@@ -122,33 +122,18 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
 
             resizeSVG(newComponent.getBoundingBox(), false);
 
-            newComponent.getDraggableComponent().drag(dragMove, dragStart, dragEnd);
+            draggableComponents = newComponent.getDraggableComponents();
 
-            newComponent.getDraggableComponent().mouseover(function () { modelEditorE.css('cursor', 'move'); });
-            newComponent.getDraggableComponent().mouseout(function () { modelEditorE.css('cursor', 'default'); });
+            hookUpDrag = function (svgObject, component) {
+                svgObject.node.style.cursor = 'move';
+                svgObject.drag(dragMove, dragStart, dragEnd, component, component, component);
+            };
 
-            /*st = paper.set();
+            for (i = 0; i < draggableComponents.length; i += 1) {
+                //draggableComponents[i].svgComponent = newComponent;
 
-            rect = paper.rect(objDescriptor.posX, objDescriptor.posY, 100, 100, 10);
-            rect.attr("fill", "#d0d0d0");
-            //rect.data( "id", objDescriptor.id );
-
-            text = paper.text(objDescriptor.posX + 50, objDescriptor.posY + 30, objDescriptor.title);
-            //text.transform("t50,30");
-            //text.data( "id", objDescriptor.id );
-
-            rect.drag(move, dragStart, dragEnd);
-
-            if (objDescriptor.title === "Loading...") {
-                rect.attr("opacity", 0.1);
+                hookUpDrag(draggableComponents[i], newComponent);
             }
-
-            st.push(rect);
-            st.push(text);*/
-
-            //rect.attr("clip-rect", objDescriptor.posX + "," + objDescriptor.posY + ",70,50");
-
-            //st.transform("t" + objDescriptor.posX + "," + objDescriptor.posY);
 
             return newComponent;
         };

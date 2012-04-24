@@ -15,7 +15,6 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             posX,
             posY,
             title,
-            moveTo,
             opacity;
 
         //get logger instance for this component
@@ -42,7 +41,7 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         render = function () {
             components.rect.attr("x", posX);
             components.rect.attr("y", posY);
-            components.rect.attr("fill", "#d0d0d0");
+            components.rect.attr("fill", "#AFAFAF");
             components.rect.attr("opacity", opacity);
 
             components.text.attr("x", posX + 50);
@@ -65,8 +64,8 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             return { "posX" : posX, "posY": posY };
         };
 
-        this.getDraggableComponent = function () {
-            return components.rect;
+        this.getDraggableComponents = function () {
+            return [ components.rect, components.text ];
         };
 
         this.deleteComponent = function () {
@@ -78,11 +77,9 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             return componentSet.getBBox();
         };
 
-
-        components.rect.updateComponent = this.updateComponent;
-        components.rect.getPosition = this.getPosition;
-        components.rect.id = guid;
-        components.rect.getBoundingBox = this.getBoundingBox;
+        this.getId = function () {
+            return guid;
+        };
 
         //finally render the component
         render();
