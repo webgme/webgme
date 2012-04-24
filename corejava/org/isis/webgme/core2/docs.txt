@@ -1,0 +1,44 @@
+Storage:
+	Object sha1;
+
+Node:
+	Storage storage;
+
+	Node parent;
+	Collection<Node> children = INVERSE(parent);
+	
+	Node basetype;
+	Collection<Node> subtypes = INVERSE(basetype);
+	
+	Collection<Query> queries = INVERSE(Query.node);
+	
+	boolean loadSelf = OR(queries.loadSelf);
+	boolean loadParent = OR(queries.loadParent);
+	boolean loadChildren = OR(queries.loadChildren);
+	boolean loadBasetype = OR(queries.loadBasetype);
+	boolean loadSubtypes = OR(queries.loadSubtypes);
+	
+Client:
+	Collection<Query> queries = INVERSE(Query.client);
+	
+Query:
+	Node node;
+	Client client:
+	
+	Storage storage = node.storage;
+	
+	Query parent = node.parent != null ? Query(node.parent, client) : null;
+	Collection<Query> children = node.children != null ? Query(node.children, client) : null;
+
+	boolean loadSelf = loadParent OR loadChildren OR loadBasetype OR loadSubtypes OR parent.loadChildren OR OR(children.loadParent);
+		
+	boolean loadParent = loadAncestor;
+	boolean loadChildren = childrenPattern;
+	boolean loadBasetype = loadAncestor;
+	boolean loadSubtypes = false;
+	boolean loadAncestor = ancestorPattern OR OR(children.loadAncestor) OR OR(subtypes.loadAncestor);
+	
+	boolean selfPattern;
+	boolean childrenPattern;
+	boolean ancestorPattern;
+	

@@ -11,9 +11,8 @@ public class Reflection {
 
 	public static Class<A> klass = A.class;
 
-	@SuppressWarnings("hiding")
-	public static abstract class Factory<Type> {
-		public abstract Type create();
+	public static abstract class Factory<ObjectType> {
+		public abstract ObjectType create();
 	};
 
 	public static Factory<A> factory = new Factory<A>() {
