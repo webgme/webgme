@@ -444,10 +444,6 @@ var Project = function(_project,_branch,_basedir){
     this.deleteClient = function(id){
         logger.debug("Project.deleteClient "+id);
         delete _clients[id];
-        var clientids = "";
-        for(var i in _clients){
-            clientids += i +" : ";
-        }
     };
 
     /*message handling*/
@@ -602,11 +598,13 @@ var TestBasicSocket = function(_iosocket,_librarian,_id){
     /*basic socket messages*/
     _iosocket.on('disconnect',function(msg){
         logger.debug("TestBasicSocket.on.disconnect "+_id);
-        _librarian.connectToBranch(_project,_branch,function(project){
-            if(project){
-                project.deleteClient(_id);
-            }
-        });
+        if(_project !== undefined && _branch !== undefined){
+            _librarian.connectToBranch(_project,_branch,function(project){
+                if(project){
+                    project.deleteClient(_id);
+                }
+            });
+        }
     });
     _iosocket.on('connectToBranch',function(msg){
         logger.debug("TestBasicSocket.on.connectToBranch "+_id);
@@ -641,6 +639,9 @@ var TestBasicSocket = function(_iosocket,_librarian,_id){
     this.getId = function(){
         return _id;
     };
+    this.getSocket = function(){
+        return _iosocket;
+    };
     /*private functions*/
 };
 /*
@@ -652,6 +653,8 @@ var Client = function(_iosocket,_id,_project){
     var _clipboard = []; /*it has to be on client level*/
     /*message handlings*/
     _iosocket.on('clientMessage',function(msg){
+        console.trace();
+        console.log("kecso "+JSON.stringify(_iosocket.listeners));
         /*you have to simply put it into the transaction queue*/
         var clientmsg = {}; clientmsg.client = _id; clientmsg.msg = msg;
         _project.onClientMessage(clientmsg);
