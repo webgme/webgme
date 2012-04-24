@@ -653,8 +653,6 @@ var Client = function(_iosocket,_id,_project){
     var _clipboard = []; /*it has to be on client level*/
     /*message handlings*/
     _iosocket.on('clientMessage',function(msg){
-        console.trace();
-        console.log("kecso "+JSON.stringify(_iosocket.listeners));
         /*you have to simply put it into the transaction queue*/
         var clientmsg = {}; clientmsg.client = _id; clientmsg.msg = msg;
         _project.onClientMessage(clientmsg);
@@ -1458,7 +1456,7 @@ var DirtyStorage = function(_projectname,_branchname){
     };
     this.set = function(id,object,cb){
         if(_objects){
-            _objects.save(object,function(err){
+            _objects.save({_id:id,object:object},function(err){
                 cb(err);
             });
         }
