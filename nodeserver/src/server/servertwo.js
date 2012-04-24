@@ -69,7 +69,12 @@ var numberToDword = function(number){
         str = "0"+str;
     }
     return str;
-}
+};
+var copyObject = function(object){
+    var copyobject = JSON.stringify(object);
+    copyobject = JSON.parse(copyobject);
+    return copyobject;
+};
 
 /*COMMON INCLUDES*/
 var FS = require('fs');
@@ -719,8 +724,8 @@ var TransactionQueue = function(_project){
     /*public functions*/
     this.onClientMessage = function(msg){
         /*we simply put the message into the queue*/
-        logger.debug("put commands to queue "+JSON.stringify(msg));
-        _queue.push(msg);
+        logger.debug("TransactionQueue.onClientMessage "+JSON.stringify(msg));
+        _queue.push(copyObject(msg));
         processNextMessage();
     };
 
