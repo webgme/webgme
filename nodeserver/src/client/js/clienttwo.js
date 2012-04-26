@@ -1,12 +1,35 @@
 define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket.io.js'],function(LogManager, EventDispatcher){
-    var logger = LogManager.create("Client");
+    var logger,
+        Client,
+        CommandQueue,
+        LocalCommander,
+        Storage,
+        ClientNode,
+        ClientNode2,
+        Territory;
+
+    logger = LogManager.create("Client");
     /*
     this is the main class
     it contains all the information
     it communicates with the server
     and it serves the widgets - of course not directly ;)
      */
-    var Client = function(_serverlocation){
+    Client = function(cServerLocation){
+        var cStorage,
+            cQueue,
+            cSocket,
+            cLogin,
+            cPassword,
+            cTerritories,
+            cCommandsequence,
+            cSelf,
+            cProject,
+            cBranch,
+            cConnected,
+            cFirst,
+            cReconnecting,
+            cFakereconnect;
 
         $.extend(this, new EventDispatcher());
 
@@ -14,27 +37,22 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
         };
 
-        var _storage = new Storage(this);
-        var _queue = new CommandQueue(this,_storage);
-        var _socket = undefined;
-        var _login = undefined;
-        var _password = undefined;
-        var _territories ={};
-        var _commandsequence = 0;
-        var _self = this;
-        var _project = undefined;
-        var _branch = undefined;
-        var _connected = false;
-        var _first = true;
-        var _reconnecting = false;
-        var _fakereconnect = true;
+        cStorage = new Storage(this);
+        cQueue = new CommandQueue(this,cStorage);
+        cTerritories ={};
+        cCommandsequence = 0;
+        cSelf = this;
+        cConnected = false;
+        cFirst = true;
+        cReconnecting = false;
+        cFakereconnect = true;
 
         /*public interface*/
         /*message sending*/
         this.sendMessage = function(msg){
-            if(_connected){
+            if(cConnected){
                 logger.debug("clientMessage "+JSON.stringify(msg));
-                _socket.emit('clientMessage',msg);
+                cSocket.emit('clientMessage',msg);
             }
             else{
                 logger.debug("clientMessage not sent as server is not reachable");
@@ -46,75 +64,75 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
 
 
             /*main*/
-            if(_socket === undefined){
-                _socket = io.connect( _serverlocation );
+            if(cSocket === undefined){
+                cSocket = io.connect( cServerLocation );
 
                 /*socket handling functions*/
 
             }
 
             /*socket communication*/
-            _socket.on('connect', function(msg){
-                if(_project !== undefined && _branch !== undefined && _reconnecting === false){
-                    _reconnecting = true;
+            cSocket.on('connect', function(msg){
+                if(cProject !== undefined && cBranch !== undefined && cReconnecting === false){
+                    cReconnecting = true;
                     /*this is a recconection, so we have to act accordingly*/
                     reconnectToServer(function(error){
                         if(error === true){
                             console.log("recconection failure :(");
                         }
                         else{
-                            _connected = true;
+                            cConnected = true;
                             /*we should send to the server our territories again!!!*/
                             resendAllTerritories();
-                            _reconnecting = false;
-                            _fakereconnect = true;
+                            cReconnecting = false;
+                            cFakereconnect = true;
                         }
 
                     });
                 }
 
-                if(_first){
-                    _first = false;
+                if(cFirst){
+                    cFirst = false;
                     cb();
                 }
             });
-            _socket.on('error',function(msg){
+            cSocket.on('error',function(msg){
             });
-            _socket.on('reconnecting',function(msg){
-                _connected = false;
+            cSocket.on('reconnecting',function(msg){
+                cConnected = false;
             });
 
-            _socket.on('serverMessage',function(msg){
+            cSocket.on('serverMessage',function(msg){
                 logger.debug("serverMessage "+JSON.stringify(msg));
                 for(var i in msg){
                     var event = msg[i];
                     logger.debug("event "+JSON.stringify(event));
                     if(event.type === "command"){
-                        _queue.commandResult(event.cid,event.success);
+                        cQueue.commandResult(event.cid,event.success);
                     }
                     else if(event.type === "load"){
-                        _storage.set(event.id,event.object);
+                        cStorage.set(event.id,event.object);
                         shootEvent("load",event.id);
                     }
                     else if(event.type === "unload"){
-                        _storage.set(event.id, undefined);
+                        cStorage.set(event.id, undefined);
                         shootEvent("unload",event.id);
                     }
                     else if(event.type === "modify"){
-                        _storage.set(event.id,event.object);
+                        cStorage.set(event.id,event.object);
                         shootEvent("modify",event.id);
                     }
                     else if(event.type === "delete"){
-                        _storage.set(event.id,null);
+                        cStorage.set(event.id,null);
                         shootEvent("delete",event.id);
                     }
                 }
 
             });
 
-            _socket.on('clientMessageAck',function(){
+            cSocket.on('clientMessageAck',function(){
             });
-            _socket.on('clientMessageNack',function(error){
+            cSocket.on('clientMessageNack',function(error){
             });
             /*
             _socket.on('listProjectsAck',function(msg){
@@ -152,48 +170,48 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             */
         };
         this.authenticate = function(login,pwd,cb){
-            _socket.on('authenticateAck',function(){
+            cSocket.on('authenticateAck',function(){
                 cb();
             });
-            _socket.on('authenticateNack',function(error){
+            cSocket.on('authenticateNack',function(error){
                 cb(error);
             });
 
             /*main*/
-            _login = login;
-            _password = pwd;
-            _socket.emit('authenticate',{login:_login,pwd:_password});
+            cLogin = login;
+            cPassword = pwd;
+            cSocket.emit('authenticate',{login:cLogin,pwd:cPassword});
         };
         this.listProjects = function(cb){
-            _socket.on('listProjectsAck',function(msg){
+            cSocket.on('listProjectsAck',function(msg){
                cb(null,msg);
             });
-            _socket.on('listProjectsNack',function(error){
+            cSocket.on('listProjectsNack',function(error){
                 cb(error);
             });
 
             /*main*/
-            _socket.emit('listProjects');
+            cSocket.emit('listProjects');
         };
         /*this is just for test purpose till we implement the project selection widget...*/
         this.makeconnect = function(cb){
-            _socket.on('connectToBranchAck',function(){
-                _connected = true;
+            cSocket.on('connectToBranchAck',function(){
+                cConnected = true;
                 cb();
                 return;
             });
-            _socket.emit('connectToBranch',"test");
+            cSocket.emit('connectToBranch',"test");
         };
 
         /*storage like operations*/
         this.getNode = function(id){
-            if(_storage.get(id) !== undefined && _storage.get(id) !== null){
-                return new ClientNode(this,id,_storage);
+            if(cStorage.get(id) !== undefined && cStorage.get(id) !== null){
+                return new ClientNode(this,id,cStorage);
             }
-            return _storage.get(id);
+            return cStorage.get(id);
         };
         this.delNode = function(id){
-            _queue.push({cid:"c"+(_commandsequence++),type:"delete",id:id});
+            cQueue.push({cid:"c"+(cCommandsequence++),type:"delete",id:id});
         };
 
         /* Maintain currently selected node id */
@@ -202,7 +220,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             if ( objectId !== selectedObjectId ) {
                 selectedObjectId = objectId;
 
-                _self.dispatchEvent( _self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
+                cSelf.dispatchEvent( cSelf.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
             }
         };
 
@@ -211,41 +229,41 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
         var _territoryCounter = 0;
         this.reserveTerritory = function(ui){
             _territoryCounter += 1;
-            _territories[_territoryCounter] = new Territory(_self,_territoryCounter,ui);
+            cTerritories[_territoryCounter] = new Territory(cSelf,_territoryCounter,ui);
             return _territoryCounter;
         };
         this.addPatterns = function(tid,patterns){
-            _territories[tid].addPatterns(patterns);
+            cTerritories[tid].addPatterns(patterns);
         };
         this.removePatterns = function(tid,patterns){
-            _territories[tid].removePatterns(patterns);
+            cTerritories[tid].removePatterns(patterns);
         };
         this.removeTerritory = function(tid){
-            _territories[tid].del();
-            delete _territories[tid];
+            cTerritories[tid].del();
+            delete cTerritories[tid];
         };
         this.hasPattern = function(tid,nodeid){
-            return _territories[tid].hasPattern(nodeid);
+            return cTerritories[tid].hasPattern(nodeid);
         };
 
         /*used by the territory*/
         this.updateTerritory = function(tid,patterns){
-            _queue.push({type:"territory",cid:"c"+(_commandsequence++),id:tid,patterns:patterns});
+            cQueue.push({type:"territory",cid:"c"+(cCommandsequence++),id:tid,patterns:patterns});
         };
 
         /*clipboard functions*/
         this.copy = function(ids){
-            _queue.push({type:"copy",cid:"c"+(_commandsequence++),ids:ids});
+            cQueue.push({type:"copy",cid:"c"+(cCommandsequence++),ids:ids});
         };
         this.paste = function(id){
-            _queue.push({type:"paste",cid:"c"+(_commandsequence++),id:id});
+            cQueue.push({type:"paste",cid:"c"+(cCommandsequence++),id:id});
         };
 
         /*attribute change*/
         this.modifyNode = function(nodeid,attributename,newvalue){
             var command = {type:"modify",id:nodeid};
             command[attributename] = newvalue;
-            _queue.push(command);
+            cQueue.push(command);
         };
 
         /*client side commander functions*/
@@ -254,36 +272,36 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             shootEvent(etype,eid);
         };
         this.getClientId = function(){
-            return _socket.socket.sessionid;
+            return cSocket.socket.sessionid;
         }
         /*private functions*/
         var shootEvent = function(etype,eid){
-            for(var i in _territories){
-                _territories[i].onEvent(etype,eid);
+            for(var i in cTerritories){
+                cTerritories[i].onEvent(etype,eid);
             }
         };
         var reconnectToServer = function(cb){
-            _socket.on('selectProjectAck',function(msg){
-                _socket.emit('connectToBranch',_branch);
+            cSocket.on('selectProjectAck',function(msg){
+                cSocket.emit('connectToBranch',cBranch);
             });
-            _socket.on('connectToBranchAck',function(msg){
+            cSocket.on('connectToBranchAck',function(msg){
                 cb();
             });
-            _socket.on('authenticateNack',function(error){
+            cSocket.on('authenticateNack',function(error){
                 cb(true);
             });
-            _socket.on('selectProjectNack',function(error){
+            cSocket.on('selectProjectNack',function(error){
                 cb(true);
             });
 
             /*main*/
-            _self.authenticate(_login,_password,function(){
-                _socket.emit('selectProject',_project);
+            cSelf.authenticate(cLogin,cPassword,function(){
+                cSocket.emit('selectProject',cProject);
             });
         };
         var resendAllTerritories = function(){
-            for(var i in _territories){
-                _territories[i].reSend();
+            for(var i in cTerritories){
+                cTerritories[i].reSend();
             }
         }
     };
@@ -294,7 +312,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
     it also controls the speed of message sending
     and it collects the command requests
      */
-    var CommandQueue = function(_client,_storage){
+    CommandQueue = function(_client,_storage){
         var _queue = {};
         var _sent = {};
         var _timer = 10000;
@@ -371,7 +389,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
     TODO: it should also handle the reversing of the command
     if for some reason it fails on the server side...
      */
-    var LocalCommander = function(_client,_storage){
+    LocalCommander = function(_client,_storage){
         _clipboard = [];
         /*public functions*/
         this.handleCommand = function(command){
@@ -429,7 +447,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
     basic storage class
     it is not used directly by the widgets
      */
-    var Storage = function(_client){
+    Storage = function(_client){
         var _objects = {};
 
         /*public functions*/
@@ -449,7 +467,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
     but only through functions
     this way all modifications will be visible
      */
-    var ClientNode = function(_client,_id,_storage){
+    ClientNode = function(_client,_id,_storage){
 
         /*public interface*/
         this.isDeleted = function(){
@@ -495,8 +513,189 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             }
         };
     };
+    ClientNode2 = function(cClient,cId,cStorage){
+        var copyObject,
+            rIsMyBase,
+            rGetProperty;
 
-    var Territory = function(_client,_tid,_ui){
+        copyObject = function(object){
+            "use strict";
+            var copyobject = JSON.stringify(object);
+            copyobject = JSON.parse(copyobject);
+            return copyobject;
+        };
+        rIsMyBase = function(baseid,selfid){
+            var object;
+            if(baseid && selfid){
+                object = cStorage.get(selfid);
+                if(object){
+                    if(object.base){
+                        if(object.baseId === baseid){
+                            return true;
+                        }
+                        return rIsMyBase(baseid,selfid);
+                    }
+                    return false;
+                }
+                return false;
+            }
+            return false;
+        };
+        rGetProperty = function(propertypath,id){
+            var propertyarray,
+                actual,
+                inner,
+                object;
+
+            propertyarray = propertypath.split('.');
+            object = cStorage.get(id);
+            actual = 0;
+            inner = object;
+
+            if(object === null || object === undefined){
+                return object;
+            }
+
+            while(actual<propertyarray.length){
+                if(inner[propertyarray[actual]] === null){
+                    return null;
+                }
+                if(inner[propertyarray[actual]] === undefined){
+                    if(object.baseId){
+                        return rGetProperty(propertypath,object.baseId);
+                    }
+                    return null;
+                }
+                inner = inner[propertyarray[actual++]];
+            }
+            return copyObject(inner);
+        };
+
+        /*basic getter and setter*/
+        /*TODO maybe array should have their own getter and setter*/
+        this.getProperty = function(propertypath){
+            /* TODO: if property is array type than we should give back the inherited ones as well */
+            return rGetProperty(propertypath,cId);
+        };
+        this.setProperty = function(propertypath,newvalue){
+            /* TODO: if property is array type than we should check to not add any inherited to this level */
+            var fullmodify,
+                innermodify,
+                actual,
+                object,
+                propertyarray;
+
+            propertyarray = propertypath.split('.');
+            object = cStorage.get(cId);
+            if(object === null || object === undefined){
+                return;
+            }
+
+            object = copyObject(object);
+            actual = 0;
+            fullmodify = object;
+            while(actual<propertyarray.length){
+                object[propertyarray[actual]] = object[propertyarray[actual]] || {};
+                object = object[propertyarray[actual++]];
+            }
+            object = newvalue;
+            cClient.modifyNode(cId,propertyarray[0],fullmodify[propertyarray[0]]);
+        };
+
+        /*property setter and getter functions*/
+        /*name*/
+        this.getName = function(){
+            return this.getProperty("name");
+        };
+        this.setName = function(newvalue){
+            this.setProperty("name",newvalue);
+        };
+        /*id*/
+        this.getId = function(){
+            return this.getProperty("_id");
+        };
+        this.setId = function(newvalue){
+            this.setProperty("_id",newvalue);
+        };
+        /*containement relations*/
+        /*parent*/
+        this.getParentId = function(){
+            return this.getProperty("parentId");
+        };
+        this.getMetaParentIds = function(){
+            return this.getProperty("metaParentIds");
+        };
+        this.setParentId = function(newvalue){
+            this.setProperty("parentId",newvalue);
+        };
+        this.setMetaParentIds = function(newarray){
+            this.setProperty("metaParentId",newarray);
+        };
+        /*children*/
+        this.getChildrenIds = function(){
+            return this.getProperty("childrenIds");
+        };
+        this.getMetaChildrenIds = function(){
+            return this.getProperty("metaChildrenIds");
+        };
+        this.setChildrenIds = function(newarray){
+            this.setProperty("childrenIds",newarray);
+        };
+        this.setMetaChildrenIds = function(newarray){
+            this.setProperty("metaChildrenIds",newarray);
+        };
+        /*connection attributes*/
+        /*source*/
+        this.getSourceId = function(){
+            return this.getProperty("sourceId");
+        };
+        this.getMetaSourceIds = function(){
+            return this.getProperty("metaSourceIds");
+        };
+        this.setSourceId = function(newvalue){
+            this.setProperty("sourceId",newvalue);
+        };
+        this.setMetaSourceIds = function(newarray){
+            this.setProperty("metaSourceIds",newarray);
+        };
+        /*destination*/
+        this.getDestinationId = function(){
+            return this.getProperty("destinationId");
+        };
+        this.getMetaDestinationIds = function(){
+            return this.getProperty("metaDestinationIds");
+        };
+        this.setDestinationId = function(newvalue){
+            this.setProperty("destinationId",newvalue);
+        };
+        this.setMetaDestinationIds = function(newarray){
+            this.setProperty("metaDestinationIds",newarray);
+        };
+
+
+        /*registry*/
+        this.getRegistry = function(registrypath){
+            if(registrypath === null || registrypath === undefined || registrypath === ""){
+                registrypath = "registry";
+            }
+            else{
+                registrypath = "registry."+registrypath;
+            }
+            return this.getProperty(registrypath);
+        };
+        this.setRegistry = function(registrypath,newvalue){
+            if(registrypath === null || registrypath === undefined || registrypath === ""){
+                registrypath = "registry";
+            }
+            else{
+                registrypath = "registry."+registrypath;
+            }
+            this.setProperty(registrypath,newvalue);
+        };
+
+
+    };
+    Territory = function(_client,_tid,_ui){
         var _patterns = {};
 
         /*public interface*/
