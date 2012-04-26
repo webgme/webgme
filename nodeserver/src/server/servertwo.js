@@ -1415,6 +1415,111 @@ var Territory = function(cClient,cId){
     };
 
 };
+var Territory2 = function(cId,cClient,cReadStorage){
+    "use strict";
+    var cCurrentIds,
+        cPreviousIds,
+        cPatterns;
+    cCurrentIds = [];
+    cPreviousIds = [];
+    cPatterns = {};
+
+    this.updatePatterns = function(newpatterns){
+        var i,
+            clist,
+            plist,
+            added,
+            removed,
+            progress,
+            updateComplete,
+            addToCurrent,
+            patternComplete,
+            processPattern,
+            processRule;
+
+        addToCurrent = function(id,object,cb){
+            if(insertIntoArray(clist,id)){
+                if(plist.indexOf(id) === -1){
+                    added[id] = object;
+                }
+                if(object.baseId && clist.indexOf(object.baseId) === -1){
+                    cReadStorage.get(object.baseId,function(err,base){
+                        if(err){
+                            logger.error("Territory.updatePatterns found mising base "+object.baseId);
+                            cb();
+                        }
+                        addToCurrent(object.baseId,base,cb);
+                    });
+                }
+            }
+            else{
+                cb();
+            }
+        };
+
+        updateComplete = function(){
+            var i;
+            cCurrentIds = clist;
+            cPreviousIds = plist;
+            for(i=0;i<cPreviousIds.length;i++){
+                if(cCurrentIds.indexOf(cPreviousIds[i]) === -1){
+                    removed[cPreviousIds[i]] = null;
+                }
+            }
+            cClient.onUpdateTerritory(added,removed);
+        };
+
+        patternComplete = function(id){
+            var i;
+            progress[id] = true;
+            for(i in progress){
+                if(progress[i] === false){
+                    return;
+                }
+            }
+            updateComplete();
+        };
+
+        processPattern = function(patternid){
+
+
+            /*main*/
+            cReadStorage.get(patternid,function(err,basenode){
+                var i;
+                if(err){
+                    logger.error("Territory.updatePatterns.processPattern wrong basenodeid in pattern "+patternid);
+                    patternComplete(patternid);
+                    return;
+                }
+
+                addToCurrent(patternid,basenode,function(){
+                    for(i in newpatterns[patternid]){
+                        
+                    }
+                });
+            });
+
+        };
+        processRule = function(rulename,rulevalue,currentnodeid){
+
+        };
+
+
+        /*main*/
+        if(newpatterns === null && newpatterns === undefined){
+            newpatterns = copyObject(cPatterns);
+        }
+        progress = {};
+        for(i in newpatterns){
+            progress[i] = false;
+        }
+
+        for(i in newpatterns){
+            processPattern(i);
+        }
+    };
+
+};
 /*
 this is the storage class
 every active Project has one...
