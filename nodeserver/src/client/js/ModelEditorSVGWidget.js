@@ -100,17 +100,19 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         this.clear = function () {
             paper.clear();
             paper.setSize(defaultPaperSize.w, defaultPaperSize.h);
+            titleText = null;
         };
 
         this.setTitle = function (title) {
             if (titleText) {
-                titleText.remove();
+                titleText.attr("text", title);
+            } else {
+                titleText = paper.text(5, 15, title);
+                titleText.attr("text-anchor", "start");
+                titleText.attr("font-size", 16);
+                titleText.attr("font-weight", "bold");
+                titleText.attr("fill", "#ff0000");
             }
-            titleText = paper.text(5, 15, title);
-            titleText.attr("text-anchor", "start");
-            titleText.attr("font-size", 16);
-            titleText.attr("font-weight", "bold");
-            titleText.attr("fill", "#ff0000");
         };
 
         this.createObject = function (objDescriptor) {

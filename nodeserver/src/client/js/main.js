@@ -17,7 +17,8 @@ require([   'order!jquery.min',
             './../../common/LogManager.js',
             './../../common/CommonUtil.js',
             './../js/ModelEditorControl.js',
-            './../js/ModelEditorSVGWidget.js' ], function (jquery,
+            './../js/ModelEditorSVGWidget.js',
+            './../js/ModelEditorWidget.js' ], function (jquery,
                                                         jqueryUI,
                                                         domReady,
                                                         Client,
@@ -28,7 +29,8 @@ require([   'order!jquery.min',
                                                         logManager,
                                                         commonUtil,
                                                         ModelEditorControl,
-                                                        ModelEditorSVGWidget) {
+                                                        ModelEditorSVGWidget,
+                                                        ModelEditorWidget) {
     domReady(function () {
 
         //if ( commonUtil.DEBUG === true ) {
@@ -38,7 +40,8 @@ require([   'order!jquery.min',
         var client,
             tDynaTree,
             tJSTree,
-            modelEditor,
+            modelEditorSVG,
+            modelEditorHTML,
             doConnect,
             lastContainerWidth = 0,
             resizeMiddlePane;
@@ -63,7 +66,8 @@ require([   'order!jquery.min',
                     //delayer = new DelayControl(client.socket, document.getElementById("socketDelayer"));
                     tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
-                    modelEditor = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+                    modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+                    modelEditorHTML = new ModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
                 });
             });
         };
@@ -76,10 +80,33 @@ require([   'order!jquery.min',
          */
         lastContainerWidth = 0;
         resizeMiddlePane = function () {
-            var cW = $("#contentContainer").width();
+            var cW = $("#contentContainer").width(),
+                eW = 0,
+                eH = 0;
             if (cW !== lastContainerWidth) {
                 $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
                 lastContainerWidth = cW;
+
+                //by default lay out in vertical split
+                eW = Math.floor($("#middlePane").width() / 2);
+                eH = Math.floor($("#middlePane").height());
+
+                if (eW < 560) {
+                    //inner children has to be laid out under each other (horizontal split)
+                    eW = Math.floor($("#middlePane").width());
+                    eH = Math.floor($("#middlePane").height() / 2);
+                }
+
+                $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
+                $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
+
+                //set container position correctly
+                if (eW < 560) {
+                    $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
+                } else {
+                    $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
+                }
+
             }
         };
 
