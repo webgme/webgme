@@ -51,16 +51,15 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         this.clear = function () {
             modelEditorE.html("");
             modelEditorE.width(defaultSize.w).height(defaultSize.h);
-            titleText = null;
         };
 
-        this.setTitle = function (title) {
-            if (!titleText) {
-                titleText = $('<div/>', {
-                    "class": "modelEditorTitle"
-                }).appendTo(modelEditorE);
-            }
-            titleText.html(title);
+        this.setRootNode = function (nodeId, node, multiLevelFactor) {
+            var rootComponent;
+
+            logger.debug("Initializing multi level model editor with root: '" + node.id + "' and MultiLevelFactor: " + multiLevelFactor);
+
+            rootComponent = new ModelEditorComponent(nodeId, node, self, true, multiLevelFactor);
+            rootComponent.addTo(modelEditorE);
         };
 
         this.createObject = function (objDescriptor) {
@@ -68,8 +67,8 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
 
             logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
 
-            newComponent = new ModelEditorComponent(objDescriptor, self);
-            newComponent.addTo(modelEditorE);
+            //newComponent = new ModelEditorComponent(objDescriptor, self);
+            //newComponent.addTo(modelEditorE);
 
             //resizeSVG(newComponent.getBoundingBox(), false);
 

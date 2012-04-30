@@ -6,8 +6,8 @@ div.modelEditorTitle {
 }
 
 .column {
-    height: 100px;
-    width: 100px;
+    min-height: 100px;
+    min-width: 100px;
     float: left;
     border: 2px solid #666666;
     background-color: #ccc;
@@ -19,7 +19,6 @@ div.modelEditorTitle {
     -ms-box-shadow: inset 0 0 3px #000;
     box-shadow: inset 0 0 3px #000;
     text-align: center;
-    cursor: move;
 }
 .column header {
     color: #fff;
@@ -62,4 +61,10 @@ div.dragPosPanel {
     left: 0px;
     width: 80px;
     z-index: 100000;
+}
+
+.modelcomponent .children {
+    position: absolute;
+    width: 100%;
+    border-top: 1px solid #000000;
 }
