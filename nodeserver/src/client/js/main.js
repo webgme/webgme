@@ -18,7 +18,8 @@ require([   'order!jquery.min',
             './../../common/CommonUtil.js',
             './../js/ModelEditorControl.js',
             './../js/ModelEditorSVGWidget.js',
-            './../js/ModelEditorWidget.js' ], function (jquery,
+            './../js/ModelEditorWidget.js',
+            './../js/MultiLevelModelEditorControl.js' ], function (jquery,
                                                         jqueryUI,
                                                         domReady,
                                                         Client,
@@ -30,7 +31,8 @@ require([   'order!jquery.min',
                                                         commonUtil,
                                                         ModelEditorControl,
                                                         ModelEditorSVGWidget,
-                                                        ModelEditorWidget) {
+                                                        ModelEditorWidget,
+                                                        MultiLevelModelEditorControl) {
     domReady(function () {
 
         //if ( commonUtil.DEBUG === true ) {
@@ -67,7 +69,7 @@ require([   'order!jquery.min',
                     tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
                     modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-                    modelEditorHTML = new ModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
+                    modelEditorHTML = new MultiLevelModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
                 });
             });
         };
@@ -82,7 +84,8 @@ require([   'order!jquery.min',
         resizeMiddlePane = function () {
             var cW = $("#contentContainer").width(),
                 eW = 0,
-                eH = 0;
+                eH = 0,
+                horizontalSplit = false;
             if (cW !== lastContainerWidth) {
                 $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
                 lastContainerWidth = cW;
@@ -95,13 +98,14 @@ require([   'order!jquery.min',
                     //inner children has to be laid out under each other (horizontal split)
                     eW = Math.floor($("#middlePane").width());
                     eH = Math.floor($("#middlePane").height() / 2);
+                    horizontalSplit = true;
                 }
 
                 $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
                 $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
 
                 //set container position correctly
-                if (eW < 560) {
+                if (horizontalSplit === true) {
                     $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
                 } else {
                     $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
