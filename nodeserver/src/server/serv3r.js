@@ -889,6 +889,7 @@ var Territory = function(cClient,cId,cReadStorage){
             i;
 
         addToCurrentList = function(id,object,cb){
+            logger.debug("kecso "+id+" "+JSON.stringify(object));
             if(currentList.indexOf(id) === -1){
                 currentList.push(id);
                 if(previousList.indexOf(id) === -1){
@@ -900,7 +901,9 @@ var Territory = function(cClient,cId,cReadStorage){
                                 cb(); return;
                             }
                             else{
-                                addToCurrentList(object.relations.baseId,base,cb);
+                                if(object.relations.baseId){
+                                    addToCurrentList(object.relations.baseId,base,cb);
+                                }
                                 return;
                             }
                         });
@@ -912,7 +915,8 @@ var Territory = function(cClient,cId,cReadStorage){
             cb(); return;
         };
 
-        updateComplete = function(pattern){
+        updateComplete = function(){
+            logger.debug("kecso002 ");
             var i,
                 removedObjects = {};
 
@@ -928,6 +932,7 @@ var Territory = function(cClient,cId,cReadStorage){
         };
 
         patternComplete = function(){
+            logger.debug("kecso001 "+patternCounter);
             if(--patternCounter === 0){
                 updateComplete();
             }
@@ -940,6 +945,7 @@ var Territory = function(cClient,cId,cReadStorage){
                 updateRule;
 
             ruleComplete = function(){
+                logger.debug("kecso000 "+ruleCounter);
                 if(--ruleCounter === 0){
                     patternComplete();
                     return;
@@ -963,7 +969,7 @@ var Territory = function(cClient,cId,cReadStorage){
                         else{
                             if(insertIntoArray(ruleChains[rulename],currentId)){
                                 addToCurrentList(currentId,object,function(){
-                                    next = object[rulename];
+                                    next = object.relations[rulename];
                                     if(next){
                                         rulevalue--;
                                         called=false;
@@ -1003,6 +1009,7 @@ var Territory = function(cClient,cId,cReadStorage){
 
             /*main*/
             ruleCounter = 0;
+            ruleChains = {};
             for(i in rules){
                 ruleChains[i] = [];
                 ruleCounter++;
@@ -1015,8 +1022,9 @@ var Territory = function(cClient,cId,cReadStorage){
             newpatterns = copyObject(cPatterns);
         }
         previousList = copyObject(cCurrentList);
-        currentList = {};
-
+        currentList = [];
+        addedObjects = {};
+        patternCounter = 0;
         for(i in newpatterns){
             patternCounter++;
             updatePattern(i,newpatterns[i]);
