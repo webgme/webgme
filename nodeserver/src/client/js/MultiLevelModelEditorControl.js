@@ -11,34 +11,86 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             nodes,
             modelEditor,
             currentNodeInfo,
-            refresh,
-            multiLevelFactor = 2;
+            refresh;
 
         //get logger instance for this component
-        logger = logManager.create("ModelEditorControl");
+        logger = logManager.create("MultiLevelModelEditorControl");
 
         project = myProject;
-
-
 
         territoryId = project.reserveTerritory(this);
 
         //local container for accounting the currently opened node list
-        //its a hash map with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
+        //its a hash map with a key of nodeId and a value of { , childrenIds[] }
         nodes = {};
 
         //create the tree using our custom widget
         modelEditor = myModelEditor;
-        modelEditor.project = project;
+        modelEditor.setProject(project);
 
         //local variable holding info about the currently opened node
         currentNodeInfo = { "id": null, "children" : [] };
 
-        /*modelEditor.onObjectPositionChanged = function (nodeId, position) {
+        modelEditor.onObjectPositionChanged = function (nodeId, position) {
             var selectedNode = project.getNode(nodeId);
-            logger.debug("Object position changed for id:'" + nodeId + "', new pos:[" + position.posX + ", " + position.posY + "]");
-            selectedNode.setAttribute("attr", { "posX": position.posX, "posY": position.posY });
-        };*/
+            logger.debug("Object position changed for id:'" + nodeId + "', new pos:[" + position.x + ", " + position.y + "]");
+            selectedNode.setAttribute("attr", { "posX": position.x, "posY": position.y });
+        };
+
+        modelEditor.onComponentExpanded = function (nodeId) {
+            //first create dummy elements under the parent representing the childrend being loaded
+            var parent = project.getNode(nodeId),
+                parentModelComponent,
+                childrenIDs,
+                i,
+                currentChildId,
+                childNode,
+                childModelComponent,
+                newPattern;
+
+            if (parent) {
+
+                //get the DOM node representing the parent in the tree
+                parentModelComponent = nodes[nodeId].modelObject;
+
+                //get the children IDs of the parent
+                childrenIDs = parent.getAttribute("children");
+
+                for (i = 0; i < childrenIDs.length; i += 1) {
+                    currentChildId = childrenIDs[i];
+
+                    childNode = project.getNode(currentChildId);
+
+                    //local variable for the created treenode of the child node (loading or full)
+                    childModelComponent = null;
+
+                    //check if the node could be retreived from the client
+                    if (childNode) {
+                        //the node was present on the client side, render ist full data
+                        childModelComponent = modelEditor.createObject(currentChildId, childNode, parentModelComponent);
+
+                        //store the node's info in the local hashmap
+                        nodes[currentChildId] = {    "modelObject": childModelComponent,
+                            "children" : childNode.getAttribute("children"),
+                            "state" : stateLoaded };
+                    } else {
+                        //the node is not present on the client side, render a loading node instead
+                        //create a new node for it in the tree
+                        childModelComponent = modelEditor.createObject(currentChildId, childNode, parentModelComponent);
+
+                        //store the node's info in the local hashmap
+                        nodes[currentChildId] = {    "modelObject": childModelComponent,
+                            "children" : [],
+                            "state" : stateLoading };
+                    }
+                }
+            }
+
+            //need to expand the territory
+            newPattern = {};
+            newPattern[nodeId] = { "children": 1 };
+            project.addPatterns(territoryId, newPattern);
+        };
 
         project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
             var newPattern = {},
@@ -47,8 +99,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 childrenIDs = [],
                 currentChildId,
                 childNode,
-                childObject,
-                childDescriptor;
+                childObject;
 
             //delete everything from model editor
             modelEditor.clear();
@@ -62,16 +113,16 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
             currentNodeInfo = { "id": null, "children" : [] };
 
-            newPattern[nodeId] = { "children": multiLevelFactor };
+            newPattern[nodeId] = { "children": 1 };
             project.addPatterns(territoryId, newPattern);
 
             selectedNode = project.getNode(nodeId);
 
             if (selectedNode) {
-                modelEditor.setRootNode(nodeId, selectedNode, multiLevelFactor);
+                currentNodeInfo.rootNode = modelEditor.createRootFromNode(selectedNode);
 
                 //get the children IDs of the parent
-                /*childrenIDs = selectedNode.getAttribute("children");
+                childrenIDs = selectedNode.getAttribute("children");
 
                 for (i = 0; i < childrenIDs.length; i += 1) {
 
@@ -83,24 +134,17 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                     //assume that the child is not yet loaded on the client
                     nodes[currentChildId] = {   "modelObject": childObject,
+                        "children" : [],
                         "state": stateLoading };
 
-                    childDescriptor =  { "id" : currentChildId,
-                        "posX": 20,
-                        "posY": 20,
-                        "title": "Loading..." };
-
                     if (childNode) {
-                        childDescriptor.posX = childNode.getAttribute("attr").posX;
-                        childDescriptor.posY = childNode.getAttribute("attr").posY;
-                        childDescriptor.title =  childNode.getAttribute("name");
-
                         //store the node's info in the local hash map
+                        nodes[currentChildId].children = childNode.getAttribute("children");
                         nodes[currentChildId].state = stateLoaded;
                     }
 
-                    nodes[currentChildId].modelObject = modelEditor.createObject(childDescriptor);
-                }  */
+                    nodes[currentChildId].modelObject = modelEditor.createObject(currentChildId, childNode, currentNodeInfo.rootNode);
+                }
 
                 //save the given nodeId as the currently handled one
                 currentNodeInfo.id = nodeId;
@@ -109,8 +153,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         });
 
         refresh = function (eventType, objectId) {
-            var nodeDescriptor = null,
-                j,
+            var j,
                 parentNode,
                 oldChildren,
                 currentChildren,
@@ -147,9 +190,13 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 //check if the updated object is the opened node
                 if (objectId === currentNodeInfo.id) {
                     //the updated object is the parent whose children are drawn here
-                    //the only interest about the parent are the new and deleted children
+
                     parentNode = project.getNode(objectId);
 
+                    //make sure to update any rendered properties change
+                    modelEditor.updateObject(currentNodeInfo.rootNode, parentNode);
+
+                    //the only interest about the parent are the new and deleted children
                     oldChildren = currentNodeInfo.children;
                     currentChildren = [];
                     if (parentNode) {
@@ -205,20 +252,13 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     updatedObject = project.getNode(objectId);
 
                     if (updatedObject) {
-
-                        //create the node's descriptor for the widget
-                        nodeDescriptor = {   "id" : objectId,
-                            "posX": updatedObject.getAttribute("attr").posX,
-                            "posY": updatedObject.getAttribute("attr").posY,
-                            "title": updatedObject.getAttribute("name") };
-
                         //check what state the object is in according to the local hashmap
                         if (nodes[objectId].state === stateLoading) {
                             nodes[objectId].state = stateLoaded;
                         }
 
-                        //update the node's representation in the tree
-                        modelEditor.updateObject(nodes[objectId].modelObject, nodeDescriptor);
+                        //update the node's representation in the widget
+                        modelEditor.updateObject(nodes[objectId].modelObject, updatedObject);
                     }
                 }
             }
@@ -228,18 +268,18 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         // PUBLIC METHODS
         this.onEvent = function (etype, eid) {
             switch (etype) {
-                case "load":
-                    //refresh("insert", eid);
-                    break;
-                case "modify":
-                    //refresh("update", eid);
-                    break;
-                case "create":
-                    //refresh("insert", eid);
-                    break;
-                case "delete":
-                    //refresh("update", eid);
-                    break;
+            case "load":
+                refresh("insert", eid);
+                break;
+            case "modify":
+                refresh("update", eid);
+                break;
+            case "create":
+                refresh("insert", eid);
+                break;
+            case "delete":
+                refresh("update", eid);
+                break;
             }
         };
     };

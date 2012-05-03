@@ -24,6 +24,20 @@ define( [], function(){
         },
 
         /*
+         * Returns true if the two boundingbox overlap
+         */
+        overlap : function (boundingBoxA, boundingBoxB) {
+            var result = false;
+
+            if (boundingBoxA.x < boundingBoxB.x2 && boundingBoxA.x2 > boundingBoxB.x && boundingBoxA.y < boundingBoxB.y2 &&
+                boundingBoxA.y2 > boundingBoxB.y) {
+                result = true;
+            }
+
+            return result;
+        },
+
+        /*
          * Loads a CSS file dinamically
          */
         loadCSS : function( filePath ) {

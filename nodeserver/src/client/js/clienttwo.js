@@ -485,7 +485,7 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
             }
             else if(object["base"])
             return _data[name];*/
-            return recursiveGetAttribute(name,_id);
+            return recursiveGetComplexAttribute(name.split(".")[0], name.split("." ).splice(1),_id);
 
         };
         this.setAttribute = function(name,value){
@@ -500,6 +500,38 @@ define(['/common/logmanager.js','/common/EventDispatcher.js', '/socket.io/socket
                 if(object[name]){
                     var retval = JSON.stringify(object[name]);
                     return JSON.parse(retval);
+                }
+                else if(object.base){
+                    return recursiveGetAttribute(name,object.base);
+                }
+                else{
+                    return null;
+                }
+            }
+            else{
+                return undefined;
+            }
+        };
+
+        var recursiveGetComplexAttribute = function(name, attrSegments,id){
+            var object = _storage.get(id);
+            if(object){
+                if(object[name]){
+                    var retval = JSON.parse(JSON.stringify(object[name]));
+
+                    while( attrSegments.length > 0 ) {
+                        var subSegment = attrSegments[0];
+                        attrSegments = attrSegments.slice(1);
+
+                        if ( retval[subSegment] ) {
+                            retval = retval[subSegment];
+                        } else {
+                            retval = null;
+                            break;
+                        }
+                    }
+
+                    return retval;
                 }
                 else if(object.base){
                     return recursiveGetAttribute(name,object.base);

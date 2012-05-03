@@ -2,7 +2,16 @@
 /*
  * WIDGET ModelEditor based on HTML, JS and CSS
  */
-define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil.js', './../js/ModelEditorComponent.js' ], function (util, logManager, commonUtil, ModelEditorComponent) {
+define([    './util.js', './../../common/LogManager.js',
+            './../../common/CommonUtil.js',
+            './../js/ModelEditorComponent.js',
+            './../js/ModelEditorCanvasSkin.js',
+            './../js/ModelEditorComponentSkin.js'  ], function (util,
+                                                                logManager,
+                                                                commonUtil,
+                                                                ModelEditorComponent,
+                                                                ModelEditorCanvasSkin,
+                                                                ModelEditorComponentSkin) {
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorWidget.css');
 
@@ -10,12 +19,13 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         var logger,
             containerControl,
             guid,
-            zoomFactor = 1.0,
             self = this,
             modelEditorE,
-            titleText,
             defaultSize = { "w" : 2000, "h": 1500 },
-            canvasSkin = "DefaultCanvasSkin.html";
+            nodeAttributeKeys = { "id" : "_id" },
+            rootComponent = null,
+            project = null,
+            generateComponentDescriptorFromNode;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorWidget");
@@ -51,33 +61,65 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         this.clear = function () {
             modelEditorE.html("");
             modelEditorE.width(defaultSize.w).height(defaultSize.h);
+            rootComponent = null;
         };
 
-        this.setRootNode = function (nodeId, node, multiLevelFactor) {
-            var rootComponent;
+        this.setProject = function (myProject) {
+            project = myProject;
+        };
 
-            logger.debug("Initializing multi level model editor with root: '" + node.id + "' and MultiLevelFactor: " + multiLevelFactor);
+        this.getProject = function () {
+            return project;
+        };
 
-            rootComponent = new ModelEditorComponent(nodeId, node, self, true, multiLevelFactor);
+        generateComponentDescriptorFromNode = function (node, skinPropertyDescriptor) {
+            var componentDescriptor = {},
+                i;
+
+            for (i in skinPropertyDescriptor) {
+                if (skinPropertyDescriptor.hasOwnProperty(i)) {
+                    componentDescriptor[i] = node.getAttribute(skinPropertyDescriptor[i]);
+                }
+            }
+
+            return componentDescriptor;
+        };
+
+        this.createRootFromNode = function (node) {
+            var rootSkinInstance = new ModelEditorCanvasSkin();
+
+            logger.debug("Initializing multi level model editor with root: '" + node.getAttribute(nodeAttributeKeys.id) + "'");
+
+            rootComponent = new ModelEditorComponent(generateComponentDescriptorFromNode(node, rootSkinInstance.getSkinPropertyDescriptor()), self, rootSkinInstance);
             rootComponent.addTo(modelEditorE);
+
+            return rootComponent;
         };
 
-        this.createObject = function (objDescriptor) {
-            var newComponent, draggableComponents, i, hookUpDrag;
+        this.createObject = function (nodeId, node, parentModelComponent) {
+            var newComponent,
+                componentDescriptor = {},
+                modelSkinInstance = new ModelEditorComponentSkin();
 
-            logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
+            logger.debug("Creating object with parameters: '" + nodeId + "'");
 
-            //newComponent = new ModelEditorComponent(objDescriptor, self);
-            //newComponent.addTo(modelEditorE);
+            if (node) {
+                componentDescriptor = generateComponentDescriptorFromNode(node, modelSkinInstance.getSkinPropertyDescriptor());
+            } else {
+                componentDescriptor.id = nodeId;
+            }
+
+            newComponent = new ModelEditorComponent(componentDescriptor, self, modelSkinInstance);
+            parentModelComponent.addChild(newComponent);
 
             //resizeSVG(newComponent.getBoundingBox(), false);
 
             //draggableComponents = newComponent.getDraggableComponents();
 
-            hookUpDrag = function (svgObject, component) {
+            /*hookUpDrag = function (svgObject, component) {
                 //svgObject.node.style.cursor = 'move';
                 //svgObject.drag(dragMove, dragStart, dragEnd, component, component, component);
-            };
+            };*/
 
             /*for (i = 0; i < draggableComponents.length; i += 1) {
                 //draggableComponents[i].svgComponent = newComponent;
@@ -88,29 +130,14 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             return newComponent;
         };
 
-        this.updateObject = function (modelObject, objDescriptor) {
-            /*logger.debug("Updating object with parameters: " + JSON.stringify(objDescriptor));
+        this.updateObject = function (modelComponent, node) {
+            var componentDescriptor = {};
 
-            modelObject.updateComponent(objDescriptor);
+            componentDescriptor = generateComponentDescriptorFromNode(node, modelComponent.getSkinInstance().getSkinPropertyDescriptor());
 
-            resizeSVG(modelObject.getBoundingBox(), false);*/
+            logger.debug("Updating object with parameters: " + JSON.stringify(componentDescriptor));
 
-            /*if (modelObject.attr("x") !== objDescriptor.posX) {
-             modelObject.attr("x", objDescriptor.posX);
-             }
-
-             if (modelObject.attr("y") !== objDescriptor.posY) {
-             modelObject.attr("y", objDescriptor.posY);
-             }
-
-             if (objDescriptor.title !== "Loading...") {
-             modelObject.attr("opacity", 1.0);
-             }
-
-             var text = modelObject[1];
-             if (text.attr("text") !== objDescriptor.title) {
-             text.attr("text", objDescriptor.title);
-             }*/
+            modelComponent.updateProperties(componentDescriptor);
         };
 
         this.deleteObject = function (modelObject) {

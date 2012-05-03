@@ -1,8 +1,14 @@
-div.modelEditorTitle {
+div.canvasTitle {
     font-size: 16px;
     font-weight: bold;
     color: #ff0000;
     padding: 5px;
+}
+
+div.childrenContainer {
+    position: absolute;
+    /*width: 100%;
+    height: 100%;*/
 }
 
 .column {
@@ -62,9 +68,38 @@ div.dragPosPanel {
     width: 80px;
     z-index: 100000;
 }
+div.invalidPosition {
+    background-color: #FA6666;
+    border: #ff0000 solid 1px;
+    color: #ff0000;
+}
+
+.modelEditorComponent .displayChildren {
+    width: 100%;
+    border-top: 1px solid #aaaaaa;
+    cursor: pointer;
+    bottom: 1px;
+    line-height: 10px;
+    position: absolute;
+}
+
+.modelEditorComponent .displayChildren span {
+    color: #ff0000;
+    font-size: 9px;
+    font-family: Helvetica, Arial;
+}
 
 .modelcomponent .children {
-    position: absolute;
     width: 100%;
-    border-top: 1px solid #000000;
+    min-height: 30px;
+    position: absolute;
 }
+
+.noUserSelect {
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
