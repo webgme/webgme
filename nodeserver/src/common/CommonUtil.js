@@ -1,3 +1,4 @@
+"use strict";
 /*
  * Utility helper functions for the client and server side
  */
@@ -5,7 +6,7 @@ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
 }
 
-define( [], function(){
+define([], function () {
 
     //return utility functions
     return {
@@ -41,13 +42,13 @@ define( [], function(){
         /*
          * Generated a GUID
          */
-        guid: function() {
-            var S4 = function() {
-                return (((1+Math.random())*0x10000)|0).toString(16).substring(1);
+        guid: function () {
+            var S4 = function () {
+                return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
             };
 
             //return GUID
-            return (S4()+S4()+"-"+S4()+"-"+S4()+"-"+S4()+"-"+S4()+S4()+S4());
+            return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
         }
     };
 });

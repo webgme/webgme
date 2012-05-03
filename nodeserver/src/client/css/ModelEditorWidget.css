@@ -1,0 +1,105 @@
+div.canvasTitle {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff0000;
+    padding: 5px;
+}
+
+div.childrenContainer {
+    position: absolute;
+    /*width: 100%;
+    height: 100%;*/
+}
+
+.column {
+    min-height: 100px;
+    min-width: 100px;
+    float: left;
+    border: 2px solid #666666;
+    background-color: #ccc;
+    -webkit-border-radius: 10px;
+    -ms-border-radius: 10px;
+    -moz-border-radius: 10px;
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 3px #000;
+    -ms-box-shadow: inset 0 0 3px #000;
+    box-shadow: inset 0 0 3px #000;
+    text-align: center;
+}
+.column header {
+    color: #fff;
+    text-shadow: #000 0 1px;
+    box-shadow: 5px;
+    padding: 5px;
+    background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+    background: -webkit-gradient(linear, left top, right top,
+    color-stop(0, rgb(0,0,0)),
+    color-stop(0.50, rgb(79,79,79)),
+    color-stop(1, rgb(21,21,21)));
+    background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+    background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+    border-bottom: 1px solid #ddd;
+    -webkit-border-top-left-radius: 10px;
+    -moz-border-radius-topleft: 10px;
+    -ms-border-radius-topleft: 10px;
+    border-top-left-radius: 10px;
+    -webkit-border-top-right-radius: 10px;
+    -ms-border-top-right-radius: 10px;
+    -moz-border-radius-topright: 10px;
+    border-top-right-radius: 10px;
+}
+
+#dPartBrowser .column {
+    margin-top: 10px;
+}
+
+div.dragPosPanel {
+    font-size: 8px;
+    font-weight:bold;
+    font-family: Verdana;
+    color: #222;
+    background-color: #e6e6e6;
+    border: #222 solid 1px;
+    padding: 2px 4px;
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    z-index: 100000;
+}
+div.invalidPosition {
+    background-color: #FA6666;
+    border: #ff0000 solid 1px;
+    color: #ff0000;
+}
+
+.modelEditorComponent .displayChildren {
+    width: 100%;
+    border-top: 1px solid #aaaaaa;
+    cursor: pointer;
+    bottom: 1px;
+    line-height: 10px;
+    position: absolute;
+}
+
+.modelEditorComponent .displayChildren span {
+    color: #ff0000;
+    font-size: 9px;
+    font-family: Helvetica, Arial;
+}
+
+.modelcomponent .children {
+    width: 100%;
+    min-height: 30px;
+    position: absolute;
+}
+
+.noUserSelect {
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -webkit-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
