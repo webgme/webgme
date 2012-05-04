@@ -19,7 +19,8 @@ require([   'order!jquery.min',
             './../js/ModelEditorControl.js',
             './../js/ModelEditorSVGWidget.js',
             './../js/ModelEditorWidget.js',
-            './../js/MultiLevelModelEditorControl.js' ], function (jquery,
+            './../js/MultiLevelModelEditorControl.js',
+            './../js/WidgetAPI/WidgetManager.js'], function (jquery,
                                                         jqueryUI,
                                                         domReady,
                                                         Client,
@@ -32,7 +33,8 @@ require([   'order!jquery.min',
                                                         ModelEditorControl,
                                                         ModelEditorSVGWidget,
                                                         ModelEditorWidget,
-                                                        MultiLevelModelEditorControl) {
+                                                        MultiLevelModelEditorControl,
+                                                        WidgetManager) {
     domReady(function () {
 
         //if ( commonUtil.DEBUG === true ) {
@@ -70,6 +72,7 @@ require([   'order!jquery.min',
 
                     modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
                     modelEditorHTML = new MultiLevelModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
+                    //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
                 });
             });
         };
