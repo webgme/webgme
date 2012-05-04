@@ -47,7 +47,7 @@ var commonUtil = require('./../common/CommonUtil.js');
 
 /*COMMON VARIABLES*/
 var STORAGELATENCY = 1;
-LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL );
+LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
 var ID = "_id";
@@ -466,8 +466,8 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                     cb();
                 }
                 else{
-                    if(object.relations.referralIds.indexOf(refId) !== -1){
-                        object.relations.referralIds.splice(object.relations.referralIds.indexOf(refId),1);
+                    if(object.relations.referredIds.indexOf(refId) !== -1){
+                        object.relations.referredIds.splice(object.relations.referredIds.indexOf(refId),1);
                         commandBuffer.set(id,object);
                     }
                     else{
@@ -488,7 +488,9 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                         commandBuffer.set(id,object);
                     }
                     else{
-                        logger.error("Commander.deleteCommand.removeChild wrong child info "+childId);
+                        if(childId === deletecommand.id){
+                            logger.error("Commander.deleteCommand.removeChild wrong child info "+childId+" in object "+id);
+                        }
                     }
                     cb();
                 }
@@ -505,7 +507,9 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                         commandBuffer.set(id,object);
                     }
                     else{
-                        logger.error("Commander.deleteCommand.removeInheritor wrong inheritor info "+inhId);
+                        if(inhId === deletecommand.id){
+                            logger.error("Commander.deleteCommand.removeInheritor wrong inheritor info "+inhId+" from object "+id);
+                        }
                     }
                     cb();
                 }
@@ -513,7 +517,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         };
 
         deleteObject = function(id){
-
             /*main*/
             count++;
             commandBuffer.get(id,function(err,object){
@@ -527,6 +530,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                     for(i=0;i<object.relations.inheritorIds.length;i++){
                         deleteObject(object.relations.inheritorIds[i]);
                     }
+                    objectDeleted();
                 };
 
                 /*main*/
@@ -546,13 +550,13 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                                     }
                                 };
                                 /*main*/
-                                innercount = object.relations.referralIds.length;
+                                innercount = object.relations.referredIds.length;
                                 if(innercount === 0){
                                     relationsRemoved();
                                 }
                                 else{
-                                    for(i=0;i<object.relations.referralIds.length;i++){
-                                        removeReferral(id,object.relations.referralIds[i],retfunc)
+                                    for(i=0;i<object.relations.referredIds.length;i++){
+                                        removeReferral(id,object.relations.referredIds[i],retfunc)
                                     }
                                 }
                             });
@@ -618,7 +622,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                           newobject.relations.childrenIds = [];
                           newobject.relations.parentId = parentId;
                           newobject.relations.inheritorIds = [];
-                          newobject.relations.referralIds = [];
+                          newobject.relations.referredIds = [];
                           newobject[ID] = prefix+newobject[ID];
                           if(newobject.relations.referenceId){
                               commandBuffer.get(newobject.relations.referenceId,function(err,refobj){
