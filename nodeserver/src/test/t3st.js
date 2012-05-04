@@ -1,6 +1,11 @@
 "use strict";
 var io = require('socket.io-client');
 var socket = io.connect('http://localhost:8081');
+var fs=require('fs');
+var commands = fs.readFileSync("t3stcommands.wcf","utf8");
+commands = commands.split('\n');
+console.log(JSON.stringify(commands));
+var commandpointer = 0;
 
 socket.on('connect',function(msg){
     socket.emit('connectToBranch',"t3st");
@@ -8,7 +13,7 @@ socket.on('connect',function(msg){
 
 socket.on('connectToBranchAck',function(msg){
     console.log("connectToBranchAck");
-    socket.emit('clientMessage',{commands:[{type:"territory",id:"t01",patterns:{"root":{children:-1}}}]});
+    sendnextcommand();
 });
 
 socket.on('clientMessageAck',function(msg){
@@ -17,4 +22,33 @@ socket.on('clientMessageAck',function(msg){
 socket.on('serverMessage',function(msg){
     console.log("serverMessage: "+JSON.stringify(msg));
     socket.emit('serverMessageAck');
+    commandresponded(msg);
 });
+
+
+var sendnextcommand = function(){
+    if(commandpointer<commands.length){
+        if(commands[commandpointer].length>0){
+            commands[commandpointer] = JSON.parse(commands[commandpointer]);
+            socket.emit('clientMessage',{commands:[commands[commandpointer]]});
+        }
+        else{
+            commandpointer++;
+            sendnextcommand();
+        }
+    }
+    else{
+        process.exit(0);
+    }
+};
+var commandresponded = function(msg){
+    var i;
+    for(i=0;i<msg.length;i++){
+        if(msg[i].type === "command" && msg[i].cid === commands[commandpointer].cid){
+            commandpointer++;
+            sendnextcommand();
+        }
+    }
+};
+
+/*MAIN*/
