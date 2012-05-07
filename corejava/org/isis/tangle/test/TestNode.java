@@ -1,4 +1,7 @@
-package org.isis.tangle;
+package org.isis.tangle.test;
+
+import org.isis.tangle.Cursor;
+import org.isis.tangle.Node;
 
 public class TestNode extends Node {
 

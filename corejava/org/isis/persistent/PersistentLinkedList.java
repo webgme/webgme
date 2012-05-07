@@ -62,7 +62,7 @@ public abstract class PersistentLinkedList<Value> extends
 	protected static final PersistentLinkedList EMPTY = new EmptyNode();
 	
 	@SuppressWarnings("unchecked")
-	public static <Value> PersistentLinkedList<Value> EMPTY() {
+	public static <Value> PersistentLinkedList<Value> empty() {
 		return EMPTY;
 	}
 
@@ -85,7 +85,7 @@ public abstract class PersistentLinkedList<Value> extends
 		}
 	};
 
-	public static final <Value> PersistentLinkedList<Value> construct(
+	public static final <Value> PersistentLinkedList<Value> prepend(
 			Value first, PersistentLinkedList<Value> rest) {
 		assert (first != null && rest != null);
 		return new ObjNode<Value>(first, rest);
@@ -104,7 +104,7 @@ public abstract class PersistentLinkedList<Value> extends
 		}
 	};
 
-	public static final PersistentLinkedList<Integer> construct(int first,
+	public static final PersistentLinkedList<Integer> prepend(int first,
 			PersistentLinkedList<Integer> rest) {
 		assert (rest != null);
 		return new IntNode(first, rest);

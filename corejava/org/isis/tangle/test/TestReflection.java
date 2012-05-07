@@ -1,8 +1,8 @@
-package org.isis.tangle;
+package org.isis.tangle.test;
 
 import java.lang.reflect.*;
 
-public class Reflection {
+public class TestReflection {
 	private static final int REPEATS = 1000;
 	private static final int RUNS = 30000;
 

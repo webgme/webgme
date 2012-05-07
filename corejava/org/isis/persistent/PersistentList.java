@@ -66,11 +66,11 @@ public abstract class PersistentList<Value> extends PersistentCollection<Value>
 		throw new UnsupportedOperationException();
 	}
 
-	public ListIterator<Value> listIterator(int arg0) {
+	public ListIterator<Value> listIterator(int index) {
 		throw new UnsupportedOperationException();
 	}
 
-	public final List<Value> subList(int arg0, int arg1) {
+	public PersistentList<Value> subList(int start, int end) {
 		throw new UnsupportedOperationException();
 	}
 

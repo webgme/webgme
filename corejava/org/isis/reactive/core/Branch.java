@@ -1,4 +1,4 @@
-package org.isis.webgme.core;
+package org.isis.reactive.core;
 
 import org.isis.reactive.*;
 

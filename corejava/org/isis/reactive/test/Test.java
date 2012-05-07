@@ -1,4 +1,4 @@
-package org.isis.webgme.test;
+package org.isis.reactive.test;
 
 import org.isis.reactive.*;
 
