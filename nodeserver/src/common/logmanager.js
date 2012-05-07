@@ -3,6 +3,7 @@
  *
  * Author: Robert Kereskenyi
  */
+//"use strict";
 
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
@@ -12,7 +13,7 @@ if (typeof define !== 'function') {
  * -------- LOGMANAGER -------
  */
 
-define( [], function(){
+define([], function () {
 
     var logLevels = {
         "ALL" : 5,
@@ -34,71 +35,71 @@ define( [], function(){
 
     var useColors = false;
 
-    var Logger = function( componentName ) {
+    var Logger = function (componentName) {
 
-        var logMessage = function( level, msg ) {
-            if ( currentLogLevel > logLevels.OFF ) {
+        var logMessage = function (level, msg) {
+            if (currentLogLevel > logLevels.OFF) {
                 //log only what meets configuration
-                if (  logLevels[level] <= currentLogLevel ) {
+                if ( logLevels[level] <= currentLogLevel) {
                     //see whether console exists
-                    if ( console && console.log ) {
+                    if (console && console.log) {
                         var logTime = new Date();
 
-                        var logTimeStr = (logTime.getHours() < 10 ) ? "0" + logTime.getHours() : logTime.getHours();
+                        var logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours();
                         logTimeStr += ":";
-                        logTimeStr += (logTime.getMinutes() < 10 ) ? "0" + logTime.getMinutes() : logTime.getMinutes();
+                        logTimeStr += (logTime.getMinutes() < 10) ? "0" + logTime.getMinutes() : logTime.getMinutes();
                         logTimeStr += ":";
-                        logTimeStr += (logTime.getSeconds() < 10 ) ? "0" + logTime.getSeconds() : logTime.getSeconds();
+                        logTimeStr += (logTime.getSeconds() < 10) ? "0" + logTime.getSeconds() : logTime.getSeconds();
                         logTimeStr += ".";
-                        logTimeStr += (logTime.getMilliseconds() < 10 ) ? "00" + logTime.getMilliseconds() : ( (logTime.getMilliseconds() < 100 ) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds() );
+                        logTimeStr += (logTime.getMilliseconds() < 10) ? "00" + logTime.getMilliseconds() : ((logTime.getMilliseconds() < 100) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds());
 
                         var levelStr = level;
-                        if ( useColors === true ) {
+                        if (useColors === true) {
                             levelStr  = '\033[' + logColors[level] +'m' + level + '\033[39m';
                         }
 
-                        console.log( levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg );
+                        console.log(levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg);
                     }
                 }
             }
         };
 
-        this.debug = function( msg ) {
-            logMessage( "DEBUG", msg );
+        this.debug = function (msg) {
+            logMessage("DEBUG", msg);
         } ;
 
-        this.info = function( msg ) {
-            logMessage( "INFO", msg );
+        this.info = function (msg) {
+            logMessage("INFO", msg);
         } ;
 
-        this.warning = function( msg ) {
-            logMessage( "WARNING", msg );
+        this.warning = function (msg) {
+            logMessage("WARNING", msg);
         } ;
 
-        this.error = function( msg ) {
-            logMessage( "ERROR", msg );
+        this.error = function (msg) {
+            logMessage("ERROR", msg);
         } ;
     };
 
     return {
         logLevels : logLevels,
 
-        setLogLevel : function( level ) {
-            if ( ( level >= 0 ) && ( level <= logLevels.ALL ) ) {
+        setLogLevel : function (level) {
+            if ((level >= 0) && (level <= logLevels.ALL)) {
                 currentLogLevel = level;
             }
         },
 
-        useColors : function( enabled ) {
-            if ( ( enabled === true ) || ( enabled === false ) ) {
+        useColors : function (enabled) {
+            if ((enabled === true) || (enabled === false)) {
                 useColors = enabled;
             } else {
                 useColors = false;
             }
         },
 
-        create : function( componentName ) {
-            return new Logger( componentName );
+        create : function (componentName) {
+            return new Logger(componentName);
         }
     };
 });

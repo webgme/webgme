@@ -71,8 +71,8 @@ require([   'order!jquery.min',
                     tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
                     modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-                    modelEditorHTML = new MultiLevelModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
-                    //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+                    //modelEditorHTML = new MultiLevelModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
+                    modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
                 });
             });
         };

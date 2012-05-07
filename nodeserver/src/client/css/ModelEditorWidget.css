@@ -68,6 +68,7 @@ div.dragPosPanel {
     width: 80px;
     z-index: 100000;
 }
+
 div.invalidPosition {
     background-color: #FA6666;
     border: #ff0000 solid 1px;

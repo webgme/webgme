@@ -8,7 +8,6 @@ define([], function () {
         this.skinPartContents = {};
         this.chilrenContainer = null;
         this.project = null;
-        this.widgetContext = {};
         this.el = $('<div/>');
 
         this.initializeFromNode = function (node) {
@@ -17,7 +16,7 @@ define([], function () {
         };
 
         this.renderUI = function () {
-            this.skinParts.title = $('<span/>');
+            this.skinParts.title = $('<div/>');
             this.skinParts.childrenContainer = $('<div/>', {
                 "class" : "children"
             });
@@ -59,6 +58,9 @@ define([], function () {
                     child = this.children[i];
                     child.render();
                     this.chilrenContainer.append(child.el);
+                    if ($.isFunction(this.childAdded)) {
+                        this.childAdded.call(this, child);
+                    }
                 }
             }
         };
@@ -67,8 +69,23 @@ define([], function () {
             this.children.push(child);
             if (this.chilrenContainer) {
                 child.render();
+                child.parentWidget = this;
                 this.chilrenContainer.append(child.el);
+                if ($.isFunction(this.childAdded)) {
+                    this.childAdded.call(this, child);
+                }
             }
+        };
+
+        this.getBoundingBox = function () {
+            var bBox = {    "x": parseInt($(this.el).css("left"), 10),
+                            "y": parseInt($(this.el).css("top"), 10),
+                            "w": parseInt($(this.el).outerWidth(true), 10),
+                            "h": parseInt($(this.el).outerHeight(true), 10) };
+            bBox.x2 = bBox.x + bBox.w;
+            bBox.y2 = bBox.y + bBox.h;
+
+            return bBox;
         };
     };
 

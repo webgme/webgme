@@ -30,14 +30,14 @@ define(['./../../../common/LogManager.js', './../../../common/EventDispatcher.js
                     currentWidget.render();
                     containerElement.append(currentWidget.el);
 
-                    var cw2 = new SkinType();
+                    /*var cw2 = new SkinType();
                     cw2.initializeFromNode(selectedNode);
 
                     var cw3 = new SkinType();
                     cw3.initializeFromNode(selectedNode);
 
                     currentWidget.addChild(cw2);
-                    currentWidget.addChild(cw3);
+                    currentWidget.addChild(cw3);*/
                 });
             }
         });

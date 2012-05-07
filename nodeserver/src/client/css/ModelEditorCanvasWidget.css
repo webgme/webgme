@@ -1,0 +1,32 @@
+div.modelEditorCanvasTitle {
+    font-size: 16px;
+    font-weight: bold;
+    color: #ff0000;
+    padding: 5px;
+}
+
+div.invalidChildDrag {
+    background-color: #FCC4BE;
+}
+
+div.dragPosPanel {
+    font-size: 8px;
+    font-weight:bold;
+    font-family: Verdana;
+    color: #222;
+    background: rgba(224, 224, 224, 0.49);
+    border: rgba(0,0,0,0.25) solid 1px;
+    padding: 2px 4px;
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    z-index: 100000;
+    text-align:center;
+}
+
+div.invalidPosition {
+    background: rgba(255, 0, 0, 0.49);
+    border: #FF0000 solid 1px;
+}
