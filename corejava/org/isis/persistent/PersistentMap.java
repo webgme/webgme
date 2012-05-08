@@ -32,7 +32,7 @@ public abstract class PersistentMap<Key, Value> implements Map<Key, Value> {
 		protected final PersistentMap<Key, Value> map;
 		
 		protected EntrySet(PersistentMap<Key, Value> map) {
-			super(map.size, map.hash + 1972);
+			super(map.size, map.hash + 101);
 			this.map = map;
 		}
 
@@ -80,7 +80,7 @@ public abstract class PersistentMap<Key, Value> implements Map<Key, Value> {
 		protected final PersistentMap<Key, Value> map;
 		
 		protected KeySet(PersistentMap<Key, Value> map) {
-			super(map.size, map.hash + 1973);
+			super(map.size, map.hash + 102);
 			this.map = map;
 		}
 
@@ -145,7 +145,7 @@ public abstract class PersistentMap<Key, Value> implements Map<Key, Value> {
 		protected final PersistentMap<Key, Value> map;
 		
 		protected ValueCollection(PersistentMap<Key, Value> map) {
-			super(map.size, map.hash + 1974);
+			super(map.size, map.hash + 103);
 			this.map = map;
 		}
 

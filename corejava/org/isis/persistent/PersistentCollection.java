@@ -26,6 +26,19 @@ public abstract class PersistentCollection<Value> implements Collection<Value> {
 		return hash;
 	}
 
+	private static final int HASH_BASIS = -2128831035;
+	private static final int HASH_PRIME = 16777619;
+
+	protected static final int firstHash(int id) {
+		return HASH_BASIS + id;
+	}
+	
+	protected static final int calcHash(int hash, int value) {
+		hash ^= value;
+		hash *= HASH_PRIME;
+		return hash;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public boolean equals(Object o) {
 		assert (o != null && o instanceof PersistentCollection);
@@ -56,7 +69,7 @@ public abstract class PersistentCollection<Value> implements Collection<Value> {
 	}
 
 	public boolean contains(Object value) {
-		assert( value != null );
+		assert (value != null);
 
 		Iterator<Value> iter = iterator();
 		while (iter.hasNext()) {
@@ -68,7 +81,7 @@ public abstract class PersistentCollection<Value> implements Collection<Value> {
 	}
 
 	public boolean containsAll(Collection<?> coll) {
-		assert( coll != null );
+		assert (coll != null);
 
 		Iterator<?> iter = coll.iterator();
 		while (iter.hasNext()) {
@@ -85,16 +98,29 @@ public abstract class PersistentCollection<Value> implements Collection<Value> {
 
 	@SuppressWarnings("unchecked")
 	public <Type> Type[] toArray(Type[] array) {
-		assert( array.length == size );
+		assert (array.length >= size);
 
 		int pos = 0;
 		Iterator<Value> iter = iterator();
 
-		while (iter.hasNext())
+		while (pos < size)
 			array[pos++] = (Type) iter.next();
 
-		assert (pos == size);
+		assert (!iter.hasNext());
 		return array;
+	}
+
+	public static void toArray(Collection<Integer> coll, int[] array) {
+		int size = coll.size();
+		assert (array.length >= size);
+
+		int pos = 0;
+		Iterator<Integer> iter = coll.iterator();
+
+		while (pos < size)
+			array[pos++] = iter.next();
+
+		assert (!iter.hasNext());
 	}
 
 	public final boolean add(Value value) {

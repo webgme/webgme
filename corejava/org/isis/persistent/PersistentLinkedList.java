@@ -2,8 +2,7 @@ package org.isis.persistent;
 
 import java.util.*;
 
-public abstract class PersistentLinkedList<Value> extends
-		PersistentList<Value> {
+public abstract class PersistentLinkedList<Value> extends PersistentList<Value> {
 
 	protected final PersistentLinkedList<Value> rest;
 
@@ -13,8 +12,7 @@ public abstract class PersistentLinkedList<Value> extends
 		return rest;
 	}
 
-	protected static final class ListIterator<Value>
-			implements Iterator<Value> {
+	protected static final class ListIterator<Value> implements Iterator<Value> {
 
 		protected PersistentLinkedList<Value> list;
 
@@ -44,14 +42,11 @@ public abstract class PersistentLinkedList<Value> extends
 		return new ListIterator<Value>(this);
 	}
 
-	protected static final int HASH_BASIS = -2128831035;
-	protected static final int HASH_PRIME = 16777619;
-
 	protected PersistentLinkedList() {
-		super(0, HASH_BASIS);
+		super(0, firstHash(1));
 		this.rest = null;
 	}
-	
+
 	protected static final class EmptyNode extends PersistentLinkedList<Object> {
 		public Object first() {
 			throw new UnsupportedOperationException();
@@ -60,14 +55,14 @@ public abstract class PersistentLinkedList<Value> extends
 
 	@SuppressWarnings("rawtypes")
 	protected static final PersistentLinkedList EMPTY = new EmptyNode();
-	
+
 	@SuppressWarnings("unchecked")
 	public static <Value> PersistentLinkedList<Value> empty() {
 		return EMPTY;
 	}
 
 	protected PersistentLinkedList(int first, PersistentLinkedList<Value> rest) {
-		super(rest.size + 1, (rest.hash ^ ((rest.size << 16) + first)) * HASH_PRIME);
+		super(rest.size + 1, calcHash(rest.hash, (rest.size << 16) + first));
 		this.rest = rest;
 	}
 

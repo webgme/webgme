@@ -11,9 +11,18 @@ public abstract class PersistentArrayList<Value> extends PersistentList<Value> {
 	protected static final class IntArray extends PersistentArrayList<Integer> {
 
 		protected final int[] array;
+
+		protected static int calcHash(int[] array) {
+			int hash = firstHash(2);
+			
+			for(int i = 0; i < array.length; ++i)
+				hash = calcHash(hash, array[i]);
+
+			return hash;
+		}
 		
 		protected IntArray(int[] array, int size) {
-			super(size, 0);
+			super(size, calcHash(array));
 			this.array = array;
 		}
 
@@ -36,8 +45,20 @@ public abstract class PersistentArrayList<Value> extends PersistentList<Value> {
 
 		protected final Value[] array;
 		
+		protected static <Value> int calcHash(Value[] array) {
+			int hash = firstHash(3);
+			
+			for(int i = 0; i < array.length; ++i) {
+				assert( array[i] != null );
+				hash = calcHash(hash, array[i].hashCode());
+			}
+
+			return hash;
+		}
+		
+		
 		protected ObjArray(Value[] array, int size) {
-			super(size, 0);
+			super(size, calcHash(array));
 			this.array = array;
 		}
 
@@ -130,6 +151,8 @@ public abstract class PersistentArrayList<Value> extends PersistentList<Value> {
 		return new ArrayIterator<Value>(this, index);
 	}
 
+	public abstract Value get(int index);
+	
 	public abstract PersistentList<Value> prefix(int end);
 	
 	public final PersistentList<Value> subList(int start, int end) {
@@ -137,5 +160,35 @@ public abstract class PersistentArrayList<Value> extends PersistentList<Value> {
 			throw new UnsupportedOperationException();
 		
 		return prefix(end);
+	}
+	
+	public static <Value> void toArray(PersistentArrayList<Value> source, Value[] target) {
+		assert (target.length >= source.size);
+
+		ObjArray<Value> s = (ObjArray<Value>)source;
+		System.arraycopy(s.array, 0, target, 0, source.size);
+	}
+
+	public static <Value> void toArray(PersistentArrayList<Integer> source, int[] target) {
+		assert (target.length >= source.size);
+
+		IntArray s = (IntArray)source;
+		System.arraycopy(s.array, 0, target, 0, source.size);
+	}
+
+	public static PersistentArrayList<Integer> persist(int[] array) {
+		return new IntArray(array, array.length);
+	}
+	
+	public static PersistentArrayList<Integer> persist(int[] array, int size) {
+		return new IntArray(array, size);
+	}
+
+	public static <Value> PersistentArrayList<Value> persist(Value[] array) {
+		return new ObjArray<Value>(array, array.length);
+	}
+
+	public static <Value> PersistentArrayList<Value> persist(Value[] array, int size) {
+		return new ObjArray<Value>(array, size);
 	}
 }
