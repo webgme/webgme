@@ -5,12 +5,14 @@ define(['./../../../common/LogManager.js',
         './../util.js',
         './WidgetBase.js',
         './ModelEditorModelWidget.js',
-        './ModelEditorConnectionWidget.js'], function (logManager,
+        './ModelEditorConnectionWidget.js',
+        './../NotificationManager.js'], function (logManager,
                                                       EventDispatcher,
                                                       util,
                                                       WidgetBase,
                                                       ModelEditorModelWidget,
-                                                      ModelEditorConnectionWidget) {
+                                                      ModelEditorConnectionWidget,
+                                                      notificationManager) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorCanvasWidget.css');
@@ -27,7 +29,7 @@ define(['./../../../common/LogManager.js',
             refresh,
             createChildComponent,
             positionChildOnCanvas,
-            myGridSpace = 10,
+            myGridSpace = 1,
             childDragValidPos = true;
 
         $.extend(this, new WidgetBase());
@@ -64,8 +66,8 @@ define(['./../../../common/LogManager.js',
             originalInitializeFromNode.call(self, node);
             territoryId = self.project.reserveTerritory(self);
 
-            currentNodeInfo.id = node.getAttribute("_id");
-            currentNodeInfo.children = node.getAttribute("children");
+            currentNodeInfo.id = node.getAttribute(self.nodeAttrNames.id);
+            currentNodeInfo.children = node.getAttribute(self.nodeAttrNames.children);
 
             //create all the children and add to parent
             for (i = 0; i < currentNodeInfo.children.length; i += 1) {
@@ -99,19 +101,45 @@ define(['./../../../common/LogManager.js',
         };
 
         refresh = function (eventType, nodeId) {
-            var childNode;
+            var node = self.project.getNode(nodeId),
+                newTitle,
+                newChildren = [],
+                childrenDiff,
+                i;
 
-            if (eventType === "insert") {
-                childNode = self.project.getNode(nodeId);
-                if (childNode) {
-                    if (childNode.getAttribute("parent") === currentNodeInfo.id) {
-                        createChildComponent(childNode);
+            if (node) {
+                if (eventType === "insert") {
+                    if (node.getAttribute(self.nodeAttrNames.parentId) === currentNodeInfo.id) {
+                        createChildComponent(node);
                     }
                 }
-            }
 
-            if (eventType === "update") {
+                if (eventType === "update") {
+                    if (node.getAttribute(self.nodeAttrNames.id) === currentNodeInfo.id) {
+                        //update of currently opened node
+                        //- title might have changed
+                        //- children collection might have changed
 
+                        newTitle = node.getAttribute(self.nodeAttrNames.name);
+                        if (self.skinPartContents.title !== newTitle) {
+                            self.skinParts.title.html(newTitle).hide().fadeIn('fast');
+                            notificationManager.displayMessage("Object title '" + self.skinPartContents.title + "' has been changed to '" + newTitle + "'.");
+                            self.skinPartContents.title = newTitle;
+                        }
+
+                        newChildren = node.getAttribute(self.nodeAttrNames.children);
+
+                        //added children handled in the 'insert' part
+                        childrenDiff = util.arrayMinus(currentNodeInfo.children, newChildren);
+                        for (i = 0; i < childrenDiff.length; i += 1) {
+                            //remove the children
+                            self.removeChildById(childrenDiff[i]);
+                        }
+
+                        //save new children collection info
+                        currentNodeInfo.children = newChildren;
+                    }
+                }
             }
         };
 
@@ -119,7 +147,7 @@ define(['./../../../common/LogManager.js',
             var childComponent;
 
             childComponent = new ModelEditorModelWidget();
-            childrenComponents[node.getAttribute("_id")] = childComponent;
+            childrenComponents[node.getAttribute(self.nodeAttrNames.id)] = childComponent;
             childComponent.project = self.project;
             childComponent.initializeFromNode(node);
             childComponent.position = { "x": node.getAttribute("attr.posX"), "y": node.getAttribute("attr.posY") };
@@ -158,7 +186,7 @@ define(['./../../../common/LogManager.js',
 
             childComponentEl.draggable({
                 zIndex: 100000,
-                grid: [10, 10],
+                grid: [myGridSpace, myGridSpace],
                 start: function (event, ui) {
                     childComponent.dragStartPos = {"x": childComponent.position.x, "y": childComponent.position.y };
                     childDragValidPos = true;

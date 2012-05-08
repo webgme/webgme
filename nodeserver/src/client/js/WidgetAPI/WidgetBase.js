@@ -9,10 +9,14 @@ define([], function () {
         this.chilrenContainer = null;
         this.project = null;
         this.el = $('<div/>');
+        this.nodeAttrNames = {  "id": "_id",
+                                "name" : "name",
+                                "children": "children",
+                                "parentId": "parent" };
 
         this.initializeFromNode = function (node) {
-            this.skinPartContents.id = node.getAttribute("_id");
-            this.skinPartContents.title = node.getAttribute("name");
+            this.skinPartContents.id = node.getAttribute(this.nodeAttrNames.id);
+            this.skinPartContents.title = node.getAttribute(this.nodeAttrNames.name);
         };
 
         this.renderUI = function () {
@@ -75,6 +79,10 @@ define([], function () {
                     this.childAdded.call(this, child);
                 }
             }
+        };
+
+        this.removeChildById = function (childId) {
+            //TODO: fixme, this.childrenCollection should be handled here in WidgetBase
         };
 
         this.getBoundingBox = function () {
