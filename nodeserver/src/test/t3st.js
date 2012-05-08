@@ -95,7 +95,7 @@ var commandresponded = function(msg){
     var i;
     console.log("commandpointer "+commandpointer);
     for(i=0;i<msg.length;i++){
-        if(msg[i].type === "command" && msg[i].cid === commands[commandpointer].cid){
+        if(msg[i].type === "command" && commandpointer<commands.length && msg[i].cid === commands[commandpointer].cid){
             commandpointer++;
             sendnextcommand();
         }

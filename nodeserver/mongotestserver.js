@@ -14,14 +14,25 @@ var timeStampInt = function(){
 var lfd = undefined;
 var fs = require('fs');
 var log = function(text){
-    if(lfd){
+  /*  if(lfd){
         fs.writeSync(lfd,"["+timeStamp()+"] "+text+"\n");
     }
     else{
         lfd = fs.openSync(timeStampNoFormat()+".log", 'a');
         log(text);
     }
-}
+    */
+};
+var dfd = undefined;
+var dataout = function(object){
+    if(dfd){
+        fs.writeSync(dfd,object+"\n");
+    }
+    else{
+        dfd=fs.openSync("js.data.out",'a');
+        dataout(object);
+    }
+};
 var DB = require('mongodb').Db;
 var SERVER = require('mongodb').Server;
 
@@ -157,7 +168,8 @@ var readSubTree = function(root){
     	if(err){
     		log("ooops "+query);
     	}
-    	else{    		
+    	else{
+            dataout(JSON.stringify(result));
 	        var time = timeStampInt()-starttime;
 	        log("{"+result._id+"} returned in "+time+"ms");
 	        for(var i in result.children){

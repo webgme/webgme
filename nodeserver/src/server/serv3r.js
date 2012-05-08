@@ -556,7 +556,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                                 }
                                 else{
                                     for(i=0;i<object.relations.referredIds.length;i++){
-                                        removeReferral(id,object.relations.referredIds[i],retfunc)
+                                        removeReference(id,object.relations.referredIds[i],retfunc)
                                     }
                                 }
                             });

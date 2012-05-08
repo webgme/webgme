@@ -737,6 +737,11 @@ var Project = function(cProject,cBranch){
     this.deleteClient = function(id){
         logger.debug("Project.deleteClient "+id);
         delete cClients[id];
+        for(var i in cTerritories){
+            if(i.indexOf(id) !== -1){
+                delete cTerritories[i];
+            }
+        }
     };
 
     /*message handling*/
