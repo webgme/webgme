@@ -342,7 +342,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             deleteCommand(command);
         }
         else if(command.type === "paste"){
-            pasteCommand(command,"p_"+cCid+"_"+"_"+command.cid+"_");
+            pasteCommand(command,"p_"+cCid+"_"+command.cid+"_");
         }
         else if(command.type === "save"){
             saveCommand(command);
