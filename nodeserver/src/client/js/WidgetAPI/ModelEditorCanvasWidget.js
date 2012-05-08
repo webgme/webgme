@@ -17,167 +17,136 @@ define(['./../../../common/LogManager.js',
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorCanvasWidget.css');
 
-    var ModelEditorCanvasWidget = function () {
+    var ModelEditorCanvasWidget = function (id) {
         var logger,
-            originalRenderUI,
-            originalInitializeFromNode,
             self = this,
-            defaultSize = { "w": 2000, "h": 1500 },
             territoryId = 0,
-            currentNodeInfo,
-            childrenComponents = {},
-            refresh,
+            currentNodeInfo = { "id": id, "children" : [] },
+            defaultSize = { "w": 800, "h": 1000 },
+            skinContent = {},
             createChildComponent,
+            childComponentsCreateQueue = {},
+            myGridSize = 10,
+            childDragValidPos = true,
+            onChildDrag,
             positionChildOnCanvas,
-            myGridSpace = 1,
-            childDragValidPos = true;
+            adjustChildrenContainerSize,
+            refresh;
 
-        $.extend(this, new WidgetBase());
+        $.extend(this, new WidgetBase(id));
 
+        //disable any kind of selection on the control because of dragging
         this.el.disableSelection();
 
         //get logger instance for this component
-        logger = logManager.create("ModelEditorCanvasWidget");
+        logger = logManager.create("ModelEditorCanvasWidget_" + id);
         logManager.setLogLevel(5);
 
-        currentNodeInfo = { "id": null, "children" : [] };
+        this.initializeFromNode = function (node) {
+            var newPattern;
 
-        originalRenderUI = this.renderUI;
-        this.renderUI = function () {
-            //for now the original renderUI works just fine, but need to modify the style
-            originalRenderUI.call(self);
+            territoryId = self.project.reserveTerritory(self);
+            currentNodeInfo.children = node.getAttribute(self.nodeAttrNames.children);
 
-            $(self.skinParts.title).addClass("modelEditorCanvasTitle");
+            //generate skin controls
+            //node title
+            self.skinParts.title = $('<div/>');
+            self.skinParts.title.addClass("modelEditorCanvasTitle");
+            this.el.append(self.skinParts.title);
 
-            //set size for children container
-            $(self.skinParts.childrenContainer).outerWidth(defaultSize.w).outerHeight(defaultSize.h);
+            //children container
+            self.skinParts.childrenContainer = $('<div/>', {
+                "class" : "children"
+            });
+            //by default occupy all the available space
+            self.skinParts.childrenContainer.outerWidth(defaultSize.w).outerHeight(defaultSize.h);
+            this.el.append(self.skinParts.childrenContainer);
 
             this.skinParts.dragPosPanel = $('<div/>', {
                 "class" : "dragPosPanel"
             });
-        };
+            this.el.append(self.skinParts.dragPosPanel);
 
-        originalInitializeFromNode = this.initializeFromNode;
-        this.initializeFromNode = function (node) {
-            var newPattern,
-                i,
-                childNode;
+            //get content from node
+            skinContent.title = node.getAttribute(self.nodeAttrNames.name);
 
-            originalInitializeFromNode.call(self, node);
-            territoryId = self.project.reserveTerritory(self);
+            //apply content to controls
+            self.skinParts.title.html(skinContent.title);
 
-            currentNodeInfo.id = node.getAttribute(self.nodeAttrNames.id);
-            currentNodeInfo.children = node.getAttribute(self.nodeAttrNames.children);
-
-            //create all the children and add to parent
-            for (i = 0; i < currentNodeInfo.children.length; i += 1) {
-                childNode = self.project.getNode(currentNodeInfo.children[i]);
-                if (childNode) {
-                    createChildComponent(childNode);
-                }
-            }
-
+            //specify territory
             newPattern = {};
-            newPattern[currentNodeInfo.id] = { "children": 1 };
+            newPattern[self.getId()] = { "children": 0 };
             self.project.addPatterns(territoryId, newPattern);
         };
 
-        // PUBLIC METHODS
-        this.onEvent = function (etype, eid) {
-            switch (etype) {
-            case "load":
-                refresh("insert", eid);
-                break;
-            case "modify":
-                refresh("update", eid);
-                break;
-            case "create":
-                refresh("insert", eid);
-                break;
-            case "delete":
-                refresh("update", eid);
-                break;
+        this.addedToParent = function () {
+            var i;
+            //create widget for children and add them to self
+
+            for (i = 0; i < currentNodeInfo.children.length; i += 1) {
+                createChildComponent(currentNodeInfo.children[i], true);
             }
         };
 
-        refresh = function (eventType, nodeId) {
-            var node = self.project.getNode(nodeId),
-                newTitle,
-                newChildren = [],
-                childrenDiff,
-                i;
+        createChildComponent = function (childId, silent) {
+            var childNode = self.project.getNode(childId),
+                childWidget;
 
-            if (node) {
-                if (eventType === "insert") {
-                    if (node.getAttribute(self.nodeAttrNames.parentId) === currentNodeInfo.id) {
-                        createChildComponent(node);
-                    }
-                }
-
-                if (eventType === "update") {
-                    if (node.getAttribute(self.nodeAttrNames.id) === currentNodeInfo.id) {
-                        //update of currently opened node
-                        //- title might have changed
-                        //- children collection might have changed
-
-                        newTitle = node.getAttribute(self.nodeAttrNames.name);
-                        if (self.skinPartContents.title !== newTitle) {
-                            self.skinParts.title.html(newTitle).hide().fadeIn('fast');
-                            notificationManager.displayMessage("Object title '" + self.skinPartContents.title + "' has been changed to '" + newTitle + "'.");
-                            self.skinPartContents.title = newTitle;
-                        }
-
-                        newChildren = node.getAttribute(self.nodeAttrNames.children);
-
-                        //added children handled in the 'insert' part
-                        childrenDiff = util.arrayMinus(currentNodeInfo.children, newChildren);
-                        for (i = 0; i < childrenDiff.length; i += 1) {
-                            //remove the children
-                            self.removeChildById(childrenDiff[i]);
-                        }
-
-                        //save new children collection info
-                        currentNodeInfo.children = newChildren;
-                    }
-                }
+            if (silent === false) {
+                childComponentsCreateQueue[childId] = childId;
             }
+
+            childWidget = new ModelEditorModelWidget(childId);
+            childWidget.project = self.project;
+            childWidget.initializeFromNode(childNode);
+            self.addChild(childWidget);
         };
 
-        createChildComponent = function (node) {
-            var childComponent;
+        this.childBBoxChanged = function (child) {
+            //check children's X;Y position based on this parent's layout settings
+            positionChildOnCanvas(child);
 
-            childComponent = new ModelEditorModelWidget();
-            childrenComponents[node.getAttribute(self.nodeAttrNames.id)] = childComponent;
-            childComponent.project = self.project;
-            childComponent.initializeFromNode(node);
-            childComponent.position = { "x": node.getAttribute("attr.posX"), "y": node.getAttribute("attr.posY") };
+            //check if the new children does not cause overlap
+            //readjust if necessary
 
-            self.addChild(childComponent);
+            //check if current children container's width and height are big enough to contain the children
+            adjustChildrenContainerSize(child);
         };
 
         positionChildOnCanvas = function (childComponent) {
             var posXDelta,
                 posYDelta,
                 childComponentEl = $(childComponent.el),
-                childPosition = childComponent.position;
+                pX = parseInt(childComponentEl.css("left"), 10),
+                pY = parseInt(childComponentEl.css("top"), 10);
 
             //correct the children position based on this skin's granularity
-            posXDelta = childPosition.x % myGridSpace;
-            posYDelta = childPosition.y % myGridSpace;
+            posXDelta = pX % myGridSize;
+            posYDelta = pY % myGridSize;
 
-            childPosition.x += (posXDelta < Math.floor(myGridSpace / 2) + 1 ? -1 * posXDelta : myGridSpace - posXDelta);
-            childPosition.y += (posYDelta < Math.floor(myGridSpace / 2) + 1 ? -1 * posYDelta : myGridSpace - posYDelta);
+            pX += (posXDelta < Math.floor(myGridSize / 2) + 1 ? -1 * posXDelta : myGridSize - posXDelta);
+            pY += (posYDelta < Math.floor(myGridSize / 2) + 1 ? -1 * posYDelta : myGridSize - posYDelta);
 
-            childComponentEl.css("position", "absolute");
-            childComponentEl.css("left", childComponent.position.x);
-            childComponentEl.css("top", childComponent.position.y);
+            if ((parseInt(childComponentEl.css("left"), 10) !== pX) || (parseInt(childComponentEl.css("top"), 10) !== pY)) {
+                childComponent.setPosition(pX, pY, true);
+            }
+        };
+
+        adjustChildrenContainerSize = function (childComponent) {
+            var cW = self.skinParts.childrenContainer.outerWidth(),
+                cH = self.skinParts.childrenContainer.outerHeight(),
+                childBBox = childComponent.getBoundingBox();
+
+            if (cW < childBBox.x2) {
+                self.skinParts.childrenContainer.outerWidth(childBBox.x2 + 100);
+            }
+            if (cH < childBBox.y2) {
+                self.skinParts.childrenContainer.outerHeight(childBBox.y2 + 100);
+            }
         };
 
         this.childAdded = function (childComponent) {
             var childComponentEl = $(childComponent.el);
-            //set child position
-            positionChildOnCanvas(childComponent);
-
 
             //hook up moving
             //enable dragging
@@ -186,24 +155,22 @@ define(['./../../../common/LogManager.js',
 
             childComponentEl.draggable({
                 zIndex: 100000,
-                grid: [myGridSpace, myGridSpace],
+                grid: [myGridSize, myGridSize],
                 start: function (event, ui) {
-                    childComponent.dragStartPos = {"x": childComponent.position.x, "y": childComponent.position.y };
+                    childComponent.dragStartPos = {"x": parseInt(childComponentEl.css("left"), 10), "y": parseInt(childComponentEl.css("top"), 10) };
                     childDragValidPos = true;
                     self.skinParts.dragPosPanel.removeClass("invalidPosition");
                     self.skinParts.dragPosPanel.show();
                     logger.debug("Start dragging from original position X: " + childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
                 },
                 stop: function (event, ui) {
-                    var childNode;
-                    logger.debug("Stop dragging at position X: " + childComponent.position.x + ", Y: " + childComponent.position.y);
+                    var stopPos = { "x": parseInt(childComponentEl.css("left"), 10), "y":  parseInt(childComponentEl.css("top"), 10) };
+                    logger.debug("Stop dragging at position X: " + stopPos.x + ", Y: " + stopPos.y);
                     self.skinParts.dragPosPanel.hide();
                     self.el.removeClass("invalidChildDrag");
                     if (childDragValidPos === true) {
                         //save back new position
-                        childNode = self.project.getNode(childComponentEl.attr("id"));
-                        logger.debug("Object position changed for id:'" + childComponentEl.attr("id") + "', new pos:[" + childComponent.position.x + ", " + childComponent.position.y + "]");
-                        childNode.setAttribute("attr", { "posX":  childComponent.position.x, "posY":  childComponent.position.y });
+                        childComponent.setPosition(stopPos.x, stopPos.y, false);
                     } else {
                         //roll back to original position
                         logger.debug("Component has been dropped at an invalid position, rolling back to original. X: " +  childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
@@ -211,7 +178,6 @@ define(['./../../../common/LogManager.js',
                             left: childComponent.dragStartPos.x,
                             top: childComponent.dragStartPos.y
                         }, 500, function () {
-                            childComponent.position = { "x": childComponent.dragStartPos.x, "y": childComponent.dragStartPos.y };
                             delete childComponent.dragStartPos;
                         });
                     }
@@ -220,7 +186,6 @@ define(['./../../../common/LogManager.js',
                     var dragPos = { "x": parseInt(childComponentEl.css("left"), 10), "y": parseInt(childComponentEl.css("top"), 10) },
                         validPos = true,
                         childBBox;
-                    childComponent.position = { "x": dragPos.x, "y": dragPos.y };
 
                     //position panel
                     self.skinParts.dragPosPanel.html("X: " + dragPos.x + " Y: " + dragPos.y);
@@ -228,8 +193,8 @@ define(['./../../../common/LogManager.js',
                     self.skinParts.dragPosPanel.css("left", childBBox.x + (childBBox.w - self.skinParts.dragPosPanel.outerWidth()) / 2);
                     self.skinParts.dragPosPanel.css("top", childBBox.y + childBBox.h + 10);
 
-                    if ($.isFunction(self.onChildDrag)) {
-                        validPos = self.onChildDrag.call(self, childComponent);
+                    if ($.isFunction(onChildDrag)) {
+                        validPos = onChildDrag.call(self, childComponent);
                     }
 
                     if (childDragValidPos !== validPos) {
@@ -240,29 +205,127 @@ define(['./../../../common/LogManager.js',
                             self.skinParts.dragPosPanel.removeClass("invalidPosition");
                         }
                     }
-
-                    if ($.isFunction(childComponent.onDrag)) {
-                        childComponent.onDrag.call(childComponent, validPos);
-                    }
                 }
             });
         };
 
-        this.onChildDrag = function (childComponent) {
+        onChildDrag = function (childComponent) {
             var validPos = true,
-                i;
+                i,
+                childBBox = childComponent.getBoundingBox();
 
-            for (i = 0; i < this.children.length; i += 1) {
-                if (childComponent.el !== this.children[i].el) {
-                    validPos = !(util.overlap(childComponent.getBoundingBox(), this.children[i].getBoundingBox()));
-                    if (validPos === false) {
+            if (childBBox.x < 0 || childBBox.y < 0) {
+                validPos = false;
+            }
 
-                        logger.debug("Inavlid pos");
-                        break;
+            if (validPos === true) {
+                for (i in self.children) {
+                    if (self.children.hasOwnProperty(i)) {
+                        if (childComponent.el !== self.children[i].el) {
+                            validPos = !(util.overlap(childBBox, self.children[i].getBoundingBox()));
+                            if (validPos === false) {
+                                break;
+                            }
+                        }
                     }
                 }
             }
+
             return validPos;
+        };
+
+        // PUBLIC METHODS
+        this.onEvent = function (etype, eid) {
+            if (eid === currentNodeInfo.id) {
+                switch (etype) {
+                case "load":
+                    //refresh("insert", eid);
+                    break;
+                case "modify":
+                    refresh("update", eid);
+                    break;
+                case "create":
+                    //refresh("insert", eid);
+                    break;
+                case "delete":
+                    //refresh("update", eid);
+                    break;
+                }
+            }
+        };
+
+        refresh = function (eventType, nodeId) {
+            var node = self.project.getNode(nodeId),
+                newTitle,
+                newChildren = [],
+                childrenDiff = [],
+                i;
+
+            if (node) {
+                if (eventType === "update") {
+
+                    //update of currently opened node
+                    //- title might have changed
+                    //- children collection might have changed
+
+                    newTitle = node.getAttribute(self.nodeAttrNames.name);
+                    if (skinContent.title !== newTitle) {
+                        self.skinParts.title.html(newTitle).hide().fadeIn('fast');
+                        notificationManager.displayMessage("Object title '" + skinContent.title + "' has been changed to '" + newTitle + "'.");
+                        skinContent.title = newTitle;
+                    }
+
+                    newChildren = node.getAttribute(self.nodeAttrNames.children);
+
+                    //added children handled in the 'insert' part
+                    //but keep track of them here because of the notifications
+                    childrenDiff = util.arrayMinus(newChildren, currentNodeInfo.children);
+                    for (i = 0; i < childrenDiff.length; i += 1) {
+                        createChildComponent(childrenDiff[i], true);
+                    }
+                    if (childrenDiff.length > 0) {
+                        if (childrenDiff.length > 1) {
+                            notificationManager.displayMessage(childrenDiff.length + " new children have been created for '" + skinContent.title + "'");
+                        } else {
+                            notificationManager.displayMessage("1 new child has been created for '" + skinContent.title + "'");
+                        }
+                    }
+
+                    //handle removed children
+                    childrenDiff = util.arrayMinus(currentNodeInfo.children, newChildren);
+                    for (i = 0; i < childrenDiff.length; i += 1) {
+                        //remove the children
+                        self.removeChildById(childrenDiff[i]);
+                    }
+                    if (childrenDiff.length > 0) {
+                        if (childrenDiff.length > 1) {
+                            notificationManager.displayMessage(childrenDiff.length + " children have been removed from '" + skinContent.title + "'");
+                        } else {
+                            notificationManager.displayMessage("1 child has been removed from '" + skinContent.title + "'");
+                        }
+                    }
+
+                    //save new children collection info
+                    currentNodeInfo.children = newChildren;
+                }
+            }
+        };
+
+        this.destroy = function () {
+            var i;
+
+            //destroy all children
+            for (i in self.children) {
+                if (self.children.hasOwnProperty(i)) {
+                    self.children[i].destroy();
+                }
+            }
+
+            //delete its own territory
+            self.project.removeTerritory(territoryId);
+
+            //finally remove itself from DOM
+            this.el.remove();
         };
     };
 

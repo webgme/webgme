@@ -15,7 +15,7 @@ define(['./../../../common/LogManager.js', './../../../common/EventDispatcher.js
                 widgetContext;
 
             if (currentWidget) {
-                currentWidget.el.remove();
+                currentWidget.destroy();
             }
 
             selectedNode = project.getNode(nodeId);
@@ -24,20 +24,11 @@ define(['./../../../common/LogManager.js', './../../../common/EventDispatcher.js
                 require([skinPath], function (SkinType) {
                     //TODO: figure out the concrete widget that should render that node
                     widgetContext = { "isRoot": true };
-                    currentWidget = new SkinType();
+                    currentWidget = new SkinType(nodeId);
                     currentWidget.project = project;
                     currentWidget.initializeFromNode(selectedNode);
-                    currentWidget.render();
                     containerElement.append(currentWidget.el);
-
-                    /*var cw2 = new SkinType();
-                    cw2.initializeFromNode(selectedNode);
-
-                    var cw3 = new SkinType();
-                    cw3.initializeFromNode(selectedNode);
-
-                    currentWidget.addChild(cw2);
-                    currentWidget.addChild(cw3);*/
+                    currentWidget.addedToParent();
                 });
             }
         });
