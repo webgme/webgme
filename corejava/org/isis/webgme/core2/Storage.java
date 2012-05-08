@@ -14,7 +14,7 @@ public class Storage {
 		nodes.add(node);
 	}
 
-	public void removeQuery(Node node) {
+	public void removeNode(Node node) {
 		assert( nodes.contains(node) );
 		nodes.remove(node);
 	}

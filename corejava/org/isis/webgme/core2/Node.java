@@ -76,9 +76,6 @@ public class Node {
 		if( basetype != null )
 			basetype.addSubtype(this);
 		
-		if( basetype != null )
-			basetype.addChild(this);
-
 		Iterator<Query> iter = queries.iterator();
 		while(iter.hasNext()) {
 			Query query = iter.next();
@@ -182,5 +179,4 @@ public class Node {
 		
 		// TODO: load the parent
 	}
-
 }
