@@ -177,7 +177,7 @@ define(['./../../../common/LogManager.js',
                         childComponentEl.animate({
                             left: childComponent.dragStartPos.x,
                             top: childComponent.dragStartPos.y
-                        }, 500, function () {
+                        }, 200, function () {
                             delete childComponent.dragStartPos;
                         });
                     }
