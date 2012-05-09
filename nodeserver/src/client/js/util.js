@@ -23,8 +23,56 @@ define(['order!jquery.min',
         }
     });
 
+    /*
+     * Disabling selection on element
+     */
+    $.fn.extend({
+        editInPlace : function (editClass, successCallback) {
+            this.each(function () {
+                var contentWidth = $(this).outerWidth(),
+                    inputCtrl,
+                    prevTitle = $(this).html(),
+                    originalCtrl = $(this);
 
-        /*
+                originalCtrl.html("<input id='editNode' value='" + prevTitle + "' class='" + editClass + "' />");
+                inputCtrl =  $(this).find("#editNode");
+                inputCtrl.width(contentWidth - 18);
+                inputCtrl.focus().keydown(
+                    function (event) {
+                        switch (event.which) {
+                        case 27: // [esc]
+                            // discard changes on [esc]
+                            inputCtrl.val(prevTitle);
+                            event.preventDefault();
+                            $(this).blur();
+                            break;
+                        case 13: // [enter]
+                            // simulate blur to accept new value
+                            event.preventDefault();
+                            $(this).blur();
+                            break;
+                        }
+                    }
+                ).blur(function (event) {
+                    var newTitle = inputCtrl.val();
+                    // Accept new value, when user leaves <input>
+
+                    if (newTitle === "") {
+                        newTitle = prevTitle;
+                    }
+
+                    originalCtrl.html(newTitle);
+                    if (prevTitle !== newTitle) {
+                        if (successCallback) {
+                            successCallback(newTitle);
+                        }
+                    }
+                });
+            });
+        }
+    });
+
+    /*
      *
      * Getting textwidth
      *

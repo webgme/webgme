@@ -19,7 +19,8 @@ define(['./../../../common/LogManager.js',
             territoryId,
             skinContent = {},
             refresh,
-            noTitleValue = "Loading...";
+            noTitleValue = "Loading...",
+            editNodeTitle;
 
         $.extend(this, new WidgetBase(id));
 
@@ -55,6 +56,28 @@ define(['./../../../common/LogManager.js',
             newPattern = {};
             newPattern[self.getId()] = { "children": 0 };
             self.project.addPatterns(territoryId, newPattern);
+
+            //hook up double click for node title edit
+            self.skinParts.title.dblclick(editNodeTitle);
+        };
+
+        editNodeTitle = function () {
+            //can not edit 'loading...' node
+            if (skinContent.title === noTitleValue) {
+                return;
+            }
+            //first of all unbind dblclick
+            self.skinParts.title.unbind("dblclick");
+
+            // Replace node with <input>
+            self.skinParts.title.editInPlace("modelTitle", function (newTitle) {
+                var node = self.project.getNode(self.getId());
+                skinContent.title = newTitle;
+                node.setAttribute("name", newTitle);
+            });
+
+            //hook up double click for node title edit
+            self.skinParts.title.dblclick(editNodeTitle);
         };
 
         this.setPosition = function (pX, pY, silent) {
