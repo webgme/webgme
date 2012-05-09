@@ -462,12 +462,14 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         };
         removeReferral = function(refId,id,cb){
             commandBuffer.get(id,function(err,object){
+                var index;
                 if(err){
                     cb();
                 }
                 else{
-                    if(object.relations.referredIds.indexOf(refId) !== -1){
-                        object.relations.referredIds.splice(object.relations.referredIds.indexOf(refId),1);
+                    index = object.relations.referredIds.indexOf(refId);
+                    if(index !== -1){
+                        object.relations.referredIds.splice(index,1);
                         commandBuffer.set(id,object);
                     }
                     else{
@@ -479,12 +481,14 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         };
         removeChild = function(childId,id,cb){
             commandBuffer.get(id,function(err,object){
+                var index;
                 if(err){
                     cb();
                 }
                 else{
-                    if(object.relations.childrenIds.indexOf(childId) !== -1){
-                        object.relations.childrenIds.splice(object.relations.childrenIds.indexOf(childId),1);
+                    index = object.relations.childrenIds.indexOf(childId);
+                    if(index !== -1){
+                        object.relations.childrenIds.splice(index,1);
                         commandBuffer.set(id,object);
                     }
                     else{
@@ -498,12 +502,14 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         };
         removeInheritor = function(inhId,id,cb){
             commandBuffer.get(id,function(err,object){
+                var index;
                 if(err){
                     cb();
                 }
                 else{
-                    if(object.relations.inheritorIds.indexOf(inhId) !== -1){
-                        object.relations.inheritorIds.splice(object.relations.inheritorIds.indexOf(inhId),1);
+                    index = object.relations.inheritorIds.indexOf(inhId);
+                    if(index !== -1){
+                        object.relations.inheritorIds.splice(index,1);
                         commandBuffer.set(id,object);
                     }
                     else{
