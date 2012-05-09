@@ -256,7 +256,7 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
     /*public functions*/
     this.get = function(id,cb){
         if(bufferedObjects[id]){
-            cb(null,copyObject(bufferedObjects[id]));
+            cb(null,bufferedObjects[id]);
         }
         else{
             cStorage.get(id,function(err,object){
@@ -266,14 +266,14 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
                 else{
                     bufferedObjects[id]=object;
                     objectStates[id]="read";
-                    cb(null,copyObject(bufferedObjects[id]));
+                    cb(null,bufferedObjects[id]);
                 }
             });
         }
     };
     this.set = function(id,object){
         if(bufferedObjects[id] && objectStates[id]!=="delete"){
-            bufferedObjects[id]=copyObject(object);
+            bufferedObjects[id]=object;
             if(object){
                 if(objectStates[id] !== "create"){
                     objectStates[id]="update";
@@ -284,7 +284,7 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
             }
         }
         else{
-            bufferedObjects[id]=copyObject(object);
+            bufferedObjects[id]=object;
             objectStates[id]="create";
         }
     };
@@ -880,7 +880,7 @@ var Territory = function(cClient,cId,cReadStorage){
                 logger.error("Territory.sendTerritory error in getting object "+err);
             }
             else{
-                objectlist[object[ID]] = copyObject(object);
+                objectlist[object[ID]] = object;
             }
             if(--amount === 0){
                 cClient.onUpdateTerritory(objectlist,{});
@@ -907,7 +907,7 @@ var Territory = function(cClient,cId,cReadStorage){
             if(currentList.indexOf(id) === -1){
                 currentList.push(id);
                 if(previousList.indexOf(id) === -1){
-                    addedObjects[id] = copyObject(object);
+                    addedObjects[id] = object;
                 }
 
                 if(object.relations.baseId !== null && currentList.indexOf(object.relations.baseId) === -1){
