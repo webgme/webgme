@@ -251,7 +251,11 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
         bufferedObjects,
         objectStates,
         completeCommand,
-        flushBuffer;
+        flushBuffer,
+        readQueue,
+        self,
+        objectArrived,
+        flushReadQueue;
 
     /*public functions*/
     this.get = function(id,cb){
@@ -259,16 +263,13 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
             cb(null,bufferedObjects[id]);
         }
         else{
-            cStorage.get(id,function(err,object){
-                if(err){
-                    cb(err);
-                }
-                else{
-                    bufferedObjects[id]=object;
-                    objectStates[id]="read";
-                    cb(null,bufferedObjects[id]);
-                }
-            });
+            readQueue.push({id:id,cb:cb});
+            if(objectStates[id] === undefined){
+                objectStates[id] = "db";
+                cStorage.get(id,function(err,object){
+                    objectArrived(id,err,object);
+                });
+            }
         }
     };
     this.set = function(id,object){
@@ -297,6 +298,40 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
         completeCommand();
     };
     /*private function*/
+    flushReadQueue = function(id){
+        var i = 0;
+        while(i<readQueue.length){
+            if(readQueue[i].id === id){
+                self.get(readQueue[i].id,readQueue[i].cb);
+                readQueue.splice(i,1);
+            }
+            else{
+                i++;
+            }
+        }
+    };
+    objectArrived = function(id,err,object){
+        var i,
+            req;
+        if(err){
+        /*TODO have to separate different type of errors*/
+            i = 0;
+            while(i<readQueue.length){
+                if(readQueue[i].id === id){
+                    readQueue[i].cb(err);
+                    readQueue.splice(i,1);
+                }
+                else{
+                    i++;
+                }
+            }
+        }
+        else{
+            bufferedObjects[id] = object;
+            objectStates[id] = "read";
+            flushReadQueue(id);
+        }
+    };
     flushBuffer = function(){
         var count,
             objectSaved,
@@ -310,7 +345,7 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
 
         /*main*/
         for(i in bufferedObjects){
-            if(objectStates[i] !== "read"){
+            if(objectStates[i] !== "read" && objectStates[i]!=="db"){
                 count++;
                 cStorage.set(i,bufferedObjects[i],objectSaved);
             }
@@ -327,7 +362,7 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
             for(i in cClients){
                 msg = [];
                 for(j in bufferedObjects){
-                    if(objectStates[j] !== "read"){
+                    if(objectStates[j] !== "read" && objectStates[j] !== "db"){
                         if(cClients[i].interestedInObject(j)){
                             msg.push({type:objectStates[j],id:j,object:bufferedObjects[j]});
                         }
@@ -344,10 +379,14 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
             CB();
         }
     };
+
     /*main*/
+    self = this;
     commandStatus = true;
     bufferedObjects = {};
     objectStates = {};
+
+
 };
 var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
     var processCommand,
