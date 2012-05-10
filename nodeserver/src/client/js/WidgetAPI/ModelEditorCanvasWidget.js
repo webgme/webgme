@@ -152,7 +152,7 @@ define(['./../../../common/LogManager.js',
             pY += (posYDelta < Math.floor(myGridSize / 2) + 1 ? -1 * posYDelta : myGridSize - posYDelta);
 
             if ((parseInt(childComponentEl.css("left"), 10) !== pX) || (parseInt(childComponentEl.css("top"), 10) !== pY)) {
-                childComponent.setPosition(pX, pY, true);
+                childComponent.setPosition(pX, pY, true, true);
             }
         };
 
@@ -606,8 +606,10 @@ define(['./../../../common/LogManager.js',
 
             logger.debug("Select children by rubber band: [" + tX + "," + tY + "], [" + tX2 + "," + tY2 + "]");
 
-            selectionContainsBBox = function (childBBox) {
+            selectionContainsBBox = function (childBBox, childId) {
+                var interSectionArea = Math.max(0, Math.max(rbBBox.x2, childBBox.x2) - Math.min(rbBBox.x, childBBox.x)) * Math.max(0, Math.max(rbBBox.y2, childBBox.y2) - Math.min(rbBBox.y, childBBox.y));
 
+                logger.debug("intersection area with '" + childId + "': " + interSectionArea);
                 if ((rbBBox.x <= childBBox.x) && (rbBBox.x2 >= childBBox.x2) && (rbBBox.y <= childBBox.y) && (rbBBox.y2 >= childBBox.y2)) {
                     return true;
                 }
@@ -618,7 +620,7 @@ define(['./../../../common/LogManager.js',
             for (i in self.children) {
                 if (self.children.hasOwnProperty(i)) {
                     //if (util.overlap(rbBBox, self.children[i].getBoundingBox())) {
-                    if (selectionContainsBBox(self.children[i].getBoundingBox())) {
+                    if (selectionContainsBBox(self.children[i].getBoundingBox(), i)) {
                         childrenIDs.push(i);
                     }
                 }

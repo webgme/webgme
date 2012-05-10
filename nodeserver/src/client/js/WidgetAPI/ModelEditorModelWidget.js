@@ -80,7 +80,7 @@ define(['./../../../common/LogManager.js',
             self.skinParts.title.dblclick(editNodeTitle);
         };
 
-        this.setPosition = function (pX, pY, silent) {
+        this.setPosition = function (pX, pY, silent, noParentNotification) {
             var childNode;
 
             this.el.css("position", "absolute");
@@ -96,8 +96,10 @@ define(['./../../../common/LogManager.js',
                 }
             }
 
-            if (self.parentWidget) {
-                self.parentWidget.childBBoxChanged(self);
+            if (noParentNotification !== true) {
+                if (self.parentWidget) {
+                    self.parentWidget.childBBoxChanged(self);
+                }
             }
         };
 
