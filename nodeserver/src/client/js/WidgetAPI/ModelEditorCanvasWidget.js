@@ -607,12 +607,23 @@ define(['./../../../common/LogManager.js',
             logger.debug("Select children by rubber band: [" + tX + "," + tY + "], [" + tX2 + "," + tY2 + "]");
 
             selectionContainsBBox = function (childBBox, childId) {
-                var interSectionArea = Math.max(0, Math.max(rbBBox.x2, childBBox.x2) - Math.min(rbBBox.x, childBBox.x)) * Math.max(0, Math.max(rbBBox.y2, childBBox.y2) - Math.min(rbBBox.y, childBBox.y));
+                var interSectionRect,
+                    acceptRatio = 0.5,
+                    interSectionRatio;
 
-                logger.debug("intersection area with '" + childId + "': " + interSectionArea);
-                if ((rbBBox.x <= childBBox.x) && (rbBBox.x2 >= childBBox.x2) && (rbBBox.y <= childBBox.y) && (rbBBox.y2 >= childBBox.y2)) {
-                    return true;
+                if (util.overlap(rbBBox, childBBox)) {
+                    interSectionRect = { "x": Math.max(childBBox.x, rbBBox.x),
+                        "y": Math.max(childBBox.y, rbBBox.y),
+                        "x2": Math.min(childBBox.x2, rbBBox.x2),
+                        "y2": Math.min(childBBox.y2, rbBBox.y2) };
+
+                    interSectionRatio = (interSectionRect.x2 - interSectionRect.x) * (interSectionRect.y2 - interSectionRect.y) / ((childBBox.x2 - childBBox.x) * (childBBox.y2 - childBBox.y));
+                    if (interSectionRatio > acceptRatio) {
+                        return true;
+                    }
                 }
+
+
 
                 return false;
             };
