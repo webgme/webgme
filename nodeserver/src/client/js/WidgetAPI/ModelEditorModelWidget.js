@@ -156,6 +156,22 @@ define(['./../../../common/LogManager.js',
             //finally remove itself from DOM
             this.el.remove();
         };
+
+        this.onSelect = function () {
+            this.el.addClass("selected");
+        };
+
+        this.onDeselect = function () {
+            this.el.removeClass("selected");
+        };
+
+        this.moveBy = function (dX, dY) {
+            var cX = parseInt(this.el.css("left"), 10),
+                cY = parseInt(this.el.css("top"), 10);
+
+            this.el.css("left", cX + dX);
+            this.el.css("top", cY + dY);
+        };
     };
 
     return ModelEditorModelWidget;

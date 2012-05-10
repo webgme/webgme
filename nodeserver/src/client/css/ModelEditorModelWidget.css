@@ -53,3 +53,9 @@ input.modelTitle {
     border-radius: 3px;
 }
 
+.selected {
+    border: 2px solid #52A8EC;
+    background-color: #DBEAFC;
+    //background-color: #C3DCFC;
+}
+
