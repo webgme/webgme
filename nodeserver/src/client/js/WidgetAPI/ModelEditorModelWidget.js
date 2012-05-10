@@ -80,7 +80,7 @@ define(['./../../../common/LogManager.js',
             self.skinParts.title.dblclick(editNodeTitle);
         };
 
-        this.setPosition = function (pX, pY, silent) {
+        this.setPosition = function (pX, pY, silent, noParentNotification) {
             var childNode;
 
             this.el.css("position", "absolute");
@@ -96,8 +96,10 @@ define(['./../../../common/LogManager.js',
                 }
             }
 
-            if (self.parentWidget) {
-                self.parentWidget.childBBoxChanged(self);
+            if (noParentNotification !== true) {
+                if (self.parentWidget) {
+                    self.parentWidget.childBBoxChanged(self);
+                }
             }
         };
 
@@ -155,6 +157,22 @@ define(['./../../../common/LogManager.js',
 
             //finally remove itself from DOM
             this.el.remove();
+        };
+
+        this.onSelect = function () {
+            this.el.addClass("selected");
+        };
+
+        this.onDeselect = function () {
+            this.el.removeClass("selected");
+        };
+
+        this.moveBy = function (dX, dY) {
+            var cX = parseInt(this.el.css("left"), 10),
+                cY = parseInt(this.el.css("top"), 10);
+
+            this.el.css("left", cX + dX);
+            this.el.css("top", cY + dY);
         };
     };
 
