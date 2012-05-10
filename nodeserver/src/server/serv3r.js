@@ -246,8 +246,9 @@ var TransactionQueue = function(cProject){
         processNextMessage();
     };
 };
-var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
-    var commandStatus,
+var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
+    var i,
+        commandStatus,
         bufferedObjects,
         objectStates,
         completeCommand,
@@ -255,7 +256,9 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
         readQueue,
         self,
         objectArrived,
-        flushReadQueue;
+        flushReadQueue,
+        finalizeClient,
+        clientcount;
 
     /*public functions*/
     this.get = function(id,cb){
@@ -291,11 +294,28 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
     };
     this.commandFailed = function(){
         commandStatus = false;
-        completeCommand();
+        self.finalizeCommand();
     };
     this.commandSucceeds = function(){
-        flushBuffer();
-        completeCommand();
+    };
+    this.finalizeCommand = function(){
+        var i,
+            msg;
+        if(commandStatus){
+            flushBuffer(function(){
+                var i;
+                for(i in cClients){
+                    finalizeClient(cClients[i]);
+                }
+            });
+        }
+        else{
+            msg = [];
+            for(i=0;i<cCommands.length;i++){
+                msg.push({type:"command",cid:cCommands[i].cid,success:false});
+            }
+            cClients[cCid].sendMessage(msg);
+        }
     };
     /*private function*/
     flushReadQueue = function(id){
@@ -332,24 +352,59 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
             flushReadQueue(id);
         }
     };
-    flushBuffer = function(){
+    flushBuffer = function(cb){
         var count,
             objectSaved,
             i;
 
         objectSaved = function(err){
             if(--count === 0){
-                completeCommand();
+                cb();
             }
         };
 
         /*main*/
         for(i in bufferedObjects){
+            count++;
+        }
+        for(i in bufferedObjects){
             if(objectStates[i] !== "read" && objectStates[i]!=="db"){
-                count++;
                 cStorage.set(i,bufferedObjects[i],objectSaved);
             }
+            else{
+                objectSaved();
+            }
         }
+    };
+    finalizeClient = function(client){
+        client.refreshTerritories(self,function(loadlist,unloadlist){
+            var i,
+                msg = [];
+            for(i in bufferedObjects){
+                if(loadlist.indexOf(i) !== -1){
+                    msg.push({type:"load",id:i,object:bufferedObjects[i]});
+                }
+                else if(unloadlist.indexOf(i) !== -1){
+                    msg.push({type:"unload",id:i,object:bufferedObjects[i]});
+                }
+                else if(objectStates[i] !== "read" && client.interestedInObject(i)){
+                    msg.push({type:objectStates[i],id:i,object:bufferedObjects[i]});
+                }
+            }
+            if(client.getId() === cCid){
+                for(i=0;i<cCommands.length;i++){
+                    msg.push({type:"command",cid:cCommands[i].cid,success:true});
+                }
+            }
+            if(msg.length>0){
+                client.sendMessage(msg);
+            }
+
+            if(--clientcount === 0){
+                CB(); /*probably these message sendings could go paralelly with the next command, but who knows*/
+            }
+
+        });
     };
     completeCommand = function(){
         var msg,
@@ -385,6 +440,10 @@ var CommandBuffer = function(cStorage,cCid,cTerritories,cCommand,cClients,CB){
     commandStatus = true;
     bufferedObjects = {};
     objectStates = {};
+    clientcount = 0;
+    for(i in cClients){
+        clientcount++;
+    }
 
 
 };
@@ -401,7 +460,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         inheritObject;
 
     processCommand = function(command){
-        commandBuffer = new CommandBuffer(cStorage,cCid,cTerritories,command,cClients,commandProcessed);
         if(command.type === "copy"){
             copyCommand(command);
         }
@@ -426,17 +484,14 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             processCommand(cCommands[0]);
         }
         else{
-            for(i in cTerritories){
-                cTerritories[i].updatePatterns();
-            }
-            CB();
+            commandBuffer.finalizeCommand();
         }
     };
 
     /*commands*/
     copyCommand = function(copycommand){
         cClients[cCid].copy(copycommand.ids);
-        commandBuffer.commandSucceeds();
+        commandProcessed();
     };
     modifyCommand = function(modifycommand){
         var i,
@@ -459,7 +514,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 if(modified){
                     commandBuffer.set(modifycommand.id,object);
                 }
-                commandBuffer.commandSucceeds();
+                commandProcessed();
             }
         });
     };
@@ -475,7 +530,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             count;
 
         deletionComplete = function(){
-            commandBuffer.commandSucceeds();
+            commandProcessed();
         };
         objectDeleted = function(){
             if(--count === 0){
@@ -627,7 +682,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
         copyComlete = function(){
             if(status){
-                commandBuffer.commandSucceeds();
+                commandProcessed();
             }
             else{
                 commandBuffer.commandFailed();
@@ -737,7 +792,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
         childrenComplete = function(){
             if(status){
-                commandBuffer.commandSucceeds();
+                commandProcessed();
             }
             else{
                 commandBuffer.commandFailed();
@@ -892,9 +947,10 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
 
     /*main*/
+    commandBuffer = new CommandBuffer(cStorage,cCid,cTerritories,cCommands,cClients,CB);
     processCommand(cCommands[0]);
 };
-var Territory = function(cClient,cId,cReadStorage){
+var Territory = function(cClient,cId){
     var cPatterns = {},
         cPreviousList = [],
         cCurrentList = [];
@@ -909,29 +965,7 @@ var Territory = function(cClient,cId,cReadStorage){
     };
 
     /*asynchronous functions*/
-    this.sendTerritory = function(){
-        var i,
-            amount,
-            objectlist = {},
-            receiveElement;
-        receiveElement = function(err,object){
-            if(err){
-                logger.error("Territory.sendTerritory error in getting object "+err);
-            }
-            else{
-                objectlist[object[ID]] = object;
-            }
-            if(--amount === 0){
-                cClient.onUpdateTerritory(objectlist,{});
-            }
-        };
-
-        amount = cCurrentList.length;
-        for(i=0;i<cCurrentList.length;i++){
-            cReadStorage.get(cCurrentList[i],receiveElement);
-        }
-    };
-    this.updatePatterns = function(newpatterns,cid){
+    this.updatePatterns = function(newpatterns,storage,CB){
         var addToCurrentList,
             updateComplete,
             patternComplete,
@@ -950,7 +984,7 @@ var Territory = function(cClient,cId,cReadStorage){
                 }
 
                 if(object.relations.baseId !== null && currentList.indexOf(object.relations.baseId) === -1){
-                    cReadStorage.get(object.relations.baseId,function(err,base){
+                    storage.get(object.relations.baseId,function(err,base){
                         if(err){
                             logger.error("Territory.updatePatterns.addtoCurrentList base object not found "+object.relations.baseId);
                             cb(); return;
@@ -968,7 +1002,6 @@ var Territory = function(cClient,cId,cReadStorage){
                 cb();
             }
         };
-
         updateComplete = function(){
             var i,
                 removedObjects = {};
@@ -981,7 +1014,7 @@ var Territory = function(cClient,cId,cReadStorage){
             cCurrentList = currentList;
             cPreviousList = previousList;
             cPatterns = newpatterns;
-            cClient.onUpdateTerritory(addedObjects,removedObjects,cid);
+            CB(addedObjects,removedObjects);
         };
 
         patternComplete = function(){
@@ -1011,7 +1044,7 @@ var Territory = function(cClient,cId,cReadStorage){
                     return;
                 }
                 else{
-                    cReadStorage.get(currentId,function(err,object){
+                    storage.get(currentId,function(err,object){
                         if(err){
                             logger.error("Territory.updatePatterns.updatePattern.updateRule cannot get object "+currentId);
                             ruleComplete();
@@ -1033,7 +1066,7 @@ var Territory = function(cClient,cId,cReadStorage){
                                                 return;
                                             }
                                             else{
-                                                updateComplete();
+                                                patternComplete();
                                                 return;
                                             }
                                         }
@@ -1078,6 +1111,8 @@ var Territory = function(cClient,cId,cReadStorage){
         patternCounter = 0;
         for(i in newpatterns){
             patternCounter++;
+        }
+        for(i in newpatterns){
             updatePattern(i,newpatterns[i]);
         }
         if(patternCounter === 0){
@@ -1085,9 +1120,11 @@ var Territory = function(cClient,cId,cReadStorage){
         }
     };
 };
-var Client = function(cIoSocket,cId,cProject){
+var Client = function(cIoSocket,cId,cReadStorage,cProject){
     var cObjects = {},
-        cClipboard = []; /*it has to be on client level*/
+        cClipboard = [], /*it has to be on client level*/
+        cTerritories = {},
+        cSelf = this;
     /*message handlings*/
     cIoSocket.on('clientMessage',function(msg){
         /*you have to simply put it into the transaction queue*/
@@ -1104,38 +1141,42 @@ var Client = function(cIoSocket,cId,cProject){
     });
 
     /*public functions*/
-    this.onUpdateTerritory = function(added,removed,cid){
-        logger.debug("Client.onUpdateTerritory "+JSON.stringify(added)+","+JSON.stringify(removed));
-        var msg = [],i,additem,delitem;
-        for(i in added){
-            if(cObjects[i] === undefined){
-                cObjects[i] = 1;
-                additem = {}; additem.type = 'load'; additem.id = i; additem.object = added[i];
-                msg.push(additem);
-            }
-            else{
-                cObjects[i]++;
-            }
+    this.getId = function(){
+        return cId;
+    }
+    this.updateTerritory = function(territoryid,patterns,commandid){
+        logger.debug("Client.updateTerritory "+territoryid+","+JSON.stringify(patterns)+","+commandid);
+        if(cTerritories[territoryid] === undefined || cTerritories[territoryid] === null){
+            cTerritories[territoryid] = new Territory(cSelf,territoryid);
         }
-        for(i in removed){
-            if(cObjects[i] === undefined){
-                /*was already removed*/
-            }
-            else{
-                cObjects[i]--;
-                if(cObjects[i]<=0){
-                    delete cObjects[i];
-                    delitem = {}; delitem.type = 'unload'; delitem.id = i;
-                    msg.push(delitem);
+        cTerritories[territoryid].updatePatterns(patterns,cReadStorage,function(addedobjects,removedobjects){
+            logger.debug("Client.updatePattern at territory result "+JSON.stringify(addedobjects)+","+JSON.stringify(removedobjects));
+            var i,
+                msg = [];
+            for(i in addedobjects){
+                if(cObjects[i] === undefined){
+                    cObjects[i] = 1;
+                    msg.push({type:"load",id:i,object:addedobjects[i]});
+                }
+                else{
+                    cObjects[i]++;
                 }
             }
-        }
-        if(cid){
-            msg.push({type:"command",cid:cid,success:true});
-        }
-        if(msg.length>0){
-            cIoSocket.emit('serverMessage',msg);
-        }
+            for(i in removedobjects){
+                if(cObjects[i] === undefined){
+                    /*was already removed*/
+                }
+                else{
+                    cObjects[i]--;
+                    if(cObjects[i]<=0){
+                        delete cObjects[i];
+                        msg.push({type:"unload",id:i});
+                    }
+                }
+            }
+            msg.push({type:"command",cid:commandid,success:true});
+            cSelf.sendMessage(msg);
+        });
     };
     this.copy = function(objects){
         cClipboard = objects;
@@ -1144,6 +1185,7 @@ var Client = function(cIoSocket,cId,cProject){
         return cClipboard;
     };
     this.sendMessage = function(msg){
+        logger.debug("Client.sendMessage "+JSON.stringify(msg));
         cIoSocket.emit('serverMessage',msg);
     };
     this.interestedInObject = function(objectid){
@@ -1152,12 +1194,60 @@ var Client = function(cIoSocket,cId,cProject){
         }
         return false;
     };
+    this.refreshTerritories = function(storage,cb){
+        var i,
+            loadlist,
+            unloadlist,
+            territorycount,
+            territoryRefeshed;
+
+        territoryRefeshed = function(addedobjects,removedobjects){
+            var i;
+            for(i in addedobjects){
+                if(cObjects[i] === undefined){
+                    cObjects[i] = 1;
+                    insertIntoArray(loadlist,i);
+                }
+                else{
+                    cObjects[i]++;
+                }
+            }
+            for(i in removedobjects){
+                if(cObjects[i] === undefined){
+                    /*was already removed*/
+                }
+                else{
+                    cObjects[i]--;
+                    if(cObjects[i]<=0){
+                        delete cObjects[i];
+                        insertIntoArray(unloadlist,i);
+                    }
+                }
+            }
+
+            /*check if all territory have been updated sofar*/
+            if(--territorycount === 0){
+                cb(loadlist,unloadlist);
+            }
+        };
+        /*main*/
+        territorycount = 0;
+        loadlist = [];
+        unloadlist = [];
+        for(i in cTerritories){
+            territorycount++;
+        }
+        for(i in cTerritories){
+            cTerritories[i].updatePatterns(null,storage,territoryRefeshed);
+        }
+    };
 };
 var Project = function(cProject,cBranch,cLibrarian){
     var cClients = {},
         cTerritories = {},
         cTransactionQ = new TransactionQueue(this),
-        cStorage;
+        cStorage,
+        cSelf = this;
     if(commonUtil.StorageType === "test"){
         cStorage = new TestStorage(cProject,cBranch);
     }
@@ -1173,7 +1263,7 @@ var Project = function(cProject,cBranch,cLibrarian){
         logger.debug("Project.addClient "+id);
         var client,i;
         if(cClients[id] === undefined){
-            client = new Client(socket,id,this);
+            client = new Client(socket,id,new ReadStorage(cStorage),cSelf);
             cClients[id] = client;
         }
         return true;
@@ -1199,13 +1289,9 @@ var Project = function(cProject,cBranch,cLibrarian){
     this.onProcessMessage = function(cid,commands,cb){
         new Commander(cStorage,cClients,cid,cTerritories,commands,cb);
     };
-    this.onUpdateTerritory = function(clid,cid,tid,newpatterns){
-        logger.debug("Project.onUpdateTerritory "+JSON.stringify(clid)+","+JSON.stringify(cid)+","+JSON.stringify(tid)+","+JSON.stringify(newpatterns));
-        if(cTerritories[tid] === undefined || cTerritories[tid] === null){
-            var territory = new Territory(cClients[clid],tid,new ReadStorage(cStorage));
-            cTerritories[clid+tid] = territory;
-        }
-        cTerritories[clid+tid].updatePatterns(newpatterns,cid);
+    this.onUpdateTerritory = function(clientId,commandId,territoryId,newpatterns){
+        logger.debug("Project.onUpdateTerritory "+JSON.stringify(clientId)+","+JSON.stringify(commandId)+","+JSON.stringify(territoryId)+","+JSON.stringify(newpatterns));
+        cClients[clientId].updateTerritory(territoryId,newpatterns,commandId);
     };
 };
 var TestLibrarian = function(){
