@@ -2,11 +2,10 @@
 var io = require('socket.io-client');
 var socket = io.connect('http://localhost:8081');
 var fs=require('fs');
-var commands = fs.readFileSync("t3stcommands.wcf","utf8");
-commands = commands.split('\n');
-console.log(JSON.stringify(commands));
-var commandpointer = 0;
-var objects = [];
+var lines = fs.readFileSync("t3stcommands.wcf","utf8");
+lines = lines.split('\n');
+var objects = {};
+var messagecallback;
 
 socket.on('connect',function(msg){
     socket.emit('connectToBranch',"t3st");
@@ -14,93 +13,132 @@ socket.on('connect',function(msg){
 
 socket.on('connectToBranchAck',function(msg){
     console.log("connectToBranchAck");
-    sendnextcommand();
+    if(lines.length === 0){
+        console.log("no real input!!!");
+    }
+    else{
+        processLine(lines[0]);
+    }
 });
 
 socket.on('clientMessageAck',function(msg){
     console.log("clientMessageAck");
 });
 socket.on('serverMessage',function(msg){
+    var i;
     console.log("serverMessage: "+JSON.stringify(msg));
     socket.emit('serverMessageAck');
-    commandresponded(msg);
+    for(i=0;i<msg.length;i++){
+        if(msg[i].type === "load" || msg[i].type === "create" || msg[i].type === "update"){
+            objects[msg[i].id] = msg[i].object;
+        }
+        else if(msg[i].type === "unload"){
+            delete objects[msg[i].id];
+        }
+        else if(msg[i].type === "delete"){
+            objects[msg[i].id] = null;
+        }
+    }
+    messagecallback(msg);
 });
 
-
-var sendnextcommand = function(){
-    var valid;
-    if(commandpointer<commands.length){
-        if(commands[commandpointer].length>0){
-            valid = true;
-            commands[commandpointer] = JSON.parse(commands[commandpointer]);
-            if(commands[commandpointer].type === "wait"){
-                setTimeout(
-                    function(){
-                        commandpointer++;
-                        sendnextcommand();
-                    },5000);
-            }
-            else{
-                if((typeof commands[commandpointer].id) === "number"){
-                    if(commands[commandpointer].id < objects.length){
-                        commands[commandpointer].id = objects[commands[commandpointer].id];
-                    }
-                    else{
-                        valid = false;
-                    }
-                }
-
-                if((typeof commands[commandpointer].parentId) === "number"){
-                    if(commands[commandpointer].parentId < objects.length){
-                        commands[commandpointer].parentId = objects[commands[commandpointer].parentId];
-                    }
-                    else{
-                        valid = false;
-                    }
-                }
-
-                if((typeof commands[commandpointer].baseId) === "number"){
-                    if(commands[commandpointer].baseId < objects.length){
-                        commands[commandpointer].baseId = objects[commands[commandpointer].baseId];
-                    }
-                    else{
-                        valid = false;
-                    }
-                }
-
-
-                if(valid){
-                    socket.emit('clientMessage',{commands:[commands[commandpointer]]});
-                }
-                else{
-                    commandpointer++;
-                    sendnextcommand();
-                }
+var printContainment = function(){
+    var printObjectContainmentLine = function(objectId){
+        var i,
+            line="";
+        line+="["+objects[objectId]._id+"]->[";
+        for(i=0;i<objects[objectId].relations.childrenIds.length;i++){
+            line+=objects[objectId].relations.childrenIds[i]+",";
+        }
+        if(i>0){
+            line = line.slice(0,line.lastIndexOf(","));
+        }
+        line+="]";
+        console.log(line);
+    };
+    var rPrintConatinment = function(id){
+        var i;
+        if(objects[id]){
+            printObjectContainmentLine(id);
+            for(i=0;i<objects[id].relations.childrenIds.length;i++){
+                rPrintConatinment(objects[id].relations.childrenIds[i]);
             }
         }
-        else{
-            commandpointer++;
-            sendnextcommand();
-        }
+    };
+
+    /*main*/
+    console.log("Object containment information:");
+    rPrintConatinment("root");
+
+};
+var printObjects = function(){
+    var i,
+        line="Objects: ";
+    for(i in objects){
+        line+=i+",";
+    }
+    i = line.lastIndexOf(",");
+    if(i !== -1){
+        line = line.slice(0,i);
+    }
+    console.log(line);
+};
+var toNextLine = function(){
+    lines.shift();
+    if(lines.length === 0){
+        setTimeout(function(){
+            process.exit();
+        },5000);
     }
     else{
-        setTimeout(function(){
-                console.log("objects:"+JSON.stringify(objects));
-                process.exit(0);
-            },5000);
-
+        if(lines[0] && lines[0] !== ""){
+            processLine(lines[0]);
+        }
+        else{
+            toNextLine();
+        }
     }
 };
-var commandresponded = function(msg){
-    var i;
-    console.log("commandpointer "+commandpointer);
-    for(i=0;i<msg.length;i++){
-        if(msg[i].type === "command" && commandpointer<commands.length && msg[i].cid === commands[commandpointer].cid){
-            commandpointer++;
-            sendnextcommand();
+var processLine = function(line){
+    var i,
+        commands = JSON.parse(line),
+        commandids = [];
+    if(commands instanceof Array){
+        /*we should send them as a command and wait for the result to come ;)*/
+        for(i=0;i<commands.length;i++){
+            commandids.push(commands[i].cid);
         }
-        else if(msg[i].type === "load"){
-            objects.push(msg[i].id);
+        messagecallback = function(msg){
+            var i,
+                index;
+            for(i=0;i<msg.length;i++){
+                if(msg[i].type === "command"){
+                    index = commandids.indexOf(msg[i].cid);
+                    if(index !== -1){
+                        commandids.splice(index,1);
+                    }
+                }
+            }
+            if(commandids.length === 0){
+                toNextLine();
+            }
+        };
+        socket.emit('clientMessage',{commands:commands});
+    }
+    else{
+        /*tester commands*/
+        if(commands.type === "wait"){
+            setTimeout(function(){
+                toNextLine();
+            },5000);
+        }
+        else if(commands.type === "printObjects"){
+            printObjects();
+            toNextLine();
+        }
+        else if(commands.type === "printContainment"){
+            printContainment();
+            toNextLine();
         }
     }
 };

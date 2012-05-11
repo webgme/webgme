@@ -246,7 +246,7 @@ var TransactionQueue = function(cProject){
         processNextMessage();
     };
 };
-var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
+var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
     var i,
         commandStatus,
         bufferedObjects,
@@ -311,8 +311,8 @@ var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
         }
         else{
             msg = [];
-            for(i=0;i<cCommands.length;i++){
-                msg.push({type:"command",cid:cCommands[i].cid,success:false});
+            for(i=0;i<cCommandIds.length;i++){
+                msg.push({type:"command",cid:cCommandIds[i].cid,success:false});
             }
             cClients[cCid].sendMessage(msg);
         }
@@ -364,6 +364,7 @@ var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
         };
 
         /*main*/
+        count = 0;
         for(i in bufferedObjects){
             count++;
         }
@@ -392,8 +393,8 @@ var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
                 }
             }
             if(client.getId() === cCid){
-                for(i=0;i<cCommands.length;i++){
-                    msg.push({type:"command",cid:cCommands[i].cid,success:true});
+                for(i=0;i<cCommandIds.length;i++){
+                    msg.push({type:"command",cid:cCommandIds[i],success:true});
                 }
             }
             if(msg.length>0){
@@ -441,6 +442,7 @@ var CommandBuffer = function(cStorage,cCid,cCommands,cClients,CB){
     bufferedObjects = {};
     objectStates = {};
     clientcount = 0;
+    readQueue = [];
     for(i in cClients){
         clientcount++;
     }
@@ -457,7 +459,9 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         deleteCommand,
         commandBuffer,
         readSubTree,
-        inheritObject;
+        inheritObject,
+        commandIds,
+        i;
 
     processCommand = function(command){
         if(command.type === "copy"){
@@ -479,7 +483,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
     commandProcessed = function(){
         var i;
         cCommands.shift();
-        commandBuffer={};
         if(cCommands.length>0){
             processCommand(cCommands[0]);
         }
@@ -947,7 +950,11 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
 
     /*main*/
-    commandBuffer = new CommandBuffer(cStorage,cCid,cTerritories,cCommands,cClients,CB);
+    commandIds = [];
+    for(i=0;i<cCommands.length;i++){
+        commandIds.push(cCommands[i].cid);
+    }
+    commandBuffer = new CommandBuffer(cStorage,cCid,commandIds,cClients,CB);
     processCommand(cCommands[0]);
 };
 var Territory = function(cClient,cId){
@@ -1066,7 +1073,7 @@ var Territory = function(cClient,cId){
                                                 return;
                                             }
                                             else{
-                                                patternComplete();
+                                                ruleComplete();
                                                 return;
                                             }
                                         }
@@ -1095,9 +1102,17 @@ var Territory = function(cClient,cId){
             ruleCounter = 0;
             ruleChains = {};
             for(i in rules){
-                ruleChains[i] = [];
                 ruleCounter++;
-                updateRule(originId,i,rules[i]);
+            }
+            if(ruleCounter === 0){
+                patternComplete();
+            }
+            else{
+                for(i in rules){
+                    ruleChains[i] = [];
+                    ruleCounter++;
+                    updateRule(originId,i,rules[i]);
+                }
             }
         };
 
@@ -1112,11 +1127,13 @@ var Territory = function(cClient,cId){
         for(i in newpatterns){
             patternCounter++;
         }
-        for(i in newpatterns){
-            updatePattern(i,newpatterns[i]);
-        }
         if(patternCounter === 0){
             updateComplete();
+        }
+        else{
+            for(i in newpatterns){
+                updatePattern(i,newpatterns[i]);
+            }
         }
     };
 };
@@ -1199,9 +1216,9 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
             loadlist,
             unloadlist,
             territorycount,
-            territoryRefeshed;
+            territoryRefreshed;
 
-        territoryRefeshed = function(addedobjects,removedobjects){
+        territoryRefreshed = function(addedobjects,removedobjects){
             var i;
             for(i in addedobjects){
                 if(cObjects[i] === undefined){
@@ -1238,7 +1255,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
             territorycount++;
         }
         for(i in cTerritories){
-            cTerritories[i].updatePatterns(null,storage,territoryRefeshed);
+            cTerritories[i].updatePatterns(null,storage,territoryRefreshed);
         }
     };
 };

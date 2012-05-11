@@ -1,11 +1,7 @@
 {
-"root":{"_id":"root","relations":{"parentId":null,"childrenIds":["metameta","meta"],"baseId":null,"inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"RootFolder"},"registry":{}},
-
-"metameta":{"_id":"metameta","relations":{"parentId":"root","childrenIds":["mmobj"],"baseId":null,"inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"MetaMetaFolder"},"registry":{}},
-"mmobj":{"_id":"mmobj","relations":{"parentId":"metameta","childrenIds":[],"baseId":null,"inheritorIds":["mmodel","mstate","mtransition"],"referenceId":null,"referredIds":[]},"attributes":{"name":"OBJECT"},"registry":{}},
-
-"meta":{"_id":"meta","relations":{"parentId":"root","childrenIds":["mmodel"],"baseId":null,"inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"MetaFolder"},"registry":{}},
-"mmodel":{"_id":"mmodel","relations":{"parentId":"meta","childrenIds":["mstate","mtransition"],"baseId":"mmobj","inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"MetaModel"},"registry":{}},
-"mstate":{"_id":"mstate","relations":{"parentId":"mmodel","childrenIds":[],"baseId":"mmobj","inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"MetaState"},"registry":{}},
-"mtransition":{"_id":"mtransition","relations":{"parentId":"mmodel","childrenIds":[],"baseId":"mmobj","inheritorIds":[],"referenceId":null,"referredIds":[]},"attributes":{"name":"MetaTransition"},"registry":{}}
+    "root":{"_id":"root","relations":{"baseId":null,"inheritorIds":[],"parentId":null,"childrenIds":["mmfolder","mfolder"]},"attributes":{"name":"RootFolder"},"registry":{}},
+    "mmfolder":{"_id":"mmfolder","relations":{"baseId":null,"inheritorIds":[],"parentId":"root","childrenIds":["metameta"]},"attributes":{"name":"MetaMetaFolder"},"registry":{}},
+    "metameta":{"_id":"metameta","relations":{"baseId":null,"inheritorIds":["paradigm"],"parentId":"mmfolder","childrenIds":[]},"attributes":{"name":"MetaMetaObject"},"registry":{}},
+    "mfolder":{"_id":"mfolder","relations":{"baseId":null,"inheritorIds":[],"parentId":"root","childrenIds":["paradigm"]},"attributes":{"name":"MetaFolder"},"registry":{}},
+    "paradigm":{"_id":"paradigm","relations":{"baseId":"metameta","inheritorIds":[],"parentId":"mfolder","childrenIds":[]},"attributes":{"name":"Paradigm"},"registry":{}}
 }
