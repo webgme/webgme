@@ -5,6 +5,7 @@ var fs=require('fs');
 var lines = fs.readFileSync("t3stcommands.wcf","utf8");
 lines = lines.split('\n');
 var objects = {};
+var variables = {};
 var messagecallback;
 
 socket.on('connect',function(msg){
@@ -83,12 +84,15 @@ var printObjects = function(){
     }
     console.log(line);
 };
+var printVariables = function(){
+    console.log("VARIABLES: "+JSON.stringify(variables));
+}
 var toNextLine = function(){
     lines.shift();
     if(lines.length === 0){
         setTimeout(function(){
             process.exit();
-        },5000);
+        },1);
     }
     else{
         if(lines[0] && lines[0] !== ""){
@@ -107,6 +111,15 @@ var processLine = function(line){
         /*we should send them as a command and wait for the result to come ;)*/
         for(i=0;i<commands.length;i++){
             commandids.push(commands[i].cid);
+            if(variables[commands[i].parentId]){
+                commands[i].parentId = variables[commands[i].parentId];
+            }
+            if(variables[commands[i].baseId]){
+                commands[i].baseId = variables[commands[i].baseId];
+            }
+            if(variables[commands[i].id]){
+                commands[i].id = variables[commands[i].id];
+            }
         }
         messagecallback = function(msg){
             var i,
@@ -138,6 +151,21 @@ var processLine = function(line){
         }
         else if(commands.type === "printContainment"){
             printContainment();
+            toNextLine();
+        }
+        else if(commands.type === "find"){
+            if(commands.variable && commands.pattern){
+                for(i in objects){
+                    if(i.search(commands.pattern) !== -1){
+                        variables[commands.variable] = i;
+                        break;
+                    }
+                }
+            }
+            toNextLine();
+        }
+        else if(commands.type === "printVariables"){
+            printVariables();
             toNextLine();
         }
     }
