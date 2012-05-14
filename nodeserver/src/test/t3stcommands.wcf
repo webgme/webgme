@@ -1,9 +1,0 @@
-[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]
-[{"cid":"0002","type":"createChild","baseId":"metameta","parentId":"paradigm"}]
-{"type":"find","pattern":"002/metameta","variable":"mychild001"}
-{"type":"printVariables"}
-[{"cid":"0003","type":"createChild","baseId":"metameta","parentId":"mychild001"}]
-{"type":"find","pattern":"003/metameta","variable":"mychild002"}
-{"type":"printVariables"}
-[{"cid":"0004","type":"createChild","baseId":"mychild002","parentId":"mychild001"}]
-{"type":"printObjects"}

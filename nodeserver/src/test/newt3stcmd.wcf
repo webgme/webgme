@@ -1,0 +1,9 @@
+{"type":"printVariables"}
+{"type":"printObjects"}
+[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]
+[{"cid":"0002","type":"createChild","baseId":"paradigm","parentId":"folder"}]
+{"type":"find","pattern":"002/paradigm","variable":"mymodel"}
+{"type":"printVariables"}
+{"type":"printObjects"}
+[{"cid":"0002","type":"modify","id":"mymodel","attributes":{"name":"MyModel"}}]
+{"type":"printObjects"}

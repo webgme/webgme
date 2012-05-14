@@ -465,19 +465,19 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
     processCommand = function(command){
         if(command.type === "copy"){
-            copyCommand(command);
+            copyCommand(command,commandProcessed);
         }
         else if(command.type === "modify"){
-            modifyCommand(command);
+            modifyCommand(command,commandProcessed);
         }
         else if(command.type === "delete"){
-            deleteCommand(command);
+            deleteCommand(command,commandProcessed);
         }
         else if(command.type === "paste"){
-            pasteCommand(command);
+            pasteCommand(command,commandProcessed);
         }
         else if(command.type === "createChild" || command.type === "createSubType"){
-            childrenCommand(command);
+            childrenCommand(command,commandProcessed);
         }
     };
     commandProcessed = function(){
@@ -492,11 +492,11 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
     };
 
     /*commands*/
-    copyCommand = function(copycommand){
+    copyCommand = function(copycommand,callback){
         cClients[cCid].copy(copycommand.ids);
-        commandProcessed();
+        callback();
     };
-    modifyCommand = function(modifycommand){
+    modifyCommand = function(modifycommand,callback){
         var i,
             modified;
         /*main*/
@@ -517,11 +517,11 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 if(modified){
                     commandBuffer.set(modifycommand.id,object);
                 }
-                commandProcessed();
+                callback();
             }
         });
     };
-    deleteCommand = function(deletecommand){
+    deleteCommand = function(deletecommand,callback){
         var i,
             deleteObject,
             deletionComplete,
@@ -533,7 +533,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             count;
 
         deletionComplete = function(){
-            commandProcessed();
+            callback();
         };
         objectDeleted = function(){
             if(--count === 0){
@@ -785,7 +785,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             doCopy(pastecommand.id,copylist[i]);
         }
     };
-    childrenCommand = function(childrencommand){
+    childrenCommand = function(childrencommand,callback){
         var prefix,
             status,
             count,
@@ -795,7 +795,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
 
         childrenComplete = function(){
             if(status){
-                commandProcessed();
+                callback();
             }
             else{
                 commandBuffer.commandFailed();
@@ -1044,8 +1044,7 @@ var Territory = function(cClient,cId){
             };
             updateRule = function(currentId,rulename,rulevalue){
                 var i,
-                    next,
-                    called;
+                    next;
                 if(rulevalue === 0){
                     ruleComplete();
                     return;
@@ -1063,13 +1062,12 @@ var Territory = function(cClient,cId){
                                     next = object.relations[rulename];
                                     if(next){
                                         rulevalue--;
-                                        called=false;
                                         if(next instanceof Array){
-                                            for(i=0;i<next.length;i++){
-                                                called = true;
-                                                updateRule(next[i],rulename,rulevalue);
-                                            }
-                                            if(called){
+                                            if(next.length > 0){
+                                                ruleCounter+=next.length-1;
+                                                for(i=0;i<next.length;i++){
+                                                    updateRule(next[i],rulename,rulevalue);
+                                                }
                                                 return;
                                             }
                                             else{
@@ -1110,7 +1108,6 @@ var Territory = function(cClient,cId){
             else{
                 for(i in rules){
                     ruleChains[i] = [];
-                    ruleCounter++;
                     updateRule(originId,i,rules[i]);
                 }
             }

@@ -2,7 +2,7 @@
 var io = require('socket.io-client');
 var socket = io.connect('http://localhost:8081');
 var fs=require('fs');
-var lines = fs.readFileSync("t3stcommands.wcf","utf8");
+var lines = fs.readFileSync("newt3stcmd.wcf","utf8");
 lines = lines.split('\n');
 var objects = {};
 var variables = {};
