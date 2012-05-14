@@ -885,22 +885,21 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
     inheritObject = function(baseId,prefix,cb){
         var i,
             count,
-            objectCopied,
             inheritedobject;
-
-        objectCopied = function(){
-            if(--count === 0){
-                cb(null,inheritedobject);
-            }
-        };
 
 
         /*main*/
-        count = 0;
         readSubTree(baseId,function(err,subTreeIds){
             var quickCopyObject,
+                objectCopied,
                 newobject;
+            objectCopied = function(){
+                if(--count === 0){
+                    cb(null,inheritedobject);
+                }
+            };
             quickCopyObject = function(id){
+                var i;
                 commandBuffer.get(id,function(err,object){
                     /*no error can happen!!!*/
                     newobject = copyObject(object);
@@ -940,8 +939,9 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 cb(1);
             }
             else{
+                count = subTreeIds.length;
                 for(i=0;i<subTreeIds.length;i++){
-                    count++;
+                    console.log("kecso");
                     quickCopyObject(subTreeIds[i]);
                 }
             }
