@@ -3,6 +3,31 @@
  *
  * Author: Tamas Kecskes
  */
+/*
+The sturcture of the objects in the database looks like the following:
+{
+    _id:string - identification of the object as used in the database and between client and server as well
+    attributes:{"attributename":number/string/object} - these attributes are the ones which doesn't refer to any other object in the project
+    registry:{"entryname":number/string/object} - these parts of the objects are free to use, but they will not handled nor checked by the system so the user should take care of them if they holds any info regarding other objects (the main aim is to use values here which are not really part of the model, but needed for example the visualization)
+    relations:{ - the relations represent the basic structure of the model
+        parentId:string - refers to the owner of the current object
+        childrenIds:[string] - refers to the contained objects of the current object, together with the parentId they represent the containment hierarchy of the model
+        baseId:string - refers to the base object of the current object
+        inheritorIds:[string] - refers to the inheritor objects of the current object, together with baseId they represent the inheritance hierarchy of the model
+    }
+    pointers:{ - pointers are the freely usable relations between objects
+        pointername:{
+            in:[string] - the incoming part of the pointer relations which refers to the objects pointed to the current object witht the given pointer name
+            out:string - refers to some object
+        }
+    }
+}
+the following commands available:
+*createFolder
+copy - saves a set of objects onto the clipboard for later operations (done on client level so each client has its own clipboard)
+paste - paste the content of the clipboard under the given object (creates deepcopy of each object on the clipboard the the proper place)
+modify - modifies some single attribute (which means that this command will not deal with any kind of relations so it is good only for registry and attribute changes)
+ */
 "use strict";
 /*COMMON FUNCTIONS*/
 var insertIntoArray = function(list,item){
@@ -882,6 +907,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         readIds = [];
         rReadObject(rootId);
     };
+
     inheritObject = function(baseId,prefix,cb){
         var i,
             count,
@@ -941,7 +967,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
             else{
                 count = subTreeIds.length;
                 for(i=0;i<subTreeIds.length;i++){
-                    console.log("kecso");
                     quickCopyObject(subTreeIds[i]);
                 }
             }
@@ -1199,7 +1224,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
         return cClipboard;
     };
     this.sendMessage = function(msg){
-        logger.debug("Client.sendMessage "+JSON.stringify(msg));
+        //logger.debug("Client.sendMessage "+JSON.stringify(msg));
         cIoSocket.emit('serverMessage',msg);
     };
     this.interestedInObject = function(objectid){
