@@ -10,7 +10,9 @@ define(function () {
 	return {
 		mongodb: {
 			host: "localhost",
-			port: 27017
+			port: 27017,
+			database: "test",
+			collection: "storage"
 		}
 	};
 });
