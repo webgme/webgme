@@ -7,5 +7,3 @@
 {"type":"printObjects"}
 [{"cid":"0002","type":"modify","id":"mymodel","attributes":{"name":"MyModel"}}]
 {"type":"printObjects"}
-[{"cid":"0003","type":"createChild","baseId":null,"parentId":"folder"}]
-{"type":"printObjects"}

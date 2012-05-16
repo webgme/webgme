@@ -1,7 +1,11 @@
 var io = require('socket.io-client');
 var fs=require('fs');
 var T3stClient = function(storage,commands){
-    var socket = io.connect('http://localhost:8081'),
+    var options = {
+            transports: ['websocket'],
+            'force new connection': true
+        },
+        socket = io.connect('http://localhost:8081',options),
         commandpointer,
         variables,
         state,
@@ -12,7 +16,8 @@ var T3stClient = function(storage,commands){
         printContainment,
         printVariables,
         processLine,
-        finalizeLine;
+        finalizeLine,
+        lastResult;
 
     /*public functions*/
     this.runNextCommand = function(callback){
@@ -34,10 +39,13 @@ var T3stClient = function(storage,commands){
     this.isReady = function(){
         return state === "ready";
     };
+    this.getLastResult = function(){
+        return lastResult;
+    };
 
     /*private functions*/
     idString = function(){
-        return "["+socket.id+"]";
+        return "["+socket.socket.sessionid+"]";
     };
     printLog = function(text){
         console.log(idString()+" "+text);
@@ -205,6 +213,9 @@ var T3stClient = function(storage,commands){
     finalizeLine = function(result,cb){
         msgCallBack = null;
         state = "ready";
+        if(result){
+            lastResult = result;
+        }
         if(cb){
             cb(result);
         }
@@ -215,6 +226,7 @@ var T3stClient = function(storage,commands){
     /*main*/
     commandpointer = 0;
     variables = {};
+    lastResult = true;
     state = "init";
 };
 
@@ -239,8 +251,29 @@ var nextCommands = function(result){
         }
     }
     else{
-        console.log("valami nem jott be");
-        process.exit(0);
+        finishednum = 0;
+        clientnum = 0;
+        for(i in clients){
+            clientnum++;
+            if(clients[i].isFinished()){
+                finishednum++;
+            }
+            else{
+                if(clients[i].getLastResult() === false){
+                    console.log("valami nem jott be");
+                    process.exit(0);
+                }
+            }
+        }
+        if(finishednum === clientnum){
+
+            setTimeout(function(){
+                process.exit(0);
+            },1000);
+        }
+        else{
+            nextCommands(true);
+        }
     }
 };
 /*main*/
@@ -249,8 +282,8 @@ var i,
     clients = {},
     objects = {};
 for(i=2;i<arguments.length;i++){
-    clients["client_"+i-1] = new T3stClient(objects,fs.readFileSync(arguments[i],"utf8").split("\n"));
+    clients["client_"+(i-1).toString()] = new T3stClient(objects,fs.readFileSync(arguments[i],"utf8").split("\n"));
 }
 setTimeout(function(){
     nextCommands(true);
-},5000);
+},1000);

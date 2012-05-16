@@ -27,6 +27,8 @@ the following commands available:
 copy - saves a set of objects onto the clipboard for later operations (done on client level so each client has its own clipboard)
 paste - paste the content of the clipboard under the given object (creates deepcopy of each object on the clipboard the the proper place)
 modify - modifies some single attribute (which means that this command will not deal with any kind of relations so it is good only for registry and attribute changes)
+createChild - creates an empty child using the given basetype under the given parent
+createSubType - creates an empty subtype from the given base under the given parent
  */
 "use strict";
 /*COMMON FUNCTIONS*/
