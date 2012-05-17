@@ -99,6 +99,17 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 		};
 	};
 
+	// ----------------- deepclone -----------------
+
+	var deepclone = function (o) {
+		var c = {};
+		for( var k in o ) {
+			var v = o[k];
+			c[k] = (v && typeof v === "object") ? deepclone(v) : v;
+		}
+		return c;
+	};
+
 	// ----------------- ReadBranch -----------------
 
 	var ReadBranch = function (storage) {
@@ -115,17 +126,22 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 				if( !err ) {
 					obj = {
 						data: obj,
-						parent: null
+						parent: null,
+						relid: null
 					};
 				}
 				callback(err, obj);
 			});
 		};
 
-		this.getChildrenRelids = function (node) {
-			
+		this.getRelid = function (node) {
+			return node.relid;
 		};
-		
+
+		this.getChildren = function (node) {
+			return node.data.children;
+		};
+
 		this.getChild = function (node, relid, callback) {
 			ASSERT(node && node.data);
 			ASSERT(typeof relid === "string");
@@ -141,7 +157,8 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 					if( !err ) {
 						obj = {
 							data: obj,
-							parent: node
+							parent: node,
+							relid: relid
 						};
 					}
 					callback(err, obj);
@@ -161,14 +178,13 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 
 		this.isDirty = function (node) {
 			ASSERT(node);
-			return !node.hash;
+			return node.children;
 		};
 
 		this.makeDirty = function (node) {
 			ASSERT(node);
 
-			while( node && node.hash ) {
-				delete node.hash;
+			while( node && (!node.children) ) {
 				node = node.parent;
 			}
 		};
@@ -186,8 +202,7 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 					obj = {
 						hash: hash,
 						data: obj,
-						parent: null,
-						children: {}
+						parent: null
 					};
 				}
 				callback(err, obj);
@@ -195,31 +210,33 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 		};
 
 		this.getChild = function (node, relid, callback) {
-			ASSERT(node && node.data && node.$children);
+			ASSERT(node && node.data);
 			ASSERT(typeof relid === "string");
 
-			var child = node.children[relid];
-			if( !child ) {
-				var children = node.data.children;
-				var hash = children || children[relid];
-				if( hash ) {
-					ASSERT(typeof hash === "string");
-					storage.get(hash, function (err, obj) {
-						if( !err ) {
-							// we might have it already
-							child = node.$children[relid];
-							if( !child ) {
-								child = {
-									data: obj,
-									parent: node,
-									children: {}
-								};
-								node.children[relid] = child;
+			if( node.children ) {
+				var child = node.children[relid];
+				if( !child ) {
+					var children = node.data.children;
+					var hash = children || children[relid];
+					if( hash ) {
+						ASSERT(typeof hash === "string");
+						storage.get(hash, function (err, obj) {
+							if( !err ) {
+								// we might have it already
+								child = node.$children[relid];
+								if( !child ) {
+									child = {
+										data: obj,
+										parent: node,
+										children: {}
+									};
+									node.children[relid] = child;
+								}
 							}
-						}
-						callback(err, child);
-					});
-					return;
+							callback(err, child);
+						});
+						return;
+					}
 				}
 			}
 
