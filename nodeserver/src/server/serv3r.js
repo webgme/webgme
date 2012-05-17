@@ -567,42 +567,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 deletionComplete();
             }
         };
-        removeReference = function(refId,id,cb){
-            commandBuffer.get(id,function(err,object){
-                if(err){
-                    cb();
-                }
-                else{
-                    if(object.relations.referenceId === refId){
-                        object.relations.referenceId = null;
-                        commandBuffer.set(id,object);
-                    }
-                    else{
-                        logger.error("Commander.deleteCommand.removeReference wrong reference info "+refId);
-                    }
-                    cb();
-                }
-            });
-        };
-        removeReferral = function(refId,id,cb){
-            commandBuffer.get(id,function(err,object){
-                var index;
-                if(err){
-                    cb();
-                }
-                else{
-                    index = object.relations.referredIds.indexOf(refId);
-                    if(index !== -1){
-                        object.relations.referredIds.splice(index,1);
-                        commandBuffer.set(id,object);
-                    }
-                    else{
-                        logger.error("Commander.deleteCommand.removeReferral wrong reference info "+refId);
-                    }
-                    cb();
-                }
-            });
-        };
         removeChild = function(childId,id,cb){
             commandBuffer.get(id,function(err,object){
                 var index;
@@ -670,26 +634,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 else{
                     removeChild(id,object.relations.parentId,function(){
                         removeInheritor(id,object.relations.baseId,function(){
-                            removeReferral(id,object.relations.referenceId,function(){
-                                var i,
-                                    retfunc,
-                                    innercount;
-                                retfunc = function(){
-                                    if(--innercount === 0){
-                                        relationsRemoved();
-                                    }
-                                };
-                                /*main*/
-                                innercount = object.relations.referredIds.length;
-                                if(innercount === 0){
-                                    relationsRemoved();
-                                }
-                                else{
-                                    for(i=0;i<object.relations.referredIds.length;i++){
-                                        removeReference(id,object.relations.referredIds[i],retfunc)
-                                    }
-                                }
-                            });
+                            relationsRemoved();
                         });
                     });
                 }
@@ -701,116 +646,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
         deleteObject(deletecommand.id);
     };
     pasteCommand = function(pastecommand){
-        var i,
-            status,
-            copylist,
-            prefix,
-            count,
-            doCopy,
-            objectCopied,
-            copyComlete;
-
-        copyComlete = function(){
-            if(status){
-                commandProcessed();
-            }
-            else{
-                commandBuffer.commandFailed();
-            }
-        };
-        objectCopied = function(){
-            if(--count === 0){
-                copyComlete();
-            }
-        };
-        doCopy = function(parentId,copyId){
-            var i,
-                newobject;
-            count++;
-            commandBuffer.get(parentId,function(err,parent){
-                if(err){
-                    status = false;
-                    objectCopied();
-                }
-                else{
-                  commandBuffer.get(copyId,function(err,fromobject){
-                      var i,
-                          relationsCreated;
-                      relationsCreated = function(){
-                          for(i=0;i<fromobject.relations.childrenIds.length;i++){
-                              doCopy(newobject[ID],fromobject.relations.childrenIds[i]);
-                          }
-                          objectCopied();
-                      };
-                      /*main*/
-                      if(err){
-                          status = false;
-                          objectCopied();
-                      }
-                      else{
-                          newobject = copyObject(fromobject);
-                          newobject.relations.childrenIds = [];
-                          newobject.relations.parentId = parentId;
-                          newobject.relations.inheritorIds = [];
-                          newobject.relations.referredIds = [];
-                          newobject[ID] = prefix+newobject[ID];
-                          if(newobject.relations.referenceId){
-                              commandBuffer.get(newobject.relations.referenceId,function(err,refobj){
-                                  if(err){
-                                      status = false;
-                                      objectCopied();
-                                  }
-                                  else{
-                                      refobj.relations.referredIds.push(newobject[ID]);
-                                      commandBuffer.set(refobj[ID],refobj);
-                                      if(newobject.relations.baseId){
-                                          commandBuffer.get(newobject.relations.baseId,function(err,baseobj){
-                                              if(err){
-                                                  status=false;
-                                                  objectCopied();
-                                              }
-                                              else{
-                                                  baseobj.relations.inheritorIds.push(newobject[ID]);
-                                                  relationsCreated();
-                                              }
-                                          });
-                                      }
-                                      else{
-                                          relationsCreated();
-                                      }
-                                  }
-                              });
-                          }
-                          else{
-                              if(newobject.relations.baseId){
-                                  commandBuffer.get(newobject.relations.baseId,function(err,baseobj){
-                                      if(err){
-                                          status=false;
-                                          objectCopied();
-                                      }
-                                      else{
-                                          baseobj.relations.inheritorIds.push(newobject[ID]);
-                                          commandBuffer.set(baseobj[ID],baseobj);
-                                          relationsCreated();
-                                      }
-                                  });
-                              }
-                              else{
-                                  relationsCreated();
-                              }
-                          }
-                      }
-                  });
-                }
-            });
-        };
-        /*main*/
-        status = true;
-        prefix = cCid+"_"+pastecommand.cid+"/";
-        copylist = cClients[cCid].getCopyList();
-        for(i=0;i<copylist.length;i++){
-            doCopy(pastecommand.id,copylist[i]);
-        }
     };
     childrenCommand = function(childrencommand,callback){
         var prefix,
@@ -944,11 +779,6 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                     for(i=0;i<newobject.relations.childrenIds.length;i++){
                         newobject.relations.childrenIds[i] = prefix + newobject.relations.childrenIds[i];
                     }
-
-                    if(subTreeIds.indexOf(newobject.relations.referenceId) !== -1){
-                        newobject.relations.referenceId = prefix + newobject.relations.referenceId;
-                    }
-                    newobject.relations.referredIds = [];
 
                     newobject.relations.baseId = object[ID];
                     newobject.relations.inheritorIds = [];
