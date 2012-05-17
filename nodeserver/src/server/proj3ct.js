@@ -4,31 +4,31 @@
  * Author: Tamas Kecskes
  */
 /*
-The sturcture of the objects in the database looks like the following:
-{
-    _id:string - identification of the object as used in the database and between client and server as well
-    attributes:{"attributename":number/string/object} - these attributes are the ones which doesn't refer to any other object in the project
-    registry:{"entryname":number/string/object} - these parts of the objects are free to use, but they will not handled nor checked by the system so the user should take care of them if they holds any info regarding other objects (the main aim is to use values here which are not really part of the model, but needed for example the visualization)
-    relations:{ - the relations represent the basic structure of the model
-        parentId:string - refers to the owner of the current object
-        childrenIds:[string] - refers to the contained objects of the current object, together with the parentId they represent the containment hierarchy of the model
-        baseId:string - refers to the base object of the current object
-        inheritorIds:[string] - refers to the inheritor objects of the current object, together with baseId they represent the inheritance hierarchy of the model
-    }
-    pointers:{ - pointers are the freely usable relations between objects
-        pointername:{
-            from:[string] - the incoming part of the pointer relations which refers to the objects pointed to the current object witht the given pointer name
-            to:string - refers to some object
-        }
-    }
-}
-the following commands available:
-*createFolder
-copy - saves a set of objects onto the clipboard for later operations (done on client level so each client has its own clipboard)
-paste - paste the content of the clipboard under the given object (creates deepcopy of each object on the clipboard the the proper place)
-modify - modifies some single attribute (which means that this command will not deal with any kind of relations so it is good only for registry and attribute changes)
-createChild - creates an empty child using the given basetype under the given parent
-createSubType - creates an empty subtype from the given base under the given parent
+ The sturcture of the objects in the database looks like the following:
+ {
+ _id:string - identification of the object as used in the database and between client and server as well
+ attributes:{"attributename":number/string/object} - these attributes are the ones which doesn't refer to any other object in the project
+ registry:{"entryname":number/string/object} - these parts of the objects are free to use, but they will not handled nor checked by the system so the user should take care of them if they holds any info regarding other objects (the main aim is to use values here which are not really part of the model, but needed for example the visualization)
+ relations:{ - the relations represent the basic structure of the model
+ parentId:string - refers to the owner of the current object
+ childrenIds:[string] - refers to the contained objects of the current object, together with the parentId they represent the containment hierarchy of the model
+ baseId:string - refers to the base object of the current object
+ inheritorIds:[string] - refers to the inheritor objects of the current object, together with baseId they represent the inheritance hierarchy of the model
+ }
+ pointers:{ - pointers are the freely usable relations between objects
+ pointername:{
+ from:[string] - the incoming part of the pointer relations which refers to the objects pointed to the current object witht the given pointer name
+ to:string - refers to some object
+ }
+ }
+ }
+ the following commands available:
+ *createFolder
+ copy - saves a set of objects onto the clipboard for later operations (done on client level so each client has its own clipboard)
+ paste - paste the content of the clipboard under the given object (creates deepcopy of each object on the clipboard the the proper place)
+ modify - modifies some single attribute (which means that this command will not deal with any kind of relations so it is good only for registry and attribute changes)
+ createChild - creates an empty child using the given basetype under the given parent
+ createSubType - creates an empty subtype from the given base under the given parent
  */
 "use strict";
 /*COMMON FUNCTIONS*/
@@ -89,59 +89,6 @@ LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
 var ID = "_id";
 
-
-var TestBasicSocket = function(CIoSocket,cLibrarian,CId){
-    var cProject = "testproject",
-        cBranch;
-
-    /*basic socket messages*/
-    CIoSocket.on('disconnect',function(msg){
-        logger.debug("TestBasicSocket.on.disconnect "+CId);
-        if(cProject !== undefined && cBranch !== undefined){
-            cLibrarian.connectToBranch(cProject,cBranch,function(project){
-                if(project){
-                    project.deleteClient(CId);
-                }
-            });
-        }
-    });
-    CIoSocket.on('connectToBranch',function(msg){
-        logger.debug("TestBasicSocket.on.connectToBranch "+CId);
-        cBranch = msg;
-
-        cLibrarian.connectToBranch(cProject,cBranch,function(err,project){
-            if(err){
-                logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
-                CIoSocket.emit('connectToBranchNack');
-                return;
-            }
-
-            if(project){
-                if(project.addClient(CIoSocket,CId)){
-                    logger.debug("TestBasicSocket.emit.connectToBranchAck "+CId);
-                    CIoSocket.emit('connectToBranchAck',CId);
-                }
-                else{
-                    logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
-                    CIoSocket.emit('connectToBranchNack');
-                }
-            }
-            else{
-                logger.debug("TestBasicSocket.emit.connectToBranchNack "+CId);
-                CIoSocket.emit('connectToBranchNack');
-            }
-        });
-    });
-
-
-    /*public functions*/
-    this.getId = function(){
-        return CId;
-    };
-    this.getSocket = function(){
-        return CIoSocket;
-    };
-};
 var TestStorage = function(cProjectName,cBranchName){
     var cObjects = {};
 
@@ -371,7 +318,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         var i,
             req;
         if(err){
-        /*TODO have to separate different type of errors*/
+            /*TODO have to separate different type of errors*/
             i = 0;
             while(i<readQueue.length){
                 if(readQueue[i].id === id){
@@ -486,7 +433,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
 
 
 };
-var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
+var Commander = function(cStorage,cClients,cCid,cCommands,CB){
     var processCommand,
         commandProcessed,
         modifyCommand,
@@ -826,7 +773,7 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                 else{
                     insertIntoArray(readIds,id);
                     for(i=0;i<object.relations.childrenIds.length;i++){
-                       rReadObject(object.relations.childrenIds[i]);
+                        rReadObject(object.relations.childrenIds[i]);
                     }
                     objectRead();
                 }
@@ -1105,7 +1052,12 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
         /*we are not that happy but cannot do much*/
         console.log("client: "+cId+" - serverMessageNack");
     });
-
+    cIoSocket.on('disconnect',function(msg){
+        logger.debug("Client.on.disconnect "+cId);
+        if(cProject){
+            cProject.deleteClient(cId);
+        }
+    });
     /*public functions*/
     this.getId = function(){
         return cId;
@@ -1208,11 +1160,11 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
         }
     };
 };
-var Project = function(cProject,cBranch,cLibrarian){
+var Project = function(cPort,cProject,cBranch){
     var cClients = {},
-        cTerritories = {},
         cTransactionQ = new TransactionQueue(this),
         cStorage,
+        cIo = require('socket.io').listen(cPort),
         cSelf = this;
     if(commonUtil.StorageType === "test"){
         cStorage = new TestStorage(cProject,cBranch);
@@ -1221,6 +1173,17 @@ var Project = function(cProject,cBranch,cLibrarian){
         cStorage = new DirtyStorage(cProject,cBranch);
     }
 
+    /*socket.IO listener*/
+    cIo.set('log level', 1); // reduce logging
+    cIo.sockets.on('connection', function(socket){
+        logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
+        if(cClients[socket.id]){
+            logger.debug("Project.connection - already connected client "+socket.id);
+        }
+        else{
+            cSelf.addClient(socket,socket.id);
+        }
+    });
     /*public functions*/
     this.getProjectInfo = function(){
         return {project:cProject,branch:cBranch};
@@ -1243,7 +1206,8 @@ var Project = function(cProject,cBranch,cLibrarian){
             count++;
         }
         if(count === 0){
-            cLibrarian.closeProject(cProject,cBranch);
+            logger.debug("no more clients, quit");
+            process.exit(0);
         }
     };
 
@@ -1253,100 +1217,14 @@ var Project = function(cProject,cBranch,cLibrarian){
         cTransactionQ.onClientMessage(msg);
     };
     this.onProcessMessage = function(cid,commands,cb){
-        new Commander(cStorage,cClients,cid,cTerritories,commands,cb);
+        new Commander(cStorage,cClients,cid,commands,cb);
     };
     this.onUpdateTerritory = function(clientId,commandId,territoryId,newpatterns){
         logger.debug("Project.onUpdateTerritory "+JSON.stringify(clientId)+","+JSON.stringify(commandId)+","+JSON.stringify(territoryId)+","+JSON.stringify(newpatterns));
         cClients[clientId].updateTerritory(territoryId,newpatterns,commandId);
     };
 };
-var TestLibrarian = function(){
-    var cProjects = [],
-        cSelf =this;
-
-    /*public functions*/
-    this.connectToBranch = function(project,branch,cb){
-        var i,info,newproject;
-        for(i=0;i<cProjects.length;i++){
-            info = cProjects[i].getProjectInfo();
-            if(info && info.project === project && info.branch === branch){
-                cb(null,cProjects[i]);
-                return;
-            }
-        }
-        newproject = new Project(project,branch,cSelf);
-        cProjects.push(newproject);
-        cb(null,newproject);
-    };
-    this.closeProject = function(project,branch){
-        var i,index,info;
-        for(i=0;i<cProjects.length;i++){
-            info = cProjects.getProjectInfo();
-            if(info.project === project && info.branch === branch){
-                index = i;
-                break;
-            }
-        }
-        cProjects.splice(index,1);
-    };
-};
-var Server = function(cPort){
-    var cConnectedSockets = [],
-        httpGet,
-        http = require('http').createServer(httpGet),
-        io = require('socket.io').listen(http),
-        cLibrarian = new TestLibrarian(),
-        cServer = this,
-        cClientSourceFolder = "/../client";
-    io.set('log level', 1); // reduce logging
-
-
-    http.listen(cPort);
-    httpGet = function(req, res){
-        logger.debug("HTTP REQ - "+req.url);
-
-        if(req.url==='/'){
-            req.url = '/index.html';
-        }
-
-        if (req.url.indexOf('/common/') === 0 ) {
-            cClientSourceFolder = "/..";
-        } else {
-            cClientSourceFolder = "/../client";
-        }
-
-        FS.readFile(__dirname + cClientSourceFolder +req.url, function(err,data){
-            if(err){
-                res.writeHead(500);
-                logger.error("Error getting the file:" +__dirname + cClientSourceFolder +req.url);
-                return res.end('Error loading ' + req.url);
-            }
-
-            if(req.url.indexOf('.js')>0){
-                logger.debug("HTTP RESP - "+req.url);
-                res.writeHead(200, {
-                    'Content-Length': data.length,
-                    'Content-Type': 'application/x-javascript' });
-
-            } else if (req.url.indexOf('.css')>0) {
-                logger.debug("HTTP RESP - "+req.url);
-                res.writeHead(200, {
-                    'Content-Length': data.length,
-                    'Content-Type': 'text/css' });
-
-            }
-            else{
-                res.writeHead(200);
-            }
-            res.end(data);
-        });
-    };
-
-    io.sockets.on('connection', function(socket){
-        logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
-        cConnectedSockets.push(new TestBasicSocket(socket,cLibrarian,socket.id));
-    });
-};
 /*MAIN*/
-var server = new Server( commonUtil.ServerPort );
+var project = new Project(8081,"testproject","t3st");
+
 

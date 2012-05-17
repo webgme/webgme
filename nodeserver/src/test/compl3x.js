@@ -53,10 +53,6 @@ var T3stClient = function(storage,commands){
     /*socket functions*/
     socket.on('connect',function(msg){
         printLog('socketIO connection established');
-        socket.emit('connectToBranch',"t3st");
-    });
-    socket.on('connectToBranchAck',function(msg){
-        printLog('connection to project established');
         finalizeLine();
     });
     socket.on('clientMessageAck',function(msg){
@@ -134,10 +130,16 @@ var T3stClient = function(storage,commands){
     processLine = function(line,cb){
         var i,
             result = true,
-            commands = JSON.parse(line),
+            commands,
             commandids = [];
         /*main*/
         state = "work";
+        if(line.length>0){
+            commands = JSON.parse(line);
+        }
+        else{
+            commands = {type:"printVariables"};
+        }
         if(commands instanceof Array){
             /*we should send them as a command and wait for the result to come ;)*/
             for(i=0;i<commands.length;i++){
