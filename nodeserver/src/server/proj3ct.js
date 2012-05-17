@@ -1225,6 +1225,16 @@ var Project = function(cPort,cProject,cBranch){
     };
 };
 /*MAIN*/
-var project = new Project(8081,"testproject","t3st");
+var i,
+    commandargs = process.argv.splice(" "),
+    project;
+logger.debug(commandargs);
+if(commandargs.length !== 5){
+    logger.error("proper usage: node proj3ct.js portnumber projectname branchname");
+    process.exit(0);
+}
+else{
+    project = new Project(Number(commandargs[2]),commandargs[3],commandargs[4]);
+}
 
 
