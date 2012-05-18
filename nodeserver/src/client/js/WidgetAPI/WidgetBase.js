@@ -13,7 +13,11 @@ define(['./../../../common/CommonUtil.js'], function (commonUtil) {
                                 "children": "children",
                                 "parentId": "parent",
                                 "posX": "attr.posX",
-                                "posY": "attr.posY" };
+                                "posY": "attr.posY",
+                                "source" : "srcId",
+                                "target" : "trgtId",
+                                "outgoingConnections": "connSrc",
+                                "incomingConnections": "connTrgt" };
 
         //widget outermost DOM element
         this.el = $('<div/>').attr("id", guid);
@@ -62,6 +66,14 @@ define(['./../../../common/CommonUtil.js'], function (commonUtil) {
                 this.children[childId].destroy();
                 delete this.children[childId];
             }
+        };
+
+        this.isSelectable = function () {
+            return false;
+        };
+
+        this.isDraggable = function () {
+            return false;
         };
     };
 

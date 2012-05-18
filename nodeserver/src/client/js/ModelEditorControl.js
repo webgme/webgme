@@ -78,7 +78,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                         "posY": 20,
                         "title": "Loading..." };
 
-                    if (childNode) {
+                    if (childNode && childNode.getAttribute("attr")) {
                         childDescriptor.posX = childNode.getAttribute("attr").posX;
                         childDescriptor.posY = childNode.getAttribute("attr").posY;
                         childDescriptor.title =  childNode.getAttribute("name");
@@ -192,7 +192,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //get the node from the project
                     updatedObject = project.getNode(objectId);
 
-                    if (updatedObject) {
+                    if (updatedObject && updatedObject.getAttribute("attr")) {
 
                         //create the node's descriptor for the widget
                         nodeDescriptor = {   "id" : objectId,
