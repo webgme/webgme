@@ -444,6 +444,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         pointCommand,
         commandBuffer,
         readSubTree,
+        readISubTree,
         inheritObject,
         commandIds,
         i;
@@ -509,102 +510,226 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             }
         });
     };
+    
     deleteCommand = function(deletecommand,callback){
-        var i,
-            deleteObject,
-            deletionComplete,
-            objectDeleted,
-            removeReference,
-            removeReferral,
-            removeChild,
-            removeInheritor,
-            count;
-
-        deletionComplete = function(){
-            callback();
-        };
-        objectDeleted = function(){
-            if(--count === 0){
-                deletionComplete();
+        var subIds,
+            readcount,
+            allObjectsRead,
+            alreadycalled,
+            allObjectDisconnected,
+            objectDisconnected,
+            disconnectObject,
+            disconnectcount,
+            callCallBack;
+        callCallBack = function(){
+            if(!alreadycalled){
+                alreadycalled = true;
+                callback();
             }
         };
-        removeChild = function(childId,id,cb){
-            commandBuffer.get(id,function(err,object){
-                var index;
-                if(err){
-                    cb();
-                }
-                else{
-                    index = object.relations.childrenIds.indexOf(childId);
-                    if(index !== -1){
-                        object.relations.childrenIds.splice(index,1);
-                        commandBuffer.set(id,object);
-                    }
-                    else{
-                        if(childId === deletecommand.id){
-                            logger.error("Commander.deleteCommand.removeChild wrong child info "+childId+" in object "+id);
-                        }
-                    }
-                    cb();
-                }
-            });
+        allObjectsRead = function(){
+            var i;
+            disconnectcount = subIds.length;
+            for(i=0;i<subIds.length;i++){
+                disconnectObject(subIds[i],objectDisconnected);
+            }
         };
-        removeInheritor = function(inhId,id,cb){
-            commandBuffer.get(id,function(err,object){
-                var index;
-                if(err){
-                    cb();
-                }
-                else{
-                    index = object.relations.inheritorIds.indexOf(inhId);
-                    if(index !== -1){
-                        object.relations.inheritorIds.splice(index,1);
-                        commandBuffer.set(id,object);
-                    }
-                    else{
-                        if(inhId === deletecommand.id){
-                            logger.error("Commander.deleteCommand.removeInheritor wrong inheritor info "+inhId+" from object "+id);
-                        }
-                    }
-                    cb();
-                }
-            });
+        allObjectDisconnected = function(){
+            var i;
+            for(i=0;i<subIds.length;i++){
+                commandBuffer.set(subIds[i],null);
+            }
+            callCallBack();
         };
-
-        deleteObject = function(id){
-            /*main*/
-            count++;
-            commandBuffer.get(id,function(err,object){
+        objectDisconnected = function(){
+            if(--disconnectcount === 0){
+                allObjectDisconnected();
+            }
+        };
+        disconnectObject = function(disconnectId,cb){
+            var pointercount,
+                disconnectPointer,
+                mainobject,
+                pointerRemoved;
+            pointerRemoved = function(){
+                if(--pointercount === 0){
+                    cb();
+                }
+            };
+            disconnectPointer = function(name){
                 var i,
-                    relationsRemoved;
+                    disconnectcount,
+                    removePointer;
 
-                relationsRemoved = function(){
-                    for(i=0;i<object.relations.childrenIds.length;i++){
-                        deleteObject(object.relations.childrenIds[i]);
-                    }
-                    for(i=0;i<object.relations.inheritorIds.length;i++){
-                        deleteObject(object.relations.inheritorIds[i]);
-                    }
-                    objectDeleted();
+                removePointer = function(id){
+                    commandBuffer.get(id,function(error,object){
+                        if(error){
+                            commandBuffer.commandFailed();
+                            callCallBack();
+                        }
+                        else{
+                            if(object.pointers[name].to === disconnectId){
+                                object.pointers[name].to = null;
+                                commandBuffer.set(object[ID],object);
+                            }
+                            if(--disconnectcount === 0){
+                                pointerRemoved();
+                            }
+                        }
+                    });
                 };
 
                 /*main*/
-                if(err){
-                    objectDeleted();
+                disconnectcount = mainobject.pointers[name].from.length+1;
+                for(i=0;i<mainobject.pointers[name].from.length;i++){
+                    if(subIds.indexOf(mainobject.pointers[name].from[i]) === -1){
+                        removePointer(mainobject.pointers[name].from[i]);
+                    }
+                    else{
+                        if(--disconnectcount === 0){
+                            pointerRemoved();
+                        }
+                    }
+                }
+                if(subIds.indexOf(mainobject.pointers[name].to) === -1){
+                    commandBuffer.get(mainobject.pointers[name].to,function(error,object){
+                        if(error){
+                            commandBuffer.commandFailed();
+                            callCallBack();
+                        }
+                        else{
+                            removeFromArray(object.pointers[name].from,mainobject[ID]);
+                            commandBuffer.set(object[ID],object);
+                            if(--disconnectcount === 0){
+                                pointerRemoved();
+                            }
+                        }
+                    });
                 }
                 else{
-                    removeChild(id,object.relations.parentId,function(){
-                        removeInheritor(id,object.relations.baseId,function(){
-                            relationsRemoved();
+                    if(--disconnectcount === 0){
+                        pointerRemoved();
+                    }
+                }
+            };
+
+            /*main*/
+            commandBuffer.get(disconnectId,function(error,object){
+                var i;
+                if(error){
+                    commandBuffer.commandFailed();
+                    callCallBack();
+                }
+                else{
+                    mainobject = object;
+                    pointercount = 0;
+                    for(i in mainobject.pointers){
+                        pointercount++;
+                    }
+                    pointercount++;
+                    if(mainobject.relations.baseId){
+                        commandBuffer.get(mainobject.relations.baseId,function(error,object){
+                            if(error){
+                                commandBuffer.commandFailed();
+                                callCallBack();
+                            }
+                            else{
+                                removeFromArray(object.relations.inheritorIds,disconnectId);
+                                commandBuffer.set(object[ID],object);
+                                if(--pointercount === 0){
+                                    cb();
+                                }
+                            }
                         });
-                    });
+                    }
+                    else{
+                        if(--pointercount === 0){
+                            cb();
+                        }
+                    }
+
+                    for(i in mainobject.pointers){
+                        disconnectPointer(i);
+                    }
                 }
             });
         };
-
         /*main*/
-        count = 0;
-        deleteObject(deletecommand.id);
+        subIds = [];
+        readcount = 4;
+        alreadycalled = false;
+        readSubTree(deletecommand.id,function(error,subtree){
+            if(error){
+                commandBuffer.commandFailed();
+                callCallBack();
+            }
+            else{
+                subIds = subIds.concat(subtree);
+                if(--readcount === 0){
+                    allObjectsRead();
+                }
+            }
+        });
+        readISubTree(deletecommand.id,function(error,subtree){
+            if(error){
+                commandBuffer.commandFailed();
+                callCallBack();
+            }
+            else{
+                subIds = subIds.concat(subtree);
+                if(--readcount === 0){
+                    allObjectsRead();
+                }
+            }
+        });
+        commandBuffer.get(deletecommand.id,function(error,mainobject){
+            if(error){
+                commandBuffer.commandFailed();
+                callCallBack();
+            }
+            else{
+                if(mainobject.relations.baseId){
+                    commandBuffer.get(mainobject.relations.baseId,function(error,baseobject){
+                        if(error){
+                            commandBuffer.commandFailed();
+                            callCallBack();
+                        }
+                        else{
+                            removeFromArray(baseobject.relations.inheritorIds,deletecommand.id);
+                            commandBuffer.set(baseobject[ID],baseobject);
+                            if(--readcount === 0){
+                                allObjectsRead();
+                            }
+                        }
+                    });
+                }
+                else{
+                    if(--readcount === 0){
+                        allObjectsRead();
+                    }
+                }
+                if(mainobject.relations.parentId){
+                    commandBuffer.get(mainobject.relations.parentId,function(error,parentobject){
+                        if(error){
+                            commandBuffer.commandFailed();
+                            callCallBack();
+                        }
+                        else{
+                            removeFromArray(parentobject.relations.childrenIds,deletecommand.id);
+                            commandBuffer.set(parentobject[ID],parentobject);
+                            if(--readcount === 0){
+                                allObjectsRead();
+                            }
+                        }
+                    });
+                }
+                else{
+                    if(--readcount === 0){
+                        allObjectsRead();
+                    }
+                }
+            }
+        });
     };
     pasteCommand = function(pastecommand){
     };
@@ -774,6 +899,46 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     insertIntoArray(readIds,id);
                     for(i=0;i<object.relations.childrenIds.length;i++){
                         rReadObject(object.relations.childrenIds[i]);
+                    }
+                    objectRead();
+                }
+            });
+        };
+
+        /*main*/
+        state=true;
+        count = 0;
+        readIds = [];
+        rReadObject(rootId);
+    };
+    readISubTree = function(rootId,cb){
+        var i,
+            count,
+            objectRead,
+            rReadObject,
+            readIds,
+            state;
+        objectRead = function(){
+            if(--count === 0){
+                if(state){
+                    cb(null,readIds);
+                }
+                else{
+                    cb(1);
+                }
+            }
+        };
+        rReadObject = function(id){
+            count++;
+            commandBuffer.get(id,function(err,object){
+                if(err){
+                    state=false;
+                    objectRead();
+                }
+                else{
+                    insertIntoArray(readIds,id);
+                    for(i=0;i<object.relations.inheritorIds.length;i++){
+                        rReadObject(object.relations.inheritorIds[i]);
                     }
                     objectRead();
                 }
