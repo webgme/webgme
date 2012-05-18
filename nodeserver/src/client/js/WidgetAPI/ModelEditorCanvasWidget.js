@@ -44,7 +44,8 @@ define(['./../../../common/LogManager.js',
             rubberBandBBox,
             drawRubberBand,
             rubberBandDrawing = false,
-            selectChildrenByRubberBand;
+            selectChildrenByRubberBand,
+            redrawComponentConnections;
 
         $.extend(this, new WidgetBase(id));
 
@@ -99,31 +100,59 @@ define(['./../../../common/LogManager.js',
 
             //specify territory
             newPattern = {};
-            newPattern[self.getId()] = { "children": 0 };
+            newPattern[self.getId()] = { "children": 1 };
             self.project.addPatterns(territoryId, newPattern);
         };
 
         this.addedToParent = function () {
-            var i;
+            var i,
+                connectionIds = [],
+                childObject,
+                conn;
             //create widget for children and add them to self
 
+            //first draw the models and after that the connections
             for (i = 0; i < currentNodeInfo.children.length; i += 1) {
-                createChildComponent(currentNodeInfo.children[i], true);
+                childObject = self.project.getNode(currentNodeInfo.children[i]);
+                if (childObject) {
+                    if (childObject.getAttribute("srcId") && childObject.getAttribute("trgtId")) {
+                        connectionIds.push(currentNodeInfo.children[i]);
+                    } else {
+                        createChildComponent(currentNodeInfo.children[i], true);
+                    }
+                } else {
+                    createChildComponent(currentNodeInfo.children[i], true);
+                }
+
             }
+
+            //we need the timeout for the CSS rules to be applied (the object needs its final size before we can draw connections)
+            setTimeout(function () {
+                for (i = 0; i < connectionIds.length; i += 1) {
+                    createChildComponent(connectionIds[i]);
+                }
+            }, 100);
         };
 
         createChildComponent = function (childId, silent) {
             var childNode = self.project.getNode(childId),
                 childWidget;
 
-            if (silent === false) {
-                childComponentsCreateQueue[childId] = childId;
-            }
+            if (childNode) {
+                if (silent === false) {
+                    childComponentsCreateQueue[childId] = childId;
+                }
 
-            childWidget = new ModelEditorModelWidget(childId);
-            childWidget.project = self.project;
-            childWidget.initializeFromNode(childNode);
-            self.addChild(childWidget);
+                if (childNode.getAttribute("srcId") && childNode.getAttribute("trgtId")) {
+                    childWidget = new ModelEditorConnectionWidget(childId);
+                } else {
+                    childWidget = new ModelEditorModelWidget(childId);
+                }
+
+                childWidget.project = self.project;
+                childWidget.initializeFromNode(childNode);
+                self.addChild(childWidget);
+            }
         };
 
         this.childBBoxChanged = function (child) {
@@ -132,6 +161,7 @@ define(['./../../../common/LogManager.js',
 
             //check if the new children does not cause overlap
             //readjust if necessary
+            redrawComponentConnections(child.getId());
 
             //check if current children container's width and height are big enough to contain the children
             adjustChildrenContainerSize(child);
@@ -170,135 +200,196 @@ define(['./../../../common/LogManager.js',
         };
 
         this.childAdded = function (childComponent) {
-            var childComponentEl = $(childComponent.el);
+            var childComponentEl = $(childComponent.el),
+                childNode = self.project.getNode(childComponent.getId()),
+                incomingConnectionIds = childNode.getAttribute(self.nodeAttrNames.incomingConnections),
+                outgoingConnectionIds = childNode.getAttribute(self.nodeAttrNames.outgoingConnections);
 
             //hook up selection
-            childComponentEl.bind('mousedown', onComponentMouseDown);
+            if (childComponent.isSelectable() === true) {
+                childComponentEl.bind('mousedown', onComponentMouseDown);
+            }
 
             //hook up moving
-            //enable dragging
-            childComponentEl.css("cursor", "move");
-            childComponentEl.disableSelection();
+            if (childComponent.isDraggable() === true) {
+                //enable dragging
+                childComponentEl.css("cursor", "move");
+                childComponentEl.disableSelection();
 
-            childComponentEl.draggable({
-                zIndex: 100000,
-                grid: [myGridSize, myGridSize],
-                helper: function (event) {
-                    var clonedInstance = childComponentEl.clone().attr("id", childComponent.getId() + "_clone").css("opacity", "0.000001");
+                childComponentEl.draggable({
+                    zIndex: 100000,
+                    grid: [myGridSize, myGridSize],
+                    helper: function (event) {
+                        var clonedInstance = childComponentEl.clone().attr("id", childComponent.getId() + "_clone").css("opacity", "0.000001");
 
-                    dragStartPos.x = parseInt(childComponentEl.css("left"), 10);
-                    dragStartPos.y = parseInt(childComponentEl.css("top"), 10);
+                        dragStartPos.x = parseInt(childComponentEl.css("left"), 10);
+                        dragStartPos.y = parseInt(childComponentEl.css("top"), 10);
 
-                    return clonedInstance;
-                },
-                start: function (event, ui) {
-                    var i,
-                        childId;
+                        return clonedInstance;
+                    },
+                    start: function (event, ui) {
+                        var i,
+                            childId;
 
-                    for (i = 0; i < selectedComponentIds.length; i += 1) {
-                        childId = selectedComponentIds[i];
-                        self.children[childId].dragStartPos = {"x": parseInt(self.children[childId].el.css("left"), 10), "y": parseInt(self.children[childId].el.css("top"), 10) };
-                        if (i === 0) {
-                            selectionBBox.x = self.children[childId].dragStartPos.x;
-                            selectionBBox.y = self.children[childId].dragStartPos.y;
-                            selectionBBox.x2 = selectionBBox.x + self.children[childId].el.outerWidth();
-                            selectionBBox.y2 = selectionBBox.y + self.children[childId].el.outerHeight();
-                        } else {
-                            if (selectionBBox.x > self.children[childId].dragStartPos.x) {
+                        for (i = 0; i < selectedComponentIds.length; i += 1) {
+                            childId = selectedComponentIds[i];
+                            self.children[childId].dragStartPos = {"x": parseInt(self.children[childId].el.css("left"), 10), "y": parseInt(self.children[childId].el.css("top"), 10) };
+                            if (i === 0) {
                                 selectionBBox.x = self.children[childId].dragStartPos.x;
-                            }
-                            if (selectionBBox.y > self.children[childId].dragStartPos.y) {
                                 selectionBBox.y = self.children[childId].dragStartPos.y;
-                            }
-                            if (selectionBBox.x2 < self.children[childId].dragStartPos.x + self.children[childId].el.outerWidth()) {
-                                selectionBBox.x2 = self.children[childId].dragStartPos.x + self.children[childId].el.outerWidth();
-                            }
-                            if (selectionBBox.y2 < self.children[childId].dragStartPos.y + self.children[childId].el.outerHeight()) {
-                                selectionBBox.y2 = self.children[childId].dragStartPos.y + self.children[childId].el.outerHeight();
+                                selectionBBox.x2 = selectionBBox.x + self.children[childId].el.outerWidth();
+                                selectionBBox.y2 = selectionBBox.y + self.children[childId].el.outerHeight();
+                            } else {
+                                if (selectionBBox.x > self.children[childId].dragStartPos.x) {
+                                    selectionBBox.x = self.children[childId].dragStartPos.x;
+                                }
+                                if (selectionBBox.y > self.children[childId].dragStartPos.y) {
+                                    selectionBBox.y = self.children[childId].dragStartPos.y;
+                                }
+                                if (selectionBBox.x2 < self.children[childId].dragStartPos.x + self.children[childId].el.outerWidth()) {
+                                    selectionBBox.x2 = self.children[childId].dragStartPos.x + self.children[childId].el.outerWidth();
+                                }
+                                if (selectionBBox.y2 < self.children[childId].dragStartPos.y + self.children[childId].el.outerHeight()) {
+                                    selectionBBox.y2 = self.children[childId].dragStartPos.y + self.children[childId].el.outerHeight();
+                                }
                             }
                         }
-                    }
 
-                    selectionBBox.w = selectionBBox.x2 - selectionBBox.x;
-                    selectionBBox.h = selectionBBox.y2 - selectionBBox.y;
+                        selectionBBox.w = selectionBBox.x2 - selectionBBox.x;
+                        selectionBBox.h = selectionBBox.y2 - selectionBBox.y;
 
-                    childDragValidPos = true;
-                    self.skinParts.dragPosPanel.removeClass("invalidPosition");
-                    self.skinParts.dragPosPanel.html("X: " + selectionBBox.x + " Y: " + selectionBBox.y);
-                    self.skinParts.dragPosPanel.css("left", selectionBBox.x + (selectionBBox.w - self.skinParts.dragPosPanel.outerWidth()) / 2);
-                    self.skinParts.dragPosPanel.css("top", selectionBBox.y + selectionBBox.h + 10);
-                    self.skinParts.dragPosPanel.show();
-                    logger.debug("Start dragging from original position X: " + childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
-                },
-                stop: function (event, ui) {
-                    var stopPos = { "x": parseInt(ui.helper.css("left"), 10), "y": parseInt(ui.helper.css("top"), 10) },
-                        dX = stopPos.x - dragStartPos.x,
-                        dY = stopPos.y - dragStartPos.y,
-                        i,
-                        childId,
-                        rollBackFn;
+                        childDragValidPos = true;
+                        self.skinParts.dragPosPanel.removeClass("invalidPosition");
+                        self.skinParts.dragPosPanel.html("X: " + selectionBBox.x + " Y: " + selectionBBox.y);
+                        self.skinParts.dragPosPanel.css("left", selectionBBox.x + (selectionBBox.w - self.skinParts.dragPosPanel.outerWidth()) / 2);
+                        self.skinParts.dragPosPanel.css("top", selectionBBox.y + selectionBBox.h + 10);
+                        self.skinParts.dragPosPanel.show();
+                        logger.debug("Start dragging from original position X: " + childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
+                    },
+                    stop: function (event, ui) {
+                        var stopPos = { "x": parseInt(ui.helper.css("left"), 10), "y": parseInt(ui.helper.css("top"), 10) },
+                            dX = stopPos.x - dragStartPos.x,
+                            dY = stopPos.y - dragStartPos.y,
+                            i,
+                            childId,
+                            rollBackFn;
 
-                    logger.debug("Stop dragging at position X: " + stopPos.x + ", Y: " + stopPos.y);
-                    self.skinParts.dragPosPanel.hide();
+                        logger.debug("Stop dragging at position X: " + stopPos.x + ", Y: " + stopPos.y);
+                        self.skinParts.dragPosPanel.hide();
 
-                    if (childDragValidPos === true) {
-                        //save back new position
-                        //TODO: FIXME - do all the save in one round!!!!
-                        for (i = 0; i < selectedComponentIds.length; i += 1) {
-                            childId = selectedComponentIds[i];
-                            self.children[childId].setPosition(self.children[childId].dragStartPos.x + dX, self.children[childId].dragStartPos.y + dY, false);
-                        }
-                    } else {
-                        //roll back to original position
-                        logger.debug("Component has been dropped at an invalid position, rolling back to original. X: " +  childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
-                        rollBackFn = function (child) {
-                            child.el.animate({
-                                left: child.dragStartPos.x,
-                                top: child.dragStartPos.y
-                            }, 200, function () {
-                                delete child.dragStartPos;
-                            });
-                        };
-                        for (i = 0; i < selectedComponentIds.length; i += 1) {
-                            childId = selectedComponentIds[i];
-                            rollBackFn(self.children[childId]);
-                        }
-                    }
-                },
-                drag: function (event, ui) {
-                    var dragPos = { "x": parseInt(ui.helper.css("left"), 10), "y": parseInt(ui.helper.css("top"), 10) },
-                        validPos,
-                        dX = dragPos.x - dragStartPos.x,
-                        dY = dragPos.y - dragStartPos.y,
-                        i,
-                        childId;
-
-                    //position drag-position panel
-                    self.skinParts.dragPosPanel.html("X: " + (selectionBBox.x + dX) + " Y: " + (selectionBBox.y + dY));
-                    self.skinParts.dragPosPanel.css("left", selectionBBox.x + dX + (selectionBBox.w - self.skinParts.dragPosPanel.outerWidth()) / 2);
-                    self.skinParts.dragPosPanel.css("top", selectionBBox.y + dY + selectionBBox.h + 10);
-
-                    //move all the selected children
-                    for (i = 0; i < selectedComponentIds.length; i += 1) {
-                        childId = selectedComponentIds[i];
-                        self.children[childId].el.css("left", self.children[childId].dragStartPos.x + dX);
-                        self.children[childId].el.css("top", self.children[childId].dragStartPos.y + dY);
-                    }
-
-                    //check if the new position is allowed or not
-                    validPos = validDrag(dX, dY);
-
-                    if (childDragValidPos !== validPos) {
-                        childDragValidPos = validPos;
-                        if (childDragValidPos === false) {
-                            self.skinParts.dragPosPanel.addClass("invalidPosition");
+                        if (childDragValidPos === true) {
+                            //save back new position
+                            //TODO: FIXME - do all the save in one round!!!!
+                            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                                childId = selectedComponentIds[i];
+                                redrawComponentConnections(childId);
+                                self.children[childId].setPosition(self.children[childId].dragStartPos.x + dX, self.children[childId].dragStartPos.y + dY, false);
+                            }
                         } else {
-                            self.skinParts.dragPosPanel.removeClass("invalidPosition");
+                            //roll back to original position
+                            logger.debug("Component has been dropped at an invalid position, rolling back to original. X: " +  childComponent.dragStartPos.x + ", Y: " + childComponent.dragStartPos.y);
+                            rollBackFn = function (child) {
+                                child.el.animate({
+                                    left: child.dragStartPos.x,
+                                    top: child.dragStartPos.y
+                                },
+                                    {   duration: 200,
+                                        complete: function () {
+                                            delete child.dragStartPos;
+                                            redrawComponentConnections(child.getId());
+                                        }
+                                        }
+                                    );
+                            };
+                            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                                childId = selectedComponentIds[i];
+                                rollBackFn(self.children[childId]);
+                            }
                         }
-                    }
+                    },
+                    drag: function (event, ui) {
+                        var dragPos = { "x": parseInt(ui.helper.css("left"), 10), "y": parseInt(ui.helper.css("top"), 10) },
+                            validPos,
+                            dX = dragPos.x - dragStartPos.x,
+                            dY = dragPos.y - dragStartPos.y,
+                            i,
+                            childId;
 
+                        //position drag-position panel
+                        self.skinParts.dragPosPanel.html("X: " + (selectionBBox.x + dX) + " Y: " + (selectionBBox.y + dY));
+                        self.skinParts.dragPosPanel.css("left", selectionBBox.x + dX + (selectionBBox.w - self.skinParts.dragPosPanel.outerWidth()) / 2);
+                        self.skinParts.dragPosPanel.css("top", selectionBBox.y + dY + selectionBBox.h + 10);
+
+                        //move all the selected children
+                        for (i = 0; i < selectedComponentIds.length; i += 1) {
+                            childId = selectedComponentIds[i];
+                            self.children[childId].el.css("left", self.children[childId].dragStartPos.x + dX);
+                            self.children[childId].el.css("top", self.children[childId].dragStartPos.y + dY);
+                            redrawComponentConnections(childId);
+                        }
+
+                        //check if the new position is allowed or not
+                        validPos = validDrag(dX, dY);
+
+                        if (childDragValidPos !== validPos) {
+                            childDragValidPos = validPos;
+                            if (childDragValidPos === false) {
+                                self.skinParts.dragPosPanel.addClass("invalidPosition");
+                            } else {
+                                self.skinParts.dragPosPanel.removeClass("invalidPosition");
+                            }
+                        }
+
+                        //redrawSelectedItemsConnections();
+                    }
+                });
+            }
+
+            //if the child is a connection, let it draw itself based on the source and target info
+            if (childComponent instanceof ModelEditorConnectionWidget) {
+                childComponent.redrawConnection(self.children[childNode.getAttribute(self.nodeAttrNames.source)], self.children[childNode.getAttribute(self.nodeAttrNames.target)]);
+            }
+        };
+
+        redrawComponentConnections = function (childId) {
+            var connectionsToRedraw = [],
+                i,
+                j,
+                incomingConnectionIds,
+                outgoingConnectionIds,
+                srcWidget,
+                trgtWidget,
+                concreteConnection,
+                connNode;
+
+            incomingConnectionIds = self.project.getNode(childId).getAttribute(self.nodeAttrNames.incomingConnections);
+            outgoingConnectionIds = self.project.getNode(childId).getAttribute(self.nodeAttrNames.outgoingConnections);
+            if (incomingConnectionIds) {
+                for (j = 0; j < incomingConnectionIds.length; j += 1) {
+                    if (connectionsToRedraw.indexOf(incomingConnectionIds[j]) === -1) {
+                        connectionsToRedraw.push(incomingConnectionIds[j]);
+                    }
                 }
-            });
+            }
+            if (outgoingConnectionIds) {
+                for (j = 0; j < outgoingConnectionIds.length; j += 1) {
+                    if (connectionsToRedraw.indexOf(outgoingConnectionIds[j]) === -1) {
+                        connectionsToRedraw.push(outgoingConnectionIds[j]);
+                    }
+                }
+            }
+
+            for (i = 0; i < connectionsToRedraw.length; i += 1) {
+                connNode = self.project.getNode(connectionsToRedraw[i]);
+                if (connNode) {
+                    srcWidget = self.children[connNode.getAttribute(self.nodeAttrNames.source)];
+                    trgtWidget = self.children[connNode.getAttribute(self.nodeAttrNames.target)];
+                    concreteConnection = self.children[connectionsToRedraw[i]];
+                    if (concreteConnection) {
+                        concreteConnection.redrawConnection(srcWidget, trgtWidget);
+                    }
+                }
+            }
         };
 
         validDrag = function (dX, dY) {
@@ -317,7 +408,9 @@ define(['./../../../common/LogManager.js',
             //get all the children IDs
             for (i in self.children) {
                 if (self.children.hasOwnProperty(i)) {
-                    allComponentIds.push(i);
+                    if (self.children[i] instanceof ModelEditorModelWidget) {
+                        allComponentIds.push(i);
+                    }
                 }
             }
 
@@ -342,21 +435,24 @@ define(['./../../../common/LogManager.js',
 
         // PUBLIC METHODS
         this.onEvent = function (etype, eid) {
-            if (eid === currentNodeInfo.id) {
-                switch (etype) {
-                case "load":
-                    //refresh("insert", eid);
-                    break;
-                case "modify":
-                    refresh("update", eid);
-                    break;
-                case "create":
-                    //refresh("insert", eid);
-                    break;
-                case "delete":
-                    //refresh("update", eid);
-                    break;
+            switch (etype) {
+            case "load":
+                if (currentNodeInfo.children.indexOf(eid) > -1) {
+                    createChildComponent(eid, true);
                 }
+                //refresh("insert", eid);
+                break;
+            case "modify":
+                if (eid === currentNodeInfo.id) {
+                    refresh("update", eid);
+                }
+                break;
+            case "create":
+                //refresh("insert", eid);
+                break;
+            case "delete":
+                //refresh("update", eid);
+                break;
             }
         };
 
@@ -541,7 +637,7 @@ define(['./../../../common/LogManager.js',
                 mX,
                 mY;
 
-            if (target === self.skinParts.childrenContainer[0]) {
+            if ((target === self.skinParts.childrenContainer[0]) || (target instanceof SVGSVGElement)) {
                 if (e.ctrlKey !== true) {
                     clearSelection();
                 }
@@ -623,16 +719,15 @@ define(['./../../../common/LogManager.js',
                     }
                 }
 
-
-
                 return false;
             };
 
             for (i in self.children) {
                 if (self.children.hasOwnProperty(i)) {
-                    //if (util.overlap(rbBBox, self.children[i].getBoundingBox())) {
-                    if (selectionContainsBBox(self.children[i].getBoundingBox(), i)) {
-                        childrenIDs.push(i);
+                    if (self.children[i].isSelectable() === true) {
+                        if (selectionContainsBBox(self.children[i].getBoundingBox(), i)) {
+                            childrenIDs.push(i);
+                        }
                     }
                 }
             }
