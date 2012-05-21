@@ -16,7 +16,7 @@ define(function () {
 				console.log(message);
 			}
 
-			throw error;
+//			throw error;
 		}
 	};
 });

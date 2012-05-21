@@ -7,25 +7,41 @@
 var requirejs = require("requirejs");
 
 requirejs.config({
-	nodeRequire : require
+	nodeRequire: require
 });
 
-requirejs([ "assert", "storage" ], function(ASSERT, STORAGE) {
+requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 	"use strict";
 
 	var mongo = new STORAGE.Mongo();
-	mongo.open(function(err) {
-		
-/*		
-		storage.get("headx", function(err, result) {
-			console.log(err);
-			console.log(result);
-			storage.close();
-		});
-*/
+	mongo.open(function (err) {
+		var graph = new STORAGE.Graph(mongo);
+		var tree = new STORAGE.Tree(graph);
 
-		mongo.dump(function(err) {
-			mongo.close();
+		mongo.removeAll(function (err) {
+
+			var root = graph.create();
+			graph.setData(root, "name", "root");
+			var child = graph.create();
+			graph.setData(child, "name", "child");
+			graph.setChild(root, "1", child);
+			graph.setChild(root, "2", child);
+
+			graph.persist(root, function (err) {
+
+				tree.getRoot(graph.getKey(root), function (err, rnode) {
+					tree.getChild(rnode, "1", function(err, cnode) {
+						
+						tree.mutate(cnode);
+						tree.setData(cnode, "name", "hihi");
+
+						mongo.dumpAll(function() {
+							mongo.close();
+						});
+					});
+
+				});
+			});
 		});
 
 	});
