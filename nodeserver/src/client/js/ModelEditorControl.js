@@ -3,7 +3,26 @@
 define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './util.js'], function (logManager, EventDispatcher, util) {
 
     var ModelEditorControl = function (myProject, myModelEditor) {
-        var logger, project, territoryId, stateLoading = 0, stateLoaded = 1, nodes, modelEditor, currentNodeInfo, refresh;
+        var logger,
+            project,
+            territoryId,
+            stateLoading = 0,
+            stateLoaded = 1,
+            nodes,
+            modelEditor,
+            currentNodeInfo,
+            refresh,
+            nodeAttrNames = {   "id": "_id",
+                                "name" : "name",
+                                "children": "children",
+                                "parentId": "parent",
+                                "posX": "attr.posX",
+                                "posY": "attr.posY",
+                                "source" : "srcId",
+                                "target" : "trgtId",
+                                "directed" : "directed",
+                                "outgoingConnections": "connSrc",
+                                "incomingConnections": "connTrgt" };
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorControl");
@@ -56,10 +75,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             selectedNode = project.getNode(nodeId);
 
             if (selectedNode) {
-                modelEditor.setTitle(selectedNode.getAttribute("name"));
+                modelEditor.setTitle(selectedNode.getAttribute(nodeAttrNames.name));
 
                 //get the children IDs of the parent
-                childrenIDs = selectedNode.getAttribute("children");
+                childrenIDs = selectedNode.getAttribute(nodeAttrNames.children);
 
                 for (i = 0; i < childrenIDs.length; i += 1) {
 
@@ -73,20 +92,26 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     nodes[currentChildId] = {   "modelObject": childObject,
                                                     "state": stateLoading };
 
-                    childDescriptor =  { "id" : currentChildId,
-                        "posX": 20,
-                        "posY": 20,
-                        "title": "Loading..." };
+                    childDescriptor =  { "id" : currentChildId };
 
-                    if (childNode && childNode.getAttribute("attr")) {
-                        childDescriptor.posX = childNode.getAttribute("attr").posX;
-                        childDescriptor.posY = childNode.getAttribute("attr").posY;
-                        childDescriptor.title =  childNode.getAttribute("name");
-
-                        //store the node's info in the local hash map
-                        nodes[currentChildId].state = stateLoaded;
+                    //is it a connection
+                    if (childNode.getAttribute(nodeAttrNames.source) && childNode.getAttribute(nodeAttrNames.target)) {
+                        childDescriptor.kind = "CONNECTION";
+                        childDescriptor.source = childNode.getAttribute(nodeAttrNames.source);
+                        childDescriptor.target = childNode.getAttribute(nodeAttrNames.target);
+                        childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
+                        childDescriptor.directed =  childNode.getAttribute(nodeAttrNames.directed);
+                        childDescriptor.sourceComponent = nodes[childDescriptor.source].modelObject;
+                        childDescriptor.targetComponent = nodes[childDescriptor.target].modelObject;
+                    } else {
+                        childDescriptor.kind = "MODEL";
+                        childDescriptor.posX = childNode.getAttribute(nodeAttrNames.posX);
+                        childDescriptor.posY = childNode.getAttribute(nodeAttrNames.posY);
+                        childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
                     }
 
+                    //store the node's info in the local hash map
+                    nodes[currentChildId].state = stateLoaded;
                     nodes[currentChildId].modelObject = modelEditor.createObject(childDescriptor);
                 }
 
@@ -138,10 +163,12 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //the only interest about the parent are the new and deleted children
                     parentNode = project.getNode(objectId);
 
+                    modelEditor.setTitle(parentNode.getAttribute(nodeAttrNames.name));
+
                     oldChildren = currentNodeInfo.children;
                     currentChildren = [];
                     if (parentNode) {
-                        currentChildren = parentNode.getAttribute("children");
+                        currentChildren = parentNode.getAttribute(nodeAttrNames.children);
                     }
 
                     //Handle children deletion
@@ -166,21 +193,18 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                         nodes[addedChildId] = {   "modelObject": childObject,
                             "state" : stateLoading };
 
-                        childDescriptor =  { "id" : addedChildId,
-                            "posX": 20,
-                            "posY": 20,
-                            "title": "Loading..."  };
-
                         if (childNode) {
-                            childDescriptor.posX = childNode.getAttribute("attr").posX;
-                            childDescriptor.posY = childNode.getAttribute("attr").posY;
-                            childDescriptor.title =  childNode.getAttribute("name");
+                            childDescriptor =  { "id" : addedChildId };
+
+                            childDescriptor.posX = childNode.getAttribute(nodeAttrNames.posX);
+                            childDescriptor.posY = childNode.getAttribute(nodeAttrNames.posY);
+                            childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
 
                             //store the node's info in the local hash map
                             nodes[addedChildId].state = stateLoaded;
-                        }
 
-                        nodes[addedChildId].modelObject = modelEditor.createObject(childDescriptor);
+                            nodes[addedChildId].modelObject = modelEditor.createObject(childDescriptor);
+                        }
                     }
 
                     //finally store the actual children info for the parent
@@ -196,9 +220,9 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                         //create the node's descriptor for the widget
                         nodeDescriptor = {   "id" : objectId,
-                            "posX": updatedObject.getAttribute("attr").posX,
-                            "posY": updatedObject.getAttribute("attr").posY,
-                            "title": updatedObject.getAttribute("name") };
+                            "posX": updatedObject.getAttribute(nodeAttrNames.posX),
+                            "posY": updatedObject.getAttribute(nodeAttrNames.posY),
+                            "title": updatedObject.getAttribute(nodeAttrNames.name) };
 
                         //check what state the object is in according to the local hashmap
                         if (nodes[objectId].state === stateLoading) {
