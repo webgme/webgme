@@ -5,7 +5,7 @@ var T3stClient = function(storage,commands){
             transports: ['websocket'],
             'force new connection': true
         },
-        socket = io.connect('http://localhost:8081',options),
+        socket = io.connect('http://localhost:8123',options),
         commandpointer,
         variables,
         state,
