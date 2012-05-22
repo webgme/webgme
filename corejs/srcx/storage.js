@@ -160,10 +160,14 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			var error = null;
 
 			this.start = function () {
+				ASSERT(callback && counter >= 1);
+
 				++counter;
 			};
 
 			this.done = function (err) {
+				ASSERT(callback && counter >= 1);
+
 				error = error || err;
 				if( --counter === 0 ) {
 					callback(error);
@@ -199,6 +203,8 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		};
 
 		this.persist = function (node, callback) {
+			ASSERT(node && callback);
+			
 			var saver = new Saver(callback);
 			saver.save(node);
 			saver.done(null);
@@ -285,44 +291,63 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			});
 		};
 
-		this.mutate = function (node) {
+		/**
+		 * Nodes can become invalid in two ways. 1) We request the same
+		 * child of a parent twice and modify one of them, then the other 
+		 * will not reflect the same modified data but the stale old 
+		 * data. 2) We could remove nodes or change branches completely
+		 * which creates dangling nodes.
+		 */
+		this.isValid = function (node) {
 			ASSERT(node && node.data);
 
-			if( !graph.isMutable(node.data) ) {
-				/**
-				 * If this fails, then this child has already been modified
-				 * through another copy. Do not keep references to old nodes, or
-				 * persist them.
-				 */
-				ASSERT(!node.parent
-				|| graph.getChildren(node.parent.data)[node.relid] === graph.getKey(node.data));
+			while(node.parent) {
+				ASSERT(typeof node.relid === "string" && node.parent.data);
+				var child = graph.getChildren(node.parent.data)[node.relid];
+				
+				if( typeof child === "string" ) {
+					ASSERT(child === graph.getKey(node.data));
+				}
+				else if( child !== node.data ) {
+					return false;
+				}
+				
+				node = node.parent;
+			}
+			
+			return true;
+		};
+		
+		this.mutate = function (node) {
+			ASSERT(this.isValid(node));
 
+			if( !graph.isMutable(node.data) ) {
 				node.data = graph.mutate(node.data);
-				if( node.parent ) {
-					this.mutate(node.parent);
+				
+				while(node.parent && !graph.isMutable(node.parent.data) ) {
+					node.parent.data = graph.mutate(node.parent.data);
 					graph.setChild(node.parent.data, node.relid, node.data);
+					
+					node = node.parent;
 				}
 			}
 		};
 
-		this.persist = function (node) {
-			ASSERT(node && node.data);
+		this.persist = function (node, callback) {
+			ASSERT(this.isValid(node));
 			ASSERT(this.isMutable(node));
 
-			ASSERT(!node.parent || graph.getChildren(node.parent.data)[node.relid] === node.data);
-			
-			node.data = graph.persist(node.data);
-			
+			graph.persist(node.data, callback);
 		};
 
 		this.getChildren = function (node) {
-			ASSERT(node && node.data);
+			ASSERT(this.isValid(node));
 
 			return graph.getChildren(node.data);
 		};
 
 		this.getChild = function (node, relid, callback) {
-			ASSERT(node && node.data);
+			ASSERT(this.isValid(node));
 			ASSERT(callback);
 
 			graph.getChild(node.data, relid, function (err, data) {
@@ -335,173 +360,39 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		};
 
 		this.setChild = function (node, relid, child) {
-			ASSERT(node && node.data);
-			ASSERT(child && child.data);
+			ASSERT(this.isValid(node));
+			ASSERT(this.isValid(child));
 			ASSERT(this.isMutable(node));
 
 			graph.setChild(node.data, relid, child.data);
 		};
 
 		this.delChild = function (node, relid) {
-			ASSERT(node && node.data);
+			ASSERT(this.isValid(node));
 			ASSERT(this.isMutable(node));
 
 			graph.delChild(node.data, relid);
 		};
 
 		this.getData = function (node, name) {
-			ASSERT(node && node.data);
+			ASSERT(this.isValid(node));
 
 			graph.getData(node.data, name);
 		};
 
 		this.setData = function (node, name, data) {
-			ASSERT(node && node.data);
+			ASSERT(this.isValid(node));
 			ASSERT(this.isMutable(node));
 
 			graph.setData(node.data, name, data);
 		};
 	};
 
-	// ----------------- ReadBranch -----------------
-
-	var ReadBranch = function (storage) {
-		ASSERT(storage !== null);
-
-		this.opened = function () {
-			return storage.opened();
-		};
-
-		this.getRoot = function (hash, callback) {
-			ASSERT(typeof hash === "string");
-
-			storage.get(function (err, obj) {
-				if( !err ) {
-					obj = {
-						data: obj,
-						parent: null,
-						relid: null
-					};
-				}
-				callback(err, obj);
-			});
-		};
-
-		this.getChild = function (node, relid, callback) {
-			ASSERT(node && node.data);
-			ASSERT(typeof relid === "string");
-
-			var children = node.data.children;
-			var hash = children || children[relid];
-			if( !hash ) {
-				callback(null, null);
-			}
-			else {
-				ASSERT(typeof hash === "string");
-				storage.get(hash, function (err, obj) {
-					if( !err ) {
-						obj = {
-							data: obj,
-							parent: node,
-							relid: relid
-						};
-					}
-					callback(err, obj);
-				});
-			}
-		};
-	};
-
-	// ----------------- WriteBranch -----------------
-
-	var WriteBranch = function (storage) {
-		ASSERT(storage !== null);
-
-		this.opened = function () {
-			return storage.opened();
-		};
-
-		this.isDirty = function (node) {
-			ASSERT(node);
-			ASSERT((node.children !== undefined) === (node.data.hash === undefined));
-
-			return !!node.children;
-		};
-
-		this.makeDirty = function (node) {
-			ASSERT(node);
-			if( !node.children ) {
-				if( node.parent ) {
-					this.makeDirty(node.parent);
-
-					ASSERT(!node.parent.children[node.relid]);
-					ASSERT(node.parent.data.children[node.relid] === node.data.hash);
-				}
-			}
-		};
-
-		this.setData = function (node, data) {
-			this.makeDirty(node);
-			node.data = data;
-		};
-
-		this.getRoot = function (hash, callback) {
-			ASSERT(typeof hash === "string");
-
-			storage.get(hash, function (err, obj) {
-				if( !err ) {
-					obj = {
-						hash: hash,
-						data: obj,
-						parent: null
-					};
-				}
-				callback(err, obj);
-			});
-		};
-
-		this.deleteChild = function (node, relid) {
-		};
-
-		this.getChild = function (node, relid, callback) {
-			ASSERT(node && node.data);
-			ASSERT(typeof relid === "string");
-
-			if( node.children ) {
-				var child = node.children[relid];
-				if( !child ) {
-					var children = node.data.children;
-					var hash = children || children[relid];
-					if( hash ) {
-						ASSERT(typeof hash === "string");
-						storage.get(hash, function (err, obj) {
-							if( !err ) {
-								// we might have it already
-								child = node.$children[relid];
-								if( !child ) {
-									child = {
-										data: obj,
-										parent: node,
-										children: {}
-									};
-									node.children[relid] = child;
-								}
-							}
-							callback(err, child);
-						});
-						return;
-					}
-				}
-			}
-
-			// callback(null, child);
-		};
-	};
-
+	// ----------------- Interface -----------------
+	
 	return {
 		Mongo: Mongo,
 		Graph: Graph,
-		Tree: Tree,
-		Branch: ReadBranch
+		Tree: Tree
 	};
 });

@@ -35,8 +35,11 @@ requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 						tree.mutate(cnode);
 						tree.setData(cnode, "name", "hihi");
 
-						mongo.dumpAll(function() {
-							mongo.close();
+						tree.persist(rnode, function(err) {
+							console.log("hihi");
+							mongo.dumpAll(function() {
+								mongo.close();
+							});
 						});
 					});
 
