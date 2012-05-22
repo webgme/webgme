@@ -1,19 +1,30 @@
-"use strict";
 /*
  * WIDGET ModelEditor based on SVG
  */
-define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil.js', './../js/ModelEditorSVGComponent.js', 'raphael.amd' ], function (util, logManager, commonUtil, ModelEditorSVGComponent) {
+define([    './util.js', './../../common/LogManager.js',
+            './../../common/CommonUtil.js',
+            './../js/ModelEditorSVGModel.js',
+            './../js/ModelEditorSVGConnection.js',
+            './NotificationManager.js',
+            'raphael.amd'], function (util,
+                                       logManager,
+                                       commonUtil,
+                                       ModelEditorSVGModel,
+                                       ModelEditorSVGConnection,
+                                       notificationManager) {
+    "use strict";
+
+    var ModelEditorSVGWidget;
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     //util.loadCSS( 'css/ModelEditorSVGWidget.css' );
 
-    var ModelEditorSVGWidget = function (containerId) {
+    ModelEditorSVGWidget = function (containerId) {
         var logger,
             containerControl,
             guid,
             paper,
             zoomFactor = 1.0,
             self = this,
-            dragStartPos = {},
             dragStart,
             dragEnd,
             dragMove,
@@ -21,11 +32,24 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             titleText,
             resizeSVG,
             paperCanvas,
-            defaultPaperSize = { "w" : 2000, "h": 1500 };
+            defaultPaperSize = { "w" : 2000, "h": 1500 },
+            setSelection,
+            selectedComponentIds = [],
+            clearSelection,
+            children = {},
+            onBackgroundMouseDown,
+            onBackgroundMouseUp,
+            onBackgroundMouseMove,
+            rubberBandBBox,
+            drawRubberBand,
+            rubberBandDrawing = false,
+            selectChildrenByRubberBand,
+            rubberBandRect = null;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGWidget");
 
+        //save jQueried parent control
         //save jQueried parent control
         containerControl = $("#" + containerId);
 
@@ -44,6 +68,7 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         modelEditorE = $('<div/>', {
             id: "modelEditor_" + guid
         });
+        modelEditorE.disableSelection();
 
         //add control to parent
         containerControl.append(modelEditorE);
@@ -54,22 +79,38 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         paperCanvas = $(paper.canvas);
 
         dragStart = function () {
-            dragStartPos = this.getPosition();
-            this.updateComponent({ "opacity": 0.5});
-        };
+            var i,
+                childComponent;
 
-        dragEnd = function () {
-            this.updateComponent({ "opacity": 1.0});
-
-            resizeSVG(this.getBoundingBox(), true);
-
-            if ($.isFunction(self.onObjectPositionChanged)) {
-                self.onObjectPositionChanged.call(self, this.getId(), this.getPosition());
+            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                childComponent = children[selectedComponentIds[i]];
+                childComponent.dragStartPos = childComponent.getPosition();
             }
         };
 
+        dragEnd = function () {
+            var i,
+                childComponent;
+
+            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                childComponent = children[selectedComponentIds[i]];
+
+                resizeSVG(childComponent.getBoundingBox(), true);
+
+                delete childComponent.dragStartPos;
+
+                if ($.isFunction(self.onObjectPositionChanged)) {
+                    self.onObjectPositionChanged.call(self, childComponent.getId(), childComponent.getPosition());
+                }
+            }
+        };
         dragMove = function (dx, dy) {
-            this.updateComponent({ "posX": Math.round(dragStartPos.posX + dx * zoomFactor), "posY": Math.round(dragStartPos.posY + dy * zoomFactor) });
+            var i,
+                childComponent;
+            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                childComponent = children[selectedComponentIds[i]];
+                childComponent.updateComponent({ "posX": Math.round(childComponent.dragStartPos.posX + dx * zoomFactor), "posY": Math.round(childComponent.dragStartPos.posY + dy * zoomFactor) }, false);
+            }
         };
 
         resizeSVG = function (bBox, doScroll) {
@@ -104,8 +145,14 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         };
 
         this.setTitle = function (title) {
+            var oldTitle = "";
+
             if (titleText) {
-                titleText.attr("text", title);
+                oldTitle = titleText.attr("text");
+                if (oldTitle !== title) {
+                    titleText.attr("text", title);
+                    notificationManager.displayMessage("Node name '" + oldTitle + "' has been changed to '" + title + "'.");
+                }
             } else {
                 titleText = paper.text(5, 15, title);
                 titleText.attr("text-anchor", "start");
@@ -116,25 +163,49 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
         };
 
         this.createObject = function (objDescriptor) {
-            var newComponent, draggableComponents, i, hookUpDrag;
+            var newComponent, draggableComponents, i, hookUpDrag, hookUpSelection, self = this;
 
             logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
 
-            newComponent = new ModelEditorSVGComponent(objDescriptor, paper);
+            if (objDescriptor.kind === "MODEL") {
+                newComponent = new ModelEditorSVGModel(objDescriptor, paper);
+            }
 
-            resizeSVG(newComponent.getBoundingBox(), false);
+            if (objDescriptor.kind === "CONNECTION") {
+                newComponent = new ModelEditorSVGConnection(objDescriptor, paper);
+            }
 
-            draggableComponents = newComponent.getDraggableComponents();
+            if (newComponent) {
+                resizeSVG(newComponent.getBoundingBox(), false);
 
-            hookUpDrag = function (svgObject, component) {
-                svgObject.node.style.cursor = 'move';
-                svgObject.drag(dragMove, dragStart, dragEnd, component, component, component);
-            };
+                draggableComponents = newComponent.getDraggableComponents();
 
-            for (i = 0; i < draggableComponents.length; i += 1) {
-                //draggableComponents[i].svgComponent = newComponent;
+                if (newComponent.isSelectable() === true) {
+                    hookUpSelection = function (svgObject, component) {
+                        svgObject.mousedown(function (e) {
+                            setSelection.call(self, [component.getId()], e.ctrlKey);
+                            //e.preventDefault();
+                            //e.stopPropagation();
+                        });
+                    };
 
-                hookUpDrag(draggableComponents[i], newComponent);
+                    for (i = 0; i < draggableComponents.length; i += 1) {
+                        hookUpSelection(draggableComponents[i], newComponent);
+                    }
+                }
+
+                if (newComponent.isDraggable() === true) {
+                    hookUpDrag = function (svgObject) {
+                        svgObject.node.style.cursor = 'move';
+                        svgObject.drag(dragMove, dragStart, dragEnd);
+                    };
+
+                    for (i = 0; i < draggableComponents.length; i += 1) {
+                        hookUpDrag(draggableComponents[i]);
+                    }
+                }
+
+                children[newComponent.getId()] = newComponent;
             }
 
             return newComponent;
@@ -146,29 +217,214 @@ define([ './util.js', './../../common/LogManager.js', './../../common/CommonUtil
             modelObject.updateComponent(objDescriptor);
 
             resizeSVG(modelObject.getBoundingBox(), false);
-
-            /*if (modelObject.attr("x") !== objDescriptor.posX) {
-                modelObject.attr("x", objDescriptor.posX);
-            }
-
-            if (modelObject.attr("y") !== objDescriptor.posY) {
-                modelObject.attr("y", objDescriptor.posY);
-            }
-
-            if (objDescriptor.title !== "Loading...") {
-                modelObject.attr("opacity", 1.0);
-            }
-
-            var text = modelObject[1];
-            if (text.attr("text") !== objDescriptor.title) {
-                text.attr("text", objDescriptor.title);
-            }*/
         };
 
         this.deleteObject = function (modelObject) {
             logger.debug("Deleting object with parameters: " + modelObject);
+            delete children[modelObject.getId()];
             modelObject.deleteComponent();
         };
+
+        setSelection = function (ids, ctrlPressed) {
+            var i,
+                childId,
+                childComponent;
+
+            if (ids.length > 0) {
+                if (ctrlPressed === true) {
+                    //while CTRL key is pressed, add/remove ids to the selection
+                    for (i = 0; i < ids.length; i += 1) {
+                        childId = ids[i];
+                        childComponent = children[childId];
+
+                        if (selectedComponentIds.indexOf(childId) === -1) {
+                            selectedComponentIds.push(childId);
+
+                            if ($.isFunction(childComponent.onSelect)) {
+                                childComponent.onSelect.call(childComponent);
+                            }
+                        } else {
+                            //child is already part of the selection
+                            if ($.isFunction(childComponent.onDeselect)) {
+                                childComponent.onDeselect.call(childComponent);
+                            }
+                            //remove from selection and deselect it
+                            selectedComponentIds.splice(selectedComponentIds.indexOf(childId), 1);
+                        }
+                    }
+                } else {
+                    //CTRL key is not pressed
+                    if (ids.length > 1) {
+                        clearSelection();
+
+                        for (i = 0; i < ids.length; i += 1) {
+                            childId = ids[i];
+                            childComponent = children[childId];
+
+                            selectedComponentIds.push(childId);
+
+                            if ($.isFunction(childComponent.onSelect)) {
+                                childComponent.onSelect.call(childComponent);
+                            }
+                        }
+                    } else {
+                        childId = ids[0];
+                        childComponent = children[childId];
+
+                        //if not yet in selection
+                        if (selectedComponentIds.indexOf(childId) === -1) {
+                            clearSelection();
+
+                            selectedComponentIds.push(childId);
+
+                            if ($.isFunction(childComponent.onSelect)) {
+                                childComponent.onSelect.call(childComponent);
+                            }
+                        }
+                    }
+                }
+            }
+
+            logger.debug("selectedIds: " + selectedComponentIds);
+        };
+
+        clearSelection = function () {
+            var i,
+                childId,
+                childComponent;
+
+            for (i = 0; i < selectedComponentIds.length; i += 1) {
+                childId = selectedComponentIds[i];
+                childComponent = children[childId];
+
+                if (childComponent) {
+                    if ($.isFunction(childComponent.onDeselect)) {
+                        childComponent.onDeselect.call(childComponent);
+                    }
+
+                }
+            }
+
+            selectedComponentIds = [];
+        };
+
+        onBackgroundMouseDown = function (e) {
+            var target = e.target || e.currentTarget,
+                mX,
+                mY;
+
+            if (target instanceof SVGSVGElement) {
+                if (e.ctrlKey !== true) {
+                    clearSelection();
+                }
+
+                //get fixed mouse coordinates
+                mX = e.pageX - $(this).offset().left;
+                mY = e.pageY - $(this).offset().top;
+
+                //start drawing rubberband
+                rubberBandDrawing = true;
+                rubberBandBBox = { "x": mX, "y": mY, "x2": mX, "y2": mY };
+                drawRubberBand();
+            }
+        };
+
+        onBackgroundMouseMove = function (e) {
+            if (rubberBandDrawing) {
+                rubberBandBBox.x2 = e.pageX - $(this).offset().left;
+                rubberBandBBox.y2 = e.pageY - $(this).offset().top;
+                drawRubberBand();
+            }
+        };
+
+        onBackgroundMouseUp = function (e) {
+            if (rubberBandDrawing) {
+                rubberBandBBox.x2 = e.pageX - $(this).offset().left;
+                rubberBandBBox.y2 = e.pageY -  $(this).offset().top;
+                drawRubberBand();
+
+                selectChildrenByRubberBand(e.ctrlKey);
+
+                rubberBandRect.remove();
+                rubberBandRect = null;
+            }
+            rubberBandDrawing = false;
+        };
+
+        drawRubberBand = function () {
+            var minEdgeLength = 2,
+                tX = Math.min(rubberBandBBox.x, rubberBandBBox.x2),
+                tX2 = Math.max(rubberBandBBox.x, rubberBandBBox.x2),
+                tY = Math.min(rubberBandBBox.y, rubberBandBBox.y2),
+                tY2 = Math.max(rubberBandBBox.y, rubberBandBBox.y2);
+
+            if (rubberBandRect === null) {
+                rubberBandRect = paper.rect(0, 0, 100, 100).attr({"fill": "rgba(219, 234, 252, 0.49)", "stroke": "#52A8EC", "stroke-width": 1});
+            }
+
+            if (tX2 - tX < minEdgeLength || tY2 - tY < minEdgeLength) {
+                rubberBandRect.hide();
+            } else {
+                rubberBandRect.show();
+            }
+
+            rubberBandRect.attr({   "x": tX,
+                                    "y": tY,
+                                    "width": tX2 - tX,
+                                    "height": tY2 - tY });
+        };
+
+        selectChildrenByRubberBand = function (ctrlPressed) {
+            var i,
+                tX = Math.min(rubberBandBBox.x, rubberBandBBox.x2),
+                tX2 = Math.max(rubberBandBBox.x, rubberBandBBox.x2),
+                tY = Math.min(rubberBandBBox.y, rubberBandBBox.y2),
+                tY2 = Math.max(rubberBandBBox.y, rubberBandBBox.y2),
+                rbBBox = { "x": tX, "y": tY, "x2": tX2, "y2": tY2 },
+                childrenIDs = [],
+                selectionContainsBBox;
+
+            logger.debug("Select children by rubber band: [" + tX + "," + tY + "], [" + tX2 + "," + tY2 + "]");
+
+            selectionContainsBBox = function (childBBox, childId) {
+                var interSectionRect,
+                    acceptRatio = 0.5,
+                    interSectionRatio;
+
+                if (util.overlap(rbBBox, childBBox)) {
+                    interSectionRect = { "x": Math.max(childBBox.x, rbBBox.x),
+                        "y": Math.max(childBBox.y, rbBBox.y),
+                        "x2": Math.min(childBBox.x2, rbBBox.x2),
+                        "y2": Math.min(childBBox.y2, rbBBox.y2) };
+
+                    interSectionRatio = (interSectionRect.x2 - interSectionRect.x) * (interSectionRect.y2 - interSectionRect.y) / ((childBBox.x2 - childBBox.x) * (childBBox.y2 - childBBox.y));
+                    if (interSectionRatio > acceptRatio) {
+                        return true;
+                    }
+                }
+
+                return false;
+            };
+
+            for (i in children) {
+                if (children.hasOwnProperty(i)) {
+                    if (children[i].isSelectable() === true) {
+                        if (selectionContainsBBox(children[i].getBoundingBox(), i)) {
+                            childrenIDs.push(i);
+                        }
+                    }
+                }
+            }
+
+            if (childrenIDs.length > 0) {
+                setSelection(childrenIDs, ctrlPressed);
+            }
+        };
+
+        //hook up background mouse events for rubberband box selection
+        modelEditorE.bind('mousedown', onBackgroundMouseDown);
+        modelEditorE.bind('mousemove', onBackgroundMouseMove);
+        modelEditorE.bind('mouseup', onBackgroundMouseUp);
     };
 
     return ModelEditorSVGWidget;
