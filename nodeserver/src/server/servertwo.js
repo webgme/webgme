@@ -558,6 +558,15 @@ var Commander = function(cStorage,cClients,cCid,cTerritories,cCommands,CB){
                     var newobj = {};
                     for(var i in object){
                         newobj[i] = object[i];
+                        //reposition copied models by [30,30]
+                        if (i === "attr") {
+                            if (newobj.attr.posX) {
+                                newobj.attr.posX += 30;
+                            }
+                            if (newobj.attr.posY) {
+                                newobj.attr.posY += 30;
+                            }
+                        }
                     }
                     newobj._id = prefix+newobj._id;
                     newobj.parent = parentid;

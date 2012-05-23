@@ -22,7 +22,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                                 "target" : "trgtId",
                                 "directed" : "directed",
                                 "outgoingConnections": "connSrc",
-                                "incomingConnections": "connTrgt" };
+                                "incomingConnections": "connTrgt" },
+            createObject,
+            updateObject,
+            getObjectDescriptor;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorControl");
@@ -53,9 +56,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 i = 0,
                 childrenIDs = [],
                 currentChildId,
-                childNode,
-                childObject,
-                childDescriptor;
+                childNode;
 
             //delete everything from model editor
             modelEditor.clear();
@@ -86,33 +87,14 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                     childNode = project.getNode(currentChildId);
 
-                    childObject = null;
-
                     //assume that the child is not yet loaded on the client
-                    nodes[currentChildId] = {   "modelObject": childObject,
+                    nodes[currentChildId] = {   "modelObject": null,
                                                     "state": stateLoading };
 
-                    childDescriptor =  { "id" : currentChildId };
-
-                    //is it a connection
-                    if (childNode.getAttribute(nodeAttrNames.source) && childNode.getAttribute(nodeAttrNames.target)) {
-                        childDescriptor.kind = "CONNECTION";
-                        childDescriptor.source = childNode.getAttribute(nodeAttrNames.source);
-                        childDescriptor.target = childNode.getAttribute(nodeAttrNames.target);
-                        childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
-                        childDescriptor.directed =  childNode.getAttribute(nodeAttrNames.directed);
-                        childDescriptor.sourceComponent = nodes[childDescriptor.source].modelObject;
-                        childDescriptor.targetComponent = nodes[childDescriptor.target].modelObject;
-                    } else {
-                        childDescriptor.kind = "MODEL";
-                        childDescriptor.posX = childNode.getAttribute(nodeAttrNames.posX);
-                        childDescriptor.posY = childNode.getAttribute(nodeAttrNames.posY);
-                        childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
+                    //if the child is already loaded on the client side
+                    if (childNode) {
+                        createObject(childNode);
                     }
-
-                    //store the node's info in the local hash map
-                    nodes[currentChildId].state = stateLoaded;
-                    nodes[currentChildId].modelObject = modelEditor.createObject(childDescriptor);
                 }
 
                 //save the given nodeId as the currently handled one
@@ -122,9 +104,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         });
 
         refresh = function (eventType, objectId) {
-            var nodeDescriptor = null,
-                j,
-                parentNode,
+            var j,
                 oldChildren,
                 currentChildren,
                 childrenDeleted,
@@ -132,8 +112,6 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 childrenAdded,
                 addedChildId,
                 childNode,
-                childObject,
-                childDescriptor,
                 updatedObject;
 
             //HANDLE INSERT
@@ -146,7 +124,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //update the "loading" node accordingly
                     if (nodes[objectId].state === stateLoading) {
                         //set eventType to "update" and let it go and be handled by "update" event
-                        eventType = "update";
+                        createObject(project.getNode(objectId));
                     }
                 }
             }
@@ -155,21 +133,22 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             //HANDLE UPDATE
             //object got updated in the territory
             if (eventType === "update") {
-                //handle deleted children
+                updatedObject = project.getNode(objectId);
 
                 //check if the updated object is the opened node
                 if (objectId === currentNodeInfo.id) {
-                    //the updated object is the parent whose children are drawn here
-                    //the only interest about the parent are the new and deleted children
-                    parentNode = project.getNode(objectId);
+                    //the updated object is the parent whose children are displayed here
+                    //the interest about the parent is:
+                    // - name change
+                    // - new children
+                    // - deleted children
 
-                    modelEditor.setTitle(parentNode.getAttribute(nodeAttrNames.name));
+                    //handle name change
+                    modelEditor.setTitle(updatedObject.getAttribute(nodeAttrNames.name));
 
+                    //save old and current children info to be able to see the difference
                     oldChildren = currentNodeInfo.children;
-                    currentChildren = [];
-                    if (parentNode) {
-                        currentChildren = parentNode.getAttribute(nodeAttrNames.children);
-                    }
+                    currentChildren = updatedObject.getAttribute(nodeAttrNames.children) || [];
 
                     //Handle children deletion
                     childrenDeleted = util.arrayMinus(oldChildren, currentChildren);
@@ -185,25 +164,14 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     for (j = 0; j < childrenAdded.length; j += 1) {
                         addedChildId = childrenAdded[j];
 
-                        childNode = project.getNode(addedChildId);
-
-                        childObject = null;
-
                         //assume that the child is not yet loaded on the client
-                        nodes[addedChildId] = {   "modelObject": childObject,
+                        nodes[addedChildId] = {   "modelObject": null,
                             "state" : stateLoading };
 
+                        //if the child is already loaded on the client side
+                        childNode = project.getNode(addedChildId);
                         if (childNode) {
-                            childDescriptor =  { "id" : addedChildId };
-
-                            childDescriptor.posX = childNode.getAttribute(nodeAttrNames.posX);
-                            childDescriptor.posY = childNode.getAttribute(nodeAttrNames.posY);
-                            childDescriptor.title =  childNode.getAttribute(nodeAttrNames.name);
-
-                            //store the node's info in the local hash map
-                            nodes[addedChildId].state = stateLoaded;
-
-                            nodes[addedChildId].modelObject = modelEditor.createObject(childDescriptor);
+                            createObject(childNode);
                         }
                     }
 
@@ -211,28 +179,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     currentNodeInfo.children = currentChildren;
 
                 } else if (nodes[objectId]) {
-                    //this control shows an interest for this object
+                    //one of the children of the opened node has been updated
                     logger.debug("Update object with id: " + objectId);
-                    //get the node from the project
-                    updatedObject = project.getNode(objectId);
-
-                    if (updatedObject && updatedObject.getAttribute("attr")) {
-
-                        //create the node's descriptor for the widget
-                        nodeDescriptor = {   "id" : objectId,
-                            "posX": updatedObject.getAttribute(nodeAttrNames.posX),
-                            "posY": updatedObject.getAttribute(nodeAttrNames.posY),
-                            "title": updatedObject.getAttribute(nodeAttrNames.name) };
-
-                        //check what state the object is in according to the local hashmap
-                        if (nodes[objectId].state === stateLoading) {
-                            nodes[objectId].state = stateLoaded;
-                        }
-
-                        //update the node's representation in the tree
-                        if (nodes[objectId].modelObject) {
-                            modelEditor.updateObject(nodes[objectId].modelObject, nodeDescriptor);
-                        }
+                    if (nodes[objectId].state === stateLoaded) {
+                        updateObject(updatedObject);
                     }
                 }
             }
@@ -255,6 +205,47 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 refresh("update", eid);
                 break;
             }
+        };
+
+        createObject = function (nodeObj) {
+            var currentNodeId = nodeObj.getAttribute(nodeAttrNames.id);
+
+            //store the node's info in the local hash map
+            nodes[currentNodeId].state = stateLoaded;
+            nodes[currentNodeId].modelObject = modelEditor.createObject(getObjectDescriptor(nodeObj));
+        };
+
+        updateObject = function (nodeObj) {
+            var objectId = nodeObj.getAttribute(nodeAttrNames.id);
+
+            //update the node's representation in the tree
+            if (nodes[objectId].modelObject) {
+                modelEditor.updateObject(nodes[objectId].modelObject, getObjectDescriptor(nodeObj));
+            }
+        };
+
+        getObjectDescriptor = function (nodeObj) {
+            var objDescriptor = {};
+
+            objDescriptor.id = nodeObj.getAttribute(nodeAttrNames.id);
+
+            //fill the descriptor based on its type
+            if (nodeObj.getAttribute(nodeAttrNames.source) && nodeObj.getAttribute(nodeAttrNames.target)) {
+                objDescriptor.kind = "CONNECTION";
+                objDescriptor.source = nodeObj.getAttribute(nodeAttrNames.source);
+                objDescriptor.target = nodeObj.getAttribute(nodeAttrNames.target);
+                objDescriptor.title =  nodeObj.getAttribute(nodeAttrNames.name);
+                objDescriptor.directed =  nodeObj.getAttribute(nodeAttrNames.directed);
+                objDescriptor.sourceComponent = nodes[objDescriptor.source].modelObject;
+                objDescriptor.targetComponent = nodes[objDescriptor.target].modelObject;
+            } else {
+                objDescriptor.kind = "MODEL";
+                objDescriptor.posX = nodeObj.getAttribute(nodeAttrNames.posX);
+                objDescriptor.posY = nodeObj.getAttribute(nodeAttrNames.posY);
+                objDescriptor.title =  nodeObj.getAttribute(nodeAttrNames.name);
+            }
+
+            return objDescriptor;
         };
     };
 
