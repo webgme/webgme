@@ -230,7 +230,9 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                         }
 
                         //update the node's representation in the tree
-                        modelEditor.updateObject(nodes[objectId].modelObject, nodeDescriptor);
+                        if (nodes[objectId].modelObject) {
+                            modelEditor.updateObject(nodes[objectId].modelObject, nodeDescriptor);
+                        }
                     }
                 }
             }

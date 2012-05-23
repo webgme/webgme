@@ -16,7 +16,7 @@ define([    './util.js', './../../common/LogManager.js',
 
     var ModelEditorSVGWidget;
     //load its own CSS file (css/ModelEditorSVGWidget.css)
-    //util.loadCSS( 'css/ModelEditorSVGWidget.css' );
+    util.loadCSS('css/ModelEditorSVGWidget.css');
 
     ModelEditorSVGWidget = function (containerId) {
         var logger,
@@ -44,7 +44,9 @@ define([    './util.js', './../../common/LogManager.js',
             drawRubberBand,
             rubberBandDrawing = false,
             selectChildrenByRubberBand,
-            rubberBandRect = null;
+            rubberBandRect = null,
+            onBackgroundKeyDown,
+            selectAll;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGWidget");
@@ -66,7 +68,9 @@ define([    './util.js', './../../common/LogManager.js',
 
         //generate control dynamically
         modelEditorE = $('<div/>', {
-            id: "modelEditor_" + guid
+            id: "modelEditor_" + guid,
+            "class": "modelEditorSVG",
+            "tabindex": 0
         });
         modelEditorE.disableSelection();
 
@@ -139,9 +143,17 @@ define([    './util.js', './../../common/LogManager.js',
 
         /* PUBLIC FUNCTIONS */
         this.clear = function () {
+            var i;
             paper.clear();
             paper.setSize(defaultPaperSize.w, defaultPaperSize.h);
             titleText = null;
+
+            for (i in children) {
+                if (children.hasOwnProperty(i)) {
+                    children[i].deleteComponent();
+                    delete children[i];
+                }
+            }
         };
 
         this.setTitle = function (title) {
@@ -150,7 +162,9 @@ define([    './util.js', './../../common/LogManager.js',
             if (titleText) {
                 oldTitle = titleText.attr("text");
                 if (oldTitle !== title) {
-                    titleText.attr("text", title);
+                    titleText.attr({ "text": title,
+                                      "opacity": 0.0 });
+                    titleText.animate({ "opacity": 1.0 }, 400);
                     notificationManager.displayMessage("Node name '" + oldTitle + "' has been changed to '" + title + "'.");
                 }
             } else {
@@ -158,7 +172,6 @@ define([    './util.js', './../../common/LogManager.js',
                 titleText.attr("text-anchor", "start");
                 titleText.attr("font-size", 16);
                 titleText.attr("font-weight", "bold");
-                titleText.attr("fill", "#ff0000");
             }
         };
 
@@ -421,10 +434,41 @@ define([    './util.js', './../../common/LogManager.js',
             }
         };
 
+        onBackgroundKeyDown = function (e) {
+            switch (e.which) {
+            case 65:    //a
+                if (e.ctrlKey) {
+                    selectAll();
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                break;
+            }
+        };
+
+        selectAll = function () {
+            var childrenIDs = [],
+                i;
+
+            for (i in children) {
+                if (children.hasOwnProperty(i)) {
+                    if (children[i].isSelectable() === true) {
+                        childrenIDs.push(i);
+                    }
+                }
+            }
+
+            if (childrenIDs.length > 0) {
+                setSelection(childrenIDs, false);
+            }
+        };
+
         //hook up background mouse events for rubberband box selection
         modelEditorE.bind('mousedown', onBackgroundMouseDown);
         modelEditorE.bind('mousemove', onBackgroundMouseMove);
         modelEditorE.bind('mouseup', onBackgroundMouseUp);
+        modelEditorE.bind('keydown', onBackgroundKeyDown);
     };
 
     return ModelEditorSVGWidget;
