@@ -3,12 +3,12 @@ var BackEndClient = function(server,socket){
         created = false;
     socket.on('data',function(data){
         console.log(data);
-        var msg = {type:"createProject",project:"testproject",branch:"t3st"};
+        var msg = {type:"createProject",project:"testp",branch:"tc1"};
         if(!created){
             socket.write(JSON.stringify(msg),function(){
                 console.log("data written");
                 created = true;
-                msg.branch = "other";
+                msg.branch = "tc1b";
                 socket.write(JSON.stringify(msg),function(){
                 });
             });

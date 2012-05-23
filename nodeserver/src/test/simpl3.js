@@ -17,6 +17,7 @@ internal command format:
 var io = require('socket.io-client');
 var fs=require('fs');
 var Client = function(host,storage){
+    console.log(host);
     var options = {
             transports: ['websocket'],
             'force new connection': true
@@ -58,6 +59,7 @@ var Client = function(host,storage){
             }
         };
         /*main*/
+        commandstatus = true;
         if(state!=="ready"){
             callback(false);
             return;
@@ -68,7 +70,7 @@ var Client = function(host,storage){
         for(i=0;i<commands.length;i++){
             commandids[commands[i].cid] = false;
         }
-        socket.emit(commands);
+        socket.emit('clientMessage',{commands:commands});
     };
     this.isReady = function(){
         return state === "ready";
@@ -82,6 +84,7 @@ var Client = function(host,storage){
     };
     /*socket functions*/
     socket.on('connect',function(msg){
+        console.log("connected");
         state = "ready";
     });
     socket.on('clientMessageAck',function(msg){
@@ -151,10 +154,11 @@ var Test = function(host,tc){
             if(!result){
                 testFailed();
             }
-            if(--line.repreats === 0){
+            if(line.repeats === 0){
                 lineProcessed();
             }
             else{
+                line.repeats -=1;
                 executeServerCommands();
             }
         };
@@ -171,10 +175,10 @@ var Test = function(host,tc){
         /*main*/
         line = JSON.parse(tc[linepointer]);
         if(line.internalcommand){
-            doInternalCommand(line.interalcommand);
+            doInternalCommand(line.internalcommand);
         }
         else{
-            line.repreats = line.repeats || 1;
+            line.repeats = line.repeats || 0;
             if(line.servercommands){
                 executeServerCommands();
             }
@@ -203,44 +207,44 @@ var Test = function(host,tc){
         printObjectContainmentLine = function(objectId){
             var i,
                 line="";
-            line+="["+storage[objectId]._id+"]->[";
-            for(i=0;i<storage[objectId].relations.childrenIds.length;i++){
-                line+=storage[objectId].relations.childrenIds[i]+",";
+            line+="["+objects[objectId]._id+"]->[";
+            for(i=0;i<objects[objectId].relations.childrenIds.length;i++){
+                line+=objects[objectId].relations.childrenIds[i]+",";
             }
             if(i>0){
                 line = line.slice(0,line.lastIndexOf(","));
             }
             line+="]";
-            printLog(line);
+            console.log(line);
         };
         rPrintConatinment = function(id){
             var i;
             if(objects[id]){
                 printObjectContainmentLine(id);
-                for(i=0;i<storage[id].relations.childrenIds.length;i++){
-                    rPrintConatinment(storage[id].relations.childrenIds[i]);
+                for(i=0;i<objects[id].relations.childrenIds.length;i++){
+                    rPrintConatinment(objects[id].relations.childrenIds[i]);
                 }
             }
         };
 
         /*main*/
-        printLog("Object containment information:");
+        console.log("Object containment information:");
         rPrintConatinment("root");
     };
     printObjects = function(){
         var i,
             line="Objects: ";
-        for(i in storage){
+        for(i in objects){
             line+=i+",";
         }
         i = line.lastIndexOf(",");
         if(i !== -1){
             line = line.slice(0,i);
         }
-        printLog(line);
+        console.log(line);
     };
     printVariables = function(){
-        printLog("VARIABLES: "+JSON.stringify(variables));
+        console.log("VARIABLES: "+JSON.stringify(variables));
     };
     setVariable = function(pattern,name){
         var i;
@@ -264,7 +268,19 @@ var Test = function(host,tc){
         clientstates[config.clients[i]] = "empty";
     }
 
-
-
+    setTimeout(function(){
+        processLine();
+    },1000);
 };
 
+
+/*main*/
+var i,
+    arguments = process.argv.splice(" "),
+    clients = {},
+    objects = {};
+if(arguments.length !== 4){
+    console.log("nem igy kell!!! -> parancs host tc");
+    process.exit(0);
+}
+var test = new Test(arguments[2],fs.readFileSync(arguments[3],"utf8").split("\n"));
