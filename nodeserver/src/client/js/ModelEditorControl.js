@@ -54,6 +54,18 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             logger.debug("Creating connection between models: '" + sourceId + "' and '" + targetId + "' in parent '" + currentNodeInfo.id + "'");
         };
 
+        //called from the TreeBrowserWidget when a node has been marked to "copy this"
+        modelEditor.onNodeCopy = function (selectedIds) {
+            project.copy(selectedIds);
+        };
+
+        //called from the TreeBrowserWidget when a node has been marked to "paste here"
+        modelEditor.onNodePaste = function () {
+            if (currentNodeInfo.id) {
+                project.paste(currentNodeInfo.id);
+            }
+        };
+
         project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
             var newPattern = {},
                 selectedNode,

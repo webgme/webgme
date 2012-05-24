@@ -457,6 +457,26 @@ define([    './util.js', './../../common/LogManager.js',
                     return false;
                 }
                 break;
+            case 67:    //c
+                if (e.ctrlKey) {
+                    if ($.isFunction(self.onNodeCopy)) {
+                        self.onNodeCopy.call(self, selectedComponentIds);
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                break;
+            case 86:    //v
+                if (e.ctrlKey) {
+                    if ($.isFunction(self.onNodePaste)) {
+                        self.onNodePaste.call(self);
+                    }
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            break;
             }
         };
 
