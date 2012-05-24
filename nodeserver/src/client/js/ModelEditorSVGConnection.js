@@ -26,7 +26,8 @@ define([    './util.js',
             targetComponent,
             directed = false,
             self = this,
-            color = "#000000";
+            color = "#000000",
+            selfRender;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGConnection_" + objDescriptor.id);
@@ -48,16 +49,16 @@ define([    './util.js',
 
         componentSet.push(components.path);
 
+        selfRender = function () {
+            render.call(self);
+        };
+
         if (sourceComponent instanceof ModelEditorSVGModel) {
-            sourceComponent.addEventListener(sourceComponent.events.POSITION_CHANGED, function () {
-                render.call(self);
-            });
+            sourceComponent.addEventListener(sourceComponent.events.POSITION_CHANGED, selfRender);
         }
 
         if (targetComponent instanceof ModelEditorSVGModel) {
-            targetComponent.addEventListener(targetComponent.events.POSITION_CHANGED, function () {
-                render.call(self);
-            });
+            targetComponent.addEventListener(targetComponent.events.POSITION_CHANGED, selfRender);
         }
 
         render = function () {
@@ -166,7 +167,17 @@ define([    './util.js',
         };
 
         this.deleteComponent = function () {
+            if (sourceComponent instanceof ModelEditorSVGModel) {
+                sourceComponent.removeEventListener(sourceComponent.events.POSITION_CHANGED, selfRender);
+            }
+
+            if (targetComponent instanceof ModelEditorSVGModel) {
+                targetComponent.removeEventListener(targetComponent.events.POSITION_CHANGED, selfRender);
+            }
+
             components.path.remove();
+            delete components.path;
+
             logger.debug("Deleted.");
         };
 

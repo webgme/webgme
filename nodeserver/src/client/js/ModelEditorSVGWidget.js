@@ -485,31 +485,36 @@ define([    './util.js', './../../common/LogManager.js',
         this.startDrawConnection = function (sourceId) {
             var connDescriptor = {};
 
-            connDescriptor.id = "tempConnection";
-            connDescriptor.directed = true;
-            connDescriptor.sourceComponent = children[sourceId];
-            connDescriptor.targetComponent = null;
-            //connDescriptor.color = "#0000FF";
+            if (connectionDrawingDescriptor.isDrawing === false) {
+                connDescriptor.id = "tempConnection";
+                connDescriptor.directed = true;
+                connDescriptor.sourceComponent = children[sourceId];
+                connDescriptor.targetComponent = null;
+                //connDescriptor.color = "#0000FF";
 
-            connectionDrawingDescriptor.isDrawing = true;
-            connectionDrawingDescriptor.sourceId = sourceId;
-            connectionDrawingDescriptor.connection = new ModelEditorSVGConnection(connDescriptor, paper);
+                connectionDrawingDescriptor.isDrawing = true;
+                connectionDrawingDescriptor.sourceId = sourceId;
+                connectionDrawingDescriptor.connection = new ModelEditorSVGConnection(connDescriptor, paper);
 
-            logger.debug("startDrawConnection: " + sourceId);
+                logger.debug("startDrawConnection: " + sourceId);
+            }
         };
 
         this.endDrawConnection = function (targetId) {
-            if (targetId) {
-                connectionDrawingDescriptor.targetId = targetId;
-                logger.debug("endDrawConnection: " + targetId);
-                if ($.isFunction(self.onConnectionCreated)) {
-                    self.onConnectionCreated.call(self, connectionDrawingDescriptor.sourceId, connectionDrawingDescriptor.targetId);
+            if (connectionDrawingDescriptor.isDrawing === true) {
+                if (targetId) {
+                    connectionDrawingDescriptor.targetId = targetId;
+                    logger.debug("endDrawConnection: " + targetId);
+                    if ($.isFunction(self.onConnectionCreated)) {
+                        self.onConnectionCreated.call(self, connectionDrawingDescriptor.sourceId, connectionDrawingDescriptor.targetId);
+                    }
                 }
-            }
 
-            //finally clean up the temporary drawing
-            connectionDrawingDescriptor.connection.deleteComponent();
-            connectionDrawingDescriptor = { "isDrawing": false };
+                //finally clean up the temporary drawing
+                connectionDrawingDescriptor.connection.deleteComponent();
+                delete connectionDrawingDescriptor.connection;
+                connectionDrawingDescriptor = { "isDrawing": false };
+            }
         };
 
         drawConnection = function (mX, mY) {

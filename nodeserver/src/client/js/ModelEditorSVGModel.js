@@ -78,11 +78,11 @@ define([    './util.js',
                 "stroke-width": 2,
                 "opacity": opacity });
 
-            components.rect.mouseup(function (e) {
+            /*components.rect.mouseup(function (e) {
                 parentWidget.endDrawConnection(guid);
                 e.preventDefault();
                 e.stopPropagation();
-            });
+            });*/
 
             components.header = paper.path("m" + posX + "," + (posY + 24) + " l100,0 l0,-14 a10,10 0 0,0 -10,-10 l-80,0 a10,10 0 0,0 -10,10 z");
             components.header.attr("fill", "0-rgb(0,0,0)-rgb(79,79,79):50-rgb(21,21,21)");
