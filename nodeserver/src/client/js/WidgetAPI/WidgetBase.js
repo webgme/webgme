@@ -29,10 +29,10 @@ define(['./../../../common/CommonUtil.js'], function (commonUtil) {
         this.getBoundingBox = function () {
             var bBox = {    "x": parseInt($(this.el).css("left"), 10),
                 "y": parseInt($(this.el).css("top"), 10),
-                "w": parseInt($(this.el).outerWidth(true), 10),
-                "h": parseInt($(this.el).outerHeight(true), 10) };
-            bBox.x2 = bBox.x + bBox.w;
-            bBox.y2 = bBox.y + bBox.h;
+                "width": parseInt($(this.el).outerWidth(true), 10),
+                "height": parseInt($(this.el).outerHeight(true), 10) };
+            bBox.x2 = bBox.x + bBox.width;
+            bBox.y2 = bBox.y + bBox.height;
 
             return bBox;
         };

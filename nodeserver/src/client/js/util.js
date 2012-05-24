@@ -122,6 +122,19 @@ define(['order!jquery.min',
         },
 
         /*
+         * Returns true if the two position is inside the rectangle
+         */
+        isPositionInsideRectangle : function (position, boundingBox) {
+            var result = false;
+
+            if (boundingBox.x <= position.x && boundingBox.x2 >= position.x && boundingBox.y <= position.y && boundingBox.y2 >= position.y) {
+                result = true;
+            }
+
+            return result;
+        },
+
+        /*
          * Loads a CSS file dinamically
          */
         loadCSS : function (filePath) {
