@@ -4,11 +4,13 @@
 define([    './util.js',
             './../../common/LogManager.js',
             './../../common/CommonUtil.js',
-            './../js/ModelEditorSVGModel.js',
+            './ModelEditorSVGModel.js',
+            './BezierHelper.js',
             'raphael.amd' ], function (util,
                                        logManager,
                                        commonUtil,
-                                       ModelEditorSVGModel) {
+                                       ModelEditorSVGModel,
+                                       BezierHelper) {
     "use strict";
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
@@ -67,74 +69,22 @@ define([    './util.js',
 
         render = function () {
             if (sourceComponent && targetComponent) {
-                var srcBBox = sourceComponent.getBoundingBox(),
-                    tgtBBox = targetComponent.getBoundingBox(),
-                    bb1 = { x: srcBBox.x,
-                        y: srcBBox.y,
-                        width: srcBBox.width,
-                        height: srcBBox.height },
-                    bb2 = { x: tgtBBox.x,
-                        y: tgtBBox.y,
-                        width: tgtBBox.width,
-                        height: tgtBBox.height },
-                    p = [{x: bb1.x + bb1.width / 2, y: bb1.y},
-                        {x: bb1.x + bb1.width / 2, y: bb1.y + bb1.height},
-                        {x: bb1.x, y: bb1.y + bb1.height / 2},
-                        {x: bb1.x + bb1.width, y: bb1.y + bb1.height / 2},
-                        {x: bb2.x + bb2.width / 2, y: bb2.y},
-                        {x: bb2.x + bb2.width / 2, y: bb2.y + bb2.height},
-                        {x: bb2.x, y: bb2.y + bb2.height / 2},
-                        {x: bb2.x + bb2.width, y: bb2.y + bb2.height / 2}],
-                    d = {},
-                    dis = [],
-                    i,
-                    j,
-                    res,
-                    dx,
-                    dy,
-                    x = [],
-                    y = [],
-                    pathDef,
+                var pathDef,
                     borderW = 0,
-                    pathAttributes;
+                    pathAttributes,
+                    bezierControlPoints,
+                    i;
+
+                bezierControlPoints = BezierHelper.getBezierControlPoints(sourceComponent.getBoundingBox(), targetComponent.getBoundingBox());
 
                 for (i = 0; i < 4; i += 1) {
-                    for (j = 4; j < 8; j += 1) {
-                        dx = Math.abs(p[i].x - p[j].x);
-                        dy = Math.abs(p[i].y - p[j].y);
-                        if ((i === j - 4) || (((i !== 3 && j !== 6) || p[i].x < p[j].x) && ((i !== 2 && j !== 7) || p[i].x > p[j].x) && ((i !== 0 && j !== 5) || p[i].y > p[j].y) && ((i !== 1 && j !== 4) || p[i].y < p[j].y))) {
-                            dis.push(dx + dy);
-                            d[dis[dis.length - 1]] = [i, j];
-                        }
-                    }
-                }
-                if (dis.length === 0) {
-                    res = [0, 4];
-                } else {
-                    res = d[Math.min.apply(Math, dis)];
+                    bezierControlPoints[i].x += borderW;
+                    bezierControlPoints[i].y += borderW;
                 }
 
-                x[1] = p[res[0]].x;
-                y[1] = p[res[0]].y;
-                x[4] = p[res[1]].x;
-                y[4] = p[res[1]].y;
+                logger.debug("Shortest line is from [" + bezierControlPoints[0].x + "," + bezierControlPoints[0].y + "] to [" + bezierControlPoints[3].x + "," + bezierControlPoints[3].y + "]");
 
-                dx = Math.max(Math.abs(x[1] - x[4]) / 2, 10);
-                dy = Math.max(Math.abs(y[1] - y[4]) / 2, 10);
-
-                x[2] = [x[1], x[1], x[1] - dx, x[1] + dx][res[0]].toFixed(3);
-                y[2] = [y[1] - dy, y[1] + dy, y[1], y[1]][res[0]].toFixed(3);
-                x[3] = [0, 0, 0, 0, x[4], x[4], x[4] - dx, x[4] + dx][res[1]].toFixed(3);
-                y[3] = [0, 0, 0, 0, y[1] + dy, y[1] - dy, y[4], y[4]][res[1]].toFixed(3);
-
-                for (i = 0; i <= 4; i += 1) {
-                    x[i] += borderW;
-                    y[i] += borderW;
-                }
-
-                logger.debug("Shortest line is from [" + x[1] + "," + y[1] + "] to [" + x[4] + "," + y[4] + "]");
-
-                pathDef = ["M", x[1].toFixed(3), y[1].toFixed(3), "C", x[2], y[2], x[3], y[3], x[4].toFixed(3), y[4].toFixed(3)].join(",");
+                pathDef = ["M", bezierControlPoints[0].x, bezierControlPoints[0].y, "C", bezierControlPoints[1].x, bezierControlPoints[1].y, bezierControlPoints[2].x, bezierControlPoints[2].y, bezierControlPoints[3].x, bezierControlPoints[3].y].join(",");
 
                 components.path.remove();
                 components.path = paper.path(pathDef).toBack();
@@ -152,17 +102,17 @@ define([    './util.js',
 
                 if (markerAtEnds === true) {
                     if (components.startMarker) {
-                        components.startMarker.attr({   "cx": x[1],
-                                                        "cy": y[1] });
+                        components.startMarker.attr({   "cx": bezierControlPoints[0].x,
+                                                        "cy": bezierControlPoints[0].y });
                     } else {
-                        components.startMarker = paper.circle(x[1], y[1], 15).attr(markerAttrs).toBack();
+                        components.startMarker = paper.circle(bezierControlPoints[0].x, bezierControlPoints[0].y, 15).attr(markerAttrs).toBack();
                     }
 
                     if (components.endMarker) {
-                        components.endMarker.attr({   "cx": x[4],
-                            "cy": y[4] });
+                        components.endMarker.attr({   "cx": bezierControlPoints[3].x,
+                                                      "cy": bezierControlPoints[3].y });
                     } else {
-                        components.endMarker = paper.circle(x[4], y[4], 15).attr(markerAttrs).toBack();
+                        components.endMarker = paper.circle(bezierControlPoints[3].x, bezierControlPoints[3].y, 15).attr(markerAttrs).toBack();
                     }
                 } else {
                     if (components.startMarker) {
