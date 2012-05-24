@@ -3,7 +3,7 @@ var BackEndClient = function(server,socket){
         created = false;
     socket.on('data',function(data){
         console.log(data);
-        var msg = {type:"createProject",project:"testp",branch:"tc1"};
+        var msg = {type:"createProject",project:"testp",branch:"paste"};
         if(!created){
             socket.write(JSON.stringify(msg),function(){
                 console.log("data written");
@@ -15,7 +15,6 @@ var BackEndClient = function(server,socket){
         }
     });
     socket.on('end',function(){
-
     });
     server.disconnectClient(id);
 };
@@ -34,7 +33,7 @@ var NetworkServer = function(port){
     };
     /*main*/
     server.listen(port,function(){
-        console.log("ohom...");
+        console.log("started\nwaiting for back3nd(s)");
     });
 };
 

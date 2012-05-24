@@ -25,7 +25,7 @@
  the following commands available:
  *createFolder
  copy - saves a set of objects onto the clipboard for later operations (done on client level so each client has its own clipboard)
- paste - paste the content of the clipboard under the given object (creates deepcopy of each object on the clipboard the the proper place)
+ paste - paste the content of the clipboard under the given object (creates deep-copy of each object on the clipboard the the proper place)
  modify - modifies some single attribute (which means that this command will not deal with any kind of relations so it is good only for registry and attribute changes)
  createChild - creates an empty child using the given basetype under the given parent
  createSubType - creates an empty subtype from the given base under the given parent
@@ -352,13 +352,18 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         for(i in bufferedObjects){
             count++;
         }
-        for(i in bufferedObjects){
-            if(objectStates[i] !== "read" && objectStates[i]!=="db"){
-                cStorage.set(i,bufferedObjects[i],objectSaved);
+        if(count>0){
+            for(i in bufferedObjects){
+                if(objectStates[i] !== "read" && objectStates[i]!=="db"){
+                    cStorage.set(i,bufferedObjects[i],objectSaved);
+                }
+                else{
+                    objectSaved();
+                }
             }
-            else{
-                objectSaved();
-            }
+        }
+        else{
+            cb();
         }
     };
     finalizeClient = function(client){
@@ -510,7 +515,6 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             }
         });
     };
-    
     deleteCommand = function(deletecommand,callback){
         var subIds,
             readcount,
@@ -731,7 +735,143 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             }
         });
     };
-    pasteCommand = function(pastecommand){
+    pasteCommand = function(pastecommand,callback){
+        var i, j,
+            subtreeids,
+            copylist,
+            readcount,
+            pastecount,
+            callCallBack,
+            called,
+            prefix,
+            pasteObject,
+            objectPasted,
+            inheritanceCreated,
+            inheritancecount;
+
+        callCallBack = function(){
+            if(!called){
+                called = true;
+                callback();
+            }
+        };
+
+        inheritanceCreated = function(){
+            if(--inheritancecount === 0){
+                callCallBack();
+            }
+        };
+        objectPasted = function(object){
+            if(copylist.indexOf(object[ID]) !== -1){
+                /*we have to connect to the parent*/
+                commandBuffer.get(pastecommand.id,function(error,parent){
+                    if(error){
+                        commandBuffer.commandFailed();
+                        callCallBack();
+                    }
+                    else{
+                        parent.relations.childrenIds.push(object[ID]);
+                        commandBuffer.set(parent[ID],parent);
+                        object.relations.parentId = parent[ID];
+                        commandBuffer.set(object[ID],object);
+                    }
+                })
+            }
+            if(--pastecount === 0){
+                commandBuffer.get(pastecommand.id,function(error,parent){
+                    var i,j;
+                    if(error){
+                        commandBuffer.commandFailed();
+                        callCallBack();
+                    }
+                    else{
+                        inheritancecount = parent.relations.inheritorIds.length*copylist.length;
+                        if(inheritancecount>0){
+                            for(i=0;i<parent.relations.inheritorIds.length;i++){
+                                for(j=0;j<copylist.length;j++){
+                                    childrenCommand({cid:pastecommand.cid+"_"+i+""+j,baseId:copylist[j],parentId:parent.relations.inheritorIds[i]},inheritanceCreated);
+                                }
+                            }
+                        }
+                        else{
+                            callCallBack();
+                        }
+                    }
+                });
+            }
+        };
+        pasteObject = function(mainId,cb){
+            commandBuffer.get(mainId,function(error,object){
+                var i, j, index, newobject;
+                if(error){
+                    commandBuffer.commandFailed();
+                    callCallBack();
+                }
+                else{
+                    newobject = copyObject(object);
+                    newobject[ID] = prefix+newobject[ID];
+                    index = copylist.indexOf(object[ID]);
+                    if(index !== -1){
+                        copylist[index] = newobject[ID];
+                    }
+                    /*relations*/
+                    newobject.relations.inheritorIds = [];
+                    newobject.relations.parentId = prefix + newobject.relations.parentId;
+                    for(i=0;i<newobject.relations.childrenIds.length;i++){
+                        newobject.relations.childrenIds[i] = prefix + newobject.relations.childrenIds[i];
+                    }
+                    /*pointers*/
+                    for(i in newobject.pointers){
+                        if(subtreeids.indexOf(newobject.pointers[i].to) !== -1){
+                            newobject.pointers[i].to = prefix + newobject.pointers[i].to;
+                        }
+                        for(j=0;j<newobject.pointers[i].from.length;j++){
+                            if(subtreeids.indexOf(newobject.pointers[i].from[j]) !== -1){
+                                newobject.pointers[i].from[j] = prefix + newobject.pointers[i].from[j];
+                            }
+                            else{
+                                newobject.pointers[i].from[j] = null;
+                            }
+                        }
+                        j=0;
+                        while(j<newobject.pointers[i].from.length){
+                            if(newobject.pointers[i].from[j]){
+                                j++;
+                            }
+                            else{
+                                newobject.pointers[i].from.splice(j,1);
+                            }
+                        }
+                    }
+                    commandBuffer.set(newobject[ID],newobject);
+                    cb(newobject);
+                }
+            });
+        };
+
+        /*main*/
+        called = false;
+        prefix = cCid+"_"+pastecommand.cid+"/";
+        copylist = cClients[cCid].getCopyList();
+        subtreeids = [];
+        readcount = copylist.length;
+        for(i=0;i<copylist.length;i++){
+            readSubTree(copylist[i],function(error,result){
+                if(error){
+                    commandBuffer.commandFailed();
+                    callCallBack();
+                }
+                else{
+                    subtreeids = mergeArrays(subtreeids,result);
+                    if(--readcount == 0){
+                        pastecount = subtreeids.length;
+                        for(j=0;j<subtreeids.length;j++){
+                            pasteObject(subtreeids[j],objectPasted);
+                        }
+                    }
+                }
+            });
+        }
     };
     childrenCommand = function(childrencommand,callback){
         var prefix,
@@ -1320,8 +1460,13 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
         for(i in cTerritories){
             territorycount++;
         }
-        for(i in cTerritories){
-            cTerritories[i].updatePatterns(null,storage,territoryRefreshed);
+        if(territorycount>0){
+            for(i in cTerritories){
+                cTerritories[i].updatePatterns(null,storage,territoryRefreshed);
+            }
+        }
+        else{
+            cb([],[]);
         }
     };
 };
