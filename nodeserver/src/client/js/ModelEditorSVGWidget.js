@@ -373,7 +373,7 @@ define([    './util.js', './../../common/LogManager.js',
             rubberBandDrawing = false;
 
             if (connectionDrawingDescriptor.isDrawing) {
-                self.endDrawConnection(null);
+                self.endDrawConnection(activeModelId);
             }
         };
 
@@ -412,7 +412,7 @@ define([    './util.js', './../../common/LogManager.js',
 
             logger.debug("Select children by rubber band: [" + tX + "," + tY + "], [" + tX2 + "," + tY2 + "]");
 
-            selectionContainsBBox = function (childBBox, childId) {
+            selectionContainsBBox = function (childBBox) {
                 var interSectionRect,
                     acceptRatio = 0.5,
                     interSectionRatio;
@@ -435,7 +435,7 @@ define([    './util.js', './../../common/LogManager.js',
             for (i in children) {
                 if (children.hasOwnProperty(i)) {
                     if (children[i].isSelectable() === true) {
-                        if (selectionContainsBBox(children[i].getBoundingBox(), i)) {
+                        if (selectionContainsBBox(children[i].getBoundingBox())) {
                             childrenIDs.push(i);
                         }
                     }
@@ -476,7 +476,7 @@ define([    './util.js', './../../common/LogManager.js',
                     e.stopPropagation();
                     return false;
                 }
-            break;
+                break;
             }
         };
 

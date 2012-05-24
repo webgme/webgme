@@ -31,8 +31,7 @@ define([    './util.js',
             hookupMouseOverAndOut,
             unhookupMouseOverAndOut,
             onModelMouseOver,
-            onModelMouseOut,
-            modelHasMouseOver = 0;
+            onModelMouseOut;
 
         $.extend(this, new EventDispatcher());
 
@@ -71,12 +70,6 @@ define([    './util.js',
                 e.stopPropagation();
             });
 
-            components.sweetRect.mouseup(function (e) {
-                parentWidget.endDrawConnection(guid);
-                e.preventDefault();
-                e.stopPropagation();
-            });
-
             components.rect = paper.rect(posX, posY, 100, 100, 10);
             components.rect.attr({"x": posX,
                 "y": posY,
@@ -85,7 +78,7 @@ define([    './util.js',
                 "stroke-width": 2,
                 "opacity": opacity });
 
-            components.rect.mouseup(function (e) {
+            components.rect.mouseup(function () {
                 parentWidget.endDrawConnection(guid);
             });
 
@@ -105,25 +98,25 @@ define([    './util.js',
 
             for (i in components) {
                 if (components.hasOwnProperty(i)) {
-                    hookupMouseOverAndOut(components[i], i);
+                    hookupMouseOverAndOut(components[i]);
                 }
             }
         };
 
-        onModelMouseOver = function (e) {
+        onModelMouseOver = function () {
             pWidget.setActiveModel(guid);
         };
 
-        onModelMouseOut = function (e) {
+        onModelMouseOut = function () {
             pWidget.resetActiveModel(guid);
         };
 
-        hookupMouseOverAndOut = function (rComponent, cName) {
+        hookupMouseOverAndOut = function (rComponent) {
             rComponent.mouseover(onModelMouseOver);
             rComponent.mouseout(onModelMouseOut);
         };
 
-        unhookupMouseOverAndOut = function (rComponent, cName) {
+        unhookupMouseOverAndOut = function (rComponent) {
             rComponent.unmouseover(onModelMouseOver);
             rComponent.unmouseout(onModelMouseOut);
         };
