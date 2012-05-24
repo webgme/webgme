@@ -59,6 +59,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 		this.getKey = function (node) {
 			ASSERT(node && typeof node === "object");
+
 			return node._id;
 		};
 
@@ -66,13 +67,15 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			ASSERT(node && typeof node === "object");
 			ASSERT(key === false || typeof key === "string");
 
-			Object.defineProperty(node, "_id", {
-				value: key,
-				writable: true,
-				enumerable: true
-			});
+			node._id = key;
 		};
 
+		this.delKey = function (node) {
+			ASSERT(node && typeof node === "object");
+
+			delete node._id;
+		};
+		
 		this.load = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
@@ -687,23 +690,33 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 		this.getKey = storage.getKey;
 
-		this.isVertex = function (vertex) {
-			ASSERT(vertex && typeof vertex === "object");
-			return storage.getKey(vertex) !== undefined;
+		this.hasKey = function (node) {
+			return storage.getKey(node) !== undefined;
 		};
 
-		this.isMutable = function (vertex) {
-			ASSERT(this.isVertex(vertex));
-			return storage.getKey(vertex) === false;
-		};
-
+		this.addKey = function (node) {
+			storage.setKey(node, false);
+		}; 
+		
+		this.delKey = storage.delKey;
+		
 		this.load = storage.load;
 
-		this.make = function (data) {
-			storage.setKey(data, false);
+		this.isMutable = function (node) {
+			ASSERT(this.hasKey(node));
+			return storage.getKey(node) === false;
 		};
 
-		this.mutate = deepclone;
+		this.mutate = function (node) {
+			ASSERT(this.hasKey(node));
+			
+			node = deepclone(node);
+			
+			ASSERT(storage.getKey(node) === undefined);
+			storage.setKey(node, false);
+
+			return node;
+		};
 
 		var Saver = function (callback) {
 			ASSERT(callback);
@@ -729,14 +742,14 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		};
 
 		// TODO: try to catch cycles in the graph
-		Saver.prototype.save = function (vertex) {
-			ASSERT(vertex && typeof vertex === "object");
-			ASSERT(typeof storage.getKey(vertex) !== "string");
+		Saver.prototype.save = function (node) {
+			ASSERT(node && typeof node === "object");
+			ASSERT(typeof storage.getKey(node) !== "string");
 
 			var relid, child, key;
 
-			for( relid in vertex ) {
-				child = vertex[relid];
+			for( relid in node ) {
+				child = node[relid];
 				if( child && typeof child === "object" ) {
 
 					key = storage.getKey(child);
@@ -748,58 +761,55 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 					ASSERT(key === undefined || typeof key === "string");
 					if( key ) {
-						vertex[relid] = key;
+						node[relid] = key;
 					}
 				}
 			}
 
-			key = storage.getKey(vertex);
+			key = storage.getKey(node);
 			if( key === false ) {
 
-				key = SHA1(JSON.stringify(vertex));
-				storage.setKey(vertex, key);
+				key = SHA1(JSON.stringify(node));
+				storage.setKey(node, key);
 
 				this.start();
-				storage.save(vertex, this.done);
+				storage.save(node, this.done);
 			}
 
 			ASSERT(key === undefined || typeof key === "string");
 			return key;
 		};
 
-		this.persist = function (vertex, callback) {
-			ASSERT(this.isMutable(vertex));
+		this.persist = function (node, callback) {
+			ASSERT(this.isMutable(node));
 			ASSERT(callback);
 
 			var saver = new Saver(callback);
-			var key = saver.save(vertex);
+			var key = saver.save(node);
 			saver.done(null);
 
 			return key;
 		};
 	};
 
-	// ----------------- ContainmentTree -----------------
+	// ----------------- PersistentTree -----------------
 
-	var ContainmentTree = function (graph) {
+	var PersistentTree = function (graph) {
 		ASSERT(graph);
 
-		this.getKey = function (node) {
-			ASSERT(this.isNode(node));
-
-			return graph.getKey(node.vertex);
+		this.getKey = function (handle) {
+			ASSERT(handle && handle.node);
+			return graph.getKey(handle.node);
 		};
 
-		this.isNode = function (node) {
-			ASSERT(node && typeof node === "object");
-
-			return node.vertex && graph.isVertex(node.vertex);
+		this.hasKey = function (handle) {
+			ASSERT(handle && handle.node);
+			return graph.hasKey(handle.node);
 		};
 
-		this.isMutable = function (node) {
-			ASSERT(this.isNode(node));
-
-			return graph.isMutable(node.vertex);
+		this.isMutable = function (handle) {
+			ASSERT(handle && handle.node);
+			return graph.isMutable(handle.node);
 		};
 
 		this.mutate = function (node) {
@@ -819,69 +829,54 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 		this.persist = function (node, callback) {
 			ASSERT(this.isMutable(node));
-
-			graph.persist(node.vertex, callback);
+			graph.persist(node.node, callback);
 		};
 
 		this.getRoot = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(callback);
 
-			graph.load(key, function (err, vertex) {
-				ASSERT(err || (vertex && vertex.children));
+			graph.load(key, function (err, data) {
 				callback(err, err ? undefined : {
-					vertex: vertex,
+					data: data,
 					parent: null
 				});
 			});
 		};
 
+		this.getParent = function (node) {
+			ASSERT(node && node.data);
+			return node.parent;
+		};
+		
+		this.getData = function (node) {
+			ASSERT(node && node.data);
+			return node.data;
+		};
+		
+		this.getChild = function (node, relid) {
+			ASSERT(node && node.data);
+			
+			var child = node.data[relid];
+			ASSERT(child && typeof child === "object");
+
+			return {
+				data: child,
+				parent: node,
+				relid: relid
+			};
+		};
+
 		this.create = function() {
-			var node = {
-				vertex: {
-					children: {}
-				},
+			var handle = {
+				node: {},
 				parent: null
 			};
 
-			graph.make(node.vertex);
-			return node;
+			graph.make(handle.node);
+			return handle;
 		};
 		
-		this.getParent = function (node) {
-			ASSERT(this.isNode(node));
-
-			return node.parent;
-		};
-
-		this.getChildrenRelids = function (node) {
-			ASSERT(this.isNode(node));
-			ASSERT(node.vertex.children);
-
-			return node.vertex.children;
-		};
-
-		this.getChild = function (node, relid, callback) {
-			
-		};
-		
-		this.moveNode = function (node, target) {
-			ASSERT(this.isNode(node));
-			ASSERT(this.isNode(target));
-
-			if( node.parent ) {
-				this.mutate(node.parent);
-				graph.delChild(node.parent.data, node.relid);
-			}
-
-			if( target ) {
-				this.mutate(target);
-			}
-			else {
-				node.parent = null;
-				delete node.relid;
-			}
-		};
 	};
 
 	// ----------------- ReferenceTree -----------------
