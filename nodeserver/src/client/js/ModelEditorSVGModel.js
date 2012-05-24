@@ -16,7 +16,7 @@ define([    './util.js',
 
     var ModelEditorSVGModel;
 
-    ModelEditorSVGModel = function (objDescriptor, paper) {
+    ModelEditorSVGModel = function (objDescriptor, paper, pWidget) {
         var logger,
             guid,
             renderFirst,
@@ -25,7 +25,9 @@ define([    './util.js',
             posX,
             posY,
             title,
-            opacity;
+            opacity,
+            sweetDistance = 5,
+            parentWidget = pWidget;
 
         $.extend(this, new EventDispatcher());
 
@@ -50,6 +52,24 @@ define([    './util.js',
 
         /* generate the components for the first time */
         renderFirst = function () {
+            components.sweetRect = paper.rect(posX - sweetDistance, posY - sweetDistance, 100 + 2 * sweetDistance, 100 + 2 * sweetDistance, 0);
+            components.sweetRect.attr({"fill": "#FF0000",
+                "stroke" : "none",
+                "stroke-width": 0,
+                "opacity": 0.0001 });
+            components.sweetRect.node.style.cursor = 'crosshair';
+            components.sweetRect.mousedown(function (e) {
+                parentWidget.startDrawConnection(guid);
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            components.sweetRect.mouseup(function (e) {
+                parentWidget.endDrawConnection(guid);
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
             components.rect = paper.rect(posX, posY, 100, 100, 10);
             components.rect.attr({"x": posX,
                 "y": posY,
@@ -57,6 +77,12 @@ define([    './util.js',
                 "stroke": "#666666",
                 "stroke-width": 2,
                 "opacity": opacity });
+
+            components.rect.mouseup(function (e) {
+                parentWidget.endDrawConnection(guid);
+                e.preventDefault();
+                e.stopPropagation();
+            });
 
             components.header = paper.path("m" + posX + "," + (posY + 24) + " l100,0 l0,-14 a10,10 0 0,0 -10,-10 l-80,0 a10,10 0 0,0 -10,10 z");
             components.header.attr("fill", "0-rgb(0,0,0)-rgb(79,79,79):50-rgb(21,21,21)");
@@ -98,6 +124,9 @@ define([    './util.js',
 
                 components.text.attr({  "x": posX + 50,
                     "y": posY + 12 });
+
+                components.sweetRect.attr({ "x" : posX - sweetDistance,
+                                            "y" : posY - sweetDistance });
 
                 if (silent !== true) {
                     this.dispatchEvent(this.events.POSITION_CHANGED);

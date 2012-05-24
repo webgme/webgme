@@ -25,7 +25,8 @@ define([    './util.js',
             sourceComponent,
             targetComponent,
             directed = false,
-            self = this;
+            self = this,
+            color = "#000000";
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGConnection_" + objDescriptor.id);
@@ -37,6 +38,7 @@ define([    './util.js',
         sourceComponent = objDescriptor.sourceComponent || null;
         targetComponent = objDescriptor.targetComponent || null;
         directed = objDescriptor.directed || false;
+        color = objDescriptor.color || color;
 
         components = {};
         componentSet = paper.set();
@@ -131,7 +133,7 @@ define([    './util.js',
 
                 components.path.remove();
                 components.path = paper.path(pathDef).toBack();
-                pathAttributes = {  "stroke": "#000",
+                pathAttributes = {  "stroke": color,
                                     "fill": "none",
                                     "stroke-width": "2",
                                     "arrow-start": "oval",
@@ -150,6 +152,7 @@ define([    './util.js',
             sourceComponent = objDescriptor.sourceComponent || sourceComponent;
             targetComponent = objDescriptor.targetComponent || targetComponent;
             directed = objDescriptor.directed || directed;
+            color = objDescriptor.color || color;
 
             render();
         };

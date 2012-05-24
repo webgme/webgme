@@ -50,6 +50,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             selectedNode.setAttribute("attr", { "posX": position.posX, "posY": position.posY });
         };
 
+        modelEditor.onConnectionCreated = function (sourceId, targetId) {
+            logger.debug("Creating connection between models: '" + sourceId + "' and '" + targetId + "' in parent '" + currentNodeInfo.id + "'");
+        };
+
         project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
             var newPattern = {},
                 selectedNode,

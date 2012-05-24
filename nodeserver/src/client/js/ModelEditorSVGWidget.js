@@ -46,7 +46,9 @@ define([    './util.js', './../../common/LogManager.js',
             selectChildrenByRubberBand,
             rubberBandRect = null,
             onBackgroundKeyDown,
-            selectAll;
+            selectAll,
+            connectionDrawingDescriptor = { "isDrawing" : false },
+            drawConnection;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGWidget");
@@ -181,7 +183,7 @@ define([    './util.js', './../../common/LogManager.js',
             logger.debug("Creating object with parameters: " + JSON.stringify(objDescriptor));
 
             if (objDescriptor.kind === "MODEL") {
-                newComponent = new ModelEditorSVGModel(objDescriptor, paper);
+                newComponent = new ModelEditorSVGModel(objDescriptor, paper, self);
             }
 
             if (objDescriptor.kind === "CONNECTION") {
@@ -343,10 +345,16 @@ define([    './util.js', './../../common/LogManager.js',
         };
 
         onBackgroundMouseMove = function (e) {
+            var mX = e.pageX - $(this).offset().left,
+                mY = e.pageY - $(this).offset().top;
+
             if (rubberBandDrawing) {
-                rubberBandBBox.x2 = e.pageX - $(this).offset().left;
-                rubberBandBBox.y2 = e.pageY - $(this).offset().top;
+                rubberBandBBox.x2 = mX;
+                rubberBandBBox.y2 = mY;
                 drawRubberBand();
+            }
+            if (connectionDrawingDescriptor.isDrawing) {
+                drawConnection(mX, mY);
             }
         };
 
@@ -362,6 +370,10 @@ define([    './util.js', './../../common/LogManager.js',
                 rubberBandRect = null;
             }
             rubberBandDrawing = false;
+
+            if (connectionDrawingDescriptor.isDrawing) {
+                self.endDrawConnection(null);
+            }
         };
 
         drawRubberBand = function () {
@@ -469,6 +481,53 @@ define([    './util.js', './../../common/LogManager.js',
         modelEditorE.bind('mousemove', onBackgroundMouseMove);
         modelEditorE.bind('mouseup', onBackgroundMouseUp);
         modelEditorE.bind('keydown', onBackgroundKeyDown);
+
+        this.startDrawConnection = function (sourceId) {
+            var connDescriptor = {};
+
+            connDescriptor.id = "tempConnection";
+            connDescriptor.directed = true;
+            connDescriptor.sourceComponent = children[sourceId];
+            connDescriptor.targetComponent = null;
+            //connDescriptor.color = "#0000FF";
+
+            connectionDrawingDescriptor.isDrawing = true;
+            connectionDrawingDescriptor.sourceId = sourceId;
+            connectionDrawingDescriptor.connection = new ModelEditorSVGConnection(connDescriptor, paper);
+
+            logger.debug("startDrawConnection: " + sourceId);
+        };
+
+        this.endDrawConnection = function (targetId) {
+            if (targetId) {
+                connectionDrawingDescriptor.targetId = targetId;
+                logger.debug("endDrawConnection: " + targetId);
+                if ($.isFunction(self.onConnectionCreated)) {
+                    self.onConnectionCreated.call(self, connectionDrawingDescriptor.sourceId, connectionDrawingDescriptor.targetId);
+                }
+            }
+
+            //finally clean up the temporary drawing
+            connectionDrawingDescriptor.connection.deleteComponent();
+            connectionDrawingDescriptor = { "isDrawing": false };
+        };
+
+        drawConnection = function (mX, mY) {
+            var connDesc = {};
+            connDesc.targetComponent = {};
+            connDesc.targetComponent.getBoundingBox = function () {
+                return {
+                    "x": mX,
+                    "y": mY,
+                    "x2": mX + 2,
+                    "y2": mY + 2,
+                    "width": 2,
+                    "height": 2
+                };
+            };
+
+            connectionDrawingDescriptor.connection.updateComponent(connDesc);
+        };
     };
 
     return ModelEditorSVGWidget;
