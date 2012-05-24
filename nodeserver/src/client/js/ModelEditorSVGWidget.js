@@ -48,7 +48,8 @@ define([    './util.js', './../../common/LogManager.js',
             onBackgroundKeyDown,
             selectAll,
             connectionDrawingDescriptor = { "isDrawing" : false },
-            drawConnection;
+            drawConnection,
+            activeModelId = null;
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGWidget");
@@ -491,6 +492,7 @@ define([    './util.js', './../../common/LogManager.js',
                 connDescriptor.sourceComponent = children[sourceId];
                 connDescriptor.targetComponent = null;
                 //connDescriptor.color = "#0000FF";
+                connDescriptor.markerAtEnds = false;
 
                 connectionDrawingDescriptor.isDrawing = true;
                 connectionDrawingDescriptor.sourceId = sourceId;
@@ -519,19 +521,38 @@ define([    './util.js', './../../common/LogManager.js',
 
         drawConnection = function (mX, mY) {
             var connDesc = {};
-            connDesc.targetComponent = {};
-            connDesc.targetComponent.getBoundingBox = function () {
-                return {
-                    "x": mX,
-                    "y": mY,
-                    "x2": mX + 2,
-                    "y2": mY + 2,
-                    "width": 2,
-                    "height": 2
+
+            //when mouse is not over a model, draw line to the mouse pos
+            if (activeModelId === null) {
+                connDesc.targetComponent = {};
+                connDesc.markerAtEnds = false;
+                connDesc.targetComponent.getBoundingBox = function () {
+                    return {
+                        "x": mX,
+                        "y": mY,
+                        "x2": mX + 2,
+                        "y2": mY + 2,
+                        "width": 2,
+                        "height": 2
+                    };
                 };
-            };
+            } else {
+                //draw line to the component the mouse is currently over
+                connDesc.targetComponent = children[activeModelId];
+                connDesc.markerAtEnds = true;
+            }
 
             connectionDrawingDescriptor.connection.updateComponent(connDesc);
+        };
+
+        this.setActiveModel = function (id) {
+            activeModelId = id;
+        };
+
+        this.resetActiveModel = function (id) {
+            if (activeModelId === id) {
+                activeModelId = null;
+            }
         };
     };
 

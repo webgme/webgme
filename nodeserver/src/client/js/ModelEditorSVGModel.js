@@ -26,8 +26,13 @@ define([    './util.js',
             posY,
             title,
             opacity,
-            sweetDistance = 5,
-            parentWidget = pWidget;
+            sweetDistance = 8,
+            parentWidget = pWidget,
+            hookupMouseOverAndOut,
+            unhookupMouseOverAndOut,
+            onModelMouseOver,
+            onModelMouseOut,
+            modelHasMouseOver = 0;
 
         $.extend(this, new EventDispatcher());
 
@@ -52,6 +57,8 @@ define([    './util.js',
 
         /* generate the components for the first time */
         renderFirst = function () {
+            var i;
+
             components.sweetRect = paper.rect(posX - sweetDistance, posY - sweetDistance, 100 + 2 * sweetDistance, 100 + 2 * sweetDistance, 0);
             components.sweetRect.attr({"fill": "#FF0000",
                 "stroke" : "none",
@@ -78,11 +85,9 @@ define([    './util.js',
                 "stroke-width": 2,
                 "opacity": opacity });
 
-            /*components.rect.mouseup(function (e) {
+            components.rect.mouseup(function (e) {
                 parentWidget.endDrawConnection(guid);
-                e.preventDefault();
-                e.stopPropagation();
-            });*/
+            });
 
             components.header = paper.path("m" + posX + "," + (posY + 24) + " l100,0 l0,-14 a10,10 0 0,0 -10,-10 l-80,0 a10,10 0 0,0 -10,10 z");
             components.header.attr("fill", "0-rgb(0,0,0)-rgb(79,79,79):50-rgb(21,21,21)");
@@ -97,6 +102,30 @@ define([    './util.js',
                 "fill": "#FFFFFF" });
 
             componentSet.push(components.rect, components.text, components.header);
+
+            for (i in components) {
+                if (components.hasOwnProperty(i)) {
+                    hookupMouseOverAndOut(components[i], i);
+                }
+            }
+        };
+
+        onModelMouseOver = function (e) {
+            pWidget.setActiveModel(guid);
+        };
+
+        onModelMouseOut = function (e) {
+            pWidget.resetActiveModel(guid);
+        };
+
+        hookupMouseOverAndOut = function (rComponent, cName) {
+            rComponent.mouseover(onModelMouseOver);
+            rComponent.mouseout(onModelMouseOut);
+        };
+
+        unhookupMouseOverAndOut = function (rComponent, cName) {
+            rComponent.unmouseover(onModelMouseOver);
+            rComponent.unmouseout(onModelMouseOut);
         };
 
         /* PUBIC METHODS */
@@ -143,9 +172,18 @@ define([    './util.js',
         };
 
         this.deleteComponent = function () {
-            components.rect.remove();
-            components.text.remove();
-            components.header.remove();
+            var i;
+            //empty set
+            componentSet.clear();
+
+            //remove and unregister event handlers from each component one by one
+            for (i in components) {
+                if (components.hasOwnProperty(i)) {
+                    unhookupMouseOverAndOut(components[i], i);
+                    components[i].remove();
+                    delete components[i];
+                }
+            }
             logger.debug("Deleted.");
         };
 

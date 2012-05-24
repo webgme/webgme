@@ -27,7 +27,10 @@ define([    './util.js',
             directed = false,
             self = this,
             color = "#000000",
-            selfRender;
+            selfRender,
+            markerAtEnds = false,
+            markerAttrs = {"stroke-width": 1,
+                "fill": "rgba(0,0,255,0.3)"};
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorSVGConnection_" + objDescriptor.id);
@@ -40,6 +43,7 @@ define([    './util.js',
         targetComponent = objDescriptor.targetComponent || null;
         directed = objDescriptor.directed || false;
         color = objDescriptor.color || color;
+        markerAtEnds = objDescriptor.markerAtEnds || markerAtEnds;
 
         components = {};
         componentSet = paper.set();
@@ -145,6 +149,32 @@ define([    './util.js',
                 }
 
                 components.path.attr(pathAttributes);
+
+                if (markerAtEnds === true) {
+                    if (components.startMarker) {
+                        components.startMarker.attr({   "cx": x[1],
+                                                        "cy": y[1] });
+                    } else {
+                        components.startMarker = paper.circle(x[1], y[1], 15).attr(markerAttrs).toBack();
+                    }
+
+                    if (components.endMarker) {
+                        components.endMarker.attr({   "cx": x[4],
+                            "cy": y[4] });
+                    } else {
+                        components.endMarker = paper.circle(x[4], y[4], 15).attr(markerAttrs).toBack();
+                    }
+                } else {
+                    if (components.startMarker) {
+                        components.startMarker.remove();
+                        delete components.startMarker;
+                    }
+
+                    if (components.endMarker) {
+                        components.endMarker.remove();
+                        delete components.endMarker;
+                    }
+                }
             }
         };
 
@@ -154,6 +184,9 @@ define([    './util.js',
             targetComponent = objDescriptor.targetComponent || targetComponent;
             directed = objDescriptor.directed || directed;
             color = objDescriptor.color || color;
+            if (objDescriptor.hasOwnProperty("markerAtEnds")) {
+                markerAtEnds = objDescriptor.markerAtEnds;
+            }
 
             render();
         };
@@ -167,6 +200,8 @@ define([    './util.js',
         };
 
         this.deleteComponent = function () {
+            var i;
+
             if (sourceComponent instanceof ModelEditorSVGModel) {
                 sourceComponent.removeEventListener(sourceComponent.events.POSITION_CHANGED, selfRender);
             }
@@ -175,8 +210,12 @@ define([    './util.js',
                 targetComponent.removeEventListener(targetComponent.events.POSITION_CHANGED, selfRender);
             }
 
-            components.path.remove();
-            delete components.path;
+            for (i in components) {
+                if (components.hasOwnProperty(i)) {
+                    components[i].remove();
+                    delete components[i];
+                }
+            }
 
             logger.debug("Deleted.");
         };
