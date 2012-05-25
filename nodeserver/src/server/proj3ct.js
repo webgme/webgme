@@ -937,8 +937,6 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             if(fromobj.pointers[pointcommand.name] === null || fromobj.pointers[pointcommand.name] === undefined){
                 fromobj.pointers[pointcommand.name] = {to:null, from:[]};
             }
-            fromobj.pointers[pointcommand.name].to = toobj[ID];
-            commandBuffer.set(fromobj[ID],fromobj);
             if(oldtoobj){
                 if(oldtoobj.pointers[pointcommand.name].from){
                     removeFromArray(oldtoobj.pointers[pointcommand.name].from,fromobj[ID]);
@@ -946,12 +944,17 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 }
             }
             if(toobj){
+                fromobj.pointers[pointcommand.name].to = toobj[ID];
                 if(toobj.pointers[pointcommand.name] === null || toobj.pointers[pointcommand.name] === undefined){
                     toobj.pointers[pointcommand.name] = {to:null, from:[]};
                 }
                 insertIntoArray(toobj.pointers[pointcommand.name].from,fromobj[ID]);
                 commandBuffer.set(toobj[ID],toobj);
             }
+            else{
+                fromobj.pointers[pointcommand.name].to = null;
+            }
+            commandBuffer.set(fromobj[ID],fromobj);
             callback();
         };
         commandBuffer.get(pointcommand.id,function(err,result){
