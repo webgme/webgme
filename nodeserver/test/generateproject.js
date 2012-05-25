@@ -56,6 +56,27 @@ for (i = 0; i < allParentIds.length; i += 1) {
 
     for (j = 0; j < Math.floor(currentParent.children.length / 2); j += 1) {
 
+        if (j === 0) {
+            //first child is always connected to itself
+            var selfConn = { "_id": "conn_" + currentParent.children[0] + "_" + currentParent.children[0],
+                "srcId": currentParent.children[0],
+                "trgtId": currentParent.children[0],
+                "directed": true,
+                "children": []};
+
+            selfConn.name = selfConn._id;
+            selfConn.parent = allParentIds[i];
+
+            //store object in my storage
+            storage[selfConn._id] =  selfConn;
+
+            //fix the two ends of the connection
+            storage[selfConn.srcId].connSrc.push(selfConn._id);
+            storage[selfConn.trgtId].connTrgt.push(selfConn._id);
+
+            childrenConnectionsIds.push(selfConn._id);
+        }
+
         //create connection object
         var newConn = { "_id": "conn_" + currentParent.children[j] + "_" + currentParent.children[currentParent.children.length - 1 - j],
             "srcId": currentParent.children[j],

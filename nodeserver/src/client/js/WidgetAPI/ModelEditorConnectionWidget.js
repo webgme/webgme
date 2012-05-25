@@ -56,6 +56,12 @@ define(['./../../../common/LogManager.js',
             cW = Math.abs(bezierControlPoints[0].x - bezierControlPoints[3].x);
             cH = Math.abs(bezierControlPoints[0].y - bezierControlPoints[3].y);
 
+            //when the source and target of the connection is the same
+            if (srcWidget.getId() === trgtWidget.getId()) {
+                cW = srcWidget.getBoundingBox().width;
+                cH = srcWidget.getBoundingBox().height;
+            }
+
             if (cX === bezierControlPoints[0].x) {
                 for (i = 3; i >= 0; i -= 1) {
                     bezierControlPoints[i].x -= bezierControlPoints[0].x;

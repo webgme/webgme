@@ -15,36 +15,37 @@ requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 
 	var mongo = new STORAGE.Mongo();
 	mongo.open(function (err) {
-		var graph = new STORAGE.Graph(mongo);
-		var tree = new STORAGE.Tree(graph);
-
+		ASSERT(!err);
+		
 		mongo.removeAll(function (err) {
+			ASSERT(!err);
+			
+			var tree = new STORAGE.PersistentTree(mongo);
+			var root = tree.createRoot();
+			tree.setProperty(root, "name", "root");
+			var first = tree.createChild(root, "1");
+			tree.addKey(first);
+			tree.setProperty(first, "name", "first");
+			
+			tree.persist(root, function(err) {
+				ASSERT(!err);
 
-			var root = graph.createNode();
-//			graph.setData(root, "name", "root");
-			var child = graph.createLeaf();
-			graph.setData(child, "name", "child");
-			graph.setChild(root, "1", child);
-			graph.setChild(root, "2", child);
+				tree.loadRoot(tree.getKey(root), function(err, root) {
+					ASSERT(!err);
 
-			graph.persist(root, function (err) {
+					tree.mutate(root);
+					var second = tree.createChild(root, "2");
+					tree.addKey(second);
+					
+					tree.persist(root, function(err) {
+						ASSERT(!err);
 
-				tree.getRoot(graph.getKey(root), function (err, rnode) {
-					tree.getChild(rnode, "1", function (err, cnode) {
-
-						tree.mutate(cnode);
-						tree.setData(cnode, "name", "hihi");
-
-						tree.persist(rnode, function (err) {
-							mongo.dumpAll(function () {
-								mongo.close();
-							});
+						mongo.dumpAll(function () {
+							mongo.close();
 						});
 					});
-
 				});
 			});
 		});
-
 	});
 });
