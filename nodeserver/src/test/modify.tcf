@@ -1,0 +1,10 @@
+{"clients":["c001","c002"]}
+{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]}
+{"clientId":"c002","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]}
+{"clientId":"c002","servercommands":[{"cid":"0001","type":"modify","id":"o10","attributes":{"name":"masik","attr":"egyik"}}]}
+{"clientId":"c001","servercommands":[{"cid":"0001","type":"modify","id":"o10","attributes":{"name":"egyik","attr":"masik"}}]}
+{"clientId":"c002","servercommands":[{"cid":"0001","type":"modify","id":"o10","attributes":{},"registry":{"name":"regname"}}]}
+{"clientId":"c002","servercommands":[{"cid":"0001","type":"modify","id":"o10"}]}
+{"internalcommand":{"type":"printVariables"}}
+{"internalcommand":{"type":"printContainment"}}
+{"internalcommand":{"type":"printObjects"}}
