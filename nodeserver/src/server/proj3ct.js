@@ -246,7 +246,10 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
 
     /*public functions*/
     this.get = function(id,cb){
-        if(bufferedObjects[id]){
+        if(bufferedObjects[id] === null){
+            cb(null,null);
+        }
+        else if(bufferedObjects[id]){
             cb(null,bufferedObjects[id]);
         }
         else{
@@ -1120,7 +1123,6 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 }
             };
             quickCopyObject = function(id){
-                console.log("kecso");
                 var i;
                 commandBuffer.get(id,function(err,object){
                     /*no error can happen!!!*/
@@ -1241,6 +1243,7 @@ var Territory = function(cClient,cId){
         };
 
         patternComplete = function(){
+            console.log("kecso2-"+patternCounter);
             if(--patternCounter === 0){
                 updateComplete();
             }
@@ -1253,6 +1256,7 @@ var Territory = function(cClient,cId){
                 updateRule;
 
             ruleComplete = function(){
+                console.log("kecso1-"+ruleCounter);
                 if(--ruleCounter === 0){
                     patternComplete();
                     return;
@@ -1263,49 +1267,51 @@ var Territory = function(cClient,cId){
                     next;
                 if(rulevalue === 0){
                     ruleComplete();
-                    return;
                 }
                 else{
+                    console.log("kecso4");
                     storage.get(currentId,function(err,object){
+                        console.log("kecso5");
                         if(err){
                             logger.error("Territory.updatePatterns.updatePattern.updateRule cannot get object "+currentId);
                             ruleComplete();
-                            return;
                         }
                         else{
-                            if(insertIntoArray(ruleChains[rulename],currentId)){
-                                addToCurrentList(currentId,object,function(){
-                                    next = object.relations[rulename];
-                                    if(next){
-                                        rulevalue--;
-                                        if(next instanceof Array){
-                                            if(next.length > 0){
-                                                ruleCounter+=next.length-1;
-                                                for(i=0;i<next.length;i++){
-                                                    updateRule(next[i],rulename,rulevalue);
+                            console.log("kecso3-"+JSON.stringify(object));
+                            if(object){
+                                if(insertIntoArray(ruleChains[rulename],currentId)){
+                                    addToCurrentList(currentId,object,function(){
+                                        next = object.relations[rulename];
+                                        if(next){
+                                            rulevalue--;
+                                            if(next instanceof Array){
+                                                if(next.length > 0){
+                                                    ruleCounter+=next.length-1;
+                                                    for(i=0;i<next.length;i++){
+                                                        updateRule(next[i],rulename,rulevalue);
+                                                    }
                                                 }
-                                                return;
+                                                else{
+                                                    ruleComplete();
+                                                }
                                             }
                                             else{
-                                                ruleComplete();
-                                                return;
+                                                updateRule(next,rulename,rulevalue);
                                             }
                                         }
                                         else{
-                                            updateRule(next,rulename,rulevalue);
-                                            return;
+                                            ruleComplete();
                                         }
-                                    }
-                                    else{
-                                        ruleComplete();
-                                        return;
-                                    }
-                                });
+                                    });
+                                }
+                                else{
+                                    /*it was already in the current chain, so we should stop*/
+                                    ruleComplete();
+                                }
                             }
                             else{
-                                /*it was already in the current chain, so we should stop*/
+                                /*the object under deletion*/
                                 ruleComplete();
-                                return;
                             }
                         }
                     });
