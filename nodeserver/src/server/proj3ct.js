@@ -934,14 +934,22 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             toobj,
             objectsLoaded;
         objectsLoaded = function(){
-            fromobj.pointer[pointcommand.name].to = toobj[ID];
+            if(fromobj.pointers[pointcommand.name] === null || fromobj.pointers[pointcommand.name] === undefined){
+                fromobj.pointers[pointcommand.name] = {to:null, from:[]};
+            }
+            fromobj.pointers[pointcommand.name].to = toobj[ID];
             commandBuffer.set(fromobj[ID],fromobj);
             if(oldtoobj){
-                removeFromArray(oldtoobj.pointer[pointcommand.name].from,fromobj[ID]);
-                commandBuffer.set(oldtoobj[ID],oldtoobj);
+                if(oldtoobj.pointers[pointcommand.name].from){
+                    removeFromArray(oldtoobj.pointers[pointcommand.name].from,fromobj[ID]);
+                    commandBuffer.set(oldtoobj[ID],oldtoobj);
+                }
             }
             if(toobj){
-                insertIntoArray(toobj.pointer[pointcommand.name].from,fromobj[ID]);
+                if(toobj.pointers[pointcommand.name] === null || toobj.pointers[pointcommand.name] === undefined){
+                    toobj.pointers[pointcommand.name] = {to:null, from:[]};
+                }
+                insertIntoArray(toobj.pointers[pointcommand.name].from,fromobj[ID]);
                 commandBuffer.set(toobj[ID],toobj);
             }
             callback();
@@ -961,11 +969,11 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                         }
                         else{
                             toobj = result;
-                            if(fromobj.pointer[pointcommand.name]){
-                                if(fromobj.pointer[pointcommand.name].to){
-                                    commandBuffer.get(fromobj.pointer[pointcommand.name].to,function(err,result){
+                            if(fromobj.pointers[pointcommand.name]){
+                                if(fromobj.pointers[pointcommand.name].to){
+                                    commandBuffer.get(fromobj.pointers[pointcommand.name].to,function(err,result){
                                         if(err){
-                                            logger.debug("Commander.pointCommand unable to get 'old to' object "+fromobj.pointer[pointcommand.name].to);
+                                            logger.debug("Commander.pointCommand unable to get 'old to' object "+fromobj.pointers[pointcommand.name].to);
                                             commandBuffer.commandFailed();
                                         }
                                         else{
@@ -985,11 +993,11 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     });
                 }
                 else{
-                    if(fromobj.pointer[pointcommand.name]){
-                        if(fromobj.pointer[pointcommand.name].to){
-                            commandBuffer.get(fromobj.pointer[pointcommand.name].to,function(err,result){
+                    if(fromobj.pointers[pointcommand.name]){
+                        if(fromobj.pointers[pointcommand.name].to){
+                            commandBuffer.get(fromobj.pointers[pointcommand.name].to,function(err,result){
                                 if(err){
-                                    logger.debug("Commander.pointCommand unable to get 'old to' object "+fromobj.pointer[pointcommand.name].to);
+                                    logger.debug("Commander.pointCommand unable to get 'old to' object "+fromobj.pointers[pointcommand.name].to);
                                     commandBuffer.commandFailed();
                                 }
                                 else{
@@ -1109,6 +1117,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 }
             };
             quickCopyObject = function(id){
+                console.log("kecso");
                 var i;
                 commandBuffer.get(id,function(err,object){
                     /*no error can happen!!!*/
