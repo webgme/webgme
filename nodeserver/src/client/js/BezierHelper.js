@@ -35,43 +35,60 @@ define([], function () {
                 y = [],
                 result = [];
 
-            for (i = 0; i < 4; i += 1) {
-                for (j = 4; j < 8; j += 1) {
-                    dx = Math.abs(p[i].x - p[j].x);
-                    dy = Math.abs(p[i].y - p[j].y);
-                    if ((i === j - 4) || (((i !== 3 && j !== 6) || p[i].x < p[j].x) && ((i !== 2 && j !== 7) || p[i].x > p[j].x) && ((i !== 0 && j !== 5) || p[i].y > p[j].y) && ((i !== 1 && j !== 4) || p[i].y < p[j].y))) {
-                        dis.push(dx + dy);
-                        d[dis[dis.length - 1]] = [i, j];
+            if ((bb1.x !== bb2.x) && (bb1.y !== bb2.y)) {
+                for (i = 0; i < 4; i += 1) {
+                    for (j = 4; j < 8; j += 1) {
+                        dx = Math.abs(p[i].x - p[j].x);
+                        dy = Math.abs(p[i].y - p[j].y);
+                        if ((i === j - 4) || (((i !== 3 && j !== 6) || p[i].x < p[j].x) && ((i !== 2 && j !== 7) || p[i].x > p[j].x) && ((i !== 0 && j !== 5) || p[i].y > p[j].y) && ((i !== 1 && j !== 4) || p[i].y < p[j].y))) {
+                            dis.push(dx + dy);
+                            d[dis[dis.length - 1]] = [i, j];
+                        }
                     }
                 }
-            }
-            if (dis.length === 0) {
-                res = [0, 4];
+                if (dis.length === 0) {
+                    res = [0, 4];
+                } else {
+                    res = d[Math.min.apply(Math, dis)];
+                }
+
+                x[1] = p[res[0]].x;
+                y[1] = p[res[0]].y;
+                x[4] = p[res[1]].x;
+                y[4] = p[res[1]].y;
+
+                dx = Math.max(Math.abs(x[1] - x[4]) / 2, 10);
+                dy = Math.max(Math.abs(y[1] - y[4]) / 2, 10);
+
+                /*if (dx !== dy) {
+                 if (dx === 10) {
+                 dx = 50;
+                 }
+                 if (dy === 10) {
+                 dy = 50;
+                 }
+                 }*/
+
+                x[2] = [x[1], x[1], x[1] - dx, x[1] + dx][res[0]].toFixed(3);
+                y[2] = [y[1] - dy, y[1] + dy, y[1], y[1]][res[0]].toFixed(3);
+                x[3] = [0, 0, 0, 0, x[4], x[4], x[4] - dx, x[4] + dx][res[1]].toFixed(3);
+                y[3] = [0, 0, 0, 0, y[1] + dy, y[1] - dy, y[4], y[4]][res[1]].toFixed(3);
             } else {
-                res = d[Math.min.apply(Math, dis)];
+                //when the source and target of the connection is the same
+                x[1] = p[1].x;
+                y[1] = p[1].y;
+                x[4] = p[7].x;
+                y[4] = p[7].y;
+
+                x[2] = bb1.x + bb1.width;
+                y[2] = bb1.y + bb1.height * 1.5;
+
+                x[3] = bb1.x + bb1.width * 1.5;
+                y[3] = bb1.y + bb1.height;
             }
 
-            x[1] = p[res[0]].x;
-            y[1] = p[res[0]].y;
-            x[4] = p[res[1]].x;
-            y[4] = p[res[1]].y;
 
-            dx = Math.max(Math.abs(x[1] - x[4]) / 2, 10);
-            dy = Math.max(Math.abs(y[1] - y[4]) / 2, 10);
 
-            /*if (dx !== dy) {
-                if (dx === 10) {
-                    dx = 50;
-                }
-                if (dy === 10) {
-                    dy = 50;
-                }
-            }*/
-
-            x[2] = [x[1], x[1], x[1] - dx, x[1] + dx][res[0]].toFixed(3);
-            y[2] = [y[1] - dy, y[1] + dy, y[1], y[1]][res[0]].toFixed(3);
-            x[3] = [0, 0, 0, 0, x[4], x[4], x[4] - dx, x[4] + dx][res[1]].toFixed(3);
-            y[3] = [0, 0, 0, 0, y[1] + dy, y[1] - dy, y[4], y[4]][res[1]].toFixed(3);
 
             result.push({"x": parseFloat(x[1].toFixed(3)), "y": parseFloat(y[1].toFixed(3))});
             result.push({"x": parseFloat(x[2]), "y": parseFloat(y[2])});
