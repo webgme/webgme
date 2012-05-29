@@ -77,7 +77,8 @@ var Client = function(host,storage){
     };
     /*private functions*/
     idString = function(){
-        return "["+socket.socket.sessionid+"]";
+        var date = new Date();
+        return "["+socket.socket.sessionid+" | "+date.getTime()+"]";
     };
     printLog = function(text){
         console.log(idString()+" "+text);
