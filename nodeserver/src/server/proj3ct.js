@@ -114,7 +114,9 @@ var TestStorage = function(cProjectName,cBranchName){
             cObjects[id] = null;
             cb();},1);
     };
-
+    this.print = function(){
+        console.log("STORAGE\n"+JSON.stringify(cObjects)+"\nSTORAGE\n");
+    };
     /*private functions*/
 
     /*main*/
@@ -877,8 +879,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         }
     };
     childrenCommand = function(childrencommand,callback){
-        var prefix,
-            status,
+        var status,
             count,
             childrenComplete,
             childrenCreated,
@@ -897,7 +898,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 childrenComplete();
             }
         };
-        rCreateChild = function(parentId,baseId){
+        rCreateChild = function(parentId,baseId,prefix){
             var i;
             count++;
             inheritObject(baseId,prefix,function(err,inherited){
@@ -917,7 +918,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             inherited.relations.parentId = parent[ID];
                             commandBuffer.set(inherited[ID],inherited);
                             for(i=0;i<parent.relations.inheritorIds.length;i++){
-                                rCreateChild(parent.relations.inheritorIds[i],inherited[ID]);
+                                rCreateChild(parent.relations.inheritorIds[i],inherited[ID],i+"_"+prefix);
                             }
                             childrenCreated();
                         }
@@ -928,8 +929,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         /*main*/
         status = true;
         count = 0;
-        prefix = cCid+"_"+childrencommand.cid+"/";
-        rCreateChild(childrencommand.parentId,childrencommand.baseId);
+        rCreateChild(childrencommand.parentId,childrencommand.baseId,cCid+"_"+childrencommand.cid+"/");
     };
     pointCommand = function(pointcommand,callback){
         var fromobj,
@@ -1032,19 +1032,10 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             rReadObject,
             readIds,
             state;
-        objectRead = function(){
-            if(--count === 0){
-                if(state){
-                    cb(null,readIds);
-                }
-                else{
-                    cb(1);
-                }
-            }
-        };
         rReadObject = function(id){
             count++;
             commandBuffer.get(id,function(err,object){
+                var i;
                 if(err){
                     state=false;
                     objectRead();
@@ -1057,6 +1048,16 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     objectRead();
                 }
             });
+        };
+        objectRead = function(){
+            if(--count === 0){
+                if(state){
+                    cb(null,readIds);
+                }
+                else{
+                    cb(1);
+                }
+            }
         };
 
         /*main*/
@@ -1243,7 +1244,6 @@ var Territory = function(cClient,cId){
         };
 
         patternComplete = function(){
-            console.log("kecso2-"+patternCounter);
             if(--patternCounter === 0){
                 updateComplete();
             }
@@ -1256,7 +1256,6 @@ var Territory = function(cClient,cId){
                 updateRule;
 
             ruleComplete = function(){
-                console.log("kecso1-"+ruleCounter);
                 if(--ruleCounter === 0){
                     patternComplete();
                     return;
@@ -1269,15 +1268,12 @@ var Territory = function(cClient,cId){
                     ruleComplete();
                 }
                 else{
-                    console.log("kecso4");
                     storage.get(currentId,function(err,object){
-                        console.log("kecso5");
                         if(err){
                             logger.error("Territory.updatePatterns.updatePattern.updateRule cannot get object "+currentId);
                             ruleComplete();
                         }
                         else{
-                            console.log("kecso3-"+JSON.stringify(object));
                             if(object){
                                 if(insertIntoArray(ruleChains[rulename],currentId)){
                                     addToCurrentList(currentId,object,function(){
