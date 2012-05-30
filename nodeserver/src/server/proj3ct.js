@@ -84,7 +84,7 @@ var commonUtil = require('./../common/CommonUtil.js');
 
 /*COMMON VARIABLES*/
 var STORAGELATENCY = 1;
-LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
+LOGMANAGER.setLogLevel( /*LOGMANAGER.logLevels.ALL*/1 );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
 var ID = "_id";
@@ -748,11 +748,11 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             pastecount,
             callCallBack,
             called,
-            prefix,
             pasteObject,
             objectPasted,
             inheritanceCreated,
-            inheritancecount;
+            inheritancecount,
+            inheritanceArray;
 
         callCallBack = function(){
             if(!called){
@@ -814,25 +814,25 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 }
                 else{
                     newobject = copyObject(object);
-                    newobject[ID] = prefix+newobject[ID];
+                    newobject[ID] = inheritanceArray[newobject[ID]];
                     index = copylist.indexOf(object[ID]);
                     if(index !== -1){
                         copylist[index] = newobject[ID];
                     }
                     /*relations*/
                     newobject.relations.inheritorIds = [];
-                    newobject.relations.parentId = prefix + newobject.relations.parentId;
+                    newobject.relations.parentId = inheritanceArray[newobject.relations.parentId];
                     for(i=0;i<newobject.relations.childrenIds.length;i++){
-                        newobject.relations.childrenIds[i] = prefix + newobject.relations.childrenIds[i];
+                        newobject.relations.childrenIds[i] = inheritanceArray[newobject.relations.childrenIds[i]];
                     }
                     /*pointers*/
                     for(i in newobject.pointers){
                         if(subtreeids.indexOf(newobject.pointers[i].to) !== -1){
-                            newobject.pointers[i].to = prefix + newobject.pointers[i].to;
+                            newobject.pointers[i].to = inheritanceArray[newobject.pointers[i].to];
                         }
                         for(j=0;j<newobject.pointers[i].from.length;j++){
                             if(subtreeids.indexOf(newobject.pointers[i].from[j]) !== -1){
-                                newobject.pointers[i].from[j] = prefix + newobject.pointers[i].from[j];
+                                newobject.pointers[i].from[j] = inheritanceArray[newobject.pointers[i].from[j]];
                             }
                             else{
                                 newobject.pointers[i].from[j] = null;
@@ -856,7 +856,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
 
         /*main*/
         called = false;
-        prefix = cCid+"_"+pastecommand.cid+"/";
+        inheritanceArray = {};
         copylist = cClients[cCid].getCopyList();
         subtreeids = [];
         readcount = copylist.length;
@@ -870,6 +870,9 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     subtreeids = mergeArrays(subtreeids,result);
                     if(--readcount == 0){
                         pastecount = subtreeids.length;
+                        for(j=0;j<subtreeids.length;j++){
+                            inheritanceArray[subtreeids[j]] = commonUtil.guid();
+                        }
                         for(j=0;j<subtreeids.length;j++){
                             pasteObject(subtreeids[j],objectPasted);
                         }
@@ -898,10 +901,10 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 childrenComplete();
             }
         };
-        rCreateChild = function(parentId,baseId,prefix){
+        rCreateChild = function(parentId,baseId){
             var i;
             count++;
-            inheritObject(baseId,prefix,function(err,inherited){
+            inheritObject(baseId,function(err,inherited){
                 if(err){
                     status = false;
                     childrenCreated();
@@ -918,7 +921,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             inherited.relations.parentId = parent[ID];
                             commandBuffer.set(inherited[ID],inherited);
                             for(i=0;i<parent.relations.inheritorIds.length;i++){
-                                rCreateChild(parent.relations.inheritorIds[i],inherited[ID],i+"_"+prefix);
+                                rCreateChild(parent.relations.inheritorIds[i],inherited[ID]);
                             }
                             childrenCreated();
                         }
@@ -1107,7 +1110,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         rReadObject(rootId);
     };
 
-    inheritObject = function(baseId,prefix,cb){
+    inheritObject = function(baseId,cb){
         var i,
             count,
             inheritedobject;
@@ -1117,7 +1120,8 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         readSubTree(baseId,function(err,subTreeIds){
             var quickCopyObject,
                 objectCopied,
-                newobject;
+                newobject,
+                inheritanceArray;
             objectCopied = function(){
                 if(--count === 0){
                     cb(null,inheritedobject);
@@ -1132,20 +1136,20 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     newobject.registry = {};
 
                     if(subTreeIds.indexOf(newobject.relations.parentId) !== -1){
-                        newobject.relations.parentId = prefix + newobject.relations.parentId;
+                        newobject.relations.parentId = inheritanceArray[newobject.relations.parentId];
                     }
                     else{
                         newobject.relations.parentId = null;
                         inheritedobject = newobject;
                     }
                     for(i=0;i<newobject.relations.childrenIds.length;i++){
-                        newobject.relations.childrenIds[i] = prefix + newobject.relations.childrenIds[i];
+                        newobject.relations.childrenIds[i] = inheritanceArray[newobject.relations.childrenIds[i]];
                     }
 
                     newobject.relations.baseId = object[ID];
                     newobject.relations.inheritorIds = [];
 
-                    newobject[ID] = prefix+object[ID];
+                    newobject[ID] = inheritanceArray[object[ID]];
 
                     commandBuffer.set(newobject[ID],newobject);
 
@@ -1159,7 +1163,11 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 cb(1);
             }
             else{
+                inheritanceArray = {};
                 count = subTreeIds.length;
+                for(i=0;i<subTreeIds.length;i++){
+                    inheritanceArray[subTreeIds[i]] = commonUtil.guid();
+                }
                 for(i=0;i<subTreeIds.length;i++){
                     quickCopyObject(subTreeIds[i]);
                 }

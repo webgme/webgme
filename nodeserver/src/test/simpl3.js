@@ -16,8 +16,18 @@ internal command format:
  */
 var io = require('socket.io-client');
 var fs=require('fs');
+var logfile;
+var Log = function(text){
+    //return;
+    var file ="";
+    try{
+        file = fs.readFileSync(logfile,"utf8");
+    }
+    catch(e){}
+    file+=text+"\n";
+    fs.writeFileSync(logfile,file,"utf8");
+};
 var Client = function(host,storage){
-    console.log(host);
     var options = {
             transports: ['websocket'],
             'force new connection': true
@@ -81,11 +91,11 @@ var Client = function(host,storage){
         return "["+socket.socket.sessionid+" | "+date.getTime()+"]";
     };
     printLog = function(text){
-        console.log(idString()+" "+text);
+        Log(idString()+" "+text);
     };
     /*socket functions*/
     socket.on('connect',function(msg){
-        console.log("connected");
+        Log("connected");
         state = "ready";
     });
     socket.on('clientMessageAck',function(msg){
@@ -143,7 +153,7 @@ var Test = function(host,tc){
         }
     };
     testFailed = function(){
-        console.log("the test failed");
+        Log("the test failed");
         process.exit(0);
     }
     processLine = function(){
@@ -216,7 +226,7 @@ var Test = function(host,tc){
                 line = line.slice(0,line.lastIndexOf(","));
             }
             line+="]";
-            console.log(line);
+            Log(line);
         };
         rPrintConatinment = function(id){
             var i;
@@ -229,7 +239,7 @@ var Test = function(host,tc){
         };
 
         /*main*/
-        console.log("Object containment information:");
+        Log("Object containment information:");
         rPrintConatinment("root");
     };
     printObjects = function(){
@@ -242,10 +252,10 @@ var Test = function(host,tc){
         if(i !== -1){
             line = line.slice(0,i);
         }
-        console.log(line);
+        Log(line);
     };
     printVariables = function(){
-        console.log("VARIABLES: "+JSON.stringify(variables));
+        Log("VARIABLES: "+JSON.stringify(variables));
     };
     setVariable = function(pattern,name){
         var i;
@@ -280,8 +290,9 @@ var i,
     arguments = process.argv.splice(" "),
     clients = {},
     objects = {};
-if(arguments.length !== 4){
-    console.log("nem igy kell!!! -> parancs host tc");
+if(arguments.length !== 5){
+    console.log("nem igy kell!!! -> parancs host tc logfile");
     process.exit(0);
 }
+logfile = arguments[4];
 var test = new Test(arguments[2],fs.readFileSync(arguments[3],"utf8").split("\n"));
