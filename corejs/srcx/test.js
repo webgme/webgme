@@ -33,15 +33,20 @@ requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 				tree.loadRoot(tree.getKey(root), function(err, root) {
 					ASSERT(!err);
 
-					tree.mutate(root);
-					var second = tree.createChild(root, "2");
-					tree.addKey(second);
-					
-					tree.persist(root, function(err) {
-						ASSERT(!err);
+//					tree.mutate(root);
+					tree.loadChild(root, "1", function(err, first) {
+						tree.mutate(first);
+						var second = tree.createChild(root, "2");
+						tree.addKey(second);
+						tree.setProperty(second, "name", "second");
+						tree.setProperty(first, "name", "first prime");
+						
+						tree.persist(root, function(err) {
+							ASSERT(!err);
 
-						mongo.dumpAll(function () {
-							mongo.close();
+							mongo.dumpAll(function () {
+								mongo.close();
+							});
 						});
 					});
 				});
