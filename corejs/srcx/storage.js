@@ -456,29 +456,38 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 			return {
 				data: data,
-				parent: null
+				parent: null,
+				relid: undefined
 			};
 		};
 
-		this.createChild = function (node, relid, data) {
+		this.createChild = function (node, relid) {
 			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
 			ASSERT(typeof relid === "string");
-			ASSERT(!data || typeof data === "object");
 
-			if( data ) {
-				data._mutable = true;
-			}
-			else {
-				data = {
-					_mutable: true
-				};
-			}
+			this.mutate(node);
 
+			var data = {
+				_mutable: true
+			};
 			node.data[relid] = data;
 
 			return {
 				data: data,
+				parent: node,
+				relid: relid
+			};
+		};
+
+		this.getChild = function (node, relid) {
+			ASSERT_NODE(node);
+			ASSERT(typeof relid === "string");
+
+			var child = node.data[relid];
+			ASSERT(child && typeof child === "object");
+
+			return {
+				data: child,
 				parent: node,
 				relid: relid
 			};
@@ -500,7 +509,8 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 				ASSERT(err || storage.getKey(data) === key);
 				callback(err, err ? undefined : {
 					data: data,
-					parent: null
+					parent: null,
+					relid: undefined
 				});
 			});
 		};
@@ -535,6 +545,45 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		this.getParent = function (node) {
 			ASSERT_NODE(node);
 			return node.parent;
+		};
+
+		this.delParent = function (node) {
+			ASSERT_NODE(node);
+			ASSERT_NODE(node.parent);
+
+			this.mutate(node.parent);
+			delete node.parent.data[node.relid];
+
+			node.parent = null;
+			node.relid = undefined;
+		};
+
+		this.setParent = function (node, parent, relid) {
+			ASSERT_NODE(node);
+			ASSERT(node.parent === null && !node.relid);
+			ASSERT(relid && typeof relid === "string");
+
+			this.mutate(parent);
+			parent.data[relid] = node.data;
+
+			node.parent = parent;
+			node.relid = relid;
+		};
+
+		this.getPath = function (node) {
+			ASSERT_NODE(node);
+
+			var path = [];
+			while( node.parent ) {
+				path.push(node.relid);
+				node = node.parent;
+			}
+			return path;
+		};
+
+		this.getRelid = function (node) {
+			ASSERT_NODE(node);
+			return node.relid;
 		};
 
 		this.isMutable = function (node) {
@@ -636,6 +685,10 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			var key = saver.save(node.data);
 			saver.done(null);
 
+			if( node.parent ) {
+				node.parent.data[node.relid] = key;
+			}
+			
 			return key;
 		};
 
@@ -648,17 +701,17 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 		this.setProperty = function (node, name, value) {
 			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
 			ASSERT(typeof name === "string");
 
+			this.mutate(node);
 			node.data[name] = value;
 		};
 
 		this.delProperty = function (node, name) {
 			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
 			ASSERT(typeof name === "string");
 
+			this.mutate(node);
 			delete node.data[name];
 		};
 	};
@@ -676,7 +729,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 				if( !relid || data[relid] !== undefined ) {
 					// TODO: infinite cycle?
 					do {
-						relid = Math.floor(Math.random() * RELID.maxRelid);
+						relid = (Math.floor(Math.random() * maxRelid)).toString();
 					} while( data[relid] !== undefined );
 				}
 
@@ -694,20 +747,15 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 	var Branch = function (tree) {
 
 		this.getKey = tree.getKey;
+		this.getRoot = tree.loadRoot;
 
-		this.loadRoot = tree.loadRoot;
-
+		this.load = tree.loadRoot;
+		
 		this.create = function () {
-			return {
-				parent: null,
-				data: {
-					_mutable: true,
-					children: {},
-					attributes: {
-						_mutable: true
-					}
-				}
-			};
+			var root = tree.createRoot();
+			tree.createChild(root, "attributes");
+
+			return root;
 		};
 
 		var ChildrenLoader = function (callback) {
@@ -738,7 +786,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			};
 		};
 
-		this.loadChildren = function (node, callback) {
+		this.getChildren = function (node, callback) {
 			ASSERT(node && callback);
 
 			var loader = new ChildrenLoader(callback);
@@ -753,59 +801,50 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			loader.done(null);
 		};
 
-		this.loadChild = tree.loadChild;
+		this.getChild = tree.loadChild;
 
-		// --- containment
-
-		this.getPath = function (node) {
-			ASSERT(node);
-
-			var path = [];
-			while( node.parent ) {
-				path.push(node.relid);
-				node = node.parent;
-			}
-			return path;
-		};
-
-		this.getParent = function (node) {
-			ASSERT(node);
-
-			return node.parent;
-		};
-
-		this.getRelid = function (node) {
-			ASSERT(node);
-
-			return node.relid;
-		};
+		this.getParent = tree.getParent;
+		this.getPath = tree.getPath;
+		this.getRelid = tree.getRelid;
 
 		this.detach = function (node) {
-			ASSERT(node && node.parent && node.relid);
+			ASSERT(tree.getParent(node) !== null);
 
-			tree.mutate(node.parent);
-			tree.deleteChild(node.parent, node.relid);
-
-			node.parent = null;
-			delete node.relid;
+			tree.delParent(node);
 		};
 
-		this.attach = function (parent, node) {
-			ASSERT(parent && node);
-			ASSERT(node.parent === null && !node.relid);
+		this.attach = function (node, parent) {
+			ASSERT(node && parent);
+			ASSERT(tree.getParent(node) === null);
 
-			node.relid = RELID.create(parent.data);
-
-			tree.mutate(parent);
-			tree.addChild(parent, node.relid, node.data);
-
-			node.parent = parent;
+			var relid = RELID.create(parent.data);
+			tree.setParent(node, parent, relid);
 		};
 
-		this.move = function (parent, node) {
+		this.copy = function (node, parent) {
+			ASSERT(node && parent);
+
+			var relid = RELID.create(parent.data);
+			tree.copy(node, parent, relid);
 		};
 
-		this.copy = function (parent, node) {
+		this.getAttribute = function (node, name) {
+			return tree.getProperty(tree.getChild(node, "attributes"), name);
+		};
+
+		this.delAttribute = function (node, name) {
+			return tree.delProperty(tree.getChild(node, "attributes"), name);
+		};
+
+		this.setAttribute = function (node, name, value) {
+			return tree.setProperty(tree.getChild(node, "attributes"), name, value);
+		};
+		
+		this.persist = function(root, callback) {
+			ASSERT(root && callback);
+			ASSERT(tree.getParent(root) === null);
+			
+			tree.persist(root, callback);
 		};
 	};
 
@@ -815,6 +854,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		Mongo: Mongo,
 		Graph: Graph,
 		Tree: Tree,
-		PersistentTree: PersistentTree
+		PersistentTree: PersistentTree,
+		Branch: Branch
 	};
 });

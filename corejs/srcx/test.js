@@ -20,33 +20,30 @@ requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 		mongo.removeAll(function (err) {
 			ASSERT(!err);
 			
-			var tree = new STORAGE.PersistentTree(mongo);
-			var root = tree.createRoot();
-			tree.setProperty(root, "name", "root");
-			var first = tree.createChild(root, "1");
-			tree.addKey(first);
-			tree.setProperty(first, "name", "first");
+			var branch = new STORAGE.Branch(new STORAGE.PersistentTree(mongo));
+			var root = branch.create();
+			branch.setAttribute(root, "name", "root");
 			
-			tree.persist(root, function(err) {
+			var first = branch.create();
+			branch.setAttribute(first, "name", "first");
+			branch.attach(first, root);
+			
+			var second = branch.create();
+			branch.setAttribute(second, "name", "second");
+			branch.attach(second, root);
+			
+			branch.persist(root, function(err) {
 				ASSERT(!err);
 
-				tree.loadRoot(tree.getKey(root), function(err, root) {
+				branch.load(branch.getKey(root), function(err, root) {
 					ASSERT(!err);
-
-//					tree.mutate(root);
-					tree.loadChild(root, "1", function(err, first) {
-						tree.mutate(first);
-						var second = tree.createChild(root, "2");
-						tree.addKey(second);
-						tree.setProperty(second, "name", "second");
-						tree.setProperty(first, "name", "first prime");
+					
+					branch.setAttribute(root, "name", "root2");
+					branch.persist(root, function(err) {
+						ASSERT(!err);
 						
-						tree.persist(root, function(err) {
-							ASSERT(!err);
-
-							mongo.dumpAll(function () {
-								mongo.close();
-							});
+						mongo.dumpAll(function () {
+							mongo.close();
 						});
 					});
 				});
