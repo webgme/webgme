@@ -1109,7 +1109,6 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         readIds = [];
         rReadObject(rootId);
     };
-
     inheritObject = function(baseId,cb){
         var i,
             count,
