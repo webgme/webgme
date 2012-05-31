@@ -404,6 +404,39 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', '/socket.io/socket
      but only through functions
      this way all modifications will be visible
      */
+    ClientNode = function(client,id,storage){
+        var selfdata,
+            ;
+        /*public funcitons*/
+        this.isDeleted = function(){
+            return selfdata === null;
+        };
+        this.getParentId = function(){
+            return selfdata.relations.parentId;
+        };
+        this.getChildrenIds = function(){
+            return selfdata.relations.childrenIds;
+        };
+        this.getBaseId = function(){
+            return selfdata.relations.baseId;
+        };
+        this.getInheritorIds = function(){
+            return selfdata.relations.inheritorIds;
+        };
+        this.getAttribute = function(name){
+
+        };
+        this.getRegistry = function(name){
+
+        };
+
+        /*private functions*/
+
+
+        /*main*/
+        selfdata = storage.get(id);
+
+    };
     ClientNode = function(_client,_id,_storage){
 
         /*public interface*/
