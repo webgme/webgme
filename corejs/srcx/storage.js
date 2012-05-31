@@ -133,275 +133,23 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 	// ----------------- deepclone -----------------
 
 	var deepclone = function (o) {
-		var c = {};
-		for( var k in o ) {
-			var v = o[k];
-			c[k] = (v && typeof v === "object") ? deepclone(v) : v;
-		}
-		return c;
-	};
-
-	// ----------------- Graph -----------------
-
-	var Graph = function (storage) {
-		ASSERT(storage);
-
-		this.getKey = storage.getKey;
-
-		this.isMutable = function (node) {
-			return !storage.getKey(node);
-		};
-
-		this.create = function () {
-			return {
-				children: {}
-			};
-		};
-
-		this.getNode = storage.load;
-
-		this.mutate = deepclone;
-
-		var Saver = function (callback) {
-			ASSERT(callback);
-
-			var counter = 1;
-			var error = null;
-
-			this.start = function () {
-				ASSERT(callback && counter >= 1);
-
-				++counter;
-			};
-
-			this.done = function (err) {
-				ASSERT(callback && counter >= 1);
-
-				error = error || err;
-				if( --counter === 0 ) {
-					callback(error);
-					callback = null;
+		var c, k;
+		if( o && typeof o === "object" ) {
+			if( o.constructor !== Array ) {
+				c = {};
+				for( k in o ) {
+					c[k] = deepclone(o[k]);
 				}
-			};
-		};
-
-		Saver.prototype.save = function (node) {
-			ASSERT(node && node.children);
-
-			var key = storage.getKey(node);
-			if( !key ) {
-				var children = node.children;
-				for( var relid in children ) {
-					var child = children[relid];
-					if( typeof child !== "string" ) {
-						child = this.save(child);
-						ASSERT(typeof child === "string");
-						children[relid] = child;
-					}
-				}
-
-				key = SHA1(JSON.stringify(node));
-
-				ASSERT(!storage.getKey(node));
-				storage.setKey(node, key);
-
-				this.start();
-				storage.save(node, this.done);
-			}
-			return key;
-		};
-
-		this.persist = function (node, callback) {
-			ASSERT(node && callback);
-
-			var saver = new Saver(callback);
-			saver.save(node);
-			saver.done(null);
-		};
-
-		this.getData = function (node, name) {
-			ASSERT(typeof name === "string");
-			ASSERT(name !== "children");
-
-			return node[name];
-		};
-
-		this.setData = function (node, name, data) {
-			ASSERT(this.isMutable(node));
-			ASSERT(typeof name === "string");
-			ASSERT(name !== "children");
-
-			node[name] = data;
-		};
-
-		this.delData = function (node, name) {
-			ASSERT(this.isMutable(node));
-			ASSERT(typeof name === "string");
-			ASSERT(name !== "children");
-
-			delete node[name];
-		};
-
-		this.getChildren = function (node) {
-			ASSERT(node && node.children);
-
-			return node.children;
-		};
-
-		this.getChild = function (node, relid, callback) {
-			ASSERT(node && node.children);
-
-			var child = node.children[relid];
-			if( typeof child === "string" ) {
-				storage.load(child, callback);
 			}
 			else {
-				ASSERT(child && child.children);
-				ASSERT(this.isMutable(node));
-
-				callback(null, child);
-			}
-		};
-
-		this.setChild = function (node, relid, child) {
-			ASSERT(node && node.children);
-			ASSERT(child && child.children);
-			ASSERT(this.isMutable(node));
-
-			node.children[relid] = child;
-		};
-
-		this.delChild = function (node, relid) {
-			ASSERT(node && node.children);
-			ASSERT(this.isMutable(node));
-
-			delete node.children[relid];
-		};
-	};
-
-	// ----------------- Tree -----------------
-
-	var Tree = function (graph) {
-		ASSERT(graph);
-
-		this.isMutable = function (node) {
-			ASSERT(node && node.data);
-			return graph.isMutable(node.data);
-		};
-
-		this.getRoot = function (key, callback) {
-			ASSERT(callback);
-
-			graph.getNode(key, function (err, data) {
-				callback(err, err ? undefined : {
-					data: data,
-					parent: null
-				});
-			});
-		};
-
-		/**
-		 * Nodes can become invalid in two ways. 1) We request the same child of
-		 * a parent twice and modify one of them, then the other will not
-		 * reflect the same modified data but the stale old data. 2) We could
-		 * remove nodes or change branches completely which creates dangling
-		 * nodes.
-		 */
-		this.isValid = function (node) {
-			ASSERT(node && node.data);
-
-			while( node.parent ) {
-				ASSERT(typeof node.relid === "string" && node.parent.data);
-				var child = graph.getChildren(node.parent.data)[node.relid];
-
-				if( typeof child === "string" ) {
-					ASSERT(child === graph.getKey(node.data));
-				}
-				else if( child !== node.data ) {
-					return false;
-				}
-
-				node = node.parent;
-			}
-
-			return true;
-		};
-
-		this.mutate = function (node) {
-			ASSERT(this.isValid(node));
-
-			if( !graph.isMutable(node.data) ) {
-				node.data = graph.mutate(node.data);
-
-				while( node.parent && !graph.isMutable(node.parent.data) ) {
-					node.parent.data = graph.mutate(node.parent.data);
-					graph.setChild(node.parent.data, node.relid, node.data);
-
-					node = node.parent;
+				c = [];
+				for( k = 0; k < o.length; ++k ) {
+					c.push(deepclone(o[k]));
 				}
 			}
-		};
-
-		this.persist = function (node, callback) {
-			ASSERT(this.isValid(node));
-			ASSERT(this.isMutable(node));
-
-			graph.persist(node.data, callback);
-		};
-
-		this.getChildren = function (node) {
-			ASSERT(this.isValid(node));
-
-			return graph.getChildren(node.data);
-		};
-
-		this.getChild = function (node, relid, callback) {
-			ASSERT(this.isValid(node));
-			ASSERT(callback);
-
-			graph.getChild(node.data, relid, function (err, data) {
-				callback(err, err ? undefined : {
-					data: data,
-					parent: node,
-					relid: relid
-				});
-			});
-		};
-
-		this.setChild = function (node, relid, child) {
-			ASSERT(this.isValid(node));
-			ASSERT(this.isValid(child));
-			ASSERT(this.isMutable(node));
-
-			graph.setChild(node.data, relid, child.data);
-		};
-
-		this.delChild = function (node, relid) {
-			ASSERT(this.isValid(node));
-			ASSERT(this.isMutable(node));
-
-			graph.delChild(node.data, relid);
-		};
-
-		this.getData = function (node, name) {
-			ASSERT(this.isValid(node));
-
-			graph.getData(node.data, name);
-		};
-
-		this.setData = function (node, name, data) {
-			ASSERT(this.isValid(node));
-			ASSERT(this.isMutable(node));
-
-			graph.setData(node.data, name, data);
-		};
-
-		this.delData = function (node, name) {
-			ASSERT(this.isValid(node));
-			ASSERT(this.isMutable(node));
-
-			graph.delData(node.data, name);
-		};
+			return c;
+		}
+		return o;
 	};
 
 	// ----------------- PersistentTree -----------------
@@ -542,6 +290,61 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			}
 		};
 
+		this.loadByPath = function (node, path, callback) {
+			ASSERT_NODE(node);
+			ASSERT(typeof path === "string" || path.constructor === Array);
+			ASSERT(callback);
+
+			if( typeof path === "string" ) {
+				path = this.parseStringPath(path);
+			}
+
+			var index = path.length;
+			var relid;
+
+			var done = function (err, data) {
+				if( err ) {
+					callback(err);
+					return;
+				}
+
+				ASSERT(storage.getKey(data) === node.data[relid]);
+				node = {
+					data: data,
+					parent: node,
+					relid: relid
+				};
+
+				next();
+			};
+
+			var next = function () {
+				while( index !== 0 ) {
+					ASSERT_NODE(node);
+
+					relid = path[--index];
+					ASSERT(typeof relid === "string");
+
+					var child = node.data[relid];
+					ASSERT(child && (typeof child === "object" || typeof child === "string"));
+
+					if( typeof child === "string" ) {
+						storage.load(child, done);
+						return;
+					}
+
+					node = {
+						data: child,
+						parent: node,
+						relid: relid
+					};
+				}
+				callback(null, node);
+			};
+
+			next();
+		};
+
 		this.getParent = function (node) {
 			ASSERT_NODE(node);
 			return node.parent;
@@ -578,12 +381,47 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 				path.push(node.relid);
 				node = node.parent;
 			}
+
 			return path;
+		};
+
+		this.getStringPath = function (node) {
+			ASSERT_NODE(node);
+
+			var empty = "";
+			var path = empty;
+			while( node.parent ) {
+				if( path === empty ) {
+					path = node.relid;
+				}
+				else {
+					path = path + "/" + node.relid;
+				}
+				node = node.parent;
+			}
+
+			return path;
+		};
+
+		this.parseStringPath = function (path) {
+			ASSERT(path && typeof path === "string");
+
+			return path.length === 0 ? [] : path.split("/");
 		};
 
 		this.getRelid = function (node) {
 			ASSERT_NODE(node);
 			return node.relid;
+		};
+
+		this.getRoot = function (node) {
+			ASSERT_NODE(node);
+
+			while( node.parent ) {
+				node = node.parent;
+			}
+
+			return node;
 		};
 
 		this.isMutable = function (node) {
@@ -688,7 +526,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			if( node.parent ) {
 				node.parent.data[node.relid] = key;
 			}
-			
+
 			return key;
 		};
 
@@ -714,12 +552,104 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			this.mutate(node);
 			delete node.data[name];
 		};
+
+		this.getProperty2 = function (node, name1, name2) {
+			ASSERT_NODE(node);
+			ASSERT(typeof name1 === "string");
+			ASSERT(typeof name2 === "string");
+
+			return node.data[name1][name2];
+		};
+
+		this.setProperty2 = function (node, name1, name2, value) {
+			ASSERT_NODE(node);
+			ASSERT(typeof name1 === "string");
+			ASSERT(typeof name2 === "string");
+
+			node = this.getChild(node, name1);
+			this.mutate(node);
+			node.data[name2] = value;
+		};
+
+		this.delProperty2 = function (node, name1, name2) {
+			ASSERT_NODE(node);
+			ASSERT(typeof name1 === "string");
+			ASSERT(typeof name2 === "string");
+
+			node = this.getChild(node, name1);
+			this.mutate(node);
+			delete node.data[name2];
+		};
+
+		this.dumpTree = function (key, callback) {
+			ASSERT(key && typeof key === "string");
+			ASSERT(callback);
+
+			var root = null;
+			var error = null;
+			var counter = 1;
+
+			var decrease = function () {
+				if( --counter === 0 ) {
+					console.log(JSON.stringify(root, null, '\t'));
+
+					callback(error, root);
+					callback = null;
+				}
+			};
+
+			var load = function (data, relid) {
+				ASSERT(data && typeof data === "object");
+				ASSERT(typeof relid === "string");
+
+				var key = data[relid];
+				ASSERT(typeof key === "string" && key.length === 40);
+
+				++counter;
+				storage.load(key, function (err, child) {
+					error = error || err;
+
+					var copy = deepclone(child);
+
+					data[relid] = copy;
+					scan(copy);
+
+					// copy.id = storage.getKey(child);
+					decrease();
+				});
+			};
+
+			var scan = function (data) {
+				ASSERT(data && typeof data === "object");
+
+				for( var relid in data ) {
+					var child = data[relid];
+
+					if( typeof child === "string" && child.length === 40 ) {
+						load(data, relid);
+					}
+					else if( child && typeof child === "object" ) {
+						scan(child);
+					}
+				}
+			};
+
+			storage.load(key, function (err, data) {
+				ASSERT(err || storage.getKey(data) === key);
+
+				root = deepclone(data);
+				scan(root);
+
+				decrease();
+			});
+		};
 	};
 
 	// ----------------- RELID -----------------
 
 	var RELID = (function () {
-		var maxRelid = Math.pow(2, 31);
+		// var maxRelid = Math.pow(2, 31);
+		var maxRelid = 1000;
 
 		return {
 			create: function (data, relid) {
@@ -727,7 +657,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 				ASSERT(relid === undefined || typeof relid === "string");
 
 				if( !relid || data[relid] !== undefined ) {
-					// TODO: infinite cycle?
+					// TODO: detect infinite cycle?
 					do {
 						relid = (Math.floor(Math.random() * maxRelid)).toString();
 					} while( data[relid] !== undefined );
@@ -747,13 +677,14 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 	var Branch = function (tree) {
 
 		this.getKey = tree.getKey;
-		this.getRoot = tree.loadRoot;
 
-		this.load = tree.loadRoot;
-		
-		this.create = function () {
+		this.loadRoot = tree.loadRoot;
+
+		this.createNode = function () {
 			var root = tree.createRoot();
 			tree.createChild(root, "attributes");
+			tree.createChild(root, "pointers");
+			tree.createChild(root, "collections");
 
 			return root;
 		};
@@ -775,7 +706,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 				ASSERT(callback && counter >= 1);
 
 				error = error || err;
-				if( !err ) {
+				if( child ) {
 					children.push(child);
 				}
 
@@ -786,7 +717,7 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			};
 		};
 
-		this.getChildren = function (node, callback) {
+		this.loadChildren = function (node, callback) {
 			ASSERT(node && callback);
 
 			var loader = new ChildrenLoader(callback);
@@ -801,11 +732,12 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 			loader.done(null);
 		};
 
-		this.getChild = tree.loadChild;
+		this.loadChild = tree.loadChild;
 
 		this.getParent = tree.getParent;
-		this.getPath = tree.getPath;
 		this.getRelid = tree.getRelid;
+		this.getRoot = tree.getRoot;
+		this.getPath = tree.getStringPath;
 
 		this.detach = function (node) {
 			ASSERT(tree.getParent(node) !== null);
@@ -829,22 +761,136 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 		};
 
 		this.getAttribute = function (node, name) {
-			return tree.getProperty(tree.getChild(node, "attributes"), name);
+			return tree.getProperty2(node, "attributes", name);
 		};
 
 		this.delAttribute = function (node, name) {
-			return tree.delProperty(tree.getChild(node, "attributes"), name);
+			tree.delProperty2(node, "attributes", name);
 		};
 
 		this.setAttribute = function (node, name, value) {
-			return tree.setProperty(tree.getChild(node, "attributes"), name, value);
+			tree.setProperty2(node, "attributes", name, value);
 		};
-		
-		this.persist = function(root, callback) {
+
+		this.persist = function (root, callback) {
 			ASSERT(root && callback);
 			ASSERT(tree.getParent(root) === null);
-			
+
 			tree.persist(root, callback);
+		};
+
+		this.loadPointer = function (node, name, callback) {
+			ASSERT(node && name && callback);
+
+			var path = tree.getProperty2(node, "pointers", name);
+			if( path === undefined ) {
+				callback(null, null);
+			}
+			else {
+				ASSERT(typeof path === "string");
+
+				var root = tree.getRoot(node);
+				tree.loadByPath(root, path, callback);
+			}
+		};
+
+		this.setPointer = function (node, name, target, callback) {
+			ASSERT(node && name && target && callback);
+
+			var array, collections, targetpath;
+			
+			var root = tree.getRoot(node);
+			var pointers = tree.getChild(node, "pointers");
+			var nodepath = tree.getStringPath(node);
+
+			var setter = function() {
+				collections = tree.getChild(target, "collections");
+
+				array = tree.getProperty(collections, name);
+				ASSERT(array === undefined || array.constructor === Array);
+
+				if( array ) {
+					array = array.slice(0);
+					array.push(nodepath);
+				}
+				else {
+					array = [ nodepath ];
+				}
+
+				tree.setProperty(collections, name, array);
+
+				targetpath = tree.getStringPath(target);
+				tree.setProperty(pointers, name, targetpath);
+				
+				callback(null);
+			};
+			
+			targetpath = tree.getProperty(pointers, name);
+			ASSERT(targetpath === undefined || typeof targetpath === "string");
+
+			if( targetpath ) {
+				tree.loadByPath(root, targetpath, function (err, target) {
+					if( err ) {
+						callback(err);
+					}
+					else {
+						collections = tree.getChild(target, "collections");
+
+						array = tree.getProperty(collections, name);
+						ASSERT(array.constructor === Array);
+
+						var index = array.indexOf(nodepath);
+						ASSERT(index >= 0);
+
+						array.slice(0);
+						array.splice(index, 1);
+
+						tree.setProperty(collections, name, array);
+						tree.delProperty(pointers, name);
+
+						setter();
+					}
+				});
+			}
+			else {
+				setter();
+			}
+		};
+
+		this.delPointer = function (node, name, callback) {
+			ASSERT(node && name && callback);
+
+			var pointers = tree.getChild(node, "pointers");
+
+			var targetpath = tree.getProperty(pointers, name);
+			ASSERT(targetpath === undefined || typeof targetpath === "string");
+
+			if( targetpath ) {
+				var root = tree.getRoot(node);
+				tree.loadByPath(root, targetpath, function (err, target) {
+					if( err ) {
+						callback(err);
+					}
+					else {
+						var collections = tree.getChild(target, "collections");
+
+						var array = tree.getProperty(collections, name);
+						ASSERT(array.constructor === Array);
+
+						var nodepath = tree.getStringPath(node);
+						var index = array.indexOf(nodepath);
+						ASSERT(index >= 0);
+
+						array.slice(0);
+						array.splice(index, 1);
+
+						tree.setProperty(collections, name, array);
+						tree.delProperty(pointers, name);
+						
+						callback(null);
+					}
+				});
+			}
 		};
 	};
 
@@ -852,8 +898,6 @@ define([ "assert", "mongodb", "sha1", "config" ], function (ASSERT, MONGODB, SHA
 
 	return {
 		Mongo: Mongo,
-		Graph: Graph,
-		Tree: Tree,
 		PersistentTree: PersistentTree,
 		Branch: Branch
 	};

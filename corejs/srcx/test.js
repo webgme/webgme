@@ -20,30 +20,57 @@ requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
 		mongo.removeAll(function (err) {
 			ASSERT(!err);
 			
-			var branch = new STORAGE.Branch(new STORAGE.PersistentTree(mongo));
-			var root = branch.create();
+			var tree = new STORAGE.PersistentTree(mongo);
+			var branch = new STORAGE.Branch(tree);
+			var root = branch.createNode();
 			branch.setAttribute(root, "name", "root");
 			
-			var first = branch.create();
+			var first = branch.createNode();
 			branch.setAttribute(first, "name", "first");
 			branch.attach(first, root);
 			
-			var second = branch.create();
+			var second = branch.createNode();
 			branch.setAttribute(second, "name", "second");
 			branch.attach(second, root);
 			
-			branch.persist(root, function(err) {
+			branch.setPointer(first, "ref", second, function(err) {
 				ASSERT(!err);
 
-				branch.load(branch.getKey(root), function(err, root) {
+				branch.persist(root, function(err) {
 					ASSERT(!err);
-					
-					branch.setAttribute(root, "name", "root2");
-					branch.persist(root, function(err) {
+
+					branch.loadRoot(branch.getKey(root), function(err, root) {
 						ASSERT(!err);
 						
-						mongo.dumpAll(function () {
-							mongo.close();
+						branch.setAttribute(root, "name", "root hmm");
+						branch.loadChildren(root, function(err, children) {
+							ASSERT(!err);
+
+							for(var i = 0; i < children.length; ++i) {
+								var child = children[i];
+
+								if(branch.getAttribute(child, "name") === "first") {
+									first = child;
+								}
+								
+								branch.setAttribute(child, "name", branch.getAttribute(child, "name") + " hihi");
+							}
+
+							branch.loadPointer(first, "ref", function(err, second) {
+								ASSERT(!err);
+								
+								branch.setAttribute(second, "apple", "apple");
+								
+								branch.persist(root, function(err) {
+									ASSERT(!err);
+									
+//									mongo.dumpAll(function () {
+									tree.dumpTree(branch.getKey(root), function(err) {
+										ASSERT(!err);
+										mongo.close();
+									});
+								});
+							});
 						});
 					});
 				});
