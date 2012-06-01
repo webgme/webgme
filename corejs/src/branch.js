@@ -36,15 +36,21 @@ define([ "assert" ], function (ASSERT) {
 
 	var Branch = function (tree) {
 
+		var ATTRIBUTES = "attr";
+		var POINTERS = "ptr";
+		var COLLECTIONS = "coll";
+		var REGISTRY = "reg";
+		
 		this.getKey = tree.getKey;
 
 		this.loadRoot = tree.loadRoot;
 
 		this.createNode = function () {
 			var root = tree.createRoot();
-			tree.createChild(root, "attributes");
-			tree.createChild(root, "pointers");
-			tree.createChild(root, "collections");
+			tree.createChild(root, ATTRIBUTES);
+			tree.createChild(root, REGISTRY);
+			tree.createChild(root, POINTERS);
+			tree.createChild(root, COLLECTIONS);
 
 			return root;
 		};
@@ -121,15 +127,27 @@ define([ "assert" ], function (ASSERT) {
 		};
 
 		this.getAttribute = function (node, name) {
-			return tree.getProperty2(node, "attributes", name);
+			return tree.getProperty2(node, ATTRIBUTES, name);
 		};
 
 		this.delAttribute = function (node, name) {
-			tree.delProperty2(node, "attributes", name);
+			tree.delProperty2(node, ATTRIBUTES, name);
 		};
 
 		this.setAttribute = function (node, name, value) {
-			tree.setProperty2(node, "attributes", name, value);
+			tree.setProperty2(node, ATTRIBUTES, name, value);
+		};
+
+		this.getRegistry = function (node, name) {
+			return tree.getProperty2(node, REGISTRY, name);
+		};
+
+		this.delRegistry = function (node, name) {
+			tree.delProperty2(node, REGISTRY, name);
+		};
+
+		this.setRegistry = function (node, name, value) {
+			tree.setProperty2(node, REGISTRY, name, value);
 		};
 
 		this.persist = function (root, callback) {
@@ -142,7 +160,7 @@ define([ "assert" ], function (ASSERT) {
 		this.loadPointer = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
-			var path = tree.getProperty2(node, "pointers", name);
+			var path = tree.getProperty2(node, POINTERS, name);
 			if( path === undefined ) {
 				callback(null, null);
 			}
@@ -160,11 +178,11 @@ define([ "assert" ], function (ASSERT) {
 			var array, collections, targetpath;
 
 			var root = tree.getRoot(node);
-			var pointers = tree.getChild(node, "pointers");
+			var pointers = tree.getChild(node, POINTERS);
 			var nodepath = tree.getStringPath(node);
 
 			var setter = function () {
-				collections = tree.getChild(target, "collections");
+				collections = tree.getChild(target, COLLECTIONS);
 
 				array = tree.getProperty(collections, name);
 				ASSERT(array === undefined || array.constructor === Array);
@@ -194,7 +212,7 @@ define([ "assert" ], function (ASSERT) {
 						callback(err);
 					}
 					else {
-						collections = tree.getChild(oldtarget, "collections");
+						collections = tree.getChild(oldtarget, COLLECTIONS);
 
 						array = tree.getProperty(collections, name);
 						ASSERT(array.constructor === Array);
@@ -220,7 +238,7 @@ define([ "assert" ], function (ASSERT) {
 		this.delPointer = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
-			var pointers = tree.getChild(node, "pointers");
+			var pointers = tree.getChild(node, POINTERS);
 
 			var targetpath = tree.getProperty(pointers, name);
 			ASSERT(targetpath === undefined || typeof targetpath === "string");
@@ -232,7 +250,7 @@ define([ "assert" ], function (ASSERT) {
 						callback(err);
 					}
 					else {
-						var collections = tree.getChild(target, "collections");
+						var collections = tree.getChild(target, COLLECTIONS);
 
 						var array = tree.getProperty(collections, name);
 						ASSERT(array.constructor === Array);

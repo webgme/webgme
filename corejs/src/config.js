@@ -13,6 +13,16 @@ define(function () {
 			port: 27017,
 			database: "test",
 			collection: "storage"
+		},
+		
+		copy: function(defaults, options) {
+			options = options || {};
+			for(var key in defaults) {
+				if(!options.hasOwnProperty(key)) {
+					options[key] = defaults[key];
+				}
+			}
+			return options;
 		}
 	};
 });

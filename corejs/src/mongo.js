@@ -7,12 +7,14 @@
 define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 	"use strict";
 
-	var Mongo = function () {
+	var Mongo = function (options) {
 		var database = null, collection = null;
-
+		
+		options = CONFIG.copy(CONFIG.mongodb, options);
+		
 		this.open = function (callback) {
-			database = new MONGODB.Db(CONFIG.mongodb.database, new MONGODB.Server(
-			CONFIG.mongodb.host, CONFIG.mongodb.port));
+			database = new MONGODB.Db(options.database, new MONGODB.Server(
+			options.host, options.port));
 
 			var abort = function (err) {
 				console.log("could not open mongodb: " + err);
@@ -26,7 +28,7 @@ define([ "assert", "mongodb", "config" ], function (ASSERT, MONGODB, CONFIG) {
 					abort(err1);
 				}
 				else {
-					database.collection(CONFIG.mongodb.collection, function (err2, result) {
+					database.collection(options.collection, function (err2, result) {
 						if( err2 ) {
 							abort(err2);
 						}
