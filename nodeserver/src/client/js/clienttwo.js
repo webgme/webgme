@@ -327,7 +327,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', '/socket.io/socket
                 _client.sendMessage({commands:[command]});
                 return;
             }
-            _queue[command.cid] = command;
+            queue[command.cid] = command;
             setTimeout(function(){
                 commandTimeout(command.cid);
             },_timer);
@@ -357,23 +357,23 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', '/socket.io/socket
             if(_cansend ===true || isSentEmpty()){
                 _cansend = true;
                 var msg = {commands:[]};
-                for(var i in _queue){
-                    msg.commands.push(_queue[i]);
+                for(var i in queue){
+                    msg.commands.push(queue[i]);
                 }
                 logger.debug("next command message to server "+JSON.stringify(msg));
                 if(msg.commands.length>0){
                     _client.sendMessage(msg);
                     _cansend = false;
-                    _sent = _queue;
-                    _queue = {};
+                    _sent = queue;
+                    queue = {};
                 }
             }
         };
         var commandTimeout = function(cid){
-            if(_queue[cid] || _sent[cid]){
+            if(queue[cid] || _sent[cid]){
                 console.log("command timeout "+cid);
             }
-            delete _queue[cid];
+            delete queue[cid];
             delete _sent[cid];
 
             if(isSentEmpty()){
