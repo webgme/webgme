@@ -10,18 +10,18 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "storage" ], function (ASSERT, STORAGE) {
+requirejs([ "assert", "mongo", "pertree", "branch" ], function (ASSERT, Mongo, PerTree, Branch) {
 	"use strict";
 
-	var mongo = new STORAGE.Mongo();
+	var mongo = new Mongo();
 	mongo.open(function (err) {
 		ASSERT(!err);
 		
 		mongo.removeAll(function (err) {
 			ASSERT(!err);
 			
-			var tree = new STORAGE.PersistentTree(mongo);
-			var branch = new STORAGE.Branch(tree);
+			var tree = new PerTree(mongo);
+			var branch = new Branch(tree);
 			var root = branch.createNode();
 			branch.setAttribute(root, "name", "root");
 			
