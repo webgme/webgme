@@ -12,7 +12,7 @@ define(function () {
 			var error = new Error("ASSERT failed");
 			var message = "ASSERT failed at " + error.stack;
 
-			if( console ) {
+			if( console && !process ) {
 				console.log(message);
 			}
 
