@@ -1,4 +1,4 @@
-define(['/common/logmanager.js'], function( logManager ){
+define(['/common/LogManager.js'], function( logManager ){
 
     var TreeBrowserControl = function(_client, treeBrowser ){
 

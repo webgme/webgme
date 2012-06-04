@@ -79,7 +79,7 @@ var copyObject = function(object){
 
 /*COMMON INCLUDES*/
 var FS = require('fs');
-var LOGMANAGER = require('./../common/logmanager.js');
+var LOGMANAGER = require('./../common/LogManager.js');
 var commonUtil = require('./../common/CommonUtil.js');
 
 /*COMMON VARIABLES*/

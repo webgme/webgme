@@ -1,11 +1,10 @@
 var FS = require('fs');
-var LOGMANAGER = require('./../common/logmanager.js');
+var LOGMANAGER = require('./../common/LogManager.js');
 var commonUtil = require('./../common/CommonUtil.js');
 
 LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
-var proj3ct = require(__dirname+'proj3ct.js').Project;
 
 var Server = function(parameters){
     var http = require('http').createServer(function(req, res){
@@ -47,12 +46,13 @@ var Server = function(parameters){
                 res.end(data);
             });
         }),
-        project = new proj3ct(parameters.ProjectPort,parameters.ProjectName,parameters.BranchName),
+        project = new (require('forever').Monitor) (require('path').join(__dirname,'proj3ct.js'),{'options':[parameters.ProjectPort,parameters.ProjectName,parameters.BranchName]});
         io = require('socket.io').listen(http),
         clientsrcfolder = "/../client";
 
     io.set('log level', 1); // reduce logging
     http.listen(parameters.ServerPort);
+    project.start();
 
     io.sockets.on('connection', function(socket){
         logger.debug("someone connected to the static server!!!!");

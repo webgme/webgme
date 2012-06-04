@@ -10,9 +10,8 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
 
     logger = LogManager.create("Client");
 
-    Client = function(server,callback){
+    Client = function(server){
         var socket = io.connect(server),
-            cbcalled = false,
             connected = false,
             storage = new Storage(),
             self = this,
@@ -20,7 +19,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             clipboard = {},
             updateStorage,
             updateUsers,
-            users,
+            users ={},
             shootEvent,
             handleMessage;
 
@@ -34,10 +33,6 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         /*socket functions*/
         socket.on('connect',function(msg){
             connected = true;
-            if(!cbcalled){
-                cbcalled = true;
-                callback();
-            }
         });
         socket.on('reconnecting',function(msg){
             connected = false;
@@ -88,6 +83,12 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         this.deleteNode = function(id){
             commandqueue.push({type:"delete",id:id,cid:"tuti nem kell"});
         };
+        this.delMoreNodes = function(ids){
+            var i;
+            for(i=0;i<ids.length;i++){
+                self.deleteNode(ids[i]);
+            }
+        };
         this.createChild = function(parent,base){
             commandqueue.push({type:"createChild",baseId:base,parentId:parent,cid:"mondom nem kell"});
         };
@@ -120,6 +121,20 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             }
         };
 
+        /*getting a node*/
+        this.getNode = function(id){
+            if(storage.get(id)){
+                return new ClientNode(self,id,storage);
+            }
+            else{
+                return storage.get(id);
+            }
+        };
+
+        /*socket like functions*/
+        this.sendMessage = function(msg){
+            socket.emit('clientMessage',msg);
+        };
         /*private functions*/
         shootEvent = function(type,id){
             var i,
@@ -143,8 +158,11 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             /*main*/
             /*if the transaction failed, there is nothing to do*/
             for(i=0;i<msg.length;i++){
-                if(msg[i].type === "command" && msg[i].success === "false"){
-                    return;
+                if(msg[i].type === "command"){
+                    commandqueue.commandResult(msg[i].cid,msg[i].success);
+                    if(msg[i].success === "false"){
+                        return;
+                    }
                 }
             }
 
@@ -166,7 +184,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             }
             /*then we shoot all other events*/
             for(i=0;i<msg.length;i++){
-                if(msg[i].type === "load" || msg[i].type === "modify" || msg[i].type === "create" || msg[i].type === "delete"){
+                if(msg[i].type === "load" || msg[i].type === "update" || msg[i].type === "create" || msg[i].type === "delete"){
                     shootEvent(msg[i].type,msg[i].id);
                 }
             }
@@ -225,14 +243,14 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                                 break;
                             case "children":
                                 if(data.relations.childrenIds){
-                                    for(i=0;i<data.relations.childrenIds;i++){
+                                    for(i=0;i<data.relations.childrenIds.length;i++){
                                         updateRule(data.relations.childrenIds[i],rulename,rulevalue-1,itemssofar);
                                     }
                                 }
                                 break;
                             case "inheritor":
                                 if(data.relations.inheritorIds){
-                                    for(i=0;i<data.relations.inheritorIds;i++){
+                                    for(i=0;i<data.relations.inheritorIds.length;i++){
                                         updateRule(data.relations.inheritorIds[i],rulename,rulevalue-1,itemssofar);
                                     }
                                 }
@@ -250,7 +268,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 for(i in pattern){
                     rulechain = [];
                     updateRule(id,i,commonUtil.copy(pattern[i]),rulechain);
-                    commonUtil.mergeArrays(ids,rulechain);
+                    ids = commonUtil.mergeArrays(ids,rulechain);
                 }
             };
             /*main*/
@@ -281,7 +299,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         };
         this.commandResult = function(cid,success){
             /*TODO success*/
-            delete _sent[cid];
+            delete sent[cid];
 
             if(isSentEmpty()){
                 cansend = true;
@@ -299,7 +317,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             return false;
         };
         var sendNextClientMessage = function(){
-            logger.debug("trying to send next command message to server (cansend="+_cansend+",sentisempty="+isSentEmpty());
+            logger.debug("trying to send next command message to server (cansend="+cansend+",sentisempty="+isSentEmpty());
             if(cansend ===true || isSentEmpty()){
                 cansend = true;
                 var msg = {commands:[]};
@@ -342,7 +360,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         };
     };
     ClientNode = function(client,id,storage){
-        var selfdata,
+        var selfdata = storage.get(id),
             rGetAttribute,
             rGetRegistry;
         /*public funcitons*/
@@ -350,22 +368,52 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             return selfdata === null;
         };
         this.getParentId = function(){
-            return selfdata.relations.parentId;
+            if(selfdata){
+                return selfdata.relations.parentId;
+            }
+            else{
+                return selfdata;
+            }
         };
         this.getChildrenIds = function(){
-            return selfdata.relations.childrenIds;
+            if(selfdata){
+                return selfdata.relations.childrenIds;
+            }
+            else{
+                return selfdata;
+            }
         };
         this.getBaseId = function(){
-            return selfdata.relations.baseId;
+            if(selfdata){
+                return selfdata.relations.baseId;
+            }
+            else{
+                return selfdata;
+            }
         };
         this.getInheritorIds = function(){
-            return selfdata.relations.inheritorIds;
+            if(selfdata){
+                return selfdata.relations.inheritorIds;
+            }
+            else{
+                return selfdata
+            }
         };
         this.getAttribute = function(name){
-
+            if(selfdata){
+                return rGetAttribute(id,name);
+            }
+            else{
+                return selfdata;
+            }
         };
         this.getRegistry = function(name){
-
+            if(selfdata){
+                return rGetRegistry(id,name);
+            }
+            else{
+                return selfdata;
+            }
         };
 
         /*private functions*/
@@ -410,10 +458,6 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             }
 
         };
-
-        /*main*/
-        selfdata = storage.get(id);
-
     };
     return Client;
 });

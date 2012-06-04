@@ -89,7 +89,7 @@ define([], function () {
         standalone: {
             ServerIP: "self",
             ServerPort: 8081,
-            PorjectIP: "self",
+            ProjectIP: "self",
             ProjectPort: 8082,
             ProjectName: "testp",
             BranchName: "basic"

@@ -79,14 +79,14 @@ var copyObject = function(object){
 
 /*COMMON INCLUDES*/
 var FS = require('fs');
-var LOGMANAGER = require('./../common/logmanager.js');
+var LOGMANAGER = require('./../common/LogManager.js');
 var commonUtil = require('./../common/CommonUtil.js');
 
 /*COMMON VARIABLES*/
 var STORAGELATENCY = 1;
-LOGMANAGER.setLogLevel( /*LOGMANAGER.logLevels.ALL*/1 );
+LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL /*1*/);
 LOGMANAGER.useColors( true );
-var logger = LOGMANAGER.create( "server" );
+var logger = LOGMANAGER.create( "proj3ct" );
 var ID = "_id";
 
 var TestStorage = function(cProjectName,cBranchName){
@@ -1271,20 +1271,31 @@ var Territory = function(cClient,cId){
             updateRule = function(currentId,rulename,rulevalue){
                 var i,
                     next;
-                if(rulevalue === 0){
-                    ruleComplete();
-                }
-                else{
-                    storage.get(currentId,function(err,object){
-                        if(err){
-                            logger.error("Territory.updatePatterns.updatePattern.updateRule cannot get object "+currentId);
-                            ruleComplete();
-                        }
-                        else{
-                            if(object){
-                                if(insertIntoArray(ruleChains[rulename],currentId)){
-                                    addToCurrentList(currentId,object,function(){
-                                        next = object.relations[rulename];
+                storage.get(currentId,function(err,object){
+                    if(err){
+                        logger.error("Territory.updatePatterns.updatePattern.updateRule cannot get object "+currentId);
+                        ruleComplete();
+                    }
+                    else{
+                        if(object){
+                            if(insertIntoArray(ruleChains[rulename],currentId)){
+                                addToCurrentList(currentId,object,function(){
+                                    if(rulevalue === 0){
+                                        ruleComplete();
+                                    }
+                                    else{
+                                        //next = object.relations[rulename];
+                                        switch(rulename){
+                                            case "children":
+                                                next = object.relations.childrenIds;
+                                                break;
+                                            case "parent":
+                                                next = object.relations.parentId;
+                                                break;
+                                            case "inheritor":
+                                                next = object.relations.inheritorIds;
+                                                break;
+                                        }
                                         if(next){
                                             rulevalue--;
                                             if(next instanceof Array){
@@ -1305,20 +1316,20 @@ var Territory = function(cClient,cId){
                                         else{
                                             ruleComplete();
                                         }
-                                    });
-                                }
-                                else{
-                                    /*it was already in the current chain, so we should stop*/
-                                    ruleComplete();
-                                }
+                                    }
+                                });
                             }
                             else{
-                                /*the object under deletion*/
+                                /*it was already in the current chain, so we should stop*/
                                 ruleComplete();
                             }
                         }
-                    });
-                }
+                        else{
+                            /*the object under deletion*/
+                            ruleComplete();
+                        }
+                    }
+                });
             };
 
             /*main*/
@@ -1512,6 +1523,7 @@ var Project = function(cPort,cProject,cBranch){
             logger.debug("Project.connection - already connected client "+socket.id);
         }
         else{
+            logger.debug("new client connected "+socket.id);
             cSelf.addClient(socket,socket.id);
         }
     });
