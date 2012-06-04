@@ -85,6 +85,14 @@ define([], function () {
                 }
             }
             return three;
+        },
+        standalone: {
+            ServerIP: "self",
+            ServerPort: 8081,
+            PorjectIP: "self",
+            ProjectPort: 8082,
+            ProjectName: "testp",
+            BranchName: "basic"
         }
 
     };
