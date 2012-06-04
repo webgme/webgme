@@ -31,6 +31,12 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 	// ----------------- PersistentTree -----------------
 
+	var keyregexp = new RegExp("[0-9a-f]{40}");
+
+	var isKey = function (key) {
+		return typeof key === "string" && key.length === 40 && keyregexp.test(key);
+	};
+	
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
@@ -73,6 +79,8 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 			return storage.delKey(node.data);
 		};
 
+		this.isKey = isKey;
+		
 		this.createRoot = function () {
 			var data = {
 				_mutable: true
@@ -368,7 +376,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 			for( relid in data ) {
 				child = data[relid];
-				if( child._mutable ) {
+				if( typeof child === "object" && child._mutable ) {
 					key = this.save(child);
 					ASSERT(key === undefined || typeof key === "string");
 
@@ -484,15 +492,20 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 				++counter;
 				storage.load(key, function (err, child) {
-					error = error || err;
+					ASSERT(err || child);
 
-					var copy = deepclone(child);
+					if( !err ) {
+						var copy = deepclone(child);
 
-					data[relid] = copy;
-					scan(copy);
+						data[relid] = copy;
+						scan(copy);
 
-					// copy.id = storage.getKey(child);
-					decrease();
+						// copy.id = storage.getKey(child);
+						decrease();
+					}
+					else {
+						error = error || err;
+					}
 				});
 			};
 
@@ -502,7 +515,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 				for( var relid in data ) {
 					var child = data[relid];
 
-					if( typeof child === "string" && child.length === 40 ) {
+					if( isKey(child) ) {
 						load(data, relid);
 					}
 					else if( child && typeof child === "object" ) {
