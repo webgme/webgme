@@ -32,49 +32,12 @@
  */
 "use strict";
 /*COMMON FUNCTIONS*/
-var insertIntoArray = function(list,item){
-    if (list instanceof Array){
-        if(list.indexOf(item) === -1){
-            list.push(item);
-            return true;
-        }
-        return false;
-    }
-    return false;
-};
-var removeFromArray = function(list,item){
-    var index = list.indexOf(item);
-    if(index === -1){
-        return false;
-    }
-    else{
-        list.splice(index,1);
-        return true;
-    }
-}
-var mergeArrays = function(one,two){
-    var three = [],i;
-    for(i in one){
-        three.push(one[i]);
-    }
-    for(i in two){
-        if(one.indexOf(two[i]) === -1){
-            three.push(two[i]);
-        }
-    }
-    return three;
-};
 var numberToDword = function(number){
     var str = number.toString(16);
     while(str.length<8){
         str = "0"+str;
     }
     return str;
-};
-var copyObject = function(object){
-    var copyobject = JSON.stringify(object);
-    copyobject = JSON.parse(copyobject);
-    return copyobject;
 };
 
 /*COMMON INCLUDES*/
@@ -228,7 +191,7 @@ var TransactionQueue = function(cProject){
     this.onClientMessage = function(msg){
         /*we simply put the message into the queue*/
         logger.debug("TransactionQueue.onClientMessage "+JSON.stringify(msg));
-        cQueue.push(copyObject(msg));
+        cQueue.push(commonUtil.copy(msg));
         processNextMessage();
     };
 };
@@ -607,7 +570,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             callCallBack();
                         }
                         else{
-                            removeFromArray(object.pointers[name].from,mainobject[ID]);
+                            commonUtil.removeFromArray(object.pointers[name].from,mainobject[ID]);
                             commandBuffer.set(object[ID],object);
                             if(--disconnectcount === 0){
                                 pointerRemoved();
@@ -643,7 +606,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                                 callCallBack();
                             }
                             else{
-                                removeFromArray(object.relations.inheritorIds,disconnectId);
+                                commonUtil.removeFromArray(object.relations.inheritorIds,disconnectId);
                                 commandBuffer.set(object[ID],object);
                                 if(--pointercount === 0){
                                     cb();
@@ -704,7 +667,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             callCallBack();
                         }
                         else{
-                            removeFromArray(baseobject.relations.inheritorIds,deletecommand.id);
+                            commonUtil.removeFromArray(baseobject.relations.inheritorIds,deletecommand.id);
                             commandBuffer.set(baseobject[ID],baseobject);
                             if(--readcount === 0){
                                 allObjectsRead();
@@ -724,7 +687,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             callCallBack();
                         }
                         else{
-                            removeFromArray(parentobject.relations.childrenIds,deletecommand.id);
+                            commonUtil.removeFromArray(parentobject.relations.childrenIds,deletecommand.id);
                             commandBuffer.set(parentobject[ID],parentobject);
                             if(--readcount === 0){
                                 allObjectsRead();
@@ -813,7 +776,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     callCallBack();
                 }
                 else{
-                    newobject = copyObject(object);
+                    newobject = commonUtil.copy(object);
                     newobject[ID] = inheritanceArray[newobject[ID]];
                     index = copylist.indexOf(object[ID]);
                     if(index !== -1){
@@ -867,7 +830,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     callCallBack();
                 }
                 else{
-                    subtreeids = mergeArrays(subtreeids,result);
+                    subtreeids = commonUtil.mergeArrays(subtreeids,result);
                     if(--readcount == 0){
                         pastecount = subtreeids.length;
                         for(j=0;j<subtreeids.length;j++){
@@ -945,7 +908,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             }
             if(oldtoobj){
                 if(oldtoobj.pointers[pointcommand.name].from){
-                    removeFromArray(oldtoobj.pointers[pointcommand.name].from,fromobj[ID]);
+                    commonUtil.removeFromArray(oldtoobj.pointers[pointcommand.name].from,fromobj[ID]);
                     commandBuffer.set(oldtoobj[ID],oldtoobj);
                 }
             }
@@ -954,7 +917,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 if(toobj.pointers[pointcommand.name] === null || toobj.pointers[pointcommand.name] === undefined){
                     toobj.pointers[pointcommand.name] = {to:null, from:[]};
                 }
-                insertIntoArray(toobj.pointers[pointcommand.name].from,fromobj[ID]);
+                commonUtil.insertIntoArray(toobj.pointers[pointcommand.name].from,fromobj[ID]);
                 commandBuffer.set(toobj[ID],toobj);
             }
             else{
@@ -1044,7 +1007,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     objectRead();
                 }
                 else{
-                    insertIntoArray(readIds,id);
+                    commonUtil.insertIntoArray(readIds,id);
                     for(i=0;i<object.relations.childrenIds.length;i++){
                         rReadObject(object.relations.childrenIds[i]);
                     }
@@ -1094,7 +1057,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                     objectRead();
                 }
                 else{
-                    insertIntoArray(readIds,id);
+                    commonUtil.insertIntoArray(readIds,id);
                     for(i=0;i<object.relations.inheritorIds.length;i++){
                         rReadObject(object.relations.inheritorIds[i]);
                     }
@@ -1130,7 +1093,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 var i;
                 commandBuffer.get(id,function(err,object){
                     /*no error can happen!!!*/
-                    newobject = copyObject(object);
+                    newobject = commonUtil.copy(object);
                     newobject.attributes = {};
                     newobject.registry = {};
 
@@ -1278,7 +1241,7 @@ var Territory = function(cClient,cId){
                     }
                     else{
                         if(object){
-                            if(insertIntoArray(ruleChains[rulename],currentId)){
+                            if(commonUtil.insertIntoArray(ruleChains[rulename],currentId)){
                                 addToCurrentList(currentId,object,function(){
                                     if(rulevalue === 0){
                                         ruleComplete();
@@ -1351,9 +1314,9 @@ var Territory = function(cClient,cId){
 
         /*main*/
         if(newpatterns === undefined || newpatterns === null){
-            newpatterns = copyObject(cPatterns);
+            newpatterns = commonUtil.copy(cPatterns);
         }
-        previousList = copyObject(cCurrentList);
+        previousList = commonUtil.copy(cCurrentList);
         currentList = [];
         addedObjects = {};
         patternCounter = 0;
@@ -1461,7 +1424,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
             for(i in addedobjects){
                 if(cObjects[i] === undefined){
                     cObjects[i] = 1;
-                    insertIntoArray(loadlist,i);
+                    commonUtil.insertIntoArray(loadlist,i);
                 }
                 else{
                     cObjects[i]++;
@@ -1475,7 +1438,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
                     cObjects[i]--;
                     if(cObjects[i]<=0){
                         delete cObjects[i];
-                        insertIntoArray(unloadlist,i);
+                        commonUtil.insertIntoArray(unloadlist,i);
                     }
                 }
             }
