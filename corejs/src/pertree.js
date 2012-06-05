@@ -31,10 +31,10 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 	// ----------------- PersistentTree -----------------
 
-	var keyregexp = new RegExp("[0-9a-f]{40}");
+	var keyregexp = new RegExp("id:[0-9a-f]{40}");
 
 	var isKey = function (key) {
-		return typeof key === "string" && key.length === 40 && keyregexp.test(key);
+		return typeof key === "string" && key.length === 43 && keyregexp.test(key);
 	};
 	
 	var PersistentTree = function (storage) {
@@ -53,7 +53,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 			var key = storage.getKey(node.data);
 			ASSERT(key === undefined || key === false
-			|| (typeof key === "string" && key.length === 40));
+			|| isKey(key));
 
 			ASSERT(node.parent === null || !key || node.parent.data[node.relid] === key);
 			ASSERT(node.parent === null || key || node.parent.data[node.relid] === node.data);
@@ -154,7 +154,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 
 			var child = node.data[relid];
 			ASSERT(child && typeof child === "obejct" || typeof child === "string");
-			ASSERT(typeof child !== "string" || child.length === 40);
+			ASSERT(isKey(child));
 
 			if( typeof child === "string" ) {
 				storage.load(child, function (err, data) {
@@ -390,7 +390,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 			ASSERT(key === false || key === undefined);
 
 			if( key === false ) {
-				key = SHA1(JSON.stringify(data));
+				key = "id:" + SHA1(JSON.stringify(data));
 				storage.setKey(data, key);
 
 				this.start();
@@ -488,7 +488,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 				ASSERT(typeof relid === "string");
 
 				var key = data[relid];
-				ASSERT(typeof key === "string" && key.length === 40);
+				ASSERT(isKey(key));
 
 				++counter;
 				storage.load(key, function (err, child) {
