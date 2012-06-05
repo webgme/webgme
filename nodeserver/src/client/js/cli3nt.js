@@ -21,13 +21,21 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             updateUsers,
             users ={},
             shootEvent,
-            handleMessage;
+            handleMessage,
+            selectedObjectId = null;
 
         /*event functions to relay information between users*/
         $.extend(this, new EventDispatcher());
 
         this.events = {
             "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
+        };
+        this.setSelectedObjectId = function ( objectId ) {
+            if ( objectId !== selectedObjectId ) {
+                selectedObjectId = objectId;
+
+                self.dispatchEvent( self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
+            }
         };
 
         /*socket functions*/

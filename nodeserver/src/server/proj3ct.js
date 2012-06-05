@@ -1368,7 +1368,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
             cTerritories[territoryid] = new Territory(cSelf,territoryid);
         }
         cTerritories[territoryid].updatePatterns(patterns,cReadStorage,function(addedobjects,removedobjects){
-            logger.debug("Client.updatePattern at territory result "+JSON.stringify(addedobjects)+","+JSON.stringify(removedobjects));
+            //logger.debug("Client.updatePattern at territory result "+JSON.stringify(addedobjects)+","+JSON.stringify(removedobjects));
             var i,
                 msg = [];
             for(i in addedobjects){
