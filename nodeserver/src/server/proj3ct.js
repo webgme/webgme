@@ -1550,7 +1550,9 @@ var Project = function(cPort,cProject,cBranch){
         }
         if(count === 0){
             logger.debug("no more clients, quit");
-            process.exit(0);
+            setTimeout(function(){
+                process.exit(0);
+            },1000);
         }
     };
 

@@ -1,10 +1,11 @@
 var FS = require('fs');
 var LOGMANAGER = require('./../common/LogManager.js');
 var commonUtil = require('./../common/CommonUtil.js');
-
 LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
+
+var os = require('os');
 
 var Server = function(parameters){
     var http = require('http').createServer(function(req, res){
@@ -46,13 +47,30 @@ var Server = function(parameters){
                 res.end(data);
             });
         }),
-        project = new (require('forever').Monitor) (require('path').join(__dirname,'proj3ct.js'),{'options':[parameters.ProjectPort,parameters.ProjectName,parameters.BranchName]});
-        io = require('socket.io').listen(http),
+        project,
+        io = require('socket.io').listen(http);
         clientsrcfolder = "/../client";
 
     io.set('log level', 1); // reduce logging
     http.listen(parameters.ServerPort);
-    project.start();
+    if(os.platform().indexOf('win') === -1){
+        project = new (require('forever').Monitor) (require('path').join(__dirname,'proj3ct.js'),{'options':[parameters.ProjectPort,parameters.ProjectName,parameters.BranchName]});
+        project.start();
+    }
+    else{
+        project = require('child_process').spawn('cmd');
+        project.stdout.on('data', function (data) {
+            console.log('[P-stdout] ' + data);
+            if(data.toString().indexOf("no more clients, quit") !== -1){
+                console.log('[P-stdout] restarting project');
+                project.stdin.write('node proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
+            }
+        });
+        project.stderr.on('data', function (data) {
+            console.log('[P-stderr] ' + data);
+        });
+        project.stdin.write('node proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
+    }
 
     io.sockets.on('connection', function(socket){
         logger.debug("someone connected to the static server!!!!");
