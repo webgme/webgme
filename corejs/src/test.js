@@ -10,7 +10,7 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "mongo", "pertree", "branch" ], function (ASSERT, Mongo, PerTree, Branch) {
+requirejs([ "assert", "mongo", "branch" ], function (ASSERT, Mongo, Branch) {
 	"use strict";
 
 	var mongo = new Mongo();
@@ -20,8 +20,7 @@ requirejs([ "assert", "mongo", "pertree", "branch" ], function (ASSERT, Mongo, P
 		mongo.removeAll(function (err) {
 			ASSERT(!err);
 			
-			var tree = new PerTree(mongo);
-			var branch = new Branch(tree);
+			var branch = new Branch(mongo);
 			var root = branch.createNode();
 			branch.setAttribute(root, "name", "root");
 			
@@ -65,7 +64,7 @@ requirejs([ "assert", "mongo", "pertree", "branch" ], function (ASSERT, Mongo, P
 									ASSERT(!err);
 									
 //									mongo.dumpAll(function () {
-									tree.dumpTree(branch.getKey(root), function(err) {
+									branch.dumpTree(branch.getKey(root), function(err) {
 										ASSERT(!err);
 										mongo.close();
 									});
