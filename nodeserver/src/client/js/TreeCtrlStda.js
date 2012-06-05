@@ -120,11 +120,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //finally delete the nodeId itself (if needed)
                     if (deleteSelf === true) {
                         delete nodes[childNodeId];
+                        //and collect the nodeId from territory removal
+                        removeFromTerritory.push({ "nodeid": childNodeId  });
+                        delete selfPatterns[childNodeId];
                     }
-
-                    //and collect the nodeId from territory removal
-                    removeFromTerritory.push({ "nodeid": childNodeId  });
-                    delete selfPatterns[childNodeId];
                 }
             };
 
