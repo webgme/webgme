@@ -4,30 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
+define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 	"use strict";
-
-	// ----------------- deepclone -----------------
-
-	var deepclone = function (o) {
-		var c, k;
-		if( o && typeof o === "object" ) {
-			if( o.constructor !== Array ) {
-				c = {};
-				for( k in o ) {
-					c[k] = deepclone(o[k]);
-				}
-			}
-			else {
-				c = [];
-				for( k = 0; k < o.length; ++k ) {
-					c.push(deepclone(o[k]));
-				}
-			}
-			return c;
-		}
-		return o;
-	};
 
 	// ----------------- PersistentTree -----------------
 
@@ -270,6 +248,15 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 			return path;
 		};
 
+		this.getLevel = function (node) {
+			var level = 0;
+			while(node.parent) {
+				++level;
+				node = node.parent;
+			}
+			return level;
+		};
+		
 		this.getStringPath = function (node) {
 			ASSERT_NODE(node);
 
@@ -495,7 +482,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 					ASSERT(err || child);
 
 					if( !err ) {
-						var copy = deepclone(child);
+						var copy = UTIL.deepCopy(child);
 
 						data[relid] = copy;
 						scan(copy);
@@ -527,7 +514,7 @@ define([ "assert", "lib/sha1" ], function (ASSERT, SHA1) {
 			storage.load(key, function (err, data) {
 				ASSERT(err || storage.getKey(data) === key);
 
-				root = deepclone(data);
+				root = UTIL.deepCopy(data);
 				scan(root);
 
 				decrease();

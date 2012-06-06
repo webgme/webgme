@@ -7,7 +7,7 @@
 define(function () {
 	"use strict";
 
-	return function (cond) {
+	var assert = function (cond) {
 		if( !cond ) {
 			var error = new Error("ASSERT failed");
 			var message = "ASSERT failed at " + error.stack;
@@ -18,5 +18,7 @@ define(function () {
 
 			throw error;
 		}
-	};
+	}; 
+	
+	return assert;
 });
