@@ -245,6 +245,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         }
     };
     this.commandFailed = function(){
+        logger.error("command execution failed");
         commandStatus = false;
         self.finalizeCommand();
     };
@@ -869,12 +870,14 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             count++;
             inheritObject(baseId,function(err,inherited){
                 if(err){
+                    logger.error("inheriting object failed: reason["+err+"],base["+baseId+"]");
                     status = false;
                     childrenCreated();
                 }
                 else{
                     commandBuffer.get(parentId,function(err,parent){
                         if(err){
+                            logger.error("getting object failed: reason["+err+"],id["+parentId+"]");
                             status = false;
                             childrenComplete();
                         }
@@ -1003,6 +1006,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             commandBuffer.get(id,function(err,object){
                 var i;
                 if(err){
+                    logger.error("getting object failed: reason["+err+"},id["+id+"]");
                     state=false;
                     objectRead();
                 }
@@ -1053,6 +1057,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             count++;
             commandBuffer.get(id,function(err,object){
                 if(err){
+                    logger.error("getting object failed: reason["+err+"},id["+id+"]");
                     state=false;
                     objectRead();
                 }
@@ -1368,7 +1373,6 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
             cTerritories[territoryid] = new Territory(cSelf,territoryid);
         }
         cTerritories[territoryid].updatePatterns(patterns,cReadStorage,function(addedobjects,removedobjects){
-            //logger.debug("Client.updatePattern at territory result "+JSON.stringify(addedobjects)+","+JSON.stringify(removedobjects));
             var i,
                 msg = [];
             for(i in addedobjects){
@@ -1403,7 +1407,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
         return cClipboard;
     };
     this.sendMessage = function(msg){
-        //logger.debug("Client.sendMessage "+JSON.stringify(msg));
+        logger.debug("Client.sendMessage "/*+JSON.stringify(msg)*/);
         cIoSocket.emit('serverMessage',msg);
     };
     this.interestedInObject = function(objectid){
@@ -1479,7 +1483,7 @@ var Project = function(cPort,cProject,cBranch){
     }
 
     /*socket.IO listener*/
-    cIo.set('log level', 1); // reduce logging
+    //cIo.set('log level', 1); // reduce logging
     cIo.sockets.on('connection', function(socket){
         logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
         if(cClients[socket.id]){

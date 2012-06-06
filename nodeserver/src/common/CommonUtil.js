@@ -92,7 +92,7 @@ define([], function () {
             ProjectIP: "self",
             ProjectPort: 8082,
             ProjectName: "testp",
-            BranchName: "basic"
+            BranchName: "100k"
         }
 
     };
