@@ -130,6 +130,10 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			pertree.copy(node, parent, relid);
 		};
 
+		this.getAttributes = function (node) {
+			return pertree.getProperty(node, ATTRIBUTES);
+		};
+		
 		this.getAttribute = function (node, name) {
 			return pertree.getProperty2(node, ATTRIBUTES, name);
 		};

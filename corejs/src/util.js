@@ -72,6 +72,44 @@ define([ "assert" ], function (ASSERT) {
 		return options;
 	};
 
+	var nullCallback = function () {
+	};
+
+	var errorHandler = function (callback) {
+		ASSERT(callback && callback.constructor === Function && callback.length === 1);
+
+		var pending = 0;
+
+		return function (process) {
+			ASSERT(arguments.length === 1);
+
+			if( callback ) {
+				if( process && process.constructor === Function ) {
+					++pending;
+					
+					return function (err, arg1, arg2, arg3) {
+						if( err ) {
+							callback(err);
+							callback = nullCallback;
+						}
+						else {
+							process(arg1, arg2, arg3);
+
+							if( --pending === 0 ) {
+								callback(null);
+								callback = null;
+							}
+						}
+					};
+				}
+				else if( process || pending === 0 ) {
+					callback(process);
+					callback = null;
+				}
+			}
+		};
+	};
+	
 	/**
 	 * Constructs a priority queue object that calls enqueued processes, and
 	 * returns the enqueue function. The priority queue object calls at most
@@ -85,7 +123,7 @@ define([ "assert" ], function (ASSERT) {
 	 * argument. The process must call the done(err) function to complete the
 	 * process.
 	 */
-	var priorityQueue = function (maxPending, comparator, callback) {
+	var priorityEnqueue = function (maxPending, comparator, callback) {
 		ASSERT(maxPending >= 1);
 		ASSERT(comparator && callback);
 
@@ -106,7 +144,7 @@ define([ "assert" ], function (ASSERT) {
 					queue = null;
 
 					callback(err);
-					callback = null;
+					callback = nullCallback;
 				}
 				else if( pending < maxPending && queue.length !== 0 ) {
 					call();
@@ -125,7 +163,7 @@ define([ "assert" ], function (ASSERT) {
 
 		return function (pri, proc, arg) {
 			ASSERT(pri && proc);
-			
+
 			binaryInsert(queue, {
 				pri: pri,
 				proc: proc,
@@ -143,6 +181,7 @@ define([ "assert" ], function (ASSERT) {
 		binaryInsert: binaryInsert,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
-		priorityQueue: priorityQueue
+		errorHandler: errorHandler,
+		priorityEnqueue: priorityEnqueue
 	};
 });

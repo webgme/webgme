@@ -10,8 +10,9 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "lib/sax", "fs", "mongo", "branch", "config", "util" ], function (ASSERT,
-SAX, FS, Mongo, Branch, CONFIG, UTIL) {
+requirejs(
+[ "assert", "lib/sax", "fs", "mongo", "branch", "config", "util" ],
+function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL) {
 	"use strict";
 
 	// ------- parser -------
@@ -222,43 +223,128 @@ SAX, FS, Mongo, Branch, CONFIG, UTIL) {
 		var branch = new Branch(storage);
 
 		var metaroot = branch.createNode();
-		var metaproj = branch.createNode();
-		branch.attach(metaproj, metaroot);
+		var paradigm = branch.createNode();
+		branch.attach(paradigm, metaroot);
 
-		var enqueue = UTIL.priorityQueue(CONFIG.reader.concurrentReads, comparePaths,
-		function (err) {
+		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths, function (
+		err) {
 			if( err ) {
 				console.log("Building error: " + JSON.stringify(err));
+				callback(err);
 			}
 			else {
-				console.log("Building done ");
+				console.log("Building done");
+				branch.persist(metaroot, function (err2) {
+					console.log("Saving meta " + (err2 ? " error:" + err2 : "done"));
+					branch.dumpTree(branch.getKey(metaroot), function (err3) {
+						callback(err2);
+					});
+				});
 			}
-			callback(err);
 		});
 
-		var process = function (path, done, node) {
+		var getChildByTag = function (node, name, callback2) {
+			branch.loadChildren(node, function (err, children) {
+				if( err ) {
+					callback2(err);
+				}
+				else {
+					for( var i = 0; i < children.length; ++i ) {
+						if( branch.getAttribute(children[i], "#tag") === name ) {
+							callback2(null, children[i]);
+							return;
+						}
+					}
+					callback2(null, null);
+				}
+			});
+		};
 
-			if( branch.getLevel(node) === 1 && branch.getAttribute(node, "#tag") !== "paradigm" ) {
-				done("Not a meta paradigm");
+		var copyAttributes = function (xmlNode, metaNode, attrs) {
+			if( !attrs ) {
+				attrs = Object.keys(branch.getAttributes(xmlNode));
+			}
+
+			for( var i = 0; i < attrs.length; ++i ) {
+				var attr = attrs[i];
+				ASSERT(typeof attr === "string");
+				var value = branch.getAttribute(xmlNode, attr);
+				if( value ) {
+					branch.setAttribute(metaNode, attr, value);
+				}
+			}
+		};
+
+		var attributes = {};
+		var parseAttribute = function(xmlnode) {
+			ASSERT(xmlnode && callback);
+			
+			var path = branch.getStringPath(xmlnode);
+			var meta = attributes[path];
+			if(meta) {
+				return meta;
+			}
+			else {
+				meta = branch.createNode();
+				branch.attach(meta, paradigm);
+				
+				copyAttributes(xmlnode, meta);
+			}
+		};
+		
+		var process = function (path, done, node) {
+			var errorHandler = UTIL.errorHandler(done);
+
+			var tag = branch.getAttribute(node, "#tag");
+
+			if( branch.getLevel(node) === 1 && tag !== "paradigm" ) {
+				errorHandler("Not a meta paradigm");
 				return;
 			}
 
-			if( branch.getLevel(node) <= 2 ) {
-//				console.log(path, node.data);
+			if( tag === "attrdef" ) {
+				var metaobj = branch.createNode();
+				branch.attach(metaobj, paradigm);
 
-				branch.loadChildren(node, function (err, children) {
-					if( !err ) {
-						for( var i = 0; i < children.length; ++i ) {
-							var child = children[i];
-							enqueue(branch.getPath(child), process, child);
-						}
+				copyAttributes(node, metaobj);
+			}
+
+			if( tag === "paradigm" ) {
+
+				copyAttributes(node, paradigm);
+
+				getChildByTag(node, "comment", errorHandler(function (node2) {
+					if( node2 ) {
+						branch
+						.setAttribute(paradigm, "comment", branch.getAttribute(node2, "text"));
 					}
-					done(err);
-				});
+				}));
+
+				getChildByTag(
+				node,
+				"author",
+				errorHandler(function (node2) {
+					if( node2 ) {
+						branch.setAttribute(paradigm, "author", branch.getAttribute(node2, "text"));
+					}
+				}));
+
+				getChildByTag(node, "dispname", errorHandler(function (node2) {
+					if( node2 ) {
+						branch.setAttribute(paradigm, "dispname", branch
+						.getAttribute(node2, "text"));
+					}
+				}));
 			}
-			else {
-				done(null);
-			}
+
+			branch.loadChildren(node, errorHandler(function (children) {
+				for( var i = 0; i < children.length; ++i ) {
+					var child = children[i];
+					enqueue(branch.getPath(child), process, child);
+				}
+			}));
+
+			errorHandler(null);
 		};
 
 		branch.loadRoot(key, function (err, node) {
