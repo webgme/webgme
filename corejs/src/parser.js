@@ -10,8 +10,8 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "lib/sax", "fs", "mongo", "branch" ], function (ASSERT, SAX, FS, Mongo,
-Branch) {
+requirejs([ "assert", "lib/sax", "fs", "mongo", "branch", "config", "util" ], function (ASSERT,
+SAX, FS, Mongo, Branch, CONFIG, UTIL) {
 	"use strict";
 
 	// ------- parser -------
@@ -19,9 +19,13 @@ Branch) {
 	var parse = function (storage, filename, callback) {
 		ASSERT(storage && filename && callback);
 
+		var ids = {};
+		var idCount = 0;
+
 		var timerhandle = setInterval(function () {
-			console.log("  at line " + parser._parser.line + " (" + total + " objects)");
-		}, 5000);
+			console.log("  at line " + parser._parser.line + " (" + total + " objects, " + idCount
+			+ " ids)");
+		}, CONFIG.parser.reportingTime);
 
 		var branch = new Branch(storage);
 
@@ -37,12 +41,7 @@ Branch) {
 			}
 		};
 
-		var tags = [ {
-			name: "Root",
-			attributes: {
-				created: (new Date()).toString()
-			}
-		} ];
+		var tags = [];
 
 		var persisting = 1;
 		var persist = function () {
@@ -54,12 +53,14 @@ Branch) {
 					exit(err);
 				}
 				else if( --persisting === 0 ) {
-					console.log("Parsing done (" + total + " objects)");
-
 					var key = branch.getKey(tags[0].node);
+
+					console.log("Parsing done (" + total + " objects, " + idCount + " ids)");
+					console.log("Root key = " + key);
+
 					tags = null;
 					branch = null;
-					
+
 					exit(null, key);
 				}
 			});
@@ -68,37 +69,51 @@ Branch) {
 		var total = 0;
 		var counter = 0;
 
-		var createNode = function (tag) {
+		var addTag = function (tag) {
 			var node = branch.createNode();
+
+			if( tags.length !== 0 ) {
+				branch.attach(node, tags[tags.length - 1].node);
+			}
 
 			for( var key in tag.attributes ) {
 				branch.setAttribute(node, key, tag.attributes[key]);
 			}
 
-			branch.setAttribute(node, "tag", tag.name);
+			branch.setAttribute(node, "#tag", tag.name);
+
+			if( tag.attributes.id ) {
+				ASSERT(ids[tag.attributes.id] === undefined);
+
+				ids[tag.attributes.id] = branch.getStringPath(node);
+				++idCount;
+			}
 
 			tag.text = "";
 			tag.node = node;
 
 			++total;
-			if( ++counter >= 20000 ) {
+			if( ++counter >= CONFIG.parser.persistingLimit ) {
 				++persisting;
 				persist();
 				counter = 0;
 			}
+
+			tags.push(tag);
 		};
 
-		createNode(tags[0]);
+		addTag({
+			name: "Root",
+			attributes: {
+				created: (new Date()).toString()
+			}
+		});
 
 		var parser = SAX.createStream(true, {
 			trim: true
 		});
 
-		parser.on("opentag", function (tag) {
-			createNode(tag);
-			branch.attach(tag.node, tags[tags.length - 1].node);
-			tags.push(tag);
-		});
+		parser.on("opentag", addTag);
 
 		parser.on("closetag", function (name) {
 			ASSERT(tags.length >= 2);
@@ -124,6 +139,7 @@ Branch) {
 
 		parser.on("end", function () {
 			ASSERT(tags.length === 1);
+			branch.setAttribute(tags[0].node, "#ids", ids);
 			persist();
 		});
 
@@ -140,76 +156,122 @@ Branch) {
 		});
 	};
 
-	// ------- paths -------
-	
-	var binarySearch = function(array, element) {
-		ASSERT(array.constructor === Array);
-		ASSERT(path.constructor === Array);
-		
-		var low = 0;
-		var high = array.length-1;
-		
-		while( low < high ) {
-			var mid = Math.floor((low + high) / 2);
-			ASSERT(mid < high);
-
-			
-		}
-		
-		return low;
-	};
-	
-	var mergePath = function(array, path) {
-	};
-	
 	// ------- reader -------
 
-	var reader = function(storage, key, callback) {
+	var comparePaths = function (a, b) {
+		ASSERT(a.constructor === Array);
+		ASSERT(b.constructor === Array);
+
+		var c = a.length;
+		var d = b.length;
+
+		while( --c >= 0 && --d >= 0 ) {
+			var t = a[c] - b[d];
+			if( t !== 0 ) {
+				return t;
+			}
+		}
+
+		return a.length - b.length;
+	};
+
+	var reader = function (storage, key, callback) {
 		var branch = new Branch(storage);
-		
-		var error = null;
 		var count = 0;
 
-		var timerhandle = setInterval(function () {
-			console.log("  reading " + count + " objects");
-		}, 5000);
+		var timerhandle;
 
-		var missing = 1;
-		var missingDone = function() {
-			if( --missing === 0 ) {
-				console.log("Reading done (" + count + " objects)");
-				callback(error);
-				callback = null;
+		var enqueue = UTIL.priorityQueue(CONFIG.reader.concurrentReads, comparePaths,
+		function (err) {
+			clearInterval(timerhandle);
+			console.log("Reading done (" + count + " objects)");
+			callback(err);
+		});
 
-				clearInterval(timerhandle);
-			}
-		};
-		
-		var processNode = function(node) {
-			count += 1;
-			missing += 1;
-			branch.loadChildren(node, function(err, children) {
-				error = error || err;
+		var process = function (path, done, node) {
+			++count;
+			branch.loadChildren(node, function (err, children) {
 				if( !err ) {
-					for(var i = 0; i < children.length; ++i) {
-						processNode(children[i]);
+					for( var i = 0; i < children.length; ++i ) {
+						var child = children[i];
+						enqueue(branch.getPath(child), process, child);
 					}
 				}
-				missingDone();
+				done(err);
 			});
 		};
-		
-		console.log("Reading tree ...");
-		
-		branch.loadRoot(key, function(err, node) {
-			error = error || err;
-			if( node ) {
-				processNode(node);
+
+		branch.loadRoot(key, function (err, node) {
+			if( err ) {
+				callback(err);
 			}
-			missingDone();
+			else {
+				console.log("Reading tree ...");
+				timerhandle = setInterval(function () {
+					console.log("  reading " + count + " objects");
+				}, CONFIG.reader.reportingTime);
+
+				enqueue(branch.getPath(node), process, node);
+			}
 		});
 	};
-	
+
+	// ------- metabuilder -------
+
+	var metabuilder = function (storage, key, callback) {
+		var branch = new Branch(storage);
+
+		var metaroot = branch.createNode();
+		var metaproj = branch.createNode();
+		branch.attach(metaproj, metaroot);
+
+		var enqueue = UTIL.priorityQueue(CONFIG.reader.concurrentReads, comparePaths,
+		function (err) {
+			if( err ) {
+				console.log("Building error: " + JSON.stringify(err));
+			}
+			else {
+				console.log("Building done ");
+			}
+			callback(err);
+		});
+
+		var process = function (path, done, node) {
+
+			if( branch.getLevel(node) === 1 && branch.getAttribute(node, "#tag") !== "paradigm" ) {
+				done("Not a meta paradigm");
+				return;
+			}
+
+			if( branch.getLevel(node) <= 2 ) {
+//				console.log(path, node.data);
+
+				branch.loadChildren(node, function (err, children) {
+					if( !err ) {
+						for( var i = 0; i < children.length; ++i ) {
+							var child = children[i];
+							enqueue(branch.getPath(child), process, child);
+						}
+					}
+					done(err);
+				});
+			}
+			else {
+				done(null);
+			}
+		};
+
+		branch.loadRoot(key, function (err, node) {
+			if( err ) {
+				callback(err);
+			}
+			else {
+				console.log("Building meta objects ...");
+				enqueue(branch.getPath(node), process, node);
+			}
+		});
+	};
+
 	// ------- database -------
 
 	var mongo = new Mongo();
@@ -260,10 +322,8 @@ Branch) {
 					if( err2 ) {
 						console.log(err2);
 					}
-					
-					reader(mongo, key, function(err3) {
-						ASSERT(!err3);
-						
+
+					metabuilder(mongo, key, function (err3) {
 						console.log("Closing database");
 						closeDatabase();
 					});

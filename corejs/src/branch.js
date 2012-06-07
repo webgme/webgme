@@ -10,8 +10,8 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 	// ----------------- RELID -----------------
 
 	var RELID = {
-		// maxRelid: Math.pow(2, 31),
-		maxRelid: 1000,
+		maxRelid: Math.pow(2, 31),
+		// maxRelid: 1000,
 
 		create: function (data, relid) {
 			ASSERT(data && typeof data === "object");
@@ -105,7 +105,9 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 		this.getParent = pertree.getParent;
 		this.getRelid = pertree.getRelid;
 		this.getRoot = pertree.getRoot;
-		this.getPath = pertree.getStringPath;
+		this.getPath = pertree.getPath;
+		this.getStringPath = pertree.getStringPath;
+		this.getLevel = pertree.getLevel;
 
 		this.detach = function (node) {
 			ASSERT(pertree.getParent(node) !== null);

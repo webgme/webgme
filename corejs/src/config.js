@@ -15,14 +15,14 @@ define(function () {
 			collection: "storage"
 		},
 		
-		copy: function(defaults, options) {
-			options = options || {};
-			for(var key in defaults) {
-				if(!options.hasOwnProperty(key)) {
-					options[key] = defaults[key];
-				}
-			}
-			return options;
+		parser: {
+			persistingLimit: 5000,
+			reportingTime: 2000 
+		},
+		
+		reader: {
+			concurrentReads: 10,
+			reportingTime: 2000
 		}
 	};
 });
