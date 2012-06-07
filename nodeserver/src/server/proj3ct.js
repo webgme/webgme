@@ -837,6 +837,11 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                         for(j=0;j<subtreeids.length;j++){
                             inheritanceArray[subtreeids[j]] = commonUtil.guid();
                         }
+                        if(pastecommand.inheritance){
+                            for(j in pastecommand.inheritance){
+                                inheritanceArray[j] = pastecommand.inheritance[j];
+                            }
+                        }
                         for(j=0;j<subtreeids.length;j++){
                             pasteObject(subtreeids[j],objectPasted);
                         }
@@ -865,10 +870,10 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 childrenComplete();
             }
         };
-        rCreateChild = function(parentId,baseId){
+        rCreateChild = function(parentId,baseId,newguid){
             var i;
             count++;
-            inheritObject(baseId,function(err,inherited){
+            inheritObject(baseId,newguid,function(err,inherited){
                 if(err){
                     logger.error("inheriting object failed: reason["+err+"],base["+baseId+"]");
                     status = false;
@@ -887,7 +892,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                             inherited.relations.parentId = parent[ID];
                             commandBuffer.set(inherited[ID],inherited);
                             for(i=0;i<parent.relations.inheritorIds.length;i++){
-                                rCreateChild(parent.relations.inheritorIds[i],inherited[ID]);
+                                rCreateChild(parent.relations.inheritorIds[i],null,inherited[ID]);
                             }
                             childrenCreated();
                         }
@@ -898,7 +903,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         /*main*/
         status = true;
         count = 0;
-        rCreateChild(childrencommand.parentId,childrencommand.baseId,cCid+"_"+childrencommand.cid+"/");
+        rCreateChild(childrencommand.parentId,childrencommand.baseId,childrencommand.newguid);
     };
     pointCommand = function(pointcommand,callback){
         var fromobj,
@@ -1077,7 +1082,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         readIds = [];
         rReadObject(rootId);
     };
-    inheritObject = function(baseId,cb){
+    inheritObject = function(baseId,newguid,cb){
         var i,
             count,
             inheritedobject;
@@ -1134,6 +1139,9 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                 count = subTreeIds.length;
                 for(i=0;i<subTreeIds.length;i++){
                     inheritanceArray[subTreeIds[i]] = commonUtil.guid();
+                }
+                if(newguid){
+                    inheritanceArray[baseId] = newguid;
                 }
                 for(i=0;i<subTreeIds.length;i++){
                     quickCopyObject(subTreeIds[i]);
@@ -1483,7 +1491,7 @@ var Project = function(cPort,cProject,cBranch){
     }
 
     /*socket.IO listener*/
-    //cIo.set('log level', 1); // reduce logging
+    cIo.set('log level', 1); // reduce logging
     cIo.sockets.on('connection', function(socket){
         logger.debug("SOCKET.IO CONN - "+JSON.stringify(socket.id));
         if(cClients[socket.id]){
