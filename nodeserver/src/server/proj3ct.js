@@ -1011,14 +1011,16 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             commandBuffer.get(id,function(err,object){
                 var i;
                 if(err){
-                    logger.error("getting object failed: reason["+err+"},id["+id+"]");
+                    logger.error("readSubTree.rReadObject - getting object failed: reason["+err+"],id["+id+"]");
                     state=false;
                     objectRead();
                 }
                 else{
                     commonUtil.insertIntoArray(readIds,id);
                     for(i=0;i<object.relations.childrenIds.length;i++){
-                        rReadObject(object.relations.childrenIds[i]);
+                        if(object.relations.childrenIds[i]){
+                            rReadObject(object.relations.childrenIds[i]);
+                        }
                     }
                     objectRead();
                 }
@@ -1062,7 +1064,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
             count++;
             commandBuffer.get(id,function(err,object){
                 if(err){
-                    logger.error("getting object failed: reason["+err+"},id["+id+"]");
+                    logger.error("readISubTree.rReadObject - getting object failed: reason["+err+"},id["+id+"]");
                     state=false;
                     objectRead();
                 }

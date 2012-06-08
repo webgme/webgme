@@ -3,7 +3,7 @@ var payload = "";
 var objects = {};
 var emptyObject = function(){
     return { _id:"obj"+objectCounter++,
-        attributes:{"name":"default","payload":payload},
+        attributes:{"name":"default","payload":payload, "isPort":true},
         registry:{ "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)} },
         relations:{parentId:null,
             childrenIds:[],
@@ -22,6 +22,18 @@ var generatePayload = function(size){
             payload+="a";
         }
     }
+};
+var easyBase = function(){
+    var object, connection;
+    object = emptyObject();
+    object._id = "object";
+    object.relations.inheritorIds.push("connection");
+    objects["object"] = object;
+    connection = emptyObject();
+    connection._id = "connection";
+    connection.relations.baseId = "object";
+    objects["connection"] = connection;
+    return object;
 };
 var generateBase = function(length){
     var i,
@@ -71,12 +83,12 @@ var i,
     arguments = process.argv.splice(" "),
     commonbase,
     root;
-if(arguments.length !== 7){
-    console.log("usage: gensimpl3 filename numoflevels numofchildren sizeofpayload numofbase");
+if(arguments.length !== 6){
+    console.log("usage: gensimpl3 filename numoflevels numofchildren sizeofpayload");
     process.exit(0);
 }
 generatePayload(Number(arguments[5]));
-commonbase = generateBase(Number(arguments[6]));
+commonbase = /*generateBase(Number(arguments[6]))*/ easyBase();
 root = rGenerateTree(0,Number(arguments[3]),Number(arguments[4]));
 fs.writeFileSync(arguments[2]+".tpf", JSON.stringify(objects));
 console.log(objectCounter+" object have been created!");

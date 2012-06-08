@@ -109,7 +109,22 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         this.delPointer = function(id,name){
             commandqueue.push({type:"point",id:id,to:null,name:name});
         };
-        this.makeConnection = function(parent,base,source,target){
+        this.makeConnection = function(parameters){
+            var baseId,
+                guid;
+            if(parameters.parentId && parameters.sourceId && parameters.targetId){
+                baseId = parameters.baseId || "connection";
+                guid = commonUtil.guid();
+                commandqueue.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid,cid:"connnection 001"});
+                commandqueue.push({type:"point",id:guid,name:"source",to:parameters.sourceId,cid:"connection 002"});
+                commandqueue.push({type:"point",id:guid,name:"target",to:parameters.targetId,cid:"connection 003"});
+                if(parameters.directed !== null parameters.directed !== undefined){
+                    self.setAttributes(guid,"directed",parameters.directed);
+                }
+            }
+            else{
+                logger.error("fraudulent connection creation: "+JSON.stringify(parameters));
+            }
         };
 
         /*UserInterface handling*/
