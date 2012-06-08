@@ -118,7 +118,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 commandqueue.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid,cid:"connnection 001"});
                 commandqueue.push({type:"point",id:guid,name:"source",to:parameters.sourceId,cid:"connection 002"});
                 commandqueue.push({type:"point",id:guid,name:"target",to:parameters.targetId,cid:"connection 003"});
-                if(parameters.directed !== null parameters.directed !== undefined){
+                if(parameters.directed !== null && parameters.directed !== undefined){
                     self.setAttributes(guid,"directed",parameters.directed);
                 }
             }
