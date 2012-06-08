@@ -10,6 +10,7 @@ define(function () {
 	return {
 		mongodb: {
 			host: "localhost",
+//			host: "129.59.104.16",
 			port: 27017,
 			database: "test",
 			collection: "storage"
@@ -21,7 +22,7 @@ define(function () {
 		},
 		
 		reader: {
-			concurrentReads: 10,
+			concurrentReads: 1,
 			reportingTime: 2000
 		}
 	};

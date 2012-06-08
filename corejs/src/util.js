@@ -72,44 +72,45 @@ define([ "assert" ], function (ASSERT) {
 		return options;
 	};
 
-	var nullCallback = function () {
-	};
-
 	var errorHandler = function (callback) {
 		ASSERT(callback && callback.constructor === Function && callback.length === 1);
 
-		var pending = 0;
+		var pending = 1;
 
-		return function (process) {
-			ASSERT(arguments.length === 1);
+		return {
+			wait: function () {
+				++pending;
+			},
 
-			if( callback ) {
-				if( process && process.constructor === Function ) {
-					++pending;
-					
-					return function (err, arg1, arg2, arg3) {
-						if( err ) {
+			wrap: function (process) {
+				ASSERT(process && process.constructor === Function);
+
+				return function (err, data) {
+					if( callback ) {
+						if( !err ) {
+							process(data);
+						}
+
+						if( err || --pending === 0 ) {
 							callback(err);
-							callback = nullCallback;
+							callback = null;
 						}
-						else {
-							process(arg1, arg2, arg3);
+					}
+				};
+			},
 
-							if( --pending === 0 ) {
-								callback(null);
-								callback = null;
-							}
-						}
-					};
-				}
-				else if( process || pending === 0 ) {
-					callback(process);
+			done: function (err) {
+				if( callback && (err || --pending === 0) ) {
+					callback(err);
 					callback = null;
 				}
 			}
 		};
 	};
-	
+
+	var nullCallback = function () {
+	};
+
 	/**
 	 * Constructs a priority queue object that calls enqueued processes, and
 	 * returns the enqueue function. The priority queue object calls at most

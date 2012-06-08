@@ -131,8 +131,7 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			ASSERT(typeof relid === "string");
 
 			var child = node.data[relid];
-			ASSERT(child && typeof child === "obejct" || typeof child === "string");
-			ASSERT(isKey(child));
+			ASSERT(child && (typeof child === "object" || isKey(child)));
 
 			if( typeof child === "string" ) {
 				storage.load(child, function (err, data) {
