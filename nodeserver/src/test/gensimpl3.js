@@ -4,7 +4,7 @@ var objects = {};
 var emptyObject = function(){
     return { _id:"obj"+objectCounter++,
         attributes:{"name":"default","payload":payload},
-        registry:{},
+        registry:{ "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)} },
         relations:{parentId:null,
             childrenIds:[],
             baseId:null,

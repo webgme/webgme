@@ -12,7 +12,7 @@ var Server = function(parameters){
             logger.debug("HTTP REQ - "+req.url);
 
             if(req.url==='/'){
-                req.url = '/indexstda.html';
+                req.url = '/index.html';
             }
 
             if (req.url.indexOf('/common/') === 0 ) {

@@ -2,14 +2,18 @@
 
 // set the baseUrl for module lookup to '/lib' folder
 require.config({
-    baseUrl: "/lib"
+    baseUrl: "/lib",
+    paths: {
+        "WidgetAPI": "/js/WidgetAPI"
+    }
 });
 
 // let require load all the toplevel needed script and call us on domReady
 require([   'order!jquery.min',
             'order!jquery-ui.min',
+            'order!./../../common/underscore.js',
             'domReady',
-            'order!./../js/clienttwo.js',
+            'order!./../js/cli3nt.js',
             'order!./../js/TreeBrowserControl.js',
             'order!./../js/JSTreeBrowserWidget.js',
             'order!./../js/delayctrl.js',
@@ -22,6 +26,7 @@ require([   'order!jquery.min',
             './../js/MultiLevelModelEditorControl.js',
             './../js/WidgetAPI/WidgetManager.js'], function (jquery,
                                                         jqueryUI,
+                                                        underscore,
                                                         domReady,
                                                         Client,
                                                         TreeBrowserControl,
@@ -57,24 +62,19 @@ require([   'order!jquery.min',
             var serverLocation;
 
             //by default serverlocation is the same server the page loaded from
-            if (commonUtil.ServerIP === "self") {
-                serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.ServerPort;
+            if (commonUtil.standalone.ProjectIP === "self") {
+                serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.standalone.ProjectPort;
             } else {
-                serverLocation = 'http://' + commonUtil.ServerIP + ':' + commonUtil.ServerPort;
+                serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
             }
 
             client = new Client(serverLocation);
-            client.connect(function () {
-                client.makeconnect(function () {
-                    tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
-                    //delayer = new DelayControl(client.socket, document.getElementById("socketDelayer"));
-                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
+            tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
+            //delayer = new DelayControl(client.socket, document.getElementById("socketDelayer"));
+            tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
-                    modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-                    //modelEditorHTML = new MultiLevelModelEditorControl(client, new ModelEditorWidget("modelEditorHtml"));
-                    modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-                });
-            });
+            modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+            //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
         };
 
         /*main*/

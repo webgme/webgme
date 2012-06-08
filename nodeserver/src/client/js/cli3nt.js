@@ -383,6 +383,14 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 return selfdata;
             }
         };
+        this.getId = function(){
+            if(selfdata){
+                return selfdata._id;
+            }
+            else{
+                return selfdata;
+            }
+        };
         this.getChildrenIds = function(){
             if(selfdata){
                 return selfdata.relations.childrenIds;

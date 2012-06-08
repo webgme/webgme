@@ -2,27 +2,19 @@
 
 define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './util.js'], function (logManager, EventDispatcher, util) {
 
-    var ModelEditorControl = function (myProject, myModelEditor) {
+    var ModelEditorControl = function (myClient, myModelEditor) {
         var logger,
-            project,
-            territoryId,
+            client,
+            selfId,
+            selfPatterns = {},
             stateLoading = 0,
             stateLoaded = 1,
             nodes,
             modelEditor,
             currentNodeInfo,
             refresh,
-            nodeAttrNames = {   "id": "_id",
-                                "name" : "name",
-                                "children": "children",
-                                "parentId": "parent",
-                                "posX": "attr.posX",
-                                "posY": "attr.posY",
-                                "source" : "srcId",
-                                "target" : "trgtId",
-                                "directed" : "directed",
-                                "outgoingConnections": "connSrc",
-                                "incomingConnections": "connTrgt" },
+            nodeAttrNames = { "name" : "name" },
+            nodeRegistryNames = {   "position" : "position" },
             createObject,
             updateObject,
             getObjectDescriptor;
@@ -30,9 +22,9 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         //get logger instance for this component
         logger = logManager.create("ModelEditorControl");
 
-        project = myProject;
+        client = myClient;
 
-        territoryId = project.reserveTerritory(this);
+        selfId = client.addUI(this);
 
         //local container for accounting the currently opened node list
         //its a hash map with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[] }
@@ -45,9 +37,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         currentNodeInfo = { "id": null, "children" : [] };
 
         modelEditor.onObjectPositionChanged = function (nodeId, position) {
-            var selectedNode = project.getNode(nodeId);
-            logger.debug("Object position changed for id:'" + nodeId + "', new pos:[" + position.posX + ", " + position.posY + "]");
-            selectedNode.setAttribute("attr", { "posX": position.posX, "posY": position.posY });
+            client.setRegistry(nodeId, nodeRegistryNames.position, { "x": position.posX, "y": position.posY } );
         };
 
         modelEditor.onConnectionCreated = function (sourceId, targetId) {
@@ -56,19 +46,18 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
         modelEditor.onNodeCopy = function (selectedIds) {
-            project.copy(selectedIds);
+            client.copyNodes(selectedIds);
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
         modelEditor.onNodePaste = function () {
             if (currentNodeInfo.id) {
-                project.paste(currentNodeInfo.id);
+                client.pasteNodes(currentNodeInfo.id);
             }
         };
 
-        project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
-            var newPattern = {},
-                selectedNode,
+        client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
+            var selectedNode,
                 i = 0,
                 childrenIDs = [],
                 currentChildId,
@@ -81,13 +70,14 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             nodes = {};
 
             if (currentNodeInfo.id) {
-                project.removePatterns(territoryId, { "nodeid": currentNodeInfo.id });
+                delete selfPatterns[currentNodeInfo.id];
+                client.updateTerritory(selfId, selfPatterns);
             }
 
             currentNodeInfo = { "id": null, "children" : [] };
 
-            newPattern[nodeId] = { "children": 1 };
-            project.addPatterns(territoryId, newPattern);
+            selfPatterns[nodeId] = { "children": 1};
+            client.updateTerritory(selfId, selfPatterns);
 
             selectedNode = project.getNode(nodeId);
 
@@ -95,7 +85,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 modelEditor.setTitle(selectedNode.getAttribute(nodeAttrNames.name));
 
                 //get the children IDs of the parent
-                childrenIDs = selectedNode.getAttribute(nodeAttrNames.children);
+                childrenIDs = selectedNode.getChildrenIds();
 
                 for (i = 0; i < childrenIDs.length; i += 1) {
 
@@ -140,7 +130,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //update the "loading" node accordingly
                     if (nodes[objectId].state === stateLoading) {
                         //set eventType to "update" and let it go and be handled by "update" event
-                        createObject(project.getNode(objectId));
+                        createObject(client.getNode(objectId));
                     }
                 }
             }
@@ -149,7 +139,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             //HANDLE UPDATE
             //object got updated in the territory
             if (eventType === "update") {
-                updatedObject = project.getNode(objectId);
+                updatedObject = client.getNode(objectId);
 
                 //check if the updated object is the opened node
                 if (objectId === currentNodeInfo.id) {
@@ -185,7 +175,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                             "state" : stateLoading };
 
                         //if the child is already loaded on the client side
-                        childNode = project.getNode(addedChildId);
+                        childNode = client.getNode(addedChildId);
                         if (childNode) {
                             createObject(childNode);
                         }
@@ -224,7 +214,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         };
 
         createObject = function (nodeObj) {
-            var currentNodeId = nodeObj.getAttribute(nodeAttrNames.id);
+            var currentNodeId = nodeObj.getId();
 
             //store the node's info in the local hash map
             nodes[currentNodeId].state = stateLoaded;
@@ -232,7 +222,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         };
 
         updateObject = function (nodeObj) {
-            var objectId = nodeObj.getAttribute(nodeAttrNames.id);
+            var objectId = nodeObj.getId();
 
             //update the node's representation in the tree
             if (nodes[objectId].modelObject) {
@@ -241,9 +231,10 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         };
 
         getObjectDescriptor = function (nodeObj) {
-            var objDescriptor = {};
+            var objDescriptor = {},
+                position;
 
-            objDescriptor.id = nodeObj.getAttribute(nodeAttrNames.id);
+            objDescriptor.id = nodeObj.getId();
 
             //fill the descriptor based on its type
             if (nodeObj.getAttribute(nodeAttrNames.source) && nodeObj.getAttribute(nodeAttrNames.target)) {
@@ -252,12 +243,13 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 objDescriptor.target = nodeObj.getAttribute(nodeAttrNames.target);
                 objDescriptor.title =  nodeObj.getAttribute(nodeAttrNames.name);
                 objDescriptor.directed =  nodeObj.getAttribute(nodeAttrNames.directed);
-                objDescriptor.sourceComponent = nodes[objDescriptor.source].modelObject;
-                objDescriptor.targetComponent = nodes[objDescriptor.target].modelObject;
+                objDescriptor.sourceComponent = nodes[objDescriptor.source] ? nodes[objDescriptor.source].modelObject : null;
+                objDescriptor.targetComponent = nodes[objDescriptor.target] ? nodes[objDescriptor.target].modelObject : null;
             } else {
                 objDescriptor.kind = "MODEL";
-                objDescriptor.posX = nodeObj.getAttribute(nodeAttrNames.posX);
-                objDescriptor.posY = nodeObj.getAttribute(nodeAttrNames.posY);
+                position = nodeObj.getRegistry(nodeRegistryNames.position);
+                objDescriptor.posX = position.x;
+                objDescriptor.posY = position.y;
                 objDescriptor.title =  nodeObj.getAttribute(nodeAttrNames.name);
             }
 

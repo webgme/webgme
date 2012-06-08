@@ -8,14 +8,15 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             rootNodeId = "root",
             stateLoading = 0,
             stateLoaded = 1,
-            territoryId = 0,
+            selfId,
+            selfPatterns = {},
             nodes = {}, //local container for accounting the currently opened node list, its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[], state }
             refresh;
 
         //get logger instance for this component
         logger = logManager.create("TreeBrowserControl");
 
-        territoryId = client.reserveTerritory(this);
+        selfId = client.addUI(this);
 
         //add "root" with its children to territory
         setTimeout(function () {
@@ -32,7 +33,8 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                                         "state" : stateLoading };
 
             //add the root to the query
-            client.addPatterns(territoryId, { "root": { "children": 1, "base": 3 } });
+            selfPatterns = { "root": { "children": 1} };
+            client.updateTerritory(selfId, selfPatterns);
         }, 1);
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
@@ -45,8 +47,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 i,
                 currentChildId,
                 childNode,
-                childTreeNode,
-                newPattern;
+                childTreeNode;
 
             if (parent) {
 
@@ -54,7 +55,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                 parentNode = nodes[nodeId].treeNode;
 
                 //get the children IDs of the parent
-                childrenIDs = parent.getAttribute("children");
+                childrenIDs = parent.getChildrenIds();
 
                 for (i = 0; i < childrenIDs.length; i += 1) {
                     currentChildId = childrenIDs[i];
@@ -69,12 +70,12 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                         //the node was present on the client side, render ist full data
                         childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
                                                                                 "name": childNode.getAttribute("name"),
-                                                                                "hasChildren" : (childNode.getAttribute("children")).length > 0,
-                                                                                "class" :   ((childNode.getAttribute("children")).length > 0) ? "gme-model" : "gme-atom" });
+                                                                                "hasChildren" : (childNode.getChildrenIds()).length > 0,
+                                                                                "class" :   ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
 
                         //store the node's info in the local hashmap
                         nodes[currentChildId] = {    "treeNode": childTreeNode,
-                                                        "children" : childNode.getAttribute("children"),
+                                                        "children" : childNode.getChildrenIds(),
                                                         "state" : stateLoaded };
                     } else {
                         //the node is not present on the client side, render a loading node instead
@@ -93,9 +94,8 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             }
 
             //need to expand the territory
-            newPattern = {};
-            newPattern[nodeId] = { "children": 1, "base": 3 };
-            client.addPatterns(territoryId, newPattern);
+            selfPatterns[nodeId] = { "children": 1};
+            client.updateTerritory(selfId, selfPatterns);
         };
 
         //called from the TreeBrowserWidget when a node has been closed by its collapse icon
@@ -119,10 +119,11 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                     //finally delete the nodeId itself (if needed)
                     if (deleteSelf === true) {
                         delete nodes[childNodeId];
-                    }
 
-                    //and collect the nodeId from territory removal
-                    removeFromTerritory.push({ "nodeid": childNodeId  });
+                        //and collect the nodeId from territory removal
+                        removeFromTerritory.push({ "nodeid": childNodeId  });
+                        delete selfPatterns[childNodeId];
+                    }
                 }
             };
 
@@ -131,25 +132,25 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
             //if there is anything to remove from the territory, do it
             if (removeFromTerritory.length > 0) {
-                client.removePatterns(territoryId, removeFromTerritory);
+                client.updateTerritory(selfId, selfPatterns);
             }
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "copy this"
         treeBrowser.onNodeCopy = function (selectedIds) {
-            client.copy(selectedIds);
+            client.copyNodes(selectedIds);
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "paste here"
         treeBrowser.onNodePaste = function (nodeId) {
-            client.paste(nodeId);
+            client.pasteNodes(nodeId);
         };
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         treeBrowser.onNodeDelete = function (selectedIds) {
             var i;
             for (i = 0; i < selectedIds.length; i += 1) {
-                client.delNode(selectedIds[i]);
+                client.deleteNode(selectedIds[i]);
             }
         };
 
@@ -157,8 +158,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
         treeBrowser.onNodeTitleChanged = function (nodeId, oldText, newText) {
 
             //send name update to the server
-            var currentNode = client.getNode(nodeId);
-            currentNode.setAttribute("name", newText);
+            client.setAttributes(nodeId, "name", newText);
 
             //reject name change on client side - need server roundtrip to notify about the name change
             return false;
@@ -223,7 +223,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                             //specify the icon for the treenode
                             //TODO: fixme (determine the type based on the 'kind' of the object)
-                            objType = ((updatedObject.getAttribute("children")).length > 0) ? "gme-model" : "gme-atom";
+                            objType = ((updatedObject.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom";
                             //for root node let's specify specific type
                             if (objectId === rootNodeId) {
                                 objType = "gme-root";
@@ -231,14 +231,14 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                             //create the node's descriptor for the tree-browser widget
                             nodeDescriptor = {  "text" :  updatedObject.getAttribute("name"),
-                                "hasChildren" : (updatedObject.getAttribute("children")).length > 0,
+                                "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
                                 "class" : objType };
 
                             //update the node's representation in the tree
                             treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
 
                             //update the object's children list in the local hashmap
-                            nodes[objectId].children = updatedObject.getAttribute("children");
+                            nodes[objectId].children = updatedObject.getChildrenIds();
 
                             //finally update the object's state showing loaded
                             nodes[objectId].state = stateLoaded;
@@ -248,7 +248,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
                                 "text" : updatedObject.getAttribute("name"),
-                                "hasChildren" : (updatedObject.getAttribute("children")).length > 0//,
+                                "hasChildren" : (updatedObject.getChildrenIds()).length > 0//,
                                 //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
                             };
 
@@ -256,7 +256,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                             treeBrowser.updateNode(nodes[objectId].treeNode, nodeDescriptor);
 
                             oldChildren = nodes[objectId].children;
-                            currentChildren = updatedObject.getAttribute("children");
+                            currentChildren = updatedObject.getChildrenIds();
 
                             //the concrete child deletion is important only if the node is open in the tree
                             if (treeBrowser.isExpanded(nodes[objectId].treeNode)) {
@@ -277,6 +277,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
 
                                         //and collect the nodeId from territory removal
                                         removeFromTerritory.push({ "nodeid": childNodeId  });
+                                        delete selfPatterns[childNodeId];
                                     }
                                 };
 
@@ -317,12 +318,12 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                                         //the node was present on the client side, render ist full data
                                         childTreeNode = treeBrowser.createNode(nodes[objectId].treeNode, {  "id": currentChildId,
                                             "name": childNode.getAttribute("name"),
-                                            "hasChildren": (childNode.getAttribute("children")).length > 0,
-                                            "class" :  ((childNode.getAttribute("children")).length > 0) ? "gme-model" : "gme-atom" });
+                                            "hasChildren": (childNode.getChildrenIds()).length > 0,
+                                            "class" :  ((childNode.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom" });
 
                                         //store the node's info in the local hashmap
                                         nodes[currentChildId] = {   "treeNode": childTreeNode,
-                                            "children" : childNode.getAttribute("children"),
+                                            "children" : childNode.getChildrenIds(),
                                             "state" : stateLoaded };
                                     } else {
                                         //the node is not present on the client side, render a loading node instead
@@ -341,19 +342,20 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
                             }
 
                             //update the object's children list in the local hashmap
-                            nodes[objectId].children = updatedObject.getAttribute("children");
+                            nodes[objectId].children = updatedObject.getChildrenIds();
 
                             //finally update the object's state showing loaded
                             nodes[objectId].state = stateLoaded;
 
                             //if there is no more children of the current node, remove it from the territory
-                            if ((updatedObject.getAttribute("children")).length === 0) {
+                            if ((updatedObject.getChildrenIds()).length === 0) {
                                 removeFromTerritory.push({ "nodeid" : objectId });
+                                delete selfPatterns[objectId];
                             }
 
                             //if there is anythign to remove from the territory, do so
                             if (removeFromTerritory.length > 0) {
-                                client.removePatterns(territoryId, removeFromTerritory);
+                                client.updateTerritory(selfId, selfPatterns);
                             }
                         }
                     }
@@ -367,7 +369,7 @@ define(['./../../common/LogManager.js', './../../common/EventDispatcher.js', './
             case "load":
                 refresh("insert", eid);
                 break;
-            case "modify":
+            case "update":
                 refresh("update", eid);
                 break;
             case "create":
