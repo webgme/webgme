@@ -4,7 +4,9 @@ var objects = {};
 var emptyObject = function(){
     return { _id:"obj"+objectCounter++,
         attributes:{"name":"default","payload":payload, "isPort":true},
-        registry:{ "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)} },
+        registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
+                    "isConnection" : false,
+                    "isPort" : true},
         relations:{parentId:null,
             childrenIds:[],
             baseId:null,
@@ -32,6 +34,7 @@ var easyBase = function(){
     connection = emptyObject();
     connection._id = "connection";
     connection.relations.baseId = "object";
+    connection.registry.isConnection = true;
     objects["connection"] = connection;
     return object;
 };

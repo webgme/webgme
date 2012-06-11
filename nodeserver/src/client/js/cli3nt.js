@@ -446,7 +446,34 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 return selfdata;
             }
         };
-
+        this.getPointer = function(name){
+            var pointer = {to:null,from:[]};
+            if(selfdata.pointers[name]){
+                pointer = commonUtil.copy(selfdata.pointers[name]);
+            }
+            return pointer;
+        };
+        this.getConnectionList = function(){
+            var i,
+                connectionlist = [],
+                templist;
+            if(selfdata === null || selfdata === undefined){
+                return connectionlist;
+            }
+            if(selfdata.pointers.source){
+                templist = commonUtil.copy(selfdata.pointers.source.from);
+                for(i=0;i<templist.length();i++){
+                    connectionlist.push({id:templist[i],out:true});
+                }
+            }
+            if(selfdata.pointers.target){
+                templist = commonUtil.copy(selfdata.pointers.target.from);
+                for(i=0;i<templist.length();i++){
+                    connectionlist.push({id:templist[i],out:false});
+                }
+            }
+            return connectionlist;
+        };
         /*private functions*/
         rGetAttribute = function(id,name){
             var data;
