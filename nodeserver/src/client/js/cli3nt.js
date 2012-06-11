@@ -15,7 +15,6 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             connected = false,
             storage = new Storage(),
             self = this,
-            commandqueue = new CommandQueue(self,storage),
             clipboard = {},
             updateStorage,
             updateUsers,
@@ -66,7 +65,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             if(data){
                 attributes = commonUtil.copy(data.attributes);
                 attributes[name] = value;
-                commandqueue.push({type:"modify",cid:"ezminek",id:id,attributes:attributes});
+                self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"modify",id:id,attributes:attributes}]});
             }
         };
         this.setRegistry = function(id,name,value){
@@ -78,18 +77,18 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             if(data){
                 registry = commonUtil.copy(data.registry);
                 registry[name] = value;
-                commandqueue.push({type:"modify",cid:"ezminek",id:id,registry:registry});
+                self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"modify",id:id,registry:registry}]});
             }
         };
         this.copyNodes = function(ids){
             clipboard = ids;
-            commandqueue.push({type:"copy",ids:clipboard,cid:"tenyleg kell??"});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"copy",ids:clipboard}]});
         };
         this.pasteNodes = function(id){
-            commandqueue.push({type:"paste",id:id,cid:"commandid"});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"paste",id:id}]});
         };
         this.deleteNode = function(id){
-            commandqueue.push({type:"delete",id:id,cid:"tuti nem kell"});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"delete",id:id}]});
         };
         this.delMoreNodes = function(ids){
             var i;
@@ -98,29 +97,31 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             }
         };
         this.createChild = function(parent,base){
-            commandqueue.push({type:"createChild",baseId:base,parentId:parent,cid:"mondom nem kell"});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"createChild",baseId:base,parentId:parent}]});
         };
         this.createSubType = function(parent,base){
-            commandqueue.push({type:"createSubType",baseId:base,parentId:parent,cid:"mondom nem kell"});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"createSubType",baseId:base,parentId:parent}]});
         };
         this.makePointer = function(id,name,to){
-            commandqueue.push({type:"point",id:id,to:to,name:name});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"point",id:id,to:to,name:name}]});
         };
         this.delPointer = function(id,name){
-            commandqueue.push({type:"point",id:id,to:null,name:name});
+            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"point",id:id,to:null,name:name}]});
         };
         this.makeConnection = function(parameters){
-            var baseId,
+            var commands=[],
+                baseId,
                 guid;
             if(parameters.parentId && parameters.sourceId && parameters.targetId){
                 baseId = parameters.baseId || "connection";
                 guid = commonUtil.guid();
-                commandqueue.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid,cid:"connnection 001"});
-                commandqueue.push({type:"point",id:guid,name:"source",to:parameters.sourceId,cid:"connection 002"});
-                commandqueue.push({type:"point",id:guid,name:"target",to:parameters.targetId,cid:"connection 003"});
+                commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
+                commands.push({type:"point",id:guid,name:"source",to:parameters.sourceId});
+                commands.push({type:"point",id:guid,name:"target",to:parameters.targetId});
                 if(parameters.directed !== null && parameters.directed !== undefined){
-                    self.setAttributes(guid,"directed",parameters.directed);
+                    commands.push({type:"modify",id:guid,attributes:{directed:parameters.directed}});
                 }
+                self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:commands});
             }
             else{
                 logger.error("fraudulent connection creation: "+JSON.stringify(parameters));
@@ -140,7 +141,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         this.updateTerritory = function(guid,patterns){
             if(users[guid]){
                 users[guid].updatePatterns(patterns);
-                commandqueue.push({type:"territory",cid:"nemkollll",id:guid,patterns:users[guid].getPatterns()});
+                self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"territory",id:guid,patterns:users[guid].getPatterns()}]});
             }
         };
 
@@ -180,14 +181,14 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
 
             /*main*/
             /*if the transaction failed, there is nothing to do*/
-            for(i=0;i<msg.length;i++){
+            /*for(i=0;i<msg.length;i++){
                 if(msg[i].type === "command"){
                     commandqueue.commandResult(msg[i].cid,msg[i].success);
                     if(msg[i].success === "false"){
                         return;
                     }
                 }
-            }
+            }*/
 
             /*first we shoot the unload events*/
             for(i=0;i<msg.length;i++){

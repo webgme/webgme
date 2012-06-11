@@ -2,8 +2,8 @@ var objectCounter = 0;
 var payload = "";
 var objects = {};
 var emptyObject = function(){
-    return { _id:"obj"+objectCounter++,
-        attributes:{"name":"default","payload":payload, "isPort":true},
+    return { _id:"obj"+objectCounter,
+        attributes:{"name":"ojj"+objectCounter++,"payload":payload, "isPort":true},
         registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
                     "isConnection" : false,
                     "isPort" : true},
