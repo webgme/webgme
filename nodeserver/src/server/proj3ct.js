@@ -162,7 +162,7 @@ var TransactionQueue = function(cProject){
     processNextMessage = function(){
         if(cCanWork === true && cQueue.length>0){
             var territorymsg = cQueue[0],
-                cid = territorymsg.client,
+                clientId = territorymsg.client,
                 updatecommands = [],
                 territorycommands = {},
                 i;
@@ -175,10 +175,10 @@ var TransactionQueue = function(cProject){
                 }
             }
             for(i in territorycommands){
-                cProject.onUpdateTerritory(cid,territorycommands[i].cid,territorycommands[i].id,territorycommands[i].patterns);
+                cProject.onUpdateTerritory(clientId,territorycommands[i].id,territorycommands[i].patterns);
             }
             if(updatecommands.length>0){
-                cProject.onProcessMessage(cid,updatecommands,messageHandled);
+                cProject.onProcessMessage(clientId,{transactionId:territorymsg.msg.transactionId,commands:updatecommands},messageHandled);
                 cCanWork = false;
             }
             else{
@@ -195,7 +195,7 @@ var TransactionQueue = function(cProject){
         processNextMessage();
     };
 };
-var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
+var CommandBuffer = function(storage,clientId,transactionId,clients,CB){
     var i,
         commandStatus,
         bufferedObjects,
@@ -221,7 +221,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
             readQueue.push({id:id,cb:cb});
             if(objectStates[id] === undefined){
                 objectStates[id] = "db";
-                cStorage.get(id,function(err,object){
+                storage.get(id,function(err,object){
                     objectArrived(id,err,object);
                 });
             }
@@ -257,17 +257,15 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         if(commandStatus){
             flushBuffer(function(){
                 var i;
-                for(i in cClients){
-                    finalizeClient(cClients[i]);
+                for(i in clients){
+                    finalizeClient(clients[i]);
                 }
             });
         }
         else{
             msg = [];
-            for(i=0;i<cCommandIds.length;i++){
-                msg.push({type:"command",cid:cCommandIds[i].cid,success:false});
-            }
-            cClients[cCid].sendMessage(msg);
+            msg.push({type:"command",transactionId:transactionId,success:false});
+            clients[clientId].sendMessage(msg);
         }
     };
     /*private function*/
@@ -324,7 +322,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         if(count>0){
             for(i in bufferedObjects){
                 if(objectStates[i] !== "read" && objectStates[i]!=="db"){
-                    cStorage.set(i,bufferedObjects[i],objectSaved);
+                    storage.set(i,bufferedObjects[i],objectSaved);
                 }
                 else{
                     objectSaved();
@@ -336,6 +334,7 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         }
     };
     finalizeClient = function(client){
+        console.log("kecso "+JSON.stringify(client));
         client.refreshTerritories(self,function(loadlist,unloadlist){
             var i,
                 msg = [];
@@ -350,10 +349,8 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
                     msg.push({type:objectStates[i],id:i,object:bufferedObjects[i]});
                 }
             }
-            if(client.getId() === cCid){
-                for(i=0;i<cCommandIds.length;i++){
-                    msg.push({type:"command",cid:cCommandIds[i],success:true});
-                }
+            if(client.getId() === clientId){
+                msg.push({type:"command",transactionId:transactionId,success:true});
             }
             if(msg.length>0){
                 client.sendMessage(msg);
@@ -369,25 +366,25 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
         var msg,
             i,j;
         if(!commandStatus){
-            cClients[cCid].sendMessage([{type:"command",cid:cCommand.cid,success:false}]);
+            clients[clientId].sendMessage([{type:"command",transactionId:transactionId,success:false}]);
             CB();
         }
         else{
-            for(i in cClients){
+            for(i in clients){
                 msg = [];
                 for(j in bufferedObjects){
                     if(objectStates[j] !== "read" && objectStates[j] !== "db"){
-                        if(cClients[i].interestedInObject(j)){
+                        if(clients[i].interestedInObject(j)){
                             msg.push({type:objectStates[j],id:j,object:bufferedObjects[j]});
                         }
                     }
                 }
-                if(i === cCid){
-                    msg.push({type:"command",cid:cCommand.cid,success:true});
+                if(i === clientId){
+                    msg.push({type:"command",transactionId:transactionId,success:true});
                 }
 
                 if(msg.length>0){
-                    cClients[i].sendMessage(msg);
+                    clients[i].sendMessage(msg);
                 }
             }
             CB();
@@ -401,13 +398,13 @@ var CommandBuffer = function(cStorage,cCid,cCommandIds,cClients,CB){
     objectStates = {};
     clientcount = 0;
     readQueue = [];
-    for(i in cClients){
+    for(i in clients){
         clientcount++;
     }
 
 
 };
-var Commander = function(cStorage,cClients,cCid,cCommands,CB){
+var Commander = function(storage,clients,clientId,transaction,CB){
     var processCommand,
         commandProcessed,
         modifyCommand,
@@ -445,9 +442,9 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
     };
     commandProcessed = function(){
         var i;
-        cCommands.shift();
-        if(cCommands.length>0){
-            processCommand(cCommands[0]);
+        transaction.commands.shift();
+        if(transaction.commands.length>0){
+            processCommand(transaction.commands[0]);
         }
         else{
             commandBuffer.finalizeCommand();
@@ -456,7 +453,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
 
     /*commands*/
     copyCommand = function(copycommand,callback){
-        cClients[cCid].copy(copycommand.ids);
+        clients[clientId].copy(copycommand.ids);
         callback();
     };
     modifyCommand = function(modifycommand,callback){
@@ -758,7 +755,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
                         if(inheritancecount>0){
                             for(i=0;i<parent.relations.inheritorIds.length;i++){
                                 for(j=0;j<copylist.length;j++){
-                                    childrenCommand({cid:pastecommand.cid+"_"+i+""+j,baseId:copylist[j],parentId:parent.relations.inheritorIds[i]},inheritanceCreated);
+                                    childrenCommand({type:"createChild",baseId:copylist[j],parentId:parent.relations.inheritorIds[i]},inheritanceCreated);
                                 }
                             }
                         }
@@ -821,7 +818,7 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
         /*main*/
         called = false;
         inheritanceArray = {};
-        copylist = cClients[cCid].getCopyList();
+        copylist = clients[clientId].getCopyList();
         subtreeids = [];
         readcount = copylist.length;
         for(i=0;i<copylist.length;i++){
@@ -1154,14 +1151,10 @@ var Commander = function(cStorage,cClients,cCid,cCommands,CB){
 
 
     /*main*/
-    commandIds = [];
-    for(i=0;i<cCommands.length;i++){
-        commandIds.push(cCommands[i].cid);
-    }
-    commandBuffer = new CommandBuffer(cStorage,cCid,commandIds,cClients,CB);
-    processCommand(cCommands[0]);
+    commandBuffer = new CommandBuffer(storage,clientId,transaction.transactionId,clients,CB);
+    processCommand(transaction.commands[0]);
 };
-var Territory = function(cClient,cId){
+var Territory = function(cClient,territoryId){
     var cPatterns = {},
         cPreviousList = [],
         cCurrentList = [];
@@ -1172,7 +1165,7 @@ var Territory = function(cClient,cId){
         return (cCurrentList.indexOf(id) !== -1);
     };
     this.getId = function(){
-        return cId;
+        return territoryId;
     };
 
     /*asynchronous functions*/
@@ -1348,7 +1341,7 @@ var Territory = function(cClient,cId){
         }
     };
 };
-var Client = function(cIoSocket,cId,cReadStorage,cProject){
+var Client = function(cIoSocket,clientId,cReadStorage,cProject){
     var cObjects = {},
         cClipboard = [], /*it has to be on client level*/
         cTerritories = {},
@@ -1356,7 +1349,7 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
     /*message handlings*/
     cIoSocket.on('clientMessage',function(msg){
         /*you have to simply put it into the transaction queue*/
-        var clientmsg = {}; clientmsg.client = cId; clientmsg.msg = msg;
+        var clientmsg = {}; clientmsg.client = clientId; clientmsg.msg = msg;
         cProject.onClientMessage(clientmsg);
         cIoSocket.emit('clientMessageAck');
     });
@@ -1365,20 +1358,20 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
     });
     cIoSocket.on('serverMessageNack',function(msg){
         /*we are not that happy but cannot do much*/
-        console.log("client: "+cId+" - serverMessageNack");
+        console.log("client: "+clientId+" - serverMessageNack");
     });
     cIoSocket.on('disconnect',function(msg){
-        logger.debug("Client.on.disconnect "+cId);
+        logger.debug("Client.on.disconnect "+clientId);
         if(cProject){
-            cProject.deleteClient(cId);
+            cProject.deleteClient(clientId);
         }
     });
     /*public functions*/
     this.getId = function(){
-        return cId;
-    }
-    this.updateTerritory = function(territoryid,patterns,commandid){
-        logger.debug("Client.updateTerritory "+territoryid+","+JSON.stringify(patterns)+","+commandid);
+        return clientId;
+    };
+    this.updateTerritory = function(territoryid,patterns){
+        logger.debug("Client.updateTerritory "+territoryid+","+JSON.stringify(patterns));
         if(cTerritories[territoryid] === undefined || cTerritories[territoryid] === null){
             cTerritories[territoryid] = new Territory(cSelf,territoryid);
         }
@@ -1406,7 +1399,6 @@ var Client = function(cIoSocket,cId,cReadStorage,cProject){
                     }
                 }
             }
-            msg.push({type:"command",cid:commandid,success:true});
             cSelf.sendMessage(msg);
         });
     };
@@ -1538,12 +1530,12 @@ var Project = function(cPort,cProject,cBranch){
         logger.debug("Project.onClientMessage "+JSON.stringify(msg));
         cTransactionQ.onClientMessage(msg);
     };
-    this.onProcessMessage = function(cid,commands,cb){
-        new Commander(cStorage,cClients,cid,commands,cb);
+    this.onProcessMessage = function(clientId,transaction,cb){
+        new Commander(cStorage,cClients,clientId,transaction,cb);
     };
-    this.onUpdateTerritory = function(clientId,commandId,territoryId,newpatterns){
-        logger.debug("Project.onUpdateTerritory "+JSON.stringify(clientId)+","+JSON.stringify(commandId)+","+JSON.stringify(territoryId)+","+JSON.stringify(newpatterns));
-        cClients[clientId].updateTerritory(territoryId,newpatterns,commandId);
+    this.onUpdateTerritory = function(clientId,territoryId,newpatterns){
+        logger.debug("Project.onUpdateTerritory "+JSON.stringify(clientId)+","+JSON.stringify(territoryId)+","+JSON.stringify(newpatterns));
+        cClients[clientId].updateTerritory(territoryId,newpatterns);
     };
 };
 /*MAIN*/
