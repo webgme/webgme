@@ -39,6 +39,7 @@ define([], function () {
         MongoDBLocation : 'localhost',
         MongoDBPort : 27017,
 
+        AutoSave : true,
         /*
          * Generated a GUID
          */
@@ -92,7 +93,7 @@ define([], function () {
             ProjectIP: "self",
             ProjectPort: 8082,
             ProjectName: "testp",
-            BranchName: "100k"
+            BranchName: "basic"
         }
 
     };

@@ -80,6 +80,9 @@ var TestStorage = function(cProjectName,cBranchName){
     this.print = function(){
         console.log("STORAGE\n"+JSON.stringify(cObjects)+"\nSTORAGE\n");
     };
+    this.save = function(){
+        FS.writeFileSync("../test/"+cProjectName+"_"+cBranchName+".tpf",JSON.stringify(cObjects),"utf8");
+    };
     /*private functions*/
 
     /*main*/
@@ -257,6 +260,9 @@ var CommandBuffer = function(storage,clientId,transactionId,clients,CB){
         if(commandStatus){
             flushBuffer(function(){
                 var i;
+                if(commonUtil.AutoSave){
+                    storage.save();
+                }
                 for(i in clients){
                     finalizeClient(clients[i]);
                 }
