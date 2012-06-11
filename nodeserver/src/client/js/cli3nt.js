@@ -114,7 +114,9 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 guid;
             if(parameters.parentId && parameters.sourceId && parameters.targetId){
                 baseId = parameters.baseId || "connection";
-                guid = commonUtil.guid();
+                //guid = commonUtil.guid();
+                //TODO: just to make recognisable ID for connection.... delete at some point please
+                guid = "conn_" + parameters.sourceId + "_" + parameters.targetId;
                 commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
                 commands.push({type:"point",id:guid,name:"source",to:parameters.sourceId});
                 commands.push({type:"point",id:guid,name:"target",to:parameters.targetId});
@@ -463,13 +465,13 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             }
             if(selfdata.pointers.source){
                 templist = commonUtil.copy(selfdata.pointers.source.from);
-                for(i=0;i<templist.length();i++){
+                for(i=0;i<templist.length;i++){
                     connectionlist.push({id:templist[i],out:true});
                 }
             }
             if(selfdata.pointers.target){
                 templist = commonUtil.copy(selfdata.pointers.target.from);
-                for(i=0;i<templist.length();i++){
+                for(i=0;i<templist.length;i++){
                     connectionlist.push({id:templist[i],out:false});
                 }
             }
