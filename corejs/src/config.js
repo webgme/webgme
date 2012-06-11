@@ -15,14 +15,14 @@ define(function () {
 			database: "test",
 			collection: "storage"
 		},
-		
+
 		parser: {
 			persistingLimit: 5000,
 			reportingTime: 2000 
 		},
-		
+
 		reader: {
-			concurrentReads: 1,
+			concurrentReads: 10,
 			reportingTime: 2000
 		}
 	};

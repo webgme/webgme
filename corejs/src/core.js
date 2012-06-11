@@ -4,57 +4,85 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "pertree" ], function (ASSERT, PerTree) {
+define([ "assert", "pertree", "cache" ], function (ASSERT, PerTree, Cache) {
 	"use strict";
 
 	// ----------------- RELID -----------------
 
-	var RELID = {
-		maxRelid: Math.pow(2, 31),
-		// maxRelid: 1000,
+	var maxRelid = Math.pow(2, 31);
 
-		create: function (data, relid) {
-			ASSERT(data && typeof data === "object");
-			ASSERT(relid === undefined || typeof relid === "string");
+	var createRelid = function (data, relid) {
+		ASSERT(data && typeof data === "object");
+		ASSERT(relid === undefined || isValidRelid(relid));
 
-			if( !relid || data[relid] !== undefined ) {
-				// TODO: detect infinite cycle?
-				do {
-					relid = (Math.floor(Math.random() * RELID.maxRelid)).toString();
-				} while( data[relid] !== undefined );
-			}
-
-			return relid;
-		},
-
-		isValid: function (relid) {
-			return parseInt(relid, 10).toString() === relid;
+		if( !relid || data[relid] !== undefined ) {
+			// TODO: detect infinite cycle?
+			do {
+				relid = Math.floor(Math.random() * maxRelid);
+//				relid = relid.toString();
+			} while( data[relid] !== undefined );
 		}
+
+		return relid;
 	};
 
-	// ----------------- Branch -----------------
+	var isValidRelid = function (relid) {
+		return typeof relid === "number" || parseInt(relid, 10).toString() === relid;
+	};
 
-	var Branch = function (storage) {
+	var ATTRIBUTES = "attr";
+	var POINTERS = "ptr";
+	var COLLECTIONS = "coll";
+	var REGISTRY = "reg";
 
-		var pertree = new PerTree(storage);
+	// ----------------- Core -----------------
 
-		var ATTRIBUTES = "attr";
-		var POINTERS = "ptr";
-		var COLLECTIONS = "coll";
-		var REGISTRY = "reg";
+	var Core = function (storage) {
 
-		this.getKey = pertree.getKey;
+		var pertree = new PerTree(new Cache(storage));
+		//var pertree = new PerTree(storage);
 
-		this.loadRoot = pertree.loadRoot;
+		var getAttributes = function (node) {
+			return pertree.getProperty(node, ATTRIBUTES);
+		};
 
-		this.createNode = function () {
-			var root = pertree.createRoot();
-			pertree.createChild(root, ATTRIBUTES);
-			pertree.createChild(root, REGISTRY);
-			pertree.createChild(root, POINTERS);
-			pertree.createChild(root, COLLECTIONS);
+		var getAttribute = function (node, name) {
+			return pertree.getProperty2(node, ATTRIBUTES, name);
+		};
 
-			return root;
+		var delAttribute = function (node, name) {
+			pertree.delProperty2(node, ATTRIBUTES, name);
+		};
+
+		var setAttribute = function (node, name, value) {
+			pertree.setProperty2(node, ATTRIBUTES, name, value);
+		};
+
+		var getRegistry = function (node, name) {
+			return pertree.getProperty2(node, REGISTRY, name);
+		};
+
+		var delRegistry = function (node, name) {
+			pertree.delProperty2(node, REGISTRY, name);
+		};
+
+		var setRegistry = function (node, name, value) {
+			pertree.setProperty2(node, REGISTRY, name, value);
+		};
+
+		var createNode = function (parent, basetype) {
+			var node = pertree.createRoot();
+			pertree.createChild(node, ATTRIBUTES);
+			pertree.createChild(node, REGISTRY);
+			pertree.createChild(node, POINTERS);
+			pertree.createChild(node, COLLECTIONS);
+
+			if( parent ) {
+				var relid = createRelid(parent.data);
+				pertree.setParent(node, parent, relid);
+			}
+
+			return node;
 		};
 
 		var ChildrenLoader = function (callback) {
@@ -85,13 +113,13 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			};
 		};
 
-		this.loadChildren = function (node, callback) {
+		var loadChildren = function (node, callback) {
 			ASSERT(node && callback);
 
 			var loader = new ChildrenLoader(callback);
 
 			for( var relid in node.data ) {
-				if( RELID.isValid(relid) ) {
+				if( isValidRelid(relid) ) {
 					loader.start();
 					pertree.loadChild(node, relid, loader.done);
 				}
@@ -100,72 +128,35 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			loader.done(null);
 		};
 
-		this.loadChild = pertree.loadChild;
-
-		this.getParent = pertree.getParent;
-		this.getRelid = pertree.getRelid;
-		this.getRoot = pertree.getRoot;
-		this.getPath = pertree.getPath;
-		this.getStringPath = pertree.getStringPath;
-		this.getLevel = pertree.getLevel;
-
-		this.detach = function (node) {
+		var detach = function (node) {
 			ASSERT(pertree.getParent(node) !== null);
 
 			pertree.delParent(node);
 		};
 
-		this.attach = function (node, parent) {
+		var attach = function (node, parent) {
 			ASSERT(node && parent);
 			ASSERT(pertree.getParent(node) === null);
 
-			var relid = RELID.create(parent.data);
+			var relid = createRelid(parent.data);
 			pertree.setParent(node, parent, relid);
 		};
 
-		this.copy = function (node, parent) {
+		var copy = function (node, parent) {
 			ASSERT(node && parent);
 
-			var relid = RELID.create(parent.data);
+			var relid = createRelid(parent.data);
 			pertree.copy(node, parent, relid);
 		};
 
-		this.getAttributes = function (node) {
-			return pertree.getProperty(node, ATTRIBUTES);
-		};
-		
-		this.getAttribute = function (node, name) {
-			return pertree.getProperty2(node, ATTRIBUTES, name);
-		};
-
-		this.delAttribute = function (node, name) {
-			pertree.delProperty2(node, ATTRIBUTES, name);
-		};
-
-		this.setAttribute = function (node, name, value) {
-			pertree.setProperty2(node, ATTRIBUTES, name, value);
-		};
-
-		this.getRegistry = function (node, name) {
-			return pertree.getProperty2(node, REGISTRY, name);
-		};
-
-		this.delRegistry = function (node, name) {
-			pertree.delProperty2(node, REGISTRY, name);
-		};
-
-		this.setRegistry = function (node, name, value) {
-			pertree.setProperty2(node, REGISTRY, name, value);
-		};
-
-		this.persist = function (root, callback) {
+		var persist = function (root, callback) {
 			ASSERT(root && callback);
 			ASSERT(pertree.getParent(root) === null);
 
 			pertree.persist(root, callback);
 		};
 
-		this.loadPointer = function (node, name, callback) {
+		var loadPointer = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
 			var path = pertree.getProperty2(node, POINTERS, name);
@@ -180,7 +171,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			}
 		};
 
-		this.setPointer = function (node, name, target, callback) {
+		var setPointer = function (node, name, target, callback) {
 			ASSERT(node && name && target && callback);
 
 			var array, collections, targetpath;
@@ -243,7 +234,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			}
 		};
 
-		this.delPointer = function (node, name, callback) {
+		var delPointer = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
 			var pointers = pertree.getChild(node, POINTERS);
@@ -279,8 +270,35 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			}
 		};
 
-		this.dumpTree = pertree.dumpTree;
+		return {
+			getKey: pertree.getKey,
+			loadRoot: pertree.loadRoot,
+			createNode: createNode,
+			loadChildren: loadChildren,
+			loadChild: pertree.loadChild,
+			getParent: pertree.getParent,
+			getRelid: pertree.getRelid,
+			getRoot: pertree.getRoot,
+			getPath: pertree.getPath,
+			getStringPath: pertree.getStringPath,
+			getLevel: pertree.getLevel,
+			detach: detach,
+			attach: attach,
+			copy: copy,
+			getAttributes: getAttributes,
+			getAttribute: getAttribute,
+			setAttribute: setAttribute,
+			delAttribute: delAttribute,
+			getRegistry: getRegistry,
+			setRegistry: setRegistry,
+			delRegistry: delRegistry,
+			persist: persist,
+			loadPointer: loadPointer,
+			setPointer: setPointer,
+			delPointer: delPointer,
+			dumpTree: pertree.dumpTree
+		};
 	};
 
-	return Branch;
+	return Core;
 });

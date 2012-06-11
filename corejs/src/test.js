@@ -10,7 +10,7 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "mongo", "branch" ], function (ASSERT, Mongo, Branch) {
+requirejs([ "assert", "mongo", "core" ], function (ASSERT, Mongo, Core) {
 	"use strict";
 
 	var mongo = new Mongo();
@@ -20,51 +20,49 @@ requirejs([ "assert", "mongo", "branch" ], function (ASSERT, Mongo, Branch) {
 		mongo.removeAll(function (err) {
 			ASSERT(!err);
 			
-			var branch = new Branch(mongo);
-			var root = branch.createNode();
-			branch.setAttribute(root, "name", "root");
+			var core = new Core(mongo);
+			var root = core.createNode();
+			core.setAttribute(root, "name", "root");
 			
-			var first = branch.createNode();
-			branch.setAttribute(first, "name", "first");
-			branch.attach(first, root);
+			var first = core.createNode(root);
+			core.setAttribute(first, "name", "first");
 			
-			var second = branch.createNode();
-			branch.setAttribute(second, "name", "second");
-			branch.attach(second, root);
+			var second = core.createNode(root);
+			core.setAttribute(second, "name", "second");
 			
-			branch.setPointer(first, "ref", second, function(err) {
+			core.setPointer(first, "ref", second, function(err) {
 				ASSERT(!err);
 
-				branch.persist(root, function(err) {
+				core.persist(root, function(err) {
 					ASSERT(!err);
 
-					branch.loadRoot(branch.getKey(root), function(err, root) {
+					core.loadRoot(core.getKey(root), function(err, root) {
 						ASSERT(!err);
 						
-						branch.setAttribute(root, "name", "root hmm");
-						branch.loadChildren(root, function(err, children) {
+						core.setAttribute(root, "name", "root hmm");
+						core.loadChildren(root, function(err, children) {
 							ASSERT(!err);
 
 							for(var i = 0; i < children.length; ++i) {
 								var child = children[i];
 
-								if(branch.getAttribute(child, "name") === "first") {
+								if(core.getAttribute(child, "name") === "first") {
 									first = child;
 								}
 								
-								branch.setAttribute(child, "name", branch.getAttribute(child, "name") + " hihi");
+								core.setAttribute(child, "name", core.getAttribute(child, "name") + " hihi");
 							}
 
-							branch.loadPointer(first, "ref", function(err, second) {
+							core.loadPointer(first, "ref", function(err, second) {
 								ASSERT(!err);
 								
-								branch.setAttribute(second, "apple", "apple");
+								core.setAttribute(second, "apple", "apple");
 								
-								branch.persist(root, function(err) {
+								core.persist(root, function(err) {
 									ASSERT(!err);
 									
 //									mongo.dumpAll(function () {
-									branch.dumpTree(branch.getKey(root), function(err) {
+									core.dumpTree(core.getKey(root), function(err) {
 										ASSERT(!err);
 										mongo.close();
 									});

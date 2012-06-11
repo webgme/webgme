@@ -12,12 +12,11 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 
 		options = UTIL.copyOptions(CONFIG.mongodb, options);
 
-		this.open = function (callback) {
+		var open = function (callback) {
 			database = new MONGODB.Db(options.database, new MONGODB.Server(options.host,
 			options.port));
 
 			var abort = function (err) {
-				console.log("could not open mongodb: " + err);
 				database.close();
 				database = null;
 				callback(err);
@@ -41,11 +40,11 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			});
 		};
 
-		this.opened = function () {
+		var opened = function () {
 			return collection !== null;
 		};
 
-		this.close = function (callback) {
+		var close = function (callback) {
 			ASSERT(database && collection);
 
 			// to sync data
@@ -62,26 +61,26 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			});
 		};
 
-		this.getKey = function (node) {
+		var getKey = function (node) {
 			ASSERT(node && typeof node === "object");
 
 			return node._id;
 		};
 
-		this.setKey = function (node, key) {
+		var setKey = function (node, key) {
 			ASSERT(node && typeof node === "object");
 			ASSERT(key === false || typeof key === "string");
 
 			node._id = key;
 		};
 
-		this.delKey = function (node) {
+		var delKey = function (node) {
 			ASSERT(node && typeof node === "object");
 
 			delete node._id;
 		};
 
-		this.load = function (key, callback) {
+		var load = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
 
@@ -98,7 +97,7 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			});
 		};
 
-		this.save = function (node, callback) {
+		var save = function (node, callback) {
 			ASSERT(node && typeof node === "object");
 			ASSERT(typeof node._id === "string");
 			ASSERT(collection && callback);
@@ -106,7 +105,7 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			collection.save(node, callback);
 		};
 
-		this.remove = function (key, callback) {
+		var remove = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
 
@@ -115,7 +114,7 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			}, callback);
 		};
 
-		this.dumpAll = function (callback) {
+		var dumpAll = function (callback) {
 			ASSERT(collection && callback);
 
 			collection.find().each(function (err, item) {
@@ -128,15 +127,29 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			});
 		};
 
-		this.removeAll = function (callback) {
+		var removeAll = function (callback) {
 			ASSERT(collection && callback);
 
 			collection.drop(function (err) {
-				if(err && err.errmsg === "ns not found") {
+				if( err && err.errmsg === "ns not found" ) {
 					err = null;
 				}
 				callback(err);
 			});
+		};
+
+		return {
+			open: open,
+			opened: opened,
+			close: close,
+			getKey: getKey,
+			setKey: setKey,
+			delKey: delKey,
+			load: load,
+			save: save,
+			remove: remove,
+			dumpAll: dumpAll,
+			removeAll: removeAll
 		};
 	};
 

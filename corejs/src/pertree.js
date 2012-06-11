@@ -4,7 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
+define(
+[ "assert", "lib/sha1", "util" ],
+function (ASSERT, SHA1, UTIL) {
 	"use strict";
 
 	// ----------------- PersistentTree -----------------
@@ -14,52 +16,57 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 	var isKey = function (key) {
 		return typeof key === "string" && key.length === 43 && keyregexp.test(key);
 	};
-	
+
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
-		var ASSERT_NODE = function (node) {
-			// console.log(node);
+		var isValid = function (node) {
+			var valid = node && node.data && typeof node.data === "object";
+			valid = valid
+			&& (node.parent === null || (node.parent.data && typeof node.parent.data === "object"));
 
-			ASSERT(node && node.data && typeof node.data === "object");
-			ASSERT(node.parent === null
-			|| (node.parent.data && typeof node.parent.data === "object"));
+			valid = valid && (node.data._mutable === undefined || node.data._mutable === true);
+			valid = valid
+			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
 
-			ASSERT(node.data._mutable === undefined || node.data._mutable === true);
-			ASSERT(node.parent === null || node.data._mutable === undefined
-			|| node.parent.data._mutable === true);
+			if( valid ) {
+				var key = storage.getKey(node.data);
+				valid = valid && (key === undefined || key === false || isKey(key));
 
-			var key = storage.getKey(node.data);
-			ASSERT(key === undefined || key === false
-			|| isKey(key));
+				valid = valid
+				&& (node.parent === null || !key || node.parent.data[node.relid] === key);
+				valid = valid
+				&& (node.parent === null || key || node.parent.data[node.relid] === node.data);
+				valid = valid && (!node.data._mutable || typeof key !== "string");
+			}
 
-			ASSERT(node.parent === null || !key || node.parent.data[node.relid] === key);
-			ASSERT(node.parent === null || key || node.parent.data[node.relid] === node.data);
-			ASSERT(!node.data._mutable || typeof key !== "string");
+			if( !valid ) {
+				console.log("Wrong node: " + JSON.stringify(node));
+			}
+
+			return valid;
 		};
 
-		this.getKey = function (node) {
-			ASSERT_NODE(node);
+		var getKey = function (node) {
+			ASSERT(isValid(node));
 			return storage.getKey(node.data);
 		};
 
-		this.addKey = function (node) {
-			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
+		var addKey = function (node) {
+			ASSERT(isValid(node));
+			ASSERT(isMutable(node));
 
 			return storage.setKey(node.data, false);
 		};
 
-		this.delKey = function (node) {
-			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
+		var delKey = function (node) {
+			ASSERT(isValid(node));
+			ASSERT(isMutable(node));
 
 			return storage.delKey(node.data);
 		};
 
-		this.isKey = isKey;
-		
-		this.createRoot = function () {
+		var createRoot = function () {
 			var data = {
 				_mutable: true
 			};
@@ -72,11 +79,11 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			};
 		};
 
-		this.createChild = function (node, relid) {
-			ASSERT_NODE(node);
-			ASSERT(typeof relid === "string");
+		var createChild = function (node, relid) {
+			ASSERT(isValid(node));
+			ASSERT(typeof relid === "string" || typeof relid === "number");
 
-			this.mutate(node);
+			mutate(node);
 
 			var data = {
 				_mutable: true
@@ -90,9 +97,9 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			};
 		};
 
-		this.getChild = function (node, relid) {
-			ASSERT_NODE(node);
-			ASSERT(typeof relid === "string");
+		var getChild = function (node, relid) {
+			ASSERT(isValid(node));
+			ASSERT(typeof relid === "string" || typeof relid === "number");
 
 			var child = node.data[relid];
 			ASSERT(child && typeof child === "object");
@@ -104,15 +111,15 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			};
 		};
 
-		this.deleteChild = function (node, relid) {
-			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
-			ASSERT(typeof relid === "string");
+		var deleteChild = function (node, relid) {
+			ASSERT(isValid(node));
+			ASSERT(isMutable(node));
+			ASSERT(typeof relid === "string" || typeof relid === "number");
 
 			delete node.data[relid];
 		};
 
-		this.loadRoot = function (key, callback) {
+		var loadRoot = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(callback);
 
@@ -126,9 +133,9 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			});
 		};
 
-		this.loadChild = function (node, relid, callback) {
-			ASSERT_NODE(node);
-			ASSERT(typeof relid === "string");
+		var loadChild = function (node, relid, callback) {
+			ASSERT(isValid(node));
+			ASSERT(typeof relid === "string" || typeof relid === "number");
 
 			var child = node.data[relid];
 			ASSERT(child && (typeof child === "object" || isKey(child)));
@@ -152,13 +159,13 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			}
 		};
 
-		this.loadByPath = function (node, path, callback) {
-			ASSERT_NODE(node);
+		var loadByPath = function (node, path, callback) {
+			ASSERT(isValid(node));
 			ASSERT(typeof path === "string" || path.constructor === Array);
 			ASSERT(callback);
 
 			if( typeof path === "string" ) {
-				path = this.parseStringPath(path);
+				path = parseStringPath(path);
 			}
 
 			var index = path.length;
@@ -182,10 +189,10 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 
 			var next = function () {
 				while( index !== 0 ) {
-					ASSERT_NODE(node);
+					ASSERT(isValid(node));
 
 					relid = path[--index];
-					ASSERT(typeof relid === "string");
+					ASSERT(typeof relid === "string" || typeof relid === "number");
 
 					var child = node.data[relid];
 					ASSERT(child && (typeof child === "object" || typeof child === "string"));
@@ -207,36 +214,36 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			next();
 		};
 
-		this.getParent = function (node) {
-			ASSERT_NODE(node);
+		var getParent = function (node) {
+			ASSERT(isValid(node));
 			return node.parent;
 		};
 
-		this.delParent = function (node) {
-			ASSERT_NODE(node);
-			ASSERT_NODE(node.parent);
+		var delParent = function (node) {
+			ASSERT(isValid(node));
+			ASSERT(isValid(node.parent));
 
-			this.mutate(node.parent);
+			mutate(node.parent);
 			delete node.parent.data[node.relid];
 
 			node.parent = null;
 			node.relid = undefined;
 		};
 
-		this.setParent = function (node, parent, relid) {
-			ASSERT_NODE(node);
+		var setParent = function (node, parent, relid) {
+			ASSERT(isValid(node));
 			ASSERT(node.parent === null && !node.relid);
-			ASSERT(relid && typeof relid === "string");
+			ASSERT(typeof relid === "string" || typeof relid === "number");
 
-			this.mutate(parent);
+			mutate(parent);
 			parent.data[relid] = node.data;
 
 			node.parent = parent;
 			node.relid = relid;
 		};
 
-		this.getPath = function (node) {
-			ASSERT_NODE(node);
+		var getPath = function (node) {
+			ASSERT(isValid(node));
 
 			var path = [];
 			while( node.parent ) {
@@ -247,17 +254,17 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			return path;
 		};
 
-		this.getLevel = function (node) {
+		var getLevel = function (node) {
 			var level = 0;
-			while(node.parent) {
+			while( node.parent ) {
 				++level;
 				node = node.parent;
 			}
 			return level;
 		};
-		
-		this.getStringPath = function (node) {
-			ASSERT_NODE(node);
+
+		var getStringPath = function (node) {
+			ASSERT(isValid(node));
 
 			var empty = "";
 			var path = empty;
@@ -274,19 +281,19 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			return path;
 		};
 
-		this.parseStringPath = function (path) {
+		var parseStringPath = function (path) {
 			ASSERT(path && typeof path === "string");
 
 			return path.length === 0 ? [] : path.split("/");
 		};
 
-		this.getRelid = function (node) {
-			ASSERT_NODE(node);
+		var getRelid = function (node) {
+			ASSERT(isValid(node));
 			return node.relid;
 		};
 
-		this.getRoot = function (node) {
-			ASSERT_NODE(node);
+		var getRoot = function (node) {
+			ASSERT(isValid(node));
 
 			while( node.parent ) {
 				node = node.parent;
@@ -295,13 +302,13 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			return node;
 		};
 
-		this.isMutable = function (node) {
-			ASSERT_NODE(node);
+		var isMutable = function (node) {
+			ASSERT(isValid(node));
 			return node.data._mutable;
 		};
 
-		this.mutate = function (node) {
-			ASSERT_NODE(node);
+		var mutate = function (node) {
+			ASSERT(isValid(node));
 
 			var data = node.data;
 			if( !data._mutable ) {
@@ -322,7 +329,7 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 				node.data = copy;
 
 				if( node.parent ) {
-					this.mutate(node.parent);
+					mutate(node.parent);
 
 					node.parent.data[node.relid] = copy;
 				}
@@ -386,9 +393,9 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			return key;
 		};
 
-		this.persist = function (node, callback) {
-			ASSERT_NODE(node);
-			ASSERT(this.isMutable(node));
+		var persist = function (node, callback) {
+			ASSERT(isValid(node));
+			ASSERT(isMutable(node));
 
 			var saver = new Saver(callback);
 			var key = saver.save(node.data);
@@ -401,58 +408,58 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 			return key;
 		};
 
-		this.getProperty = function (node, name) {
-			ASSERT_NODE(node);
+		var getProperty = function (node, name) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name === "string");
 
 			return node.data[name];
 		};
 
-		this.setProperty = function (node, name, value) {
-			ASSERT_NODE(node);
+		var setProperty = function (node, name, value) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name === "string");
 
-			this.mutate(node);
+			mutate(node);
 			node.data[name] = value;
 		};
 
-		this.delProperty = function (node, name) {
-			ASSERT_NODE(node);
+		var delProperty = function (node, name) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name === "string");
 
-			this.mutate(node);
+			mutate(node);
 			delete node.data[name];
 		};
 
-		this.getProperty2 = function (node, name1, name2) {
-			ASSERT_NODE(node);
+		var getProperty2 = function (node, name1, name2) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name1 === "string");
 			ASSERT(typeof name2 === "string");
 
 			return node.data[name1][name2];
 		};
 
-		this.setProperty2 = function (node, name1, name2, value) {
-			ASSERT_NODE(node);
+		var setProperty2 = function (node, name1, name2, value) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name1 === "string");
 			ASSERT(typeof name2 === "string");
 
-			node = this.getChild(node, name1);
-			this.mutate(node);
+			node = getChild(node, name1);
+			mutate(node);
 			node.data[name2] = value;
 		};
 
-		this.delProperty2 = function (node, name1, name2) {
-			ASSERT_NODE(node);
+		var delProperty2 = function (node, name1, name2) {
+			ASSERT(isValid(node));
 			ASSERT(typeof name1 === "string");
 			ASSERT(typeof name2 === "string");
 
-			node = this.getChild(node, name1);
-			this.mutate(node);
+			node = getChild(node, name1);
+			mutate(node);
 			delete node.data[name2];
 		};
 
-		this.dumpTree = function (key, callback) {
+		var dumpTree = function (key, callback) {
 			ASSERT(key && typeof key === "string");
 			ASSERT(callback);
 
@@ -471,7 +478,7 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 
 			var load = function (data, relid) {
 				ASSERT(data && typeof data === "object");
-				ASSERT(typeof relid === "string");
+				ASSERT(typeof relid === "string" || typeof relid === "number");
 
 				var key = data[relid];
 				ASSERT(isKey(key));
@@ -518,6 +525,40 @@ define([ "assert", "lib/sha1", "util" ], function (ASSERT, SHA1, UTIL) {
 
 				decrease();
 			});
+		};
+		
+		return {
+			isKey: isKey,
+			isValid: isValid,
+			getKey: getKey,
+			addKey: addKey,
+			delKey: delKey,
+			createRoot: createRoot,
+			loadRoot: loadRoot,
+			createChild: createChild,
+			getChild: getChild,
+			loadChild: loadChild,
+			deleteChild: deleteChild,
+			loadByPath: loadByPath,
+			getParent: getParent,
+			setParent: setParent,
+			delParent: delParent,
+			getPath: getPath,
+			getLevel: getLevel,
+			getStringPath: getStringPath,
+			parseStringPath: parseStringPath,
+			getRoot: getRoot,
+			getRelid: getRelid,
+			isMutable: isMutable,
+			mutate: mutate,
+			persist: persist,
+			getProperty: getProperty,
+			setProperty: setProperty,
+			delProperty: delProperty,
+			getProperty2: getProperty2,
+			setProperty2: setProperty2,
+			delProperty2: delProperty2,
+			dumpTree: dumpTree
 		};
 	};
 

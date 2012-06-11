@@ -11,8 +11,8 @@ requirejs.config({
 });
 
 requirejs(
-[ "assert", "lib/sax", "fs", "mongo", "branch", "config", "util", "metabuilder" ],
-function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
+[ "assert", "lib/sax", "fs", "mongo", "core", "config", "util", "metabuilder" ],
+function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder) {
 	"use strict";
 
 	// ------- parser -------
@@ -28,7 +28,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 			+ " ids)");
 		}, CONFIG.parser.reportingTime);
 
-		var branch = new Branch(storage);
+		var core = new Core(storage);
 
 		var exit = function (err, result) {
 			if( timerhandle ) {
@@ -49,18 +49,18 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 			ASSERT(tags.length !== 0);
 			ASSERT(persisting >= 1);
 
-			branch.persist(tags[0].node, function (err) {
+			core.persist(tags[0].node, function (err) {
 				if( err ) {
 					exit(err);
 				}
 				else if( --persisting === 0 ) {
-					var key = branch.getKey(tags[0].node);
+					var key = core.getKey(tags[0].node);
 
 					console.log("Parsing done (" + total + " objects, " + idCount + " ids)");
 					console.log("Root key = " + key);
 
 					tags = null;
-					branch = null;
+					core = null;
 
 					exit(null, key);
 				}
@@ -71,22 +71,22 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 		var counter = 0;
 
 		var addTag = function (tag) {
-			var node = branch.createNode();
+			var node = core.createNode();
 
 			if( tags.length !== 0 ) {
-				branch.attach(node, tags[tags.length - 1].node);
+				core.attach(node, tags[tags.length - 1].node);
 			}
 
 			for( var key in tag.attributes ) {
-				branch.setAttribute(node, key, tag.attributes[key]);
+				core.setAttribute(node, key, tag.attributes[key]);
 			}
 
-			branch.setAttribute(node, "#tag", tag.name);
+			core.setAttribute(node, "#tag", tag.name);
 
 			if( tag.attributes.id ) {
 				ASSERT(ids[tag.attributes.id] === undefined);
 
-				ids[tag.attributes.id] = branch.getStringPath(node);
+				ids[tag.attributes.id] = core.getStringPath(node);
 				++idCount;
 			}
 
@@ -123,7 +123,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 			ASSERT(tag.name === name);
 
 			if( tag.text !== "" ) {
-				branch.setAttribute(tag.node, "#text", tag.text);
+				core.setAttribute(tag.node, "#text", tag.text);
 			}
 		});
 
@@ -140,7 +140,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 
 		parser.on("end", function () {
 			ASSERT(tags.length === 1);
-			branch.setAttribute(tags[0].node, "#ids", ids);
+			core.setAttribute(tags[0].node, "#ids", ids);
 			persist();
 		});
 
@@ -177,12 +177,12 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 	};
 
 	var reader = function (storage, key, callback) {
-		var branch = new Branch(storage);
+		var core = new Core(storage);
 		var count = 0;
 
 		var timerhandle;
 
-		var enqueue = UTIL.priorityQueue(CONFIG.reader.concurrentReads, comparePaths,
+		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths,
 		function (err) {
 			clearInterval(timerhandle);
 			console.log("Reading done (" + count + " objects)");
@@ -190,19 +190,20 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 		});
 
 		var process = function (path, done, node) {
+			// console.log(node);
 			++count;
-			branch.loadChildren(node, function (err, children) {
+			core.loadChildren(node, function (err, children) {
 				if( !err ) {
 					for( var i = 0; i < children.length; ++i ) {
 						var child = children[i];
-						enqueue(branch.getPath(child), process, child);
+						enqueue(core.getPath(child), process, child);
 					}
 				}
 				done(err);
 			});
 		};
 
-		branch.loadRoot(key, function (err, node) {
+		core.loadRoot(key, function (err, node) {
 			if( err ) {
 				callback(err);
 			}
@@ -212,7 +213,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 					console.log("  reading " + count + " objects");
 				}, CONFIG.reader.reportingTime);
 
-				enqueue(branch.getPath(node), process, node);
+				enqueue(core.getPath(node), process, node);
 			}
 		});
 	};
@@ -234,7 +235,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 		mongo.open(function (err1) {
 			if( err1 ) {
 				closeDatabase();
-				callback("Could not connect to database: " + JSON.stringify(err1));
+				callback("Could not open database: " + err1);
 			}
 			else {
 				console.log("Clearing database");
@@ -269,6 +270,7 @@ function (ASSERT, SAX, FS, Mongo, Branch, CONFIG, UTIL, metabuilder) {
 					}
 
 					metabuilder(mongo, key, function (err3) {
+//					reader(mongo, key, function(err3) {
 						console.log("Closing database");
 						closeDatabase();
 					});
