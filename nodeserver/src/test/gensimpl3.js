@@ -3,10 +3,9 @@ var payload = "";
 var objects = {};
 var emptyObject = function(){
     return { _id:"obj"+objectCounter,
-        attributes:{"name":"ojj"+objectCounter++,"payload":payload, "isPort":true},
+        attributes:{"name":"obj"+objectCounter++,"payload":payload, "isPort":true},
         registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
-                    "isConnection" : false,
-                    "isPort" : true},
+                    "isConnection" : false},
         relations:{parentId:null,
             childrenIds:[],
             baseId:null,
@@ -93,6 +92,39 @@ if(arguments.length !== 6){
 generatePayload(Number(arguments[5]));
 commonbase = /*generateBase(Number(arguments[6]))*/ easyBase();
 root = rGenerateTree(0,Number(arguments[3]),Number(arguments[4]));
+//all the objects are generated, create connection
+console.log("root.relations.childrenIds.length: " + root.relations.childrenIds.length);
+var rootChildren = root.relations.childrenIds.length;
+for (i = 0; i < rootChildren; i++) {
+    //console.log("i: " + i);
+    var connId = "conn_" + root.relations.childrenIds[0] + "_" + root.relations.childrenIds[i];
+    var connObject = emptyObject();
+    connObject._id = connId;
+    connObject.attributes.name = connId;
+    connObject.relations.baseId = "connection";
+    connObject.relations.inheritorIds.push(connId);
+
+    //set parent
+    connObject.relations.parentId = root._id;
+    root.relations.childrenIds.push(connId);
+
+    //set source and target
+    connObject.pointers.source = { "to": root.relations.childrenIds[0], "from": [] };
+    connObject.pointers.target = { "to": root.relations.childrenIds[i], "from": [] };
+
+    var sourceFrom = objects[root.relations.childrenIds[0]].pointers.source || { "to" : null, "from" : [] };
+    sourceFrom.from.push(connId);
+    objects[root.relations.childrenIds[0]].pointers.source = sourceFrom;
+
+    var targetFrom = objects[root.relations.childrenIds[i]].pointers.target || { "to" : null, "from" : [] };
+    targetFrom.from.push(connId);
+    objects[root.relations.childrenIds[i]].pointers.target = targetFrom;
+
+    objects[connId] = connObject;
+}
+
+
+
 fs.writeFileSync(arguments[2]+".tpf", JSON.stringify(objects));
 console.log(objectCounter+" object have been created!");
 process.exit(0);
