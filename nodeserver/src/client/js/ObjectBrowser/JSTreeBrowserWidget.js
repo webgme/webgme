@@ -138,7 +138,7 @@ define(['./../util.js',
                         "action": function (obj) {
                             createNode(obj.attr("nId"));
                         },
-                        "icon": "img/edit.png"
+                        "icon": "img/create.png"
                     },
                     "copyItem": { // The "delete" menu item
                         "label": "Copy",
