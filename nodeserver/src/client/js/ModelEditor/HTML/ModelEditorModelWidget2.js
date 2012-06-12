@@ -26,7 +26,6 @@ define(['./../../../../common/LogManager.js',
             initialize,
             childrenIds = [],
             renderPort,
-            updatePort,
             refreshChildrenContainer;
 
         $.extend(this, new WidgetBase(id, proj));
@@ -205,18 +204,18 @@ define(['./../../../../common/LogManager.js',
         // PUBLIC METHODS
         this.onEvent = function (etype, eid) {
             switch (etype) {
-                case "load":
-                    refresh("insert", eid);
-                    break;
-                case "update":
-                    refresh("update", eid);
-                    break;
-                case "create":
-                    //refresh("insert", eid);
-                    break;
-                case "delete":
-                    //refresh("update", eid);
-                    break;
+            case "load":
+                refresh("insert", eid);
+                break;
+            case "update":
+                refresh("update", eid);
+                break;
+            case "create":
+                //refresh("insert", eid);
+                break;
+            case "delete":
+                //refresh("update", eid);
+                break;
             }
 
         };
@@ -224,7 +223,13 @@ define(['./../../../../common/LogManager.js',
         refresh = function (eventType, nodeId) {
             var node = self.project.getNode(nodeId),
                 newTitle,
-                nodePosition;
+                nodePosition,
+                oldChildrenIds = childrenIds,
+                currentChildrenIds,
+                childrenDeleted,
+                childrenAdded,
+                j,
+                child;
 
             if (node) {
                 if (nodeId === self.getId()) {
@@ -241,12 +246,36 @@ define(['./../../../../common/LogManager.js',
                     }
                     nodePosition = node.getRegistry(self.nodeRegistryNames.position);
                     self.setPosition(nodePosition.x, nodePosition.y, true, false);
+
+                    currentChildrenIds = node.getChildrenIds();
+
+                    //Handle children deletion
+                    childrenDeleted = util.arrayMinus(oldChildrenIds, currentChildrenIds);
+
+                    for (j = 0; j < childrenDeleted.length; j += 1) {
+                        self.removeChildById(childrenDeleted[j]);
+                    }
+
+                    //Handle children addition
+                    childrenAdded = util.arrayMinus(currentChildrenIds, oldChildrenIds);
+                    for (j = 0; j < childrenAdded.length; j += 1) {
+                        child = self.project.getNode(childrenAdded[j]);
+                        if (child && child.getAttribute(self.nodeAttrNames.isPort) === true) {
+                            renderPort(child, true);
+                        }
+                    }
+
+                    refreshChildrenContainer();
+
+                    //finally store the actual children info for the parent
+                    childrenIds = currentChildrenIds;
                 } else {
                     if (childrenIds.indexOf(nodeId) !== -1) {
                         //it's the displayed node's child, let's see if it needs to be displayed as a port
                         if (node.getAttribute(self.nodeAttrNames.isPort) === true) {
                             if (self.children[nodeId]) {
-                                updatePort(node);
+                                self.children[nodeId].update(node);
+                                refreshChildrenContainer();
                             } else {
                                 renderPort(node);
                             }
@@ -254,10 +283,6 @@ define(['./../../../../common/LogManager.js',
                     }
                 }
             }
-        };
-
-        updatePort = function (portNode) {
-
         };
 
         renderPort = function (portNode, ignoreChildrenContainerRefresh) {
@@ -318,8 +343,8 @@ define(['./../../../../common/LogManager.js',
 
         this.getConnectionPoints = function () {
             var bBox = self.getBoundingBox(),
-                result = {  "N" : {x: bBox.x + bBox.width / 2, y: bBox.y},
-                            "S" : {x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height}//,
+                result = {  "S" : {x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height},
+                            "N" : {x: bBox.x + bBox.width / 2, y: bBox.y}//,
                            /* "W" : {x: bBox.x, y: bBox.y + bBox.height / 2},
                             "E" : {x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2}*/ };
 

@@ -109,11 +109,11 @@ define([], function () {
                 x[4] = pointB.x;
                 y[4] = pointB.y;
 
-                x[2] = pointB.x + 50;
-                y[2] = pointB.y + 50;
+                x[2] = pointB.x - 100;
+                y[2] = pointB.y + 70;
 
-                x[3] = pointB.x + 150;
-                y[3] = pointB.y + 150;
+                x[3] = pointB.x + 100;
+                y[3] = pointB.y + 70;
             } else {
 
 

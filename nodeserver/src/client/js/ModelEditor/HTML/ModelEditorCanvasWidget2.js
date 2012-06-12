@@ -328,7 +328,6 @@ define(['./../../../../common/LogManager.js',
 
         // PUBLIC METHODS
         this.onEvent = function (etype, eid) {
-            logger.debug("onEvent: '" + etype + "', '" + eid + "'");
             switch (etype) {
             case "load":
                 //createChildComponent(eid, true);
@@ -346,10 +345,6 @@ define(['./../../../../common/LogManager.js',
                 logger.debug("onEvent DELETE: " + eid + " NOT YET IMPLEMENTED");
                 break;
             }
-        };
-
-        this.startConnectionDrawing = function (sourceId) {
-
         };
 
         this.createConnection = function (sourceId, targetId) {

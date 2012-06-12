@@ -117,6 +117,10 @@ define(['./../../../../common/LogManager.js',
             return orientation;
         };
 
+        this.update = function (node) {
+            self.skinParts.portTitle.html(node.getAttribute(self.nodeAttrNames.name));
+        };
+
         initialize();
     };
 
