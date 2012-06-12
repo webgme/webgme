@@ -52,12 +52,12 @@ define([], function () {
             return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
         },
 
-        copy: function(object){
+        copy: function (object) {
             return JSON.parse(JSON.stringify(object));
         },
-        insertIntoArray: function(list,item){
-            if (list instanceof Array){
-                if(list.indexOf(item) === -1){
+        insertIntoArray: function (list, item) {
+            if (list instanceof Array) {
+                if (list.indexOf(item) === -1) {
                     list.push(item);
                     return true;
                 }
@@ -65,23 +65,22 @@ define([], function () {
             }
             return false;
         },
-        removeFromArray: function(list,item){
+        removeFromArray: function (list, item) {
             var index = list.indexOf(item);
-            if(index === -1){
+            if (index === -1) {
                 return false;
-            }
-            else{
-                list.splice(index,1);
+            } else {
+                list.splice(index, 1);
                 return true;
             }
         },
-        mergeArrays: function(one,two){
-            var three = [],i;
-            for(i in one){
+        mergeArrays: function (one, two) {
+            var three = [], i;
+            for (i in one) {
                 three.push(one[i]);
             }
-            for(i in two){
-                if(one.indexOf(two[i]) === -1){
+            for (i in two) {
+                if (one.indexOf(two[i]) === -1) {
                     three.push(two[i]);
                 }
             }

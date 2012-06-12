@@ -38,6 +38,7 @@ define(['./../../../common/LogManager.js',
 
         this.addedToParent = function () {
             paper = Raphael(id);
+            paper.canvas.style.pointerEvents = "none";
         };
 
         this.redrawConnection = function (srcWidget, trgtWidget) {
@@ -48,6 +49,14 @@ define(['./../../../common/LogManager.js',
                 cH,
                 pathDef,
                 bezierControlPoints;
+
+            if ((srcWidget === null) || (srcWidget === undefined)) {
+                return;
+            }
+
+            if ((trgtWidget === null) || (trgtWidget === undefined)) {
+                return;
+            }
 
             bezierControlPoints = BezierHelper.getBezierControlPoints(srcWidget.getBoundingBox(), trgtWidget.getBoundingBox());
 

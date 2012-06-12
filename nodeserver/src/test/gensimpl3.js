@@ -103,6 +103,7 @@ for (i = 0; i < rootChildren; i++) {
     connObject.attributes.name = connId;
     connObject.relations.baseId = "connection";
     connObject.relations.inheritorIds.push(connId);
+    connObject.attributes.directed = true;
 
     //set parent
     connObject.relations.parentId = root._id;

@@ -93,6 +93,59 @@ define([], function () {
             result.push({"x": parseFloat(x[4].toFixed(3)), "y": parseFloat(y[4].toFixed(3))});
 
             return result;
+        },
+
+        getBezierControlPoints2 : function (pointA, pointB, sideDescriptor) {
+            var dx,
+                dy,
+                x = [],
+                y = [],
+                result = [];
+
+            if ((pointA.x === pointB.x) && (pointA.y === pointB.y)) {
+                //when the source and target of the connection is the same
+                x[1] = pointB.x;
+                y[1] = pointB.y;
+                x[4] = pointB.x;
+                y[4] = pointB.y;
+
+                x[2] = pointB.x + 50;
+                y[2] = pointB.y + 50;
+
+                x[3] = pointB.x + 150;
+                y[3] = pointB.y + 150;
+            } else {
+
+
+                x[1] = pointA.x;
+                y[1] = pointA.y;
+                x[4] = pointB.x;
+                y[4] = pointB.y;
+
+                dx = Math.max(Math.abs(x[1] - x[4]) / 2, 10);
+                dy = Math.max(Math.abs(y[1] - y[4]) / 2, 10);
+
+                /*if (dx !== dy) {
+                 if (dx === 10) {
+                 dx = 50;
+                 }
+                 if (dy === 10) {
+                 dy = 50;
+                 }
+                 }*/
+
+                x[2] = [x[1], x[1], x[1] - dx, x[1] + dx][sideDescriptor[0]].toFixed(3);
+                y[2] = [y[1] - dy, y[1] + dy, y[1], y[1]][sideDescriptor[0]].toFixed(3);
+                x[3] = [x[4], x[4], x[4] - dx, x[4] + dx][sideDescriptor[1]].toFixed(3);
+                y[3] = [y[1] + dy, y[1] - dy, y[4], y[4]][sideDescriptor[1]].toFixed(3);
+            }
+
+            result.push({"x": parseFloat(x[1].toFixed(3)), "y": parseFloat(y[1].toFixed(3))});
+            result.push({"x": parseFloat(x[2]), "y": parseFloat(y[2])});
+            result.push({"x": parseFloat(x[3]), "y": parseFloat(y[3])});
+            result.push({"x": parseFloat(x[4].toFixed(3)), "y": parseFloat(y[4].toFixed(3))});
+
+            return result;
         }
     };
 

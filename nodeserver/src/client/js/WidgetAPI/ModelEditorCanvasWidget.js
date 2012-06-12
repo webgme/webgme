@@ -6,12 +6,14 @@ define(['./../../../common/LogManager.js',
         './WidgetBase.js',
         './ModelEditorModelWidget.js',
         './ModelEditorConnectionWidget.js',
+        './ModelEditorConnectionWidgetHtmlCanvas.js',
         './../NotificationManager.js'], function (logManager,
                                                       EventDispatcher,
                                                       util,
                                                       WidgetBase,
                                                       ModelEditorModelWidget,
                                                       ModelEditorConnectionWidget,
+                                                      ModelEditorConnectionWidgetHtmlCanvas,
                                                       notificationManager) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)

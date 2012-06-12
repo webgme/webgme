@@ -4,7 +4,7 @@
 require.config({
     baseUrl: "/lib",
     paths: {
-        "WidgetAPI": "/js/WidgetAPI"
+        "ModelEditorHTML": "/js/ModelEditor/HTML"
     }
 });
 
@@ -14,36 +14,32 @@ require([   'order!jquery.min',
             'order!./../../common/underscore.js',
             'domReady',
             'order!./../js/cli3nt.js',
-            'order!./../js/TreeBrowserControl.js',
-            'order!./../js/JSTreeBrowserWidget.js',
-            'order!./../js/delayctrl.js',
-            'order!./../js/DynaTreeBrowserWidget.js',
+            'order!./../js/ObjectBrowser/TreeBrowserControl.js',
+            'order!./../js/ObjectBrowser/JSTreeBrowserWidget.js',
+            'order!./../js/ObjectBrowser/DynaTreeBrowserWidget.js',
             './../../common/LogManager.js',
             './../../common/CommonUtil.js',
-            './../js/ModelEditorControl.js',
-            './../js/ModelEditorSVGWidget.js',
-            './../js/ModelEditorWidget.js',
-            './../js/MultiLevelModelEditorControl.js',
-            './../js/WidgetAPI/WidgetManager.js'], function (jquery,
+            './../js/ModelEditor/SVG/ModelEditorControl.js',
+            './../js/ModelEditor/SVG/ModelEditorSVGWidget.js',
+            './../js/ModelEditor/HTML/WidgetManager.js'], function (jquery,
                                                         jqueryUI,
                                                         underscore,
                                                         domReady,
                                                         Client,
                                                         TreeBrowserControl,
                                                         JSTreeBrowserWidget,
-                                                        DelayControl,
                                                         DynaTreeBrowserWidget,
                                                         logManager,
                                                         commonUtil,
                                                         ModelEditorControl,
                                                         ModelEditorSVGWidget,
-                                                        ModelEditorWidget,
-                                                        MultiLevelModelEditorControl,
                                                         WidgetManager) {
     domReady(function () {
 
         //if ( commonUtil.DEBUG === true ) {
         logManager.setLogLevel(logManager.logLevels.ALL);
+        logManager.excludeComponent("TreeBrowserControl");
+        logManager.excludeComponent("JSTreeBrowserWidget");
         //}
 
         var client,
@@ -54,31 +50,7 @@ require([   'order!jquery.min',
             doConnect,
             lastContainerWidth = 0,
             resizeMiddlePane;
-        //var delayer = undefined;
 
-        doConnect = function () {
-
-            //figure out the server to connect to
-            var serverLocation;
-
-            //by default serverlocation is the same server the page loaded from
-            if (commonUtil.standalone.ProjectIP === "self") {
-                serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.standalone.ProjectPort;
-            } else {
-                serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
-            }
-
-            client = new Client(serverLocation);
-            tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
-            //delayer = new DelayControl(client.socket, document.getElementById("socketDelayer"));
-            tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
-
-            modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-            //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-        };
-
-        /*main*/
-        doConnect();
 
         /*
          * Compute the size of the middle pane window based on current browser size
@@ -133,6 +105,29 @@ require([   'order!jquery.min',
 
         //and call if for the first time as well
         resizeMiddlePane();
+
+        doConnect = function () {
+
+            //figure out the server to connect to
+            var serverLocation;
+
+            //by default serverlocation is the same server the page loaded from
+            if (commonUtil.standalone.ProjectIP === "self") {
+                serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.standalone.ProjectPort;
+            } else {
+                serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
+            }
+
+            client = new Client(serverLocation);
+            //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
+            tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
+
+            modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+            modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+        };
+
+        /*main*/
+        doConnect();
     });
 
 });

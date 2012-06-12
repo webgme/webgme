@@ -32,7 +32,3 @@ div.rubberBand {
     position: absolute;
     z-index: 100000;
 }
-
-div.children  {
-    position: absolute;
-}
