@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "pertree", "cache" ], function (ASSERT, PerTree, Cache) {
+define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -39,7 +39,7 @@ define([ "assert", "pertree", "cache" ], function (ASSERT, PerTree, Cache) {
 
 	var Core = function (storage) {
 
-		var pertree = new PerTree(new Cache(storage));
+		var pertree = new PerTree(storage);
 		//var pertree = new PerTree(storage);
 
 		var getAttributes = function (node) {

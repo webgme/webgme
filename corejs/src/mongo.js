@@ -61,40 +61,13 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			});
 		};
 
-		var getKey = function (node) {
-			ASSERT(node && typeof node === "object");
-
-			return node._id;
-		};
-
-		var setKey = function (node, key) {
-			ASSERT(node && typeof node === "object");
-			ASSERT(key === false || typeof key === "string");
-
-			node._id = key;
-		};
-
-		var delKey = function (node) {
-			ASSERT(node && typeof node === "object");
-
-			delete node._id;
-		};
-
 		var load = function (key, callback) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
 
 			collection.findOne({
 				_id: key
-			}, function (err, node) {
-				if( node ) {
-					Object.defineProperty(node, "_id", {
-						writable: false,
-						enumerable: false
-					});
-				}
-				callback(err, node);
-			});
+			}, callback);
 		};
 
 		var save = function (node, callback) {
@@ -142,9 +115,7 @@ define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CON
 			open: open,
 			opened: opened,
 			close: close,
-			getKey: getKey,
-			setKey: setKey,
-			delKey: delKey,
+			KEYNAME: "_id",
 			load: load,
 			save: save,
 			remove: remove,

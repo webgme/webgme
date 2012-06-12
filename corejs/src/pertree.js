@@ -20,6 +20,8 @@ function (ASSERT, SHA1, UTIL) {
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
+		var KEYNAME = storage.KEYNAME;
+
 		var isValid = function (node) {
 			var valid = node && node.data && typeof node.data === "object";
 			valid = valid
@@ -30,7 +32,7 @@ function (ASSERT, SHA1, UTIL) {
 			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
 
 			if( valid ) {
-				var key = storage.getKey(node.data);
+				var key = node.data[KEYNAME];
 				valid = valid && (key === undefined || key === false || isKey(key));
 
 				valid = valid
@@ -49,28 +51,28 @@ function (ASSERT, SHA1, UTIL) {
 
 		var getKey = function (node) {
 			ASSERT(isValid(node));
-			return storage.getKey(node.data);
+			return node.data[KEYNAME];
 		};
 
 		var addKey = function (node) {
 			ASSERT(isValid(node));
 			ASSERT(isMutable(node));
 
-			return storage.setKey(node.data, false);
+			return node.data[KEYNAME] = false;
 		};
 
 		var delKey = function (node) {
 			ASSERT(isValid(node));
 			ASSERT(isMutable(node));
 
-			return storage.delKey(node.data);
+			delete node.data[KEYNAME];
 		};
 
 		var createRoot = function () {
 			var data = {
 				_mutable: true
 			};
-			storage.setKey(data, false);
+			data[KEYNAME] = false;
 
 			return {
 				data: data,
@@ -124,7 +126,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(callback);
 
 			storage.load(key, function (err, data) {
-				ASSERT(err || storage.getKey(data) === key);
+				ASSERT(err || data[KEYNAME] === key);
 				callback(err, err ? undefined : {
 					data: data,
 					parent: null,
@@ -142,7 +144,7 @@ function (ASSERT, SHA1, UTIL) {
 
 			if( typeof child === "string" ) {
 				storage.load(child, function (err, data) {
-					ASSERT(err || storage.getKey(data) === child);
+					ASSERT(err || data[KEYNAME] === child);
 					callback(err, err ? undefined : {
 						data: data,
 						parent: node,
@@ -177,7 +179,7 @@ function (ASSERT, SHA1, UTIL) {
 					return;
 				}
 
-				ASSERT(storage.getKey(data) === node.data[relid]);
+				ASSERT(data[KEYNAME] === node.data[relid]);
 				node = {
 					data: data,
 					parent: node,
@@ -320,8 +322,8 @@ function (ASSERT, SHA1, UTIL) {
 					copy[key] = data[key];
 				}
 
-				if( storage.getKey(data) !== undefined ) {
-					storage.setKey(copy, false);
+				if( data[KEYNAME] !== undefined ) {
+					copy[KEYNAME] = false;
 				}
 
 				ASSERT(copy._mutable === true);
@@ -379,12 +381,12 @@ function (ASSERT, SHA1, UTIL) {
 				}
 			}
 
-			key = storage.getKey(data);
+			key = data[KEYNAME];
 			ASSERT(key === false || key === undefined);
 
 			if( key === false ) {
 				key = "id:" + SHA1(JSON.stringify(data));
-				storage.setKey(data, key);
+				data[KEYNAME] = key;
 
 				this.start();
 				storage.save(data, this.done);
@@ -396,6 +398,7 @@ function (ASSERT, SHA1, UTIL) {
 		var persist = function (node, callback) {
 			ASSERT(isValid(node));
 			ASSERT(isMutable(node));
+			ASSERT(getKey(node) !== undefined);
 
 			var saver = new Saver(callback);
 			var key = saver.save(node.data);
@@ -491,9 +494,9 @@ function (ASSERT, SHA1, UTIL) {
 						var copy = UTIL.deepCopy(child);
 
 						data[relid] = copy;
-						scan(copy);
+						scan(key, copy);
 
-						// copy.id = storage.getKey(child);
+						// copy.id = child[KEYNAME];
 						decrease();
 					}
 					else {
@@ -518,7 +521,7 @@ function (ASSERT, SHA1, UTIL) {
 			};
 
 			storage.load(key, function (err, data) {
-				ASSERT(err || storage.getKey(data) === key);
+				ASSERT(err || data[KEYNAME] === key);
 
 				root = UTIL.deepCopy(data);
 				scan(root);
@@ -526,7 +529,7 @@ function (ASSERT, SHA1, UTIL) {
 				decrease();
 			});
 		};
-		
+
 		return {
 			isKey: isKey,
 			isValid: isValid,

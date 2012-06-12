@@ -10,9 +10,8 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs(
-[ "assert", "lib/sax", "fs", "mongo", "core", "config", "util", "metabuilder" ],
-function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder) {
+requirejs([ "assert", "lib/sax", "fs", "mongo", "core", "config", "util", "metabuilder", "cache" ],
+function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 	"use strict";
 
 	// ------- parser -------
@@ -182,8 +181,8 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder) {
 
 		var timerhandle;
 
-		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths,
-		function (err) {
+		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths, function (
+		err) {
 			clearInterval(timerhandle);
 			console.log("Reading done (" + count + " objects)");
 			callback(err);
@@ -220,6 +219,7 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder) {
 
 	// ------- database -------
 
+//	var mongo = new Cache(new Mongo());
 	var mongo = new Mongo();
 
 	var closeDatabase = function () {
@@ -269,10 +269,11 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder) {
 						console.log(err2);
 					}
 
-					metabuilder(mongo, key, function (err3) {
-//					reader(mongo, key, function(err3) {
+					// metabuilder(mongo, key, function (err3) {
+					reader(mongo, key, function (err3) {
 						console.log("Closing database");
 						closeDatabase();
+						// });
 					});
 				});
 			}
