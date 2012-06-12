@@ -111,18 +111,19 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
         this.makeConnection = function(parameters){
             var commands=[],
                 baseId,
+                attributes,
                 guid;
             if(parameters.parentId && parameters.sourceId && parameters.targetId){
                 baseId = parameters.baseId || "connection";
                 //guid = commonUtil.guid();
                 //TODO: just to make recognisable ID for connection.... delete at some point please
                 guid = "conn_" + parameters.sourceId + "_" + parameters.targetId;
+                attributes = {name:guid};
                 commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
                 commands.push({type:"point",id:guid,name:"source",to:parameters.sourceId});
                 commands.push({type:"point",id:guid,name:"target",to:parameters.targetId});
-                if(parameters.directed !== null && parameters.directed !== undefined){
-                    commands.push({type:"modify",id:guid,attributes:{directed:parameters.directed}});
-                }
+                attributes.directed = parameters.directed;
+                commands.push({type:"modify",id:guid,attributes:attributes});
                 self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:commands});
             }
             else{
