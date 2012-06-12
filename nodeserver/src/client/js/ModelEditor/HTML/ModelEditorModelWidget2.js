@@ -67,6 +67,53 @@ define(['./../../../../common/LogManager.js',
             });
             self.skinParts.childrenContainer.append(self.skinParts.centerPorts);
 
+            self.skinParts.connectionPoint = $('<div/>', {
+                "class" : "connectionPoint",
+                "id" : "connectionPoint"
+            });
+            self.skinParts.centerPorts.append(self.skinParts.connectionPoint);
+
+            self.skinParts.connectionPoint.draggable({
+                helper: function () {
+                    return $("<div class='ui-widget-drag-helper'></div>").data("id", self.getId());
+                },
+                scroll: true,
+                cursor: 'pointer',
+                cursorAt: {
+                    left: 0,
+                    top: 0
+                },
+                start: function (event, ui) {
+                    self.skinParts.connectionPoint.addClass("connectionSource");
+                    self.startPortConnection(self.getId());
+                    event.stopPropagation();
+                },
+                stop: function (event, ui) {
+                    self.endPortConnection(self.getId());
+                    self.skinParts.connectionPoint.removeClass("connectionSource");
+                    self.skinParts.connectionPoint.css("opacity", "0.000001");
+                    event.stopPropagation();
+                },
+                drag: function (event, ui) {
+                }
+            });
+
+            self.skinParts.connectionPoint.droppable({
+                accept: ".connectionSource",
+                activeClass: "ui-state-active",
+                hoverClass: "ui-state-hover",
+                drop: function (event, ui) {
+                    var srdId = ui.helper.data("id"),
+                        trgtId = self.getId();
+
+                    self.parentWidget.createConnection(srdId, trgtId);
+                    event.stopPropagation();
+                }
+            });
+
+            //make it non visible
+            self.skinParts.connectionPoint.css("opacity", "0.000001");
+
             self.skinParts.rightPorts = $('<div/>', {
                 "class" : "ports right"
             });
@@ -85,6 +132,17 @@ define(['./../../../../common/LogManager.js',
 
             //hook up double click for node title edit
             self.skinParts.title.dblclick(editNodeTitle);
+
+            //show and hide action-icons only when mouse is over the model
+            self.el.mouseover(function () {
+                if (self.skinParts.connectionPoint.hasClass("connectionSource") === false) {
+                    self.skinParts.connectionPoint.css("opacity", "1.0");
+                }
+            }).mouseout(function () {
+                if (self.skinParts.connectionPoint.hasClass("connectionSource") === false) {
+                    self.skinParts.connectionPoint.css("opacity", "0.000001");
+                }
+            });
         };
 
         editNodeTitle = function () {
@@ -93,9 +151,8 @@ define(['./../../../../common/LogManager.js',
 
             // Replace node with <input>
             self.skinParts.title.editInPlace("modelTitle", function (newTitle) {
-                var node = self.project.getNode(self.getId());
                 skinContent.title = newTitle;
-                node.setAttribute("name", newTitle);
+                self.project.setAttributes(self.getId(), "name", newTitle);
                 refreshChildrenContainer();
             });
 
@@ -180,6 +237,7 @@ define(['./../../../../common/LogManager.js',
                         self.skinParts.title.html(newTitle).hide().fadeIn('fast');
                         notificationManager.displayMessage("Object title '" + skinContent.title + "' has been changed to '" + newTitle + "'.");
                         skinContent.title = newTitle;
+                        refreshChildrenContainer();
                     }
                     nodePosition = node.getRegistry(self.nodeRegistryNames.position);
                     self.setPosition(nodePosition.x, nodePosition.y, true, false);
@@ -231,6 +289,10 @@ define(['./../../../../common/LogManager.js',
 
             if (childrenContainerWidth > leftPortsWidth + centerPortsWidth + rightPortsWidth) {
                 self.skinParts.centerPorts.outerWidth(childrenContainerWidth - leftPortsWidth - rightPortsWidth);
+            }
+
+            if (self.parentWidget) {
+                self.parentWidget.childBBoxChanged(self);
             }
         };
 

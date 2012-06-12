@@ -413,6 +413,14 @@ define(['./../../../../common/LogManager.js',
         };
 
         this.startDrawConnection = function (srcId) {
+            var i;
+            for (i in self.children) {
+                if (self.children.hasOwnProperty(i)) {
+                    if ($.isFunction(self.children[i].highlightConnectionTarget)) {
+                        self.children[i].highlightConnectionTarget.call(self.children[i], srcId);
+                    }
+                }
+            }
             connectionInDraw.source = srcId;
             connectionInDraw.path.show();
         };

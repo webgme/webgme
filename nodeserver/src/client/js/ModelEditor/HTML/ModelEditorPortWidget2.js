@@ -58,7 +58,7 @@ define(['./../../../../common/LogManager.js',
 
             self.el.draggable({
                 helper: function () {
-                    return $("<div class='ui-widget-drag-helper'></div>");
+                    return $("<div class='ui-widget-drag-helper'></div>").data("id", self.getId());
                 },
                 scroll: true,
                 cursor: 'pointer',
@@ -67,16 +67,13 @@ define(['./../../../../common/LogManager.js',
                     top: 0
                 },
                 start: function (event, ui) {
-                    /*highlight_possible_targets();*/
                     self.el.addClass("connectionSource");
-                    self.el.addClass("ui-state-hover");
                     self.parentWidget.startPortConnection(self.getId());
                     event.stopPropagation();
                 },
                 stop: function (event, ui) {
                     self.parentWidget.endPortConnection(self.getId());
                     self.el.removeClass("connectionSource");
-                    self.el.removeClass("ui-state-hover");
                     event.stopPropagation();
                 },
                 drag: function (event, ui) {
@@ -88,7 +85,7 @@ define(['./../../../../common/LogManager.js',
                 activeClass: "ui-state-active",
                 hoverClass: "ui-state-hover",
                 drop: function (event, ui) {
-                    var srdId = $(ui.draggable).attr("id"),
+                    var srdId = ui.helper.data("id"),
                         trgtId = self.getId();
 
                     self.parentWidget.parentWidget.createConnection(srdId, trgtId);

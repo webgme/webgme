@@ -84,3 +84,25 @@ div.center {
     min-width: 30px;
     height: 1px;
 }
+
+div.connectionPoint {
+     display: inline-block;
+     width: 24px;
+     height: 24px;
+     line-height: 24px;
+     vertical-align: text-top;
+     background-image: url("../img/curve.png");
+     background-repeat: no-repeat;
+     background-position: 3px 3px;
+     background-size: 18px 18px;
+     border: 1px solid #000000;
+     -webkit-border-radius: 5px;
+     -ms-border-radius: 5px;
+     -moz-border-radius: 5px;
+     border-radius: 5px;
+     cursor: pointer;
+}
+
+#connectionPoint.ui-state-hover {
+    background-color: #FF7800;
+}
