@@ -507,7 +507,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             var data;
             data = storage.get(id);
             if(data){
-                if(data.attributes[name]){
+                if(data.attributes.hasOwnProperty(name)){
                     return data.attributes[name];
                 }
                 else{
@@ -527,7 +527,7 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
             var data;
             data = storage.get(id);
             if(data){
-                if(data.registry[name]){
+                if(data.registry.hasOwnProperty(name)){
                     return data.registry[name];
                 }
                 else{
