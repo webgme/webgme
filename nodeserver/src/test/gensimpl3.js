@@ -3,7 +3,7 @@ var payload = "";
 var objects = {};
 var emptyObject = function(){
     return { _id:"obj"+objectCounter,
-        attributes:{"name":"obj"+objectCounter++,"payload":payload, "isPort":true},
+        attributes:{"name":"obj"+objectCounter++,"payload":payload},
         registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
                     "isConnection" : false},
         relations:{parentId:null,
@@ -29,11 +29,13 @@ var easyBase = function(){
     object = emptyObject();
     object._id = "object";
     object.relations.inheritorIds.push("connection");
+    object.attributes.isPort = true;
     objects["object"] = object;
     connection = emptyObject();
     connection._id = "connection";
     connection.relations.baseId = "object";
     connection.registry.isConnection = true;
+    connection.attributes.isPort = false;
     objects["connection"] = connection;
     return object;
 };
