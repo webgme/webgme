@@ -96,7 +96,31 @@ define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/Co
                 self.deleteNode(ids[i]);
             }
         };
-        this.createChild = function(parent,base){
+        this.createChild = function(parameters){
+            var commands=[],
+                guid,
+                baseId,
+                parent,
+                attributes;
+            if(parameters.parentId){
+                baseId = parameters.baseId || "object";
+                //guid = commonUtil.guid();
+                //TODO: readable ID for the testing should be removed at some point
+                parent = storage.get(parameters.parentId);
+                if(parent){
+                    guid = "child_"+parameters.parentId+"_"+parent.relations.childrenIds.length;
+                }
+                else{
+                    guid = "child_"+parameters.parentId+"_N";
+                }
+                attributes = {name:guid};
+                commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
+                commands.push({type:"modify",id:guid,attributes:attributes});
+                self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:commands});
+            }
+            else{
+                logger.error("fraudulent child creation: "+JSON.stringify(parameters));
+            }
             self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"createChild",baseId:base,parentId:parent}]});
         };
         this.createSubType = function(parent,base){

@@ -172,6 +172,11 @@ define(['./../../../common/LogManager.js',
             client.setSelectedObjectId(nodeId);
         };
 
+        //called from the TreeBrowserWidget when a create function is called from context menu
+        treeBrowser.onNodeCreate = function (nodeId) {
+            client.createChild({parentId:nodeId});
+        };
+
         refresh = function (eventType, objectId) {
             var nodeDescriptor = null,
                 currentChildId = null,

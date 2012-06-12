@@ -24,6 +24,7 @@ define(['./../util.js',
             pasteNode,
             deleteNode,
             editNode,
+            createNode,
             customContextMenu,
             animateNode,
             focusNode,
@@ -105,6 +106,14 @@ define(['./../util.js',
             treeViewE.jstree("rename", null);
         };
 
+        //Called when the ContexMenu's 'Create' action is selected for the node
+        createNode = function (nodeId) {
+            logger.debug("Create child for " + nodeId);
+            if ($.isFunction(self.onNodeCreate)) {
+                self.onNodeCreate.call(self, nodeId);
+            }
+        };
+
         //Called when the user right-clicks on a node and
         //the customized context menu has to be displayed
         customContextMenu = function (node) {
@@ -114,12 +123,20 @@ define(['./../util.js',
             //context menu is available for nodes that are not currently in 'loading' state
             if (node.hasClass("gme-loading") !== true) {
 
-                // The default set of available items :  Rename, Copy, Paste, Delete
+                // The default set of available items :  Rename, Create, Copy, Paste, Delete
                 items = {
                     "renameItem": { // The "rename" menu item
                         "label": "Rename",
                         "action": function (obj) {
                             editNode(obj.attr("nId"));
+                        },
+                        "icon": "img/edit.png"
+                    },
+                    "addChildItem": { // The "create" menu item
+                        "label": "Create",
+                        "separator_before": true,
+                        "action": function (obj) {
+                            createNode(obj.attr("nId"));
                         },
                         "icon": "img/edit.png"
                     },
