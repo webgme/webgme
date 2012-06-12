@@ -84,12 +84,14 @@ define(['./../../../../common/LogManager.js',
                 },
                 start: function (event, ui) {
                     self.skinParts.connectionPoint.addClass("connectionSource");
+                    self.skinParts.connectionPoint.addClass("ui-state-active");
                     self.startPortConnection(self.getId());
                     event.stopPropagation();
                 },
                 stop: function (event, ui) {
                     self.endPortConnection(self.getId());
                     self.skinParts.connectionPoint.removeClass("connectionSource");
+                    self.skinParts.connectionPoint.removeClass("ui-state-active");
                     self.skinParts.connectionPoint.css("opacity", "0.000001");
                     event.stopPropagation();
                 },
