@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "core", "util", "config" ], function (ASSERT, Core, UTIL, CONFIG) {
+define([ "assert", "core2", "util", "config" ], function (ASSERT, Core, UTIL, CONFIG) {
 	"use strict";
 
 	var comparePaths = function (a, b) {
@@ -334,9 +334,9 @@ define([ "assert", "core", "util", "config" ], function (ASSERT, Core, UTIL, CON
 				console.log("Building done");
 				core.persist(metaroot, function (err2) {
 					console.log("Saving meta " + (err2 ? " error:" + err2 : "done"));
-//					core.dumpTree(core.getKey(metaroot), function (err3) {
+					core.dumpTree(core.getKey(metaroot), function (err3) {
 						callback(err2);
-//					});
+					});
 				});
 			}
 		});

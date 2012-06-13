@@ -10,7 +10,7 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "lib/sax", "fs", "mongo", "core", "config", "util", "metabuilder", "cache" ],
+requirejs([ "assert", "lib/sax", "fs", "mongo", "core2", "config", "util", "metabuilder", "cache" ],
 function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 	"use strict";
 
@@ -269,11 +269,10 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 						console.log(err2);
 					}
 
-					// metabuilder(mongo, key, function (err3) {
-					reader(mongo, key, function (err3) {
+					metabuilder(mongo, key, function (err3) {
+					// reader(mongo, key, function (err3) {
 						console.log("Closing database");
 						closeDatabase();
-						// });
 					});
 				});
 			}

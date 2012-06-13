@@ -11,11 +11,12 @@ define([ "assert" ], function (ASSERT) {
 		ASSERT(storage !== null);
 
 		var KEYNAME = storage.KEYNAME;
-		
+
 		var cache = {};
 
 		var isEmpty = function () {
-			for( var s in cache ) {
+			var s;
+			for( s in cache ) {
 				return false;
 			}
 			return true;
@@ -77,15 +78,15 @@ define([ "assert" ], function (ASSERT) {
 			}
 		};
 
-		var keyregexp = new RegExp("id:[0-9a-f]{40}");
-		
+		var keyregexp = new RegExp("#[0-9a-f]{40}");
+
 		var save = function (obj, callback) {
 			var key = obj[KEYNAME];
 			ASSERT(key && typeof key === "string");
 
 			var item = cache[key];
 			cache[key] = obj;
-			
+
 			if( item && item.loading && item.callbacks ) {
 				var callbacks = item.callbacks;
 				for( var i = 0; i < callbacks.length; ++i ) {
@@ -94,7 +95,7 @@ define([ "assert" ], function (ASSERT) {
 			}
 
 			// TODO: hack, the higher level layer decides what is permanent
-			if( item && key.length === 43 && keyregexp.test(key) ) {
+			if( item && key.length === 41 && keyregexp.test(key) ) {
 				ASSERT(item[KEYNAME] === key);
 				callback(null);
 			}
