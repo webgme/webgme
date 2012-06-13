@@ -1053,10 +1053,8 @@ var Commander = function(storage,clients,clientId,transaction,CB){
             readIds,
             state;
         rReadObject = function(id){
-            console.log("kecso "+id);
             count++;
             commandBuffer.get(id,function(err,object){
-                console.log("kecso1 "+object[ID]);
                 var i;
                 if(err){
                     logger.error("readISubTree.rReadObject - getting object failed: reason["+err+"},id["+id+"]");
@@ -1088,9 +1086,6 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         state=true;
         count = 0;
         readIds = [];
-        /*TODO temporary hack */
-        cb(0,readIds);
-        return;
         rReadObject(rootId);
     };
     inheritObject = function(baseId,newguid,cb){
