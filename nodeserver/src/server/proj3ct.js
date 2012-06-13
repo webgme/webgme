@@ -130,6 +130,9 @@ var DirtyStorage = function(cProjectName,cBranchName){
             cb(1);
         }
     };
+    this.save = function(){
+        /*TODO: currently there is no need as every change have been stored to mongo, later maybe it will have some meaning*/
+    };
     /*private functions*/
 
     /*main*/
@@ -1063,7 +1066,6 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 }
                 else{
                     commonUtil.insertIntoArray(readIds,id);
-                    console.log("kecso2 "+object.relations.inheritorIds);
                     for(i=0;i<object.relations.inheritorIds.length;i++){
                         rReadObject(object.relations.inheritorIds[i]);
                     }
