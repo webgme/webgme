@@ -351,7 +351,8 @@ define(['./../../../../common/LogManager.js',
             logger.debug("createConnection from '" + sourceId + "' to '" + targetId + "'");
             self.project.makeConnection({   "parentId": currentNodeInfo.id,
                                             "sourceId": sourceId,
-                                            "targetId": targetId });
+                                            "targetId": targetId,
+                                            "directed": true });
         };
 
         refresh = function (eventType, objectId) {
