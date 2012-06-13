@@ -11,10 +11,10 @@ function (ASSERT, SHA1, UTIL) {
 
 	// ----------------- PersistentTree -----------------
 
-	var keyregexp = new RegExp("id:[0-9a-f]{40}");
+	var keyregexp = new RegExp("#[0-9a-f]{40}");
 
 	var isKey = function (key) {
-		return typeof key === "string" && key.length === 43 && keyregexp.test(key);
+		return typeof key === "string" && key.length === 41 && keyregexp.test(key);
 	};
 
 	var PersistentTree = function (storage) {
@@ -104,8 +104,11 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(typeof relid === "string" || typeof relid === "number");
 
 			var child = node.data[relid];
-			ASSERT(child && typeof child === "object");
+			if( !child ) {
+				return null;
+			}
 
+			ASSERT(typeof child === "object");
 			return {
 				data: child,
 				parent: node,
@@ -265,17 +268,18 @@ function (ASSERT, SHA1, UTIL) {
 			return level;
 		};
 
+		var EMPTY_STRING = "";
+
 		var getStringPath = function (node) {
 			ASSERT(isValid(node));
 
-			var empty = "";
-			var path = empty;
+			var path = EMPTY_STRING;
 			while( node.parent ) {
-				if( path === empty ) {
+				if( path === EMPTY_STRING ) {
 					path = node.relid;
 				}
 				else {
-					path = path + "/" + node.relid;
+					path = node.relid + "/" + path;
 				}
 				node = node.parent;
 			}
@@ -286,7 +290,7 @@ function (ASSERT, SHA1, UTIL) {
 		var parseStringPath = function (path) {
 			ASSERT(path && typeof path === "string");
 
-			return path.length === 0 ? [] : path.split("/");
+			return path.length === 0 ? [] : path.split("/").reverse();
 		};
 
 		var getRelid = function (node) {
@@ -385,7 +389,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(key === false || key === undefined);
 
 			if( key === false ) {
-				key = "id:" + SHA1(JSON.stringify(data));
+				key = "#" + SHA1(JSON.stringify(data));
 				data[KEYNAME] = key;
 
 				this.start();
@@ -434,6 +438,17 @@ function (ASSERT, SHA1, UTIL) {
 			delete node.data[name];
 		};
 
+		var isEmpty = function (node) {
+			ASSERT(isValid(node));
+
+			var s;
+			for( s in node.data ) {
+				return false;
+			}
+
+			return true;
+		};
+
 		var getProperty2 = function (node, name1, name2) {
 			ASSERT(isValid(node));
 			ASSERT(typeof name1 === "string");
@@ -466,6 +481,8 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(key && typeof key === "string");
 			ASSERT(callback);
 
+			console.log("Dumping tree: " + key);
+			
 			var root = null;
 			var error = null;
 			var counter = 1;
@@ -487,6 +504,7 @@ function (ASSERT, SHA1, UTIL) {
 				ASSERT(isKey(key));
 
 				++counter;
+				
 				storage.load(key, function (err, child) {
 					ASSERT(err || child);
 
@@ -494,7 +512,7 @@ function (ASSERT, SHA1, UTIL) {
 						var copy = UTIL.deepCopy(child);
 
 						data[relid] = copy;
-						scan(key, copy);
+						scan(copy);
 
 						// copy.id = child[KEYNAME];
 						decrease();
@@ -511,7 +529,7 @@ function (ASSERT, SHA1, UTIL) {
 				for( var relid in data ) {
 					var child = data[relid];
 
-					if( isKey(child) ) {
+					if( relid !== KEYNAME && isKey(child) ) {
 						load(data, relid);
 					}
 					else if( child && typeof child === "object" ) {
@@ -558,6 +576,7 @@ function (ASSERT, SHA1, UTIL) {
 			getProperty: getProperty,
 			setProperty: setProperty,
 			delProperty: delProperty,
+			isEmpty: isEmpty,
 			getProperty2: getProperty2,
 			setProperty2: setProperty2,
 			delProperty2: delProperty2,
