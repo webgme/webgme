@@ -104,7 +104,7 @@ for (i = 0; i < rootChildren; i++) {
     connObject._id = connId;
     connObject.attributes.name = connId;
     connObject.relations.baseId = "connection";
-    connObject.relations.inheritorIds.push(connId);
+    objects['connection'].relations.inheritorIds.push(connId);
     connObject.attributes.directed = true;
 
     //set parent
