@@ -340,7 +340,6 @@ var CommandBuffer = function(storage,clientId,transactionId,clients,CB){
         }
     };
     finalizeClient = function(client){
-        console.log("kecso "+JSON.stringify(client));
         client.refreshTerritories(self,function(loadlist,unloadlist){
             var i,
                 msg = [];
@@ -1053,6 +1052,27 @@ var Commander = function(storage,clients,clientId,transaction,CB){
             rReadObject,
             readIds,
             state;
+        rReadObject = function(id){
+            console.log("kecso "+id);
+            count++;
+            commandBuffer.get(id,function(err,object){
+                console.log("kecso1 "+object[ID]);
+                var i;
+                if(err){
+                    logger.error("readISubTree.rReadObject - getting object failed: reason["+err+"},id["+id+"]");
+                    state=false;
+                    objectRead();
+                }
+                else{
+                    commonUtil.insertIntoArray(readIds,id);
+                    console.log("kecso2 "+object.relations.inheritorIds);
+                    for(i=0;i<object.relations.inheritorIds.length;i++){
+                        rReadObject(object.relations.inheritorIds[i]);
+                    }
+                    objectRead();
+                }
+            });
+        };
         objectRead = function(){
             if(--count === 0){
                 if(state){
@@ -1063,28 +1083,14 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 }
             }
         };
-        rReadObject = function(id){
-            count++;
-            commandBuffer.get(id,function(err,object){
-                if(err){
-                    logger.error("readISubTree.rReadObject - getting object failed: reason["+err+"},id["+id+"]");
-                    state=false;
-                    objectRead();
-                }
-                else{
-                    commonUtil.insertIntoArray(readIds,id);
-                    for(i=0;i<object.relations.inheritorIds.length;i++){
-                        rReadObject(object.relations.inheritorIds[i]);
-                    }
-                    objectRead();
-                }
-            });
-        };
 
         /*main*/
         state=true;
         count = 0;
         readIds = [];
+        /*TODO temporary hack */
+        cb(0,readIds);
+        return;
         rReadObject(rootId);
     };
     inheritObject = function(baseId,newguid,cb){
