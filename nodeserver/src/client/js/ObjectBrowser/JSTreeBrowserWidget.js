@@ -2,11 +2,12 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define(['./../util.js',
-        './../../../common/LogManager.js',
-        './../../../common/CommonUtil.js',
-        'jquery.hotkeys',
-        'jquery.jstree'], function (util, logManager, commonUtil) {
+define(['order!jquery',
+        'order!clientUtil',
+        'logManager',
+        'commonUtil',
+        'order!lib/jquery/jquery.hotkeys',
+        'order!lib/jquery/jquery.jstree'], function ($, util, logManager, commonUtil) {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
     util.loadCSS('css/JSTreeBrowserWidget.css');
@@ -210,7 +211,8 @@ define(['./../util.js',
                 }
             },
             "themes" : {
-                "dots" : false
+                "dots" : false,
+                "url": "css/jstree/style.css"
             }
         });
 

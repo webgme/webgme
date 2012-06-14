@@ -3,9 +3,7 @@
  * Utility helper functions for the client side
  */
 
-define(['order!jquery.min',
-        'order!jquery-ui.min'], function (jquery,
-                                       jqueryUI) {
+define(['order!jquery'], function () {
 
     /*
      * Disabling selection on element

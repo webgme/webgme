@@ -1,19 +1,22 @@
 /*
  * WIDGET ModelEditor based on SVG
  */
-define([    './../../util.js',
-            './../../../../common/LogManager.js',
-            './../../../../common/CommonUtil.js',
+define([    'clientUtil',
+            'logManager',
+            'commonUtil',
+            'notificationManager',
+            'raphaeljs',
+            'lib/jquery/jwerty',
             './ModelEditorSVGModel.js',
-            './ModelEditorSVGConnection.js',
-            './../../NotificationManager.js',
-            'jwerty',
-            'raphael.amd'], function (util,
-                                       logManager,
-                                       commonUtil,
-                                       ModelEditorSVGModel,
-                                       ModelEditorSVGConnection,
-                                       notificationManager) {
+            './ModelEditorSVGConnection.js'
+        ], function (util,
+                       logManager,
+                       commonUtil,
+                       notificationManager,
+                       raphaeljs,
+                       _jwerty,
+                       ModelEditorSVGModel,
+                       ModelEditorSVGConnection) {
     "use strict";
 
     var ModelEditorSVGWidget;

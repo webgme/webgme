@@ -14,6 +14,7 @@
     text-align: center;
     padding-bottom: 3px;
 }
+
 .model div.modelTitle {
     color: #fff;
     text-shadow: #000 0 1px;
@@ -57,7 +58,6 @@ input.modelTitle {
 .selected {
     border: 2px solid #52A8EC;
     background-color: #DBEAFC;
-    /*background-color: #C3DCFC;*/
 }
 
 .model .children {
@@ -106,4 +106,14 @@ div.connectionPoint {
 
 #connectionPoint.ui-state-hover {
     background-color: #FF7800;
+}
+
+div.sweetrect {
+    cursor: crosshair;
+    z-index: 9;
+}
+
+.model.ui-state-hover {
+    border: 2px solid #ff7800;
+    background-color: #ff7800;
 }

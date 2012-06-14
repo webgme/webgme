@@ -1,18 +1,16 @@
 "use strict";
 
-define(['./../../../../common/LogManager.js',
-    './../../../../common/EventDispatcher.js',
-    './../../util.js',
-    './WidgetBase2.js',
-    './../../NotificationManager.js',
-    'text!ModelEditorHTML/ModelPortLeftTmpl.html',
-    'text!ModelEditorHTML/ModelPortRightTmpl.html'], function (logManager,
-                                              EventDispatcher,
-                                              util,
-                                              WidgetBase,
-                                              notificationManager,
-                                              modelPortLeftTmpl,
-                                              modelPortRightTmpl) {
+define(['logManager',
+        'clientUtil',
+        'notificationManager',
+        './WidgetBase2.js',
+        'text!ModelEditorHTML/ModelPortLeftTmpl.html',
+        'text!ModelEditorHTML/ModelPortRightTmpl.html'], function (logManager,
+                                                  util,
+                                                  notificationManager,
+                                                  WidgetBase,
+                                                  modelPortLeftTmpl,
+                                                  modelPortRightTmpl) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorPortWidget.css');
@@ -75,8 +73,6 @@ define(['./../../../../common/LogManager.js',
                     self.parentWidget.endPortConnection(self.getId());
                     self.el.removeClass("connectionSource");
                     event.stopPropagation();
-                },
-                drag: function (event, ui) {
                 }
             });
 
@@ -84,6 +80,7 @@ define(['./../../../../common/LogManager.js',
                 accept: ".connectionSource",
                 activeClass: "ui-state-active",
                 hoverClass: "ui-state-hover",
+                greedy: true,
                 drop: function (event, ui) {
                     var srdId = ui.helper.data("id"),
                         trgtId = self.getId();

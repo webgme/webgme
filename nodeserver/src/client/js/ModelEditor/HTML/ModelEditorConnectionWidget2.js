@@ -1,15 +1,15 @@
 "use strict";
 
-define(['./../../../../common/LogManager.js',
-    './../../../../common/EventDispatcher.js',
-    './../../util.js',
-    './WidgetBase2.js',
-    './../../BezierHelper.js',
-    'raphael.amd'], function (logManager,
-                              EventDispatcher,
-                              util,
-                              WidgetBase,
-                              BezierHelper) {
+define(['logManager',
+        'clientUtil',
+        'bezierHelper',
+        'raphaeljs',
+        './WidgetBase2.js'
+        ], function (logManager,
+                                  util,
+                                  BezierHelper,
+                                  raphaeljs,
+                                  WidgetBase) {
 
     var ModelEditorConnectionWidget2;
 
@@ -84,6 +84,16 @@ define(['./../../../../common/LogManager.js',
             }*/
 
             bezierControlPoints = BezierHelper.getBezierControlPoints2(srcCoord, trgtCoord, sideDescriptor);
+
+            cX = Math.min(bezierControlPoints[0].x, bezierControlPoints[3].x);
+            cY = Math.min(bezierControlPoints[0].y, bezierControlPoints[3].y);
+            cW = Math.abs(bezierControlPoints[0].x - bezierControlPoints[3].x);
+            cH = Math.abs(bezierControlPoints[0].y - bezierControlPoints[3].y);
+
+            $(self.el).css("left", cX - borderW).css("top", cY - borderW);
+            $(self.el).outerWidth(cW + 2 * borderW).outerHeight(cH + 2 * borderW);
+
+
             pathDef = ["M", bezierControlPoints[0].x, bezierControlPoints[0].y, "C", bezierControlPoints[1].x, bezierControlPoints[1].y, bezierControlPoints[2].x, bezierControlPoints[2].y, bezierControlPoints[3].x, bezierControlPoints[3].y].join(",");
 
             if (self.skinParts.path) {
@@ -106,6 +116,15 @@ define(['./../../../../common/LogManager.js',
 
         this.onDeselect = function () {
             self.skinParts.pathGlow.remove();
+        };
+
+        this.onDestroy = function () {
+            if (self.skinParts.path) {
+                self.skinParts.path.remove();
+                delete self.skinParts.path;
+            }
+
+            delete self.skinParts;
         };
 
         initialize();

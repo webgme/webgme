@@ -1,7 +1,7 @@
 /*IMPORTS*/
 
-@import url("../lib/contextmenu/jquery.contextMenu.css");
-@import url("../lib/dynatree/ui.dynatree.css");
+@import url("contextmenu/jquery.contextMenu.css");
+@import url("dynatree/ui.dynatree.css");
 
 /* OWN STYLES */
 ul.dynatree-container

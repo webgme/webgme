@@ -1,6 +1,6 @@
 "use strict";
 
-define(['./../../../common/CommonUtil.js'], function (commonUtil) {
+define(['commonUtil'], function (commonUtil) {
 
     var WidgetBase = function (id) {
         var guid = id || commonUtil.guid();

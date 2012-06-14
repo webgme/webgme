@@ -1,133 +1,37 @@
 "use strict";
 
+var DEBUG = true;
+
 // set the baseUrl for module lookup to '/lib' folder
 require.config({
-    baseUrl: "/lib",
+    baseUrl: "/",
     paths: {
-        "ModelEditorHTML": "/js/ModelEditor/HTML"
+        "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-1.7.2' : 'jquery-1.7.2.min'),
+        "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-1.8.21.custom' : 'jquery-ui-1.8.21.custom.min'),
+        "underscore": './../../common/underscore',
+        "commonUtil": './../../common/CommonUtil',
+        "logManager": './../../common/LogManager',
+        "eventDispatcher": './../../common/EventDispatcher',
+        "notificationManager": 'js/NotificationManager',
+        "clientUtil": 'js/util',
+        "bezierHelper" : 'js/BezierHelper',
+        "raphaeljs": 'lib/raphael/raphael.amd',
+        "eve": 'lib/raphael/eve',
+        "order": 'lib/require/order',
+        "text":	'lib/require/text',
+        "domReady":	'lib/require/domReady',
+        "ModelEditorHTML": "js/ModelEditor/HTML"
     }
 });
 
-// let require load all the toplevel needed script and call us on domReady
-require([   'order!jquery.min',
-            'order!jquery-ui.min',
-            'order!./../../common/underscore.js',
-            'domReady',
-            'order!./../js/cli3nt.js',
-            'order!./../js/ObjectBrowser/TreeBrowserControl.js',
-            'order!./../js/ObjectBrowser/JSTreeBrowserWidget.js',
-            'order!./../js/ObjectBrowser/DynaTreeBrowserWidget.js',
-            './../../common/LogManager.js',
-            './../../common/CommonUtil.js',
-            './../js/ModelEditor/SVG/ModelEditorControl.js',
-            './../js/ModelEditor/SVG/ModelEditorSVGWidget.js',
-            './../js/ModelEditor/HTML/WidgetManager.js'], function (jquery,
-                                                        jqueryUI,
-                                                        underscore,
-                                                        domReady,
-                                                        Client,
-                                                        TreeBrowserControl,
-                                                        JSTreeBrowserWidget,
-                                                        DynaTreeBrowserWidget,
-                                                        logManager,
-                                                        commonUtil,
-                                                        ModelEditorControl,
-                                                        ModelEditorSVGWidget,
-                                                        WidgetManager) {
-    domReady(function () {
-
-        //if ( commonUtil.DEBUG === true ) {
-        logManager.setLogLevel(logManager.logLevels.ALL);
-        logManager.excludeComponent("TreeBrowserControl");
-        logManager.excludeComponent("JSTreeBrowserWidget");
-        //}
-
-        var client,
-            tDynaTree,
-            tJSTree,
-            modelEditorSVG,
-            modelEditorHTML,
-            doConnect,
-            lastContainerWidth = 0,
-            resizeMiddlePane;
-
-
-        /*
-         * Compute the size of the middle pane window based on current browser size
-         */
-        lastContainerWidth = 0;
-        resizeMiddlePane = function () {
-            var cW = $("#contentContainer").width(),
-                eW = 0,
-                eH = 0,
-                horizontalSplit = false;
-            if (cW !== lastContainerWidth) {
-                $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
-                lastContainerWidth = cW;
-
-                //by default lay out in vertical split
-                eW = Math.floor($("#middlePane").width() / 2);
-                eH = Math.floor($("#middlePane").height());
-
-                if (eW < 560) {
-                    //inner children has to be laid out under each other (horizontal split)
-                    eW = Math.floor($("#middlePane").width());
-                    eH = Math.floor($("#middlePane").height() / 2);
-                    horizontalSplit = true;
-                }
-
-                $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-                $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
-
-                /******************/
-                /*eW = Math.floor($("#middlePane").width());
-                eH = Math.floor($("#middlePane").height());
-
-                $("#modelEditorContainer1").outerWidth(0).outerHeight(0);
-                $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
-
-                /******************/
-
-                //set container position correctly
-                if (horizontalSplit === true) {
-                    $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
-                } else {
-                    $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
-                }
-
-            }
-        };
-
-        //hook up windows resize event
-        $(window).resize(function () {
-            resizeMiddlePane();
+require(
+    [
+        'domReady',
+        'js/webGME'
+    ],
+    function (domReady, webGME) {
+        domReady(function () {
+            webGME.start();
         });
-
-        //and call if for the first time as well
-        resizeMiddlePane();
-
-        doConnect = function () {
-
-            //figure out the server to connect to
-            var serverLocation;
-
-            //by default serverlocation is the same server the page loaded from
-            if (commonUtil.standalone.ProjectIP === "self") {
-                serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.standalone.ProjectPort;
-            } else {
-                serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
-            }
-
-            client = new Client(serverLocation);
-            //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
-            tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
-
-            modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-            modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-        };
-
-        /*main*/
-        doConnect();
-    });
-
-});
+    }
+);

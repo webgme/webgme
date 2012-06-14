@@ -1,4 +1,4 @@
-define(['/common/LogManager.js','/common/EventDispatcher.js', './../../common/CommonUtil.js', '/socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil){
+define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil){
     var logger,
         Client,
         CommandQueue,

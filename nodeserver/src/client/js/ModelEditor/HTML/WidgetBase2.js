@@ -1,6 +1,6 @@
 "use strict";
 
-define(['./../../../../common/CommonUtil.js'], function (commonUtil) {
+define(['commonUtil'], function (commonUtil) {
 
     var WidgetBase2;
 
@@ -82,6 +82,14 @@ define(['./../../../../common/CommonUtil.js'], function (commonUtil) {
             }
         };
 
+        this.isSelectable = function () {
+            return false;
+        };
+
+        this.isDraggable = function () {
+            return false;
+        };
+
         /*
 
 
@@ -95,13 +103,7 @@ define(['./../../../../common/CommonUtil.js'], function (commonUtil) {
 
         t
 
-        this.isSelectable = function () {
-            return false;
-        };
-
-        this.isDraggable = function () {
-            return false;
-        };*/
+        */
     };
 
     return WidgetBase2;

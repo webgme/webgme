@@ -125,15 +125,6 @@ define([], function () {
                 dx = Math.max(Math.abs(x[1] - x[4]) / 2, 10);
                 dy = Math.max(Math.abs(y[1] - y[4]) / 2, 10);
 
-                /*if (dx !== dy) {
-                 if (dx === 10) {
-                 dx = 50;
-                 }
-                 if (dy === 10) {
-                 dy = 50;
-                 }
-                 }*/
-
                 x[2] = [x[1], x[1], x[1] - dx, x[1] + dx][sideDescriptor[0]].toFixed(3);
                 y[2] = [y[1] - dy, y[1] + dy, y[1], y[1]][sideDescriptor[0]].toFixed(3);
                 x[3] = [x[4], x[4], x[4] - dx, x[4] + dx][sideDescriptor[1]].toFixed(3);

@@ -1,14 +1,13 @@
 "use strict";
 
-define(['./../../../common/LogManager.js',
-    './../../../common/EventDispatcher.js',
-    './../util.js',
-    './WidgetBase.js',
-    './../NotificationManager.js'], function (logManager,
-                                   EventDispatcher,
-                                   util,
-                                   WidgetBase,
-                                   notificationManager) {
+define(['logManager',
+        'clientUtil',
+        'notificationManager',
+        './WidgetBase.js'
+        ], function (logManager,
+                       util,
+                       notificationManager,
+                       WidgetBase) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorModelWidget.css');

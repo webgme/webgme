@@ -1,8 +1,7 @@
 "use strict";
 
-define(['./../../../../common/LogManager.js',
-        './../../../../common/EventDispatcher.js',
-        './../../util.js'], function (logManager, EventDispatcher, util) {
+define(['logManager',
+        'clientUtil'], function (logManager, util) {
 
     var ModelEditorControl = function (myClient, myModelEditor) {
         var logger,

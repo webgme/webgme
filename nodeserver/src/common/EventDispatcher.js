@@ -3,6 +3,7 @@
  *
  * Author: Robert Kereskenyi
  */
+"use strict";
 
 if (typeof define !== 'function') {
     var define = require('amdefine')(module);
@@ -12,8 +13,8 @@ if (typeof define !== 'function') {
  * -------- EVENT DIASPATCHER -------
  */
 
-define( [], function(){
-    var EventDispatcher = function() {
+define([], function () {
+    var EventDispatcher = function () {
         this._eventList = {};
     };
 
