@@ -1,14 +1,15 @@
 /*
  * WIDGET ModelEditorSVGModel based on SVG
  */
-define([    './../../util.js',
-            './../../../../common/LogManager.js',
-            './../../../../common/CommonUtil.js',
-            './../../../../common/EventDispatcher.js',
-            'raphael.amd' ], function (util,
+define([    'clientUtil',
+            'logManager',
+            'commonUtil',
+            'eventDispatcher',
+            'raphaeljs' ], function (util,
                                        logManager,
                                        commonUtil,
-                                       EventDispatcher) {
+                                       EventDispatcher,
+                                       raphaeljs) {
     "use strict";
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)

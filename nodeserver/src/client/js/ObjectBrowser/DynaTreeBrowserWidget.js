@@ -2,11 +2,12 @@
 /*
  * WIDGET TreeBrowserWidget based on DynaTree
  */
-define(['./../util.js',
-        './../../../common/LogManager.js',
-        './../../../common/CommonUtil.js',
-        'jquery.dynatree',
-        'jquery.contextMenu'], function (util, logManager, commonUtil) {
+define(['order!jquery',
+        'order!clientUtil',
+        'logManager',
+        'commonUtil',
+        'order!lib/jquery/jquery.dynatree',
+        'order!lib/jquery/jquery.contextMenu'], function ($, util, logManager, commonUtil) {
 
     //load its own CSS file (css/DynaTreeBrowserWidget.css)
     util.loadCSS('css/DynaTreeBrowserWidget.css');

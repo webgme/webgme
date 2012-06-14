@@ -1,15 +1,14 @@
 "use strict";
 
-define(['./../../../common/LogManager.js',
-        './../../../common/EventDispatcher.js',
-        './../util.js',
-        './WidgetBase.js',
-        './../BezierHelper.js',
-        'raphael.amd'], function (logManager,
-                                      EventDispatcher,
+define(['logManager',
+        'clientUtil',
+        'bezierHelper',
+        'raphaeljs',
+        './WidgetBase.js'], function (logManager,
                                       util,
-                                      WidgetBase,
-                                      BezierHelper) {
+                                      bezierHelper,
+                                      raphaeljs,
+                                      WidgetBase) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     //util.loadCSS('css/ModelEditorConnectionWidget.css');
@@ -58,7 +57,7 @@ define(['./../../../common/LogManager.js',
                 return;
             }
 
-            bezierControlPoints = BezierHelper.getBezierControlPoints(srcWidget.getBoundingBox(), trgtWidget.getBoundingBox());
+            bezierControlPoints = bezierHelper.getBezierControlPoints(srcWidget.getBoundingBox(), trgtWidget.getBoundingBox());
 
             cX = Math.min(bezierControlPoints[0].x, bezierControlPoints[3].x);
             cY = Math.min(bezierControlPoints[0].y, bezierControlPoints[3].y);

@@ -9,8 +9,8 @@
  * -------- NOTIFICATIONMANAGER -------
  */
 
-define(['jquery.jgrowl.min',
-        './util.js'], function (myjgrowl, util) {
+define(['lib/jquery/jquery.jgrowl.min',
+        'clientUtil'], function (myjgrowl, util) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('./../lib/jgrowl/jquery.jgrowl.css');

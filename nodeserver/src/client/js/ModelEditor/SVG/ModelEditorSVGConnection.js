@@ -1,16 +1,18 @@
 /*
  * WIDGET ModelEditorSVGConnection based on SVG
  */
-define([    './../../util.js',
-            './../../../../common/LogManager.js',
-            './../../../../common/CommonUtil.js',
-            './ModelEditorSVGModel.js',
-            './../../BezierHelper.js',
-            'raphael.amd' ], function (util,
-                                       logManager,
-                                       commonUtil,
-                                       ModelEditorSVGModel,
-                                       BezierHelper) {
+define([    'clientUtil',
+            'logManager',
+            'commonUtil',
+            'bezierHelper',
+            'raphaeljs',
+            './ModelEditorSVGModel.js'
+        ], function (util,
+                       logManager,
+                       commonUtil,
+                       bezierHelper,
+                       raphaeljs,
+                       ModelEditorSVGModel) {
     "use strict";
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
@@ -75,7 +77,7 @@ define([    './../../util.js',
                     bezierControlPoints,
                     i;
 
-                bezierControlPoints = BezierHelper.getBezierControlPoints(sourceComponent.getBoundingBox(), targetComponent.getBoundingBox());
+                bezierControlPoints = bezierHelper.getBezierControlPoints(sourceComponent.getBoundingBox(), targetComponent.getBoundingBox());
 
                 for (i = 0; i < 4; i += 1) {
                     bezierControlPoints[i].x += borderW;

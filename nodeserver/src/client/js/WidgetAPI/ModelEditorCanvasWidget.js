@@ -1,20 +1,17 @@
 "use strict";
 
-define(['./../../../common/LogManager.js',
-        './../../../common/EventDispatcher.js',
-        './../util.js',
+define(['logManager',
+        'clientUtil',
+        'notificationManager',
         './WidgetBase.js',
         './ModelEditorModelWidget.js',
-        './ModelEditorConnectionWidget.js',
-        './ModelEditorConnectionWidgetHtmlCanvas.js',
-        './../NotificationManager.js'], function (logManager,
-                                                      EventDispatcher,
-                                                      util,
-                                                      WidgetBase,
-                                                      ModelEditorModelWidget,
-                                                      ModelEditorConnectionWidget,
-                                                      ModelEditorConnectionWidgetHtmlCanvas,
-                                                      notificationManager) {
+        './ModelEditorConnectionWidget.js'
+        ], function (logManager,
+                      util,
+                      notificationManager,
+                      WidgetBase,
+                      ModelEditorModelWidget,
+                      ModelEditorConnectionWidget) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorCanvasWidget.css');
@@ -56,7 +53,6 @@ define(['./../../../common/LogManager.js',
 
         //get logger instance for this component
         logger = logManager.create("ModelEditorCanvasWidget_" + id);
-        logManager.setLogLevel(5);
 
         this.initializeFromNode = function (node) {
             var newPattern;

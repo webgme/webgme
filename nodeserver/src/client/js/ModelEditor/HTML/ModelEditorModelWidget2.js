@@ -1,16 +1,14 @@
 "use strict";
 
-define(['./../../../../common/LogManager.js',
-    './../../../../common/EventDispatcher.js',
-    './../../util.js',
-    './WidgetBase2.js',
-    './../../NotificationManager.js',
-    './ModelEditorPortWidget2.js'], function (logManager,
-                                              EventDispatcher,
-                                              util,
-                                              WidgetBase,
-                                              notificationManager,
-                                              ModelEditorPortWidget2) {
+define(['logManager',
+        'clientUtil',
+        'notificationManager',
+        './WidgetBase2.js',
+        './ModelEditorPortWidget2.js'], function (logManager,
+                                                  util,
+                                                  notificationManager,
+                                                  WidgetBase,
+                                                  ModelEditorPortWidget2) {
 
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorModelWidget.css');
@@ -42,7 +40,7 @@ define(['./../../../../common/LogManager.js',
             childrenIds = node.getChildrenIds();
 
             //generate skin controls
-            /*$(self.el).css("z-index", 10);*/
+            $(self.el).css("z-index", 10);
             $(self.el).addClass("model");
 
             //node title
@@ -173,7 +171,7 @@ define(['./../../../../common/LogManager.js',
                 childNode = self.project.getNode(self.getId());
                 if (childNode) {
                     logger.debug("Object position changed for id:'" + self.getId() + "', new pos:[" + pX + ", " + pY + "]");
-                    childNode.setAttribute("attr", { "posX":  pX, "posY":  pY });
+                    self.project.setRegistry(self.getId(), self.nodeRegistryNames.position, { "x": pX, "y": pY });
                 }
             }
 
