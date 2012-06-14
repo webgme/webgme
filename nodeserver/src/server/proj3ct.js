@@ -542,6 +542,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 removePointer = function(id){
                     commandBuffer.get(id,function(error,object){
                         if(error){
+                            logger.debug("545 getting object failed: "+id);
                             commandBuffer.commandFailed();
                             callCallBack();
                         }
@@ -569,9 +570,10 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                         }
                     }
                 }
-                if(subIds.indexOf(mainobject.pointers[name].to) === -1){
+                if(subIds.indexOf(mainobject.pointers[name].to) === -1 && mainobject.pointers[name].to){
                     commandBuffer.get(mainobject.pointers[name].to,function(error,object){
                         if(error){
+                            logger.debug("575 getting object failed: "+mainobject.pointers[name].to);
                             commandBuffer.commandFailed();
                             callCallBack();
                         }
@@ -595,6 +597,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
             commandBuffer.get(disconnectId,function(error,object){
                 var i;
                 if(error){
+                    logger.debug("598 getting object failed: "+disconnectId);
                     commandBuffer.commandFailed();
                     callCallBack();
                 }
@@ -608,6 +611,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                     if(mainobject.relations.baseId){
                         commandBuffer.get(mainobject.relations.baseId,function(error,object){
                             if(error){
+                                logger.debug("611 getting object failed: "+mainobject.relations.baseId);
                                 commandBuffer.commandFailed();
                                 callCallBack();
                             }
@@ -638,6 +642,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         alreadycalled = false;
         readSubTree(deletecommand.id,function(error,subtree){
             if(error){
+                logger.debug("641 reading containment subtree failed");
                 commandBuffer.commandFailed();
                 callCallBack();
             }
@@ -650,6 +655,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         });
         readISubTree(deletecommand.id,function(error,subtree){
             if(error){
+                logger.debug("653 reading inheritance subtree failed");
                 commandBuffer.commandFailed();
                 callCallBack();
             }
@@ -662,6 +668,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         });
         commandBuffer.get(deletecommand.id,function(error,mainobject){
             if(error){
+                logger.debug("665 getting todelete object failed ["+deletecommand.id+"]");
                 commandBuffer.commandFailed();
                 callCallBack();
             }
@@ -669,6 +676,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 if(mainobject.relations.baseId){
                     commandBuffer.get(mainobject.relations.baseId,function(error,baseobject){
                         if(error){
+                            logger.debug("672 getting parent of todelete object failed ["+mainobject.relations.parentId+"]");
                             commandBuffer.commandFailed();
                             callCallBack();
                         }
@@ -689,6 +697,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 if(mainobject.relations.parentId){
                     commandBuffer.get(mainobject.relations.parentId,function(error,parentobject){
                         if(error){
+                            logger.debug("692 getting parent of todelete object failed ["+mainobject.relations.parentId+"]");
                             commandBuffer.commandFailed();
                             callCallBack();
                         }
