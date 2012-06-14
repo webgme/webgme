@@ -10,10 +10,12 @@ define(['logManager',
                                                   WidgetBase,
                                                   ModelEditorPortWidget2) {
 
+    var ModelEditorModelWidget2;
+
     //load its own CSS file (css/ModelEditorSVGWidget.css)
     util.loadCSS('css/ModelEditorModelWidget.css');
 
-    var ModelEditorModelWidget2 = function (id, proj) {
+    ModelEditorModelWidget2 = function (id, proj) {
         var logger,
             self = this,
             selfId,
@@ -24,7 +26,9 @@ define(['logManager',
             initialize,
             childrenIds = [],
             renderPort,
-            refreshChildrenContainer;
+            refreshChildrenContainer,
+            sweetDistance = 5,
+            updateSweetRect;
 
         $.extend(this, new WidgetBase(id, proj));
 
@@ -32,8 +36,7 @@ define(['logManager',
         logger = logManager.create("ModelEditorModelWidget2_" + id);
 
         initialize = function () {
-            var newPattern,
-                node = self.project.getNode(self.getId()),
+            var node = self.project.getNode(self.getId()),
                 nodePosition = node.getRegistry(self.nodeRegistryNames.position);
 
             selfId = self.project.addUI(self);
@@ -64,40 +67,7 @@ define(['logManager',
             });
             self.skinParts.childrenContainer.append(self.skinParts.centerPorts);
 
-            self.skinParts.connectionPoint = $('<div/>', {
-                "class" : "connectionPoint",
-                "id" : "connectionPoint"
-            });
-            self.skinParts.centerPorts.append(self.skinParts.connectionPoint);
-
-            self.skinParts.connectionPoint.draggable({
-                helper: function () {
-                    return $("<div class='ui-widget-drag-helper'></div>").data("id", self.getId());
-                },
-                scroll: true,
-                cursor: 'pointer',
-                cursorAt: {
-                    left: 0,
-                    top: 0
-                },
-                start: function (event, ui) {
-                    self.skinParts.connectionPoint.addClass("connectionSource");
-                    self.skinParts.connectionPoint.addClass("ui-state-active");
-                    self.startPortConnection(self.getId());
-                    event.stopPropagation();
-                },
-                stop: function (event, ui) {
-                    self.endPortConnection(self.getId());
-                    self.skinParts.connectionPoint.removeClass("connectionSource");
-                    self.skinParts.connectionPoint.removeClass("ui-state-active");
-                    self.skinParts.connectionPoint.css("opacity", "0.000001");
-                    event.stopPropagation();
-                },
-                drag: function (event, ui) {
-                }
-            });
-
-            self.skinParts.connectionPoint.droppable({
+            self.el.droppable({
                 accept: ".connectionSource",
                 activeClass: "ui-state-active",
                 hoverClass: "ui-state-hover",
@@ -109,9 +79,6 @@ define(['logManager',
                     event.stopPropagation();
                 }
             });
-
-            //make it non visible
-            self.skinParts.connectionPoint.css("opacity", "0.000001");
 
             self.skinParts.rightPorts = $('<div/>', {
                 "class" : "ports right"
@@ -131,17 +98,6 @@ define(['logManager',
 
             //hook up double click for node title edit
             self.skinParts.title.dblclick(editNodeTitle);
-
-            //show and hide action-icons only when mouse is over the model
-            self.el.mouseover(function () {
-                if (self.skinParts.connectionPoint.hasClass("connectionSource") === false) {
-                    self.skinParts.connectionPoint.css("opacity", "1.0");
-                }
-            }).mouseout(function () {
-                if (self.skinParts.connectionPoint.hasClass("connectionSource") === false) {
-                    self.skinParts.connectionPoint.css("opacity", "0.000001");
-                }
-            });
         };
 
         editNodeTitle = function () {
@@ -166,6 +122,8 @@ define(['logManager',
             self.el.css("left", pX);
             self.el.css("top", pY);
 
+            updateSweetRect();
+
             //non silent means save pos back to database
             if (noDBUpdate === false) {
                 childNode = self.project.getNode(self.getId());
@@ -188,6 +146,36 @@ define(['logManager',
                 child,
                 i;
 
+            //children container
+            self.skinParts.sweetRect = $('<div/>', {
+                "class" : "sweetrect"
+            });
+            self.skinParts.sweetRect.insertBefore($(self.el));
+
+            self.skinParts.sweetRect.draggable({
+                helper: function () {
+                    return $("<div class='ui-widget-drag-helper'></div>").data("id", self.getId());
+                },
+                scroll: true,
+                cursor: 'pointer',
+                cursorAt: {
+                    left: 0,
+                    top: 0
+                },
+                start: function (event, ui) {
+                    self.skinParts.sweetRect.addClass("connectionSource");
+                    self.skinParts.sweetRect.addClass("ui-state-active");
+                    self.startPortConnection(self.getId());
+                    event.stopPropagation();
+                },
+                stop: function (event, ui) {
+                    self.endPortConnection(self.getId());
+                    self.skinParts.sweetRect.removeClass("connectionSource");
+                    self.skinParts.sweetRect.removeClass("ui-state-active");
+                    event.stopPropagation();
+                }
+            });
+
             for (i = 0; i < childrenIds.length; i += 1) {
                 child = self.project.getNode(childrenIds[i]);
                 if (child && child.getAttribute(self.nodeAttrNames.isPort) === true) {
@@ -198,6 +186,18 @@ define(['logManager',
 
             if (self.parentWidget) {
                 self.parentWidget.childBBoxChanged(self);
+            }
+        };
+
+        updateSweetRect = function () {
+            var bBox = self.getBoundingBox();
+
+            if (self.skinParts.sweetRect) {
+                self.skinParts.sweetRect.css("position", "absolute");
+                self.skinParts.sweetRect.css("left", bBox.x - sweetDistance);
+                self.skinParts.sweetRect.css("top", bBox.y - sweetDistance);
+                self.skinParts.sweetRect.css("width", bBox.width + sweetDistance * 2);
+                self.skinParts.sweetRect.css("height", bBox.height + sweetDistance * 2);
             }
         };
 
@@ -316,6 +316,8 @@ define(['logManager',
                 self.skinParts.centerPorts.outerWidth(childrenContainerWidth - leftPortsWidth - rightPortsWidth);
             }
 
+            updateSweetRect();
+
             if (self.parentWidget) {
                 self.parentWidget.childBBoxChanged(self);
             }
@@ -323,6 +325,8 @@ define(['logManager',
 
         this.onDestroy = function () {
             self.project.updateTerritory(selfId, []);
+
+            self.parentWidget.removeFromSelected(selfId);
         };
 
         this.onSelect = function () {
@@ -342,13 +346,12 @@ define(['logManager',
         };
 
         this.getConnectionPoints = function () {
-            var bBox = self.getBoundingBox(),
-                result = {  "S" : {x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height},
-                            "N" : {x: bBox.x + bBox.width / 2, y: bBox.y}//,
-                           /* "W" : {x: bBox.x, y: bBox.y + bBox.height / 2},
-                            "E" : {x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2}*/ };
+            var bBox = self.getBoundingBox();
 
-            return result;
+            return {  "S" : {x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height},
+                "N" : {x: bBox.x + bBox.width / 2, y: bBox.y}//,
+                /* "W" : {x: bBox.x, y: bBox.y + bBox.height / 2},
+                 "E" : {x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2}*/ };
         };
 
         this.getConnectionPointsForPort = function (portId) {

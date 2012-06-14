@@ -57,7 +57,9 @@ define(['logManager',
             onBackgroundKeyDown,
             selectAll,
             onComponentMouseDown,
-            lastDelta = {};
+            lastDelta = {},
+            deleteSelected,
+            focusWidget;
 
         $.extend(this, new WidgetBase(id, proj));
 
@@ -65,8 +67,7 @@ define(['logManager',
         this.el.disableSelection();
 
         initialize = function () {
-            var newPattern,
-                node = self.project.getNode(self.getId());
+            var node = self.project.getNode(self.getId());
 
             //get logger instance for this component
             logger = logManager.create("ModelEditorCanvasWidget2_" + id);
@@ -116,6 +117,13 @@ define(['logManager',
             //specify territory
             selfPatterns[self.getId()] = { "children": 1};
             self.project.updateTerritory(selfId, selfPatterns);
+        };
+
+        focusWidget = function () {
+            var x = self.el.parent().parent().scrollLeft(),
+                y = self.el.parent().parent().scrollTop();
+            self.skinParts.childrenContainer.focus();
+            self.el.parent().parent().scrollLeft(x).scrollTop(y);
         };
 
         this.addedToParent = function () {
@@ -253,8 +261,7 @@ define(['logManager',
                             dX = stopPos.x - dragStartPos.x,
                             dY = stopPos.y - dragStartPos.y,
                             i,
-                            childId,
-                            rollBackFn;
+                            childId;
 
                         logger.debug("Stop dragging at position X: " + stopPos.x + ", Y: " + stopPos.y);
                         self.skinParts.dragPosPanel.hide();
@@ -462,6 +469,7 @@ define(['logManager',
 
         // PUBLIC METHODS
         this.onEvent = function (etype, eid) {
+            logger.debug("onEvent '" + etype + "', '" + eid + "'");
             switch (etype) {
             case "load":
                 //createChildComponent(eid, true);
@@ -473,10 +481,10 @@ define(['logManager',
                 }
                 break;
             case "create":
-                logger.debug("onEvent CREATE: " + eid + " NOT YET IMPLEMENTED");
+                //logger.debug("onEvent CREATE: " + eid + " NOT YET IMPLEMENTED");
                 break;
             case "delete":
-                logger.debug("onEvent DELETE: " + eid + " NOT YET IMPLEMENTED");
+                //logger.debug("onEvent DELETE: " + eid + " NOT YET IMPLEMENTED");
                 break;
             }
         };
@@ -543,14 +551,14 @@ define(['logManager',
         };
 
         this.startDrawConnection = function (srcId) {
-            var i;
+            /*var i;
             for (i in self.children) {
                 if (self.children.hasOwnProperty(i)) {
                     if ($.isFunction(self.children[i].highlightConnectionTarget)) {
                         self.children[i].highlightConnectionTarget.call(self.children[i], srcId);
                     }
                 }
-            }
+            }*/
             connectionInDraw.source = srcId;
             connectionInDraw.path.show();
         };
@@ -581,16 +589,14 @@ define(['logManager',
 
             logger.debug("onBackgroundMouseDown: " + $(target).attr("id"));
 
-            //if (target === self.skinParts.childrenContainer[0]) {
-                if (e.ctrlKey !== true) {
-                    clearSelection();
-                }
+            if (e.ctrlKey !== true) {
+                clearSelection();
+            }
 
-                //start drawing rubberband
-                rubberBand.isDrawing = true;
-                rubberBand.bBox = { "x": mousePos.mX, "y": mousePos.mY, "x2": mousePos.mX, "y2": mousePos.mY };
-                drawRubberBand();
-            //}
+            //start drawing rubberband
+            rubberBand.isDrawing = true;
+            rubberBand.bBox = { "x": mousePos.mX, "y": mousePos.mY, "x2": mousePos.mX, "y2": mousePos.mY };
+            drawRubberBand();
         };
 
         onBackgroundMouseMove = function (e) {
@@ -712,6 +718,8 @@ define(['logManager',
 
             setSelection([id], e.ctrlKey);
 
+            focusWidget();
+
             e.stopPropagation();
         };
 
@@ -819,6 +827,12 @@ define(['logManager',
                     return false;
                 }
                 break;
+            case 46:    //DEL
+                deleteSelected();
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+                break;
             }
         };
 
@@ -836,6 +850,21 @@ define(['logManager',
 
             if (childrenIDs.length > 0) {
                 setSelection(childrenIDs, false);
+            }
+        };
+
+        deleteSelected = function () {
+            var i,
+                selected = selectedComponentIds;
+
+            for (i = 0; i < selected.length; i += 1) {
+                self.project.deleteNode(selected[i]);
+            }
+        };
+
+        this.removeFromSelected = function (id) {
+            if (selectedComponentIds.indexOf(id) !== -1) {
+                setSelection([id], true);
             }
         };
 

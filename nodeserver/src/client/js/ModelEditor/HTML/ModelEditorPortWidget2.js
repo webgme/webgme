@@ -73,8 +73,6 @@ define(['logManager',
                     self.parentWidget.endPortConnection(self.getId());
                     self.el.removeClass("connectionSource");
                     event.stopPropagation();
-                },
-                drag: function (event, ui) {
                 }
             });
 
@@ -82,6 +80,7 @@ define(['logManager',
                 accept: ".connectionSource",
                 activeClass: "ui-state-active",
                 hoverClass: "ui-state-hover",
+                greedy: true,
                 drop: function (event, ui) {
                     var srdId = ui.helper.data("id"),
                         trgtId = self.getId();
