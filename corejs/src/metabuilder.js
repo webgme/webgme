@@ -324,54 +324,38 @@ define([ "assert", "core2", "util", "config" ], function (ASSERT, Core, UTIL, CO
 			}
 		};
 
-		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths, function (
-		err) {
-			if( err ) {
-				console.log("Building error: " + JSON.stringify(err));
-				callback(err);
-			}
-			else {
-				console.log("Building done");
-				core.persist(metaroot, function (err2) {
-					console.log("Saving meta " + (err2 ? " error:" + err2 : "done"));
-					core.dumpTree(core.getKey(metaroot), function (err3) {
-						callback(err2);
-					});
-				});
-			}
-		});
-
-		var process = function (path, done, node) {
-			var errorHandler = UTIL.errorHandler(done);
-
-			var tag = core.getAttribute(node, "#tag");
-
-			if( core.getLevel(node) === 1 && tag !== "paradigm" ) {
-				errorHandler.done("Not a meta paradigm");
-				return;
-			}
-
-			errorHandler.wait();
-			core.loadChildren(node, errorHandler.wrap(function (children) {
-				for( var i = 0; i < children.length; ++i ) {
-					var child = children[i];
-					enqueue(core.getPath(child), process, child);
-				}
-			}));
-
-			errorHandler.wait();
-			parseXmlNode(node, errorHandler.done);
-
-			errorHandler.done(null);
-		};
-
-		core.loadRoot(key, function (err, node) {
+		core.loadRoot(key, function (err, root) {
 			if( err ) {
 				callback(err);
 			}
 			else {
 				console.log("Building meta objects ...");
-				enqueue(core.getPath(node), process, node);
+				UTIL.depthFirstSearch(core.loadChildren, root, function (node, callback2) {
+					var tag = core.getAttribute(node, "#tag");
+
+					if( core.getLevel(node) === 1 && tag !== "paradigm" ) {
+						console.log("Not a meta paradigm");
+						return;
+					}
+
+					parseXmlNode(node, callback2);
+				}, function (node, callback2) {
+					callback2(null);
+				}, function (err2) {
+					if( err2 ) {
+						console.log("Building error: " + JSON.stringify(err2));
+						callback(err2);
+					}
+					else {
+						console.log("Building done");
+						core.persist(metaroot, function (err3) {
+							console.log("Saving meta " + (err3 ? " error:" + err3 : "done"));
+//							core.dumpTree(core.getKey(metaroot), function (err4) {
+								callback(err3);
+//							});
+						});
+					}
+				});
 			}
 		});
 	};

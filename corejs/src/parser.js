@@ -10,7 +10,8 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "lib/sax", "fs", "mongo", "core2", "config", "util", "metabuilder", "cache" ],
+requirejs(
+[ "assert", "lib/sax", "fs", "mongo", "core2", "config", "util", "metabuilder", "cache" ],
 function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 	"use strict";
 
@@ -70,11 +71,8 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 		var counter = 0;
 
 		var addTag = function (tag) {
-			var node = core.createNode();
 
-			if( tags.length !== 0 ) {
-				core.attach(node, tags[tags.length - 1].node);
-			}
+			var node = core.createNode(tags.length === 0 ? null : tags[tags.length - 1].node);
 
 			for( var key in tag.attributes ) {
 				core.setAttribute(node, key, tag.attributes[key]);
@@ -158,49 +156,9 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 
 	// ------- reader -------
 
-	var comparePaths = function (a, b) {
-		ASSERT(a.constructor === Array);
-		ASSERT(b.constructor === Array);
-
-		var c = a.length;
-		var d = b.length;
-
-		while( --c >= 0 && --d >= 0 ) {
-			var t = a[c] - b[d];
-			if( t !== 0 ) {
-				return t;
-			}
-		}
-
-		return a.length - b.length;
-	};
-
 	var reader = function (storage, key, callback) {
 		var core = new Core(storage);
 		var count = 0;
-
-		var timerhandle;
-
-		var enqueue = UTIL.priorityEnqueue(CONFIG.reader.concurrentReads, comparePaths, function (
-		err) {
-			clearInterval(timerhandle);
-			console.log("Reading done (" + count + " objects)");
-			callback(err);
-		});
-
-		var process = function (path, done, node) {
-			// console.log(node);
-			++count;
-			core.loadChildren(node, function (err, children) {
-				if( !err ) {
-					for( var i = 0; i < children.length; ++i ) {
-						var child = children[i];
-						enqueue(core.getPath(child), process, child);
-					}
-				}
-				done(err);
-			});
-		};
 
 		core.loadRoot(key, function (err, node) {
 			if( err ) {
@@ -208,18 +166,22 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 			}
 			else {
 				console.log("Reading tree ...");
-				timerhandle = setInterval(function () {
-					console.log("  reading " + count + " objects");
-				}, CONFIG.reader.reportingTime);
-
-				enqueue(core.getPath(node), process, node);
+				UTIL.depthFirstSearch(core.loadChildren, node, function (child, callback2) {
+					++count;
+					callback2(null);
+				}, function (child, callback2) {
+					callback2(null);
+				}, function (err2) {
+					console.log("Reading done (" + count + " objects)", err);
+					callback(err2);
+				});
 			}
 		});
 	};
 
 	// ------- database -------
 
-//	var mongo = new Cache(new Mongo());
+	// var mongo = new Cache(new Mongo());
 	var mongo = new Mongo();
 
 	var closeDatabase = function () {
