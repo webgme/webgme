@@ -91,9 +91,19 @@ define([], function () {
             ServerPort: 8081,
             ProjectIP: "self",
             ProjectPort: 8082,
-            ProjectName: "testp",
+            ProjectName: "debug",
             BranchName: "basic"
-        }
+        },
+        assert : function (cond) {
+            if( !cond ) {
+                var error = new Error("ASSERT failed");
+                var message = "ASSERT failed at " + error.stack;
 
+                if( console && !process ) {
+                    console.log(message);
+                }
+                throw error;
+            }
+        }
     };
 });
