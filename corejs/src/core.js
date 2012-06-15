@@ -266,6 +266,8 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			loadChild: pertree.loadChild,
 			getParent: pertree.getParent,
 			getRoot: pertree.getRoot,
+			getPath: pertree.getPath,
+			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
 			removeNode: removeNode,
 			attachNode: attachNode,

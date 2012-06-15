@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert" ], function (ASSERT) {
+define([ "assert", "config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	/**
@@ -177,12 +177,101 @@ define([ "assert" ], function (ASSERT) {
 		};
 	};
 
+	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
+		ASSERT(loadChildren && node && openNode && closeNode && callback);
+
+		var requests = [ {
+			status: 0,
+			node: node
+		} ];
+
+		var pending = 0;
+
+		var process = function (currentNode, err, children) {
+
+			var t;
+			if( callback ) {
+				if( err ) {
+					t = callback;
+					callback = null;
+					t(err);
+				}
+				else {
+					t = 0;
+					while( requests[t].node !== currentNode ) {
+						++t;
+						ASSERT(t < requests.length);
+					}
+					ASSERT(requests[t].status === 1);
+
+					requests[t].status = 3;
+
+					err = children.length;
+					while( --err >= 0 ) {
+						requests.splice(t, 0, {
+							status: 0,
+							node: children[err]
+						});
+					}
+					
+					requests.splice(t, 0, {
+						status: 2,
+						node: currentNode
+					});
+
+					ASSERT(pending >= 1);
+					--pending;
+
+					scan();
+				}
+			}
+		};
+
+		var scan = function () {
+//			console.log("scan", pending, requests.length);
+			
+			while( requests.length !== 0 && requests[0].status >= 2 ) {
+				if(requests[0].status === 2) {
+					openNode(requests.shift().node);
+				}
+				else {
+					closeNode(requests.shift().node);
+				}
+			}
+
+			var selected = [];
+
+			for( var i = 0; i < requests.length && pending < CONFIG.reader.concurrentReads; ++i ) {
+				if( requests[i].status === 0 ) {
+					ASSERT(pending >= 0);
+					++pending;
+
+					requests[i].status = 1;
+					selected.push(requests[i].node);
+				}
+			}
+			
+			if( requests.length === 0 && pending === 0 ) {
+				ASSERT(callback);
+				callback(null);
+				callback = null;
+			}
+
+			for(i = 0; i < selected.length; ++i) {
+				loadChildren(selected[i], process.bind(null, selected[i]));
+			}
+		};
+
+		scan();
+	};
+
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
 		errorHandler: errorHandler,
-		priorityEnqueue: priorityEnqueue
+		priorityEnqueue: priorityEnqueue,
+		depthFirstSearch: depthFirstSearch
 	};
 });
