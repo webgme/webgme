@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "pertree" ], function (ASSERT, PerTree) {
+define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -19,7 +19,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			// TODO: detect infinite cycle?
 			do {
 				relid = Math.floor(Math.random() * maxRelid);
-//				relid = relid.toString();
+				// relid = relid.toString();
 			} while( data[relid] !== undefined );
 		}
 
@@ -41,8 +41,8 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 
 		var pertree = new PerTree(storage);
 
-		var getAttributes = function (node) {
-			return pertree.getProperty(node, ATTRIBUTES);
+		var getAttributeNames = function (node) {
+			return Object.keys(pertree.getProperty(node, ATTRIBUTES));
 		};
 
 		var getAttribute = function (node, name) {
@@ -117,9 +117,19 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			var parent = pertree.getParent();
 			ASSERT(parent !== null);
 
-			
-			
-			pertree.delParent(node);
+			UTIL.depthFirstSearch(loadChildren, node, function (node2, callback2) {
+				callback2(null);
+			}, function (node2, callback2) {
+				callback2(null);
+			}, function (err) {
+				if( err ) {
+					callback(err);
+				}
+				else {
+					pertree.delParent(node);
+					callback(null);
+				}
+			});
 		};
 
 		var attachNode = function (node, parent) {
@@ -159,6 +169,12 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			}
 		};
 
+		var getPointerNames = function (node) {
+			ASSERT(node);
+
+			return Object.keys(pertree.getProperty(node, POINTERS));
+		};
+		
 		var setPointer = function (node, name, target, callback) {
 			ASSERT(node && name && target && callback);
 
@@ -266,13 +282,12 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			loadChild: pertree.loadChild,
 			getParent: pertree.getParent,
 			getRoot: pertree.getRoot,
-			getPath: pertree.getPath,
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
 			removeNode: removeNode,
 			attachNode: attachNode,
 			copyNode: copyNode,
-			getAttributes: getAttributes,
+			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
 			setAttribute: setAttribute,
 			delAttribute: delAttribute,
@@ -280,6 +295,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			setRegistry: setRegistry,
 			delRegistry: delRegistry,
 			persist: persist,
+			getPointerNames: getPointerNames,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,
 			setPointer: setPointer,

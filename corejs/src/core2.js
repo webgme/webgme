@@ -40,8 +40,8 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 
 		var pertree = new PerTree(storage);
 
-		var getAttributes = function (node) {
-			return pertree.getProperty(node, ATTRIBUTES);
+		var getAttributeNames = function (node) {
+			return Object.keys(pertree.getProperty(node, ATTRIBUTES));
 		};
 
 		var getAttribute = function (node, name) {
@@ -115,8 +115,6 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			var parent = pertree.getParent();
 			ASSERT(parent !== null);
 
-			
-			
 			pertree.delParent(node);
 		};
 
@@ -181,6 +179,35 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			}
 		};
 
+		var getPointerNames = function (node) {
+
+			var source = EMPTY_STRING;
+			var names = [];
+			
+			do {
+				var child = pertree.getProperty2(node, OVERLAYS, source);
+				if(child) {
+					for(var name in child) {
+						ASSERT(names.indexOf(name) === -1);
+						if( name.slice(-5) !== "-coll" ) {
+							names.push(name);
+						}
+					}
+				}
+
+				if( source === EMPTY_STRING ) {
+					source = pertree.getRelid(node);
+				}
+				else {
+					source = pertree.getRelid(node) + "/" + source;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+			
+			return names;
+		};
+		
 		var deletePointer = function (node, name) {
 			ASSERT(node && name);
 
@@ -243,97 +270,46 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			return false;
 		};
 
-		var getCommonAncestor = function (first, second) {
-			ASSERT(first && second);
-
-			var a = [];
-			do {
-				a.push(first);
-				first = pertree.getParent(first);
-			} while( first );
-
-			var b = [];
-			do {
-				b.push(second);
-				second = pertree.getParent(second);
-			} while( second );
-
-			ASSERT(a[a.length - 1] === b[b.length - 1]);
-
-			var i = a.length - 1;
-			var j = b.length - 1;
-			while( i >= 1 && j >= 1 && pertree.getRelid(a[i - 1]) === pertree.getRelid(b[j - 1]) ) {
-				--i;
-				--j;
-			}
-
-			first = a[i];
-			second = b[j];
-
-			var firstPath = EMPTY_STRING;
-			while( --i >= 0 ) {
-				if( firstPath === EMPTY_STRING ) {
-					firstPath = pertree.getRelid(a[i]);
-				}
-				else {
-					firstPath = firstPath + "/" + pertree.getRelid(a[i]);
-				}
-			}
-
-			var secondPath = EMPTY_STRING;
-			while( --j >= 0 ) {
-				if( secondPath === EMPTY_STRING ) {
-					secondPath = pertree.getRelid(b[j]);
-				}
-				else {
-					secondPath = secondPath + "/" + pertree.getRelid(b[j]);
-				}
-			}
-
-			return {
-				first: first,
-				firstPath: firstPath,
-				second: second,
-				secondPath: secondPath
-			};
-		};
-
 		var setPointer = function (node, name, target) {
 			ASSERT(node && name && target);
 
 			deletePointer(node, name);
 
-			var common = getCommonAncestor(node, target);
+			var ancestor = pertree.getCommonAncestor(node, target);
+			var relpaths = [ pertree.getStringPath(node, ancestor[0]),
+				pertree.getStringPath(target, ancestor[1]) ];
+			
+			ASSERT(ancestor[0] === ancestor[1]);
 
-			var refs = pertree.getChild(common.first, OVERLAYS);
+			var refs = pertree.getChild(ancestor[0], OVERLAYS);
 			ASSERT(refs);
 
-			var child = pertree.getChild(refs, common.firstPath);
+			var child = pertree.getChild(refs, relpaths[0]);
 			if( !child ) {
-				child = pertree.createChild(refs, common.firstPath);
+				child = pertree.createChild(refs, relpaths[0]);
 			}
 
 			ASSERT(pertree.getProperty(child, name) === undefined);
-			pertree.setProperty(child, name, common.secondPath);
+			pertree.setProperty(child, name, relpaths[1]);
 
-			child = pertree.getChild(refs, common.secondPath);
+			child = pertree.getChild(refs, relpaths[1]);
 			if( !child ) {
-				child = pertree.createChild(refs, common.secondPath);
+				child = pertree.createChild(refs, relpaths[1]);
 			}
 
 			name = name + "-coll";
-			
+
 			var array = pertree.getProperty(child, name);
 			ASSERT(array === undefined || array.constructor === Array);
-			
+
 			if( !array ) {
-				array = [common.firstPath];
+				array = [ relpaths[0] ];
 			}
 			else {
 				array = array.slice(0);
-				array.push(common.firstPath);
+				array.push(relpaths[0]);
 			}
-			
+
 			pertree.setProperty(child, name, array);
 		};
 
@@ -345,13 +321,12 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			loadChild: pertree.loadChild,
 			getParent: pertree.getParent,
 			getRoot: pertree.getRoot,
-			getPath: pertree.getPath,
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
 			removeNode: removeNode,
 			attachNode: attachNode,
 			copyNode: copyNode,
-			getAttributes: getAttributes,
+			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
 			setAttribute: setAttribute,
 			delAttribute: delAttribute,
@@ -359,6 +334,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree) {
 			setRegistry: setRegistry,
 			delRegistry: delRegistry,
 			persist: persist,
+			getPointerNames: getPointerNames,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,
 			setPointer: setPointer,

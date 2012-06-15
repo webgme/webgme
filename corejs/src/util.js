@@ -4,7 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "config" ], function (ASSERT, CONFIG) {
+define(
+[ "assert", "config" ],
+function (ASSERT, CONFIG) {
 	"use strict";
 
 	/**
@@ -72,111 +74,19 @@ define([ "assert", "config" ], function (ASSERT, CONFIG) {
 		return options;
 	};
 
-	var errorHandler = function (callback) {
-		ASSERT(callback && callback.constructor === Function && callback.length === 1);
-
-		var pending = 1;
-
-		return {
-			wait: function () {
-				++pending;
-			},
-
-			wrap: function (process) {
-				ASSERT(process && process.constructor === Function);
-
-				return function (err, data) {
-					if( callback ) {
-						if( !err ) {
-							process(data);
-						}
-
-						if( err || --pending === 0 ) {
-							callback(err);
-							callback = null;
-						}
-					}
-				};
-			},
-
-			done: function (err) {
-				if( callback && (err || --pending === 0) ) {
-					callback(err);
-					callback = null;
-				}
-			}
-		};
-	};
-
-	var nullCallback = function () {
-	};
-
 	/**
-	 * Constructs a priority queue object that calls enqueued processes, and
-	 * returns the enqueue function. The priority queue object calls at most
-	 * maxPending enqueued processes concurrently. The comparator(pri1, pri2)
-	 * function is used to compare the priorities of processes. The
-	 * callback(err) function is called when all enqueued processes are done or
-	 * if an error occurs (in which case all pending processes are cancelled).
-	 * This method returns an enqueue(pri, proc, arg) function that can be used
-	 * to enqueue the first (and subsequent) processes. The proc(pri, done, arg)
-	 * function will be called eventually with the specified priority and
-	 * argument. The process must call the done(err) function to complete the
-	 * process.
+	 * Starting from node it recursively calls the loadChildren(node, callback2)
+	 * method where callback2(err, children) returns an error or an array of
+	 * children nodes. For each node it calls openNode(node, callback3), then
+	 * other events for the children, then closeNode(node, callback4). The
+	 * callback3(err) and callback4(err) callbacks must signal the end of
+	 * processing of openNode and closeNode. Finally it calls callback(err) with
+	 * the first error code encountered, or with no error if the depth first
+	 * scan has completed normally. The number of out of order concurrent
+	 * loadChildren calls are specified in CONFIG.reader.concurrentReads, but
+	 * the order of calls to the openNode and closeNode functions are always in
+	 * order.
 	 */
-	var priorityEnqueue = function (maxPending, comparator, callback) {
-		ASSERT(maxPending >= 1);
-		ASSERT(comparator && callback);
-
-		var queue = [], pending = 0;
-
-		var comp = function (a, b) {
-			ASSERT(a.pri && b.pri);
-
-			return comparator(b.pri, a.pri);
-		};
-
-		var done = function (err) {
-			if( queue ) {
-				ASSERT(pending > 0);
-				--pending;
-
-				if( err || (pending === 0 && queue.length === 0) ) {
-					queue = null;
-
-					callback(err);
-					callback = nullCallback;
-				}
-				else if( pending < maxPending && queue.length !== 0 ) {
-					call();
-				}
-			}
-		};
-
-		var call = function () {
-			ASSERT(pending < maxPending);
-			ASSERT(queue.length > 0);
-
-			++pending;
-			var entry = queue.pop();
-			entry.proc(entry.pri, done, entry.arg);
-		};
-
-		return function (pri, proc, arg) {
-			ASSERT(pri && proc);
-
-			binaryInsert(queue, {
-				pri: pri,
-				proc: proc,
-				arg: arg
-			}, comp);
-
-			if( pending < maxPending ) {
-				call();
-			}
-		};
-	};
-
 	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
 		ASSERT(loadChildren && node && openNode && closeNode && callback);
 
@@ -188,33 +98,32 @@ define([ "assert", "config" ], function (ASSERT, CONFIG) {
 		var pending = 0;
 
 		var process = function (currentNode, err, children) {
-
-			var t;
+			var temp;
 			if( callback ) {
 				if( err ) {
-					t = callback;
+					temp = callback;
 					callback = null;
-					t(err);
+					temp(err);
 				}
 				else {
-					t = 0;
-					while( requests[t].node !== currentNode ) {
-						++t;
-						ASSERT(t < requests.length);
+					temp = 0;
+					while( requests[temp].node !== currentNode ) {
+						++temp;
+						ASSERT(temp < requests.length);
 					}
-					ASSERT(requests[t].status === 1);
+					ASSERT(requests[temp].status === 1);
 
-					requests[t].status = 3;
+					requests[temp].status = 3;
 
 					err = children.length;
 					while( --err >= 0 ) {
-						requests.splice(t, 0, {
+						requests.splice(temp, 0, {
 							status: 0,
 							node: children[err]
 						});
 					}
-					
-					requests.splice(t, 0, {
+
+					requests.splice(temp, 0, {
 						status: 2,
 						node: currentNode
 					});
@@ -227,15 +136,25 @@ define([ "assert", "config" ], function (ASSERT, CONFIG) {
 			}
 		};
 
+		var processing = 0;
+		var done = function (err) {
+			if( callback && (err || (--processing === 0 && requests.length === 0 && pending === 0)) ) {
+				var temp = callback;
+				callback = null;
+				temp(err);
+			}
+		};
+
 		var scan = function () {
-//			console.log("scan", pending, requests.length);
-			
+			// console.log("scan", pending, requests.length);
+
 			while( requests.length !== 0 && requests[0].status >= 2 ) {
-				if(requests[0].status === 2) {
-					openNode(requests.shift().node);
+				++processing;
+				if( requests[0].status === 2 ) {
+					openNode(requests.shift().node, done);
 				}
 				else {
-					closeNode(requests.shift().node);
+					closeNode(requests.shift().node, done);
 				}
 			}
 
@@ -250,14 +169,8 @@ define([ "assert", "config" ], function (ASSERT, CONFIG) {
 					selected.push(requests[i].node);
 				}
 			}
-			
-			if( requests.length === 0 && pending === 0 ) {
-				ASSERT(callback);
-				callback(null);
-				callback = null;
-			}
 
-			for(i = 0; i < selected.length; ++i) {
+			for( i = 0; i < selected.length; ++i ) {
 				loadChildren(selected[i], process.bind(null, selected[i]));
 			}
 		};
@@ -270,8 +183,6 @@ define([ "assert", "config" ], function (ASSERT, CONFIG) {
 		binaryInsert: binaryInsert,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
-		errorHandler: errorHandler,
-		priorityEnqueue: priorityEnqueue,
 		depthFirstSearch: depthFirstSearch
 	};
 });

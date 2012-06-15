@@ -31,6 +31,9 @@ function (ASSERT, SHA1, UTIL) {
 			valid = valid
 			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
 
+			valid = valid
+			&& (node.relid === undefined || typeof node.relid === "number" || typeof node.relid === "string");
+
 			if( valid ) {
 				var key = node.data[KEYNAME];
 				valid = valid && (key === undefined || key === false || isKey(key));
@@ -247,11 +250,12 @@ function (ASSERT, SHA1, UTIL) {
 			node.relid = relid;
 		};
 
-		var getPath = function (node) {
+		var getPath = function (node, base) {
 			ASSERT(isValid(node));
+			ASSERT(base === undefined || isValid(base));
 
 			var path = [];
-			while( node.parent ) {
+			while( node.parent && node !== base ) {
 				path.push(node.relid);
 				node = node.parent;
 			}
@@ -259,22 +263,27 @@ function (ASSERT, SHA1, UTIL) {
 			return path;
 		};
 
-		var getLevel = function (node) {
+		var getLevel = function (node, base) {
+			ASSERT(isValid(node));
+			ASSERT(base === undefined || isValid(base));
+
 			var level = 0;
-			while( node.parent ) {
+			while( node.parent && node !== base ) {
 				++level;
 				node = node.parent;
 			}
+
 			return level;
 		};
 
 		var EMPTY_STRING = "";
 
-		var getStringPath = function (node) {
+		var getStringPath = function (node, base) {
 			ASSERT(isValid(node));
+			ASSERT(base === undefined || isValid(base));
 
 			var path = EMPTY_STRING;
-			while( node.parent ) {
+			while( node.parent && node !== base ) {
 				if( path === EMPTY_STRING ) {
 					path = node.relid;
 				}
@@ -306,6 +315,59 @@ function (ASSERT, SHA1, UTIL) {
 			}
 
 			return node;
+		};
+
+		var getCommonAncestor = function (first, second) {
+			ASSERT(isValid(first));
+			ASSERT(isValid(second));
+
+			var a = [];
+			do {
+				a.push(first);
+				first = first.parent;
+			} while( first );
+
+			var b = [];
+			do {
+				b.push(second);
+				second = second.parent;
+			} while( second );
+
+			var i = a.length - 1;
+			var j = b.length - 1;
+			while( i >= 1 && j >= 1 && a[i - 1].relid === b[j - 1].relid ) {
+				--i;
+				--j;
+			}
+
+			return [ a[i], b[j] ];
+		};
+
+		var isAncestorOf = function (first, second) {
+			ASSERT(isValid(first));
+			ASSERT(isValid(second));
+
+			var a = [];
+			while( (first = first.parent) !== undefined ) {
+				a.push(first);
+			}
+
+			var b = [];
+			while( (second = second.parent) !== undefined ) {
+				b.push(second);
+			}
+
+			if( a.length > b.length ) {
+				return false;
+			}
+
+			for( var i = 0; i < a.length; ++i ) {
+				if( a[i].relid !== b[i].relid ) {
+					return false;
+				}
+			}
+
+			return true;
 		};
 
 		var isMutable = function (node) {
@@ -482,7 +544,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(callback);
 
 			console.log("Dumping tree: " + key);
-			
+
 			var root = null;
 			var error = null;
 			var counter = 1;
@@ -504,7 +566,7 @@ function (ASSERT, SHA1, UTIL) {
 				ASSERT(isKey(key));
 
 				++counter;
-				
+
 				storage.load(key, function (err, child) {
 					ASSERT(err || child);
 
@@ -570,6 +632,8 @@ function (ASSERT, SHA1, UTIL) {
 			parseStringPath: parseStringPath,
 			getRoot: getRoot,
 			getRelid: getRelid,
+			getCommonAncestor: getCommonAncestor,
+			isAncestorOf: isAncestorOf,
 			isMutable: isMutable,
 			mutate: mutate,
 			persist: persist,

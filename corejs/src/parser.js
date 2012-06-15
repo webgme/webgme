@@ -166,9 +166,11 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 			}
 			else {
 				console.log("Reading tree ...");
-				UTIL.depthFirstSearch(core.loadChildren, node, function (child) {
+				UTIL.depthFirstSearch(core.loadChildren, node, function (child, callback2) {
 					++count;
-				}, function (child) {
+					callback2(null);
+				}, function (child, callback2) {
+					callback2(null);
 				}, function (err2) {
 					console.log("Reading done (" + count + " objects)", err);
 					callback(err2);
