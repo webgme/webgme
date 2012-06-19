@@ -2,7 +2,7 @@ define(['CommonUtil'],function(commonUtil){
     "use strict";
     var ASSERT = commonUtil.assert;
     var GUID = commonUtil.guid;
-    var ID = "_id";
+    var KEY = "_id";
 
     var Buffer = function(storage){
         ASSERT(storage);
@@ -14,8 +14,8 @@ define(['CommonUtil'],function(commonUtil){
 
         var isValid = function(node){
             ASSERT(node);
-            ASSERT(node[ID]);
-            ASSERT(objects[node[ID]]);
+            ASSERT(node[KEY]);
+            ASSERT(objects[node[KEY]]);
 
             
             if(node.relations.baseId === null){
@@ -31,6 +31,11 @@ define(['CommonUtil'],function(commonUtil){
             }
         };
 
+        var getKey = function(node){
+            ASSET(isValid(node));
+
+            return node[KEY];
+        };
         var objectLoaded = function(key,err,object){
             ASSERT(loadqueue[key]);
             if(err){
@@ -41,11 +46,11 @@ define(['CommonUtil'],function(commonUtil){
                 delete loadqueue[key];
             }
             else{
-                ASSERT(object[ID] === key);
-                objects[object[ID]] = object;
-                states[object[ID]] = "read";
+                ASSERT(object[KEY] === key);
+                objects[object[KEY]] = object;
+                states[object[KEY]] = "read";
                 while(loadqueue[key].length>0){
-                    loadqueue[key][0](null,objects[object[ID]]);
+                    loadqueue[key][0](null,objects[object[KEY]]);
                     loadqueue[key].shift();
                 }
                 delete loadqueue[key];
@@ -112,30 +117,6 @@ define(['CommonUtil'],function(commonUtil){
             /*main*/
             rLoadObject(key);
         };
-        var loadBase = function(node,key,callback){
-            ASSERT(node);
-            ASSERT(callback);
-
-            if(objects[key]){
-                callback(null,node);
-            }
-            else{
-                loadObject(key,function(err,data){
-                    if(err){
-                        callback(err,undefined);
-                    }
-                    else{
-                        if(data.relations.baseId === null){
-                            callback(null,node);
-                        }
-                        else{
-                            loadBase(node,data.relations.baseId,callback);
-                        }
-                    }
-                });
-            }
-        };
-
         var loadRoot = function(key,callback){
             ASSERT(typeof key === "string");
             ASSERT(callback);
@@ -148,6 +129,120 @@ define(['CommonUtil'],function(commonUtil){
                     loadBase(node,key,callback);
                 }
             });
+        };
+        var loadChild = function(node,relid,callback){
+            ASSERT(isValid(node));
+            ASSERT(isValid(objects[relid]));
+            callback(null,objects[relid]);
+        };
+        var loadChildren = function(node,callback){
+            ASSERT(isValid(node));
+
+            var i;
+            var children = [];
+            for(i=0;i<node.relations.childrenIds.length;i++){
+                children.push(objects[node.relations.childrenIds[i]]);
+            }
+            callback(null,children);
+        };
+
+        var getParent = function(node){
+            ASSERT(isValid(node));
+
+            if(node.relations.parentId !== null){
+                return objects[node.relations.parentId];
+            }
+            return undefined;
+        };
+        var getRoot = function(node){
+            var root = node;
+            while(root.relations.parentId !== null){
+                root = objects[root.relations.parentId];
+            }
+
+            return root;
+        };
+        var getStringPath = function (node, base) {
+            ASSERT(isValid(node));
+            ASSERT(isValid(base));
+            return node[KEY];
+        };
+
+        var createEmptyNode = function(newguid){
+            var node = {
+                attributes:{},
+                registry:{},
+                relations:{
+                    parentId:null,
+                    childrenIds:[],
+                    baseId:null,
+                    inheritorIds:[]
+                },
+                pointers:{}
+            };
+            node[KEY] = newguid || GUID();
+
+            objects[node[KEY]] = node;
+            states[node[KEY]] = "created";
+            return objects[node[KEY]];
+        };
+        var attachInheritor = function(base,node){
+            if(commonUtil.insertIntoArray(base.relations.inheritorIds,node[KEY])){
+                if(states[base[KEY]] === "read"){
+                    states[base[KEY]] = "updated"
+                }
+            }
+        };
+        var inheritNode = function(baseId,newguid){
+
+            var inheritanceArray = {};
+            var subTreeIds = [];
+            var i,j;
+            var tempnode;
+
+            var rAddtoSubTreeIds = function(key){
+                var i;
+                commonUtil.insertIntoArray(subTreeIds,key);
+                for(i=0;i<objects[key].relations.childrenIds.length;i++){
+                    rAddtoSubTreeIds(objects[key].relations.childrenIds[i]);
+                }
+            };
+
+
+            newguid = newguid || GUID();
+            rAddtoSubTreeIds(baseId);
+            for(i=0;i<subTreeIds.length;i++){
+                inheritanceArray[subTreeIds[i]] = GUID();
+            }
+            inheritanceArray[baseId] = newguid;
+
+            for(i=0;i<subTreeIds.length;i++){
+                tempnode = createEmptyNode(inheritanceArray[subTreeIds[i]]);
+                if(subTreeIds.indexOf(objects[subTreeIds[i]].relations.parentId) !== -1){
+                    tempnode.relations.parentId = inheritanceArray[objects[subTreeIds[i]].relations.parentId];
+                }
+                else{
+                    tempnode.relations.parentId = null;
+                }
+                for(j=0;j<objects[subTreeIds[i]].relations.childrenIds.length;j++){
+                    tempnode.relations.childrenIds.push(inheritanceArray[objects[subTreeIds[i]].relations.childrenIds[j]]);
+                }
+                tempnode.relations.baseId = subTreeIds[i];
+
+                attachInheritor(objects[subTreeIds[i]],tempnode);
+            }
+
+            return objects[newguid];
+        };
+        var attachChild = function(parent,child){
+            ASSERT(isValid(parent));
+            ASSERT(isValid(child));
+            child.relations.parentId = parent[KEY];
+            if(commonUtil.insertIntoArray(parent.relations.childrenIds,child[KEY])){
+                for(var i=0;i<parent.relations.inheritorIds.length;i++){
+                    attachChild(objects[parent.relations.inheritorIds[i]],inheritNode(child[KEY]));
+                }
+            }
         };
 
         var createRoot = function(){
@@ -181,7 +276,7 @@ define(['CommonUtil'],function(commonUtil){
             ASSERT(isValid(node));
             ASSERT(typeof basename === "string");
             ASSERT(typeof name === "string");
-            ASSERT(states[node[ID] !== "deleted"]);
+            ASSERT(states[node[KEY] !== "deleted"]);
             ASSERT(value);
 
 
@@ -189,8 +284,8 @@ define(['CommonUtil'],function(commonUtil){
                 node[basename] = {};
             }
             node[basename][name] = value;
-            if(states[node[ID]] === "read"){
-                states[node[ID]] = "updated";
+            if(states[node[KEY]] === "read"){
+                states[node[KEY]] = "updated";
             }
         };
         var delProperty = function(node,basename,name){
@@ -199,11 +294,11 @@ define(['CommonUtil'],function(commonUtil){
             ASSERT(typeof name === "string");
             ASSERT(node[basename]);
             ASSERT(node[basename][name]);
-            ASSERT(states[node[ID] !== "deleted"]);
+            ASSERT(states[node[KEY] !== "deleted"]);
 
             delete node[basename][name];
-            if(states[node[ID]] === "read"){
-                states[node[ID]] = "updated";
+            if(states[node[KEY]] === "read"){
+                states[node[KEY]] = "updated";
             }
         };
 
@@ -225,6 +320,39 @@ define(['CommonUtil'],function(commonUtil){
         var delAttribute = function(node,name){
             delProperty(node,"attribute",name);
         };
+
+        var persist = function(node,callback){
+            var i;
+            var savequeue = [];
+            var count;
+            var objectSaved = function(){
+
+            };
+            for(i in states){
+                if(states[i] !== "read"){
+                    states[i] = "read";
+                    savequeue.push(objects[i]);
+                }
+            }
+
+            count = savequeue.length;
+            for(i=0;i<savequeue.length;i++){
+                storage.set(savequeue[i][KEY],savequeue[i],objectSaved);
+            }
+        };
+
+        return{
+            getKey          : getKey,
+            getRegistry     : getRegistry,
+            setRegistry     : setRegistry,
+            delRegistry     : delRegistry,
+            getAttribute    : getAttribute,
+            setAttribute    : setAttribute,
+            delAttribute    : delAttribute,
+            createEmptyNode : createEmptyNode,
+            inheritNode     : inheritNode,
+            attachChild     : attachChild
+        }
     };
     return Buffer;
 });

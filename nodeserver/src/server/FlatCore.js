@@ -5,51 +5,20 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
 
         var buffer = new CoreBuffer(storage);
 
-        var getKey = function(node){
-            ASSERT(node);
-            ASSERT(node[KEY]);
 
-            return node[KEY];
-        };
-
-        var createNode = function (parent,base) {
+        var createNode = function (parent,base,newguid) {
             var node;
             if(base){
-                node = buffer.createEmptyNode();
+                node = buffer.createEmptyNode(newguid);
             }
             else{
-                node = buffer.inheritNode(base[ID]);
+                node = buffer.inheritNode(base[ID],newguid);
+            }
+
+            if(parent){
+                buffer.attachChild(parent,node);
             }
             return node;
-        };
-
-        var loadChildren = function (node, callback) {
-            ASSERT(node && callback);
-
-            var counter = 1;
-            var children = [];
-
-            var done = function (err, child) {
-                ASSERT(counter >= 1);
-
-                if( child ) {
-                    children.push(child);
-                }
-
-                if( callback && (err || --counter === 0) ) {
-                    callback(err, children);
-                    callback = null;
-                }
-            };
-
-            for( var relid in node.data ) {
-                if( isValidRelid(relid) ) {
-                    ++counter;
-                    pertree.loadChild(node, relid, done);
-                }
-            }
-
-            done(null);
         };
 
         var removeNode = function (node) {
@@ -256,23 +225,23 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
 
 
         return {
-            getKey: pertree.getKey,
-            loadRoot: buffer.loadRoot,
-            //createNode: createNode,
-            //loadChildren: loadChildren,
-            //loadChild: pertree.loadChild,
-            //getParent: pertree.getParent,
-            //getRoot: pertree.getRoot,
-            //getStringPath: pertree.getStringPath,
+            getKey        : buffer.getKey,
+            loadRoot      : buffer.loadRoot,
+            createNode    : createNode,
+            loadChildren  : buffer.loadChildren,
+            loadChild     : buffer.loadChild,
+            getParent     : buffer.getParent,
+            getRoot       : buffer.getRoot,
+            getStringPath : buffer.getStringPath,
             //removeNode: removeNode,
-            //attachNode: attachNode,
+            attachNode: buffer.attachChild,
             //copyNode: copyNode,
-            getAttribute: buffer.getAttribute,
-            setAttribute: buffer.setAttribute,
-            delAttribute: buffer.delAttribute,
-            getRegistry: buffer.getRegistry,
-            setRegistry: bufffer.setRegistry,
-            delRegistry: buffer.delRegistry,
+            getAttribute  : buffer.getAttribute,
+            setAttribute  : buffer.setAttribute,
+            delAttribute  : buffer.delAttribute,
+            getRegistry   : buffer.getRegistry,
+            setRegistry   : bufffer.setRegistry,
+            delRegistry   : buffer.delRegistry
             //persist: persist,
             //loadPointer: loadPointer,
             //deletePointer: deletePointer,
