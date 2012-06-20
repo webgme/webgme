@@ -18,6 +18,16 @@ define(['mongodb','CommonUtil'],function(MONGO,commonUtil){
                 cb(1);
             }
         };
+        var getAll = function(cb){
+            if(objects){
+                objects.find().toArray(function(err, items) {
+                    cb(err,items);
+                });
+            }
+            else{
+                cb(1,undefined);
+            }
+        };
         var set = function(id,object,cb){
             if(objects){
                 objects.save({"_id":id,object:object},function(err){

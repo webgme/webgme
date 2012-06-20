@@ -13,22 +13,32 @@ define(['CommonUtil'],function(commonUtil){
         var loadqueue = {};
 
         var isValid = function(node){
+            var i;
             ASSERT(node);
             ASSERT(node[KEY]);
             ASSERT(objects[node[KEY]]);
 
-            
-            if(node.relations.baseId === null){
-                return true;
+            ASSERT(node.relations);
+            ASSERT(node.relations.baseId !== undefined);
+            ASSERT(node.relations.inheritorIds !== undefined);
+            ASSERT(node.relations.inheritorIds.length);
+            ASSERT(node.relations.parentId !== undefined);
+            ASSERT(node.relations.childrenIds !== undefined);
+            ASSERT(node.relations.childrenIds.length);
+
+            ASSERT(node.registry);
+
+            ASSERT(node.attributes);
+
+            ASSERT(node.pointers);
+            for(i in node.pointers){
+                ASSERT(node.pointers[i].to !== undefined);
+                ASSERT(node.pointers[i].from !== undefined);
+                ASSERT(node.pointers[i].from.length);
             }
-            else{
-                if(objects[node.relations.baseId]){
-                    return isValid(objects[node.relations.baseId]);
-                }
-                else{
-                    return false;
-                }
-            }
+
+
+            return true;
         };
 
         var getKey = function(node){
@@ -82,6 +92,7 @@ define(['CommonUtil'],function(commonUtil){
                     callback(err,objects[key]);
                 }
             };
+            var loadPointers = function()
             var rObjectLoaded = function(err){
                 if(--count === 0 || err){
                     callback(err,objects[key]);
@@ -108,6 +119,8 @@ define(['CommonUtil'],function(commonUtil){
                             if(data.relations.baseId !== null){
                                 rLoadObject(data.relations.baseId);
                             }
+                            /*parent and pointers have to be loaded as well, but not recursively*/
+
                             rObjectLoaded();
                         }
                     });
@@ -121,15 +134,27 @@ define(['CommonUtil'],function(commonUtil){
             ASSERT(typeof key === "string");
             ASSERT(callback);
 
-            loadObject(key,function(err,node){
-                if(err){
-                    callback(err,undefined);
-                }
-                else{
-                    loadBase(node,key,callback);
-                }
-            });
+            if(object[root] === undefined){
+                storage.getAll(function(err,items){
+                    var i;
+                    if(err){
+                        callback(err,undefined);
+                    }
+                    else{
+                        objects = items;
+                        states = {};
+                        for(i in objects){
+                            states[i] = "read";
+                        }
+                        callback(null,objects["root"]);
+                    }
+                });
+            }
+            else{
+                callback(null,objects["root"]);
+            }
         };
+
         var loadChild = function(node,relid,callback){
             ASSERT(isValid(node));
             ASSERT(isValid(objects[relid]));
@@ -249,6 +274,79 @@ define(['CommonUtil'],function(commonUtil){
 
         };
 
+        var removeNode = function(node){
+            ASSERT(isValid(node));
+            var i;
+            states[node[KEY]] = "deleted";
+            for(i in node.pointers){
+                deletePointer(node,i);
+            }
+            for(i=0;i<node.relations.childrenIds.length;i++){
+                removeNode(objects[node.relations.childrenIds[i]]);
+            }
+            for(i=0;i<node.relations.inheritorIds.length;i++){
+                removeNode(objects[node.relations.inheritorIds[i]]);
+            }
+
+            if(states[node.relations.parentId] !== "deleted"){
+                commonUtil.removeFromArray(objects[node.relations.parentId].relations.childrenIds,node[KEY]);
+            }
+
+            if(states[node.relations.baseId] !== "deleted"){
+                commonUtil.removeFromArray(objects[node.relations.baseId].relations.inheritorIds,node[KEY]);
+            }
+
+            objects[node[KEY]] = null;
+
+        };
+        var copyNode = function(node,parent,newguid){
+            ASSERT(node && parent);
+            newguid = newguid || GUID();
+
+            var newnode = createEmptyNode(newguid);
+            
+        };
+
+        var loadPointer = function(node,name,callback){
+            ASSERT(node && name);
+
+            if(node.pointers[name]){
+                if(node.pointers[name].to === null){
+                    callback(null,null);
+                }
+                else{
+                    callback(null,objects[node.pointers[name].to]);
+                }
+            }
+            else{
+                callback(null,undefined);
+            }
+        };
+        var deletePointer = function(node,name){
+            ASSERT(node && name);
+
+            if(node.pointers[name]){
+                if(node.pointers[name].to){
+                    commonUtil.removeFromArray(objects[node.pointers[name].to].pointers[name].from,node[KEY]);
+                }
+            }
+        };
+        var setPointer = function(node,name,target){
+            ASSERT(node && name && target);
+
+            if(node.pointers[name] === undefined){
+                node.pointers[name] = {to:null,from:[]};
+            }
+            deletePointer(node,name);
+
+            if(target.pointers[name] === undefined){
+                target.pointers[name] = {to:null,from:[]};
+            }
+
+            node.pointers[name].to = target[KEY];
+            commonUtil.insertIntoArray(target.pointers[name].from,node[KEY]);
+        };
+
         var getProperty = function(node,basename,name){
             ASSERT(isValid(node));
             ASSERT(typeof basename === "string");
@@ -325,8 +423,19 @@ define(['CommonUtil'],function(commonUtil){
             var i;
             var savequeue = [];
             var count;
-            var objectSaved = function(){
-
+            var success = true;
+            var error = null;
+            var objectSaved = function(err){
+                if(err){
+                    /*TODO how to get back to previous database state???*/
+                    success = false;
+                    objects = {};
+                    states = {};
+                    error = err;
+                }
+                if(--count === 0){
+                    callback(error);
+                }
             };
             for(i in states){
                 if(states[i] !== "read"){
@@ -351,7 +460,11 @@ define(['CommonUtil'],function(commonUtil){
             delAttribute    : delAttribute,
             createEmptyNode : createEmptyNode,
             inheritNode     : inheritNode,
-            attachChild     : attachChild
+            attachChild     : attachChild,
+            persist         : persist,
+            loadPointer     : loadPointer,
+            setPointer      : setPointer,
+            deletePointer   : deletePointer
         }
     };
     return Buffer;

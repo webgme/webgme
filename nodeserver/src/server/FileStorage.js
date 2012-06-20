@@ -1,4 +1,5 @@
-define(['fs'],function(FS){
+define(['fs','CommonUtil'],function(FS,commonUtil){
+    var COPY = commonUtil.copy;
     var Storage = function(project,branch){
         var objects = {};
 
@@ -12,6 +13,11 @@ define(['fs'],function(FS){
                     cb(1);
                 }
             },1);
+        };
+        var getAll = function(cb){
+            setTimeout(function(){
+                cb(null,COPY(objects));
+            });
         };
         var set = function(id,object,cb){
             setTimeout(function(){
