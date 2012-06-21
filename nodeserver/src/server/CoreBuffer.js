@@ -495,6 +495,7 @@ define(['CommonUtil'],function(commonUtil){
             var count;
             var success = true;
             var error = null;
+            var persistinfo = {};
             var objectSaved = function(err){
                 if(err){
                     /*TODO how to get back to previous database state???*/
@@ -504,11 +505,12 @@ define(['CommonUtil'],function(commonUtil){
                     error = err;
                 }
                 if(--count === 0){
-                    callback(error);
+                    callback(error,persistinfo);
                 }
             };
             for(i in states){
                 if(states[i] !== "read"){
+                    persistinfo[i] = states[i];
                     states[i] = "read";
                     savequeue.push(objects[i]);
                 }
@@ -524,22 +526,31 @@ define(['CommonUtil'],function(commonUtil){
             callback(null,objects["root"]);
         };
 
+        var getAttributeNames = function(node){
+            return Object.keys(node.attributes);
+        };
+        var getPointerNames = function(node){
+            return Object.keys(node.pointers);
+        };
+
         return{
-            getKey          : getKey,
-            getRegistry     : getRegistry,
-            setRegistry     : setRegistry,
-            delRegistry     : delRegistry,
-            getAttribute    : getAttribute,
-            setAttribute    : setAttribute,
-            delAttribute    : delAttribute,
-            createEmptyNode : createEmptyNode,
-            inheritNode     : inheritNode,
-            attachChild     : attachChild,
-            persist         : persist,
-            loadPointer     : loadPointer,
-            setPointer      : setPointer,
-            deletePointer   : deletePointer,
-            dumpTree        : dumpTree
+            getKey            : getKey,
+            getRegistry       : getRegistry,
+            setRegistry       : setRegistry,
+            delRegistry       : delRegistry,
+            getAttribute      : getAttribute,
+            setAttribute      : setAttribute,
+            delAttribute      : delAttribute,
+            createEmptyNode   : createEmptyNode,
+            inheritNode       : inheritNode,
+            attachChild       : attachChild,
+            persist           : persist,
+            loadPointer       : loadPointer,
+            setPointer        : setPointer,
+            deletePointer     : deletePointer,
+            dumpTree          : dumpTree,
+            getAttributeNames : getAtributeNames,
+            getPointerNames   : getPointerNames
         }
     };
     return Buffer;

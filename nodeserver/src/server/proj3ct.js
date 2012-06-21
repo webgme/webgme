@@ -853,7 +853,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         if(pastecommand.additional){
          for(i in pastecommand.additional){
              copylist.push(i);
-         }   
+         }
         }
         else{
             copylist = clients[clientId].getCopyList();
