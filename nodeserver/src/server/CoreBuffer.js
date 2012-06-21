@@ -2,6 +2,7 @@ define(['CommonUtil'],function(commonUtil){
     "use strict";
     var ASSERT = commonUtil.assert;
     var GUID = commonUtil.guid;
+    var COPY = commonUtil.copy;
     var KEY = "_id";
 
     var Buffer = function(storage){
@@ -243,18 +244,33 @@ define(['CommonUtil'],function(commonUtil){
 
             for(i=0;i<subTreeIds.length;i++){
                 tempnode = createEmptyNode(inheritanceArray[subTreeIds[i]]);
+                /*parent*/
                 if(subTreeIds.indexOf(objects[subTreeIds[i]].relations.parentId) !== -1){
                     tempnode.relations.parentId = inheritanceArray[objects[subTreeIds[i]].relations.parentId];
                 }
                 else{
                     tempnode.relations.parentId = null;
                 }
+                /*children*/
                 for(j=0;j<objects[subTreeIds[i]].relations.childrenIds.length;j++){
                     tempnode.relations.childrenIds.push(inheritanceArray[objects[subTreeIds[i]].relations.childrenIds[j]]);
                 }
+
                 tempnode.relations.baseId = subTreeIds[i];
 
                 attachInheritor(objects[subTreeIds[i]],tempnode);
+            }
+
+            /*pointers can be connected once every new node have been created*/
+            for(i=0;i<subTreeIds.length;i++){
+                for(j in objects[subTreeIds[i]].pointers){
+                    if(subTreeIds.indexOf(objects[subTreeIds[i]].pointers[j].to) === -1){
+                        setPointer(objects[inheritanceArray[subTreeIds[i]]],j,objects[subTreeIds[i]].pointers[j].to);
+                    }
+                    else{
+                        setPointer(objects[inheritanceArray[subTreeIds[i]]],j,objects[inheritanceArray[objects[subTreeIds[i]].pointers[j].to]]);
+                    }
+                }
             }
 
             return objects[newguid];
@@ -301,10 +317,64 @@ define(['CommonUtil'],function(commonUtil){
         };
         var copyNode = function(node,parent,newguid){
             ASSERT(node && parent);
-            newguid = newguid || GUID();
+            var copyArray = {};
+            var subTreeIds = [];
+            var i,j;
+            var tempnode;
 
-            var newnode = createEmptyNode(newguid);
-            
+            var rAddtoSubTreeIds = function(key){
+                var i;
+                commonUtil.insertIntoArray(subTreeIds,key);
+                for(i=0;i<objects[key].relations.childrenIds.length;i++){
+                    rAddtoSubTreeIds(objects[key].relations.childrenIds[i]);
+                }
+            };
+
+
+            newguid = newguid || GUID();
+            rAddtoSubTreeIds(baseId);
+            for(i=0;i<subTreeIds.length;i++){
+                copyArray[subTreeIds[i]] = GUID();
+            }
+            copyArray[baseId] = newguid;
+
+            for(i=0;i<subTreeIds.length;i++){
+                tempnode = createEmptyNode(copyArray[subTreeIds[i]]);
+
+                tempnode.attributes = COPY(objects[subTreeIds[i]].attributes);
+                tempnode.registry = COPY(objects[subTreeIds[i]].registry);
+
+                /*parent*/
+                if(subTreeIds.indexOf(objects[subTreeIds[i]].relations.parentId) !== -1){
+                    tempnode.relations.parentId = copyArray[objects[subTreeIds[i]].relations.parentId];
+                }
+                else{
+                    tempnode.relations.parentId = null;
+                }
+                /*children*/
+                for(j=0;j<objects[subTreeIds[i]].relations.childrenIds.length;j++){
+                    tempnode.relations.childrenIds.push(copyArray[objects[subTreeIds[i]].relations.childrenIds[j]]);
+                }
+
+                tempnode.relations.baseId = subTreeIds[i];
+
+                attachInheritor(objects[subTreeIds[i]],tempnode);
+            }
+
+            /*pointers can be connected once every new node have been created*/
+            for(i=0;i<subTreeIds.length;i++){
+                for(j in objects[subTreeIds[i]].pointers){
+                    if(subTreeIds.indexOf(objects[subTreeIds[i]].pointers[j].to) === -1){
+                        setPointer(objects[copyArray[subTreeIds[i]]],j,objects[subTreeIds[i]].pointers[j].to);
+                    }
+                    else{
+                        setPointer(objects[copyArray[subTreeIds[i]]],j,objects[copyArray[objects[subTreeIds[i]].pointers[j].to]]);
+                    }
+                }
+            }
+            attachChild(parent,objects[newguid]);
+            return objects[newguid];
+
         };
 
         var loadPointer = function(node,name,callback){
@@ -450,6 +520,10 @@ define(['CommonUtil'],function(commonUtil){
             }
         };
 
+        var dumpTree = function(key,callback){
+            callback(null,objects["root"]);
+        };
+
         return{
             getKey          : getKey,
             getRegistry     : getRegistry,
@@ -464,7 +538,8 @@ define(['CommonUtil'],function(commonUtil){
             persist         : persist,
             loadPointer     : loadPointer,
             setPointer      : setPointer,
-            deletePointer   : deletePointer
+            deletePointer   : deletePointer,
+            dumpTree        : dumpTree
         }
     };
     return Buffer;

@@ -28,7 +28,6 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
             pertree.copy(node, parent, relid);
         };
 
-
         return {
             getKey        : buffer.getKey,
             loadRoot      : buffer.loadRoot,
@@ -40,18 +39,18 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
             getStringPath : buffer.getStringPath,
             removeNode    : buffer.removeNode,
             attachNode    : buffer.attachChild,
-            //copyNode: copyNode,
+            copyNode      : buffer.copyNode,
             getAttribute  : buffer.getAttribute,
             setAttribute  : buffer.setAttribute,
             delAttribute  : buffer.delAttribute,
             getRegistry   : buffer.getRegistry,
-            setRegistry   : bufffer.setRegistry,
+            setRegistry   : buffer.setRegistry,
             delRegistry   : buffer.delRegistry,
             persist       : buffer.persist,
             loadPointer   : buffer.loadPointer,
             deletePointer : buffer.deletePointer,
             setPointer    : buffer.setPointer,
-            //dumpTree: pertree.dumpTree
+            dumpTree      : buffer.dumpTree
         };
     };
 

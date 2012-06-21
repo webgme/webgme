@@ -792,6 +792,21 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 }
                 else{
                     newobject = commonUtil.copy(object);
+                    /*adding extra attributes and registry info*/
+                    if(pastecommand.additional){
+                        if(pastecommand.additional[mainId]){
+                            if(pastecommand.additional[mainId].attributes){
+                                for(i in pastecommand.additional[mainId].attributes){
+                                    newobject.attributes[i] = pastecommand.additional[mainId].attributes[i];
+                                }
+                            }
+                            if(pastecommand.additional[mainId].registry){
+                                for(i in pastecommand.additional[mainId].registry){
+                                    newobject.registry[i] = pastecommand.additional[mainId].registry[i];
+                                }
+                            }
+                        }
+                    }
                     newobject[ID] = inheritanceArray[newobject[ID]];
                     index = copylist.indexOf(object[ID]);
                     if(index !== -1){
@@ -895,12 +910,24 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                 }
                 else{
                     commandBuffer.get(parentId,function(err,parent){
+                        var i;
                         if(err){
                             logger.error("getting object failed: reason["+err+"],id["+parentId+"]");
                             status = false;
                             childrenComplete();
                         }
                         else{
+                            if(childrencommand.attributes){
+                                for(i in childrencommand.attributes){
+                                    inherited.attributes[i] = childrencommand.attributes[i];
+                                }
+                            }
+                            if(childrencommand.registry){
+                                for(i in childrencommand.registry){
+                                    inherited.registry[i] = childrencommand.registry[i];
+                                }
+                            }
+
                             parent.relations.childrenIds.push(inherited[ID]);
                             commandBuffer.set(parent[ID],parent);
                             inherited.relations.parentId = parent[ID];

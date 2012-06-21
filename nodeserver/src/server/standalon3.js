@@ -63,13 +63,13 @@ var Server = function(parameters){
             console.log('[P-stdout] ' + data);
             if(data.toString().indexOf("no more clients, quit") !== -1){
                 console.log('[P-stdout] restarting project');
-                project.stdin.write('node proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
+                project.stdin.write('node --debug proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
             }
         });
         project.stderr.on('data', function (data) {
             console.log('[P-stderr] ' + data);
         });
-        project.stdin.write('node proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
+        project.stdin.write('node --debug proj3ct.js '+parameters.ProjectPort+" "+parameters.ProjectName+" "+parameters.BranchName+'\n');
     }
 
     io.sockets.on('connection', function(socket){
