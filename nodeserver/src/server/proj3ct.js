@@ -851,6 +851,7 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         called = false;
         inheritanceArray = {};
         if(pastecommand.additional){
+            copylist = [];
          for(i in pastecommand.additional){
              copylist.push(i);
          }   
