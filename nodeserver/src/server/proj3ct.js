@@ -850,7 +850,14 @@ var Commander = function(storage,clients,clientId,transaction,CB){
         /*main*/
         called = false;
         inheritanceArray = {};
-        copylist = clients[clientId].getCopyList();
+        if(pastecommand.additional){
+         for(i in pastecommand.additional){
+             copylist.push(i);
+         }   
+        }
+        else{
+            copylist = clients[clientId].getCopyList();
+        }
         subtreeids = [];
         readcount = copylist.length;
         for(i=0;i<copylist.length;i++){
