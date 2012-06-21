@@ -101,7 +101,8 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 guid,
                 baseId,
                 parent,
-                attributes;
+                attributes,
+                registry;
             if(parameters.parentId){
                 baseId = parameters.baseId || "object";
                 //guid = commonUtil.guid();
@@ -113,9 +114,21 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 else{
                     guid = "child_"+parameters.parentId+"_N";
                 }
-                attributes = {name:guid};
+                if(parameters.attributes){
+                    attributes = parameters.attributes;
+                }
+                else{
+                    attributes = {};
+                }
+                if(parameters.registry){
+                    registry = parameters.registry;
+                }
+                else{
+                    registry = {};
+                }
+                attributes.name = guid; /*TODO should be removed at some point*/
                 commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
-                commands.push({type:"modify",id:guid,attributes:attributes});
+                commands.push({type:"modify",id:guid,attributes:attributes,registry:registry});
                 self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:commands});
             }
             else{
@@ -152,6 +165,21 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
             }
             else{
                 logger.error("fraudulent connection creation: "+JSON.stringify(parameters));
+            }
+        };
+        this.intellyPaste = function(parameters){
+            var i,
+                additional = {};
+            if(parameters.parentId){
+                for(i in parameters){
+                    if(i !== "parentId"){
+                        additional[i] = parameters[i];
+                    }
+                }
+                self.sendMessage({transactionId:"esetleg",commands:[{type:"paste",id:parameters.parentId,additional:additional}]});
+            }
+            else{
+                logger.error("fraudulent intelligent paste: "+JSON.stringify(parameters));
             }
         };
 
