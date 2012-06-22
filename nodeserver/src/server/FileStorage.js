@@ -1,4 +1,4 @@
-define(['fs','CommonUtil'],function(FS,commonUtil){
+define(['fs','./../common/CommonUtil'],function(FS,commonUtil){
     var COPY = commonUtil.copy;
     var Storage = function(project,branch){
         var objects = {};

@@ -1,4 +1,4 @@
-define(['mongodb','CommonUtil'],function(MONGO,commonUtil){
+define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
     var Storage = function(project,branch){
         var objects,
             DB = new MONGO.Db(project, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));

@@ -1,4 +1,4 @@
-define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
+define(['CoreBuffer','./../common/CommonUtil'],function(CoreBuffer,commonUtil){
     var ASSERT = commonUtil.assert;
     var KEY = "_id";
     var Core = function (storage) {
@@ -35,6 +35,7 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
             loadChildren      : buffer.loadChildren,
             loadChild         : buffer.loadChild,
             getParent         : buffer.getParent,
+            getBase           : buffer.getBase,
             getRoot           : buffer.getRoot,
             getStringPath     : buffer.getStringPath,
             removeNode        : buffer.removeNode,
@@ -52,7 +53,8 @@ define(['CoreBuffer','CommonUtil'],function(CoreBuffer,commonUtil){
             loadPointer       : buffer.loadPointer,
             deletePointer     : buffer.deletePointer,
             setPointer        : buffer.setPointer,
-            dumpTree          : buffer.dumpTree
+            dumpTree          : buffer.dumpTree,
+            flushTree         : buffer.flushTree
         };
     };
 

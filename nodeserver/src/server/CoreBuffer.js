@@ -1,4 +1,4 @@
-define(['CommonUtil'],function(commonUtil){
+define(['./../common/CommonUtil'],function(commonUtil){
     "use strict";
     var ASSERT = commonUtil.assert;
     var GUID = commonUtil.guid;
@@ -43,7 +43,7 @@ define(['CommonUtil'],function(commonUtil){
         };
 
         var getKey = function(node){
-            ASSET(isValid(node));
+            ASSERT(isValid(node));
 
             return node[KEY];
         };
@@ -86,14 +86,16 @@ define(['CommonUtil'],function(commonUtil){
         };
         var loadObject = function(key,callback){
             var count = 0;
-            var callback = false;
+            var callbackcalled = false;
             var callCallback = function(err){
                 if(!callbackcalled){
                     callbackcalled = true;
                     callback(err,objects[key]);
                 }
             };
-            var loadPointers = function()
+            var loadPointers = function(){
+
+            };
             var rObjectLoaded = function(err){
                 if(--count === 0 || err){
                     callback(err,objects[key]);
@@ -172,11 +174,26 @@ define(['CommonUtil'],function(commonUtil){
             callback(null,children);
         };
 
+        var loadByPath = function(stringpath,callback){
+            ASSERT(objects['root']);
+            ASSERT(stringpath && callback);
+
+            callback(null,objects[stringpath]);
+        };
+
         var getParent = function(node){
             ASSERT(isValid(node));
 
             if(node.relations.parentId !== null){
                 return objects[node.relations.parentId];
+            }
+            return undefined;
+        };
+        var getBase = function(node){
+            ASSERT(isValid(node));
+
+            if(node.relations.baseId !== null){
+                return objects[node.relations.baseId];
             }
             return undefined;
         };
@@ -332,11 +349,11 @@ define(['CommonUtil'],function(commonUtil){
 
 
             newguid = newguid || GUID();
-            rAddtoSubTreeIds(baseId);
+            rAddtoSubTreeIds(node[KEY]);
             for(i=0;i<subTreeIds.length;i++){
                 copyArray[subTreeIds[i]] = GUID();
             }
-            copyArray[baseId] = newguid;
+            copyArray[node[KEY]] = newguid;
 
             for(i=0;i<subTreeIds.length;i++){
                 tempnode = createEmptyNode(copyArray[subTreeIds[i]]);
@@ -510,7 +527,7 @@ define(['CommonUtil'],function(commonUtil){
             };
             for(i in states){
                 if(states[i] !== "read"){
-                    persistinfo[i] = states[i];
+                    persistinfo[i] = {info:states[i],object:objects[i]};
                     states[i] = "read";
                     savequeue.push(objects[i]);
                 }
@@ -533,6 +550,12 @@ define(['CommonUtil'],function(commonUtil){
             return Object.keys(node.pointers);
         };
 
+        var flushTree = function(){
+            objects = {};
+            states = {};
+            loadqueue = {};
+        };
+
         return{
             getKey            : getKey,
             getRegistry       : getRegistry,
@@ -549,8 +572,18 @@ define(['CommonUtil'],function(commonUtil){
             setPointer        : setPointer,
             deletePointer     : deletePointer,
             dumpTree          : dumpTree,
-            getAttributeNames : getAtributeNames,
-            getPointerNames   : getPointerNames
+            getAttributeNames : getAttributeNames,
+            getPointerNames   : getPointerNames,
+            loadObject        : loadObject,
+            loadRoot          : loadRoot,
+            loadChild         : loadChild,
+            loadChildren      : loadChildren,
+            loadByPath        : loadByPath,
+            getParent         : getParent,
+            getRoot           : getRoot,
+            getStringPath     : getStringPath,
+            flushTree         : flushTree,
+            removeNode        : removeNode
         }
     };
     return Buffer;
