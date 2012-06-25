@@ -68,6 +68,7 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
 
         return {
             get:get,
+            getAll:getAll,
             set:set,
             del:del,
             print:print,

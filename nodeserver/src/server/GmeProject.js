@@ -87,6 +87,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
             commandIds,
             finalizeCommand,
             commandFailed,
+            root,
             i;
 
         processCommand = function(command){
@@ -129,22 +130,23 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                 clientUpdated;
 
             clientUpdated = function(id,loadlist,removelist){
+                console.log("kecso "+id+"-"+JSON.stringify(loadlist)+"-"+JSON.stringify(removelist));
                 var msg = [],
                     i,
                     objectid;
 
                 for(i in changedobjects){
-                    objectid = CORE.getStringPath(changedobjects[i].object);
+                    objectid = CORE.getStringPath(changedobjects[i].object,changedobjects[i].object);
                     if(loadlist[objectid]){
                         msg.push({type:"load",id:objectid,object:changedobjects[i].object});
                         delete loadlist[objectid];
                     }
-                    else if(removelist[CORE.getStringPath(changedobjects[i].object)]){
+                    else if(removelist[objectid]){
                         msg.push({type:"unload",id:objectid,object:null});
                         delete removelist[objectid];
                     }
-                    else if(clients[id].interestedInObject(CORE.getStringPath(changedobjects[i].object))){
-                        msg.push({type:changedobjects[i].type,object:changedobjects[i].object});
+                    else if(clients[id].interestedInObject(objectid)){
+                        msg.push({type:changedobjects[i].type,id:objectid,object:changedobjects[i].object});
                     }
                 }
                 for(i in removelist){
@@ -160,7 +162,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
 
                 clients[id].sendMessage(msg);
             };
-            CORE.persist(function(err,persistinfo){
+            CORE.persist(root,function(err,persistinfo){
                 var i,j;
                 if(err){
                     commandFailed();
@@ -381,71 +383,38 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
             }
         };
         childrenCommand = function(childrencommand,callback){
-            var status,
-                count,
-                childrenComplete,
-                childrenCreated,
-                rCreateChild;
+            var child;
 
-            childrenComplete = function(){
-                if(status){
-                    callback();
-                }
-                else{
-                    commandBuffer.commandFailed();
-                }
-            };
-            childrenCreated = function(){
-                if(--count === 0){
-                    childrenComplete();
-                }
-            };
-            rCreateChild = function(parentId,baseId,newguid){
-                var i;
-                count++;
-                inheritObject(baseId,newguid,function(err,inherited){
+            if(childrencommand.parentId){
+                CORE.loadByPath(childrencommand.parentId,function(err,parent){
                     if(err){
-                        logger.error("inheriting object failed: reason["+err+"],base["+baseId+"]");
-                        status = false;
-                        childrenCreated();
+                        logger.error("l390");
+                        commandFailed();
                     }
                     else{
-                        commandBuffer.get(parentId,function(err,parent){
-                            var i;
-                            if(err){
-                                logger.error("getting object failed: reason["+err+"],id["+parentId+"]");
-                                status = false;
-                                childrenComplete();
-                            }
-                            else{
-                                if(childrencommand.attributes){
-                                    for(i in childrencommand.attributes){
-                                        inherited.attributes[i] = childrencommand.attributes[i];
-                                    }
+                        if(childrencommand.baseId){
+                            CORE.loadByPath(childrencommand.baseId,function(err,base){
+                                if(err){
+                                    logger.error("l397");
+                                    commandFailed();
                                 }
-                                if(childrencommand.registry){
-                                    for(i in childrencommand.registry){
-                                        inherited.registry[i] = childrencommand.registry[i];
-                                    }
+                                else{
+                                    child = CORE.createNode(parent,base,childrencommand.newguid);
+                                    callback();
                                 }
-
-                                parent.relations.childrenIds.push(inherited[ID]);
-                                commandBuffer.set(parent[ID],parent);
-                                inherited.relations.parentId = parent[ID];
-                                commandBuffer.set(inherited[ID],inherited);
-                                for(i=0;i<parent.relations.inheritorIds.length;i++){
-                                    rCreateChild(parent.relations.inheritorIds[i],null,inherited[ID]);
-                                }
-                                childrenCreated();
-                            }
-                        });
+                            });
+                        }
+                        else{
+                            child = CORE.createNode(parent,null,childrencommand.newguid);
+                            callback();
+                        }
                     }
                 });
-            };
-            /*main*/
-            status = true;
-            count = 0;
-            rCreateChild(childrencommand.parentId,childrencommand.baseId,childrencommand.newguid);
+            }
+            else{
+                logger.error("l413");
+                commandFailed();
+            }
         };
         pointCommand = function(pointcommand,callback){
             var fromobj,
@@ -540,165 +509,15 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
             });
         };
 
-        /*helpers*/
-        readSubTree = function(rootId,cb){
-            var i,
-                count,
-                objectRead,
-                rReadObject,
-                readIds,
-                state;
-            rReadObject = function(id){
-                count++;
-                commandBuffer.get(id,function(err,object){
-                    var i;
-                    if(err){
-                        logger.error("readSubTree.rReadObject - getting object failed: reason["+err+"],id["+id+"]");
-                        state=false;
-                        objectRead();
-                    }
-                    else{
-                        commonUtil.insertIntoArray(readIds,id);
-                        for(i=0;i<object.relations.childrenIds.length;i++){
-                            if(object.relations.childrenIds[i]){
-                                rReadObject(object.relations.childrenIds[i]);
-                            }
-                        }
-                        objectRead();
-                    }
-                });
-            };
-            objectRead = function(){
-                if(--count === 0){
-                    if(state){
-                        cb(null,readIds);
-                    }
-                    else{
-                        cb(1);
-                    }
-                }
-            };
-
-            /*main*/
-            state=true;
-            count = 0;
-            readIds = [];
-            rReadObject(rootId);
-        };
-        readISubTree = function(rootId,cb){
-            var i,
-                count,
-                objectRead,
-                rReadObject,
-                readIds,
-                state;
-            rReadObject = function(id){
-                count++;
-                commandBuffer.get(id,function(err,object){
-                    var i;
-                    if(err){
-                        logger.error("readISubTree.rReadObject - getting object failed: reason["+err+"},id["+id+"]");
-                        state=false;
-                        objectRead();
-                    }
-                    else{
-                        commonUtil.insertIntoArray(readIds,id);
-                        for(i=0;i<object.relations.inheritorIds.length;i++){
-                            rReadObject(object.relations.inheritorIds[i]);
-                        }
-                        objectRead();
-                    }
-                });
-            };
-            objectRead = function(){
-                if(--count === 0){
-                    if(state){
-                        cb(null,readIds);
-                    }
-                    else{
-                        cb(1);
-                    }
-                }
-            };
-
-            /*main*/
-            state=true;
-            count = 0;
-            readIds = [];
-            rReadObject(rootId);
-        };
-        inheritObject = function(baseId,newguid,cb){
-            var i,
-                count,
-                inheritedobject;
-
-
-            /*main*/
-            readSubTree(baseId,function(err,subTreeIds){
-                var quickCopyObject,
-                    objectCopied,
-                    newobject,
-                    inheritanceArray;
-                objectCopied = function(){
-                    if(--count === 0){
-                        cb(null,inheritedobject);
-                    }
-                };
-                quickCopyObject = function(id){
-                    var i;
-                    commandBuffer.get(id,function(err,object){
-                        /*no error can happen!!!*/
-                        newobject = commonUtil.copy(object);
-                        newobject.attributes = {};
-                        newobject.registry = {};
-
-                        if(subTreeIds.indexOf(newobject.relations.parentId) !== -1){
-                            newobject.relations.parentId = inheritanceArray[newobject.relations.parentId];
-                        }
-                        else{
-                            newobject.relations.parentId = null;
-                            inheritedobject = newobject;
-                        }
-                        for(i=0;i<newobject.relations.childrenIds.length;i++){
-                            newobject.relations.childrenIds[i] = inheritanceArray[newobject.relations.childrenIds[i]];
-                        }
-
-                        newobject.relations.baseId = object[ID];
-                        newobject.relations.inheritorIds = [];
-
-                        newobject[ID] = inheritanceArray[object[ID]];
-
-                        commandBuffer.set(newobject[ID],newobject);
-
-                        object.relations.inheritorIds.push(newobject[ID]);
-                        commandBuffer.set(object[ID],object);
-                        objectCopied();
-                    });
-                };
-
-                if(err){
-                    cb(1);
-                }
-                else{
-                    inheritanceArray = {};
-                    count = subTreeIds.length;
-                    for(i=0;i<subTreeIds.length;i++){
-                        inheritanceArray[subTreeIds[i]] = commonUtil.guid();
-                    }
-                    if(newguid){
-                        inheritanceArray[baseId] = newguid;
-                    }
-                    for(i=0;i<subTreeIds.length;i++){
-                        quickCopyObject(subTreeIds[i]);
-                    }
-                }
-            });
-        };
-
-
-        /*main*/
-        commandBuffer = new CommandBuffer(storage,clientId,transaction.transactionId,clients,CB);
-        processCommand(transaction.commands[0]);
+        CORE.loadRoot("root",function(err,node){
+            if(err){
+                logger.error("l546");
+            }
+            else{
+                root = node;
+                processCommand(transaction.commands[0]);
+            }
+        });
     };
     var Territory = function(cClient,territoryId){
         var cPatterns = {},
@@ -721,19 +540,19 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                 computePattern,
                 updateComplete,
                 patternComplete,
-                newlist,
-                extendedlist,
+                newlist = [],
+                extendedlist = {},
                 patterncounter,
                 i;
 
             addToNewList = function(node){
                 var base = node,
-                    path = CORE.getStringPath(node,"root");
+                    path = CORE.getStringPath(node,node);
 
                 while(base && commonUtil.insertIntoArray(newlist,path)){
                     extendedlist[path] = base;
                     base = CORE.getBase(node);
-                    path = CORE.getStringPath(base);
+                    path = CORE.getStringPath(base,base);
                 }
             };
             computeRule = function(basenode,rulename,rulevalue,callback){
@@ -772,6 +591,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                         }
                     };
 
+                    count = 0;
                     rComputeChild(node,0);
                 };
                 computePointerRule = function(node,pointername,maxlevel,callback){
@@ -792,7 +612,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                             pointerCounted();
                         }
                         else{
-                            if(commonUtil.insertIntoArray(pathchain,CORE.getStringPath(node))){
+                            if(commonUtil.insertIntoArray(pathchain,CORE.getStringPath(node,node))){
                                 CORE.loadPointer(node,pointername,function(err,pointer){
                                     if(err){
                                         pointerCounted();
@@ -809,6 +629,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                         }
                     };
 
+                    count = 0;
                     rComputePointer(node,0);
                 };
 
@@ -846,14 +667,21 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                 }
                 else{
                     for(i in rules){
-                        computeRule(basenode,i,rules[i],ruleComputed);
+                        CORE.loadByPath(basenode,function(err,node){
+                            if(err){
+                                ruleComputed();
+                            }
+                            else{
+                                computeRule(node,i,rules[i],ruleComputed);
+                            }
+                        });
                     }
                 }
             };
             updateComplete = function(){
                 var i,
                     removedobjects = {},
-                    addedobjects;
+                    addedobjects = {};
 
                 for(i=0;i<newlist.length;i++){
                     if(cCurrentList.indexOf(newlist[i]) === -1){
@@ -877,22 +705,29 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
             };
 
             /*main*/
-            if(newpatterns === undefined || newpatterns === null){
-                newpatterns = commonUtil.copy(cPatterns);
-            }
-            newlist = [];
-            patternCounter = 0;
-            for(i in newpatterns){
-                patternCounter++;
-            }
-            if(patternCounter === 0){
-                updateComplete();
-            }
-            else{
-                for(i in newpatterns){
-                    computePattern(i,newpatterns[i],patternComplete);
+            CORE.loadRoot("root",function(err,root){
+                if(err){
+                    logger.error("l899");
                 }
-            }
+                else{
+                    if(newpatterns === undefined || newpatterns === null){
+                        newpatterns = commonUtil.copy(cPatterns);
+                    }
+                    newlist = [];
+                    patterncounter = 0;
+                    for(i in newpatterns){
+                        patterncounter++;
+                    }
+                    if(patterncounter === 0){
+                        updateComplete();
+                    }
+                    else{
+                        for(i in newpatterns){
+                            computePattern(i,newpatterns[i],patternComplete);
+                        }
+                    }
+                }
+            });
         };
     };
     var Client = function(cIoSocket,clientId){
@@ -1005,7 +840,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
 
                 /*check if all territory have been updated sofar*/
                 if(--territorycount === 0){
-                    cb(loadlist,unloadlist);
+                    cb(clientId,loadlist,unloadlist);
                 }
             };
             /*main*/
@@ -1021,7 +856,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                 }
             }
             else{
-                cb([],[]);
+                cb(clientId,[],[]);
             }
         };
     };

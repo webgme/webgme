@@ -31,6 +31,7 @@ define(['CoreBuffer','./../common/CommonUtil'],function(CoreBuffer,commonUtil){
         return {
             getKey            : buffer.getKey,
             loadRoot          : buffer.loadRoot,
+            loadByPath        : buffer.loadByPath,
             createNode        : createNode,
             loadChildren      : buffer.loadChildren,
             loadChild         : buffer.loadChild,

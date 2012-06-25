@@ -22,10 +22,10 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(node.relations);
             ASSERT(node.relations.baseId !== undefined);
             ASSERT(node.relations.inheritorIds !== undefined);
-            ASSERT(node.relations.inheritorIds.length);
+            ASSERT(node.relations.inheritorIds.length >= 0);
             ASSERT(node.relations.parentId !== undefined);
             ASSERT(node.relations.childrenIds !== undefined);
-            ASSERT(node.relations.childrenIds.length);
+            ASSERT(node.relations.childrenIds.length >= 0);
 
             ASSERT(node.registry);
 
@@ -35,7 +35,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             for(i in node.pointers){
                 ASSERT(node.pointers[i].to !== undefined);
                 ASSERT(node.pointers[i].from !== undefined);
-                ASSERT(node.pointers[i].from.length);
+                ASSERT(node.pointers[i].from.length >= 0);
             }
 
 
@@ -137,7 +137,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(typeof key === "string");
             ASSERT(callback);
 
-            if(object[root] === undefined){
+            if(objects[root] === undefined){
                 storage.getAll(function(err,items){
                     var i;
                     if(err){
@@ -461,7 +461,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(isValid(node));
             ASSERT(typeof basename === "string");
             ASSERT(typeof name === "string");
-            ASSERT(states[node[KEY] !== "deleted"]);
+            ASSERT(states[node[KEY]] !== "deleted");
             ASSERT(value);
 
 
@@ -479,7 +479,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(typeof name === "string");
             ASSERT(node[basename]);
             ASSERT(node[basename][name]);
-            ASSERT(states[node[KEY] !== "deleted"]);
+            ASSERT(states[node[KEY]] !== "deleted");
 
             delete node[basename][name];
             if(states[node[KEY]] === "read"){
@@ -581,6 +581,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             loadByPath        : loadByPath,
             getParent         : getParent,
             getRoot           : getRoot,
+            getBase           : getBase,
             getStringPath     : getStringPath,
             flushTree         : flushTree,
             removeNode        : removeNode

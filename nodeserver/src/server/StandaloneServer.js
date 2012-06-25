@@ -53,8 +53,10 @@ var Server = function(parameters){
 
     io.set('log level', 1); // reduce logging
     http.listen(parameters.ServerPort);
-    if(os.platform().indexOf('win') === -1){
-        project = new (require('forever').Monitor) (require('path').join(__dirname,'proj3ct.js'),{'options':[parameters.ProjectPort,parameters.ProjectName,parameters.BranchName]});
+
+    console.log('[OS]:'+os.platform());
+    if(os.platform().indexOf('win') === -1 || os.platform() === 'darwin'){
+        project = new (require('forever').Monitor) (require('path').join(__dirname,'GmeProject.js'),{'options':[parameters.ProjectPort,parameters.ProjectName,parameters.BranchName]});
         project.start();
     }
     else{
