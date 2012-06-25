@@ -104,9 +104,9 @@ define([], function () {
 
             if ((pointA.x === pointB.x) && (pointA.y === pointB.y)) {
                 //when the source and target of the connection is the same
-                x[1] = pointB.x;
+                x[1] = pointB.x - 25;
                 y[1] = pointB.y;
-                x[4] = pointB.x;
+                x[4] = pointB.x + 25;
                 y[4] = pointB.y;
 
                 x[2] = pointB.x - 100;

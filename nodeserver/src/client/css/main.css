@@ -9,19 +9,24 @@ html,body {
     font-size: 12px;
 }
 
-/*body {
+*{
+    -khtml-user-select:none;
+    -moz-user-select:-moz-none;
+    -webkit-user-select:none;
+    -o-user-select:none;
+    user-select:none;
+}
 
-    font-size:90%;
-	font-family:Helvetica,serif;
-}*/
-
-/** {
-    -khtml-user-select: none;
-    -moz-user-select: -moz-none;
-    -webkit-user-select: none;
-    -o-user-select: none;
-    user-select: none;
-}*/
+input[type=text],
+input[type=password],
+input, /*stupid jsTree does not specify type for input (renaming node)*/
+textarea{
+    -webkit-user-select:text;
+    -khtml-user-select:text;
+    -moz-user-select:text;
+    -o-user-select:text;
+    user-select:text;
+}
 
 div {
     display: block;

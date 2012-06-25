@@ -20,7 +20,10 @@ require.config({
         "order": 'lib/require/order',
         "text":	'lib/require/text',
         "domReady":	'lib/require/domReady',
-        "ModelEditorHTML": "js/ModelEditor/HTML"
+        "ModelEditorHTML": "js/ModelEditor/HTML",
+        "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
+        "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
+        "ModelEditorHTMLCSS": "css/ModelEditor"
     }
 });
 

@@ -1,9 +1,10 @@
 var objectCounter = 0;
 var payload = "";
 var objects = {};
+var objCounter = 0;
 var emptyObject = function(){
     return { _id:"obj"+objectCounter,
-        attributes:{"name":"obj"+objectCounter++,"payload":payload},
+        attributes:{"name":"obj"+objectCounter++,"payload":payload, "attr1" : "value1", "attr2": "value2"},
         registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
                     "isConnection" : false},
         relations:{parentId:null,
@@ -61,6 +62,11 @@ var rGenerateTree = function(level,maxlevel,maxchildren){
         root,
         children;
     root = emptyObject();
+    objCounter += 1;
+
+    if (objCounter % 2 == 0) {
+        root.registry.decorator = "ModelWithAttributes";
+    }
     if(level === 0){
         root._id = "root";
     }

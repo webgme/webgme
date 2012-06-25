@@ -9,22 +9,6 @@ define(['order!jquery'], function () {
      * Disabling selection on element
      */
     $.fn.extend({
-        disableSelection : function () {
-            this.each(function () {
-                this.onselectstart = function () { return false; };
-                $(this).attr('unselectable', 'on');
-                $(this).css('-moz-user-select', 'none');
-                $(this).css('-webkit-user-select', 'none');
-                $(this).css('user-select', 'none');
-                $(this).css('-ms-user-select', 'none');
-            });
-        }
-    });
-
-    /*
-     * Disabling selection on element
-     */
-    $.fn.extend({
         editInPlace : function (editClass, successCallback) {
             this.each(function () {
                 var contentWidth = $(this).outerWidth(),
@@ -48,6 +32,10 @@ define(['order!jquery'], function () {
                             // simulate blur to accept new value
                             event.preventDefault();
                             $(this).blur();
+                            break;
+                        case 46:// DEL
+                            //don't need to handle it specially but need to prevent propagation
+                            event.stopPropagation();
                             break;
                         }
                     }
@@ -142,6 +130,20 @@ define(['order!jquery'], function () {
             css.media	= 'all';
             css.href	= filePath;
             document.getElementsByTagName("head")[0].appendChild(css);
+        },
+
+        /*
+         * HTML encodes a string
+         */
+        htmlEncode: function (value) {
+            return $('<div/>').text(value).html();
+        },
+
+        /*
+         * HTML decodes a string
+         */
+        htmlDecode: function (value) {
+            return $('<div/>').html(value).text();
         }
     };
 });

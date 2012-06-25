@@ -1,10 +1,10 @@
-div.modelEditorCanvasTitle {
+.modelEditorCanvas .modelEditorCanvasTitle {
     font-size: 16px;
     font-weight: bold;
     padding: 5px;
 }
 
-div.dragPosPanel {
+.modelEditorCanvas .children .dragPosPanel {
     font-size: 8px;
     font-weight:bold;
     font-family: Verdana;
@@ -20,14 +20,16 @@ div.dragPosPanel {
     z-index: 100000;
     text-align:center;
 }
-div.rubberBand {
+
+.modelEditorCanvas .children .rubberBand {
     background: rgba(219, 234, 252, 0.49);
     border: #52A8EC solid 1px;
     position: absolute;
     z-index: 100000;
 }
 
-div.children:focus
+/*DISABLE OUTER BORDER WHEN FOCUSED*/
+/*.modelEditorCanvas .children:focus
 {
     outline: none;
-}
+}*/

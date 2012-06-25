@@ -12,7 +12,7 @@
 define(['lib/jquery/jquery.jgrowl.min',
         'clientUtil'], function (myjgrowl, util) {
 
-    //load its own CSS file (css/ModelEditorSVGWidget.css)
+    //load its own CSS file
     util.loadCSS('css/jgrowl/jquery.jgrowl.css');
 
     var activeNotifications = {};

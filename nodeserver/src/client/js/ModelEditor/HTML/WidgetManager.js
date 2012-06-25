@@ -13,9 +13,7 @@ define(['logManager',
 
         project.addEventListener(project.events.SELECTEDOBJECT_CHANGED, function (project, nodeId) {
             var selectedNode = null,
-                skinPath = './js/ModelEditor/HTML/ModelEditorCanvasWidget2.js',
-                //skinPath = './js/WidgetAPI/ModelEditorCanvasWidget.js',
-                widgetContext;
+                skinPath = './js/ModelEditor/HTML/ModelEditorCanvasComponent.js';
 
             if (currentWidget) {
                 currentWidget.destroy();
@@ -26,13 +24,7 @@ define(['logManager',
             if (selectedNode) {
                 require([skinPath], function (SkinType) {
                     //TODO: figure out the concrete widget that should render that node
-                    widgetContext = { "isRoot": true };
                     currentWidget = new SkinType(nodeId, project);
-                    if (skinPath === './js/WidgetAPI/ModelEditorCanvasWidget.js') {
-                        currentWidget.project = project;
-                        currentWidget.initializeFromNode(selectedNode);
-                    }
-
                     containerElement.append(currentWidget.el);
                     currentWidget.addedToParent();
                 });

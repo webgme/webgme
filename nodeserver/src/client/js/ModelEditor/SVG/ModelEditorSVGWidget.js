@@ -80,7 +80,6 @@ define([    'clientUtil',
             "class": "modelEditorSVG",
             "tabindex": 0
         });
-        modelEditorE.disableSelection();
 
         //add control to parent
         containerControl.append(modelEditorE);

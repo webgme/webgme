@@ -32,14 +32,39 @@ define([], function () {
         currentLogLevel = logLevels.ERROR,
         useColors = false,
         excludedComponents = [],
-        Logger;
+        Logger,
+        isComponentAllowedToLog;
+
+    isComponentAllowedToLog = function (componentName) {
+        var i,
+            excludedComponentName;
+
+        for (i = 0; i < excludedComponents.length; i += 1) {
+            excludedComponentName = excludedComponents[i];
+
+            if (excludedComponentName.substr(-1) === "*") {
+                excludedComponentName = excludedComponentName.substring(0, excludedComponentName.length - 1);
+
+                if (componentName.substring(0, excludedComponentName.length) === excludedComponentName) {
+                    return false;
+                }
+            } else {
+                if (excludedComponentName === componentName) {
+                    return false;
+                }
+            }
+
+        }
+
+        return true;
+    };
 
     Logger = function (componentName) {
         var logMessage = function (level, msg) {
             var logTime = new Date(),
                 logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours(),
                 levelStr = level;
-            if (excludedComponents.indexOf(componentName) === -1) {
+            if (isComponentAllowedToLog(componentName) === true) {
                 if (currentLogLevel > logLevels.OFF) {
                     //log only what meets configuration
                     if (logLevels[level] <= currentLogLevel) {

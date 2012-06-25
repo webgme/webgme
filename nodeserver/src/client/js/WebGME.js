@@ -6,6 +6,7 @@ define([   'order!jquery',
     'order!underscore',
     'logManager',
     'commonUtil',
+    'clientUtil',
     'order!js/cli3nt',
     'order!js/ObjectBrowser/TreeBrowserControl',
     'order!js/ObjectBrowser/JSTreeBrowserWidget',
@@ -17,6 +18,7 @@ define([   'order!jquery',
                                                             underscore,
                                                             logManager,
                                                             commonUtil,
+                                                            util,
                                                             Client,
                                                             TreeBrowserControl,
                                                             JSTreeBrowserWidget,
@@ -30,6 +32,11 @@ define([   'order!jquery',
         logManager.excludeComponent("TreeBrowserControl");
         logManager.excludeComponent("JSTreeBrowserWidget");
         logManager.excludeComponent("Client");
+        logManager.excludeComponent("ModelEditorSVGWidget");
+        logManager.excludeComponent("ModelEditorControl");
+        logManager.excludeComponent("ModelEditorSVGConnection*");
+        //logManager.excludeComponent("ModelEditorCanvasComponent*");
+        //logManager.excludeComponent("ModelEditorModelComponent*");
     }
 
     var client,
@@ -40,7 +47,6 @@ define([   'order!jquery',
         doConnect,
         lastContainerWidth = 0,
         resizeMiddlePane;
-
 
     /*
      * Compute the size of the middle pane window based on current browser size
