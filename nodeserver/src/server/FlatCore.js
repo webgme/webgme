@@ -8,11 +8,11 @@ define(['CoreBuffer','./../common/CommonUtil'],function(CoreBuffer,commonUtil){
 
         var createNode = function (parent,base,newguid) {
             var node;
-            if(base){
+            if(base === null || base === undefined){
                 node = buffer.createEmptyNode(newguid);
             }
             else{
-                node = buffer.inheritNode(base[ID],newguid);
+                node = buffer.inheritNode(base[KEY],newguid);
             }
 
             if(parent){

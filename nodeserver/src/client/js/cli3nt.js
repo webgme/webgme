@@ -134,7 +134,6 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
             else{
                 logger.error("fraudulent child creation: "+JSON.stringify(parameters));
             }
-            self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"createChild",baseId:base,parentId:parent}]});
         };
         this.createSubType = function(parent,base){
             self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"createSubType",baseId:base,parentId:parent}]});
