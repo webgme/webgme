@@ -136,25 +136,26 @@ define(['./../common/CommonUtil'],function(commonUtil){
         var loadRoot = function(key,callback){
             ASSERT(typeof key === "string");
             ASSERT(callback);
-
-            if(objects[root] === undefined){
+            if(objects["root"] === undefined){
                 storage.getAll(function(err,items){
                     var i;
                     if(err){
                         callback(err,undefined);
                     }
                     else{
-                        objects = items;
                         states = {};
-                        for(i in objects){
-                            states[i] = "read";
+                        objects = {};
+                        for(i=0;i<items.length;i++){
+                            objects[items[i][KEY]] = items[i].object;
+                            states[items[i][KEY]] = "read";
                         }
+
                         callback(null,objects[key]);
                     }
                 });
             }
             else{
-                callback(null,objects["root"]);
+                callback(null,objects[key]);
             }
         };
 
@@ -442,7 +443,6 @@ define(['./../common/CommonUtil'],function(commonUtil){
             }
         };
         var setPointer = function(node,name,target){
-            console.log("kecso "+JSON.stringify(node)+"-"+name+"-"+JSON.stringify(target));
             ASSERT(node && name && target);
 
             if(node.pointers[name] === undefined){

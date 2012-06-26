@@ -69,6 +69,16 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
                 callback(err);
             });
         };
+        var opened = function(){
+            if(objects === null){
+                return false;
+            }
+            return true;
+        };
+        var close = function(){
+            /*TODO the opening closing functions should be implemented correctly*/
+            return;
+        };
 
         DB.open(function(){
             DB.collection(branch,function(err,result){
@@ -89,7 +99,9 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
             print     : print,
             save      : save,
             open      : open,
-            removeAll : removeAll
+            removeAll : removeAll,
+            opened    : opened,
+            close     : close
         };
     };
     return Storage;
