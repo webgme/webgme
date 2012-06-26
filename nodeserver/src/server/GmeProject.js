@@ -251,7 +251,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                         else{
                             toobject = CORE.copyNode(node,parent,null);
                             if(pastecommand.additional){
-                                copyid = CORE.getStringPath(node,root);
+                                copyid = CORE.getStringPath(node);
                                 if(pastecommand.additional[copyid]){
                                     if(pastecommand.additional[copyid].attributes){
                                         for(i in pastecommand.additional[copyid].attributes){
@@ -375,13 +375,13 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
 
             addToNewList = function(node){
                 var base = node,
-                    path = CORE.getStringPath(node,root);
+                    path = CORE.getStringPath(node);
 
                 while(base && commonUtil.insertIntoArray(newlist,path)){
                     extendedlist[path] = base;
                     base = CORE.getBase(node);
                     if(base){
-                        path = CORE.getStringPath(base,root);
+                        path = CORE.getStringPath(base);
                     }
                 }
             };
@@ -442,7 +442,7 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                             pointerCounted();
                         }
                         else{
-                            if(commonUtil.insertIntoArray(pathchain,CORE.getStringPath(node,root))){
+                            if(commonUtil.insertIntoArray(pathchain,CORE.getStringPath(node))){
                                 CORE.loadPointer(node,pointername,function(err,pointer){
                                     if(err){
                                         pointerCounted();

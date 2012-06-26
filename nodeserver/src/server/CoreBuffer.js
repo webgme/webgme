@@ -207,7 +207,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
         };
         var getStringPath = function (node, base) {
             ASSERT(isValid(node));
-            ASSERT(isValid(base));
+            ASSERT(base === undefined || isValid(base));
             return node[KEY];
         };
 
