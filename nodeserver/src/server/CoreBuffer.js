@@ -149,7 +149,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
                         for(i in objects){
                             states[i] = "read";
                         }
-                        callback(null,objects["root"]);
+                        callback(null,objects[key]);
                     }
                 });
             }

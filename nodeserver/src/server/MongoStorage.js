@@ -1,6 +1,6 @@
 define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
     var Storage = function(project,branch){
-        var objects,
+        var objects = null,
             DB = new MONGO.Db(project, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
 
         var get = function(id,cb){
@@ -54,6 +54,21 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
         var print = function(){
             /*TODO: should remove this function from storage API*/
         };
+        var open = function(callback){
+            if(objects === null){
+                setTimeout(function(){
+                    callback(null);
+                },2000);
+            }
+            else{
+                callback(null);
+            }
+        };
+        var removeAll = function(callback){
+            objects.remove(function(err){
+                callback(err);
+            });
+        };
 
         DB.open(function(){
             DB.collection(branch,function(err,result){
@@ -67,12 +82,14 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
         });
 
         return {
-            get:get,
-            getAll:getAll,
-            set:set,
-            del:del,
-            print:print,
-            save:save
+            get       : get,
+            getAll    : getAll,
+            set       : set,
+            del       : del,
+            print     : print,
+            save      : save,
+            open      : open,
+            removeAll : removeAll
         };
     };
     return Storage;
