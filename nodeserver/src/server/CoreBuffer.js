@@ -555,6 +555,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
                     error = err;
                 }
                 if(--count === 0){
+                    storage.save();
                     callback(error,persistinfo);
                 }
             };
