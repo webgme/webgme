@@ -62,28 +62,25 @@ define(['logManager',
     ModelEditorModelComponent.prototype._initializeDecorator = function () {
         var node = this.project.getNode(this.getId()),
             decoratorName = "",
-            customDecorator = node.getRegistry(nodeRegistryNames.decorator);
-
-        //TODO: delete
-        customDecorator = null;
-        //TODO: enddelete
+            customDecorator = node.getRegistry(nodeRegistryNames.decorator),
+            self = this;
 
         if (_.isString(customDecorator)) {
             //TODO: delete
-            customDecorator = "ModelWithPorts";
+            customDecorator = "ModelWithPortsDecorator";
             //TODO: enddelete
             decoratorName = './js/ModelEditor/HTML/' + customDecorator + '.js';
 
             require([ decoratorName ],
                 function (customDecoratorClass) {
-                    this.DecoratorClass = customDecoratorClass;
-                    this._initialize();
+                    self.DecoratorClass = customDecoratorClass;
+                    //self._initialize();
                     //TODO: fixme
                     //if the extra decorator code has to be downloaded,
                     //this.addedToParent called earlier
                     //than the whole class'es "initialize' has been called and
                     //"decoratorInstamce" would have a valid value
-                    this._repositionConnectionRect();
+                    //self._repositionConnectionRect();
                 });
 
         } else {
@@ -104,18 +101,9 @@ define(['logManager',
         //position self on parent canvas
         this._setPosition(nodePosition.x, nodePosition.y, false);
 
-        /* TODO: THIS SHOULD BE DONE BY THE DECORATOR!!!!! */
+        //instantiate the decorator class and let it render the content
         this.decoratorInstance = new this.DecoratorClass(this);
         this.decoratorInstance.render();
-        /*this.el.css("width", "100px");
-        this.el.css("height", "100px");
-        this.el.css("border", "1px solid #000000");
-
-        //apply content to controls
-        this.el.html(node.getAttribute(nodeAttributeNames.name));*/
-        /* TODO: END OF - THIS SHOULD BE DONE BY THE DECORATOR!!!!! */
-
-
     };
 
     ModelEditorModelComponent.prototype._addedToParent = function () {
@@ -211,12 +199,6 @@ define(['logManager',
         }
 
         this.logger.debug("Object position changed to [" + pX + ", " + pY + "]" + (updateDB === true ? ", new position is saved back to database" : ""));
-
-        /*if (decoratorInstance) {
-            if ($.isFunction(decoratorInstance.afterSetPosition)) {
-                decoratorInstance.afterSetPosition();
-            }
-        }*/
 
         //fix the connection rect around it
         this._repositionConnectionRect();
