@@ -296,7 +296,13 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(isValid(parent));
             ASSERT(isValid(child));
             child.relations.parentId = parent[KEY];
+            if(states[child[KEY]] === "read"){
+                states[child[KEY]] = "updated";
+            }
             if(commonUtil.insertIntoArray(parent.relations.childrenIds,child[KEY])){
+                if(states[parent[KEY]] === "read"){
+                    states[parent[KEY]] = "updated";
+                }
                 for(var i=0;i<parent.relations.inheritorIds.length;i++){
                     attachChild(objects[parent.relations.inheritorIds[i]],inheritNode(child[KEY]));
                 }
@@ -323,10 +329,16 @@ define(['./../common/CommonUtil'],function(commonUtil){
 
             if(states[node.relations.parentId] !== "deleted"){
                 commonUtil.removeFromArray(objects[node.relations.parentId].relations.childrenIds,node[KEY]);
+                if(states[node.relations.parentId] === "read"){
+                    states[node.relations.parentId] = "updated";
+                }
             }
 
             if(states[node.relations.baseId] !== "deleted"){
                 commonUtil.removeFromArray(objects[node.relations.baseId].relations.inheritorIds,node[KEY]);
+                if(states[node.relations.baseId] === "read"){
+                    states[node.relations.baseId] = "updated";
+                }
             }
 
             objects[node[KEY]] = null;
@@ -381,11 +393,13 @@ define(['./../common/CommonUtil'],function(commonUtil){
             /*pointers can be connected once every new node have been created*/
             for(i=0;i<subTreeIds.length;i++){
                 for(j in objects[subTreeIds[i]].pointers){
-                    if(subTreeIds.indexOf(objects[subTreeIds[i]].pointers[j].to) === -1){
-                        setPointer(objects[copyArray[subTreeIds[i]]],j,objects[subTreeIds[i]].pointers[j].to);
-                    }
-                    else{
-                        setPointer(objects[copyArray[subTreeIds[i]]],j,objects[copyArray[objects[subTreeIds[i]].pointers[j].to]]);
+                    if(objects[subTreeIds[i]].pointers[j].to !== null){
+                        if(subTreeIds.indexOf(objects[subTreeIds[i]].pointers[j].to) === -1){
+                            setPointer(objects[copyArray[subTreeIds[i]]],j,objects[subTreeIds[i]].pointers[j].to);
+                        }
+                        else{
+                            setPointer(objects[copyArray[subTreeIds[i]]],j,objects[copyArray[objects[subTreeIds[i]].pointers[j].to]]);
+                        }
                     }
                 }
             }
@@ -415,10 +429,20 @@ define(['./../common/CommonUtil'],function(commonUtil){
             if(node.pointers[name]){
                 if(node.pointers[name].to){
                     commonUtil.removeFromArray(objects[node.pointers[name].to].pointers[name].from,node[KEY]);
+                    if(states[node[KEY]] === "read"){
+                        states[node[KEY]] = "updated";
+                    }
+
+                    if(states[node.pointers[name].to] === "read"){
+                        states[node.pointers[name].to] = "updated";
+                    }
+
+                    node.pointers[name].to = null;
                 }
             }
         };
         var setPointer = function(node,name,target){
+            console.log("kecso "+JSON.stringify(node)+"-"+name+"-"+JSON.stringify(target));
             ASSERT(node && name && target);
 
             if(node.pointers[name] === undefined){
@@ -432,6 +456,15 @@ define(['./../common/CommonUtil'],function(commonUtil){
 
             node.pointers[name].to = target[KEY];
             commonUtil.insertIntoArray(target.pointers[name].from,node[KEY]);
+
+            if(states[node[KEY]] === "read"){
+                states[node[KEY]] = "updated";
+            }
+
+            if(states[target[KEY]] === "read"){
+                states[target[KEY]] = "updated";
+            }
+
         };
 
         var getProperty = function(node,basename,name){
@@ -462,7 +495,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
             ASSERT(typeof basename === "string");
             ASSERT(typeof name === "string");
             ASSERT(states[node[KEY]] !== "deleted");
-            ASSERT(value);
+            ASSERT(value !== undefined);
 
 
             if(node[basename] === undefined){
@@ -500,10 +533,10 @@ define(['./../common/CommonUtil'],function(commonUtil){
             return getProperty(node,"attributes",name);
         };
         var setAttribute = function(node,name,value){
-            setProperty(node,"attribute",name,value);
+            setProperty(node,"attributes",name,value);
         };
         var delAttribute = function(node,name){
-            delProperty(node,"attribute",name);
+            delProperty(node,"attributes",name);
         };
 
         var persist = function(node,callback){
@@ -528,14 +561,29 @@ define(['./../common/CommonUtil'],function(commonUtil){
             for(i in states){
                 if(states[i] !== "read"){
                     persistinfo[i] = {info:states[i],object:objects[i]};
+                    if(states[i] === "deleted"){
+                     savequeue.push(i);   
+                    }
+                    else{
+                        savequeue.push(objects[i]);
+                    }
                     states[i] = "read";
-                    savequeue.push(objects[i]);
                 }
             }
 
             count = savequeue.length;
-            for(i=0;i<savequeue.length;i++){
-                storage.set(savequeue[i][KEY],savequeue[i],objectSaved);
+            if(count === 0){
+                callback(null,{});
+            }
+            else{
+                for(i=0;i<savequeue.length;i++){
+                    if(typeof savequeue[i] === "string"){
+                        storage.set(savequeue[i],null,objectSaved);
+                    }
+                    else{
+                        storage.set(savequeue[i][KEY],savequeue[i],objectSaved);
+                    }
+                }
             }
         };
 
@@ -584,7 +632,8 @@ define(['./../common/CommonUtil'],function(commonUtil){
             getBase           : getBase,
             getStringPath     : getStringPath,
             flushTree         : flushTree,
-            removeNode        : removeNode
+            removeNode        : removeNode,
+            copyNode          : copyNode
         }
     };
     return Buffer;
