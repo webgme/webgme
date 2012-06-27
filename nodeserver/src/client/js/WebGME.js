@@ -35,8 +35,10 @@ define([   'order!jquery',
         logManager.excludeComponent("ModelEditorSVGWidget");
         logManager.excludeComponent("ModelEditorControl");
         logManager.excludeComponent("ModelEditorSVGConnection*");
-        //logManager.excludeComponent("ModelEditorCanvasComponent*");
-        //logManager.excludeComponent("ModelEditorModelComponent*");
+        logManager.excludeComponent("ModelEditorCanvasComponent*");
+        logManager.excludeComponent("ModelEditorModelComponent*");
+        logManager.excludeComponent("ModelEditorConnectionComponent*");
+        logManager.excludeComponent("Port*");
     }
 
     var client,

@@ -12,11 +12,13 @@ define(['logManager',
     'commonUtil',
     'nodeAttributeNames',
     'nodeRegistryNames',
+    'bezierHelper',
     './ComponentBase.js' ], function (logManager,
              util,
              commonUtil,
              nodeAttributeNames,
              nodeRegistryNames,
+             bezierHelper,
              ComponentBase) {
 
     var ModelEditorConnectionComponent;
@@ -87,6 +89,14 @@ define(['logManager',
 
         this.pathAttributes.color = "#000000";
         this.pathAttributes.width = "2";
+
+        //TODO: figure out something here....
+        //in Safari and FireFox setting the arrow-end and arrow-start makes the drawing of the path so sloooooooooooow.....
+        this.skinParts.path.attr({ /*"arrow-start": this.pathAttributes.arrowStart,
+                                    "arrow-end": this.pathAttributes.arrowEnd,*/
+                                    "stroke": this.pathAttributes.color,
+                                    "fill": "none",
+                                    "stroke-width": this.pathAttributes.width });
     };
 
     ModelEditorConnectionComponent.prototype._addedToParent = function () {
@@ -116,8 +126,31 @@ define(['logManager',
         this.redrawConnection();
     };
 
-    ModelEditorConnectionComponent.prototype.redrawConnection = function (sourceCoordinates, targetCoordinates) {
-        this.skinParts.path.attr({ "path": "M" + sourceCoordinates.x + "," + sourceCoordinates.y + "L" + targetCoordinates.x + "," + targetCoordinates.y});
+    ModelEditorConnectionComponent.prototype.redrawConnection = function (srcCoordinates, tgtCoordinates) {
+        var cX,
+            cY,
+            cW,
+            cH,
+            pathDef,
+            bezierControlPoints;
+
+        bezierControlPoints = bezierHelper.getBezierControlPoints2(srcCoordinates, tgtCoordinates);
+
+        //TODO: do we really need the DIV over the path?
+        cX = Math.min(bezierControlPoints[0].x, bezierControlPoints[3].x);
+        cY = Math.min(bezierControlPoints[0].y, bezierControlPoints[3].y);
+        cW = Math.abs(bezierControlPoints[0].x - bezierControlPoints[3].x);
+        cH = Math.abs(bezierControlPoints[0].y - bezierControlPoints[3].y);
+
+        this.el.css({"left": cX - this.borderW,
+                        "top": cY - this.borderW });
+        this.el.outerWidth(cW + 2 * this.borderW).outerHeight(cH + 2 * this.borderW);
+
+        //build up path from points
+        pathDef = ["M", bezierControlPoints[0].x, bezierControlPoints[0].y, "C", bezierControlPoints[1].x, bezierControlPoints[1].y, bezierControlPoints[2].x, bezierControlPoints[2].y, bezierControlPoints[3].x, bezierControlPoints[3].y].join(",");
+
+        //set new path definition
+        this.skinParts.path.attr({ "path": pathDef});
     };
 
     return ModelEditorConnectionComponent;

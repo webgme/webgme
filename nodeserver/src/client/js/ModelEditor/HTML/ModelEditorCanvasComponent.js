@@ -8,7 +8,8 @@ define(['logManager',
         'nodeRegistryNames',
         './ComponentBase.js',
         './ModelEditorModelComponent.js',
-        './ModelEditorConnectionComponent.js'
+        './ModelEditorConnectionComponent.js',
+        'css!ModelEditorHTMLCSS/ModelEditorCanvasComponent'
         ], function (logManager,
                      util,
                      commonUtil,
@@ -21,9 +22,6 @@ define(['logManager',
 
     var ModelEditorCanvasComponent,
         baseIdNames = { "connection": "connection" };
-
-    //load its own CSS file
-    util.loadCSS('css/ModelEditor/ModelEditorCanvasComponent.css');
 
     ModelEditorCanvasComponent = function (id, proj) {
         $.extend(this, new ComponentBase(id, proj));
@@ -117,7 +115,7 @@ define(['logManager',
         this.skinParts.rubberBand.hide();
 
         //apply content to controls
-        this.skinParts.title.html(node.getAttribute(nodeAttributeNames.name));
+        this.skinParts.title.text(node.getAttribute(nodeAttributeNames.name));
 
         //specify territory
         this.selfPatterns[this.getId()] = { "children": 1};
@@ -151,16 +149,25 @@ define(['logManager',
         for (i = 0; i < this.childrenIds.length; i += 1) {
             self._createChildComponent(this.childrenIds[i]);
         }
-
-        this._refreshAllDisplayedComponentConnections();
     };
 
     ModelEditorCanvasComponent.prototype.childBBoxChanged = function (childComponentId) {
+        var affectedConnectionEndPoints = [],
+            subComponentId;
+
         //check children's X;Y position based on this parent's layout settings
         this._positionChildOnCanvas(childComponentId);
 
         //redraw affected connections
-        this._updateConnectionsWithEndPoint(childComponentId);
+        affectedConnectionEndPoints.push(childComponentId);
+        for (subComponentId in this.displayedComponentIDs) {
+            if (this.displayedComponentIDs.hasOwnProperty(subComponentId)) {
+                if (this.displayedComponentIDs[subComponentId] === childComponentId) {
+                    affectedConnectionEndPoints.push(subComponentId);
+                }
+            }
+        }
+        this._updateConnectionsWithEndPoint(affectedConnectionEndPoints);
 
         //check if current children container's width and height are big enough to contain the children
         this._adjustChildrenContainerSize(childComponentId);
@@ -213,6 +220,8 @@ define(['logManager',
                         //connections will be created when the end-objects appear on the canvas
                         this.connectionList[childId] = { "sourceId": childNode.getPointer("source").to,
                             "targetId": childNode.getPointer("target").to };
+
+                        this._updateConnectionsWithEndPoint([this.connectionList[childId].sourceId]);
                     } else {
                         childComponent = new ModelEditorModelComponent(childId, this.project);
                         if (childComponent) {
@@ -271,7 +280,7 @@ define(['logManager',
      * Called when the currently opened model has been deleted
      */
     ModelEditorCanvasComponent.prototype._unload = function () {
-        this.skinParts.title.html("The previously edited model has been deleted...");
+        this.skinParts.title.text("The previously edited model has been deleted...");
     };
 
     ModelEditorCanvasComponent.prototype._update = function (eventType, objectId) {
@@ -504,7 +513,7 @@ define(['logManager',
         this.dragOptions.selectionBBox.w = this.dragOptions.selectionBBox.x2 - this.dragOptions.selectionBBox.x;
         this.dragOptions.selectionBBox.h = this.dragOptions.selectionBBox.y2 - this.dragOptions.selectionBBox.y;
 
-        this.skinParts.dragPosPanel.html("X: " + this.dragOptions.selectionBBox.x + " Y: " + this.dragOptions.selectionBBox.y);
+        this.skinParts.dragPosPanel.text("X: " + this.dragOptions.selectionBBox.x + " Y: " + this.dragOptions.selectionBBox.y);
         this.skinParts.dragPosPanel.css({ "left": this.dragOptions.selectionBBox.x + (this.dragOptions.selectionBBox.w - this.skinParts.dragPosPanel.outerWidth()) / 2,
                                             "top": this.dragOptions.selectionBBox.y + this.dragOptions.selectionBBox.h + 10 });
         this.skinParts.dragPosPanel.show();
@@ -564,7 +573,9 @@ define(['logManager',
             i,
             id,
             childPosX,
-            childPosY;
+            childPosY,
+            affectedConnectionEndPoints = [],
+            subComponentId;
 
         if ((dX !== this.dragOptions.delta.x) || (dY !== this.dragOptions.delta.y)) {
 
@@ -613,7 +624,17 @@ define(['logManager',
             //redraw all the connections that are affected by the dragged objects
             // when necessary, because in copy mode, no need to redraw the connections
             if (this.dragOptions.mode === this.dragModes.reposition) {
-                this._updateConnectionsWithEndPoint(this.selectedComponentIds);
+                for (i = 0; i < this.selectedComponentIds.length; i += 1) {
+                    affectedConnectionEndPoints.push(this.selectedComponentIds[i]);
+                    for (subComponentId in this.displayedComponentIDs) {
+                        if (this.displayedComponentIDs.hasOwnProperty(subComponentId)) {
+                            if (this.displayedComponentIDs[subComponentId] === this.selectedComponentIds[i]) {
+                                affectedConnectionEndPoints.push(subComponentId);
+                            }
+                        }
+                    }
+                }
+                this._updateConnectionsWithEndPoint(affectedConnectionEndPoints);
             }
 
             this.dragOptions.delta = {"x": dX, "y": dY};
@@ -749,11 +770,57 @@ define(['logManager',
     };
 
     ModelEditorCanvasComponent.prototype._drawConnectionTo = function (toPosition) {
-        var srcBBox = this.childComponents[this.connectionInDraw.source].getBoundingBox(),
-            pathDefinition = "M" + (srcBBox.x + srcBBox.width / 2) + "," + (srcBBox.y + srcBBox.height / 2) + "L" + toPosition.x + "," + toPosition.y;
+        var srcConnectionPoints,
+            pathDefinition,
+            sourceId = this.connectionInDraw.source,
+            closestConnPoints;
+
+        if (this.childComponents[sourceId]) {
+            srcConnectionPoints = this.childComponents[sourceId].getConnectionPoints();
+        } else if (this.displayedComponentIDs[sourceId]) {
+            srcConnectionPoints = this.childComponents[this.displayedComponentIDs[sourceId]].getConnectionPointsById(sourceId);
+        }
+
+        closestConnPoints = this._getClosestPoints(srcConnectionPoints, [toPosition]);
+        srcConnectionPoints = srcConnectionPoints[closestConnPoints[0]];
+
+        pathDefinition = "M" + srcConnectionPoints.x + "," + srcConnectionPoints.y + "L" + toPosition.x + "," + toPosition.y;
 
         this.connectionInDraw.path.attr({ "path": pathDefinition});
+    };
 
+    //figure out the shortest side to choose between the two
+    ModelEditorCanvasComponent.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints) {
+        var d = {},
+            dis = [],
+            i,
+            j,
+            dx,
+            dy,
+            result = [];
+
+        for (i = 0; i < srcConnectionPoints.length; i += 1) {
+            if (srcConnectionPoints.hasOwnProperty(i)) {
+                for (j = 0; j < tgtConnectionPoints.length; j += 1) {
+                    if (tgtConnectionPoints.hasOwnProperty(j)) {
+                        dx = Math.abs(srcConnectionPoints[i].x - tgtConnectionPoints[j].x);
+                        dy = Math.abs(srcConnectionPoints[i].y - tgtConnectionPoints[j].y);
+
+                        if (dis.indexOf(dy + dy) === -1) {
+                            dis.push(dx + dy);
+                            d[dis[dis.length - 1]] = [i, j];
+                        }
+                    }
+                }
+            }
+
+        }
+
+        if (dis.length !== 0) {
+            result = d[Math.min.apply(Math, dis)];
+        }
+
+        return result;
     };
 
     ModelEditorCanvasComponent.prototype.endDrawConnection = function () {
@@ -769,33 +836,31 @@ define(['logManager',
             "directed": true });
     };
 
-    ModelEditorCanvasComponent.prototype.registerSubcomponent = function (list) {
+    ModelEditorCanvasComponent.prototype.registerSubcomponents = function (list) {
         var i,
             registeredIds = [];
 
         for (i in list) {
             if (list.hasOwnProperty(i)) {
-                if (i.componentId && i.ownerComponentId) {
-                    this.displayedComponentIDs[i.componentId] = i.ownerComponentId;
-                    registeredIds.push(i.componentId);
-                }
+                this.displayedComponentIDs[i] = list[i];
+                registeredIds.push(i);
             }
         }
 
         if (registeredIds.length > 0) {
-            this._updateConnectionsWithEndPoint(registeredIds, true);
+            this._updateConnectionsWithEndPoint(registeredIds);
         }
     };
 
-    ModelEditorCanvasComponent.prototype.unregisterSubcomponent = function (list) {
+    ModelEditorCanvasComponent.prototype.unregisterSubcomponents = function (list) {
         var i,
             unregisteredIds = [];
 
         for (i in list) {
             if (list.hasOwnProperty(i)) {
-                if (this.displayedComponentIDs.hasOwnProperty(i.componentId)) {
-                    delete this.displayedComponentIDs[i.componentId];
-                    unregisteredIds.push(i.componentId);
+                if (this.displayedComponentIDs.hasOwnProperty(i)) {
+                    delete this.displayedComponentIDs[i];
+                    unregisteredIds.push(i);
                 }
             }
         }
@@ -814,7 +879,8 @@ define(['logManager',
             sourceConnectionPoints,
             targetConnectionPoints,
             sourceCoordinates,
-            targetCoordinates;
+            targetCoordinates,
+            closestConnPoints;
 
         for (i in this.connectionList) {
             if (this.connectionList.hasOwnProperty(i)) {
@@ -844,7 +910,6 @@ define(['logManager',
                 }
 
                 //find the source end end coordinates and pass it to the connection
-                //TODO: get the available connection points
                 if (this.childComponents[sourceId]) {
                     sourceConnectionPoints = this.childComponents[sourceId].getConnectionPoints();
                 } else {
@@ -857,12 +922,10 @@ define(['logManager',
                     targetConnectionPoints = this.childComponents[this.displayedComponentIDs[targetId]].getConnectionPointsById(targetId);
                 }
 
-                if (sourceConnectionPoints.length > 0) {
-                    sourceCoordinates = sourceConnectionPoints[0];
-                }
-
-                if (targetConnectionPoints.length > 0) {
-                    targetCoordinates = targetConnectionPoints[0];
+                if ((sourceConnectionPoints.length > 0) && (targetConnectionPoints.length > 0)) {
+                    closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints);
+                    sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
+                    targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
                 }
 
                 this.childComponents[connectionId].redrawConnection(sourceCoordinates, targetCoordinates);

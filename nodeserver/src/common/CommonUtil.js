@@ -91,7 +91,7 @@ define([], function () {
             ServerPort: 8081,
             ProjectIP: "self",
             ProjectPort: 8082,
-            ProjectName: "debug",
+            ProjectName: "testp",
             BranchName: "basic"
         },
         assert : function (cond) {

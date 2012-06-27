@@ -7,6 +7,7 @@ define([], function () {
     var BezierHelper;
 
     BezierHelper = {
+        //SVG canvas uses this...
         getBezierControlPoints : function (boundingBox1, boundingBox2) {
             var bb1 = { x: boundingBox1.x,
                     y: boundingBox1.y,
@@ -95,12 +96,25 @@ define([], function () {
             return result;
         },
 
-        getBezierControlPoints2 : function (pointA, pointB, sideDescriptor) {
+        getBezierControlPoints2 : function (pointA, pointB) {
             var dx,
                 dy,
                 x = [],
                 y = [],
-                result = [];
+                result = [],
+                sideDescriptor = [];
+
+            if (pointA.dir === "N") { sideDescriptor.push(0); }
+            if (pointA.dir === "S") { sideDescriptor.push(1); }
+            if (pointA.dir === "W") { sideDescriptor.push(2); }
+            if (pointA.dir === "E") { sideDescriptor.push(3); }
+            if (pointA.dir === "X") { sideDescriptor.push(3); }
+
+            if (pointB.dir === "N") { sideDescriptor.push(0); }
+            if (pointB.dir === "S") { sideDescriptor.push(1); }
+            if (pointB.dir === "W") { sideDescriptor.push(2); }
+            if (pointB.dir === "E") { sideDescriptor.push(3); }
+            if (pointB.dir === "X") { sideDescriptor.push(3); }
 
             if ((pointA.x === pointB.x) && (pointA.y === pointB.y)) {
                 //when the source and target of the connection is the same

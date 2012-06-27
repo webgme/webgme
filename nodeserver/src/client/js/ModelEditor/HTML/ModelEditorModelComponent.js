@@ -37,6 +37,10 @@ define(['logManager',
             //remove extra connection rectangle from DOM
             this.skinParts.connectionRect.remove();
 
+            if (this.decoratorInstance) {
+                this.decoratorInstance.destroy();
+            }
+
             this.project.updateTerritory(this.territoryId, []);
 
             this.logger.debug("onDestroy");
@@ -56,7 +60,21 @@ define(['logManager',
         this.decoratorInstance = null;
         this.DecoratorClass = SimpleModelDecorator;
 
-        this._initializeDecorator();
+        this._initialize();
+    };
+
+    ModelEditorModelComponent.prototype._initialize = function () {
+        var node = this.project.getNode(this.getId()),
+            nodePosition = node.getRegistry(nodeRegistryNames.position);
+
+        //generate skin controls
+        this.el.addClass("model");
+
+        this.el.css("z-index", this.zIndex);
+        this.el.css("position", "absolute");
+
+        //position self on parent canvas
+        this._setPosition(nodePosition.x, nodePosition.y, false);
     };
 
     ModelEditorModelComponent.prototype._initializeDecorator = function () {
@@ -74,36 +92,15 @@ define(['logManager',
             require([ decoratorName ],
                 function (customDecoratorClass) {
                     self.DecoratorClass = customDecoratorClass;
-                    //self._initialize();
-                    //TODO: fixme
-                    //if the extra decorator code has to be downloaded,
-                    //this.addedToParent called earlier
-                    //than the whole class'es "initialize' has been called and
-                    //"decoratorInstamce" would have a valid value
-                    //self._repositionConnectionRect();
+                    self.decoratorInstance = new self.DecoratorClass(self);
+                    self.decoratorInstance.render();
                 });
 
         } else {
-            this._initialize();
+            //instantiate the decorator class and let it render the content
+            this.decoratorInstance = new this.DecoratorClass(this);
+            this.decoratorInstance.render();
         }
-    };
-
-    ModelEditorModelComponent.prototype._initialize = function () {
-        var node = this.project.getNode(this.getId()),
-            nodePosition = node.getRegistry(nodeRegistryNames.position);
-
-        //generate skin controls
-        this.el.addClass("model");
-
-        this.el.css("z-index", this.zIndex);
-        this.el.css("position", "absolute");
-
-        //position self on parent canvas
-        this._setPosition(nodePosition.x, nodePosition.y, false);
-
-        //instantiate the decorator class and let it render the content
-        this.decoratorInstance = new this.DecoratorClass(this);
-        this.decoratorInstance.render();
     };
 
     ModelEditorModelComponent.prototype._addedToParent = function () {
@@ -129,17 +126,17 @@ define(['logManager',
                 left: 0,
                 top: 0
             },
-            start: function (event, ui) {
+            start: function (event) {
                 self.skinParts.connectionRect.addClass("connection-source");
                 self.parentComponent.startDrawConnection(selfId);
                 event.stopPropagation();
             },
-            stop: function (event, ui) {
+            stop: function (event) {
                 self.skinParts.connectionRect.removeClass("connection-source");
                 self.parentComponent.endDrawConnection();
                 event.stopPropagation();
             },
-            drag: function (event, ui) {
+            drag: function (event) {
                 self.parentComponent.onDrawConnection(event);
             }
         });
@@ -162,7 +159,9 @@ define(['logManager',
 
         this._repositionConnectionRect();
 
-        this._notifyParentAboutBBoxChanged();
+        this._notifyParentAboutBBoxChange();
+
+        this._initializeDecorator();
     };
 
     ModelEditorModelComponent.prototype._repositionConnectionRect = function () {
@@ -188,8 +187,6 @@ define(['logManager',
     };
 
     ModelEditorModelComponent.prototype._setPosition = function (pX, pY, updateDB) {
-        var node = this.project.getNode(this.getId());
-
         //if position is different than the given one
         this.el.css({   "left": pX,
                         "top": pY });
@@ -214,12 +211,14 @@ define(['logManager',
 
         this._setPosition(nodePosition.x, nodePosition.y, false);
 
-        this.decoratorInstance.update.call(this.decoratorInstance);
+        if (this.decoratorInstance) {
+            this.decoratorInstance.update.call(this.decoratorInstance);
+        }
 
-        this._notifyParentAboutBBoxChanged();
+        this._notifyParentAboutBBoxChange();
     };
 
-    ModelEditorModelComponent.prototype._notifyParentAboutBBoxChanged = function () {
+    ModelEditorModelComponent.prototype._notifyParentAboutBBoxChange = function () {
         if (this.parentComponent) {
             this.parentComponent.childBBoxChanged.call(this.parentComponent, this.getId());
         }
@@ -229,24 +228,63 @@ define(['logManager',
         var bBox = this.getBoundingBox(),
             result = [];
 
-        /*if (decoratorInstance) {
-            if ($.isFunction(decoratorInstance.getConnectionPoints)) {
-                return decoratorInstance.getConnectionPoints();
+        if (this.decoratorInstance) {
+            if ($.isFunction(this.decoratorInstance.getConnectionPoints)) {
+                return this.decoratorInstance.getConnectionPoints();
             }
-        }*/
+        }
 
-        /*result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height});
+        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height});
         result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y});
         result.push({ "dir": "E", x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2});
-        result.push({ "dir": "W", x: bBox.x, y: bBox.y + bBox.height / 2});*/
+        result.push({ "dir": "W", x: bBox.x, y: bBox.y + bBox.height / 2});
 
-        result.push({ "dir": "X", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height / 2});
+        return result;
+    };
+
+    ModelEditorModelComponent.prototype.getConnectionPointsById = function (sourceId) {
+        var result = [],
+            i,
+            bBox = this.getBoundingBox();
+
+        if (this.decoratorInstance) {
+            result = this.decoratorInstance.getConnectionPointsById.call(this.decoratorInstance, sourceId);
+
+            for (i = 0; i < result.length; i += 1) {
+                result[i].x += bBox.x;
+                result[i].y += bBox.y;
+            }
+        }
 
         return result;
     };
 
     ModelEditorModelComponent.prototype.decoratorUpdated = function () {
-        this._notifyParentAboutBBoxChanged();
+        this._repositionConnectionRect();
+        this._notifyParentAboutBBoxChange();
+    };
+
+
+    ModelEditorModelComponent.prototype.registerSubcomponents = function (subComponentIds) {
+        var list = {},
+            i;
+
+        for (i = 0; i < subComponentIds.length; i += 1) {
+            list[subComponentIds[i]] = this.getId();
+        }
+
+        this.parentComponent.registerSubcomponents(list);
+    };
+
+    ModelEditorModelComponent.prototype.unregisterSubcomponents = function (subComponentIds) {
+        var list = {},
+            i;
+
+        for (i = 0; i < subComponentIds.length; i += 1) {
+            list[subComponentIds[i]] = this.getId();
+        }
+
+        this.parentComponent.unregisterSubcomponents(list);
     };
 
     return ModelEditorModelComponent;

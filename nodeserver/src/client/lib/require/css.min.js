@@ -1,0 +1,6 @@
+/**
+ * @license RequireCSS 0.3.1 Copyright (c) 2011, VIISON All Rights Reserved.
+ * Available via the MIT or new BSD license.
+ * see: http://github.com/VIISON/RequireCSS for details
+ */
+(function(){function e(b){var c=a.createElement("link");return c.rel="stylesheet",c.type="text/css",c.href=b,c}function f(b){var c;d.href=b;for(c in a.styleSheets)if(a.styleSheets[c].href===d.href)return!0;return!1}function g(a,c){var d=e(a);d.onload=function(){c()},b.appendChild(d)}function h(c,d){var g=e(c),h=a.createElement("script");b.appendChild(g),h.onload=h.onerror=function(){b.removeChild(h);var a=function(){if(f(c)){d();return}setTimeout(a,25)};a()},h.src=c,b.appendChild(h)}function i(a,b){c?g(a,b):h(a,b)}"use strict";var a=document,b=a.head||a.getElementsByTagName("head")[0],c=a.createElement("link").onload===null?undefined:!1,d=a.createElement("a");define(function(){var a;return a={version:"0.3.1",load:function(a,d,f){var g=d.toUrl(a.search(/\.(css|less|scss)$/i)===-1?a+".css":a);if(c===undefined){var h=e("data:text/css,");h.onload=function(){c=!0},b.appendChild(h),setTimeout(function(){b.removeChild(h),c!==!0&&(c=!1),i(g,f)},0)}else i(g,f)}},a})})()

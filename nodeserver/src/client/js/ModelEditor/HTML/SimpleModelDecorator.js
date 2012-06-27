@@ -3,15 +3,13 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
-    'nodeAttributeNames'], function (logManager,
+    'nodeAttributeNames',
+    'css!ModelEditorHTMLCSS/SimpleModelDecorator'], function (logManager,
              util,
              commonUtil,
              nodeAttributeNames) {
 
     var SimpleModelDecorator;
-
-    //load its own CSS file
-    util.loadCSS('css/ModelEditor/SimpleModelDecorator.css');
 
     SimpleModelDecorator = function (ownerComponent) {
         this.project = ownerComponent.project;
@@ -25,8 +23,7 @@ define(['logManager',
     };
 
     SimpleModelDecorator.prototype.render = function () {
-        var node = this.project.getNode(this.id),
-            self = this;
+        var node = this.project.getNode(this.id);
 
         this.parentContainer.addClass("modelBasic");
 
@@ -38,7 +35,7 @@ define(['logManager',
         //apply content to controls
         this.skinParts.title.text(node.getAttribute(nodeAttributeNames.name));
 
-        setTimeout(function () {self._updateModelComponent(); }, 10);
+        this._updateModelComponent();
     };
 
     SimpleModelDecorator.prototype.update = function () {
@@ -51,6 +48,10 @@ define(['logManager',
 
     SimpleModelDecorator.prototype._updateModelComponent = function () {
         this.ownerComponent.decoratorUpdated();
+    };
+
+    SimpleModelDecorator.prototype.destroy = function () {
+        this.logger.debug("Destroyed");
     };
 
     return SimpleModelDecorator;
