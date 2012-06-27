@@ -55,7 +55,8 @@ define(['CoreBuffer','./../common/CommonUtil'],function(CoreBuffer,commonUtil){
             deletePointer     : buffer.deletePointer,
             setPointer        : buffer.setPointer,
             dumpTree          : buffer.dumpTree,
-            flushTree         : buffer.flushTree
+            flushTree         : buffer.flushTree,
+            getLevel          : buffer.getLevel
         };
     };
 

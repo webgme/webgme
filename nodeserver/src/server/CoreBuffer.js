@@ -603,6 +603,16 @@ define(['./../common/CommonUtil'],function(commonUtil){
             loadqueue = {};
         };
 
+        var getLevel = function(node){
+            var level=0,
+                obj = node;
+            while(obj.relations.parentId != null){
+                obj = objects[obj.relations.parentId];
+                level++;
+            }
+            return level;
+        };
+
         return{
             getKey            : getKey,
             getRegistry       : getRegistry,
@@ -632,7 +642,8 @@ define(['./../common/CommonUtil'],function(commonUtil){
             getStringPath     : getStringPath,
             flushTree         : flushTree,
             removeNode        : removeNode,
-            copyNode          : copyNode
+            copyNode          : copyNode,
+            getLevel          : getLevel
         }
     };
     return Buffer;

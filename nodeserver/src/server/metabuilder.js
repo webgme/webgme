@@ -337,10 +337,11 @@ define([ "./../common/CommonUtil", "FlatCore", "util", "config" ], function (com
 
 					if( core.getLevel(node) === 1 && tag !== "paradigm" ) {
 						console.log("Not a meta paradigm");
-						return;
+						process.exit(0);
 					}
-
-					parseXmlNode(node, callback2);
+                    else{
+					    parseXmlNode(node, callback2);
+                    }
 				}, function (node, callback2) {
 					callback2(null);
 				}, function (err2) {
