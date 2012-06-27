@@ -16,7 +16,7 @@ define(['fs','./../common/CommonUtil'],function(FS,commonUtil){
         };
         var getAll = function(cb){
             setTimeout(function(){
-                cb(null,COPY(objects));
+                cb(null,objects);
             },1);
         };
         var set = function(id,object,cb){

@@ -1,4 +1,5 @@
 define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
+    var KEY ="_id";
     var Storage = function(project,branch){
         var objects = null,
             DB = new MONGO.Db(project, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
@@ -21,7 +22,13 @@ define(['mongodb','./../common/CommonUtil'],function(MONGO,commonUtil){
         var getAll = function(cb){
             if(objects){
                 objects.find().toArray(function(err, items) {
-                    cb(err,items);
+                    var i,
+                        retval;
+                    retval={};
+                    for(i=0;i<items.length;i++){
+                        retval[items[i][KEY]] = items[i].object;
+                    }
+                    cb(err,retval);
                 });
             }
             else{

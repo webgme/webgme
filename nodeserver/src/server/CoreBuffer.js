@@ -144,12 +144,10 @@ define(['./../common/CommonUtil'],function(commonUtil){
                     }
                     else{
                         states = {};
-                        objects = {};
-                        for(i=0;i<items.length;i++){
-                            objects[items[i][KEY]] = items[i].object;
-                            states[items[i][KEY]] = "read";
+                        objects = items;
+                        for(i in objects){
+                            states[i] = "read";
                         }
-
                         callback(null,objects[key]);
                     }
                 });
@@ -176,7 +174,7 @@ define(['./../common/CommonUtil'],function(commonUtil){
         };
 
         var loadByPath = function(stringpath,callback){
-            ASSERT(objects['root']);
+            //ASSERT(objects['root']);
             ASSERT(stringpath && callback);
 
             callback(null,objects[stringpath]);
