@@ -17,9 +17,37 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
     var inComment = false;
     var inAuthor = false;
     var registry = null;
-    var regLevel = 0;
+    var inRegistry = false;
+    var inValue = false;
+    var currentreg = null;
+    var regpath = [];
     var connPoints = [];
+    var OBJBASE = null;
+    var CONNBASE = null;
 
+    var rPrintReg = function(node){
+        CORE.loadChildren(node,function(err,children){
+            if(err){
+                console.log("bugl32");
+            }
+            else{
+                var i;
+                for(i=0;i<children.length;i++){
+                    rPrintReg(children[i]);
+                }
+            }
+        })
+    };
+    var printRegistries = function(){
+        CORE.loadRoot("root",function(err,root){
+            if(err){
+                console.log("bugl31");
+            }
+            else{
+                rPrintReg(root);
+            }
+        });
+    }
     saxStream.on("error", function (e) {
         // unhandled errors will throw, since this is a proper node
         // event emitter.
@@ -30,22 +58,29 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
     });
     saxStream.on("opentag", function (node) {
         var i;
-        var newNode = function(id){
+        var newNode = function(id,base){
             var i;
-            currentNode = CORE.createNode(currentNode,null,id);
+            currentNode = CORE.createNode(currentNode,base,id);
             CORE.setAttribute(currentNode,"name","noname");
             for(i in node.attributes){
                 CORE.setAttribute(currentNode,i,node.attributes[i]);
             }
+            registry = {"emptycounter":0};
+            reglevel = 0;
+            currentreg = registry;
+            regpath = [];
         };
         // same object as above
-        console.log("open "+node.name);
+        //console.log("open "+node.name);
         switch(node.name){
             case "name":
                 inName = true;
                 break;
             case "project":
                 newNode("root");
+                /*creating base objects -- metameta if you like it so*/
+                OBJBASE = CORE.createNode(currentNode,null,"object");
+                CONNBASE = CORE.createNode(currentNode,null,"connection");
                 break;
             case "comment":
                 inComment = true;
@@ -54,29 +89,47 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
                 inAuthor = true;
                 break;
             case "folder":
-                newNode(node.attributes.id);
+                newNode(node.attributes.id,null);
                 break;
             case "regnode":
+                if(registry === null){
+                    registry = {};
+                    regpath = [];
+                    currentreg = registry;
+                }
+                var regname;
+                if(node.attributes.name === ""){
+                    regname = "noname"+registry.emptycounter++;
+                }
+                else{
+                    regname = node.attributes.name;
+                }
+
+                currentreg[regname] = {};
+                regpath.push(regname);
+                currentreg = currentreg[regname];
+                inRegistry = true;
                 break;
             case "value":
+                inValue = true;
                 break;
             case "attribute":
-                newNode();
+                newNode(null,OBJBASE);
                 break;
             case "atom":
-                newNode(node.attributes.id);
+                newNode(node.attributes.id,OBJBASE);
                 break;
             case "connection":
-                newNode(node.attributes.id);
+                newNode(node.attributes.id,CONNBASE);
                 break;
             case "connpoint":
-                connPoints.push({connection:CORE.getStringPath(currentNode),name:node.attributes.role,target:node.attributes.target});
+                connPoints.push({connection:CORE.getStringPath(currentNode),name:node.attributes.role === "src" ? "source":"target",target:node.attributes.target});
                 break;
             case "set":
-                newNode(node.attributes.id);
+                newNode(node.attributes.id,OBJBASE);
                 break;
             case "model":
-                newNode(node.attributes.id);
+                newNode(node.attributes.id,OBJBASE);
                 break;
             default:
                 //console.log(JSON.stringify(node));
@@ -97,8 +150,28 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
             CORE.setAttribute(currentNode,"author",text);
         }
 
+        if(inValue){
+            if(inRegistry){
+                currentreg.value = text;
+            }
+            else{
+                CORE.setAttribute(currentNode,"value",text);
+            }
+        }
     });
     saxStream.on("closetag", function (tagname){
+        var closeNode = function(isConnect){
+            var i;
+            CORE.setRegistry(currentNode,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
+            //CORE.setRegistry(currentNode,"isConnection",isConnect);
+            currentNode = CORE.getParent(currentNode);
+        };
+        var setRegistry = function(){
+            delete registry.emptycounter;
+            for(i in registry){
+                CORE.setRegistry(currentNode,i,registry[i]);
+            }
+        };
         var makeConn = function(connitem){
             CORE.loadByPath(connitem.connection,function(err,conn){
                 if(err){
@@ -151,29 +224,48 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
                 }
                 break;
             case "folder":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(false);
                 break;
             case "regnode":
+                var i,
+                    tempreg;
+                tempreg=registry;
+                for(i=0;i<regpath.length-1;i++){
+                    tempreg = tempreg[regpath[i]];
+                }
+                currentreg = tempreg;
+                regpath.pop();
+                if(regpath.length === 0){
+                    inRegistry = false;
+                    setRegistry();
+                    registry = null;
+                }
                 break;
             case "value":
+                if(inValue){
+                    inValue = false;
+                }
+                else{
+                    console.log("bugl207");
+                }
                 break;
             case "attribute":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(false);
                 break;
             case "atom":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(false);
                 break;
             case "connection":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(true);
                 break;
             case "connpoint":
                 /*nothing to do*/
                 break;
             case "set":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(false);
                 break;
             case "model":
-                currentNode = CORE.getParent(currentNode);
+                closeNode(false);
                 break;
             default:
             //console.log(JSON.stringify(node));
@@ -182,6 +274,7 @@ requirejs(["./FileStorage.js","./FlatCore.js","./sax.js"],function(fst,fc,sax){
 
     saxStream.on("end",function(){
         CORE.persist(currentNode,function(err){
+            printRegistries();
             process.exit(0);
         });
     });
