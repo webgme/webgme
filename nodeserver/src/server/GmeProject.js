@@ -305,8 +305,20 @@ requirejs(['./../server/FlatCore.js','./../server/FileStorage.js','./../server/M
                 });
             }
             else{
-                logger.error("GmeProject:308");
-                commandFailed();
+                if(childrencommand.newguid){
+                    if(childrencommand.newguid === "root"){
+                        child = CORE.createNode(null,null,"root");
+                        callback();
+                    }
+                    else{
+                        logger.error("GmeProject:313");
+                        commandFailed();
+                    }
+                }
+                else{
+                    child = CORE.createNode(null,null,"root");
+                    callback();
+                }
             }
         };
         pointCommand = function(pointcommand,callback){
