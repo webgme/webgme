@@ -129,12 +129,10 @@ define(['logManager',
 
         //initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.svgPaper = Raphael(this.skinParts.childrenContainer.attr("id"));
-        this.skinParts.svgPaper.canvas.style.pointerEvents = "none";
-        this.skinParts.svgPaper.setSize("100%", "100%");
-
-        //create connection line instance
-        this.connectionInDraw.path = this.skinParts.svgPaper.path("M0,0").attr({"stroke-width": 2,
-            "stroke": "#FF7800", "stroke-dasharray": "-"}).hide();
+        this.skinParts.svgPaper.canvas.style.pointerEvents = "visiblePainted"; //"none";
+        //this.skinParts.svgPaper.setSize("100%", "100%");
+        this.skinParts.svgPaper.setSize(this.defaultSize.w, this.defaultSize.h);
+        this.skinParts.svgPaper.setViewBox(0, 0, this.defaultSize.w, this.defaultSize.h, false);
 
         //create connection line instance
         this.connectionInDraw.path = this.skinParts.svgPaper.path("M0,0").attr(
@@ -197,13 +195,22 @@ define(['logManager',
         var childComponent = this.childComponents[childComponentId],
             cW = this.skinParts.childrenContainer.outerWidth(),
             cH = this.skinParts.childrenContainer.outerHeight(),
-            childBBox = childComponent.getBoundingBox();
+            childBBox = childComponent.getBoundingBox(),
+            cW2 = cW,
+            cH2 = cH;
 
         if (cW < childBBox.x2) {
-            this.skinParts.childrenContainer.outerWidth(childBBox.x2 + 100);
+            cW2 = childBBox.x2 + 100;
+            this.skinParts.childrenContainer.outerWidth(cW2);
         }
         if (cH < childBBox.y2) {
-            this.skinParts.childrenContainer.outerHeight(childBBox.y2 + 100);
+            cH2 = childBBox.y2 + 100;
+            this.skinParts.childrenContainer.outerHeight(cH2);
+        }
+
+        if ((cW !== cW2) || (cH !== cH2)) {
+            this.skinParts.svgPaper.setSize(cW2, cH2);
+            this.skinParts.svgPaper.setViewBox(0, 0, cW2, cH2, false);
         }
     };
 
@@ -928,7 +935,7 @@ define(['logManager',
                     targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
                 }
 
-                this.childComponents[connectionId].redrawConnection(sourceCoordinates, targetCoordinates);
+                this.childComponents[connectionId].setEndpointCoordinates(sourceCoordinates, targetCoordinates);
             } else {
                 //at least one of the connection endpoint is not known
                 //if the connection is displayed, remove it
@@ -937,23 +944,6 @@ define(['logManager',
                 }
             }
         }
-    };
-
-    ModelEditorCanvasComponent.prototype._updateConnection = function (connectionId) {
-
-    };
-
-    ModelEditorCanvasComponent.prototype._refreshAllDisplayedComponentConnections = function () {
-        var allComponentIDs = [],
-            i;
-
-        for (i in this.displayedComponentIDs) {
-            if (this.displayedComponentIDs.hasOwnProperty(i)) {
-                allComponentIDs.push(i);
-            }
-        }
-
-        this._updateConnectionsWithEndPoint(allComponentIDs);
     };
 
     return ModelEditorCanvasComponent;

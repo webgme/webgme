@@ -5,5 +5,6 @@ define([], function () {
     "use strict";
 
     return {     "position" : "position",
-        "decorator": "decorator" };
+        "decorator": "decorator",
+        "segmentPoints": "segmentPoints" };
 });
