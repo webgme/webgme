@@ -86,8 +86,9 @@ define(['logManager',
         this.el.outerWidth(2 * this.borderW).outerHeight(2 * this.borderW);
 
         this.skinParts.path = this.paper.path("M0,0").attr({ stroke: "#000", fill: "none", "stroke-width": "2" });
+        this.skinParts.pathShadow = this.paper.path("M0,0").attr({ stroke: "#000", fill: "none", "stroke-width": "6", "opacity" : 0.05 });
 
-        this.skinParts.path.click(function () {
+        this.skinParts.pathShadow.click(function () {
             self.parentComponent._setSelection([self.getId()], false);
         });
 
@@ -109,6 +110,8 @@ define(['logManager',
 
         this.pathAttributes.color = "#000000";
         this.pathAttributes.width = "2";
+        this.pathAttributes.shadowWidth = "6";
+        this.pathAttributes.shadowOpacity = 0.002;
 
         //TODO: figure out something here....
         //in Safari and FireFox setting the arrow-end and arrow-start makes the drawing of the path so sloooooooooooow.....
@@ -117,6 +120,11 @@ define(['logManager',
                                     "stroke": this.pathAttributes.color,
                                     "fill": "none",
                                     "stroke-width": this.pathAttributes.width });
+
+        this.skinParts.pathShadow.attr({    "stroke": "#FFFFFF",
+                                            "fill": "none",
+                                            "stroke-width": this.pathAttributes.shadowWidth,
+                                            "opacity": this.pathAttributes.shadowOpacity});
 
         //read segment points (if any)
         for (i = 0; i < this.segmentPoints.length; i += 1) {
@@ -186,6 +194,9 @@ define(['logManager',
         if (this.skinParts.path) {
             this.skinParts.path.remove();
             delete this.skinParts.path;
+
+            this.skinParts.pathShadow.remove();
+            delete this.skinParts.pathShadow;
         }
 
         this.logger.debug("_onDestroy");
@@ -303,8 +314,12 @@ define(['logManager',
 
             this.skinParts.path.attr({ "path": pathDef});
             this.skinParts.path.attr({"opacity": "1.0"});
+
+            this.skinParts.pathShadow.attr({ "path": pathDef});
+            this.skinParts.pathShadow.attr({"opacity": this.pathAttributes.shadowOpacity});
         } else {
-            this.skinParts.path.attr({"opacity": "0.000001"});
+            this.skinParts.path.attr({"opacity": "0"});
+            this.skinParts.pathShadow.attr({"opacity": "0"});
 
             if (this.segmentPoints.length === 0) {
                 //bezierControlPoints = bezierHelper.getBezierControlPoints2(this.sourceCoordinates, this.targetCoordinates);

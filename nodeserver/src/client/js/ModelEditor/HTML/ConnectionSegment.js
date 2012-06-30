@@ -35,7 +35,8 @@ define(['logManager',
             "defaultStrokeColor": "#FF0000",
             "minDragDistance": 3,
             "color": "#0000FF",
-            "shadowPathWidth": 10};
+            "shadowPathWidth": 10,
+            "shadowPathOpacity": 0.15};
 
         this._render();
     };
@@ -89,7 +90,7 @@ define(['logManager',
 
         this.skinParts.pathShadow = this.paper.path(this.pathDef).attr({ stroke: this.settings.color,
             fill: "none",
-            "stroke-width": this.settings.shadowPathWidth, "opacity": 0.002 });
+            "stroke-width": this.settings.shadowPathWidth, "opacity": this.settings.shadowPathOpacity });
 
         this.onMouseOver = function () {
             self.skinParts.circle.show();

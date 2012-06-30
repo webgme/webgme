@@ -64,7 +64,7 @@ define([   'order!jquery',
             lastContainerWidth = cW;
 
             //by default lay out in vertical split
-            eW = Math.floor($("#middlePane").width() / 2);
+            /*eW = Math.floor($("#middlePane").width() / 2);
             eH = Math.floor($("#middlePane").height());
 
             if (eW < 560) {
@@ -75,23 +75,23 @@ define([   'order!jquery',
             }
 
             $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
+            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
 
             /******************/
-            /*eW = Math.floor($("#middlePane").width());
-             eH = Math.floor($("#middlePane").height());
+            eW = Math.floor($("#middlePane").width());
+            eH = Math.floor($("#middlePane").height());
 
-             $("#modelEditorContainer1").outerWidth(0).outerHeight(0);
-             $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
+            $("#modelEditorContainer1").outerWidth(0).outerHeight(0);
+            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
 
             /******************/
 
             //set container position correctly
-            if (horizontalSplit === true) {
+            /*if (horizontalSplit === true) {
                 $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
             } else {
                 $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
-            }
+            }*/
 
         }
     };
