@@ -113,10 +113,8 @@ define(['logManager',
         this.pathAttributes.shadowWidth = "6";
         this.pathAttributes.shadowOpacity = 0.002;
 
-        //TODO: figure out something here....
-        //in Safari and FireFox setting the arrow-end and arrow-start makes the drawing of the path so sloooooooooooow.....
-        this.skinParts.path.attr({ /*"arrow-start": this.pathAttributes.arrowStart,
-                                    "arrow-end": this.pathAttributes.arrowEnd,*/
+        this.skinParts.path.attr({ "arrow-start": this.pathAttributes.arrowStart,
+                                    "arrow-end": this.pathAttributes.arrowEnd,
                                     "stroke": this.pathAttributes.color,
                                     "fill": "none",
                                     "stroke-width": this.pathAttributes.width });
@@ -154,40 +152,7 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype._addedToParent = function () {
-        var node = this.project.getNode(this.getId());
-        //TODO: delete, read conn point from real
-        /*var sourceId = node.getPointer("source").to;
-        var targetId = node.getPointer("target").to;
-        var sourceConnectionPoints;
-        var targetConnectionPoints;
-        if (this.parentComponent.childComponents[sourceId]) {
-            sourceConnectionPoints = this.parentComponent.childComponents[sourceId].getConnectionPoints();
-        } else {
-            sourceConnectionPoints = this.parentComponent.childComponents[this.parentComponent.displayedComponentIDs[sourceId]].getConnectionPointsById(sourceId);
-        }
 
-        if (this.parentComponent.childComponents[targetId]) {
-            targetConnectionPoints = this.parentComponent.childComponents[targetId].getConnectionPoints();
-        } else {
-            targetConnectionPoints = this.parentComponent.childComponents[this.parentComponent.displayedComponentIDs[targetId]].getConnectionPointsById(targetId);
-        }
-
-        if ((sourceConnectionPoints.length > 0) && (targetConnectionPoints.length > 0)) {
-            sourceConnectionPoints = sourceConnectionPoints[0];
-            targetConnectionPoints = targetConnectionPoints[0];
-            var dX = targetConnectionPoints.x - sourceConnectionPoints.x;
-            var dY = targetConnectionPoints.y - sourceConnectionPoints.y;
-            //create two segment point
-            var segmentPoint1 = {"x": sourceConnectionPoints.x + (dX / 3),
-                "y": sourceConnectionPoints.y + (dY / 3)  };
-
-            var segmentPoint2 = {"x": sourceConnectionPoints.x + (dX * 2 / 3),
-                "y": sourceConnectionPoints.y + (dY * 2 / 3)  };
-
-            this.segmentPoints.push(new ConnectionSegmentPoint(segmentPoint1.x, segmentPoint1.y, 50, 50, this.paper, this));
-            this.segmentPoints.push(new ConnectionSegmentPoint(segmentPoint2.x, segmentPoint2.y, -50, -50, this.paper, this));
-        }*/
-        //TODO: END OF DELETE
     };
 
     ModelEditorConnectionComponent.prototype._onDestroy = function () {
