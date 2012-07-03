@@ -85,7 +85,7 @@ define(['logManager',
 
         this.el.outerWidth(2 * this.borderW).outerHeight(2 * this.borderW);
 
-        this.skinParts.path = this.paper.path("M0,0").attr({ stroke: "#000", fill: "none", "stroke-width": "2" });
+        this.skinParts.path = this.paper.path("M0,0L3,3").attr({ stroke: "#000", fill: "none", "stroke-width": "2" });
         this.skinParts.pathShadow = this.paper.path("M0,0").attr({ stroke: "#000", fill: "none", "stroke-width": "6", "opacity" : 0.05 });
 
         this.skinParts.pathShadow.click(function () {
