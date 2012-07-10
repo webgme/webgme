@@ -9,20 +9,21 @@ define(function () {
 
 	return {
 		mongodb: {
-			host: "localhost",
-//			host: "129.59.104.16",
+//			host: "localhost",
+//			host: "129.59.104.16",		// kecso
+			host: "129.59.105.195",		// cloud
 			port: 27017,
 			database: "test",
 			collection: "storage"
 		},
 
 		parser: {
-			persistingLimit: 5000,
+			persistingLimit: 1000,
 			reportingTime: 2000 
 		},
 
 		reader: {
-			concurrentReads: 10,
+			concurrentReads: 100,
 			reportingTime: 2000
 		}
 	};

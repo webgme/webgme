@@ -90,6 +90,11 @@ function (ASSERT, CONFIG) {
 	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
 		ASSERT(loadChildren && node && openNode && closeNode && callback);
 
+		/**
+		 * We maintain an array of nodes with statuses. The status codes are 0 :
+		 * waiting to be processed 1 : loadChildren is called already 2 :
+		 * openNode needs to be called 3 : closeNode needs to be called
+		 */
 		var requests = [ {
 			status: 0,
 			node: node
@@ -178,11 +183,71 @@ function (ASSERT, CONFIG) {
 		scan();
 	};
 
+	var AsyncJoin = function (callback) {
+		ASSERT(callback && callback.call && callback.length === 1);
+
+		var missing = 1;
+		var fire = function (err) {
+			if( missing && (err || --missing === 0) ) {
+				missing = 0;
+				callback(err);
+			}
+		};
+
+		return {
+			add: function () {
+				ASSERT(missing >= 1);
+				++missing;
+				return fire;
+			},
+
+			start: function () {
+				ASSERT(missing >= 1);
+				fire(null);
+			}
+		};
+	};
+
+	var AsyncArray = function (callback) {
+		ASSERT(callback && callback.call && callback.length === 2);
+		
+		var missing = 1;
+		var array = [];
+		
+		var fire = function (index, data, err) {
+			if( missing ) {
+				array[index] = data;
+				if( err || --missing === 0 ) {
+					missing = 0;
+					callback(array, err);
+				}
+			}
+		};
+
+		return {
+			add: function () {
+				ASSERT(missing >= 1);
+				++missing;
+				return fire.bind(null, array.length++);
+			},
+
+			start: function () {
+				ASSERT(missing >= 1);
+				
+				if(--missing === 0) {
+					callback(array, null);
+				}
+			}
+		};
+	};
+	
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
-		depthFirstSearch: depthFirstSearch
+		depthFirstSearch: depthFirstSearch,
+		AsyncJoin: AsyncJoin,
+		AsyncArray: AsyncArray
 	};
 });

@@ -231,8 +231,8 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 						console.log(err2);
 					}
 
-					metabuilder(mongo, key, function (err3) {
-					// reader(mongo, key, function (err3) {
+					// metabuilder(mongo, key, function (err3) {
+					reader(mongo, key, function (err3) {
 						console.log("Closing database");
 						closeDatabase();
 					});
