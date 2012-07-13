@@ -1,212 +1,547 @@
-/**
- * Created with JetBrains WebStorm.
- * User: roby
- * Date: 6/22/12
- * Time: 9:54 PM
- * To change this template use File | Settings | File Templates.
- */
 "use strict";
 
 define(['logManager',
     'clientUtil',
     'commonUtil',
-    'nodeAttributeNames',
-    'nodeRegistryNames',
     'bezierHelper',
     './ComponentBase.js',
     './ConnectionSegmentPoint.js',
-    './ConnectionSegment.js'], function (logManager,
-             util,
-             commonUtil,
-             nodeAttributeNames,
-             nodeRegistryNames,
-             bezierHelper,
-             ComponentBase,
-             ConnectionSegmentPoint,
-             ConnectionSegment) {
+    './ConnectionSegment.js',
+    './ConnectionSegmentLine.js',
+    './ConnectionSegmentBezier.js',
+    'raphaeljs',
+    'css!ModelEditorHTMLCSS/ModelEditorConnectionComponent'], function (logManager,
+                                         util,
+                                         commonUtil,
+                                         bezierHelper,
+                                         ComponentBase,
+                                         ConnectionSegmentPoint,
+                                         ConnectionSegment,
+                                         connectionSegmentLine,
+                                         connectionSegmentBezier) {
 
     var ModelEditorConnectionComponent;
 
-    ModelEditorConnectionComponent = function (id, proj, raphaelPaper) {
-        $.extend(this, new ComponentBase(id, proj));
+    ModelEditorConnectionComponent = function (objDescriptor) {
+        $.extend(this, new ComponentBase(objDescriptor.id, objDescriptor.kind));
 
-        this.logger = logManager.create("ModelEditorConnectionComponent_" + id);
-        this.logger.debug("Created");
+        this._logger = logManager.create("ModelEditorConnectionComponent_" + this.getId());
+        this._logger.debug("Created");
 
-        this.paper = raphaelPaper;
-
-        this.borderW = 5;
-
-        this.pathAttributes = {};
-
-        this.segmentPoints = [];
-
-        this.sourceCoordinates = null;
-        this.targetCoordinates = null;
-
-        this.editMode = false;
-        this.editOptions = { "color": "#0000FF" };
-        this.skinParts.editSegments = [];
+        this.parentComponent = objDescriptor.modelEditorView;
 
         /*
          * OVERRIDE COMPONENTBASE MEMBERS
          */
-        this.addedToParent = function () {
-            this._addedToParent();
-        };
-
         this.onDestroy = function () {
             this._onDestroy();
         };
 
-        this.isSelectable = function () {
-            return true;
+        this.render = function () {
+            this._render();
         };
 
-        this.isMultiSelectable = function () {
-            return false;
+        //we need an override getBoundingBox since it cannot be calculated based on the this.el
+        this.getBoundingBox = function () {
+            return this._getBoundingBox();
+        };
+
+        this.isVisible = function () {
+            return this._isVisible();
         };
         /*
          * END OVERRIDE COMPONENTBASE MEMBERS
          */
 
-        this._initialize();
+
+        /*MODELEDITORCONNECTION CONSTANTS*/
+        this._paper = objDescriptor.paper;
+
+        this._segmentPoints = [];
+
+        this._sourceCoordinates = null;
+        this._targetCoordinates = null;
+
+        this._editParams = { "editMode": false,
+                                "color": "#0000FF" };
+
+        this._skinParts.editSegments = [];
+
+        this._pathAttributes = {};
+        /*MODELEDITORCONNECTION CONSTANTS*/
+
+        this._initialize(objDescriptor);
     };
 
-    ModelEditorConnectionComponent.prototype._initialize = function () {
+    ModelEditorConnectionComponent.prototype._initialize = function (objDescriptor) {
         var self = this;
-        //generate skin controls
+
+        //read props coming from the DataBase or ModelEditor
+        this._initializeConnectionProps(objDescriptor);
+
+        //generate and set UI controls
         this.el.addClass("connection");
 
+        this._zIndex = 2000;
+
         this.el.css({ "position": "absolute",
-                      "background-color": "rgba(0, 0, 0, 0)",
-                      "left": 0,
-                       "top": 0 });
+            "background-color": "rgba(0, 0, 0, 0)",
+            "left": 0,
+            "top": 0,
+            "z-index": this._zIndex});
 
-        this.el.outerWidth(2 * this.borderW).outerHeight(2 * this.borderW);
+        //this.el.outerWidth(2 * this._borderW).outerHeight(2 * this._borderW);
+        this.el.outerWidth(0).outerHeight(0);
 
-        this.skinParts.path = this.paper.path("M0,0L3,3").attr({ stroke: "#000", fill: "none", "stroke-width": "2" });
-        this.skinParts.pathShadow = this.paper.path("M0,0").attr({ stroke: "#000", fill: "none", "stroke-width": "6", "opacity" : 0.05 });
+        this._skinParts.path = this._paper.path("M0,0L3,3");
+        this._skinParts.path.attr({ "arrow-start": this._pathAttributes.arrowStart,
+            "arrow-end": this._pathAttributes.arrowEnd,
+            "stroke": this._pathAttributes.color,
+            "fill": "none",
+            "stroke-width": this._pathAttributes.width });
 
-        this.skinParts.pathShadow.click(function () {
-            self.parentComponent._setSelection([self.getId()], false);
+        this._skinParts.pathShadow = this._paper.path("M0,0L3,3");
+        this._skinParts.pathShadow.attr({    "stroke": this._pathAttributes.shadowColor,
+            "fill": "none",
+            "stroke-width": this._pathAttributes.shadowWidth,
+            "opacity": this._pathAttributes.shadowOpacity});
+
+        //put id in the path
+        $(this._skinParts.path.node).attr("id", this.getId());
+
+        //hook up mousedown
+        this._skinParts.pathShadow.mousedown(function (event) {
+            self._onMouseDown(event);
         });
 
-        $(this.skinParts.path.node).attr("id", this.getId());
-
-        this._initializeFromNode();
+        this._skinParts.pathShadow.mouseup(function (event) {
+            self._onMouseUp(event);
+        });
     };
 
-    ModelEditorConnectionComponent.prototype._initializeFromNode = function () {
-        var node = this.project.getNode(this.getId()),
-            segmentPointList,
-            i;
+    ModelEditorConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
+        var i,
+            segmentPointList;
 
-        this.pathAttributes.arrowStart = "oval";
-        this.pathAttributes.arrowEnd = "oval";
-        if (node.getAttribute(nodeAttributeNames.directed) === true) {
-            this.pathAttributes.arrowEnd = "block";
+        /*PathAttributes*/
+        this._pathAttributes.arrowStart = objDescriptor.arrowStart || "oval";
+        this._pathAttributes.arrowEnd = objDescriptor.arrowEnd || "oval";
+        this._pathAttributes.color = objDescriptor.color || "#000000";
+        this._pathAttributes.width = objDescriptor.width || "2";
+        this._pathAttributes.shadowWidth = objDescriptor.shadowWidth || "6";
+        this._pathAttributes.shadowOpacity = objDescriptor.shadowOpacity || 0.001;
+        this._pathAttributes.shadowOpacitySelected = 0.4;
+        this._pathAttributes.shadowColor = objDescriptor.shadowColor || "#52A8EC";
+        this._pathAttributes.lineType = objDescriptor.lineType || "L";
+
+        segmentPointList = objDescriptor.segmentPoints;
+
+        //destroy current segment points (if any)
+        for (i = 0; i < this._segmentPoints.length; i += 1) {
+            this._segmentPoints[i].destroy();
+            delete this._segmentPoints[i];
         }
+        this._segmentPoints = [];
 
-        this.pathAttributes.color = "#000000";
-        this.pathAttributes.width = "2";
-        this.pathAttributes.shadowWidth = "6";
-        this.pathAttributes.shadowOpacity = 0.002;
-
-        this.skinParts.path.attr({ "arrow-start": this.pathAttributes.arrowStart,
-                                    "arrow-end": this.pathAttributes.arrowEnd,
-                                    "stroke": this.pathAttributes.color,
-                                    "fill": "none",
-                                    "stroke-width": this.pathAttributes.width });
-
-        this.skinParts.pathShadow.attr({    "stroke": "#FFFFFF",
-                                            "fill": "none",
-                                            "stroke-width": this.pathAttributes.shadowWidth,
-                                            "opacity": this.pathAttributes.shadowOpacity});
-
-        //read segment points (if any)
-        for (i = 0; i < this.segmentPoints.length; i += 1) {
-            this.segmentPoints[i].destroy();
-            delete this.segmentPoints[i];
-        }
-
-        this.segmentPoints = [];
-        segmentPointList = node.getRegistry(nodeRegistryNames.segmentPoints);
+        //create the new segment point list
         if (segmentPointList) {
             for (i = 0; i < segmentPointList.length; i += 1) {
-                this.segmentPoints.push(new ConnectionSegmentPoint({ "x": segmentPointList[i].x,
+                this._segmentPoints.push(new ConnectionSegmentPoint({ "x": segmentPointList[i].x,
                                                                     "y": segmentPointList[i].y,
                                                                     "cx": segmentPointList[i].cx,
                                                                     "cy": segmentPointList[i].cy,
-                                                                    "raphaelPaper": this.paper,
+                                                                    "raphaelPaper": this._paper,
                                                                     "connection": this,
-                                                                    "count": i}));
-            }
-        }
-
-        if (this.editMode === true) {
-            for (i = 0; i < this.segmentPoints.length; i += 1) {
-                this.segmentPoints[i].addControls();
+                                                                    "count": i,
+                                                                    "lineType": this._pathAttributes.lineType }));
             }
         }
     };
 
-    ModelEditorConnectionComponent.prototype._addedToParent = function () {
+    ModelEditorConnectionComponent.prototype._onMouseDown = function (event) {
+        this.parentComponent.onComponentMouseDown(event, this.getId());
+        event.stopPropagation();
+        //event.preventDefault();
+    };
 
+    ModelEditorConnectionComponent.prototype._onMouseUp = function (event) {
+        this.parentComponent.onComponentMouseUp(event, this.getId());
+//        event.stopPropagation();
     };
 
     ModelEditorConnectionComponent.prototype._onDestroy = function () {
-        if (this.skinParts.path) {
-            this.skinParts.path.remove();
-            delete this.skinParts.path;
+        //end edit mode (if editing right now)
+        this._endEditMode();
 
-            this.skinParts.pathShadow.remove();
-            delete this.skinParts.pathShadow;
+        //remove controls
+        if (this._skinParts.path) {
+            this._skinParts.path.remove();
+            delete this._skinParts.path;
+
+            this._skinParts.pathShadow.remove();
+            delete this._skinParts.pathShadow;
         }
 
-        this.logger.debug("_onDestroy");
+        this._logger.debug("_onDestroy");
     };
 
-    ModelEditorConnectionComponent.prototype.onSelect = function () {
-        var i;
-        this.editMode = true;
-        for (i = 0; i < this.segmentPoints.length; i += 1) {
-            this.segmentPoints[i].addControls();
-        }
-        this.redrawConnection();
+    ModelEditorConnectionComponent.prototype.onSelect = function (isMultiple) {
+        var self = this;
 
+        this._highlightPath();
+        if (isMultiple === false) {
+            this._showConnectionEndEditControls();
+
+            this._showContextMenu();
+
+            this._dblClickCallback = function (event) {
+                self._setEditMode();
+                event.stopPropagation();
+            };
+
+            this._skinParts.pathShadow.dblclick(this._dblClickCallback);
+        }
     };
 
     ModelEditorConnectionComponent.prototype.onDeselect = function () {
-        var i;
-        this.editMode = false;
-        for (i = 0; i < this.segmentPoints.length; i += 1) {
-            this.segmentPoints[i].removeControls();
-        }
-        this.redrawConnection();
+        this._unhighlightPath();
+        this._hideConnectionEndEditControls();
+        this._hideContextMenu();
+        this._skinParts.pathShadow.undblclick(this._dblClickCallback);
+        this._endEditMode();
     };
 
-    ModelEditorConnectionComponent.prototype.update = function () {
-        this._initializeFromNode();
+    ModelEditorConnectionComponent.prototype._highlightPath = function () {
+        this._skinParts.pathShadow.attr({"opacity": this._pathAttributes.shadowOpacitySelected});
+    };
 
-        this.redrawConnection();
+    ModelEditorConnectionComponent.prototype._unhighlightPath = function () {
+        this._skinParts.pathShadow.attr({"opacity": this._pathAttributes.shadowOpacity});
+    };
+
+    ModelEditorConnectionComponent.prototype._showContextMenu = function () {
+        var midPoint = this._skinParts.path.getPointAtLength(this._skinParts.path.getTotalLength() / 2),
+            self = this,
+            buttonBarWidth;
+
+        this._skinParts.toolTipMenu = $('<div/>').attr("id", this.getId() + "_tooltip");
+        this.el.append(this._skinParts.toolTipMenu);
+
+        this._skinParts.toolTipMenu.outerWidth(100).outerHeight(30);
+
+        this._skinParts.toolTipMenu.html("<div class='button-bar'><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-curved'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-straight'></div></div></div>");
+
+        buttonBarWidth = this._skinParts.toolTipMenu.find(".button-bar").outerWidth(true);
+
+        //show Bezier / Simple line switch
+        this._skinParts.toolTipMenu.css({"left": midPoint.x - (buttonBarWidth / 2),
+            "top": midPoint.y + 20,
+            "position": "absolute",
+            "background-color": "rgba(0, 0, 0, 0)"});
+
+        this.bezierDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-curved").parent();
+        this.straightLineDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-straight").parent();
+
+        if (this._pathAttributes.lineType === "L") {
+            this.straightLineDiv.addClass("selected");
+            this.bezierDiv.bind('click', function (event) {
+                self.parentComponent.setLineType(self.getId(), "B");
+                event.stopPropagation();
+            });
+        } else {
+            this.bezierDiv.addClass("selected");
+            this.straightLineDiv.bind('click', function (event) {
+                self.parentComponent.setLineType(self.getId(), "L");
+                event.stopPropagation();
+            });
+        }
+
+        this._skinParts.toolTipMenu.bind('mousedown', function (event) {
+            event.stopPropagation();
+        });
+
+        this._skinParts.toolTipMenu.bind('mouseup', function (event) {
+            event.stopPropagation();
+        });
+    };
+
+    ModelEditorConnectionComponent.prototype._hideContextMenu = function () {
+        if (this._skinParts.toolTipMenu) {
+            this._skinParts.toolTipMenu.remove();
+            this._skinParts.toolTipMenu = null;
+            delete this._skinParts.toolTipMenu;
+        }
+    };
+
+    /*
+     * DRAGGABLE ENDPOINTS
+     */
+    ModelEditorConnectionComponent.prototype._showConnectionEndEditControls = function () {
+        var opts;
+
+        //editor circle at 'source' end
+        this._skinParts.srcDragPoint = $('<div/>', {
+            "id": "srcDragPoint_" + this.getId(),
+            "class": "connectionEndDragPoint"
+        });
+
+        this.el.append(this._skinParts.srcDragPoint);
+
+        this._skinParts.srcDragPoint.css({"position": "absolute"});
+
+        opts = { "el": this._skinParts.srcDragPoint,
+                        "connId": this.getId(),
+                        "endType": "source"};
+
+        this._makeEndPointDraggable(opts);
+
+        //editor circle at 'target' end
+        this._skinParts.tgtDragPoint = $('<div/>', {
+            "id": "tgtDragPoint_" + this.getId(),
+            "class": "connectionEndDragPoint"
+        });
+
+        this.el.append(this._skinParts.tgtDragPoint);
+
+        this._skinParts.tgtDragPoint.css({"position": "absolute"});
+
+        opts = { "el": this._skinParts.tgtDragPoint,
+            "connId": this.getId(),
+            "endType": "target"};
+
+        this._repositionDragPoints({"source": true,
+            "target": true});
+
+        this._makeEndPointDraggable(opts);
+    };
+
+    ModelEditorConnectionComponent.prototype._makeEndPointDraggable = function (opts) {
+        var self = this;
+
+        opts.el.css("cursor", "move");
+        opts.el.draggable({
+            helper: function () {
+                return $("<div class='draw-connection-end-drag-helper'></div>").data({"connId": opts.connId,
+                    "endType": opts.endType});
+            },
+            scroll: true,
+            cursor: 'move',
+            cursorAt: { left: 0,
+                top: 0 },
+            start: function (event) {
+                self._originalCoord = $.extend(true, {}, self["_" + opts.endType + "Coordinates"]);
+                self._mouseStartPos = {"mX": event.pageX, "mY": event.pageY };
+                opts.el.addClass("connection-source");
+            },
+            stop: function (event, ui) {
+                opts.el.removeClass("connection-source");
+
+                //check if drop has been handled by droptargets
+                if (ui.helper.data("dropHandled") !== true) {
+                    //dropped on "nothing" that would accept it
+                    //reset original end coordinates and redraw line
+                    self["_" + opts.endType + "Coordinates"] = $.extend(true, {}, self._originalCoord);
+                    self._redrawConnection();
+                }
+
+                self._repositionDragPoints({"source": true,
+                                           "target": true});
+
+                delete self._originalCoord;
+                delete self._mouseStartPos;
+            },
+            drag: function (event) {
+                var dX = event.pageX - self._mouseStartPos.mX,
+                    dY = event.pageY - self._mouseStartPos.mY,
+                    repOpts = {};
+
+                self["_" + opts.endType + "Coordinates"].x = self._originalCoord.x + dX;
+                self["_" + opts.endType + "Coordinates"].y = self._originalCoord.y + dY;
+                self._redrawConnection();
+
+                repOpts[opts.endType] = true;
+
+                self._repositionDragPoints(repOpts);
+            }
+        });
+
+        opts.el.bind('mousedown', function (event) {
+            event.stopPropagation();
+        });
+    };
+
+    ModelEditorConnectionComponent.prototype._repositionDragPoints = function (opts) {
+        var dragPointOpts = {"width": 8,
+                            "height": 8};
+
+        if (opts.source) {
+            if (this._skinParts.srcDragPoint) {
+                this._skinParts.srcDragPoint.css({
+                    "width": dragPointOpts.width,
+                    "height": dragPointOpts.height,
+                    "left": this._sourceCoordinates.x - dragPointOpts.width / 2,
+                    "top": this._sourceCoordinates.y - dragPointOpts.width / 2
+                });
+            }
+        }
+
+        if (opts.target) {
+            if (this._skinParts.tgtDragPoint) {
+                this._skinParts.tgtDragPoint.css({
+                    "width": dragPointOpts.width,
+                    "height": dragPointOpts.height,
+                    "left": this._targetCoordinates.x - dragPointOpts.width / 2,
+                    "top": this._targetCoordinates.y - dragPointOpts.width / 2
+                });
+            }
+        }
+    };
+
+    ModelEditorConnectionComponent.prototype._hideConnectionEndEditControls = function () {
+        if (this._skinParts.srcDragPoint) {
+            this._skinParts.srcDragPoint.remove();
+            delete this._skinParts.srcDragPoint;
+        }
+
+        if (this._skinParts.tgtDragPoint) {
+            this._skinParts.tgtDragPoint.remove();
+            delete this._skinParts.tgtDragPoint;
+        }
+
+    };
+    /*
+     * END OF - DRAGGABLE ENDPOINTS
+     */
+
+    /*
+     * EDIT MODE
+     */
+    ModelEditorConnectionComponent.prototype._setEditMode = function () {
+        var i;
+
+        this._skinParts.pathShadow.undblclick(this._dblClickCallback);
+
+        this._hideConnectionEndEditControls();
+        this._hideContextMenu();
+
+        //turn on edit mode
+        this._editParams.editMode = true;
+
+        this._skinParts.path.attr({"opacity": "0"});
+        this._skinParts.pathShadow.attr({"opacity": "0"});
+
+        this._redrawConnection();
+
+        for (i = 0; i < this._segmentPoints.length; i += 1) {
+            this._segmentPoints[i].addControls();
+        }
+    };
+
+    ModelEditorConnectionComponent.prototype._endEditMode = function () {
+        var i;
+
+        if (this._editParams.editMode === true) {
+            this._editParams.editMode = false;
+
+            for (i = 0; i < this._segmentPoints.length; i += 1) {
+                this._segmentPoints[i].removeControls();
+            }
+            this._redrawConnection();
+
+            this._skinParts.path.attr({"opacity": "1.0"});
+            this._skinParts.pathShadow.attr({"opacity": this._pathAttributes.shadowOpacity});
+        }
+    };
+    /*
+     * END OF - EDIT MODE
+     */
+
+    ModelEditorConnectionComponent.prototype._getBoundingBox = function () {
+        //only when the path is visible on the screen
+        if (this._isVisible() === true) {
+            return this._skinParts.path.getBBox();
+        }
+
+        //otherwise return an invalid bounding box
+        return undefined;
+    };
+
+    ModelEditorConnectionComponent.prototype.update = function (objDescriptor) {
+        var i;
+
+        this._initializeConnectionProps(objDescriptor);
+
+        this._render();
+
+        if (this._editParams.editMode === true) {
+            for (i = 0; i < this._segmentPoints.length; i += 1) {
+                this._segmentPoints[i].addControls();
+            }
+        }
+    };
+
+    ModelEditorConnectionComponent.prototype._isVisible = function () {
+        //only when the path is visible on the screen
+        if (this._skinParts.path) {
+            if (this._skinParts.path.node.style.display !== "none") {
+                return true;
+            }
+        }
+
+        return false;
     };
 
     ModelEditorConnectionComponent.prototype.setEndpointCoordinates = function (srcCoordinates, tgtCoordinates) {
-        this.sourceCoordinates = srcCoordinates;
-        this.targetCoordinates = tgtCoordinates;
+        var hasChanged = false;
+        this._logger.debug("setEndpointCoordinates, srcCoordinates:'" + srcCoordinates + "', tgtCoordinates:'" + tgtCoordinates + "'");
 
-        this.redrawConnection();
+        if (_.isEqual(this._sourceCoordinates, srcCoordinates) !== true) {
+            this._sourceCoordinates = srcCoordinates;
+            hasChanged = true;
+        }
+
+        if (_.isEqual(this._targetCoordinates, tgtCoordinates) !== true) {
+            this._targetCoordinates = tgtCoordinates;
+            hasChanged = true;
+        }
+
+        if (hasChanged === true) {
+            this._render();
+            this._repositionDragPoints({"source": true,
+                "target": true});
+        }
     };
 
-    ModelEditorConnectionComponent.prototype.redrawConnection = function () {
-        var cX,
-            cY,
-            cW,
-            cH,
-            pathDef,
-            bezierControlPoints,
-            self = this,
+    ModelEditorConnectionComponent.prototype._render = function () {
+        var pathDef;
+
+        if (this._sourceCoordinates !== null && this._targetCoordinates !== null) {
+            this._logger.debug("_render, valid endpoints, drawing");
+            this._skinParts.path.show();
+            this._skinParts.pathShadow.show();
+            this._redrawConnection();
+
+            if (this._skinParts.toolTipMenu) {
+                this._hideContextMenu();
+                this._showContextMenu();
+            }
+        } else {
+            this._logger.debug("_render, NOT VALID endpoints, hide connection");
+            this._endEditMode();
+
+            pathDef = ["M", 0, 0, "L", 3, 3].join(",");
+            this._skinParts.path.attr({ "path": pathDef});
+            this._skinParts.pathShadow.attr({ "path": pathDef});
+
+            this._skinParts.path.hide();
+            this._skinParts.pathShadow.hide();
+
+            this._hideContextMenu();
+        }
+    };
+
+    ModelEditorConnectionComponent.prototype._redrawConnection = function () {
+        var pathDef,
             i,
             segmentPoint,
             controlPointBefore,
@@ -214,194 +549,78 @@ define(['logManager',
             editSegmentCounter = 0,
             connSegmentOptions;
 
-        /*for (i = 0; i < this.skinParts.editSegments.length; i += 1) {
-            this.skinParts.editSegments[i].remove();
-        }*/
-
-        for (i = 0; i < this.skinParts.editSegments.length; i += 1) {
-            this.skinParts.editSegments[i].destroy();
-            delete this.skinParts.editSegments[i];
+        for (i = 0; i < this._skinParts.editSegments.length; i += 1) {
+            this._skinParts.editSegments[i].destroy();
+            delete this._skinParts.editSegments[i];
         }
-        this.skinParts.editSegments = [];
+        this._skinParts.editSegments = [];
 
-
-
-        if (this.editMode === false) {
-            if (this.segmentPoints.length === 0) {
-                bezierControlPoints = bezierHelper.getBezierControlPoints2(this.sourceCoordinates, this.targetCoordinates);
-
-                //TODO: do we really need the DIV over the path?
-                /*cX = Math.min(bezierControlPoints[0].x, bezierControlPoints[3].x);
-                 cY = Math.min(bezierControlPoints[0].y, bezierControlPoints[3].y);
-                 cW = Math.abs(bezierControlPoints[0].x - bezierControlPoints[3].x);
-                 cH = Math.abs(bezierControlPoints[0].y - bezierControlPoints[3].y);
-
-                 this.el.css({"left": cX - this.borderW,
-                 "top": cY - this.borderW });
-                 this.el.outerWidth(cW + 2 * this.borderW).outerHeight(cH + 2 * this.borderW);*/
-
-                //build up path from points
-                pathDef = ["M", bezierControlPoints[0].x, bezierControlPoints[0].y, "C", bezierControlPoints[1].x, bezierControlPoints[1].y, bezierControlPoints[2].x, bezierControlPoints[2].y, bezierControlPoints[3].x, bezierControlPoints[3].y].join(",");
+        if (this._editParams.editMode === false) {
+            if (this._pathAttributes.lineType === "L") {
+                pathDef = connectionSegmentLine.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
             } else {
-
-                //source point
-                pathDef = ["M", this.sourceCoordinates.x, this.sourceCoordinates.y];
-
-                controlPointBefore = this.segmentPoints[0].getBeforeControlPoint();
-                segmentPoint = { "x": this.segmentPoints[0].x,
-                    "y": this.segmentPoints[0].y,
-                    "dir" : controlPointBefore.dir };
-
-                bezierControlPoints = bezierHelper.getBezierControlPoints2(this.sourceCoordinates, segmentPoint);
-
-                pathDef.push("C", bezierControlPoints[1].x, bezierControlPoints[1].y, controlPointBefore.x, controlPointBefore.y, bezierControlPoints[3].x, bezierControlPoints[3].y);
-
-                for (i = 0; i < this.segmentPoints.length - 1; i += 1) {
-                    this.segmentPoints[i].removeControls();
-                    controlPointAfter = this.segmentPoints[i].getAfterControlPoint();
-                    controlPointBefore = this.segmentPoints[i + 1].getBeforeControlPoint();
-
-                    pathDef.push("C", controlPointAfter.x, controlPointAfter.y, controlPointBefore.x, controlPointBefore.y, this.segmentPoints[i + 1].x, this.segmentPoints[i + 1].y);
-                }
-
-                this.segmentPoints[i].removeControls();
-                controlPointAfter = this.segmentPoints[i].getAfterControlPoint();
-                segmentPoint = { "x": this.segmentPoints[i].x,
-                    "y": this.segmentPoints[i].y,
-                    "dir" : controlPointAfter.dir };
-
-                bezierControlPoints = bezierHelper.getBezierControlPoints2(segmentPoint, this.targetCoordinates);
-
-                pathDef.push("C", controlPointAfter.x, controlPointAfter.y, bezierControlPoints[2].x, bezierControlPoints[2].y, this.targetCoordinates.x, this.targetCoordinates.y);
-
-                pathDef = pathDef.join(",");
+                pathDef = connectionSegmentBezier.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
             }
-
-            this.skinParts.path.attr({ "path": pathDef});
-            this.skinParts.path.attr({"opacity": "1.0"});
-
-            this.skinParts.pathShadow.attr({ "path": pathDef});
-            this.skinParts.pathShadow.attr({"opacity": this.pathAttributes.shadowOpacity});
+            this._skinParts.path.attr({ "path": pathDef});
+            this._skinParts.pathShadow.attr({ "path": pathDef});
         } else {
-            this.skinParts.path.attr({"opacity": "0"});
-            this.skinParts.pathShadow.attr({"opacity": "0"});
-
-            if (this.segmentPoints.length === 0) {
-                //bezierControlPoints = bezierHelper.getBezierControlPoints2(this.sourceCoordinates, this.targetCoordinates);
-
-                connSegmentOptions = {"srcCoord" : this.sourceCoordinates,
-                                      "tgtCoord": this.targetCoordinates,
-                                      "type": "bezier",
-                                      "count": editSegmentCounter,
-                                      "raphaelPaper": this.paper,
-                                      "connectionComponent": this};
-
-                this.skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
-
-                //build up path from points
-                /*pathDef = ["M", bezierControlPoints[0].x, bezierControlPoints[0].y, "C", bezierControlPoints[1].x, bezierControlPoints[1].y, bezierControlPoints[2].x, bezierControlPoints[2].y, bezierControlPoints[3].x, bezierControlPoints[3].y].join(",");
-                this.skinParts.editSegments.push(this.paper.path(pathDef).attr({ stroke: this.editOptions.color, fill: "none", "stroke-width": "2" }));
-                $(this.skinParts.editSegments[editSegmentCounter].node).attr("id", this.getId() + "_editSegment_" + editSegmentCounter);*/
-
-
-            } else {
-
-                //source point
-                /*controlPointBefore = this.segmentPoints[0].getBeforeControlPoint();
-                segmentPoint = { "x": this.segmentPoints[0].x,
-                    "y": this.segmentPoints[0].y,
-                    "dir" : controlPointBefore.dir };*/
-
-                segmentPoint = $.extend(true, {}, this.segmentPoints[0]);
-                segmentPoint.dir = this.segmentPoints[0].getBeforeControlPoint().dir;
-
-                /*bezierControlPoints = bezierHelper.getBezierControlPoints2(this.sourceCoordinates, segmentPoint);
-
-                pathDef = ["M", this.sourceCoordinates.x, this.sourceCoordinates.y];
-                pathDef.push("C", bezierControlPoints[1].x, bezierControlPoints[1].y, controlPointBefore.x, controlPointBefore.y, bezierControlPoints[3].x, bezierControlPoints[3].y);
-                pathDef = pathDef.join(",");
-
-                this.skinParts.editSegments.push(this.paper.path(pathDef).attr({ stroke: this.editOptions.color, fill: "none", "stroke-width": "2" }));
-                $(this.skinParts.editSegments[editSegmentCounter].node).attr("id", this.getId() + "_editSegment_" + editSegmentCounter);*/
-
-                connSegmentOptions = {"srcCoord" : this.sourceCoordinates,
-                    "tgtCoord": segmentPoint,
-                    "type": "bezier",
+            //edit mode
+            if (this._segmentPoints.length === 0) {
+                connSegmentOptions = {"srcCoord" : this._sourceCoordinates,
+                    "tgtCoord": this._targetCoordinates,
+                    "lineType": this._pathAttributes.lineType,
                     "count": editSegmentCounter,
-                    "raphaelPaper": this.paper,
+                    "raphaelPaper": this._paper,
                     "connectionComponent": this};
 
-                this.skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
+                this._skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
+            } else {
+                //FIRST SEGMENT: source connection point - 1st segment point
+                segmentPoint = this._segmentPoints[0];
+                connSegmentOptions = {"srcCoord" : this._sourceCoordinates,
+                    "tgtCoord": segmentPoint,
+                    "lineType": this._pathAttributes.lineType,
+                    "count": editSegmentCounter,
+                    "raphaelPaper": this._paper,
+                    "connectionComponent": this};
+
+                this._skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
 
                 editSegmentCounter += 1;
 
-                for (i = 0; i < this.segmentPoints.length - 1; i += 1) {
-                    controlPointAfter = this.segmentPoints[i].getAfterControlPoint();
-                    controlPointBefore = this.segmentPoints[i + 1].getBeforeControlPoint();
+                //MIDDLE SEGMENTS: 1st segment point - last segment point
+                for (i = 0; i < this._segmentPoints.length - 1; i += 1) {
+                    controlPointAfter = this._segmentPoints[i].getAfterControlPoint();
+                    controlPointBefore = this._segmentPoints[i + 1].getBeforeControlPoint();
 
-                    /*pathDef = ["M", this.segmentPoints[i].x, this.segmentPoints[i].y];
-                    pathDef.push("C", controlPointAfter.x, controlPointAfter.y, controlPointBefore.x, controlPointBefore.y, this.segmentPoints[i + 1].x, this.segmentPoints[i + 1].y);
-                    pathDef = pathDef.join(",");
-
-                    this.skinParts.editSegments.push(this.paper.path(pathDef).attr({ stroke: this.editOptions.color, fill: "none", "stroke-width": "2" }));
-                    $(this.skinParts.editSegments[editSegmentCounter].node).attr("id", this.getId() + "_editSegment_" + editSegmentCounter);*/
-
-                    connSegmentOptions = {"srcCoord" : this.segmentPoints[i],
-                        "tgtCoord": this.segmentPoints[i + 1],
-                        "type": "bezier",
+                    connSegmentOptions = {"srcCoord" : this._segmentPoints[i],
+                        "tgtCoord": this._segmentPoints[i + 1],
+                        "lineType": this._pathAttributes.lineType,
                         "count": editSegmentCounter,
-                        "raphaelPaper": this.paper,
+                        "raphaelPaper": this._paper,
                         "connectionComponent": this};
 
-                    this.skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
+                    this._skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
 
                     editSegmentCounter += 1;
                 }
 
-
-                /*controlPointAfter = this.segmentPoints[i].getAfterControlPoint();
-                segmentPoint = { "x": this.segmentPoints[i].x,
-                    "y": this.segmentPoints[i].y,
-                    "dir" : controlPointAfter.dir };*/
-
-                segmentPoint = $.extend(true, {}, this.segmentPoints[i]);
-                segmentPoint.dir = this.segmentPoints[i].getAfterControlPoint().dir;
-
-                /*bezierControlPoints = bezierHelper.getBezierControlPoints2(segmentPoint, this.targetCoordinates);
-
-                pathDef = ["M", this.segmentPoints[i].x, this.segmentPoints[i].y];
-                pathDef.push("C", controlPointAfter.x, controlPointAfter.y, bezierControlPoints[2].x, bezierControlPoints[2].y, this.targetCoordinates.x, this.targetCoordinates.y);
-                pathDef = pathDef.join(",");
-
-                this.skinParts.editSegments.push(this.paper.path(pathDef).attr({ stroke: this.editOptions.color, fill: "none", "stroke-width": "2" }));
-                $(this.skinParts.editSegments[editSegmentCounter].node).attr("id", this.getId() + "_editSegment_" + editSegmentCounter);*/
-
+                //LAST SEGMENT: 1ast segment point - target coordinates
+                segmentPoint = this._segmentPoints[i];
                 connSegmentOptions = {"srcCoord" : segmentPoint,
-                    "tgtCoord": this.targetCoordinates,
-                    "type": "bezier",
+                    "tgtCoord": this._targetCoordinates,
+                    "lineType": this._pathAttributes.lineType,
                     "count": editSegmentCounter,
-                    "raphaelPaper": this.paper,
+                    "raphaelPaper": this._paper,
                     "connectionComponent": this};
 
-                this.skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
+                this._skinParts.editSegments.push(new ConnectionSegment(connSegmentOptions));
 
-
-                for (i = 0; i < this.segmentPoints.length; i += 1) {
-                    this.segmentPoints[i].redrawControls();
+                //set up all segment points with the associated segments they control
+                for (i = 0; i < this._segmentPoints.length; i += 1) {
+                    this._segmentPoints[i].setConnectionSegments(this._skinParts.editSegments[i], this._skinParts.editSegments[i + 1]);
                 }
-
             }
-        }
-
-        //set new path definition
-
-    };
-
-    ModelEditorConnectionComponent.prototype._editConnection = function () {
-        var i;
-
-        for (i = 0; i < this.segmentPoints.length; i += 1) {
-            this.segmentPoints[i].showControls();
         }
     };
 
@@ -421,21 +640,21 @@ define(['logManager',
             }
         }
 
-        if (this.segmentPoints.length === 0) {
+        if (this._segmentPoints.length === 0) {
             if (add === 0) {
                 segmentPointsToSave.push(opts.add.desc);
             }
         } else {
-            for (i = 0; i < this.segmentPoints.length; i += 1) {
+            for (i = 0; i < this._segmentPoints.length; i += 1) {
                 if (add === i) {
                     segmentPointsToSave.push(opts.add.desc);
                 }
 
                 if (remove !== i) {
-                    segmentPointsToSave.push({ "x": this.segmentPoints[i].x,
-                        "y": this.segmentPoints[i].y,
-                        "cx": this.segmentPoints[i].cx,
-                        "cy": this.segmentPoints[i].cy });
+                    segmentPointsToSave.push({ "x": this._segmentPoints[i].x,
+                        "y": this._segmentPoints[i].y,
+                        "cx": this._segmentPoints[i].cx,
+                        "cy": this._segmentPoints[i].cy });
                 }
             }
 
@@ -445,7 +664,8 @@ define(['logManager',
             }
         }
 
-        this.project.setRegistry(this.getId(), nodeRegistryNames.segmentPoints, segmentPointsToSave);
+        this.parentComponent.saveConnectionSegmentPoints(this.getId(), segmentPointsToSave);
+
     };
 
     ModelEditorConnectionComponent.prototype.removeSegmentPoint = function (count) {
@@ -453,10 +673,18 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype.addSegmentPoint = function (count, x, y, cx, cy) {
-        this.saveSegmentPoints({"add": { "count": count, desc: { "x": x,
-            "y": y,
-            "cx": cx,
-            "cy": cy }}});
+        var d = { "x": x,
+            "y": y };
+
+        if (cx) {
+            d.cx = cx;
+        }
+
+        if (cy) {
+            d.cy = cy;
+        }
+
+        this.saveSegmentPoints({"add": { "count": count, desc: d }});
     };
 
     return ModelEditorConnectionComponent;

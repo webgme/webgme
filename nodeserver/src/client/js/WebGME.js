@@ -13,7 +13,8 @@ define([   'order!jquery',
     'order!js/ObjectBrowser/DynaTreeBrowserWidget',
     'js/ModelEditor/SVG/ModelEditorControl',
     'js/ModelEditor/SVG/ModelEditorSVGWidget',
-    'js/ModelEditor/HTML/WidgetManager'], function (jquery,
+    'js/ModelEditor/HTML/ModelEditorControl',
+    'js/ModelEditor/HTML/ModelEditorView'], function (jquery,
                                                             jqueryui,
                                                             underscore,
                                                             logManager,
@@ -25,7 +26,8 @@ define([   'order!jquery',
                                                             DynaTreeBrowserWidget,
                                                             ModelEditorControl,
                                                             ModelEditorSVGWidget,
-                                                            WidgetManager) {
+                                                            ModelEditorControl2,
+                                                            ModelEditorView) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -35,10 +37,15 @@ define([   'order!jquery',
         logManager.excludeComponent("ModelEditorSVGWidget");
         logManager.excludeComponent("ModelEditorControl");
         logManager.excludeComponent("ModelEditorSVGConnection*");
-        logManager.excludeComponent("ModelEditorCanvasComponent*");
-        logManager.excludeComponent("ModelEditorModelComponent*");
-        logManager.excludeComponent("ModelEditorConnectionComponent*");
-        logManager.excludeComponent("Port*");
+        //logManager.excludeComponent("ModelEditorCanvasComponent*");
+        //logManager.excludeComponent("ModelEditorModelComponent*");
+        //logManager.excludeComponent("ModelEditorConnectionComponent*");
+        //logManager.excludeComponent("Port*");
+
+        //logManager.excludeComponent("ModelEditorView_*");
+        //logManager.excludeComponent("HTML_ModelEditorControl");
+
+
     }
 
     var client,
@@ -120,8 +127,9 @@ define([   'order!jquery',
         //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
         tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
-        modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-        modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+        //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+        //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+        modelEditorHTML = new ModelEditorControl2(client, new ModelEditorView("modelEditorHtml"));
     };
 
     return {

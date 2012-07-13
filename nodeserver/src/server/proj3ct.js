@@ -756,6 +756,12 @@ var Commander = function(storage,clients,clientId,transaction,CB){
                         parent.relations.childrenIds.push(object[ID]);
                         commandBuffer.set(parent[ID],parent);
                         object.relations.parentId = parent[ID];
+
+                        if (object.registry.position) {
+                            object.registry.position.x += 50;
+                            object.registry.position.y += 50;
+                        }
+
                         commandBuffer.set(object[ID],object);
                     }
                 })

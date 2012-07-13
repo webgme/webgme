@@ -2,25 +2,23 @@
 
 define(['logManager',
     'clientUtil',
-    'commonUtil',
     'nodeAttributeNames',
     'nodeRegistryNames',
     './Port.js',
     'css!ModelEditorHTMLCSS/ModelWithPortsDecorator'], function (logManager,
-                                     util,
-                                     commonUtil,
-                                     nodeAttributeNames,
-                                     nodeRegistryNames,
-                                     Port) {
+                                                                 util,
+                                                                 nodeAttributeNames,
+                                                                 nodeRegistryNames,
+                                                                 Port) {
 
     var ModelWithPortsDecorator;
 
-    ModelWithPortsDecorator = function (ownerComponent) {
-        this.project = ownerComponent.project;
-        this.id = ownerComponent.getId();
+    ModelWithPortsDecorator = function (objectDescriptor) {
+        this.project = objectDescriptor.client;
+        this.id = objectDescriptor.id;
         this.skinParts = {};
-        this.parentContainer = ownerComponent.el;
-        this.ownerComponent = ownerComponent;
+        this.ownerComponent = objectDescriptor.ownerComponent;
+        this.parentContainer = objectDescriptor.ownerComponent.el;
         this.childrenIds = [];
         this.ports = {};
 
@@ -209,8 +207,8 @@ define(['logManager',
         }
 
         this.ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodeAttributeNames.name),
-                                                "orientation": portOrientation,
-                                                "modelEditorCanvas": this.ownerComponent.parentComponent});
+            "orientation": portOrientation,
+            "modelEditorCanvas": this.ownerComponent.parentComponent});
         portContainer.append(this.ports[portId].el);
         this.ownerComponent.registerSubcomponents([portId]);
 

@@ -1,44 +1,45 @@
-/**
- * Created with JetBrains WebStorm.
- * User: roby
- * Date: 6/22/12
- * Time: 9:54 PM
- * To change this template use File | Settings | File Templates.
- */
 "use strict";
 
 define(['logManager',
         'bezierHelper',
+        './ConnectionSegmentLine.js',
         'raphaeljs'], function (logManager,
-                                    bezierHelper) {
+                                    bezierHelper,
+                                    connectionSegmentLine) {
 
     var ConnectionSegment;
 
     ConnectionSegment = function (opts) {
-        this.connectionComponent = opts.connectionComponent;
+        if (opts) {
+            this.connectionComponent = opts.connectionComponent;
 
-        this.paper = opts.raphaelPaper;
+            this.paper = opts.raphaelPaper;
 
-        this.connectionId = this.connectionComponent.getId();
+            this.connectionId = this.connectionComponent.getId();
 
-        this.srcCoord = opts.srcCoord;
-        this.tgtCoord = opts.tgtCoord;
+            this.srcCoord = opts.srcCoord;
+            this.tgtCoord = opts.tgtCoord;
 
-        this.count = opts.count;
+            this.count = opts.count;
 
-        this.logger = logManager.create("ConnectionSegment_" + this.connectionId + "_" + this.count);
-        this.logger.debug("Created");
+            this.logger = logManager.create("ConnectionSegment_" + this.connectionId + "_" + this.count);
+            this.logger.debug("Created");
 
-        this.skinParts = {};
+            this.skinParts = {};
 
-        this.settings = { "defaultFillColor": "#FFFF00",
-            "defaultStrokeColor": "#FF0000",
-            "minDragDistance": 3,
-            "color": "#0000FF",
-            "shadowPathWidth": 10,
-            "shadowPathOpacity": 0.15};
+            this.lineType = opts.lineType;
 
-        this._render();
+            this.settings = { "defaultFillColor": "#FFFF00",
+                "defaultStrokeColor": "#FF0000",
+                "minDragDistance": 3,
+                "color": "#0000FF",
+                "shadowPathWidth": 10,
+                "shadowPathOpacity": 0.15};
+
+            this._initializeControls();
+
+            this._render();
+        }
     };
 
     ConnectionSegment.prototype._getMousePos = function (e) {
@@ -47,48 +48,19 @@ define(['logManager',
             "mY": e.pageY - childrenContainerOffset.top };
     };
 
-    ConnectionSegment.prototype._render = function () {
-        var bezierControlPoint1,
-            bezierControlPoint2,
-            calculatedBezierControlPoint,
-            self = this;
+    ConnectionSegment.prototype._initializeControls = function () {
+        var self = this;
 
-        //draw a bezier curve from srcCoord to tgtCoord
-        //srcCoord and tgtCoord might have control points as well
-        if ($.isFunction(this.srcCoord.getAfterControlPoint)) {
-            bezierControlPoint1 = this.srcCoord.getAfterControlPoint();
-        }
-
-        if ($.isFunction(this.tgtCoord.getBeforeControlPoint)) {
-            bezierControlPoint2 = this.tgtCoord.getBeforeControlPoint();
-        }
-
-        if ((bezierControlPoint1 === undefined) || (bezierControlPoint2 === undefined)) {
-            calculatedBezierControlPoint = bezierHelper.getBezierControlPoints2(this.srcCoord, this.tgtCoord);
-
-            if (bezierControlPoint1 === undefined) {
-                bezierControlPoint1 = calculatedBezierControlPoint[1];
-            }
-
-            if (bezierControlPoint2 === undefined) {
-                bezierControlPoint2 = calculatedBezierControlPoint[2];
-            }
-        }
-
-        this.pathDef = ["M", this.srcCoord.x, this.srcCoord.y];
-        this.pathDef.push("C", bezierControlPoint1.x, bezierControlPoint1.y, bezierControlPoint2.x, bezierControlPoint2.y, this.tgtCoord.x, this.tgtCoord.y);
-        this.pathDef = this.pathDef.join(",");
-
-        this.skinParts.path = this.paper.path(this.pathDef).attr({ stroke: this.settings.color,
-                                                                fill: "none",
-                                                                "stroke-width": "2" });
+        this.skinParts.path = this.paper.path("M0,0L3,3").attr({ stroke: this.settings.color,
+            fill: "none",
+            "stroke-width": "2" });
         $(this.skinParts.path.node).attr("id", this.connectionId + "_editSegment_" + this.count);
 
 
         this.skinParts.circle = this.paper.circle(0, 0, 4).attr({"stroke" : self.settings.defaultStrokeColor,
-                                                                "fill" : self.settings.defaultFillColor}).hide();
+            "fill" : self.settings.defaultFillColor}).hide();
 
-        this.skinParts.pathShadow = this.paper.path(this.pathDef).attr({ stroke: this.settings.color,
+        this.skinParts.pathShadow = this.paper.path("M0,0L3,3").attr({ stroke: this.settings.color,
             fill: "none",
             "stroke-width": this.settings.shadowPathWidth, "opacity": this.settings.shadowPathOpacity });
 
@@ -131,12 +103,12 @@ define(['logManager',
                 cy = dots.n.y - pos.y;
 
                 /*if (Math.abs(cx) < 10) {
-                    cx = cx / Math.abs(cx) * 10;
-                }
+                 cx = cx / Math.abs(cx) * 10;
+                 }
 
-                if (Math.abs(cy) < 10) {
-                    cy = cy / Math.abs(cy) * 10;
-                }*/
+                 if (Math.abs(cy) < 10) {
+                 cy = cy / Math.abs(cy) * 10;
+                 }*/
 
                 self.connectionComponent.addSegmentPoint(self.count, pos.x, pos.y, cx, cy);
             }
@@ -148,6 +120,63 @@ define(['logManager',
         this.skinParts.pathShadow.mouseout(this.onMouseOut);
         this.skinParts.pathShadow.mousemove(this.onMouseMove);
         this.skinParts.pathShadow.mousedown(this.onMouseDown);
+    };
+
+    ConnectionSegment.prototype._render = function () {
+        var bezierControlPoint1,
+            bezierControlPoint2,
+            calculatedBezierControlPoint;
+
+        if (this.lineType === "L") {
+            this.pathDef = connectionSegmentLine.getPathDef(this.srcCoord, this.tgtCoord);
+        } else {
+            //draw a bezier curve from srcCoord to tgtCoord
+            //srcCoord and tgtCoord might have control points as well
+            if ($.isFunction(this.srcCoord.getAfterControlPoint)) {
+                bezierControlPoint1 = this.srcCoord.getAfterControlPoint();
+            } else {
+                if ($.isFunction(this.tgtCoord.getBeforeControlPoint)) {
+                    this.tgtCoord.dir = this.tgtCoord.getBeforeControlPoint().dir;
+                    this.tgtCoord.dirGenerated = true;
+                }
+            }
+
+            if ($.isFunction(this.tgtCoord.getBeforeControlPoint)) {
+                bezierControlPoint2 = this.tgtCoord.getBeforeControlPoint();
+            } else {
+                if ($.isFunction(this.srcCoord.getAfterControlPoint)) {
+                    this.srcCoord.dir = this.srcCoord.getAfterControlPoint().dir;
+                    this.srcCoord.dirGenerated = true;
+                }
+            }
+
+            if ((bezierControlPoint1 === undefined) || (bezierControlPoint2 === undefined)) {
+                calculatedBezierControlPoint = bezierHelper.getBezierControlPoints2(this.srcCoord, this.tgtCoord);
+
+                if (bezierControlPoint1 === undefined) {
+                    bezierControlPoint1 = calculatedBezierControlPoint[1];
+                    if (this.tgtCoord.dirGenerated === true) {
+                        delete this.tgtCoord.dir;
+                        delete this.tgtCoord.dirGenerated;
+                    }
+                }
+
+                if (bezierControlPoint2 === undefined) {
+                    bezierControlPoint2 = calculatedBezierControlPoint[2];
+                    if (this.srcCoord.dirGenerated === true) {
+                        delete this.srcCoord.dir;
+                        delete this.srcCoord.dirGenerated;
+                    }
+                }
+            }
+
+            this.pathDef = ["M", this.srcCoord.x, this.srcCoord.y];
+            this.pathDef.push("C", bezierControlPoint1.x, bezierControlPoint1.y, bezierControlPoint2.x, bezierControlPoint2.y, this.tgtCoord.x, this.tgtCoord.y);
+            this.pathDef = this.pathDef.join(",");
+        }
+
+        this.skinParts.path.attr({"path": this.pathDef});
+        this.skinParts.pathShadow.attr({"path": this.pathDef});
     };
 
     ConnectionSegment.prototype._getSelectedPathPoint = function (mouseX, mouseY) {

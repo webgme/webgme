@@ -1,22 +1,18 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
-    'commonUtil',
     'nodeAttributeNames',
     'css!ModelEditorHTMLCSS/SimpleModelDecorator'], function (logManager,
-             util,
-             commonUtil,
-             nodeAttributeNames) {
+                                                              nodeAttributeNames) {
 
     var SimpleModelDecorator;
 
-    SimpleModelDecorator = function (ownerComponent) {
-        this.project = ownerComponent.project;
-        this.id = ownerComponent.getId();
+    SimpleModelDecorator = function (objectDescriptor) {
+        this.project = objectDescriptor.client;
+        this.id = objectDescriptor.id;
         this.skinParts = {};
-        this.parentContainer = ownerComponent.el;
-        this.ownerComponent = ownerComponent;
+        this.ownerComponent = objectDescriptor.ownerComponent;
+        this.parentContainer = objectDescriptor.ownerComponent.el;
 
         this.logger = logManager.create("SimpleModelDecorator_" + this.id);
         this.logger.debug("Created");
@@ -38,16 +34,16 @@ define(['logManager',
         this._updateModelComponent();
     };
 
+    SimpleModelDecorator.prototype._updateModelComponent = function () {
+        this.ownerComponent.decoratorUpdated();
+    };
+
     SimpleModelDecorator.prototype.update = function () {
         var node = this.project.getNode(this.id);
 
         this.skinParts.title.text(node.getAttribute(nodeAttributeNames.name));
 
         this._updateModelComponent();
-    };
-
-    SimpleModelDecorator.prototype._updateModelComponent = function () {
-        this.ownerComponent.decoratorUpdated();
     };
 
     SimpleModelDecorator.prototype.destroy = function () {

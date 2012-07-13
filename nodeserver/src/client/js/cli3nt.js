@@ -68,15 +68,26 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"modify",id:id,attributes:attributes}]});
             }
         };
-        this.setRegistry = function(id,name,value){
+        this.setRegistry = function(id,names,value){
             var data,
                 registry,
-                command;
+                command,
+                i;
 
             data = storage.get(id);
             if(data){
+                //check if name is string, then set that entry to value
                 registry = commonUtil.copy(data.registry);
-                registry[name] = value;
+                if (_.isString(names)) {
+                    registry[names] = value;
+                } else if (_.isObject(names)) {
+                    //if names is object, then names is considered as name-value pairs
+                    for (i in names) {
+                        if (names.hasOwnProperty(i)) {
+                            registry[i] =  names[i];
+                        }
+                    }
+                }
                 self.sendMessage({transactionId:"talan ezt majd hasznaljuk",commands:[{type:"modify",id:id,registry:registry}]});
             }
         };

@@ -1,13 +1,11 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
     'text!ModelEditorHTML/ModelPortLeftTmpl.html',
     'text!ModelEditorHTML/ModelPortRightTmpl.html',
     'css!ModelEditorHTMLCSS/Port'], function (logManager,
-                                               util,
-                                               modelPortLeftTmpl,
-                                               modelPortRightTmpl) {
+                                              modelPortLeftTmpl,
+                                              modelPortRightTmpl) {
 
     var Port;
 
@@ -53,7 +51,7 @@ define(['logManager',
 
         this.el.draggable({
             helper: function () {
-                return $("<div class='draw-connection-drag-helper'></div>").data("id", self.id);
+                return $("<div class='draw-connection-drag-helper'></div>").data("sourceId", self.id);
             },
             scroll: true,
             cursor: 'pointer',
@@ -61,12 +59,12 @@ define(['logManager',
                 left: 0,
                 top: 0
             },
-            start: function (event, ui) {
+            start: function (event) {
                 self.el.addClass("connection-source");
                 self.modelEditorCanvas.startDrawConnection(self.id);
                 event.stopPropagation();
             },
-            stop: function (event, ui) {
+            stop: function (event) {
                 self.modelEditorCanvas.endDrawConnection(self.id);
                 self.el.removeClass("connection-source");
                 event.stopPropagation();
@@ -82,9 +80,12 @@ define(['logManager',
             hoverClass: "connection-end-state-hover",
             greedy: true,
             drop: function (event, ui) {
-                var srdId = ui.helper.data("id");
+                var data = $.extend(true, {}, ui.helper.data());
+                data.targetId = self.id;
 
-                self.modelEditorCanvas.createConnection(srdId, self.id);
+                ui.helper.data("dropHandled", true);
+
+                self.modelEditorCanvas.createConnection(data);
                 event.stopPropagation();
             }
         });

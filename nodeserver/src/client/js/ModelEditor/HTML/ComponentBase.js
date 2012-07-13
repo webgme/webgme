@@ -4,50 +4,25 @@ define([], function () {
 
     var ComponentBase;
 
-    ComponentBase = function (id, proj) {
-        var guid = id;
-        this.project = proj;
-
-        this.parentComponent = null;
-        this.childComponents = {};
-        this.skinParts = {};
+    ComponentBase = function (id, cType) {
+        var guid = id,
+            type = cType;
 
         //component's outermost DOM element
         this.el = $('<div/>').attr("id", guid);
 
+        this._skinParts = {};
+
         this.getId = function () {
             return guid;
         };
+
+        this.getType = function () {
+            return type;
+        };
     };
 
-    ComponentBase.prototype.addChild = function (child, childContainer) {
-        if (this.childComponents[child.getId()]) {
-            this.childComponents[child.getId()].destroy();
-        }
-
-        this.childComponents[child.getId()] = child;
-
-        child.parentComponent = this;
-
-        if (childContainer) {
-            childContainer.append(child.el);
-        } else {
-            if (this.skinParts.childrenContainer) {
-                this.skinParts.childrenContainer.append(child.el);
-            }
-        }
-
-        child.addedToParent.call(child);
-    };
-
-    ComponentBase.prototype.addedToParent = function () {};
-
-    ComponentBase.prototype.removeChildById = function (childId) {
-        if (this.childComponents[childId]) {
-            this.childComponents[childId].destroy();
-            delete this.childComponents[childId];
-        }
-    };
+    ComponentBase.prototype.render = function () {};
 
     ComponentBase.prototype.destroy = function () {
         var i;
@@ -56,15 +31,10 @@ define([], function () {
         //i.e.: delete its own territory
         this.onDestroy();
 
-        //destroy all children
-        for (i in this.childComponents) {
-            if (this.childComponents.hasOwnProperty(i)) {
-                this.childComponents[i].destroy();
-            }
-        }
-
         //finally remove itself from DOM
-        this.el.remove();
+        if (this.el) {
+            this.el.remove();
+        }
     };
 
     ComponentBase.prototype.onDestroy = function () {};
@@ -80,12 +50,8 @@ define([], function () {
         return bBox;
     };
 
-    ComponentBase.prototype.isSelectable = function () {
-        return false;
-    };
-
-    ComponentBase.prototype.isMultiSelectable = function () {
-        return false;
+    ComponentBase.prototype.isVisible = function () {
+        return true;
     };
 
     return ComponentBase;

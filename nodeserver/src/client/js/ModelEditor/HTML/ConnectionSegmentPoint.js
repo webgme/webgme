@@ -1,10 +1,3 @@
-/**
- * Created with JetBrains WebStorm.
- * User: roby
- * Date: 6/22/12
- * Time: 9:54 PM
- * To change this template use File | Settings | File Templates.
- */
 "use strict";
 
 define(['logManager',
@@ -21,10 +14,12 @@ define(['logManager',
 
         this.x = opts.x;
         this.y = opts.y;
-        this.cx = opts.cx;
-        this.cy = opts.cy;
+        this.cx = opts.cx || 0;
+        this.cy = opts.cy || 0;
 
         this.count = opts.count;
+
+        this.lineType = opts.lineType;
 
         this.settings = { "mouseOverFillColor" : "#00FF00",
                           "defaultFillColor": "#FFFFE1",
@@ -75,6 +70,7 @@ define(['logManager',
 
     ConnectionSegmentPoint.prototype.destroy = function () {
         this.removeControls();
+        document.body.style.cursor = "default";
     };
 
     ConnectionSegmentPoint.prototype.removeControls = function () {
@@ -116,10 +112,38 @@ define(['logManager',
                 "y": this.y + this.cy},
             self = this;
 
-        this.line = this.paper.path(["M", cpBefore.x, cpBefore.y, "L", cpAfter.x, cpAfter.y].join(","));
+        //additionla controls needed only for Bezier
+        if (this.lineType === "B") {
+            this.line = this.paper.path(["M", cpBefore.x, cpBefore.y, "L", cpAfter.x, cpAfter.y].join(","));
+            this.controlPointBefore = this.paper.circle(cpBefore.x, cpBefore.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
+            this.controlPointAfter = this.paper.circle(cpAfter.x, cpAfter.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
+
+
+            this.controlPointBeforeMouseOverCallBack = function () {
+                self._mouseOver(self.controlPointBefore);
+            };
+
+            this.controlPointBeforeMouseOutCallBack = function () {
+                self._mouseOut(self.controlPointBefore);
+            };
+
+            this.controlPointAfterMouseOverCallBack = function () {
+                self._mouseOver(self.controlPointAfter);
+            };
+
+            this.controlPointAfterMouseOutCallBack = function () {
+                self._mouseOut(self.controlPointAfter);
+            };
+
+            this.controlPointBefore.mouseover(this.controlPointBeforeMouseOverCallBack).mouseout(this.controlPointBeforeMouseOutCallBack);
+            this.controlPointAfter.mouseover(this.controlPointAfterMouseOverCallBack).mouseout(this.controlPointAfterMouseOutCallBack);
+
+            this.controlPointBefore.drag(this._onControlPointBeforeDragMove, this._onControlPointBeforeDragStart, this.onControlPointBeforeDragEnd, this, this, this);
+            this.controlPointAfter.drag(this._onControlPointAfterDragMove, this._onControlPointAfterDragStart, this.onControlPointAfterDragEnd, this, this, this);
+        }
+
+        //the middle point is always there
         this.midPoint = this.paper.circle(this.x, this.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
-        this.controlPointBefore = this.paper.circle(cpBefore.x, cpBefore.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
-        this.controlPointAfter = this.paper.circle(cpAfter.x, cpAfter.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
 
         this.midPointMouseOverCallBack = function () {
             self._mouseOver(self.midPoint);
@@ -136,31 +160,11 @@ define(['logManager',
             event.stopPropagation();
         };
 
-        this.controlPointBeforeMouseOverCallBack = function () {
-            self._mouseOver(self.controlPointBefore);
-        };
-
-        this.controlPointBeforeMouseOutCallBack = function () {
-            self._mouseOut(self.controlPointBefore);
-        };
-
-        this.controlPointAfterMouseOverCallBack = function () {
-            self._mouseOver(self.controlPointAfter);
-        };
-
-        this.controlPointAfterMouseOutCallBack = function () {
-            self._mouseOut(self.controlPointAfter);
-        };
-
         this.midPoint.mouseover(this.midPointMouseOverCallBack).mouseout(this.midPointMouseOutCallBack);
         this.midPoint.dblclick(this.midPointDoubleClick);
-        this.controlPointBefore.mouseover(this.controlPointBeforeMouseOverCallBack).mouseout(this.controlPointBeforeMouseOutCallBack);
-        this.controlPointAfter.mouseover(this.controlPointAfterMouseOverCallBack).mouseout(this.controlPointAfterMouseOutCallBack);
 
         //hook up drag handlers
         this.midPoint.drag(this._onSegmentPointDragMove, this._onSegmentPointDragStart, this._onSegmentPointDragEnd, this, this, this);
-        this.controlPointBefore.drag(this._onControlPointBeforeDragMove, this._onControlPointBeforeDragStart, this.onControlPointBeforeDragEnd, this, this, this);
-        this.controlPointAfter.drag(this._onControlPointAfterDragMove, this._onControlPointAfterDragStart, this.onControlPointAfterDragEnd, this, this, this);
     };
 
     ConnectionSegmentPoint.prototype._mouseOver = function (circle) {
@@ -180,24 +184,35 @@ define(['logManager',
                 "y": this.y + this.cy},
             linePathDef = ["M", cpBefore.x, cpBefore.y, "L", cpAfter.x, cpAfter.y].join(",");
 
-        this.line.attr({"path": linePathDef});
         this.midPoint.attr({"cx": this.x,
-                            "cy": this.y});
-        this.controlPointBefore.attr({"cx": cpBefore.x,
-            "cy": cpBefore.y});
+            "cy": this.y});
 
-        this.controlPointAfter.attr({"cx": cpAfter.x,
-            "cy": cpAfter.y});
+        if (this.lineType === "B") {
+            this.line.attr({"path": linePathDef});
 
-        this.line.toFront();
-        this.midPoint.toFront();
-        this.controlPointBefore.toFront();
-        this.controlPointAfter.toFront();
+            this.controlPointBefore.attr({"cx": cpBefore.x,
+                "cy": cpBefore.y});
+
+            this.controlPointAfter.attr({"cx": cpAfter.x,
+                "cy": cpAfter.y});
+
+            this.line.toFront();
+            this.controlPointBefore.toFront();
+            this.controlPointAfter.toFront();
+            this.midPoint.toFront();
+        }
+
+        if (this._beforeSegment) {
+            this._beforeSegment._render();
+        }
+        if (this._afterSegment) {
+            this._afterSegment._render();
+        }
+
     };
 
     /* DRAGGING SEGMENT POINT */
     ConnectionSegmentPoint.prototype._onSegmentPointDragStart = function (x, y, event) {
-        //this.logger.debug("_onSegmentPointDragStart");
         this.validDrag = false;
         this.oldPos.x = this.x;
         this.oldPos.y = this.y;
@@ -213,7 +228,6 @@ define(['logManager',
         if (this.validDrag === true) {
             this.x = this.oldPos.x + dx;
             this.y = this.oldPos.y + dy;
-            this.connectionComponent.redrawConnection();
             this.redrawControls();
         }
         event.stopPropagation();
@@ -221,7 +235,6 @@ define(['logManager',
 
     ConnectionSegmentPoint.prototype._onSegmentPointDragEnd = function (event) {
         if (this.validDrag === true) {
-            //this.logger.debug("_onSegmentPointDragEnd");
             this.connectionComponent.saveSegmentPoints();
         }
         event.stopPropagation();
@@ -273,7 +286,15 @@ define(['logManager',
         this.cx = this.oldContolPoint.x + dx;
         this.cy = this.oldContolPoint.y + dy;
         this.redrawControls();
-        this.connectionComponent.redrawConnection();
+        //this.connectionComponent.redrawConnection();
+    };
+
+    /*
+     * ASSOCIATED CONNECTION SEGMENTS
+     */
+    ConnectionSegmentPoint.prototype.setConnectionSegments = function (beforeSegment, afterSegment) {
+        this._beforeSegment = beforeSegment;
+        this._afterSegment = afterSegment;
     };
 
     return ConnectionSegmentPoint;

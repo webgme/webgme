@@ -63,7 +63,8 @@ define([], function () {
         var logMessage = function (level, msg) {
             var logTime = new Date(),
                 logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours(),
-                levelStr = level;
+                levelStr = level,
+                concreteLogger = console.log;
             if (isComponentAllowedToLog(componentName) === true) {
                 if (currentLogLevel > logLevels.OFF) {
                     //log only what meets configuration
@@ -81,7 +82,19 @@ define([], function () {
                                 levelStr  = '\u001B[' + logColors[level] + 'm' + level + '\u001B[39m';
                             }
 
-                            console.log(levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg);
+                            if ((logLevels[level] === logLevels.ERROR) && (console.error)) {
+                                concreteLogger = console.error;
+                            }
+
+                            if ((logLevels[level] === logLevels.WARNING) && (console.warn)) {
+                                concreteLogger = console.warn;
+                            }
+
+                            if ((logLevels[level] === logLevels.INFO) && (console.info)) {
+                                concreteLogger = console.info;
+                            }
+
+                            concreteLogger.call(console, levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg);
                         }
                     }
                 }

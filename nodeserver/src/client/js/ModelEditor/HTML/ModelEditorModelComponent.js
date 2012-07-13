@@ -6,133 +6,143 @@ define(['logManager',
     'nodeAttributeNames',
     'nodeRegistryNames',
     './ComponentBase.js',
-    './SimpleModelDecorator.js'
-    ], function (logManager,
-             util,
-             commonUtil,
-             nodeAttributeNames,
-             nodeRegistryNames,
-             ComponentBase,
-             SimpleModelDecorator) {
+    './SimpleModelDecorator.js'], function (logManager,
+                                         util,
+                                         commonUtil,
+                                         nodeAttributeNames,
+                                         nodeRegistryNames,
+                                         ComponentBase) {
 
     var ModelEditorModelComponent;
 
-    ModelEditorModelComponent = function (id, proj) {
-        $.extend(this, new ComponentBase(id, proj));
+    ModelEditorModelComponent = function (objDescriptor) {
+        $.extend(this, new ComponentBase(objDescriptor.id, objDescriptor.kind));
 
-        this.logger = logManager.create("ModelEditorModelComponent_" + id);
-        this.logger.debug("Created");
+        this._logger = logManager.create("ModelEditorModelComponent_" + this.getId());
+        this._logger.debug("Created");
 
-        this.zIndex = 10;
-        this.connectionRectWidth = 5;
+        this.parentComponent = objDescriptor.modelEditorView;
 
         /*
          * OVERRIDE COMPONENTBASE MEMBERS
          */
-        this.addedToParent = function () {
-            this._addedToParent();
-        };
-
         this.onDestroy = function () {
-            //remove extra connection rectangle from DOM
-            this.skinParts.connectionRect.remove();
-
-            if (this.decoratorInstance) {
-                this.decoratorInstance.destroy();
-            }
-
-            this.project.updateTerritory(this.territoryId, []);
-
-            this.logger.debug("onDestroy");
+            this._onDestroy();
         };
 
-        this.isSelectable = function () {
-            return true;
+        this.render = function () {
+            this._render();
         };
 
-        this.isMultiSelectable = function () {
-            return true;
-        };
         /*
          * END OVERRIDE COMPONENTBASE MEMBERS
          */
 
-        this.decoratorInstance = null;
-        this.DecoratorClass = SimpleModelDecorator;
-
-        this._initialize();
+        this._initialize(objDescriptor);
     };
 
-    ModelEditorModelComponent.prototype._initialize = function () {
-        var node = this.project.getNode(this.getId()),
-            nodePosition = node.getRegistry(nodeRegistryNames.position);
+    ModelEditorModelComponent.prototype._onDestroy = function () {
+        //remove extra connection rectangle from DOM
+        this._skinParts.connectionRect.remove();
+
+        if (this._decoratorInstance) {
+            this._decoratorInstance.destroy();
+        }
+
+        this._logger.debug("onDestroy");
+    };
+
+    ModelEditorModelComponent.prototype._initialize = function (objDescriptor) {
+        /*MODELEDITORCOMPONENT CONSTANTS*/
+
+        this._zIndex = 10;
+        this._connectionRectProps = { "width" : 10,
+                                        "color": "rgba(255,0,0,0.2)"}; //TODO: remove color if not needed anymore
+
+        /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
+
+        /*instance variables*/
+        this._decoratorInstance = null;
 
         //generate skin controls
         this.el.addClass("model");
 
-        this.el.css("z-index", this.zIndex);
-        this.el.css("position", "absolute");
+        this.el.css({"z-index": this._zIndex,
+                        "position": "absolute" });
 
         //position self on parent canvas
-        this._setPosition(nodePosition.x, nodePosition.y, false);
+        this._setPosition(objDescriptor.position.x, objDescriptor.position.y);
+
+        objDescriptor.ownerComponent = this;
+
+        this._initializeDecorator(objDescriptor);
     };
 
-    ModelEditorModelComponent.prototype._initializeDecorator = function () {
-        var node = this.project.getNode(this.getId()),
-            decoratorName = "",
-            customDecorator = node.getRegistry(nodeRegistryNames.decorator),
+    ModelEditorModelComponent.prototype._initializeDecorator = function (objDescriptor) {
+        var decoratorName = objDescriptor.decorator,
             self = this;
 
-        if (_.isString(customDecorator)) {
+        if (_.isString(decoratorName)) {
             //TODO: delete
-            customDecorator = "ModelWithPortsDecorator";
+            //decoratorName = "SimpleModelDecorator";
+            decoratorName = "ModelWithPortsDecorator";
             //TODO: enddelete
-            decoratorName = './js/ModelEditor/HTML/' + customDecorator + '.js';
+            decoratorName = './js/ModelEditor/HTML/' + decoratorName + '.js';
 
             require([ decoratorName ],
-                function (customDecoratorClass) {
-                    self.DecoratorClass = customDecoratorClass;
-                    self.decoratorInstance = new self.DecoratorClass(self);
-                    self.decoratorInstance.render();
+                function (DecoratorClass) {
+                    self._decoratorInstance = new DecoratorClass(objDescriptor);
                 });
-
         } else {
-            //instantiate the decorator class and let it render the content
-            this.decoratorInstance = new this.DecoratorClass(this);
-            this.decoratorInstance.render();
+            this._logger.error("Invalid decorator name '" + decoratorName + "'");
         }
     };
 
-    ModelEditorModelComponent.prototype._addedToParent = function () {
+    ModelEditorModelComponent.prototype._render = function () {
+        var self = this;
+
+        if (this._decoratorInstance === null) {
+            setTimeout(function () {
+                self._render();
+            }, 100);
+        } else {
+            this._initializeModelUI();
+            this._decoratorInstance.render();
+        }
+    };
+
+    ModelEditorModelComponent.prototype._initializeModelUI = function () {
         var self = this,
             selfId = this.getId();
 
         //create a thin edge around it that can be used to initiate connection drawing
-        this.skinParts.connectionRect = $('<div/>', {
+        this._skinParts.connectionRect = $('<div/>', {
             "id": "connectionRect_" + this.getId()
         });
-        this.skinParts.connectionRect.css({"z-index": this.zIndex - 1,
-            "cursor": "crosshair" });
+        this._skinParts.connectionRect.css({"z-index": this._zIndex - 1,
+                                            "cursor": "crosshair" });
 
-        this.skinParts.connectionRect.insertBefore(this.el);
+        if (this._connectionRectProps.color) {
+            this._skinParts.connectionRect.css({ "backgroundColor": this._connectionRectProps.color });
+        }
 
-        this.skinParts.connectionRect.draggable({
+        this._skinParts.connectionRect.insertBefore(this.el);
+
+        this._skinParts.connectionRect.draggable({
             helper: function () {
-                return $("<div class='draw-connection-drag-helper'></div>").data("id", selfId);
+                return $("<div class='draw-connection-drag-helper'></div>").data("sourceId", selfId);
             },
             scroll: true,
-            cursor: 'pointer',
-            cursorAt: {
-                left: 0,
-                top: 0
-            },
+            cursor: 'crosshair',
+            cursorAt: { left: 0,
+                        top: 0 },
             start: function (event) {
-                self.skinParts.connectionRect.addClass("connection-source");
+                self._skinParts.connectionRect.addClass("connection-source");
                 self.parentComponent.startDrawConnection(selfId);
                 event.stopPropagation();
             },
             stop: function (event) {
-                self.skinParts.connectionRect.removeClass("connection-source");
+                self._skinParts.connectionRect.removeClass("connection-source");
                 self.parentComponent.endDrawConnection();
                 event.stopPropagation();
             },
@@ -141,7 +151,7 @@ define(['logManager',
             }
         });
 
-        self.skinParts.connectionRect.bind("mousedown", function (event) {
+        this._skinParts.connectionRect.bind("mousedown", function (event) {
             event.stopPropagation();
         });
 
@@ -150,77 +160,68 @@ define(['logManager',
             accept: ".connection-source",
             hoverClass: "connection-end-state-hover",
             drop: function (event, ui) {
-                var srcId = ui.helper.data("id");
+                var data = $.extend(true, {}, ui.helper.data());
+                data.targetId = selfId;
 
-                self.parentComponent.createConnection(srcId, selfId);
+                ui.helper.data("dropHandled", true);
+
+                self.parentComponent.createConnection(data);
                 event.stopPropagation();
             }
         });
 
         this._repositionConnectionRect();
 
+        //hook up mousedown
+        this.el.bind('mousedown', function (event) {
+            self._onMouseDown(event);
+        });
+
+        this.el.bind('mouseup', function (event) {
+            self._onMouseUp(event);
+        });
+    };
+
+    ModelEditorModelComponent.prototype._onMouseDown = function (event) {
+        this.parentComponent.onComponentMouseDown(event, this.getId());
+        event.stopPropagation();
+        event.preventDefault();
+    };
+
+    ModelEditorModelComponent.prototype._onMouseUp = function (event) {
+        this.parentComponent.onComponentMouseUp(event, this.getId());
+//        event.stopPropagation();
+    };
+
+    ModelEditorModelComponent.prototype.decoratorUpdated = function () {
+        this._repositionConnectionRect();
         this._notifyParentAboutBBoxChange();
-
-        this._initializeDecorator();
     };
 
-    ModelEditorModelComponent.prototype._repositionConnectionRect = function () {
-        var bBox = this.getBoundingBox();
-
-        if (this.skinParts.connectionRect) {
-            this.skinParts.connectionRect.css({
-                "position": "absolute",
-                "left": bBox.x - this.connectionRectWidth,
-                "top": bBox.y - this.connectionRectWidth,
-                "width": bBox.width + this.connectionRectWidth * 2,
-                "height": bBox.height + this.connectionRectWidth * 2
-            });
-        }
-    };
-
-    ModelEditorModelComponent.prototype.onSelect = function () {
-        this.el.addClass("selected");
-    };
-
-    ModelEditorModelComponent.prototype.onDeselect = function () {
-        this.el.removeClass("selected");
-    };
-
-    ModelEditorModelComponent.prototype._setPosition = function (pX, pY, updateDB) {
+    ModelEditorModelComponent.prototype._setPosition = function (pX, pY) {
         //if position is different than the given one
         this.el.css({   "left": pX,
-                        "top": pY });
-
-        if (updateDB === true) {
-            this.project.setRegistry(this.getId(), nodeRegistryNames.position, { "x": pX, "y": pY });
-        }
-
-        this.logger.debug("Object position changed to [" + pX + ", " + pY + "]" + (updateDB === true ? ", new position is saved back to database" : ""));
+            "top": pY });
 
         //fix the connection rect around it
         this._repositionConnectionRect();
     };
 
     ModelEditorModelComponent.prototype.setPosition = function (pX, pY) {
-        this._setPosition(pX, pY, true);
+        this._setPosition(pX, pY);
     };
 
-    ModelEditorModelComponent.prototype.update = function () {
-        var node = this.project.getNode(this.getId()),
-            nodePosition = node.getRegistry(nodeRegistryNames.position);
+    ModelEditorModelComponent.prototype._repositionConnectionRect = function () {
+        var bBox = this.getBoundingBox();
 
-        this._setPosition(nodePosition.x, nodePosition.y, false);
-
-        if (this.decoratorInstance) {
-            this.decoratorInstance.update.call(this.decoratorInstance);
-        }
-
-        this._notifyParentAboutBBoxChange();
-    };
-
-    ModelEditorModelComponent.prototype._notifyParentAboutBBoxChange = function () {
-        if (this.parentComponent) {
-            this.parentComponent.childBBoxChanged.call(this.parentComponent, this.getId());
+        if (this._skinParts.connectionRect) {
+            this._skinParts.connectionRect.css({
+                "position": "absolute",
+                "left": bBox.x - this._connectionRectProps.width,
+                "top": bBox.y - this._connectionRectProps.width,
+                "width": bBox.width + this._connectionRectProps.width * 2,
+                "height": bBox.height + this._connectionRectProps.width * 2
+            });
         }
     };
 
@@ -228,9 +229,9 @@ define(['logManager',
         var bBox = this.getBoundingBox(),
             result = [];
 
-        if (this.decoratorInstance) {
-            if ($.isFunction(this.decoratorInstance.getConnectionPoints)) {
-                return this.decoratorInstance.getConnectionPoints();
+        if (this._decoratorInstance) {
+            if ($.isFunction(this._decoratorInstance.getConnectionPoints)) {
+                return this._decoratorInstance.getConnectionPoints();
             }
         }
 
@@ -242,13 +243,37 @@ define(['logManager',
         return result;
     };
 
+    ModelEditorModelComponent.prototype._notifyParentAboutBBoxChange = function () {
+        if (this.parentComponent) {
+            this.parentComponent.childBBoxChanged.call(this.parentComponent, this.getId());
+        }
+    };
+
+    ModelEditorModelComponent.prototype.onSelect = function () {
+        this.el.addClass("selected");
+    };
+
+    ModelEditorModelComponent.prototype.onDeselect = function () {
+        this.el.removeClass("selected");
+    };
+
+    ModelEditorModelComponent.prototype.update = function (objDescriptor) {
+        this._setPosition(objDescriptor.position.x, objDescriptor.position.y);
+
+        if (this._decoratorInstance) {
+            this._decoratorInstance.update();
+        }
+
+        this._notifyParentAboutBBoxChange();
+    };
+
     ModelEditorModelComponent.prototype.getConnectionPointsById = function (sourceId) {
         var result = [],
             i,
             bBox = this.getBoundingBox();
 
-        if (this.decoratorInstance) {
-            result = this.decoratorInstance.getConnectionPointsById.call(this.decoratorInstance, sourceId);
+        if (this._decoratorInstance) {
+            result = this._decoratorInstance.getConnectionPointsById(sourceId);
 
             for (i = 0; i < result.length; i += 1) {
                 result[i].x += bBox.x;
@@ -258,12 +283,6 @@ define(['logManager',
 
         return result;
     };
-
-    ModelEditorModelComponent.prototype.decoratorUpdated = function () {
-        this._repositionConnectionRect();
-        this._notifyParentAboutBBoxChange();
-    };
-
 
     ModelEditorModelComponent.prototype.registerSubcomponents = function (subComponentIds) {
         var list = {},
