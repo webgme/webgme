@@ -67,7 +67,7 @@ function (ASSERT, CONFIG) {
 	var copyOptions = function (defaults, options) {
 		options = options || {};
 		for( var key in defaults ) {
-			if( !options.hasOwnProperty(key) ) {
+			if( options[key] === undefined ) {
 				options[key] = defaults[key];
 			}
 		}
