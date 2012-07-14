@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "core2", "util", "config" ], function (ASSERT, Core, UTIL, CONFIG) {
+define([ "core/assert", "core/core2", "core/util", "core/config" ], function (ASSERT, Core, UTIL, CONFIG) {
 	"use strict";
 
 	var comparePaths = function (a, b) {

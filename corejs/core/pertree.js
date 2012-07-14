@@ -5,7 +5,7 @@
  */
 
 define(
-[ "assert", "lib/sha1", "util" ],
+[ "core/assert", "core/lib/sha1", "core/util" ],
 function (ASSERT, SHA1, UTIL) {
 	"use strict";
 

@@ -10,7 +10,7 @@ requirejs.config({
 	nodeRequire: require
 });
 
-requirejs([ "assert", "mongo", "core" ], function (ASSERT, Mongo, Core) {
+requirejs([ "core/assert", "core/mongo", "core/core" ], function (ASSERT, Mongo, Core) {
 	"use strict";
 
 	var mongo = new Mongo();

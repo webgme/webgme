@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert" ], function (ASSERT) {
+define([ "core/assert" ], function (ASSERT) {
 	"use strict";
 
 	var Cache = function (storage) {

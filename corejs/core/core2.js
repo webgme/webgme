@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "pertree", "util" ], function (ASSERT, PerTree, UTIL) {
+define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree, UTIL) {
 	"use strict";
 
 	// ----------------- RELID -----------------

@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "mongodb", "config", "util" ], function (ASSERT, MONGODB, CONFIG, UTIL) {
+define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSERT, MONGODB, CONFIG, UTIL) {
 	"use strict";
 
 	var Mongo = function (options) {

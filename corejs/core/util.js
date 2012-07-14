@@ -5,7 +5,7 @@
  */
 
 define(
-[ "assert", "config" ],
+[ "core/assert", "core/config" ],
 function (ASSERT, CONFIG) {
 	"use strict";
 

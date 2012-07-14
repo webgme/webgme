@@ -7,11 +7,12 @@
 var requirejs = require("requirejs");
 
 requirejs.config({
-	nodeRequire: require
+	nodeRequire: require,
+	baseUrl: ".."
 });
 
 requirejs(
-[ "assert", "lib/sax", "fs", "mongo", "core2", "config", "util", "metabuilder", "cache" ],
+[ "core/assert", "core/lib/sax", "fs", "core/mongo", "core/core2", "core/config", "core/util", "cmd/metabuilder", "core/cache" ],
 function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 	"use strict";
 
