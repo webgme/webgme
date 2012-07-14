@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
+define([ "assert", "pertree", "util" ], function (ASSERT, PerTree, UTIL) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -132,6 +132,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 			var parent = pertree.getParent();
 			ASSERT(parent !== null);
 
+			// TODO: there is a race between deleting collections and pointers 
 			UTIL.depthFirstSearch(loadChildren, node, function (node2, callback2) {
 				callback2(null);
 			}, function (node2, callback2) {
@@ -247,38 +248,44 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 		var deleteCollection = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
-			var pointers = pertree.getChild(node, POINTERS);
+			var nodepath = pertree.getStringPath(node);
+			var collections = pertree.getChild(node, COLLECTIONS);
 
-			var targetpath = pertree.getProperty(pointers, name);
-			ASSERT(targetpath === undefined || typeof targetpath === "string");
+			var paths = pertree.getProperty(collections, name);
+			ASSERT(paths === undefined || paths.constructor === Array);
 
-			if( targetpath ) {
-				var root = pertree.getRoot(node);
-				pertree.loadByPath(root, targetpath, function (err, target) {
+			var missing = paths.length;
+			var handle = function (err, source) {
+				if( missing > 0 ) {
 					if( err ) {
+						missing = 0;
 						callback(err);
 					}
 					else {
-						var collections = pertree.getChild(target, COLLECTIONS);
-
-						var array = pertree.getProperty(collections, name);
-						ASSERT(array.constructor === Array);
-
-						var nodepath = pertree.getStringPath(node);
-						var index = array.indexOf(nodepath);
-						ASSERT(index >= 0);
-
-						array.slice(0);
-						array.splice(index, 1);
-
-						pertree.setProperty(collections, name, array);
-						pertree.delProperty(pointers, name);
-
-						callback(null);
+						var path = pertree.getProperty2(source, POINTERS, name);
+						if( path === nodepath ) {
+							pertree.delProperty2(source, POINTERS, name);
+							if( --missing === 0 ) {
+								callback(null);
+							}
+						}
+						else {
+							missing = 0;
+							callback("core data corruption: incorrect pointer value");
+						}
 					}
-				});
+				}
+			};
+
+			if( paths ) {
+				var root = pertree.getRoot(node);
+				for( var i = 0; i < paths.length; ++i ) {
+					pertree.loadByPath(root, paths[i], handle);
+				}
+				pertree.delProperty(collections, name);
 			}
-			else {
+
+			if( missing === 0 ) {
 				callback(null);
 			}
 		};
@@ -286,8 +293,8 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 		var setPointer = function (node, name, target, callback) {
 			ASSERT(node && name && target && callback);
 
-			deletePointer(node, name, function(err) {
-				if(err) {
+			deletePointer(node, name, function (err) {
+				if( err ) {
 					callback(err);
 				}
 				else {
@@ -320,11 +327,16 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 		var deleteAllReferences = function (node, callback) {
 			ASSERT(node && callback);
 
-			var names = getPointerNames(node);
 			var join = new UTIL.AsyncJoin(callback);
 
+			var names = getPointerNames(node);
 			for( var i = 0; i < names.length; ++i ) {
 				deletePointer(node, names[i], join.add());
+			}
+
+			names = getCollectionNames(node);
+			for( i = 0; i < names.length; ++i ) {
+				deleteCollection(node, names[i], join.add());
 			}
 
 			join.start();
@@ -357,6 +369,7 @@ define([ "assert", "pertree" ], function (ASSERT, PerTree, UTIL) {
 			deletePointer: deletePointer,
 			setPointer: setPointer,
 			loadCollection: loadCollection,
+			deleteCollection: deleteCollection,
 			dumpTree: pertree.dumpTree
 		};
 	};

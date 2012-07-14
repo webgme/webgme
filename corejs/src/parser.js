@@ -179,6 +179,11 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 		});
 	};
 
+	var dumpTree = function (storage, key, callback) {
+		var core = new Core(storage);
+
+		core.dumpTree(key, callback);	};
+
 	// ------- database -------
 
 	// var mongo = new Cache(new Mongo());
@@ -232,7 +237,8 @@ function (ASSERT, SAX, FS, Mongo, Core, CONFIG, UTIL, metabuilder, Cache) {
 					}
 
 					// metabuilder(mongo, key, function (err3) {
-					reader(mongo, key, function (err3) {
+					// reader(mongo, key, function (err3) {
+					dumpTree(mongo, key, function(err3) {
 						console.log("Closing database");
 						closeDatabase();
 					});
