@@ -134,7 +134,8 @@ define([ "core/assert" ], function (ASSERT) {
 			save: save,
 			remove: remove,
 			dumpAll: storage.dumpAll,
-			removeAll: removeAll
+			removeAll: removeAll,
+			searchId: storage.searchId
 		};
 	};
 

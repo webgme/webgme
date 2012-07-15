@@ -543,8 +543,6 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(key && typeof key === "string");
 			ASSERT(callback);
 
-			console.log("Dumping tree: " + key);
-
 			var root = null;
 			var error = null;
 			var counter = 1;

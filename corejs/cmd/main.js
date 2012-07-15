@@ -11,15 +11,18 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/mongo", "cmd/readxml" ], function (ASSERT, Mongo, readxml) {
+requirejs(
+[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml" ],
+function (ASSERT, Mongo, PerTree, Core, UTIL, readxml) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
 
 	if( argv.length <= 0 ) {
-		console.log("Usage: node core.js [commands]");
+		console.log("Usage: node main.js [commands]");
 		console.log("");
-		console.log("This script executes a sequence of commands that can be chained together,");
+		console
+		.log("This script executes a sequence of core commands that can be chained together,");
 		console.log("where each command is one of the following.");
 		console.log("");
 		console.log("  -mongo <host> [<port> [<db>]]\tchanges the default mongodb parameters");
@@ -27,13 +30,13 @@ requirejs([ "core/assert", "core/mongo", "cmd/readxml" ], function (ASSERT, Mong
 		console.log("  -eraseall\t\t\tremoves all objects from the database");
 		console.log("  -readxml <file>\t\treads and parses the given xml file");
 		console.log("  -root <sha1>\t\t\tselects a new root by hash");
-		console.log("  -dumptree [<file>]\t\tdumps the current root as a json object");
+		console.log("  -dumptree\t\t\tdumps the current root as a json object");
+		console.log("  -traverse\t\t\tloads all core objects from the current tree");
 		console.log("  -parsemeta\t\t\tparses the current xml root as a meta project");
-		console.log("  -traverse\t\t\tloads all objects from the current tree");
 		console.log("");
 	}
 	else {
-		var mongo, root, i = 0;
+		var mongo, root, i = 0, opt;
 
 		var parm = function (def) {
 			return (i < argv.length && argv[i].charAt(0) !== "-") ? argv[i++] : def;
@@ -46,7 +49,7 @@ requirejs([ "core/assert", "core/mongo", "cmd/readxml" ], function (ASSERT, Mong
 			if( cmd === "-mongo" ) {
 				console.log("Opening database");
 
-				var opt = {
+				opt = {
 					host: parm(),
 					port: parm(),
 					database: parm(),
@@ -107,15 +110,15 @@ requirejs([ "core/assert", "core/mongo", "cmd/readxml" ], function (ASSERT, Mong
 					next();
 				}
 				else {
-					var filename = parm();
+					opt = parm();
 
-					if( !filename ) {
+					if( !opt ) {
 						console.log("Error: XML filename is not specified");
 						argv.splice(i, 0, "-end");
 						next();
 					}
 					else {
-						readxml(mongo, filename, function (err, key) {
+						readxml(mongo, opt, function (err, key) {
 							if( err ) {
 								console.log("XML parsing error: " + err);
 								argv.splice(i, 0, "-end");
@@ -126,6 +129,92 @@ requirejs([ "core/assert", "core/mongo", "cmd/readxml" ], function (ASSERT, Mong
 							next();
 						});
 					}
+				}
+			}
+			else if( cmd === "-root" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else {
+					opt = parm();
+
+					if( !opt ) {
+						console.log("Error: root id fragment is not specified");
+						argv.splice(i, 0, "-end");
+						next();
+					}
+					else {
+						if( opt.charAt(0) !== "#" ) {
+							opt = "#" + opt;
+						}
+
+						mongo.searchId(opt, function (err, key) {
+							if( err ) {
+								console.log(err);
+								argv.splice(i, 0, "-end");
+							}
+							else {
+								console.log("Found root = " + key);
+								root = key;
+							}
+							next();
+						});
+					}
+				}
+			}
+			else if( cmd === "-dumptree" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else if( !root ) {
+					console.log("Root not selected");
+					argv.splice(i, 0, "-end");
+					next();
+				}
+				else {
+					console.log("Dumping tree ...");
+					var pertree = new PerTree(mongo);
+					pertree.dumpTree(root, function (err) {
+						console.log(err ? err : "Dumping done");
+						next();
+					});
+				}
+			}
+			else if( cmd === "-traverse" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else if( !root ) {
+					console.log("Root not selected");
+					argv.splice(i, 0, "-end");
+					next();
+				}
+				else {
+					var core = new Core(mongo);
+					var count = 0;
+
+					core.loadRoot(root, function (err, node) {
+						if( err ) {
+							console.log(err);
+							next();
+						}
+						else {
+							console.log("Reading core tree ...");
+							UTIL.depthFirstSearch(core.loadChildren, node, function (child,
+							callback2) {
+								++count;
+								callback2(null);
+							}, function (child, callback2) {
+								callback2(null);
+							}, function (err2) {
+								console.log(err ? err : "Reading done (" + count + " objects)");
+								next();
+							});
+						}
+					});
 				}
 			}
 			else {

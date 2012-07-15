@@ -41,7 +41,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 		var pertree = new PerTree(storage);
 
 		var isValid = pertree.isValid;
-		
+
 		var getAttributeNames = function (node) {
 			return Object.keys(pertree.getProperty(node, ATTRIBUTES));
 		};
@@ -72,7 +72,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 		var createNode = function (parent) {
 			ASSERT(!parent || isValid(parent));
-			
+
 			var node = pertree.createRoot();
 			pertree.createChild(node, ATTRIBUTES);
 			pertree.createChild(node, REGISTRY);
@@ -109,22 +109,22 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 		var getChildrenRelids = function (node) {
 			ASSERT(isValid(node));
-			
+
 			var relids = [];
-			for(var relid in node.data ) {
+			for( var relid in node.data ) {
 				if( isValidRelid(relid) ) {
 					relids.push(relid);
 				}
 			}
-			
+
 			return relids;
 		};
-		
+
 		var loadChildren = function (node, callback) {
 			ASSERT(node && callback);
 
 			var children = new UTIL.AsyncArray(callback);
-			
+
 			for( var relid in node.data ) {
 				if( isValidRelid(relid) ) {
 					pertree.loadChild(node, relid, children.add());
@@ -141,11 +141,11 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 			var source = EMPTY_STRING;
 			var names = [];
-			
+
 			do {
 				var child = pertree.getProperty2(node, OVERLAYS, source);
-				if(child) {
-					for(var name in child) {
+				if( child ) {
+					for( var name in child ) {
 						ASSERT(names.indexOf(name) === -1);
 						if( name.slice(-5) !== "-coll" ) {
 							names.push(name);
@@ -162,10 +162,10 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 				node = pertree.getParent(node);
 			} while( node );
-			
+
 			return names;
 		};
-		
+
 		var loadPointer = function (node, name, callback) {
 			ASSERT(node && name && callback);
 
@@ -275,7 +275,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 			var relpaths = [ pertree.getStringPath(node, ancestor[0]),
 				pertree.getStringPath(target, ancestor[1]) ];
-			
+
 			var refs = pertree.getChild(ancestor[0], OVERLAYS);
 			ASSERT(refs);
 

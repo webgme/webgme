@@ -214,12 +214,12 @@ function (ASSERT, CONFIG) {
 		var missing = 1;
 		var array = [];
 		
-		var fire = function (index, data, err) {
+		var fire = function (index, err, data) {
 			if( missing ) {
 				array[index] = data;
 				if( err || --missing === 0 ) {
 					missing = 0;
-					callback(array, err);
+					callback(err, array);
 				}
 			}
 		};
@@ -227,6 +227,7 @@ function (ASSERT, CONFIG) {
 		return {
 			add: function () {
 				ASSERT(missing >= 1);
+
 				++missing;
 				return fire.bind(null, array.length++);
 			},
@@ -235,7 +236,7 @@ function (ASSERT, CONFIG) {
 				ASSERT(missing >= 1);
 				
 				if(--missing === 0) {
-					callback(array, null);
+					callback(null, array);
 				}
 			}
 		};

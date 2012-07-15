@@ -4,7 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSERT, MONGODB, CONFIG, UTIL) {
+define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSERT, MONGODB, CONFIG,
+UTIL) {
 	"use strict";
 
 	var Mongo = function (options) {
@@ -111,6 +112,38 @@ define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSER
 			});
 		};
 
+		var idregexp = new RegExp("^[#0-9a-zA-Z_]*$");
+
+		var searchId = function (beginning, callback) {
+			ASSERT(collection && typeof beginning === "string" && callback);
+
+			if( !idregexp.test(beginning) ) {
+				callback("mongodb id " + beginning + " not valid");
+			}
+			else {
+				collection.find({
+					_id: {
+						$regex: "^" + beginning
+					}
+				}, {
+					limit: 2
+				}).toArray(function (err, docs) {
+					if( err ) {
+						callback(err);
+					}
+					else if( docs.length === 0 ) {
+						callback("mongodb id " + beginning + " not found");
+					}
+					else if( docs.length !== 1 ) {
+						callback("mongodb id " + beginning + " not unique");
+					}
+					else {
+						callback(null, docs[0]._id);
+					}
+				});
+			}
+		};
+
 		return {
 			open: open,
 			opened: opened,
@@ -120,7 +153,8 @@ define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSER
 			save: save,
 			remove: remove,
 			dumpAll: dumpAll,
-			removeAll: removeAll
+			removeAll: removeAll,
+			searchId: searchId
 		};
 	};
 
