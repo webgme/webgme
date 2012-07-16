@@ -37,7 +37,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
 		console.log("");
 	}
 	else {
-		var mongo, root, i = 0, opt;
+		var mongo, root, i = 0, opt, core;
 
 		var parm = function (def) {
 			return (i < argv.length && argv[i].charAt(0) !== "-") ? argv[i++] : def;
@@ -194,7 +194,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
 					next();
 				}
 				else {
-					var core = new Core(mongo);
+					core = new Core(mongo);
 					var count = 0;
 
 					core.loadRoot(root, function (err, node) {

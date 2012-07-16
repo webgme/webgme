@@ -26,6 +26,23 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 		return relid;
 	};
 
+	// make relids deterministic
+	if(false) {
+		var nextRelid = 0;
+		createRelid = function (data, relid) {
+			ASSERT(data && typeof data === "object");
+			ASSERT(relid === undefined || isValidRelid(relid));
+
+			if( !relid || data[relid] !== undefined ) {
+				do {
+					relid = (nextRelid += -1);
+				} while( data[relid] !== undefined );
+			}
+			
+			return relid;
+		};
+	}
+	
 	var isValidRelid = function (relid) {
 		return typeof relid === "number" || parseInt(relid, 10).toString() === relid;
 	};

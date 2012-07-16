@@ -113,6 +113,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 			};
 
 			parser(node, function (err, meta) {
+				ASSERT(!err || meta === undefined);
 				ASSERT(alreadyParsed[path].parsing);
 
 				var callbacks = alreadyParsed[path].callbacks;
@@ -213,25 +214,17 @@ function (ASSERT, Core, UTIL, CONFIG) {
 		var parseAttributes = function (xmlNode, metaNode, callback2) {
 			ASSERT(xmlNode && metaNode && callback2);
 
-			var pending = 1;
-
-			var done = function (err) {
-				if( callback2 && (err || --pending === 0) ) {
-					callback2(err);
-					callback2 = null;
-				}
-			};
-
-			var create = function (attrName) {
+			var join = new UTIL.AsyncJoin(callback2);
+			
+			var create = function (attrName, callback3) {
 				getParsedNodeByName(xmlNode, attrName, function (err, node) {
+					ASSERT(!err);
 					if( !err && node ) {
 						var attrNode = core.createNode(metaNode);
 						core.setAttribute(attrNode, "name", core.getAttribute(node, "name"));
-						// TODO: fix handling of errors
-						core.setPointer(attrNode, "basetype", node, function (err2) {
-						});
+						core.setPointer(attrNode, "basetype", node);
 					}
-					done(err);
+					callback3(err);
 				});
 			};
 
@@ -243,12 +236,12 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				for( var i = 0; i < attributes.length; ++i ) {
 					var attr = attributes[i].trim();
 					if( attr !== "" ) {
-						create(attr);
+						create(attr, join.add());
 					}
 				}
 			}
 
-			done(null);
+			join.start();
 		};
 
 		parsers.model = function (xmlNode, callback2) {
@@ -309,13 +302,20 @@ function (ASSERT, Core, UTIL, CONFIG) {
 			}
 		};
 
-		core.loadRoot(key, function (err, root) {
+		core
+		.loadRoot(
+		key,
+		function (err, root) {
 			if( err ) {
 				callback(err);
 			}
 			else {
 				console.log("Building meta objects ...");
-				UTIL.depthFirstSearch(core.loadChildren,root, function (node, callback2) {
+				UTIL
+				.depthFirstSearch(
+				core.loadChildren,
+				root,
+				function (node, callback2) {
 					if( core.getLevel(node) === 1 && core.getAttribute(node, "#tag") !== "paradigm" ) {
 						callback2("Not a meta paradigm");
 					}
