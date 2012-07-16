@@ -725,23 +725,25 @@ define(['logManager',
                 this._dragOptions.startPos.y = this._dragOptions.draggedElements[id].originalPosition.y;
             }
 
-            if (i === 0) {
-                this._dragOptions.selectionBBox.x = this._dragOptions.draggedElements[id].originalPosition.x;
-                this._dragOptions.selectionBBox.y = this._dragOptions.draggedElements[id].originalPosition.y;
-                this._dragOptions.selectionBBox.x2 = this._dragOptions.selectionBBox.x + this._dragOptions.draggedElements[id].el.outerWidth();
-                this._dragOptions.selectionBBox.y2 = this._dragOptions.selectionBBox.y + this._dragOptions.draggedElements[id].el.outerHeight();
-            } else {
-                if (this._dragOptions.selectionBBox.x > this._dragOptions.draggedElements[id].originalPosition.x) {
+            if (this._connectionList.hasOwnProperty(id) === false) {
+                if (i === 0) {
                     this._dragOptions.selectionBBox.x = this._dragOptions.draggedElements[id].originalPosition.x;
-                }
-                if (this._dragOptions.selectionBBox.y > this._dragOptions.draggedElements[id].originalPosition.y) {
                     this._dragOptions.selectionBBox.y = this._dragOptions.draggedElements[id].originalPosition.y;
-                }
-                if (this._dragOptions.selectionBBox.x2 < this._dragOptions.draggedElements[id].originalPosition.x + this._dragOptions.draggedElements[id].el.outerWidth()) {
-                    this._dragOptions.selectionBBox.x2 = this._dragOptions.draggedElements[id].originalPosition.x + this._dragOptions.draggedElements[id].el.outerWidth();
-                }
-                if (this._dragOptions.selectionBBox.y2 < this._dragOptions.draggedElements[id].originalPosition.y + this._dragOptions.draggedElements[id].el.outerHeight()) {
-                    this._dragOptions.selectionBBox.y2 = this._dragOptions.draggedElements[id].originalPosition.y + this._dragOptions.draggedElements[id].el.outerHeight();
+                    this._dragOptions.selectionBBox.x2 = this._dragOptions.selectionBBox.x + this._dragOptions.draggedElements[id].el.outerWidth();
+                    this._dragOptions.selectionBBox.y2 = this._dragOptions.selectionBBox.y + this._dragOptions.draggedElements[id].el.outerHeight();
+                } else {
+                    if (this._dragOptions.selectionBBox.x > this._dragOptions.draggedElements[id].originalPosition.x) {
+                        this._dragOptions.selectionBBox.x = this._dragOptions.draggedElements[id].originalPosition.x;
+                    }
+                    if (this._dragOptions.selectionBBox.y > this._dragOptions.draggedElements[id].originalPosition.y) {
+                        this._dragOptions.selectionBBox.y = this._dragOptions.draggedElements[id].originalPosition.y;
+                    }
+                    if (this._dragOptions.selectionBBox.x2 < this._dragOptions.draggedElements[id].originalPosition.x + this._dragOptions.draggedElements[id].el.outerWidth()) {
+                        this._dragOptions.selectionBBox.x2 = this._dragOptions.draggedElements[id].originalPosition.x + this._dragOptions.draggedElements[id].el.outerWidth();
+                    }
+                    if (this._dragOptions.selectionBBox.y2 < this._dragOptions.draggedElements[id].originalPosition.y + this._dragOptions.draggedElements[id].el.outerHeight()) {
+                        this._dragOptions.selectionBBox.y2 = this._dragOptions.draggedElements[id].originalPosition.y + this._dragOptions.draggedElements[id].el.outerHeight();
+                    }
                 }
             }
         }
@@ -842,23 +844,25 @@ define(['logManager',
                         "top": childPosY });
                 }
 
-                if (i === 0) {
-                    this._dragOptions.selectionBBox.x = childPosX;
-                    this._dragOptions.selectionBBox.y = childPosY;
-                    this._dragOptions.selectionBBox.x2 = this._dragOptions.selectionBBox.x + this._dragOptions.draggedElements[id].el.outerWidth();
-                    this._dragOptions.selectionBBox.y2 = this._dragOptions.selectionBBox.y + this._dragOptions.draggedElements[id].el.outerHeight();
-                } else {
-                    if (this._dragOptions.selectionBBox.x > childPosX) {
+                if (this._connectionList.hasOwnProperty(id) === false) {
+                    if (i === 0) {
                         this._dragOptions.selectionBBox.x = childPosX;
-                    }
-                    if (this._dragOptions.selectionBBox.y > childPosY) {
                         this._dragOptions.selectionBBox.y = childPosY;
-                    }
-                    if (this._dragOptions.selectionBBox.x2 < childPosX + this._dragOptions.draggedElements[id].el.outerWidth()) {
-                        this._dragOptions.selectionBBox.x2 = childPosX + this._dragOptions.draggedElements[id].el.outerWidth();
-                    }
-                    if (this._dragOptions.selectionBBox.y2 < childPosY + this._dragOptions.draggedElements[id].el.outerHeight()) {
-                        this._dragOptions.selectionBBox.y2 = childPosY + this._dragOptions.draggedElements[id].el.outerHeight();
+                        this._dragOptions.selectionBBox.x2 = this._dragOptions.selectionBBox.x + this._dragOptions.draggedElements[id].el.outerWidth();
+                        this._dragOptions.selectionBBox.y2 = this._dragOptions.selectionBBox.y + this._dragOptions.draggedElements[id].el.outerHeight();
+                    } else {
+                        if (this._dragOptions.selectionBBox.x > childPosX) {
+                            this._dragOptions.selectionBBox.x = childPosX;
+                        }
+                        if (this._dragOptions.selectionBBox.y > childPosY) {
+                            this._dragOptions.selectionBBox.y = childPosY;
+                        }
+                        if (this._dragOptions.selectionBBox.x2 < childPosX + this._dragOptions.draggedElements[id].el.outerWidth()) {
+                            this._dragOptions.selectionBBox.x2 = childPosX + this._dragOptions.draggedElements[id].el.outerWidth();
+                        }
+                        if (this._dragOptions.selectionBBox.y2 < childPosY + this._dragOptions.draggedElements[id].el.outerHeight()) {
+                            this._dragOptions.selectionBBox.y2 = childPosY + this._dragOptions.draggedElements[id].el.outerHeight();
+                        }
                     }
                 }
 
