@@ -117,8 +117,8 @@
 }
 
 .icon-13 {
-    height:24px;
-    width:24px;
+    height:26px;
+    width:26px;
     padding:0;
 }
 
@@ -128,4 +128,8 @@
 
 .icon-13-line-shape-straight {
     background: url(../../img/line.png) no-repeat;
+}
+
+.icon-13-line-edit {
+    background: url(../../img/cogwheels.png) no-repeat;
 }

@@ -229,7 +229,7 @@ define(['logManager',
 
         this._skinParts.toolTipMenu.outerWidth(100).outerHeight(30);
 
-        this._skinParts.toolTipMenu.html("<div class='button-bar'><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-curved'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-straight'></div></div></div>");
+        this._skinParts.toolTipMenu.html("<div class='button-bar'><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-curved'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-straight'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-edit'></div></div></div>");
 
         buttonBarWidth = this._skinParts.toolTipMenu.find(".button-bar").outerWidth(true);
 
@@ -241,6 +241,11 @@ define(['logManager',
 
         this.bezierDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-curved").parent();
         this.straightLineDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-straight").parent();
+        this.editDiv = this._skinParts.toolTipMenu.find(".icon-13-line-edit").parent();
+
+        this.bezierDiv.attr("title", "Bezier curve");
+        this.straightLineDiv.attr("title", "Straight line");
+        this.editDiv.attr("title", "Edit segment points");
 
         if (this._pathAttributes.lineType === "L") {
             this.straightLineDiv.addClass("selected");
@@ -255,6 +260,11 @@ define(['logManager',
                 event.stopPropagation();
             });
         }
+
+        this.editDiv.bind('click', function (event) {
+            self._setEditMode();
+            event.stopPropagation();
+        });
 
         this._skinParts.toolTipMenu.bind('mousedown', function (event) {
             event.stopPropagation();
