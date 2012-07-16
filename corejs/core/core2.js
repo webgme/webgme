@@ -27,7 +27,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 	};
 
 	// make relids deterministic
-	if(false) {
+	if( false ) {
 		var nextRelid = 0;
 		createRelid = function (data, relid) {
 			ASSERT(data && typeof data === "object");
@@ -38,11 +38,11 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 					relid = (nextRelid += -1);
 				} while( data[relid] !== undefined );
 			}
-			
+
 			return relid;
 		};
 	}
-	
+
 	var isValidRelid = function (relid) {
 		return typeof relid === "number" || parseInt(relid, 10).toString() === relid;
 	};
@@ -50,6 +50,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 	var ATTRIBUTES = "atr";
 	var REGISTRY = "reg";
 	var OVERLAYS = "ovr";
+	var COLLSUFFIX = "-inv";
 
 	// ----------------- Core -----------------
 
@@ -164,7 +165,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				if( child ) {
 					for( var name in child ) {
 						ASSERT(names.indexOf(name) === -1);
-						if( name.slice(-5) !== "-coll" ) {
+						if( name.slice(COLLSUFFIX.length) !== COLLSUFFIX ) {
 							names.push(name);
 						}
 					}
@@ -181,6 +182,41 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			} while( node );
 
 			return names;
+		};
+
+		var getPointerPath = function (node, name) {
+			ASSERT(node && name);
+
+			var source = EMPTY_STRING;
+			var target = null;
+
+			do {
+				var child = pertree.getChild(node, OVERLAYS);
+				ASSERT(child);
+
+				child = pertree.getChild(child, source);
+				if( child ) {
+					target = pertree.getProperty(child, name);
+					if( target ) {
+						break;
+					}
+				}
+
+				if( source === EMPTY_STRING ) {
+					source = pertree.getRelid(node);
+				}
+				else {
+					source = pertree.getRelid(node) + "/" + source;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+
+			if( target ) {
+				target = pertree.joinStringPaths(pertree.getStringPath(node), target);
+			}
+
+			return target;
 		};
 
 		var loadPointer = function (node, name, callback) {
@@ -220,6 +256,43 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			}
 		};
 
+		var loadCollection = function (node, name, callback) {
+			ASSERT(node && name && callback);
+
+			name += COLLSUFFIX;
+
+			var result = new UTIL.AsyncArray(callback);
+			var target = EMPTY_STRING;
+
+			do {
+				var child = pertree.getChild(node, OVERLAYS);
+
+				child = pertree.getChild(child, target);
+				if( child ) {
+					var sources = pertree.getProperty(target, name);
+					if( sources ) {
+						ASSERT(sources.constructor === Array);
+						ASSERT(sources.length >= 1);
+
+						for( var i = 0; i < sources.length; ++i ) {
+							pertree.loadByPath(node, sources[i], result.add());
+						}
+					}
+				}
+
+				if( target === EMPTY_STRING ) {
+					target = pertree.getRelid(node);
+				}
+				else {
+					target = pertree.getRelid(node) + "/" + target;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+
+			result.start();
+		};
+
 		var deletePointer = function (node, name) {
 			ASSERT(node && name);
 
@@ -242,7 +315,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 						child = pertree.getChild(refs, target);
 						ASSERT(child);
 
-						name = name + "-coll";
+						name = name + COLLSUFFIX;
 
 						var array = pertree.getProperty(child, name);
 						ASSERT(array && array.constructor === Array && array.length >= 1);
@@ -309,7 +382,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				child = pertree.createChild(refs, relpaths[1]);
 			}
 
-			name = name + "-coll";
+			name = name + COLLSUFFIX;
 
 			var array = pertree.getProperty(child, name);
 			ASSERT(array === undefined || array.constructor === Array);
@@ -328,14 +401,14 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 		return {
 			getKey: pertree.getKey,
 			loadRoot: pertree.loadRoot,
-			createNode: createNode,
-			getChildrenRelids: getChildrenRelids,
 			loadChildren: loadChildren,
+			getChildrenRelids: getChildrenRelids,
 			loadChild: pertree.loadChild,
 			getParent: pertree.getParent,
 			getRoot: pertree.getRoot,
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
+			createNode: createNode,
 			removeNode: removeNode,
 			copyNode: copyNode,
 			getAttributeNames: getAttributeNames,
@@ -347,9 +420,11 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			delRegistry: delRegistry,
 			persist: persist,
 			getPointerNames: getPointerNames,
+			getPointerPath: getPointerPath,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,
 			setPointer: setPointer,
+			loadCollection: loadCollection,
 			dumpTree: pertree.dumpTree
 		};
 	};

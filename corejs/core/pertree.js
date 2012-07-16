@@ -17,6 +17,15 @@ function (ASSERT, SHA1, UTIL) {
 		return typeof key === "string" && key.length === 41 && keyregexp.test(key);
 	};
 
+	var EMPTY_STRING = "";
+
+	var joinStringPaths = function (first, second) {
+		ASSERT(typeof first === "string");
+		ASSERT(typeof second === "string");
+		
+		return second === EMPTY_STRING ? first : (first === EMPTY_STRING ? second : first + "/" + second);
+	};
+	
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
@@ -275,8 +284,6 @@ function (ASSERT, SHA1, UTIL) {
 
 			return level;
 		};
-
-		var EMPTY_STRING = "";
 
 		var getStringPath = function (node, base) {
 			ASSERT(isValid(node));
@@ -627,6 +634,7 @@ function (ASSERT, SHA1, UTIL) {
 			getPath: getPath,
 			getLevel: getLevel,
 			getStringPath: getStringPath,
+			joinStringPaths: joinStringPaths,
 			parseStringPath: parseStringPath,
 			getRoot: getRoot,
 			getRelid: getRelid,

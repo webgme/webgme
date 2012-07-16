@@ -113,14 +113,6 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			return node;
 		};
 
-		var attachNode = function (node, parent) {
-			ASSERT(node && parent);
-			ASSERT(pertree.getParent(node) === null);
-
-			var relid = createRelid(parent.data);
-			pertree.setParent(node, parent, relid);
-		};
-
 		var copyNode = function (node, parent) {
 			ASSERT(node && parent);
 
@@ -353,7 +345,6 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			getStringPath: pertree.getStringPath,
 			createNode: createNode,
 			removeNode: removeNode,
-			attachNode: attachNode,
 			copyNode: copyNode,
 			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
