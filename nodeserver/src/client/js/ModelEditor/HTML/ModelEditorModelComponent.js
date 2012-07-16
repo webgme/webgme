@@ -57,7 +57,7 @@ define(['logManager',
 
         this._zIndex = 10;
         this._connectionRectProps = { "width" : 10,
-                                        "color": "rgba(255,0,0,0.2)"}; //TODO: remove color if not needed anymore
+                                        /*"color": "rgba(255,0,0,0.2)"*/}; //TODO: remove color if not needed anymore
 
         /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
 
