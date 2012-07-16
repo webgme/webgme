@@ -12,19 +12,20 @@ requirejs.config({
 });
 
 requirejs(
-[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml" ],
-function (ASSERT, Mongo, PerTree, Core, UTIL, readxml) {
+[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta" ],
+function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
 
-	if( argv.length <= 0 ) {
+	if( argv.length <= 0 || argv[0] === "-help") {
 		console.log("Usage: node main.js [commands]");
 		console.log("");
 		console
 		.log("This script executes a sequence of core commands that can be chained together,");
 		console.log("where each command is one of the following.");
 		console.log("");
+		console.log("  -help\t\t\t\tprints out this help");
 		console.log("  -mongo <host> [<port> [<db>]]\tchanges the default mongodb parameters");
 		console.log("  -dumpmongo\t\t\tdumps the content of the database");
 		console.log("  -eraseall\t\t\tremoves all objects from the database");
@@ -214,6 +215,30 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml) {
 								next();
 							});
 						}
+					});
+				}
+			}
+			else if( cmd === "-parsemeta" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else if( !root ) {
+					console.log("Root not selected");
+					argv.splice(i, 0, "-end");
+					next();
+				}
+				else {
+					parsemeta(mongo, root, function(err, key) {
+						if(err) {
+							console.log(err);
+							argv.splice(i, 0, "-end");
+						}
+						else {
+							console.log("Root key = " + key);
+							root = key;
+						}
+						next();
 					});
 				}
 			}

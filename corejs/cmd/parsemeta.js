@@ -4,27 +4,12 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/core2", "core/util", "core/config" ], function (ASSERT, Core, UTIL, CONFIG) {
+define(
+[ "core/assert", "core/core2", "core/util", "core/config" ],
+function (ASSERT, Core, UTIL, CONFIG) {
 	"use strict";
 
-	var comparePaths = function (a, b) {
-		ASSERT(a.constructor === Array);
-		ASSERT(b.constructor === Array);
-
-		var c = a.length;
-		var d = b.length;
-
-		while( --c >= 0 && --d >= 0 ) {
-			var t = a[c] - b[d];
-			if( t !== 0 ) {
-				return t;
-			}
-		}
-
-		return a.length - b.length;
-	};
-
-	var builder = function (storage, key, callback) {
+	return function (storage, key, callback) {
 		var core = new Core(storage);
 
 		var metaroot = core.createNode();
@@ -330,35 +315,28 @@ define([ "core/assert", "core/core2", "core/util", "core/config" ], function (AS
 			}
 			else {
 				console.log("Building meta objects ...");
-				UTIL.depthFirstSearch(core.loadChildren, root, function (node, callback2) {
-					var tag = core.getAttribute(node, "#tag");
-
-					if( core.getLevel(node) === 1 && tag !== "paradigm" ) {
-						console.log("Not a meta paradigm");
-						return;
+				UTIL.depthFirstSearch(core.loadChildren,root, function (node, callback2) {
+					if( core.getLevel(node) === 1 && core.getAttribute(node, "#tag") !== "paradigm" ) {
+						callback2("Not a meta paradigm");
 					}
-
-					parseXmlNode(node, callback2);
+					else {
+						parseXmlNode(node, callback2);
+					}
 				}, function (node, callback2) {
 					callback2(null);
 				}, function (err2) {
 					if( err2 ) {
-						console.log("Building error: " + JSON.stringify(err2));
-						callback(err2);
+						callback("Building error: " + JSON.stringify(err2));
 					}
 					else {
 						console.log("Building done");
 						core.persist(metaroot, function (err3) {
 							console.log("Saving meta " + (err3 ? " error:" + err3 : "done"));
-//							core.dumpTree(core.getKey(metaroot), function (err4) {
-								callback(err3);
-//							});
+							callback(err3, core.getKey(metaroot));
 						});
 					}
 				});
 			}
 		});
 	};
-
-	return builder;
 });
