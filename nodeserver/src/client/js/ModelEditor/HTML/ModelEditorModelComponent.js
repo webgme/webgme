@@ -56,8 +56,8 @@ define(['logManager',
         /*MODELEDITORCOMPONENT CONSTANTS*/
 
         this._zIndex = 10;
-        this._connectionRectProps = { "width" : 10,
-                                        /*"color": "rgba(255,0,0,0.2)"*/}; //TODO: remove color if not needed anymore
+        this._connectionRectProps = { "width" : 10/*,
+                                        "color": "rgba(255,0,0,0.2)"*/}; //TODO: remove color if not needed anymore
 
         /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
 
@@ -180,6 +180,11 @@ define(['logManager',
         this.el.bind('mouseup', function (event) {
             self._onMouseUp(event);
         });
+
+        //hook up mousedown
+        this.el.bind('dblclick', function (event) {
+            self._onDblClick(event);
+        });
     };
 
     ModelEditorModelComponent.prototype._onMouseDown = function (event) {
@@ -191,6 +196,12 @@ define(['logManager',
     ModelEditorModelComponent.prototype._onMouseUp = function (event) {
         this.parentComponent.onComponentMouseUp(event, this.getId());
 //        event.stopPropagation();
+    };
+
+    ModelEditorModelComponent.prototype._onDblClick = function (event) {
+        this.parentComponent.onComponentDblClick(this.getId());
+        event.stopPropagation();
+        event.preventDefault();
     };
 
     ModelEditorModelComponent.prototype.decoratorUpdated = function () {

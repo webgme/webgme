@@ -398,6 +398,12 @@ define(['logManager',
         //event.preventDefault();
     };
 
+    ModelEditorView.prototype.onComponentDblClick = function (componentId) {
+        this._logger.debug("onComponentDblClick: " + componentId);
+
+        this.onDoubleClick(componentId);
+    };
+
     ModelEditorView.prototype._deselect = function (componentId, ctrlPressed) {
         var childComponent = this._childComponents[componentId];
 
@@ -1093,6 +1099,10 @@ define(['logManager',
 
     ModelEditorView.prototype.onSetLineType = function (connId, type) {
         this._logger.warning("onSetLineType is not overridden in Controller...connId: '" + connId + "', new type: '" + type + "'");
+    };
+
+    ModelEditorView.prototype.onDoubleClick = function (componentId) {
+        this._logger.warning("onDoubleClick is not overridden in Controller...componentId: '" + componentId + "'");
     };
     /*ENDOF -  PUBLIC API TO OVERRIDE*/
 

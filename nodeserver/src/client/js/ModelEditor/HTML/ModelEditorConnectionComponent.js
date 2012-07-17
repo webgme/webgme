@@ -117,6 +117,10 @@ define(['logManager',
         this._skinParts.pathShadow.mouseup(function (event) {
             self._onMouseUp(event);
         });
+
+        this._skinParts.pathShadow.dblclick(function (event) {
+            self._onDblClick(event);
+        });
     };
 
     ModelEditorConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
@@ -169,6 +173,12 @@ define(['logManager',
 //        event.stopPropagation();
     };
 
+    ModelEditorConnectionComponent.prototype._onDblClick = function (event) {
+        this.parentComponent.onComponentDblClick(this.getId());
+        event.stopPropagation();
+        event.preventDefault();
+    };
+
     ModelEditorConnectionComponent.prototype._onDestroy = function () {
         //end edit mode (if editing right now)
         this._endEditMode();
@@ -193,13 +203,6 @@ define(['logManager',
             this._showConnectionEndEditControls();
 
             this._showContextMenu();
-
-            this._dblClickCallback = function (event) {
-                self._setEditMode();
-                event.stopPropagation();
-            };
-
-            this._skinParts.pathShadow.dblclick(this._dblClickCallback);
         }
     };
 
@@ -207,7 +210,6 @@ define(['logManager',
         this._unhighlightPath();
         this._hideConnectionEndEditControls();
         this._hideContextMenu();
-        this._skinParts.pathShadow.undblclick(this._dblClickCallback);
         this._endEditMode();
     };
 
@@ -428,8 +430,6 @@ define(['logManager',
      */
     ModelEditorConnectionComponent.prototype._setEditMode = function () {
         var i;
-
-        this._skinParts.pathShadow.undblclick(this._dblClickCallback);
 
         this._hideConnectionEndEditControls();
         this._hideContextMenu();
