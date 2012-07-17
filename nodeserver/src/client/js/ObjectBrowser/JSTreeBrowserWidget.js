@@ -418,6 +418,11 @@ define(['order!jquery',
             return false;
         });
 
+        treeViewE.bind("dblclick.jstree", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
         /*
          * PUBLIC METHODS
          */
