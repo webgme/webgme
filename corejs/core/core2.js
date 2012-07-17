@@ -47,10 +47,31 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 		return typeof relid === "number" || parseInt(relid, 10).toString() === relid;
 	};
 
+	var isValidPath = function (path) {
+		return typeof path === "string" || typeof path === "number";
+	};
+
 	var ATTRIBUTES = "atr";
 	var REGISTRY = "reg";
 	var OVERLAYS = "ovr";
 	var COLLSUFFIX = "-inv";
+
+	var isPointerName = function (name) {
+		ASSERT(typeof name === "string");
+
+		return name.slice(COLLSUFFIX.length) !== COLLSUFFIX;
+	};
+
+	var isEmpty = function (data) {
+		ASSERT(typeof data === "object");
+
+		var s;
+		for( s in data ) {
+			return false;
+		}
+
+		return true;
+	};
 
 	// ----------------- Core -----------------
 
@@ -88,6 +109,77 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			pertree.setProperty2(node, REGISTRY, name, value);
 		};
 
+		var insertOverlay = function (overlays, source, name, target) {
+			ASSERT(isValid(overlays) && pertree.getRelid(overlays) === OVERLAYS);
+			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
+
+			var node = pertree.getChild(overlays, source);
+			if( !node ) {
+				node = pertree.createChild(overlays, source);
+			}
+
+			ASSERT(pertree.getProperty(node, name) === undefined);
+			pertree.setProperty(node, name, target);
+
+			node = pertree.getChild(overlays, target);
+			if( !node ) {
+				node = pertree.createChild(overlays, target);
+			}
+
+			name = name + COLLSUFFIX;
+
+			var array = pertree.getProperty(node, name);
+			if( array ) {
+				ASSERT(array.indexOf(source) < 0);
+
+				array = array.slice(0);
+				array.push(source);
+			}
+			else {
+				array = [ source ];
+			}
+
+			pertree.setProperty(node, name, array);
+		};
+
+		var removeOverlay = function (overlays, source, name, target) {
+			ASSERT(isValid(overlays) && pertree.getRelid(overlays) === OVERLAYS);
+			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
+
+			var node = pertree.getChild(overlays, source);
+			ASSERT(node && pertree.getProperty(node, name) === target);
+			pertree.delProperty(node, name);
+			if( pertree.isEmpty(node) ) {
+				pertree.detach(node);
+			}
+
+			node = pertree.getChild(overlays, target);
+			ASSERT(node);
+
+			name = name + COLLSUFFIX;
+
+			var array = pertree.getProperty(node, name);
+			ASSERT(array && array.constructor === Array && array.length >= 1);
+
+			if( array.length === 1 ) {
+				ASSERT(array[0] === source);
+
+				pertree.delProperty(node, name);
+				if( pertree.isEmpty(node) ) {
+					pertree.detach(node);
+				}
+			}
+			else {
+				var index = array.indexOf(source);
+				ASSERT(index >= 0);
+
+				array = array.slice(0);
+				array.splice(index, 1);
+
+				pertree.setProperty(node, name, array);
+			}
+		};
+
 		var createNode = function (parent) {
 			ASSERT(!parent || isValid(parent));
 
@@ -104,11 +196,59 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			return node;
 		};
 
-		var removeNode = function (node) {
-			var parent = pertree.getParent();
+		var deleteNode = function (node) {
+			ASSERT(isValid(node));
+
+			var parent = pertree.getParent(node);
+			var prefix = pertree.getRelid(node);
 			ASSERT(parent !== null);
 
 			pertree.delParent(node);
+
+			while( parent ) {
+				var overlays = pertree.getChild(parent, OVERLAYS);
+
+				var list = [];
+				
+				var paths = pertree.getChildrenRelid(overlays);
+				for(var i = 0; i < paths.length; ++i) {
+					var path = paths[i];
+					if( path.substr(0, prefix.length) === prefix ) {
+						node = pertree.getChild(overlays, path);
+						var names = pertree.getChildrenRelid(node);
+						for(var j = 0; j < names.length; ++j) {
+							var name = names[j];
+							if( isPointerName(name) ) {
+								list.push({
+									s: path,
+									n: name,
+									t: pertree.getProperty(node, name)
+								});
+							}
+							else {
+								var array = pertree.getProperty(node, name);
+								ASSERT(array && array.constructor === Array);
+								name = name.substring(0, -COLLSUFFIX.length);
+								for(var k = 0; k < array.length; ++k) {
+									list.push({
+										s: array[k],
+										n: name,
+										t: path
+									});
+								}
+							}
+						}
+					}
+				}
+
+				for(i = 0; i < list.length; ++i) {
+					paths = list[i];
+					removeOverlay(overlays, paths.s, paths.n, paths.t);
+				}
+				
+				prefix = pertree.getRelid(parent) + "/" + prefix;
+				parent = parent.getParent(parent);
+			}
 		};
 
 		var copyNode = function (node, parent) {
@@ -165,7 +305,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				if( child ) {
 					for( var name in child ) {
 						ASSERT(names.indexOf(name) === -1);
-						if( name.slice(COLLSUFFIX.length) !== COLLSUFFIX ) {
+						if( isPointerName(name) ) {
 							names.push(name);
 						}
 					}
@@ -297,49 +437,15 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			ASSERT(node && name);
 
 			var source = EMPTY_STRING;
-			var target;
 
 			do {
-				var refs = pertree.getChild(node, OVERLAYS);
-				ASSERT(refs);
+				var overlays = pertree.getChild(node, OVERLAYS);
+				ASSERT(overlays);
 
-				var child = pertree.getChild(refs, source);
-				if( child ) {
-					target = pertree.getProperty(child, name);
-					if( target ) {
-						pertree.delProperty(child, name);
-						if( pertree.isEmpty(child) ) {
-							pertree.detach(child);
-						}
-
-						child = pertree.getChild(refs, target);
-						ASSERT(child);
-
-						name = name + COLLSUFFIX;
-
-						var array = pertree.getProperty(child, name);
-						ASSERT(array && array.constructor === Array && array.length >= 1);
-
-						if( array.length === 1 ) {
-							ASSERT(array[0] === source);
-
-							pertree.delProperty(child, name);
-							if( pertree.isEmpty(child) ) {
-								pertree.detach(child);
-							}
-						}
-						else {
-							var index = array.indexOf(source);
-							ASSERT(index >= 0);
-
-							array = array.slice(0);
-							array.splice(index, 1);
-
-							pertree.setProperty(child, name, array);
-						}
-
-						return true;
-					}
+				var target = pertree.getProperty2(overlays, source, name);
+				if( target ) {
+					removeOverlay(overlays, source, name, target);
+					return true;
 				}
 
 				if( source === EMPTY_STRING ) {
@@ -363,39 +469,11 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			var ancestor = pertree.getCommonAncestor(node, target);
 			ASSERT(ancestor[0] === ancestor[1]);
 
-			var relpaths = [ pertree.getStringPath(node, ancestor[0]),
-				pertree.getStringPath(target, ancestor[1]) ];
+			var overlays = pertree.getChild(ancestor[0], OVERLAYS);
+			var sourcePath = pertree.getStringPath(node, ancestor[0]);
+			var targetPath = pertree.getStringPath(target, ancestor[1]);
 
-			var refs = pertree.getChild(ancestor[0], OVERLAYS);
-			ASSERT(refs);
-
-			var child = pertree.getChild(refs, relpaths[0]);
-			if( !child ) {
-				child = pertree.createChild(refs, relpaths[0]);
-			}
-
-			ASSERT(pertree.getProperty(child, name) === undefined);
-			pertree.setProperty(child, name, relpaths[1]);
-
-			child = pertree.getChild(refs, relpaths[1]);
-			if( !child ) {
-				child = pertree.createChild(refs, relpaths[1]);
-			}
-
-			name = name + COLLSUFFIX;
-
-			var array = pertree.getProperty(child, name);
-			ASSERT(array === undefined || array.constructor === Array);
-
-			if( !array ) {
-				array = [ relpaths[0] ];
-			}
-			else {
-				array = array.slice(0);
-				array.push(relpaths[0]);
-			}
-
-			pertree.setProperty(child, name, array);
+			insertOverlay(overlays, sourcePath, name, targetPath);
 		};
 
 		return {
@@ -409,7 +487,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
 			createNode: createNode,
-			removeNode: removeNode,
+			deleteNode: deleteNode,
 			copyNode: copyNode,
 			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
