@@ -16,7 +16,7 @@ function (ASSERT, CONFIG) {
 	 */
 	var binarySearch = function (array, elem, comparator) {
 		ASSERT(array.constructor === Array);
-		ASSERT(elem && comparator);
+		ASSERT(elem && typeof comparator === "function");
 
 		var low = 0;
 		var high = array.length;
@@ -38,7 +38,7 @@ function (ASSERT, CONFIG) {
 
 	var binaryInsert = function (array, elem, comparator) {
 		ASSERT(array.constructor === Array);
-		ASSERT(elem && comparator);
+		ASSERT(elem && typeof comparator === "function");
 
 		var index = binarySearch(array, elem, comparator);
 		array.splice(index, 0, elem);
@@ -88,7 +88,8 @@ function (ASSERT, CONFIG) {
 	 * order.
 	 */
 	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
-		ASSERT(loadChildren && node && openNode && closeNode && callback);
+		ASSERT(loadChildren && node && typeof openNode === "function");
+		ASSERT(typeof closeNode === "function" && typeof callback === "function");
 
 		/**
 		 * We maintain an array of nodes with statuses. The status codes are 0 :
@@ -184,7 +185,7 @@ function (ASSERT, CONFIG) {
 	};
 
 	var AsyncJoin = function (callback) {
-		ASSERT(callback && callback.call && callback.length === 1);
+		ASSERT(typeof callback === "function" && callback.length === 1);
 
 		var missing = 1;
 		var fire = function (err) {
@@ -209,11 +210,11 @@ function (ASSERT, CONFIG) {
 	};
 
 	var AsyncArray = function (callback) {
-		ASSERT(callback && callback.call && callback.length === 2);
-		
+		ASSERT(typeof callback === "function" && callback.length === 2);
+
 		var missing = 1;
 		var array = [];
-		
+
 		var fire = function (index, err, data) {
 			if( missing ) {
 				array[index] = data;
@@ -234,14 +235,14 @@ function (ASSERT, CONFIG) {
 
 			start: function () {
 				ASSERT(missing >= 1);
-				
-				if(--missing === 0) {
+
+				if( --missing === 0 ) {
 					callback(null, array);
 				}
 			}
 		};
 	};
-	
+
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,

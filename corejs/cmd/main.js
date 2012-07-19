@@ -12,8 +12,8 @@ requirejs.config({
 });
 
 requirejs(
-[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta" ],
-function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
+[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta", "cmd/tests" ],
+function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -34,6 +34,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
 		console.log("  -dumptree\t\t\tdumps the current root as a json object");
 		console.log("  -traverse\t\t\tloads all core objects from the current tree");
 		console.log("  -parsemeta\t\t\tparses the current xml root as a meta project");
+		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
 		console.log("");
 	}
 	else {
@@ -240,6 +241,34 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta) {
 						}
 						next();
 					});
+				}
+			}
+			else if( cmd === "-test" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else {
+					opt = parm();
+
+					if( !opt ) {
+						console.log("Error: test number is not selected");
+						argv.splice(i, 0, "-end");
+						next();
+					}
+					else {
+						tests(opt, mongo, root, function(err, newroot) {
+							if( err ) {
+								console.log("Test error: " + err);
+								argv.splice(i, 0, "-end");
+							}
+							else if( typeof newroot === "string" ){
+								console.log("New root = " + newroot);
+								root = newroot;
+							}
+							next();
+						});
+					}
 				}
 			}
 			else {
