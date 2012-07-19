@@ -519,6 +519,19 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
             }
             return pointer;
         };
+        this.getPointerNames = function(){
+            var i,
+                names = [],
+                node = storage.get(id);
+
+            while(node !== null || node !== undefined){
+                for(i in node.pointers){
+                    commonUtil.insertIntoArray(names,i);
+                }
+                node = storage.get(node.relations.baseId);
+            }
+            return names;
+        };
         this.getConnectionList = function(){
             var i,
                 connectionlist = [],
