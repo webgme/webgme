@@ -290,6 +290,8 @@ define(['order!jquery',
                     if ($.isFunction(self.onNodeDoubleClicked)) {
                         logger.debug("Node double-click: " + currentSelection.nodeId);
                         self.onNodeDoubleClicked.call(self, currentSelection.nodeId);
+                        e.stopPropagation();
+                        e.preventDefault();
                     }
                 } else if ((delta > 500) && (delta <= 1000)) {
                     //consider as two slow click --> edit node
@@ -414,6 +416,11 @@ define(['order!jquery',
                 $.jstree._reference(treeViewE).open_node(o);
             }
             return false;
+        });
+
+        treeViewE.bind("dblclick.jstree", function (event) {
+            event.preventDefault();
+            event.stopPropagation();
         });
 
         /*

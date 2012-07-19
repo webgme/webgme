@@ -94,6 +94,10 @@ define(['logManager',
             reg[nodeRegistryNames.segmentPoints] = [];
             self._client.setRegistry(connId, reg);
         };
+
+        this._modelEditorView.onDoubleClick = function (componentId) {
+            self._client.setSelectedObjectId(componentId);
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         this._initialize();
@@ -268,7 +272,7 @@ define(['logManager',
     ModelEditorControl.prototype._onUnload = function (objectId) {
         //self or child unloaded
         //we care about self unload only, since child unload pretty much handled by self update (child added / child removed)
-        this._logger.warning("_onUnload NOT YET IMPLEMENTED - '" + objectId + "'");
+        //this._logger.warning("_onUnload NOT YET IMPLEMENTED - '" + objectId + "'");
     };
 
     return ModelEditorControl;

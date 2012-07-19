@@ -222,7 +222,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 					if( !err && node ) {
 						var attrNode = core.createNode(metaNode);
 						core.setAttribute(attrNode, "name", core.getAttribute(node, "name"));
-						core.setPointer(attrNode, "basetype", node);
+						core.setPointer(attrNode, "type", node);
 					}
 					callback3(err);
 				});

@@ -120,7 +120,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			pertree.copy(node, parent, relid);
 		};
 
-		var removeNode = function (node, callback) {
+		var deleteNode = function (node, callback) {
 			var parent = pertree.getParent();
 			ASSERT(parent !== null);
 
@@ -344,7 +344,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
 			createNode: createNode,
-			removeNode: removeNode,
+			deleteNode: deleteNode,
 			copyNode: copyNode,
 			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
