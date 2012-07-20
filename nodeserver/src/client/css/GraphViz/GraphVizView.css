@@ -1,0 +1,89 @@
+.graphVizView {
+    text-align: center;
+    padding-top: 50px;
+    position: relative;
+}
+
+.graphVizView .objectLayer,
+.graphVizView .paperLayer {
+    width: 100%;
+    height: 100%;
+}
+
+.graphVizView .objectLayer {
+    text-align: center;
+    display: block;
+    position: relative;
+    top: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.graphVizView .paperLayer {
+    display: block;
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.graphVizView .paperLayer .pointer {
+    stroke: #333333;
+    fill: none;
+    stroke-width: 1px;
+}
+
+.graphVizView .paperLayer .pointer.source {
+    stroke: #FF0000;
+    stroke-width: 2px;
+}
+
+.graphVizView .paperLayer .pointer.target {
+    stroke: #0000FF;
+    stroke-width: 2px;
+}
+
+.graphVizView .paperLayer .pointer.ref {
+    stroke: #EFA749;
+    stroke-width: 2px;
+}
+
+.graphVizView .pointerFilterContainer {
+    border: 1px solid #000000;
+    border-bottom: 0px solid #000000;
+    background-color: rgba(200, 200, 200, 0.3);
+    min-width: 70px;
+
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 18px;
+    color: #999;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+.graphVizView .pointerFilterContainer .pointerType {
+    padding: 5px 10px 5px 10px;
+    color: #FFFFFF;
+    font-weight: bold;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 1px solid #000000;
+}
+
+.graphVizView .pointerFilterContainer .pointerType.source {
+    background-color: #FF0000;
+}
+
+.graphVizView .pointerFilterContainer .pointerType.target {
+    background-color: #0000FF;
+}
+
+.graphVizView .pointerFilterContainer .pointerType.ref {
+    background-color: #EFA749;
+}
+
+.graphVizView .pointerFilterContainer .pointerType.containment {
+    background-color: #333333;
+}

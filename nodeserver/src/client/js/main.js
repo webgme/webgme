@@ -24,7 +24,9 @@ require.config({
         "ModelEditorHTML": "js/ModelEditor/HTML",
         "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
         "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
-        "ModelEditorHTMLCSS": "css/ModelEditor"
+        "ModelEditorHTMLCSS": "css/ModelEditor",
+        "GraphVizCSS": "css/GraphViz",
+        "GraphViz": "js/GraphViz"
     }
 });
 
