@@ -24,8 +24,8 @@ function (ASSERT, SHA1, UTIL) {
 	var EMPTY_STRING = "";
 
 	var joinStringPaths = function (first, second) {
-		ASSERT(typeof first === "string");
-		ASSERT(typeof second === "string");
+		ASSERT(typeof first === "string" || typeof first === "number");
+		ASSERT(typeof second === "string" || typeof second === "number");
 
 		return second === EMPTY_STRING ? first : (first === EMPTY_STRING ? second : first + "/"
 		+ second);
@@ -99,10 +99,10 @@ function (ASSERT, SHA1, UTIL) {
 
 		var getChildrenRelids = function (node) {
 			ASSERT(isValid(node));
-			
+
 			return Object.keys(node.data);
 		};
-		
+
 		var createChild = function (node, relid) {
 			ASSERT(isValid(node) && isRelid(relid));
 
@@ -416,6 +416,30 @@ function (ASSERT, SHA1, UTIL) {
 			}
 		};
 
+		var copyData = function (data) {
+			if( typeof data !== "object" || !data._mutable ) {
+				return data;
+			}
+
+			var copy = {};
+
+			for( var key in data ) {
+				copy[key] = copyData(data[key]);
+			}
+
+			return copy;
+		};
+
+		var copyNode = function (node) {
+			ASSERT(isValid(node));
+
+			return {
+				data: copyData(node.data),
+				parent: null,
+				relid: undefined
+			};
+		};
+
 		var Saver = function (callback) {
 			ASSERT(callback);
 
@@ -640,6 +664,7 @@ function (ASSERT, SHA1, UTIL) {
 			isMutable: isMutable,
 			mutate: mutate,
 			persist: persist,
+			copyNode: copyNode,
 			getProperty: getProperty,
 			setProperty: setProperty,
 			delProperty: delProperty,
