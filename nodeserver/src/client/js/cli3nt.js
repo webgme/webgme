@@ -524,7 +524,7 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 names = [],
                 node = storage.get(id);
 
-            while(node !== null || node !== undefined){
+            while(node !== null && node !== undefined){
                 for(i in node.pointers){
                     commonUtil.insertIntoArray(names,i);
                 }
@@ -558,7 +558,7 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 names = [],
                 node = storage.get(id);
 
-            while(node !== null || node !== undefined){
+            while(node !== null && node !== undefined){
                 for(i in node.attributes){
                     commonUtil.insertIntoArray(names,i);
                 }
