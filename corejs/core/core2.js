@@ -4,7 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree, UTIL) {
+define(
+[ "core/assert", "core/pertree", "core/util" ],
+function (ASSERT, PerTree, UTIL) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -48,7 +50,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 	};
 
 	var isValidPath = function (path) {
-		return typeof path === "string" || typeof path === "number";
+		return typeof path === "string";
 	};
 
 	var ATTRIBUTES = "atr";
@@ -146,10 +148,6 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			ASSERT(isValid(overlays) && pertree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
 
-			console.log("HUHU", '"' + source + '"', name, '"' + target + '"');
-			console.log("-----------");
-			console.log(overlays);
-			
 			var node = pertree.getChild(overlays, source);
 			ASSERT(node && pertree.getProperty(node, name) === target);
 			pertree.delProperty(node, name);
@@ -182,10 +180,6 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 				pertree.setProperty(node, name, array);
 			}
-
-			console.log("-----------");
-			console.log(overlays);
-			console.log("-----------");
 		};
 
 		var overlayQuery = function (overlays, prefix) {
@@ -193,12 +187,12 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 			var list = [];
 
-			var paths = pertree.getChildrenRelid(overlays);
+			var paths = pertree.getChildrenRelids(overlays);
 			for( var i = 0; i < paths.length; ++i ) {
 				var path = paths[i];
 				if( path.substr(0, prefix.length) === prefix ) {
 					var node = pertree.getChild(overlays, path);
-					var names = pertree.getChildrenRelid(node);
+					var names = pertree.getChildrenRelids(node);
 					for( var j = 0; j < names.length; ++j ) {
 						var name = names[j];
 						if( isPointerName(name) ) {
@@ -249,7 +243,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			ASSERT(isValid(node));
 
 			var parent = pertree.getParent(node);
-			var prefix = pertree.getRelid(node);
+			var prefix = "" + pertree.getRelid(node);
 			ASSERT(parent !== null);
 
 			pertree.delParent(node);
@@ -287,30 +281,49 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				pertree.setParent(newnode, parent, relid);
 
 				var ancestorOverlays = pertree.getChild(ancestor[0], OVERLAYS);
-				var ancestorNewPrefix = pertree.getStringPath(node, ancestor[0]);
+				var ancestorNewNodePath = pertree.getStringPath(newnode, ancestor[0]);
 
 				var base = pertree.getParent(node);
-				var basePrefix = pertree.getRelid(node);
+				var baseOldNodePath = "" + pertree.getRelid(node);
+				var baseBelowAncestor = false;
 
-				while( base !== ancestor[0] ) {
-
+				while( base ) {
 					var baseOverlays = pertree.getChild(base, OVERLAYS);
-					var list = overlayQuery(baseOverlays, basePrefix);
-					var ancestorOldPrefix = pertree.getStringPath(base, ancestor[0]);
+					var list = overlayQuery(baseOverlays, baseOldNodePath);
+
+					var ancestorBasePath = baseBelowAncestor ? pertree.getStringPath(ancestor[0],
+					base) : pertree.getStringPath(base, ancestor[0]);
 
 					for( var i = 0; i < list.length; ++i ) {
 						var entry = list[i];
 						if( entry.p ) {
-							ASSERT(entry.s.substr(0, basePrefix.length) === basePrefix);
+							var newSource, newTarget;
 
-							var newSource = ancestorNewPrefix + entry.s.substr(basePrefix.length);
-							var newTarget = ancestorOldPrefix + entry.t;
+							if( baseBelowAncestor ) {
+								ASSERT(entry.s.substr(0, ancestorBasePath.length) === ancestorBasePath);
 
-							overlayInsert(ancestorOverlays, newSource, entry.n, newTarget);
+								newSource = ancestorBasePath + "/" + ancestorNewNodePath
+								+ entry.s.substr(ancestorBasePath.length);
+
+								overlayInsert(baseOverlays, newSource, entry.n, entry.t);
+							}
+							else {
+								ASSERT(entry.s.substr(0, baseOldNodePath.length) === baseOldNodePath);
+
+								newSource = ancestorNewNodePath
+								+ entry.s.substr(baseOldNodePath.length);
+								newTarget = ancestorBasePath + entry.t;
+
+								overlayInsert(ancestorOverlays, newSource, entry.n, newTarget);
+							}
 						}
 					}
 
-					basePrefix = pertree.getRelid(base) + "/" + basePrefix;
+					if( base === ancestor[0] ) {
+						baseBelowAncestor = true;
+					}
+
+					baseOldNodePath = pertree.getRelid(base) + "/" + baseOldNodePath;
 					base = pertree.getParent(base);
 				}
 			}
@@ -469,7 +482,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				var child = pertree.getProperty2(node, OVERLAYS, target);
 				if( child ) {
 					for( var name in child ) {
-						if( ! isPointerName(name) ) {
+						if( !isPointerName(name) ) {
 							name = name.slice(0, -COLLSUFFIX.length);
 							if( names.indexOf(name) < 0 ) {
 								names.push(name);
@@ -504,7 +517,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 				child = pertree.getChild(child, target);
 				if( child ) {
-					var sources = pertree.getProperty(target, name);
+					var sources = pertree.getProperty(child, name);
 					if( sources ) {
 						ASSERT(sources.constructor === Array);
 						ASSERT(sources.length >= 1);
@@ -528,6 +541,45 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			result.start();
 		};
 
+		var getCollectionPaths = function (node, name) {
+			ASSERT(isValid(node) && name);
+
+			name += COLLSUFFIX;
+
+			var result = [];
+			var target = EMPTY_STRING;
+
+			do {
+				var child = pertree.getChild(node, OVERLAYS);
+
+				child = pertree.getChild(child, target);
+				if( child ) {
+					var sources = pertree.getProperty(child, name);
+					if( sources ) {
+						ASSERT(sources.constructor === Array);
+						ASSERT(sources.length >= 1);
+
+						var prefix = pertree.getStringPath(node);
+
+						for( var i = 0; i < sources.length; ++i ) {
+							result.push(pertree.joinStringPaths(prefix, sources[i]));
+						}
+					}
+				}
+
+				if( target === EMPTY_STRING ) {
+					target = pertree.getRelid(node);
+				}
+				else {
+					target = pertree.getRelid(node) + "/" + target;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+
+			return result;
+		};
+
 		var deletePointer = function (node, name) {
 			ASSERT(isValid(node) && typeof name === "string");
 
@@ -536,7 +588,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			do {
 				var overlays = pertree.getChild(node, OVERLAYS);
 				ASSERT(overlays);
-				
+
 				var target = pertree.getProperty2(overlays, source, name);
 				if( target !== undefined ) {
 					overlayRemove(overlays, source, name, target);
@@ -544,7 +596,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				}
 
 				if( source === EMPTY_STRING ) {
-					source = pertree.getRelid(node);
+					source = "" + pertree.getRelid(node);
 				}
 				else {
 					source = pertree.getRelid(node) + "/" + source;
@@ -601,6 +653,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			setPointer: setPointer,
 			loadCollection: loadCollection,
 			getCollectionNames: getCollectionNames,
+			getCollectionPaths: getCollectionPaths,
 			dumpTree: pertree.dumpTree
 		};
 	};

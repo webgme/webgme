@@ -88,8 +88,10 @@ function (ASSERT, CONFIG) {
 	 * order.
 	 */
 	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
-		ASSERT(loadChildren && node && typeof openNode === "function");
-		ASSERT(typeof closeNode === "function" && typeof callback === "function");
+		ASSERT(typeof loadChildren === "function" && loadChildren.length === 2 );
+		ASSERT(typeof openNode === "function" && openNode.length === 2);
+		ASSERT(typeof closeNode === "function" && closeNode.length === 2);
+		ASSERT(typeof callback === "function" && callback.length === 1);
 
 		/**
 		 * We maintain an array of nodes with statuses. The status codes are 0 :
@@ -157,6 +159,7 @@ function (ASSERT, CONFIG) {
 			while( requests.length !== 0 && requests[0].status >= 2 ) {
 				++processing;
 				if( requests[0].status === 2 ) {
+					// TODO: here is a bug, we should wait for the completion before calling other callbacks
 					openNode(requests.shift().node, done);
 				}
 				else {

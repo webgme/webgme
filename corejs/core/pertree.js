@@ -24,8 +24,7 @@ function (ASSERT, SHA1, UTIL) {
 	var EMPTY_STRING = "";
 
 	var joinStringPaths = function (first, second) {
-		ASSERT(typeof first === "string" || typeof first === "number");
-		ASSERT(typeof second === "string" || typeof second === "number");
+		ASSERT(typeof first === "string" && typeof second === "string");
 
 		return second === EMPTY_STRING ? first : (first === EMPTY_STRING ? second : first + "/"
 		+ second);
@@ -100,7 +99,14 @@ function (ASSERT, SHA1, UTIL) {
 		var getChildrenRelids = function (node) {
 			ASSERT(isValid(node));
 
-			return Object.keys(node.data);
+			var array = Object.keys(node.data);
+
+			var index = array.indexOf("_mutable");
+			if( index >= 0 ) {
+				array.splice(index, 1);
+			}
+
+			return array;
 		};
 
 		var createChild = function (node, relid) {
@@ -297,7 +303,7 @@ function (ASSERT, SHA1, UTIL) {
 			var path = EMPTY_STRING;
 			while( node.parent && node !== base ) {
 				if( path === EMPTY_STRING ) {
-					path = node.relid;
+					path = "" + node.relid;
 				}
 				else {
 					path = node.relid + "/" + path;
@@ -646,6 +652,7 @@ function (ASSERT, SHA1, UTIL) {
 			loadRoot: loadRoot,
 			createChild: createChild,
 			getChild: getChild,
+			getChildrenRelids: getChildrenRelids,
 			loadChild: loadChild,
 			deleteChild: deleteChild,
 			loadByPath: loadByPath,
