@@ -93,213 +93,103 @@ function (ASSERT, CONFIG) {
 		ASSERT(typeof closeNode === "function" && closeNode.length === 2);
 		ASSERT(typeof callback === "function" && callback.length === 1);
 
-		/**
-		 * We maintain an array of nodes with status codes. The status codes are
-		 * 0 : waiting to be processed, 1 : loadChildren is called already, 2 :
-		 * openNode needs to be called, 3 : closeNode needs to be called.
-		 */
-		var requests = [ {
-			status: 0,
-			node: node
-		} ];
-
-		var pending = 0;
-
-		var process = function (currentNode, err, children) {
-			var temp;
-			if( callback ) {
-				if( err ) {
-					temp = callback;
-					callback = null;
-					temp(err);
-				}
-				else {
-					temp = 0;
-					while( requests[temp].node !== currentNode ) {
-						++temp;
-						ASSERT(temp < requests.length);
-					}
-					ASSERT(requests[temp].status === 1);
-
-					requests[temp].status = 3;
-
-					err = children.length;
-					while( --err >= 0 ) {
-						requests.splice(temp, 0, {
-							status: 0,
-							node: children[err]
-						});
-					}
-
-					requests.splice(temp, 0, {
-						status: 2,
-						node: currentNode
-					});
-
-					ASSERT(pending >= 1);
-					--pending;
-
-					scan();
-				}
-			}
-		};
-
-		var processing = 0;
-		var done = function (err) {
-			if( callback && (err || (--processing === 0 && requests.length === 0 && pending === 0)) ) {
-				var temp = callback;
-				callback = null;
-				temp(err);
-			}
-		};
-
-		var scan = function () {
-			// console.log("scan", pending, requests.length);
-
-			while( requests.length !== 0 && requests[0].status >= 2 ) {
-				++processing;
-				if( requests[0].status === 2 ) {
-					// TODO: here is a bug, we should wait for the completion
-					// before calling other callbacks
-					openNode(requests.shift().node, done);
-				}
-				else {
-					closeNode(requests.shift().node, done);
-				}
-			}
-
+		var preloadChildren = function () {
 			var selected = [];
+			var pending = 0;
 
 			for( var i = 0; i < requests.length && pending < CONFIG.reader.concurrentReads; ++i ) {
-				if( requests[i].status === 0 ) {
-					ASSERT(pending >= 0);
-					++pending;
+				var r = requests[i];
 
-					requests[i].status = 1;
-					selected.push(requests[i].node);
+				if( r.s === 1 ) {
+					r.s = 2;
+					selected.push(r.n);
+					++pending;
+				}
+				else if( r.s === 2 ) {
+					++pending;
 				}
 			}
 
 			for( i = 0; i < selected.length; ++i ) {
-				loadChildren(selected[i], process.bind(null, selected[i]));
+				loadChildren(selected[i], loadChildrenDone.bind(null, selected[i]));
 			}
 		};
 
-		scan();
-	};
-
-	/**
-	 * Starting from node it recursively calls the loadChildren(node, callback2)
-	 * method where callback2(err, children) returns an error or an array of
-	 * children nodes. For each node it calls openNode(node, callback3), then
-	 * other events for the children, then closeNode(node, callback4). The
-	 * callback3(err) and callback4(err) callbacks must signal the end of
-	 * processing of openNode and closeNode. Finally it calls callback(err) with
-	 * the first error code encountered, or with no error if the depth first
-	 * scan has completed normally. The number of out of order concurrent
-	 * loadChildren calls are specified in CONFIG.reader.concurrentReads, but
-	 * the order of calls to the openNode and closeNode functions are always in
-	 * order.
-	 */
-	var depthFirstSearch2 = function (loadChildren, node, openNode, closeNode, callback) {
-		ASSERT(typeof loadChildren === "function" && loadChildren.length === 2);
-		ASSERT(typeof openNode === "function" && openNode.length === 2);
-		ASSERT(typeof closeNode === "function" && closeNode.length === 2);
-		ASSERT(typeof callback === "function" && callback.length === 1);
-
-		/**
-		 * We maintain an array of nodes with status codes. The status codes are
-		 * 0 : waiting to be processed, 1 : loadChildren is called already, 2 :
-		 * openNode needs to be called, 3 : closeNode needs to be called.
-		 */
-		var requests = [ {
-			status: 0,
-			node: node
-		} ];
-
-		var pending = 0;
-
-		var process = function (currentNode, err, children) {
-			var temp;
-			if( callback ) {
+		var loadChildrenDone = function (parent, err, children) {
+			if( requests ) {
 				if( err ) {
-					temp = callback;
-					callback = null;
-					temp(err);
+					requests = null;
+					callback(err);
 				}
 				else {
-					temp = 0;
-					while( requests[temp].node !== currentNode ) {
-						++temp;
-						ASSERT(temp < requests.length);
+					var i = 0;
+					while( requests[i].n !== parent || requests[i].s !== 2 ) {
+						++i;
+						ASSERT(i < requests.length);
 					}
-					ASSERT(requests[temp].status === 1);
 
-					requests[temp].status = 3;
+					requests[i].s = 3;
 
 					err = children.length;
 					while( --err >= 0 ) {
-						requests.splice(temp, 0, {
-							status: 0,
-							node: children[err]
+						requests.splice(i, 0, {
+							s: 0,
+							n: children[err]
+						}, {
+							s: 1,
+							n: children[err]
 						});
 					}
+					
+					if( requests[0].s === 0 ) {
+						requests[0].s = 4;
+						openNode(requests[0].n, openNodeDone);
+					}
+					else if( requests[0].s === 3 ) {
+						requests[0].s = 4;
+						closeNode(requests[0].n, openNodeDone);
+					}
 
-					requests.splice(temp, 0, {
-						status: 2,
-						node: currentNode
-					});
-
-					ASSERT(pending >= 1);
-					--pending;
-
-					scan();
+					preloadChildren();
 				}
 			}
 		};
 
-		var processing = 0;
-		var done = function (err) {
-			if( callback && (err || (--processing === 0 && requests.length === 0 && pending === 0)) ) {
-				var temp = callback;
-				callback = null;
-				temp(err);
-			}
-		};
-
-		var scan = function () {
-			// console.log("scan", pending, requests.length);
-
-			while( requests.length !== 0 && requests[0].status >= 2 ) {
-				++processing;
-				if( requests[0].status === 2 ) {
-					// TODO: here is a bug, we should wait for the completion
-					// before calling other callbacks
-					openNode(requests.shift().node, done);
+		var openNodeDone = function (err) {
+			if( requests ) {
+				if( err ) {
+					requests = null;
+					callback(err);
 				}
 				else {
-					closeNode(requests.shift().node, done);
+					ASSERT(requests.length >= 1 && requests[0].s === 4);
+					requests.shift();
+
+					if( requests.length === 0 ) {
+						callback(null);
+					}
+					else if( requests[0].s === 0 ) {
+						requests[0].s = 4;
+						openNode(requests[0].n, openNodeDone);
+					}
+					else if( requests[0].s === 3 ) {
+						requests[0].s = 4;
+						closeNode(requests[0].n, openNodeDone);
+					}
 				}
-			}
-
-			var selected = [];
-
-			for( var i = 0; i < requests.length && pending < CONFIG.reader.concurrentReads; ++i ) {
-				if( requests[i].status === 0 ) {
-					ASSERT(pending >= 0);
-					++pending;
-
-					requests[i].status = 1;
-					selected.push(requests[i].node);
-				}
-			}
-
-			for( i = 0; i < selected.length; ++i ) {
-				loadChildren(selected[i], process.bind(null, selected[i]));
 			}
 		};
+		
+		var requests = [ {
+			s: 4,
+			n: node
+		}, {
+			s: 1,
+			n: node
+		} ];
 
-		scan();
+		preloadChildren();
+		openNode(node, openNodeDone);
 	};
 
 	var AsyncJoin = function (callback) {

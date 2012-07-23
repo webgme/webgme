@@ -124,11 +124,10 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 			UTIL.depthFirstSearch(loadChildren, node, function(child, callback2) {
 				
 				var line = getNodeName(child) + ":";
-				console.log("x", line);
 
 				var finish = new UTIL.AsyncJoin(function(err2) {
 					console.log(line);
-//					callback2(err2);
+					callback2(err2);
 				});
 				
 				var addName = function(callback3, what, err, target) {
