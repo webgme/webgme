@@ -315,7 +315,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var parseStringPath = function (path) {
-			ASSERT(path && typeof path === "string");
+			ASSERT(typeof path === "string");
 
 			return path.length === 0 ? [] : path.split("/").reverse();
 		};

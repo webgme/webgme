@@ -413,7 +413,7 @@ function (ASSERT, PerTree, UTIL) {
 				child = pertree.getChild(child, source);
 				if( child ) {
 					target = pertree.getProperty(child, name);
-					if( target ) {
+					if( target !== undefined ) {
 						break;
 					}
 				}
@@ -428,7 +428,8 @@ function (ASSERT, PerTree, UTIL) {
 				node = pertree.getParent(node);
 			} while( node );
 
-			if( target ) {
+			if( target !== undefined ) {
+				ASSERT(node);
 				target = pertree.joinStringPaths(pertree.getStringPath(node), target);
 			}
 
@@ -448,7 +449,7 @@ function (ASSERT, PerTree, UTIL) {
 				child = pertree.getChild(child, source);
 				if( child ) {
 					target = pertree.getProperty(child, name);
-					if( target ) {
+					if( target !== undefined ) {
 						break;
 					}
 				}
@@ -463,8 +464,8 @@ function (ASSERT, PerTree, UTIL) {
 				node = pertree.getParent(node);
 			} while( node );
 
-			if( target ) {
-				ASSERT(typeof target === "string");
+			if( target !== undefined ) {
+				ASSERT(typeof target === "string" && node);
 				pertree.loadByPath(node, target, callback);
 			}
 			else {
