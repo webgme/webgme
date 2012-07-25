@@ -32,6 +32,10 @@ define(['logManager',
 
         this._initialize();
 
+        /*
+         * OVERRIDE GRAPHVIZ EDITOR API
+         */
+
         this._graphVizView.onExpand = function (objectId) {
             self._onExpand(objectId);
         };
@@ -39,6 +43,18 @@ define(['logManager',
         this._graphVizView.onCollapse = function (objectId) {
             //self.onCollapse(objectId);
         };
+
+        this._graphVizView.onCreatePointer = function (sourceId, targetId, pointerName) {
+            self._onCreatePointer(sourceId, targetId, pointerName);
+        };
+
+        this._graphVizView.onDeletePointer = function (sourceId, pointerName) {
+            self._onDeletePointer(sourceId, pointerName);
+        };
+
+        /*
+         * END OF - OVERRIDE GRAPHVIZ EDITOR API
+         */
     };
 
     GraphVizControl.prototype._initialize = function () {
@@ -146,7 +162,7 @@ define(['logManager',
             }
             this._components[nodeId].componentInstance = this._graphVizView.createObject(this._getObjectDescriptor(node), parentObject);
             this._components[nodeId].state = this._componentStates.loaded;
-            this._components[nodeId].children = node.getChildrenIds();
+            this._components[nodeId].children = node.getChildrenIds().slice();
         }
     };
 
@@ -191,7 +207,7 @@ define(['logManager',
             // - deleted children
 
             //save old and current children info to be able to see the difference
-            oldChildren = this._components[objectId].children.splice(0);
+            oldChildren = this._components[objectId].children.slice();
             newChildren = updatedObject.getChildrenIds() || [];
 
             //Handle children deletion
@@ -227,6 +243,14 @@ define(['logManager',
         //self or child unloaded
         //we care about self unload only, since child unload pretty much handled by self update (child added / child removed)
         //this._logger.warning("_onUnload NOT YET IMPLEMENTED - '" + objectId + "'");
+    };
+
+    GraphVizControl.prototype._onCreatePointer = function (sourceId, targetId, pointerName) {
+        this._client.makePointer(sourceId, pointerName, targetId);
+    };
+
+    GraphVizControl.prototype._onDeletePointer = function (sourceId, pointerName) {
+        this._client.delPointer(sourceId, pointerName);
     };
 
     return GraphVizControl;

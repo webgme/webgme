@@ -13,6 +13,7 @@
     box-shadow:0 1px 0 0 #ffffff;
     -webkit-box-shadow:0 1px 0 0 #ffffff;
     -moz-box-shadow:0 1px 0 0 #ffffff;
+    pointer-events: all;
 }
 
 .button-bar.disabled {
