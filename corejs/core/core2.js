@@ -263,7 +263,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var copyNode = function (node, parent) {
-			ASSERT(isValid(node) && (!parent || isValid(parent)));
+			ASSERT(isValid(node) && isValid(parent));
 
 			var newnode;
 
@@ -277,7 +277,7 @@ function (ASSERT, PerTree, UTIL) {
 				}
 
 				newnode = pertree.copyNode(node);
-				var relid = createRelid(parent.data);
+				var relid = createRelid(parent.data, node.relid);
 				pertree.setParent(newnode, parent, relid);
 
 				var ancestorOverlays = pertree.getChild(ancestor[0], OVERLAYS);
@@ -329,6 +329,22 @@ function (ASSERT, PerTree, UTIL) {
 			}
 			else {
 				newnode = pertree.copyNode(node);
+			}
+
+			return newnode;
+		};
+
+		//TODO: this is the lazy solution, make it fast
+		var moveNode = function (node, parent) {
+			ASSERT(isValid(node) && isValid(parent));
+
+			if( parent === pertree.getParent(node) ) {
+				return node;
+			}
+
+			var newnode = copyNode(node, parent);
+			if( newnode ) {
+				deleteNode(node);
 			}
 
 			return newnode;
@@ -639,6 +655,7 @@ function (ASSERT, PerTree, UTIL) {
 			createNode: createNode,
 			deleteNode: deleteNode,
 			copyNode: copyNode,
+			moveNode: moveNode,
 			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
 			setAttribute: setAttribute,
