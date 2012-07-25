@@ -8,6 +8,7 @@ require.config({
     paths: {
         "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-1.7.2' : 'jquery-1.7.2.min'),
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-1.8.21.custom' : 'jquery-ui-1.8.21.custom.min'),
+        "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": './../../common/underscore',
         "commonUtil": './../../common/CommonUtil',
         "logManager": './../../common/LogManager',
