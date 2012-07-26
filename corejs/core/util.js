@@ -4,9 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define(
-[ "core/assert", "core/config" ],
-function (ASSERT, CONFIG) {
+define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	/**
@@ -140,7 +138,7 @@ function (ASSERT, CONFIG) {
 							n: children[err]
 						});
 					}
-					
+
 					if( requests[0].s === 0 ) {
 						requests[0].s = 4;
 						openNode(requests[0].n, openNodeDone);
@@ -179,7 +177,7 @@ function (ASSERT, CONFIG) {
 				}
 			}
 		};
-		
+
 		var requests = [ {
 			s: 4,
 			n: node
@@ -196,8 +194,9 @@ function (ASSERT, CONFIG) {
 		ASSERT(typeof callback === "function" && callback.length === 1);
 
 		var missing = 1;
+
 		var fire = function (err) {
-			if( missing && (err || --missing === 0) ) {
+			if( (err && missing > 0) || --missing === 0 ) {
 				missing = 0;
 				callback(err);
 			}
@@ -210,8 +209,9 @@ function (ASSERT, CONFIG) {
 				return fire;
 			},
 
-			start: function () {
+			wait: function () {
 				ASSERT(missing >= 1);
+
 				fire(null);
 			}
 		};
@@ -220,17 +220,16 @@ function (ASSERT, CONFIG) {
 	var AsyncArray = function (callback) {
 		ASSERT(typeof callback === "function" && callback.length === 2);
 
-		var missing = 1;
-		var array = [];
+		var missing = 1, array = [];
 
-		var fire = function (index, err, data) {
-			if( missing ) {
+		var setter = function (index) {
+			return function (err, data) {
 				array[index] = data;
-				if( err || --missing === 0 ) {
+				if( (err && missing > 0) || --missing === 0 ) {
 					missing = 0;
 					callback(err, array);
 				}
-			}
+			};
 		};
 
 		return {
@@ -238,14 +237,52 @@ function (ASSERT, CONFIG) {
 				ASSERT(missing >= 1);
 
 				++missing;
-				return fire.bind(null, array.length++);
+				var index = array.length++;
+
+				return setter(index);
 			},
 
-			start: function () {
+			wait: function () {
 				ASSERT(missing >= 1);
 
 				if( --missing === 0 ) {
 					callback(null, array);
+				}
+			}
+		};
+	};
+
+	var AsyncPair = function (callback) {
+		ASSERT(typeof callback === "function" && callback.length === 3);
+
+		var missing = 3, first, second;
+
+		return {
+			first: function (err, data) {
+				ASSERT(first === undefined);
+
+				first = data;
+				if( (err && missing > 0) || --missing === 0 ) {
+					missing = 0;
+					callback(err, first, second);
+				}
+			},
+
+			second: function (err, data) {
+				ASSERT(second === undefined);
+
+				second = data;
+				if( (err && missing > 0) || --missing === 0 ) {
+					missing = 0;
+					callback(err, first, second);
+				}
+			},
+
+			wait: function () {
+				ASSERT(missing >= 1);
+
+				if( --missing === 0 ) {
+					callback(null, first, second);
 				}
 			}
 		};
@@ -258,6 +295,7 @@ function (ASSERT, CONFIG) {
 		copyOptions: copyOptions,
 		depthFirstSearch: depthFirstSearch,
 		AsyncJoin: AsyncJoin,
-		AsyncArray: AsyncArray
+		AsyncArray: AsyncArray,
+		AsyncPair: AsyncPair
 	};
 });

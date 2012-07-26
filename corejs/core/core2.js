@@ -381,7 +381,7 @@ function (ASSERT, PerTree, UTIL) {
 				}
 			}
 
-			children.start();
+			children.wait();
 		};
 
 		var EMPTY_STRING = "";
@@ -555,7 +555,7 @@ function (ASSERT, PerTree, UTIL) {
 				node = pertree.getParent(node);
 			} while( node );
 
-			result.start();
+			result.wait();
 		};
 
 		var getCollectionPaths = function (node, name) {
@@ -643,6 +643,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		return {
+			isValid: isValid,
 			getKey: pertree.getKey,
 			loadRoot: pertree.loadRoot,
 			loadChildren: loadChildren,

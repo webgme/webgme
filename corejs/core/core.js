@@ -124,7 +124,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			var parent = pertree.getParent();
 			ASSERT(parent !== null);
 
-			// TODO: there is a race between deleting collections and pointers 
+			// TODO: there is a race between deleting collections and pointers
 			UTIL.depthFirstSearch(loadChildren, node, function (node2, callback2) {
 				callback2(null);
 			}, function (node2, callback2) {
@@ -186,7 +186,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				pertree.loadByPath(root, paths[i], array.add());
 			}
 
-			array.start();
+			array.wait();
 		};
 
 		var deletePointer = function (node, name, callback) {
@@ -331,7 +331,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				deleteCollection(node, names[i], join.add());
 			}
 
-			join.start();
+			join.wait();
 		};
 
 		return {

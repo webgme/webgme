@@ -176,7 +176,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 					names[i]));
 				}
 
-				finish.start();
+				finish.wait();
 			}, function (child, callback2) {
 				callback2(null);
 			}, function (err) {
