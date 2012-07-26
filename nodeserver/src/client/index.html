@@ -23,11 +23,20 @@
         <div id="contentContainer">
             <div id="leftPane" class="pull-left">
                 <div class="sidePaneWidget">
-                    <div class="header">SOCKET OPTIONS</div>
-                    <div id="socketDelayer"></div>
+                    <div class="header">Visualizer</div>
+                    <div id="visualizerPanel">
+                        <ul class="nav nav-pills nav-stacked">
+                            <li class="center pointer active">
+                                <a class="btn-env" id="ModelEditor">Model Editor</a>
+                            </li>
+                            <li class="center pointer">
+                                <a class="btn-env" id="GraphViz">Graph Visualizer</a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="sidePaneWidget">
-                    <div class="header">Object Browser #1</div>
+                    <div class="header">Inventory browser</div>
                     <div id="tbDynaTree"></div>
                 </div>
             </div>
@@ -41,7 +50,7 @@
             </div>
             <div id="rightPane" class="pull-right">
                 <div class="sidePaneWidget">
-                    <div class="header">Object Browser #2</div>
+                    <div class="header">Object Browser</div>
                     <div id="tbJSTree"></div>
                 </div>
             </div>

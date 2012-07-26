@@ -125,3 +125,42 @@
 .objectContainer .core.pointer-end-state-hover {
     background-color: #FF7800;
 }
+
+/*
+ * Pointer sources
+*/
+
+.objectContainer .pointerSources {
+    position: absolute;
+    background-color: white;
+    height: 10px;
+    top: 1px;
+    left: 1px;
+}
+
+.objectContainer .pointerSources .pointer-source {
+    display: inline-block;
+    height: 9px;
+    width: 9px;
+    margin-right: 1px;
+    background-color: green;
+    float: left;
+}
+
+.objectContainer .pointerTargets {
+    position: absolute;
+    background-color: white;
+    height: 10px;
+    bottom: 1px;
+    right: 1px;
+}
+
+.objectContainer .pointerTargets .pointer-target {
+    display: inline-block;
+    height: 9px;
+    width: 9px;
+    margin-right: 1px;
+    background-color: green;
+    float: left;
+    vertical-align: bottom;
+}

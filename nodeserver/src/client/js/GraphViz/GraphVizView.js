@@ -49,7 +49,7 @@ define(['logManager',
 
         domString = _.template(graphVizViewTmpl, data);
 
-        this._defaultSize = { "w": pWidth,
+        this._defaultSize = { "w": 1500, //pWidth,
                              "h": 1000 };
 
         this._el.append($(domString));
@@ -64,8 +64,8 @@ define(['logManager',
         /*make it floating at the top-left corner*/
         graphVizViewOffset = this._el.offset();
         this._pointerFilterContainer.css({"position": "fixed",
-                                            "top": graphVizViewOffset.top + 30,
-                                            "left": graphVizViewOffset.left + 30 });
+                                            "top": graphVizViewOffset.top + 50,
+                                            "left": graphVizViewOffset.left + 230 });
 
         this._svgPaper = Raphael(this._paperLayer[0], "100%", "100%");
         //this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
@@ -218,7 +218,7 @@ define(['logManager',
             targetCoord,
             selfOffset = this._paperLayer.offset(),
             pathDef,
-            c = 1,
+            c = 3,
             path,
             sourceDX = 0,
             sourceDY = 0,
@@ -287,17 +287,24 @@ define(['logManager',
                         }
 
                         if (sourceCoord && targetCoord && sourceCoord.left !== 0 && targetCoord.left !== 0) {
-                            pathDef = ["M", sourceCoord.left - selfOffset.left + sourceDX, sourceCoord.top - selfOffset.top + sourceDY, "L", targetCoord.left - selfOffset.left + targetDX, targetCoord.top - selfOffset.top + targetDY];
+                            pathDef = ["M",
+                                sourceCoord.left - selfOffset.left + sourceDX,
+                                sourceCoord.top - selfOffset.top + sourceDY,
+                                "L",
+                                sourceCoord.left - selfOffset.left + sourceDX,
+                                sourceCoord.top - selfOffset.top + sourceDY - 25,
+                                "L", targetCoord.left - selfOffset.left + targetDX, targetCoord.top - selfOffset.top + targetDY - 25,
+                                "L", targetCoord.left - selfOffset.left + targetDX, targetCoord.top - selfOffset.top + targetDY];
 
                             pathDef = Raphael.path2curve(pathDef.join(","));
 
-                            pathDef[1][2] -= c * bezierCoeff;
-                            pathDef[1][4] -= c * bezierCoeff;
+                            pathDef[2][2] -= c * bezierCoeff;
+                            pathDef[2][4] -= c * bezierCoeff;
 
                             c += 2;
 
                             if (c >= 10) {
-                                c = 1;
+                                c = 3;
                             }
 
                             path = this._svgPaper.path(pathDef.join(",")).attr({
@@ -345,6 +352,7 @@ define(['logManager',
         };
 
         this._pointerFilterContainer.css("position", "");
+        this._pointerFilterContainer.hide();
         for (i = 0; i < pointerTypes.length; i += 1) {
             pTypeControl =  $('<div/>', {
                 "class" : "pointerType " + pointerTypes[i]
@@ -359,6 +367,7 @@ define(['logManager',
             this._setFilterTypeOpacity(pointerTypes[i]);
         }
         this._pointerFilterContainer.css("position", "fixed");
+        this._pointerFilterContainer.show();
 
     };
 
