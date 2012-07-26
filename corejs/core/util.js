@@ -233,7 +233,11 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 
 		return {
-			add: function () {
+			push: function (val) {
+				array.push(val);
+			},
+			
+			asyncPush: function () {
 				ASSERT(missing >= 1);
 
 				++missing;
@@ -252,37 +256,40 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 	};
 
-	var AsyncPair = function (callback) {
-		ASSERT(typeof callback === "function" && callback.length === 3);
+	var AsyncObject = function (callback, object) {
+		ASSERT(typeof callback === "function" && callback.length === 2);
+		ASSERT(object === undefined || typeof object === "object");
 
-		var missing = 3, first, second;
+		var missing = 1;
+		object = object || {};
+
+		var setter = function (prop) {
+			return function (err, data) {
+				object[prop] = data;
+				if( (err && missing > 0) || --missing === 0 ) {
+					missing = 0;
+					callback(err, object);
+				}
+			};
+		};
 
 		return {
-			first: function (err, data) {
-				ASSERT(first === undefined);
-
-				first = data;
-				if( (err && missing > 0) || --missing === 0 ) {
-					missing = 0;
-					callback(err, first, second);
-				}
+			set: function (prop, val) {
+				object[prop] = val;
 			},
+			
+			asyncSet: function (prop) {
+				ASSERT(typeof prop === "string" && missing >= 1);
 
-			second: function (err, data) {
-				ASSERT(second === undefined);
-
-				second = data;
-				if( (err && missing > 0) || --missing === 0 ) {
-					missing = 0;
-					callback(err, first, second);
-				}
+				++missing;
+				return setter(prop);
 			},
 
 			wait: function () {
 				ASSERT(missing >= 1);
 
 				if( --missing === 0 ) {
-					callback(null, first, second);
+					callback(null, object);
 				}
 			}
 		};
@@ -296,6 +303,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		depthFirstSearch: depthFirstSearch,
 		AsyncJoin: AsyncJoin,
 		AsyncArray: AsyncArray,
-		AsyncPair: AsyncPair
+		AsyncObject: AsyncObject
 	};
 });

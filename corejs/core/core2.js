@@ -81,7 +81,8 @@ function (ASSERT, PerTree, UTIL) {
 
 		var pertree = new PerTree(storage);
 
-		var isValid = pertree.isValid;
+		var isValidNode = pertree.isValidNode;
+		var parseStringPath = pertree.parseStringPath;
 
 		var getAttributeNames = function (node) {
 			return Object.keys(pertree.getProperty(node, ATTRIBUTES));
@@ -112,7 +113,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var overlayInsert = function (overlays, source, name, target) {
-			ASSERT(isValid(overlays) && pertree.getRelid(overlays) === OVERLAYS);
+			ASSERT(isValidNode(overlays) && pertree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
 
 			var node = pertree.getChild(overlays, source);
@@ -145,7 +146,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var overlayRemove = function (overlays, source, name, target) {
-			ASSERT(isValid(overlays) && pertree.getRelid(overlays) === OVERLAYS);
+			ASSERT(isValidNode(overlays) && pertree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
 
 			var node = pertree.getChild(overlays, source);
@@ -183,7 +184,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var overlayQuery = function (overlays, prefix) {
-			ASSERT(isValid(overlays) && typeof prefix === "string");
+			ASSERT(isValidNode(overlays) && typeof prefix === "string");
 
 			var list = [];
 
@@ -224,7 +225,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var createNode = function (parent) {
-			ASSERT(!parent || isValid(parent));
+			ASSERT(!parent || isValidNode(parent));
 
 			var node = pertree.createRoot();
 			pertree.createChild(node, ATTRIBUTES);
@@ -240,7 +241,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var deleteNode = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var parent = pertree.getParent(node);
 			var prefix = "" + pertree.getRelid(node);
@@ -263,7 +264,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var copyNode = function (node, parent) {
-			ASSERT(isValid(node) && isValid(parent));
+			ASSERT(isValidNode(node) && isValidNode(parent));
 
 			var newnode;
 
@@ -334,9 +335,9 @@ function (ASSERT, PerTree, UTIL) {
 			return newnode;
 		};
 
-		//TODO: this is the lazy solution, make it fast
+		// TODO: this is the lazy solution, make it fast
 		var moveNode = function (node, parent) {
-			ASSERT(isValid(node) && isValid(parent));
+			ASSERT(isValidNode(node) && isValidNode(parent));
 
 			if( parent === pertree.getParent(node) ) {
 				return node;
@@ -351,14 +352,14 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var persist = function (root, callback) {
-			ASSERT(isValid(root) && typeof callback === "function");
+			ASSERT(isValidNode(root) && typeof callback === "function");
 			ASSERT(pertree.getParent(root) === null);
 
 			return pertree.persist(root, callback);
 		};
 
 		var getChildrenRelids = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var relids = [];
 			for( var relid in node.data ) {
@@ -371,13 +372,13 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var loadChildren = function (node, callback) {
-			ASSERT(isValid(node) && typeof callback === "function");
+			ASSERT(isValidNode(node) && typeof callback === "function");
 
 			var children = new UTIL.AsyncArray(callback);
 
 			for( var relid in node.data ) {
 				if( isValidRelid(relid) ) {
-					pertree.loadChild(node, relid, children.add());
+					pertree.loadChild(node, relid, children.asyncPush());
 				}
 			}
 
@@ -387,7 +388,7 @@ function (ASSERT, PerTree, UTIL) {
 		var EMPTY_STRING = "";
 
 		var getPointerNames = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var source = EMPTY_STRING;
 			var names = [];
@@ -417,7 +418,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var getPointerPath = function (node, name) {
-			ASSERT(isValid(node) && typeof name === "string");
+			ASSERT(isValidNode(node) && typeof name === "string");
 
 			var source = EMPTY_STRING;
 			var target;
@@ -453,7 +454,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var loadPointer = function (node, name, callback) {
-			ASSERT(isValid(node) && name && typeof callback === "function");
+			ASSERT(isValidNode(node) && name && typeof callback === "function");
 
 			var source = EMPTY_STRING;
 			var target;
@@ -490,7 +491,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var getCollectionNames = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var target = EMPTY_STRING;
 			var names = [];
@@ -522,7 +523,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var loadCollection = function (node, name, callback) {
-			ASSERT(isValid(node) && name && typeof callback === "function");
+			ASSERT(isValidNode(node) && name && typeof callback === "function");
 
 			name += COLLSUFFIX;
 
@@ -540,7 +541,7 @@ function (ASSERT, PerTree, UTIL) {
 						ASSERT(sources.length >= 1);
 
 						for( var i = 0; i < sources.length; ++i ) {
-							pertree.loadByPath(node, sources[i], result.add());
+							pertree.loadByPath(node, sources[i], result.asyncPush());
 						}
 					}
 				}
@@ -559,7 +560,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var getCollectionPaths = function (node, name) {
-			ASSERT(isValid(node) && name);
+			ASSERT(isValidNode(node) && name);
 
 			name += COLLSUFFIX;
 
@@ -598,7 +599,7 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var deletePointer = function (node, name) {
-			ASSERT(isValid(node) && typeof name === "string");
+			ASSERT(isValidNode(node) && typeof name === "string");
 
 			var source = EMPTY_STRING;
 
@@ -626,7 +627,8 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		var setPointer = function (node, name, target) {
-			ASSERT(isValid(node) && typeof name === "string" && (!target || isValid(target)));
+			ASSERT(isValidNode(node) && typeof name === "string"
+			&& (!target || isValidNode(target)));
 
 			deletePointer(node, name);
 
@@ -643,20 +645,34 @@ function (ASSERT, PerTree, UTIL) {
 		};
 
 		return {
-			isValid: isValid,
+			// check
+			isValidNode: isValidNode,
+			isValidRelid: isValidRelid,
+			isValidPath: isValidPath,
+
+			// root
 			getKey: pertree.getKey,
 			loadRoot: pertree.loadRoot,
-			loadChildren: loadChildren,
-			getChildrenRelids: getChildrenRelids,
-			loadChild: pertree.loadChild,
-			getParent: pertree.getParent,
+			persist: persist,
 			getRoot: pertree.getRoot,
+
+			// containment
 			getLevel: pertree.getLevel,
 			getStringPath: pertree.getStringPath,
+			parseStringPath: pertree.parseStringPath,
+			getParent: pertree.getParent,
+			getChildrenRelids: getChildrenRelids,
+			loadChild: pertree.loadChild,
+			loadByPath: pertree.loadByPath,
+			loadChildren: loadChildren,
+
+			// modify
 			createNode: createNode,
 			deleteNode: deleteNode,
 			copyNode: copyNode,
 			moveNode: moveNode,
+
+			// attributes
 			getAttributeNames: getAttributeNames,
 			getAttribute: getAttribute,
 			setAttribute: setAttribute,
@@ -664,16 +680,16 @@ function (ASSERT, PerTree, UTIL) {
 			getRegistry: getRegistry,
 			setRegistry: setRegistry,
 			delRegistry: delRegistry,
-			persist: persist,
+
+			// relations
 			getPointerNames: getPointerNames,
 			getPointerPath: getPointerPath,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,
 			setPointer: setPointer,
-			loadCollection: loadCollection,
 			getCollectionNames: getCollectionNames,
 			getCollectionPaths: getCollectionPaths,
-			dumpTree: pertree.dumpTree
+			loadCollection: loadCollection
 		};
 	};
 

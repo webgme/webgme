@@ -183,7 +183,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			var array = new UTIL.AsyncArray(callback);
 
 			for( var i = 0; i < paths.length; ++i ) {
-				pertree.loadByPath(root, paths[i], array.add());
+				pertree.loadByPath(root, paths[i], array.asyncPush());
 			}
 
 			array.wait();
