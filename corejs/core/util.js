@@ -13,8 +13,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	 * always in the range [0, array.length].
 	 */
 	var binarySearch = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array);
-		ASSERT(elem && typeof comparator === "function");
+		ASSERT(array.constructor === Array && typeof comparator === "function");
 
 		var low = 0;
 		var high = array.length;
@@ -35,11 +34,34 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	};
 
 	var binaryInsert = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array);
-		ASSERT(elem && typeof comparator === "function");
+		ASSERT(array.constructor === Array && typeof comparator === "function");
 
 		var index = binarySearch(array, elem, comparator);
 		array.splice(index, 0, elem);
+		return index;
+	};
+
+	var binaryInsertUnique = function (array, elem, comparator) {
+		ASSERT(array.constructor === Array && typeof comparator === "function");
+		
+		var index = binarySearch(array, elem, comparator);
+		if( array[index] === elem ) {
+			return -1;
+		}
+		else {
+			array.splice(index, 0, elem);
+			return index;
+		}
+	};
+	
+	var stringComparator = function (a, b) {
+		ASSERT(typeof a === "string" && typeof b === "string");
+		return a.localeCompare(b);
+	};
+
+	var numberComparator = function (a, b) {
+		ASSERT(typeof a === "number" && typeof b === "number");
+		return a - b;
 	};
 
 	var deepCopy = function (o) {
@@ -236,7 +258,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			push: function (val) {
 				array.push(val);
 			},
-			
+
 			asyncPush: function () {
 				ASSERT(missing >= 1);
 
@@ -277,7 +299,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			set: function (prop, val) {
 				object[prop] = val;
 			},
-			
+
 			asyncSet: function (prop) {
 				ASSERT(typeof prop === "string" && missing >= 1);
 
@@ -298,6 +320,9 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,
+		binaryInsertUnique: binaryInsertUnique,
+		stringComparator: stringComparator,
+		numberComparator: numberComparator,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
 		depthFirstSearch: depthFirstSearch,
