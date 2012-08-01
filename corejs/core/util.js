@@ -4,9 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define(
-[ "core/assert", "core/config" ],
-function (ASSERT, CONFIG) {
+define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	/**
@@ -15,8 +13,7 @@ function (ASSERT, CONFIG) {
 	 * always in the range [0, array.length].
 	 */
 	var binarySearch = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array);
-		ASSERT(elem && typeof comparator === "function");
+		ASSERT(array.constructor === Array && typeof comparator === "function");
 
 		var low = 0;
 		var high = array.length;
@@ -37,11 +34,34 @@ function (ASSERT, CONFIG) {
 	};
 
 	var binaryInsert = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array);
-		ASSERT(elem && typeof comparator === "function");
+		ASSERT(array.constructor === Array && typeof comparator === "function");
 
 		var index = binarySearch(array, elem, comparator);
 		array.splice(index, 0, elem);
+		return index;
+	};
+
+	var binaryInsertUnique = function (array, elem, comparator) {
+		ASSERT(array.constructor === Array && typeof comparator === "function");
+		
+		var index = binarySearch(array, elem, comparator);
+		if( array[index] === elem ) {
+			return -1;
+		}
+		else {
+			array.splice(index, 0, elem);
+			return index;
+		}
+	};
+	
+	var stringComparator = function (a, b) {
+		ASSERT(typeof a === "string" && typeof b === "string");
+		return a.localeCompare(b);
+	};
+
+	var numberComparator = function (a, b) {
+		ASSERT(typeof a === "number" && typeof b === "number");
+		return a - b;
 	};
 
 	var deepCopy = function (o) {
@@ -88,108 +108,117 @@ function (ASSERT, CONFIG) {
 	 * order.
 	 */
 	var depthFirstSearch = function (loadChildren, node, openNode, closeNode, callback) {
-		ASSERT(loadChildren && node && typeof openNode === "function");
-		ASSERT(typeof closeNode === "function" && typeof callback === "function");
+		ASSERT(typeof loadChildren === "function" && loadChildren.length === 2);
+		ASSERT(typeof openNode === "function" && openNode.length === 2);
+		ASSERT(typeof closeNode === "function" && closeNode.length === 2);
+		ASSERT(typeof callback === "function" && callback.length === 1);
 
-		/**
-		 * We maintain an array of nodes with statuses. The status codes are 0 :
-		 * waiting to be processed 1 : loadChildren is called already 2 :
-		 * openNode needs to be called 3 : closeNode needs to be called
-		 */
-		var requests = [ {
-			status: 0,
-			node: node
-		} ];
-
-		var pending = 0;
-
-		var process = function (currentNode, err, children) {
-			var temp;
-			if( callback ) {
-				if( err ) {
-					temp = callback;
-					callback = null;
-					temp(err);
-				}
-				else {
-					temp = 0;
-					while( requests[temp].node !== currentNode ) {
-						++temp;
-						ASSERT(temp < requests.length);
-					}
-					ASSERT(requests[temp].status === 1);
-
-					requests[temp].status = 3;
-
-					err = children.length;
-					while( --err >= 0 ) {
-						requests.splice(temp, 0, {
-							status: 0,
-							node: children[err]
-						});
-					}
-
-					requests.splice(temp, 0, {
-						status: 2,
-						node: currentNode
-					});
-
-					ASSERT(pending >= 1);
-					--pending;
-
-					scan();
-				}
-			}
-		};
-
-		var processing = 0;
-		var done = function (err) {
-			if( callback && (err || (--processing === 0 && requests.length === 0 && pending === 0)) ) {
-				var temp = callback;
-				callback = null;
-				temp(err);
-			}
-		};
-
-		var scan = function () {
-			// console.log("scan", pending, requests.length);
-
-			while( requests.length !== 0 && requests[0].status >= 2 ) {
-				++processing;
-				if( requests[0].status === 2 ) {
-					openNode(requests.shift().node, done);
-				}
-				else {
-					closeNode(requests.shift().node, done);
-				}
-			}
-
+		var preloadChildren = function () {
 			var selected = [];
+			var pending = 0;
 
 			for( var i = 0; i < requests.length && pending < CONFIG.reader.concurrentReads; ++i ) {
-				if( requests[i].status === 0 ) {
-					ASSERT(pending >= 0);
-					++pending;
+				var r = requests[i];
 
-					requests[i].status = 1;
-					selected.push(requests[i].node);
+				if( r.s === 1 ) {
+					r.s = 2;
+					selected.push(r.n);
+					++pending;
+				}
+				else if( r.s === 2 ) {
+					++pending;
 				}
 			}
 
 			for( i = 0; i < selected.length; ++i ) {
-				loadChildren(selected[i], process.bind(null, selected[i]));
+				loadChildren(selected[i], loadChildrenDone.bind(null, selected[i]));
 			}
 		};
 
-		scan();
+		var loadChildrenDone = function (parent, err, children) {
+			if( requests ) {
+				if( err ) {
+					requests = null;
+					callback(err);
+				}
+				else {
+					var i = 0;
+					while( requests[i].n !== parent || requests[i].s !== 2 ) {
+						++i;
+						ASSERT(i < requests.length);
+					}
+
+					requests[i].s = 3;
+
+					err = children.length;
+					while( --err >= 0 ) {
+						requests.splice(i, 0, {
+							s: 0,
+							n: children[err]
+						}, {
+							s: 1,
+							n: children[err]
+						});
+					}
+
+					if( requests[0].s === 0 ) {
+						requests[0].s = 4;
+						openNode(requests[0].n, openNodeDone);
+					}
+					else if( requests[0].s === 3 ) {
+						requests[0].s = 4;
+						closeNode(requests[0].n, openNodeDone);
+					}
+
+					preloadChildren();
+				}
+			}
+		};
+
+		var openNodeDone = function (err) {
+			if( requests ) {
+				if( err ) {
+					requests = null;
+					callback(err);
+				}
+				else {
+					ASSERT(requests.length >= 1 && requests[0].s === 4);
+					requests.shift();
+
+					if( requests.length === 0 ) {
+						callback(null);
+					}
+					else if( requests[0].s === 0 ) {
+						requests[0].s = 4;
+						openNode(requests[0].n, openNodeDone);
+					}
+					else if( requests[0].s === 3 ) {
+						requests[0].s = 4;
+						closeNode(requests[0].n, openNodeDone);
+					}
+				}
+			}
+		};
+
+		var requests = [ {
+			s: 4,
+			n: node
+		}, {
+			s: 1,
+			n: node
+		} ];
+
+		preloadChildren();
+		openNode(node, openNodeDone);
 	};
 
 	var AsyncJoin = function (callback) {
 		ASSERT(typeof callback === "function" && callback.length === 1);
 
 		var missing = 1;
+
 		var fire = function (err) {
-			if( missing && (err || --missing === 0) ) {
+			if( (err && missing > 0) || --missing === 0 ) {
 				missing = 0;
 				callback(err);
 			}
@@ -202,8 +231,9 @@ function (ASSERT, CONFIG) {
 				return fire;
 			},
 
-			start: function () {
+			wait: function () {
 				ASSERT(missing >= 1);
+
 				fire(null);
 			}
 		};
@@ -212,28 +242,33 @@ function (ASSERT, CONFIG) {
 	var AsyncArray = function (callback) {
 		ASSERT(typeof callback === "function" && callback.length === 2);
 
-		var missing = 1;
-		var array = [];
+		var missing = 1, array = [];
 
-		var fire = function (index, err, data) {
-			if( missing ) {
+		var setter = function (index) {
+			return function (err, data) {
 				array[index] = data;
-				if( err || --missing === 0 ) {
+				if( (err && missing > 0) || --missing === 0 ) {
 					missing = 0;
 					callback(err, array);
 				}
-			}
+			};
 		};
 
 		return {
-			add: function () {
+			push: function (val) {
+				array.push(val);
+			},
+
+			asyncPush: function () {
 				ASSERT(missing >= 1);
 
 				++missing;
-				return fire.bind(null, array.length++);
+				var index = array.length++;
+
+				return setter(index);
 			},
 
-			start: function () {
+			wait: function () {
 				ASSERT(missing >= 1);
 
 				if( --missing === 0 ) {
@@ -243,13 +278,56 @@ function (ASSERT, CONFIG) {
 		};
 	};
 
+	var AsyncObject = function (callback, object) {
+		ASSERT(typeof callback === "function" && callback.length === 2);
+		ASSERT(object === undefined || typeof object === "object");
+
+		var missing = 1;
+		object = object || {};
+
+		var setter = function (prop) {
+			return function (err, data) {
+				object[prop] = data;
+				if( (err && missing > 0) || --missing === 0 ) {
+					missing = 0;
+					callback(err, object);
+				}
+			};
+		};
+
+		return {
+			set: function (prop, val) {
+				object[prop] = val;
+			},
+
+			asyncSet: function (prop) {
+				ASSERT(typeof prop === "string" && missing >= 1);
+
+				++missing;
+				return setter(prop);
+			},
+
+			wait: function () {
+				ASSERT(missing >= 1);
+
+				if( --missing === 0 ) {
+					callback(null, object);
+				}
+			}
+		};
+	};
+
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,
+		binaryInsertUnique: binaryInsertUnique,
+		stringComparator: stringComparator,
+		numberComparator: numberComparator,
 		deepCopy: deepCopy,
 		copyOptions: copyOptions,
 		depthFirstSearch: depthFirstSearch,
 		AsyncJoin: AsyncJoin,
-		AsyncArray: AsyncArray
+		AsyncArray: AsyncArray,
+		AsyncObject: AsyncObject
 	};
 });

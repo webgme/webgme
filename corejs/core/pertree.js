@@ -13,19 +13,18 @@ function (ASSERT, SHA1, UTIL) {
 
 	var keyregexp = new RegExp("#[0-9a-f]{40}");
 
-	var isKey = function (key) {
+	var isValidKey = function (key) {
 		return typeof key === "string" && key.length === 41 && keyregexp.test(key);
 	};
 
-	var isRelid = function (relid) {
+	var isValidRelid = function (relid) {
 		return typeof relid === "string" || typeof relid === "number";
 	};
 
 	var EMPTY_STRING = "";
 
 	var joinStringPaths = function (first, second) {
-		ASSERT(typeof first === "string" || typeof first === "number");
-		ASSERT(typeof second === "string" || typeof second === "number");
+		ASSERT(typeof first === "string" && typeof second === "string");
 
 		return second === EMPTY_STRING ? first : (first === EMPTY_STRING ? second : first + "/"
 		+ second);
@@ -36,7 +35,7 @@ function (ASSERT, SHA1, UTIL) {
 
 		var KEYNAME = storage.KEYNAME;
 
-		var isValid = function (node) {
+		var isValidNode = function (node) {
 			var valid = node && node.data && typeof node.data === "object";
 			valid = valid
 			&& (node.parent === null || (node.parent.data && typeof node.parent.data === "object"));
@@ -45,11 +44,11 @@ function (ASSERT, SHA1, UTIL) {
 			valid = valid
 			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
 
-			valid = valid && (node.relid === undefined || isRelid(node.relid));
+			valid = valid && (node.relid === undefined || isValidRelid(node.relid));
 
 			if( valid ) {
 				var key = node.data[KEYNAME];
-				valid = valid && (key === undefined || key === false || isKey(key));
+				valid = valid && (key === undefined || key === false || isValidKey(key));
 
 				valid = valid
 				&& (node.parent === null || !key || node.parent.data[node.relid] === key);
@@ -66,20 +65,18 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getKey = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 			return node.data[KEYNAME];
 		};
 
 		var addKey = function (node) {
-			ASSERT(isValid(node));
-			ASSERT(isMutable(node));
+			ASSERT(isValidNode(node) && isMutable(node));
 
 			return node.data[KEYNAME] = false;
 		};
 
 		var delKey = function (node) {
-			ASSERT(isValid(node));
-			ASSERT(isMutable(node));
+			ASSERT(isValidNode(node) && isMutable(node));
 
 			delete node.data[KEYNAME];
 		};
@@ -98,13 +95,20 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getChildrenRelids = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
-			return Object.keys(node.data);
+			var array = Object.keys(node.data);
+
+			var index = array.indexOf("_mutable");
+			if( index >= 0 ) {
+				array.splice(index, 1);
+			}
+
+			return array;
 		};
 
 		var createChild = function (node, relid) {
-			ASSERT(isValid(node) && isRelid(relid));
+			ASSERT(isValidNode(node) && isValidRelid(relid));
 
 			mutate(node);
 
@@ -121,7 +125,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getChild = function (node, relid) {
-			ASSERT(isValid(node) && isRelid(relid));
+			ASSERT(isValidNode(node) && isValidRelid(relid));
 
 			var child = node.data[relid];
 			if( !child ) {
@@ -137,14 +141,13 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var deleteChild = function (node, relid) {
-			ASSERT(isValid(node) && isMutable(node) && isRelid(relid));
+			ASSERT(isValidNode(node) && isMutable(node) && isValidRelid(relid));
 
 			delete node.data[relid];
 		};
 
 		var loadRoot = function (key, callback) {
-			ASSERT(typeof key === "string");
-			ASSERT(callback);
+			ASSERT(typeof key === "string" && typeof callback === "function");
 
 			storage.load(key, function (err, data) {
 				ASSERT(err || data[KEYNAME] === key);
@@ -157,12 +160,16 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var loadChild = function (node, relid, callback) {
-			ASSERT(isValid(node) && isRelid(relid));
+			ASSERT(isValidNode(node) && isValidRelid(relid) && typeof callback === "function");
 
 			var child = node.data[relid];
-			ASSERT(child && (typeof child === "object" || isKey(child)));
 
-			if( typeof child === "string" ) {
+			if( child === undefined ) {
+				return null;
+			}
+			else if( typeof child === "string" ) {
+				ASSERT(isValidKey(child));
+
 				storage.load(child, function (err, data) {
 					ASSERT(err || data[KEYNAME] === child);
 					callback(err, err ? undefined : {
@@ -173,6 +180,8 @@ function (ASSERT, SHA1, UTIL) {
 				});
 			}
 			else {
+				ASSERT(typeof child === "object");
+
 				callback(null, {
 					data: child,
 					parent: node,
@@ -182,68 +191,37 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var loadByPath = function (node, path, callback) {
-			ASSERT(isValid(node));
-			ASSERT(typeof path === "string" || path.constructor === Array);
-			ASSERT(callback);
+			ASSERT(isValidNode(node) && typeof callback === "function");
+			ASSERT(path.constructor === Array || typeof path === "string");
 
 			if( typeof path === "string" ) {
 				path = parseStringPath(path);
 			}
-
-			var index = path.length;
-			var relid;
-
-			var done = function (err, data) {
-				if( err ) {
+			
+			var loadNext = function (err, node) {
+				if(err) {
 					callback(err);
-					return;
 				}
-
-				ASSERT(data[KEYNAME] === node.data[relid]);
-				node = {
-					data: data,
-					parent: node,
-					relid: relid
-				};
-
-				next();
-			};
-
-			var next = function () {
-				while( index !== 0 ) {
-					ASSERT(isValid(node));
-
-					relid = path[--index];
-					ASSERT(isRelid(relid));
-
-					var child = node.data[relid];
-					ASSERT(child && (typeof child === "object" || typeof child === "string"));
-
-					if( typeof child === "string" ) {
-						storage.load(child, done);
-						return;
-					}
-
-					node = {
-						data: child,
-						parent: node,
-						relid: relid
-					};
+				else if( !node || path.length === 0 ){
+					callback(null, node);
 				}
-				callback(null, node);
+				else {
+					var relid = path.pop();
+					loadChild(node, relid, loadNext);
+				}
 			};
-
-			next();
+			
+			loadNext(null, node);
 		};
 
 		var getParent = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 			return node.parent;
 		};
 
 		var delParent = function (node) {
-			ASSERT(isValid(node));
-			ASSERT(isValid(node.parent));
+			ASSERT(isValidNode(node));
+			ASSERT(isValidNode(node.parent));
 
 			mutate(node.parent);
 			delete node.parent.data[node.relid];
@@ -253,9 +231,8 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var setParent = function (node, parent, relid) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node) && isValidRelid(relid));
 			ASSERT(node.parent === null && !node.relid);
-			ASSERT(isRelid(relid));
 
 			mutate(parent);
 			parent.data[relid] = node.data;
@@ -264,9 +241,9 @@ function (ASSERT, SHA1, UTIL) {
 			node.relid = relid;
 		};
 
-		var getPath = function (node, base) {
-			ASSERT(isValid(node));
-			ASSERT(base === undefined || isValid(base));
+		var getArrayPath = function (node, base) {
+			ASSERT(isValidNode(node));
+			ASSERT(base === undefined || isValidNode(base));
 
 			var path = [];
 			while( node.parent && node !== base ) {
@@ -278,8 +255,8 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getLevel = function (node, base) {
-			ASSERT(isValid(node));
-			ASSERT(base === undefined || isValid(base));
+			ASSERT(isValidNode(node));
+			ASSERT(base === undefined || isValidNode(base));
 
 			var level = 0;
 			while( node.parent && node !== base ) {
@@ -291,13 +268,13 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getStringPath = function (node, base) {
-			ASSERT(isValid(node));
-			ASSERT(base === undefined || isValid(base));
+			ASSERT(isValidNode(node));
+			ASSERT(base === undefined || isValidNode(base));
 
 			var path = EMPTY_STRING;
 			while( node.parent && node !== base ) {
 				if( path === EMPTY_STRING ) {
-					path = node.relid;
+					path = "" + node.relid;
 				}
 				else {
 					path = node.relid + "/" + path;
@@ -309,18 +286,18 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var parseStringPath = function (path) {
-			ASSERT(path && typeof path === "string");
+			ASSERT(typeof path === "string");
 
 			return path.length === 0 ? [] : path.split("/").reverse();
 		};
 
 		var getRelid = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 			return node.relid;
 		};
 
 		var getRoot = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			while( node.parent ) {
 				node = node.parent;
@@ -330,8 +307,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getCommonAncestor = function (first, second) {
-			ASSERT(isValid(first));
-			ASSERT(isValid(second));
+			ASSERT(isValidNode(first) && isValidNode(second));
 
 			var a = [];
 			do {
@@ -356,8 +332,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var isAncestorOf = function (first, second) {
-			ASSERT(isValid(first));
-			ASSERT(isValid(second));
+			ASSERT(isValidNode(first) && isValidNode(second));
 
 			var a = [];
 			while( (first = first.parent) !== undefined ) {
@@ -383,12 +358,12 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var isMutable = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 			return node.data._mutable;
 		};
 
 		var mutate = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var data = node.data;
 			if( !data._mutable ) {
@@ -431,7 +406,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var copyNode = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			return {
 				data: copyData(node.data),
@@ -441,7 +416,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var Saver = function (callback) {
-			ASSERT(callback);
+			ASSERT(typeof callback === "function");
 
 			var counter = 1;
 			var error = null;
@@ -499,8 +474,7 @@ function (ASSERT, SHA1, UTIL) {
 
 		// TODO: rewrite it using UTIL.AsyncJoin
 		var persist = function (node, callback) {
-			ASSERT(isValid(node));
-			ASSERT(isMutable(node));
+			ASSERT(isValidNode(node) && isMutable(node));
 			ASSERT(getKey(node) !== undefined);
 
 			var saver = new Saver(callback);
@@ -515,27 +489,27 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getProperty = function (node, name) {
-			ASSERT(isValid(node) && isRelid(name));
+			ASSERT(isValidNode(node) && isValidRelid(name));
 
 			return node.data[name];
 		};
 
 		var setProperty = function (node, name, value) {
-			ASSERT(isValid(node) && isRelid(name));
+			ASSERT(isValidNode(node) && isValidRelid(name));
 
 			mutate(node);
 			node.data[name] = value;
 		};
 
 		var delProperty = function (node, name) {
-			ASSERT(isValid(node) && isRelid(name));
+			ASSERT(isValidNode(node) && isValidRelid(name));
 
 			mutate(node);
 			delete node.data[name];
 		};
 
 		var isEmpty = function (node) {
-			ASSERT(isValid(node));
+			ASSERT(isValidNode(node));
 
 			var s;
 			for( s in node.data ) {
@@ -546,14 +520,14 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var getProperty2 = function (node, name1, name2) {
-			ASSERT(isValid(node) && isRelid(name1) && isRelid(name2));
+			ASSERT(isValidNode(node) && isValidRelid(name1) && isValidRelid(name2));
 
 			var a = node.data[name1];
 			return a === undefined ? a : a[name2];
 		};
 
 		var setProperty2 = function (node, name1, name2, value) {
-			ASSERT(isValid(node) && isRelid(name1) && isRelid(name2));
+			ASSERT(isValidNode(node) && isValidRelid(name1) && isValidRelid(name2));
 
 			node = getChild(node, name1);
 			mutate(node);
@@ -561,7 +535,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var delProperty2 = function (node, name1, name2) {
-			ASSERT(isValid(node) && isRelid(name1) && isRelid(name2));
+			ASSERT(isValidNode(node) && isValidRelid(name1) && isValidRelid(name2));
 
 			node = getChild(node, name1);
 			mutate(node);
@@ -569,8 +543,7 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var dumpTree = function (key, callback) {
-			ASSERT(key && typeof key === "string");
-			ASSERT(callback);
+			ASSERT(typeof key === "string" && typeof callback === "function");
 
 			var root = null;
 			var error = null;
@@ -586,10 +559,10 @@ function (ASSERT, SHA1, UTIL) {
 			};
 
 			var load = function (data, relid) {
-				ASSERT(data && typeof data === "object" && isRelid(relid));
+				ASSERT(data && typeof data === "object" && isValidRelid(relid));
 
 				var key = data[relid];
-				ASSERT(isKey(key));
+				ASSERT(isValidKey(key));
 
 				++counter;
 
@@ -617,7 +590,7 @@ function (ASSERT, SHA1, UTIL) {
 				for( var relid in data ) {
 					var child = data[relid];
 
-					if( relid !== KEYNAME && isKey(child) ) {
+					if( relid !== KEYNAME && isValidKey(child) ) {
 						load(data, relid);
 					}
 					else if( child && typeof child === "object" ) {
@@ -637,8 +610,8 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		return {
-			isKey: isKey,
-			isValid: isValid,
+			isValidKey: isValidKey,
+			isValidNode: isValidNode,
 			getKey: getKey,
 			addKey: addKey,
 			delKey: delKey,
@@ -646,13 +619,14 @@ function (ASSERT, SHA1, UTIL) {
 			loadRoot: loadRoot,
 			createChild: createChild,
 			getChild: getChild,
+			getChildrenRelids: getChildrenRelids,
 			loadChild: loadChild,
 			deleteChild: deleteChild,
 			loadByPath: loadByPath,
 			getParent: getParent,
 			setParent: setParent,
 			delParent: delParent,
-			getPath: getPath,
+			getArrayPath: getArrayPath,
 			getLevel: getLevel,
 			getStringPath: getStringPath,
 			joinStringPaths: joinStringPaths,

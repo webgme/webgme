@@ -31,7 +31,7 @@
     width: 61px;
     font-family: Helvetica, Arial;
     vertical-align: middle;
-    cursor: default;
+    cursor: pointer;
     text-align: center;
     position: relative;
     background-color: #000;
@@ -39,6 +39,7 @@
     border: 0px solid #333;
     overflow: hidden;
     padding:  10px;
+    pointer-events:all;
 }
 
 .objectContainer .core .title {
@@ -67,6 +68,7 @@
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 70px;
+    pointer-events:all;
 }
 
 .objectContainer .children {
@@ -114,4 +116,51 @@
     stroke: #333333;
     fill: none;
     stroke-width: 1px;
+}
+
+.objectContainer .core.pointer-source {
+    background-color: #39f;
+}
+
+.objectContainer .core.pointer-end-state-hover {
+    background-color: #FF7800;
+}
+
+/*
+ * Pointer sources
+*/
+
+.objectContainer .pointerSources {
+    position: absolute;
+    background-color: white;
+    height: 10px;
+    top: 1px;
+    left: 1px;
+}
+
+.objectContainer .pointerSources .pointer-source {
+    display: inline-block;
+    height: 9px;
+    width: 9px;
+    margin-right: 1px;
+    background-color: green;
+    float: left;
+}
+
+.objectContainer .pointerTargets {
+    position: absolute;
+    background-color: white;
+    height: 10px;
+    bottom: 1px;
+    right: 1px;
+}
+
+.objectContainer .pointerTargets .pointer-target {
+    display: inline-block;
+    height: 9px;
+    width: 9px;
+    margin-right: 1px;
+    background-color: green;
+    float: left;
+    vertical-align: bottom;
 }

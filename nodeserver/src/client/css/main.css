@@ -1,3 +1,5 @@
+@import url("bootstrap.css");
+@import url("qtip/jquery.qtip.css");
 /* OWN STYLES */
 html,body {
     margin: 0;
@@ -183,6 +185,14 @@ body {
     left:0;
     right:0;
 
+}
+
+.pointer {
+    cursor: pointer;
+}
+
+.center {
+    text-align: center !important;
 }
 
 /************************/

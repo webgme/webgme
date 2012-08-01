@@ -47,6 +47,8 @@ define(['logManager',
 
         this._bottomControls = this._el.find(".bottomControls");
 
+        this._core = this._el.find(".core");
+
         this._bottomConnectionPoint = this._el.find(".bottomConnectionPoint");
         this._topConnectionPoint = this._el.find(".topConnectionPoint");
 
@@ -67,11 +69,48 @@ define(['logManager',
         if (this._expandable === false) {
             this._bottomControls.hide();
         }
+
+        this._core.draggable({
+            helper: function () {
+                return $("<div class='draw-pointer-drag-helper'></div>").data("sourceId", self._id);
+            },
+            scroll: true,
+            cursor: 'pointer',
+            cursorAt: {
+                left: 0,
+                top: 0
+            },
+            start: function (event) {
+                self._core.addClass("pointer-source");
+                self._graphVizView.startDrawPointer(self._id);
+                event.stopPropagation();
+            },
+            stop: function (event) {
+                self._graphVizView.endDrawPointer();
+                self._core.removeClass("pointer-source");
+                event.stopPropagation();
+            },
+            drag: function (event) {
+                self._graphVizView.onDrawPointer(event);
+            }
+        });
+
+        this._core.droppable({
+            accept: ".pointer-source",
+            hoverClass: "pointer-end-state-hover",
+            greedy: true,
+            drop: function (event, ui) {
+                var sourceId = ui.helper.data("sourceId");
+
+                self._graphVizView.createPointer(sourceId, self._id);
+                event.stopPropagation();
+            }
+        });
     };
 
     GraphVizObject.prototype.afterAppend = function () {
         this._svgPaper = Raphael(this._paper[0], "100%", "100%");
-        this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
+        //this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
     };
 
     GraphVizObject.prototype._expand = function () {

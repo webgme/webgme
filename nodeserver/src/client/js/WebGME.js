@@ -4,6 +4,8 @@
 define([   'order!jquery',
     'order!jquery-ui',
     'order!underscore',
+    'order!lib/jquery/jquery.qtip',
+    'order!bootstrap',
     'logManager',
     'commonUtil',
     'clientUtil',
@@ -19,6 +21,8 @@ define([   'order!jquery',
     'js/GraphViz/GraphVizView'], function (jquery,
                                                             jqueryui,
                                                             underscore,
+                                                            qtip,
+                                                            bootstrap,
                                                             logManager,
                                                             commonUtil,
                                                             util,
@@ -60,7 +64,8 @@ define([   'order!jquery',
         doConnect,
         lastContainerWidth = 0,
         resizeMiddlePane,
-        graphViz;
+        graphViz,
+        setActiveVisualizer;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -76,8 +81,8 @@ define([   'order!jquery',
             lastContainerWidth = cW;
 
             //by default lay out in vertical split
-            eW = Math.floor($("#middlePane").width() / 2);
-            eH = Math.floor($("#middlePane").height());
+            /*eW = Math.floor($("#middlePane").width() / 2);
+            eH = Math.floor($("#middlePane").height());*/
 
             /*if (eW < 560) {
                 //inner children has to be laid out under each other (horizontal split)
@@ -94,7 +99,7 @@ define([   'order!jquery',
             eH = Math.floor($("#middlePane").height());
 
             $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-            $("#modelEditorContainer2").outerWidth(0).outerHeight(0);
+            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
 
             /******************/
 
@@ -117,6 +122,29 @@ define([   'order!jquery',
 
     //and call if for the first time as well
     resizeMiddlePane();
+
+    setActiveVisualizer = function (visualizer) {
+        if (visualizer === "ModelEditor") {
+            $("#modelEditorContainer1").hide();
+            $("#modelEditorContainer2").show();
+        } else {
+            $("#modelEditorContainer1").show();
+            $("#modelEditorContainer2").hide();
+        }
+    };
+
+    //hide GraphViz first and hook up radio button
+    setActiveVisualizer("ModelEditor");
+
+    $("#visualizerPanel").find('a[class="btn-env"]').click(function (event) {
+        var vis = $(this).attr("id");
+
+        $("#visualizerPanel").find('a[class="btn-env"]').parent().removeClass('active');
+        $(this).parent().addClass('active');
+
+        setActiveVisualizer(vis);
+        event.stopPropagation();
+    });
 
     doConnect = function () {
 

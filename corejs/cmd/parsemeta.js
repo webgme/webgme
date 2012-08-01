@@ -215,7 +215,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 			ASSERT(xmlNode && metaNode && callback2);
 
 			var join = new UTIL.AsyncJoin(callback2);
-			
+
 			var create = function (attrName, callback3) {
 				getParsedNodeByName(xmlNode, attrName, function (err, node) {
 					ASSERT(!err);
@@ -241,7 +241,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				}
 			}
 
-			join.start();
+			join.wait();
 		};
 
 		parsers.model = function (xmlNode, callback2) {

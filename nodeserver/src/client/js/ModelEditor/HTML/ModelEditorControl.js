@@ -233,7 +233,7 @@ define(['logManager',
             this._modelEditorView.updateCanvas(this._getObjectDescriptor(updatedObject));
 
             //save old and current children info to be able to see the difference
-            oldChildren = this._currentNodeInfo.children.splice(0);
+            oldChildren = this._currentNodeInfo.children.slice();
             newChildren = updatedObject.getChildrenIds() || [];
 
             //Handle children deletion

@@ -19,41 +19,171 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 		core.setAttribute(nodes[child], "name", child);
 	};
 
-	var printStats = function (what, func) {
-		ASSERT(core);
-
-		console.log("Printing " + what + ":");
-		for( var name in nodes ) {
-			console.log(name + ":", func(nodes[name]));
-		}
-		console.log();
-	};
-
 	tests[1] = function (storage, root, callback) {
 		core = new Core(storage);
 
 		createNode("a");
 		createNode("b", "a");
 		createNode("c", "a");
+		createNode("d", "b");
+		createNode("e", "b");
 
-		core.setPointer(nodes.b, "ptr", nodes.c);
+		core.setPointer(nodes.b, "ptr", nodes.e);
 		core.setPointer(nodes.c, "ptr", nodes.a);
-		core.deletePointer(nodes.c, "ptr");
+		core.setPointer(nodes.d, "ptr", nodes.c);
+		// core.deletePointer(nodes.c, "ptr");
+
+		// core.deleteNode(nodes.d);
+
+		nodes.f = core.copyNode(nodes.b, nodes.c);
+		core.setAttribute(nodes.f, "name", "f");
 
 		core.persist(nodes.a, function (err) {
-
-			printStats("attribute names", core.getAttributeNames);
-			printStats("pointer names", core.getPointerNames);
-			printStats("collection names", core.getCollectionNames);
-			printStats("pointer paths", function (node) {
-				return core.getPointerPath(node, "ptr");
-			});
-
 			callback(err, core.getKey(nodes.a));
 		});
 	};
 
 	tests[2] = function (storage, root, callback) {
+		core = new Core(storage);
+
+		var findNameByPath = function (path) {
+			if( path === undefined ) {
+				return null;
+			}
+
+			for( var name in nodes ) {
+				if( path === core.getStringPath(nodes[name]) ) {
+					return name;
+				}
+			}
+			return "unknown";
+		};
+
+		var printStats = function (what, func) {
+			ASSERT(core);
+
+			console.log("Printing " + what + ":");
+			for( var name in nodes ) {
+				console.log(name + ":", func(nodes[name]));
+			}
+			console.log();
+		};
+
+		printStats("attribute names", core.getAttributeNames);
+		printStats("node names", function (node) {
+			return core.getAttribute(node, "name");
+		});
+		printStats("pointer names", core.getPointerNames);
+		printStats("collection names", core.getCollectionNames);
+		printStats("pointer paths", function (node) {
+			return core.getPointerPath(node, "ptr");
+		});
+		printStats("pointer targets", function (node) {
+			return findNameByPath(core.getPointerPath(node, "ptr"));
+		});
+		printStats("collection count", function (node) {
+			return core.getCollectionPaths(node, "ptr").length;
+		});
+		printStats("children count", function (node) {
+			return core.getChildrenRelids(node).length;
+		});
+		printStats("lavels", core.getLevel);
+
+		callback(null);
+	};
+
+	tests[3] = function (storage, root, callback) {
+		core = new Core(storage);
+
+		var loadChildren = function (node, callback2) {
+			core.loadChildren(node, function (err, array) {
+				if( !err ) {
+					ASSERT(array.constructor === Array);
+					array.sort(function (nodea, nodeb) {
+						var namea = core.getAttribute(nodea, "name");
+						var nameb = core.getAttribute(nodeb, "name");
+						ASSERT(typeof namea === "string" && typeof nameb === "string");
+
+						return namea.localeCompare(nameb);
+					});
+				}
+				callback2(err, array);
+			});
+		};
+
+		var getNodeName = function (node) {
+			if( node === null ) {
+				return "null";
+			}
+			else if( node === undefined ) {
+				return "undefined";
+			}
+
+			var name = "";
+			while( node ) {
+				name = core.getAttribute(node, "name") + name;
+				node = core.getParent(node);
+			}
+			return name;
+		};
+
+		console.log("Printing out tree in alphanumerical order");
+		core.loadRoot(root, function (err, node) {
+			UTIL.depthFirstSearch(loadChildren, node, function (child, callback2) {
+
+				var line = getNodeName(child) + ":";
+				// line += " path=" + core.getStringPath(child);
+
+				var finish = new UTIL.AsyncJoin(function (err2) {
+					console.log(line);
+					callback2(err2);
+				});
+
+				var addPointer = function (callback3, what, err, target) {
+					if( !err ) {
+						line += " " + what + "=" + getNodeName(target);
+					}
+
+					callback3(err);
+				};
+
+				var addCollection = function (callback3, what, err, sources) {
+					if( !err ) {
+						var s = "";
+						for( var j = 0; j < sources.length; ++j ) {
+							if( j !== 0 ) {
+								s += ",";
+							}
+							s += getNodeName(sources[j]);
+						}
+						line += " " + what + "-inv=[" + s + "]";
+					}
+
+					callback3(err);
+				};
+
+				var names = core.getPointerNames(child);
+				for( var i = 0; i < names.length; ++i ) {
+					core
+					.loadPointer(child, names[i], addPointer.bind(null, finish.add(), names[i]));
+					// line += " " + names[i] + "-path=" +
+					// core.getPointerPath(child, names[i]);
+				}
+
+				names = core.getCollectionNames(child);
+				for( i = 0; i < names.length; ++i ) {
+					core.loadCollection(child, names[i], addCollection.bind(null, finish.add(),
+					names[i]));
+				}
+
+				finish.wait();
+			}, function (child, callback2) {
+				callback2(null);
+			}, function (err) {
+				console.log("Printing done");
+				callback(err, root);
+			});
+		});
 	};
 
 	return function (number, storage, root, callback) {
@@ -61,6 +191,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 			callback("no such test program");
 		}
 		else {
+			console.log("Running test " + number);
 			tests[number](storage, root, callback);
 		}
 	};
