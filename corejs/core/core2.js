@@ -29,7 +29,7 @@ function (ASSERT, PerTree, UTIL) {
 	};
 
 	// make relids deterministic
-	if( false ) {
+	if( true ) {
 		var nextRelid = 0;
 		createRelid = function (data, relid) {
 			ASSERT(data && typeof data === "object");
@@ -85,7 +85,17 @@ function (ASSERT, PerTree, UTIL) {
 		var parseStringPath = pertree.parseStringPath;
 
 		var getAttributeNames = function (node) {
-			return Object.keys(pertree.getProperty(node, ATTRIBUTES));
+			ASSERT(isValidNode(node));
+			
+			var keys = Object.keys(pertree.getProperty(node, ATTRIBUTES));
+			var i = keys.length;
+			while( --i >= 0 ) {
+				if( keys[i].charAt(0) === "_" ) {
+					keys.splice(i, 1);
+				}
+			}
+			
+			return keys;
 		};
 
 		var getAttribute = function (node, name) {
@@ -162,7 +172,7 @@ function (ASSERT, PerTree, UTIL) {
 			name = name + COLLSUFFIX;
 
 			var array = pertree.getProperty(node, name);
-			ASSERT(array && array.constructor === Array && array.length >= 1);
+			ASSERT(Array.isArray(array) && array.length >= 1);
 
 			if( array.length === 1 ) {
 				ASSERT(array[0] === source);
@@ -206,7 +216,7 @@ function (ASSERT, PerTree, UTIL) {
 						}
 						else {
 							var array = pertree.getProperty(node, name);
-							ASSERT(array && array.constructor === Array);
+							ASSERT(Array.isArray(array));
 							name = name.slice(0, -COLLSUFFIX.length);
 							for( var k = 0; k < array.length; ++k ) {
 								list.push({
@@ -537,8 +547,7 @@ function (ASSERT, PerTree, UTIL) {
 				if( child ) {
 					var sources = pertree.getProperty(child, name);
 					if( sources ) {
-						ASSERT(sources.constructor === Array);
-						ASSERT(sources.length >= 1);
+						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
 						for( var i = 0; i < sources.length; ++i ) {
 							pertree.loadByPath(node, sources[i], result.asyncPush());
@@ -574,8 +583,7 @@ function (ASSERT, PerTree, UTIL) {
 				if( child ) {
 					var sources = pertree.getProperty(child, name);
 					if( sources ) {
-						ASSERT(sources.constructor === Array);
-						ASSERT(sources.length >= 1);
+						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
 						var prefix = pertree.getStringPath(node);
 

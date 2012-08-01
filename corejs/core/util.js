@@ -13,7 +13,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	 * always in the range [0, array.length].
 	 */
 	var binarySearch = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array && typeof comparator === "function");
+		ASSERT(Array.isArray(array) && typeof comparator === "function");
 
 		var low = 0;
 		var high = array.length;
@@ -34,7 +34,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	};
 
 	var binaryInsert = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array && typeof comparator === "function");
+		ASSERT(Array.isArray(array) && typeof comparator === "function");
 
 		var index = binarySearch(array, elem, comparator);
 		array.splice(index, 0, elem);
@@ -42,8 +42,8 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	};
 
 	var binaryInsertUnique = function (array, elem, comparator) {
-		ASSERT(array.constructor === Array && typeof comparator === "function");
-		
+		ASSERT(Array.isArray(array) && typeof comparator === "function");
+
 		var index = binarySearch(array, elem, comparator);
 		if( array[index] === elem ) {
 			return -1;
@@ -53,7 +53,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			return index;
 		}
 	};
-	
+
 	var stringComparator = function (a, b) {
 		ASSERT(typeof a === "string" && typeof b === "string");
 		return a.localeCompare(b);
@@ -67,16 +67,16 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	var deepCopy = function (o) {
 		var c, k;
 		if( o && typeof o === "object" ) {
-			if( o.constructor !== Array ) {
-				c = {};
-				for( k in o ) {
-					c[k] = deepCopy(o[k]);
-				}
-			}
-			else {
+			if( Array.isArray(o) ) {
 				c = [];
 				for( k = 0; k < o.length; ++k ) {
 					c.push(deepCopy(o[k]));
+				}
+			}
+			else {
+				c = {};
+				for( k in o ) {
+					c[k] = deepCopy(o[k]);
 				}
 			}
 			return c;
