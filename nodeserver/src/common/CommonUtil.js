@@ -104,6 +104,10 @@ define([], function () {
                 }
                 throw error;
             }
+        },
+        hashbasedconfig: {
+            mongosrv: "http://localhost:888",
+            rootsrv: "http://localhost:999"
         }
     };
 });
