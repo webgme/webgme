@@ -218,21 +218,32 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		var missing = 1;
 
 		var fire = function (err) {
-			if( (err && missing > 0) || --missing === 0 ) {
-				missing = 0;
-				callback(err);
+			ASSERT(missing !== 0);
+
+			if( missing > 0 ) {
+				if( err ) {
+					missing = -1;
+					callback(err);
+				}
+				else if( --missing === 0 ) {
+					callback(null);
+				}
 			}
 		};
 
 		return {
 			add: function () {
-				ASSERT(missing >= 1);
-				++missing;
+				ASSERT(missing !== 0);
+
+				if( missing > 0 ) {
+					++missing;
+				}
+
 				return fire;
 			},
 
 			wait: function () {
-				ASSERT(missing >= 1);
+				ASSERT(missing !== 0);
 
 				fire(null);
 			}
@@ -246,32 +257,43 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 		var setter = function (index) {
 			return function (err, data) {
+				ASSERT(missing !== 0);
+
 				array[index] = data;
-				if( (err && missing > 0) || --missing === 0 ) {
-					missing = 0;
-					callback(err, array);
+
+				if( missing > 0 ) {
+					if( err ) {
+						missing = -1;
+						callback(err);
+					}
+					else if( --missing === 0 ) {
+						callback(null, array);
+					}
 				}
 			};
 		};
 
 		return {
 			push: function (val) {
+				ASSERT(missing !== 0);
+
 				array.push(val);
 			},
 
 			asyncPush: function () {
-				ASSERT(missing >= 1);
+				ASSERT(missing !== 0);
 
-				++missing;
-				var index = array.length++;
+				if( missing > 0 ) {
+					++missing;
+				}
 
-				return setter(index);
+				return setter(array.length++);
 			},
 
 			wait: function () {
-				ASSERT(missing >= 1);
+				ASSERT(missing !== 0);
 
-				if( --missing === 0 ) {
+				if( missing > 0 && --missing === 0 ) {
 					callback(null, array);
 				}
 			}
@@ -287,30 +309,44 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 		var setter = function (prop) {
 			return function (err, data) {
+				ASSERT(missing !== 0);
+
 				object[prop] = data;
-				if( (err && missing > 0) || --missing === 0 ) {
-					missing = 0;
-					callback(err, object);
+
+				if( missing > 0 ) {
+					if( err ) {
+						missing = -1;
+						callback(err);
+					}
+					else if( --missing === 0 ) {
+						callback(null, object);
+					}
 				}
 			};
 		};
 
 		return {
 			set: function (prop, val) {
+				ASSERT(missing !== 0);
+
 				object[prop] = val;
 			},
 
 			asyncSet: function (prop) {
 				ASSERT(typeof prop === "string" && missing >= 1);
+				ASSERT(missing !== 0);
 
-				++missing;
+				if( missing > 0 ) {
+					++missing;
+				}
+
 				return setter(prop);
 			},
 
 			wait: function () {
-				ASSERT(missing >= 1);
+				ASSERT(missing !== 0);
 
-				if( --missing === 0 ) {
+				if( missing > 0 && --missing === 0 ) {
 					callback(null, object);
 				}
 			}
