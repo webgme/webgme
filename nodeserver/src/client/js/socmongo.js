@@ -2,6 +2,7 @@ define([ "js/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
     "use strict";
 
     var Mongo = function (options) {
+        var ROOTNAME = "***root***";
         var socket = io.connect(options.mongosrv);
         var connected = false;
         var isopen = false;
@@ -70,6 +71,19 @@ define([ "js/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
         var searchId = function (beginning, callback) {
             socket.emit('searchId',beginning,callback);
         };
+        var loadRoot = function(callback){
+            load(ROOTNAME,function(err,node){
+                if(err){
+                    callback(err);
+                }
+                else{
+                    callback(null,node.value);
+                }
+            });
+        };
+        var saveRoot = function(value,callback){
+            save({"_id":ROOTNAME,"value":value},callback);
+        };
 
         return {
             open: open,
@@ -81,7 +95,9 @@ define([ "js/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             remove: remove,
             dumpAll: dumpAll,
             removeAll: removeAll,
-            searchId: searchId
+            searchId: searchId,
+            loadRoot: loadRoot,
+            saveRoot: saveRoot
         };
     };
 

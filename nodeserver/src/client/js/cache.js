@@ -135,7 +135,9 @@ define([ "js/assert" ], function (ASSERT) {
 			remove: remove,
 			dumpAll: storage.dumpAll,
 			removeAll: removeAll,
-			searchId: storage.searchId
+			searchId: storage.searchId,
+            loadRoot: storage.loadRoot,
+            saveRoot: storage.saveRoot
 		};
 	};
 

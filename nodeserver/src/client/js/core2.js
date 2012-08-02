@@ -576,6 +576,7 @@ define([ "js/assert", "js/pertree", "js/utilm" ], function (ASSERT, PerTree, UTI
 		return {
 			getKey: pertree.getKey,
 			loadRoot: pertree.loadRoot,
+            loadByPath: pertree.loadByPath,
 			loadChildren: loadChildren,
 			getChildrenRelids: getChildrenRelids,
 			loadChild: pertree.loadChild,

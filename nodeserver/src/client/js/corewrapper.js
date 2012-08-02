@@ -113,7 +113,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
                 logger.error("[l82] no such object: "+path);
             }
         };
-        this.setRegistry = function(path,names,value){
+        this.setRegistry = function(path,name,value){
             if(currentNodes[path]){
                 currentCore.setRegistry(currentNodes[path],name,value);
                 modifyRootOnServer(currentNodes[path]);
@@ -176,7 +176,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
         };
         this.delPointer = function(path,name){
             if(currentNodes[path]){
-                currentCore.DeletePointer(currentNodes[path],name);
+                currentCore.deletePointer(currentNodes[path],name);
                 modifyRootOnServer(currentNodes[path]);
             }
             else{
@@ -265,6 +265,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
                 path = "root";
             }
             if(!currentNodes[path]){
+                console.log("storing node:"+JSON.stringify(node));
                 currentNodes[path] = node;
             }
         };
@@ -389,7 +390,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
             return core.getRegistry(node,name);
         };
         this.getPointer = function(name){
-            return core.getPointerPath(node,name);
+            return {to:core.getPointerPath(node,name),from:[]};
         };
         this.getPointerNames = function(){
             return core.getPointerNames(node);
