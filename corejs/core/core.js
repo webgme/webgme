@@ -207,7 +207,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 						var collections = pertree.getChild(target, COLLECTIONS);
 
 						var array = pertree.getProperty(collections, name);
-						ASSERT(array.constructor === Array && array.length >= 1);
+						ASSERT(Array.isArray(array) && array.length >= 1);
 
 						var nodepath = pertree.getStringPath(node);
 						var index = array.indexOf(nodepath);
@@ -244,7 +244,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			var collections = pertree.getChild(node, COLLECTIONS);
 
 			var paths = pertree.getProperty(collections, name);
-			ASSERT(paths === undefined || paths.constructor === Array);
+			ASSERT(paths === undefined || Array.isArray(paths));
 
 			var missing = paths.length;
 			var handle = function (err, source) {
@@ -296,7 +296,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 					var collections = pertree.getChild(target, COLLECTIONS);
 
 					var array = pertree.getProperty(collections, name);
-					ASSERT(array === undefined || array.constructor === Array);
+					ASSERT(array === undefined || Array.isArray(array));
 
 					if( array ) {
 						array = array.slice(0);

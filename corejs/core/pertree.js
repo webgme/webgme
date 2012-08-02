@@ -192,7 +192,7 @@ function (ASSERT, SHA1, UTIL) {
 
 		var loadByPath = function (node, path, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
-			ASSERT(path.constructor === Array || typeof path === "string");
+			ASSERT(Array.isArray(path) || typeof path === "string");
 
 			if( typeof path === "string" ) {
 				path = parseStringPath(path);

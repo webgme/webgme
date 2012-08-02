@@ -26,9 +26,9 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 
 		var EMPTYNODE = corerels.createNode();
 
-		// TODO: we need this in memory only, not in the database 
+		// TODO: we need this in memory only, not in the database
 		corerels.persist(EMPTYNODE, function (err) {
-			if(err) {
+			if( err ) {
 				console.log(err);
 			}
 		});
@@ -56,11 +56,29 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			corerels.loadRoot(key, function (err, node) {
 				if( node ) {
 					node.type = null;
+					node.depth = 0;
 				}
 				callback(err, node);
 			});
 		};
 
+		var createNode = function (parent, type) {
+			ASSERT(!parent || isValidNode(parent));
+			ASSERT(!type || isValidNode(type));
+			ASSERT(!type || parent);
+
+			var node = corerels.createNode(parent);
+			
+			if( type ) {
+				corerels.setPointer(node, PROTOTYPE, type);
+			}
+			
+			node.type = type || null;
+			node.depth = 0;
+
+			return node;
+		};
+		
 		var getChildrenRelids = function (node) {
 			ASSERT(isValidNode(node));
 
@@ -78,94 +96,111 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			return relids;
 		};
 
-		var setupPrototype = function (node, callback) {
-			ASSERT(corerels.isValidNode(node));
+		var loadChild = function (node, relid, callback) {
+			ASSERT(isValidNode(node) && corerels.isValidRelid(relid)
+			&& typeof callback === "function");
 
-			if( node.type !== undefined ) {
-				callback(null);
-			}
-			else {
-				ASSERT(node.parent);
+			var join = new UTIL.AsyncObject(function (err, obj) {
+				if( err ) {
+					callback(err);
+					return;
+				}
 
-				var join = UTIL.AsyncObject(function (err, obj) {
-					if( err ) {
-						callback(err);
+				if( obj.ptr ) {
+					if( obj.type ) {
+						callback(new Error("core error: relid conflict for derived object"));
+						return;
 					}
-					else if( obj.type ) {
-						node.type = obj.type;
-						setupPrototype(node.type, callback);
+					else if( obj.child ) {
+						callback(new Error("core error: pointer fo nonexistent object"));
+						return;
 					}
-					else if( node.parent.type ) {
-						corerels.loadChild(node.parent.type, node.relid, function (err, type) {
-							if( err ) {
-								callback(err);
-							}
-							else {
-								node.type = type;
-								setupPrototype(node.type, callback);
-							}
-						});
+
+					obj.type = obj.ptr;
+				}
+
+				if( obj.type || obj.child ) {
+					if( !obj.child ) {
+						obj.child = {
+							parent: node,
+							relid: relid,
+							data: EMPTYNODE.data
+						};
+					}
+
+					if( obj.type ) {
+						obj.child.type = obj.type;
+						obj.child.depth = obj.type.depth;
 					}
 					else {
-						node.type = null;
-						callback(null);
+						obj.child.type = null;
+						obj.child.depth = 0;
 					}
-				});
 
-				setupPrototype(node.parent, join.asyncSet("void"));
-				corerels.loadPointer(node, PROTOTYPE, join.asyncSet("type"));
-				join.wait();
+				}
+
+				callback(null, obj.child);
+			});
+
+			corerels.loadChild(node, relid, join.asyncSet("child"));
+
+			if( node.type ) {
+				loadChild(node.type, relid, join.asyncSet("type"));
 			}
-		};
 
-		var setupPrototypeSingle = function (callback) {
-			return function (err, node) {
-				if( err || !node ) {
-					callback(err, node);
-				}
-				else {
-					setupPrototype(node, callback);
-				}
-			};
-		};
+			// TODO: dirty trick to load pointer for not yet loaded child
+			var path = corerels.getPointerPath({
+				parent: node,
+				relid: relid,
+				data: EMPTYNODE.data
+			}, PROTOTYPE);
 
-		var setupPrototypeArray = function (callback) {
-			return function (err, nodes) {
-				if( err || !nodes.length ) {
-					callback(err, nodes);
-				}
-				else {
-					var join = new UTIL.AsyncArray(callback);
+			if( typeof path === "string" ) {
+				// TODO, we should share as much of the lower part as possible
+				loadByPath(corerels.getRoot(node), path, join.asyncSet("ptr"));
+			}
 
-					for( var i = 0; i < nodes.length; ++i ) {
-						setupPrototype(nodes[i], join.asyncPush());
-					}
-
-					join.wait();
-				}
-			};
-		};
-
-		var loadChild = function (node, relid, callback) {
-			ASSERT(isValidNode(node) && typeof callback === "function");
-			
-			// TODO: we need to check EMPTYNODE data
-			
-			corerels.loadChild(node, relid, setupPrototypeSingle(callback));
+			join.wait();
 		};
 
 		var loadByPath = function (node, path, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
-			corerels.loadByPath(node, path, setupPrototypeSingle(callback));
+			ASSERT(corerels.isValidType(path));
+
+			path = corerels.parseStringPath(path);
+
+			var loadNext = function (err, node) {
+				if( err ) {
+					callback(err);
+				}
+				else if( !node || path.length === 0 ) {
+					callback(null, node);
+				}
+				else {
+					var relid = path.pop();
+					loadChild(node, relid, loadNext);
+				}
+			};
+
+			loadNext(null, node);
 		};
 
 		var loadChildren = function (node, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
-			corerels.loadChildren(node, setupPrototypeArray(callback));
+
+			var relids = getChildrenRelids(node);
+			var join = new UTIL.AsyncArray(callback);
+
+			for( var i = 0; i < relids.length; ++i ) {
+				loadChild(node, relids[i], join.asyncAdd());
+			}
+
+			join.wait();
 		};
 
 		var getPrototype = function (node) {
 			ASSERT(isValidNode(node));
+
 			return node.type;
 		};
 
@@ -221,7 +256,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 		var getPointerNames = function (node) {
 			ASSERT(isValidNode(node));
 
-			var names = [];
+			var names = [ PROTOTYPE ];
 
 			do {
 				if( node.data ) {
@@ -234,6 +269,8 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 				node = node.type;
 			} while( node );
 
+			names.splice(UTIL.binarySearch(names, PROTOTYPE, UTIL.stringComparator), 1);
+			
 			return names;
 		};
 
@@ -263,16 +300,16 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			getPrototype: getPrototype,
 			// loadSubtypes: loadSubtypes
 
-			// createNode: createNode,
+			createNode: createNode,
 			// deleteNode: deleteNode,
 			// copyNode: copyNode,
 			// moveNode: moveNode,
 
 			getAttributeNames: getAttributeNames,
-			getAttribute: corerels.getAttribute,
+			getAttribute: getAttribute,
 			setAttribute: corerels.setAttribute,
 			delAttribute: corerels.delAttribute,
-			getRegistry: corerels.getRegistry,
+			getRegistry: getRegistry,
 			setRegistry: corerels.setRegistry,
 			delRegistry: corerels.delRegistry,
 

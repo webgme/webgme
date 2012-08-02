@@ -4,7 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTIL) {
+define([ "core/assert", "core/core2", "core/util", "core/coretype" ], function (ASSERT, Core, UTIL,
+CoreType) {
 	"use strict";
 
 	var tests = {};
@@ -98,7 +99,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 		var loadChildren = function (node, callback2) {
 			core.loadChildren(node, function (err, array) {
 				if( !err ) {
-					ASSERT(array.constructor === Array);
+					ASSERT(Array.isArray(array));
 					array.sort(function (nodea, nodeb) {
 						var namea = core.getAttribute(nodea, "name");
 						var nameb = core.getAttribute(nodeb, "name");
@@ -183,6 +184,25 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, Core, UTI
 				console.log("Printing done");
 				callback(err, root);
 			});
+		});
+	};
+
+	tests[4] = function (storage, root, callback) {
+		core = new CoreType(storage);
+
+		nodes.a = core.createNode();
+		core.setAttribute(nodes.a, "name", "a");
+
+		nodes.b = core.createNode(nodes.a);
+		core.setAttribute(nodes.b, "name", "b");
+
+		nodes.c = core.createNode(nodes.a, nodes.b);
+		core.setAttribute(nodes.c, "name", "c");
+
+		core.setAttribute(nodes.b, "text", "b");
+
+		core.persist(nodes.a, function (err) {
+			callback(err, core.getKey(nodes.a));
 		});
 	};
 
