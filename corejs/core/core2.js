@@ -86,7 +86,7 @@ function (ASSERT, PerTree, UTIL) {
 
 		var getAttributeNames = function (node) {
 			ASSERT(isValidNode(node));
-			
+
 			var keys = Object.keys(pertree.getProperty(node, ATTRIBUTES));
 			var i = keys.length;
 			while( --i >= 0 ) {
@@ -94,7 +94,7 @@ function (ASSERT, PerTree, UTIL) {
 					keys.splice(i, 1);
 				}
 			}
-			
+
 			return keys;
 		};
 
@@ -498,7 +498,7 @@ function (ASSERT, PerTree, UTIL) {
 
 			return target;
 		};
-		
+
 		var loadPointer = function (node, name, callback) {
 			ASSERT(isValidNode(node) && name && typeof callback === "function");
 

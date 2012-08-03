@@ -13,7 +13,7 @@ CoreType) {
 	var core;
 	var nodes = {};
 
-	var attributeNames = null; //[ "name", "attr" ];
+	var attributeNames = null; // [ "name", "text" ];
 	var pointerNames = null; // [ "ptr", "typ" ];
 
 	var createNode = function (child, parent, type) {
@@ -47,7 +47,7 @@ CoreType) {
 			return "" + array;
 		}
 	};
-	
+
 	var loadChildren = function (node, callback2) {
 		core.loadChildren(node, function (err, array) {
 			if( !err ) {
@@ -74,15 +74,15 @@ CoreType) {
 	};
 
 	var loadPointerInfo = function (node, callback) {
-		var join = new UTIL.AsyncArray(function(err, array) {
-			if(err) {
+		var join = new UTIL.AsyncArray(function (err, array) {
+			if( err ) {
 				callback(err);
 			}
 			else {
 				callback(null, array.join(", "));
 			}
 		});
-		
+
 		var addData = function (name, callback) {
 			core.loadPointer(node, name, function (err, target) {
 				if( err ) {
@@ -103,15 +103,15 @@ CoreType) {
 	};
 
 	var loadCollectionInfo = function (node, callback) {
-		var join = new UTIL.AsyncArray(function(err, array) {
-			if(err) {
+		var join = new UTIL.AsyncArray(function (err, array) {
+			if( err ) {
 				callback(err);
 			}
 			else {
 				callback(null, array.join(", "));
 			}
 		});
-		
+
 		var addData = function (name, callback) {
 			core.loadCollection(node, name, function (err, targets) {
 				if( err ) {
@@ -133,12 +133,12 @@ CoreType) {
 
 	var loadNodeInfo = function (node, callback) {
 		var join = new UTIL.AsyncArray(function (err, array) {
-			if(err) {
+			if( err ) {
 				callback(err);
 			}
 			else {
 				var line = getNodeName(node) + ":\t";
-				for(var i = 0; i < array.length; ++i) {
+				for( var i = 0; i < array.length; ++i ) {
 					if( i > 0 && array[i] !== "" ) {
 						line += ", ";
 					}
@@ -150,7 +150,7 @@ CoreType) {
 
 		join.push(getAttributeInfo(node));
 		loadPointerInfo(node, join.asyncPush());
-//		loadCollectionInfo(node, join.asyncPush());
+		// loadCollectionInfo(node, join.asyncPush());
 
 		join.wait();
 	};
@@ -159,8 +159,8 @@ CoreType) {
 		console.log("Printing tree info");
 
 		UTIL.depthFirstSearch(loadChildren, node, function (child, callback) {
-			loadNodeInfo(child, function(err, line) {
-				if(!err) {
+			loadNodeInfo(child, function (err, line) {
+				if( !err ) {
 					console.log(line);
 				}
 				callback(err);
@@ -329,6 +329,9 @@ CoreType) {
 
 		core.setAttribute(nodes.b, "text", "b");
 
+		nodes.d = core.createNode(nodes.b);
+		core.setAttribute(nodes.d, "name", "d");
+
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
 		});
@@ -338,15 +341,15 @@ CoreType) {
 		core = new CoreType(storage);
 
 		core.loadRoot(root, function (err, node) {
-			if(err) {
+			if( err ) {
 				callback(err);
 			}
 			else {
-				printTreeInfo(node, function(err) {
-					if(err) {
+				printTreeInfo(node, function (err) {
+					if( err ) {
 						callback(err);
 					}
-					else{
+					else {
 						callback(null, root);
 					}
 				});

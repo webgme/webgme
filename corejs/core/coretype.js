@@ -68,28 +68,29 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			ASSERT(!type || parent);
 
 			var node = corerels.createNode(parent);
-			
+
 			if( type ) {
 				corerels.setPointer(node, PROTOTYPE, type);
 			}
-			
+
 			node.type = type || null;
 			node.depth = 0;
 
 			return node;
 		};
-		
+
 		var getChildrenRelids = function (node) {
 			ASSERT(isValidNode(node));
 
 			var relids = [];
 
 			do {
-				var ids = corerels.getChildrenRelids(node);
-				for( var i = 0; i < ids.length; ++i ) {
-					UTIL.binaryInsertUnique(relids, ids[i], UTIL.stringComparator);
+				if( node.data !== EMPTYNODE.data ) {
+					var ids = corerels.getChildrenRelids(node);
+					for( var i = 0; i < ids.length; ++i ) {
+						UTIL.binaryInsertUnique(relids, ids[i], UTIL.stringComparator);
+					}
 				}
-
 				node = node.type;
 			} while( node );
 
@@ -101,6 +102,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			&& typeof callback === "function");
 
 			var join = new UTIL.AsyncObject(function (err, obj) {
+
 				if( err ) {
 					callback(err);
 					return;
@@ -205,11 +207,12 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			var names = [];
 
 			do {
-				var ns = corerels.getAttributeNames(node);
-				for( var i = 0; i < ns.length; ++i ) {
-					UTIL.binaryInsertUnique(names, ns[i], UTIL.stringComparator);
+				if( node.data !== EMPTYNODE.data ) {
+					var ns = corerels.getAttributeNames(node);
+					for( var i = 0; i < ns.length; ++i ) {
+						UTIL.binaryInsertUnique(names, ns[i], UTIL.stringComparator);
+					}
 				}
-
 				node = node.type;
 			} while( node );
 
@@ -220,11 +223,12 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			ASSERT(isValidNode(node) && typeof name === "string");
 
 			do {
-				var value = corerels.getAttribute(node, name);
-				if( value !== undefined ) {
-					return value;
+				if( node.data !== EMPTYNODE.data ) {
+					var value = corerels.getAttribute(node, name);
+					if( value !== undefined ) {
+						return value;
+					}
 				}
-
 				node = node.type;
 			} while( node );
 
@@ -235,13 +239,12 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			ASSERT(isValidNode(node) && typeof name === "string");
 
 			do {
-				if( node.data ) {
+				if( node.data !== EMPTYNODE.data ) {
 					var value = corerels.getRegistry(node, name);
 					if( value !== undefined ) {
 						return value;
 					}
 				}
-
 				node = node.type;
 			} while( node );
 
@@ -254,7 +257,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			var names = [ PROTOTYPE ];
 
 			do {
-				if( node.data ) {
+				if( node.data !== EMPTYNODE.data ) {
 					var ns = corerels.getPointerNames(node);
 					for( var i = 0; i < ns.length; ++i ) {
 						UTIL.binaryInsertUnique(names, ns[i], UTIL.stringComparator);
@@ -265,8 +268,13 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			} while( node );
 
 			names.splice(UTIL.binarySearch(names, PROTOTYPE, UTIL.stringComparator), 1);
-			
+
 			return names;
+		};
+
+		var getParent = function (node) {
+			ASSERT(isValidNode(node));
+			return node.parent;
 		};
 
 		return {
@@ -285,7 +293,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			getLevel: corerels.getLevel,
 			getStringPath: corerels.getStringPath,
 			parseStringPath: corerels.parseStringPath,
-			getParent: corerels.getParent,
+			getParent: getParent,
 			getChildrenRelids: getChildrenRelids,
 			loadChild: loadChild,
 			loadByPath: loadByPath,

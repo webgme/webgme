@@ -165,7 +165,7 @@ function (ASSERT, SHA1, UTIL) {
 			var child = node.data[relid];
 
 			if( child === undefined ) {
-				return null;
+				callback(null, undefined);
 			}
 			else if( typeof child === "string" ) {
 				ASSERT(isValidKey(child));
@@ -197,12 +197,12 @@ function (ASSERT, SHA1, UTIL) {
 			if( typeof path === "string" ) {
 				path = parseStringPath(path);
 			}
-			
+
 			var loadNext = function (err, node) {
-				if(err) {
+				if( err ) {
 					callback(err);
 				}
-				else if( !node || path.length === 0 ){
+				else if( !node || path.length === 0 ) {
 					callback(null, node);
 				}
 				else {
@@ -210,7 +210,7 @@ function (ASSERT, SHA1, UTIL) {
 					loadChild(node, relid, loadNext);
 				}
 			};
-			
+
 			loadNext(null, node);
 		};
 
