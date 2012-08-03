@@ -148,7 +148,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 				loadChild(node.type, relid, join.asyncSet("type"));
 			}
 
-			var path = corerels.getOutsidePointerPath(node, PROTOTYPE, "" + relid);
+			var path = corerels.getOutsidePointerPath(node, PROTOTYPE, relid);
 
 			if( typeof path === "string" ) {
 				// TODO, we should share as much of the lower part as possible

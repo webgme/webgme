@@ -41,7 +41,7 @@ function (ASSERT, PerTree, UTIL) {
 				} while( data[relid] !== undefined );
 			}
 
-			return relid;
+			return "" + relid;
 		};
 	}
 
@@ -254,7 +254,7 @@ function (ASSERT, PerTree, UTIL) {
 			ASSERT(isValidNode(node));
 
 			var parent = pertree.getParent(node);
-			var prefix = "" + pertree.getRelid(node);
+			var prefix = pertree.getRelid(node);
 			ASSERT(parent !== null);
 
 			pertree.delParent(node);
@@ -295,7 +295,7 @@ function (ASSERT, PerTree, UTIL) {
 				var ancestorNewNodePath = pertree.getStringPath(newnode, ancestor[0]);
 
 				var base = pertree.getParent(node);
-				var baseOldNodePath = "" + pertree.getRelid(node);
+				var baseOldNodePath = pertree.getRelid(node);
 				var baseBelowAncestor = false;
 
 				while( base ) {
@@ -457,7 +457,7 @@ function (ASSERT, PerTree, UTIL) {
 
 			if( target !== undefined ) {
 				ASSERT(node);
-				target = pertree.joinStringPaths(pertree.getStringPath(node), "" + target);
+				target = pertree.joinStringPaths(pertree.getStringPath(node), target);
 			}
 
 			return target;
@@ -658,7 +658,7 @@ function (ASSERT, PerTree, UTIL) {
 				}
 
 				if( source === EMPTY_STRING ) {
-					source = "" + pertree.getRelid(node);
+					source = pertree.getRelid(node);
 				}
 				else {
 					source = pertree.getRelid(node) + "/" + source;

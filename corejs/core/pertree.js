@@ -18,7 +18,7 @@ function (ASSERT, SHA1, UTIL) {
 	};
 
 	var isValidRelid = function (relid) {
-		return typeof relid === "string" || typeof relid === "number";
+		return typeof relid === "string";
 	};
 
 	var EMPTY_STRING = "";
@@ -274,7 +274,7 @@ function (ASSERT, SHA1, UTIL) {
 			var path = EMPTY_STRING;
 			while( node.parent && node !== base ) {
 				if( path === EMPTY_STRING ) {
-					path = "" + node.relid;
+					path = node.relid;
 				}
 				else {
 					path = node.relid + "/" + path;
