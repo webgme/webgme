@@ -1,4 +1,4 @@
-define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','js/core2','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE){
+define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE){
     var logger,
         Client,
         CommandQueue,
@@ -106,16 +106,34 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
         /*MGA like functions*/
         this.setAttributes = function(path,name,value){
             if(currentNodes[path]){
-                currentCore.setAttribute(currentNodes[path],name,value);
+                if (_.isString(name)) {
+                    currentCore.setAttribute(currentNodes[path],name,value);
+                } else if (_.isObject(name)) {
+                    //if names is object, then names is considered as name-value pairs
+                    for (var i in name) {
+                        if (name.hasOwnProperty(i)) {
+                            currentCore.setAttribute(currentNodes[path],i,name[i]);
+                        }
+                    }
+                }
                 modifyRootOnServer(currentNodes[path]);
             }
             else{
-                logger.error("[l82] no such object: "+path);
+                logger.error("[l122] no such object: "+path);
             }
         };
         this.setRegistry = function(path,name,value){
             if(currentNodes[path]){
-                currentCore.setRegistry(currentNodes[path],name,value);
+                if (_.isString(name)) {
+                    currentCore.setRegistry(currentNodes[path],name,value);
+                } else if (_.isObject(name)) {
+                    //if names is object, then names is considered as name-value pairs
+                    for (var i in name) {
+                        if (name.hasOwnProperty(i)) {
+                            currentCore.setRegistry(currentNodes[path],i,name[i]);
+                        }
+                    }
+                }
                 modifyRootOnServer(currentNodes[path]);
             }
             else{
@@ -253,17 +271,15 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
             };
             newkey = currentCore.persist(currentCore.getRoot(node),persistdone);
         };
-        var queryNode = function(path){
-            if(path === ""){
-                path = "root";
-            }
-            return currentNodes[path];
-        };
-        var storeNode = function(node){
+        var getNodePath = function(node){
             var path = currentCore.getStringPath(node);
             if(path === ""){
                 path = "root";
             }
+            return path;
+        };
+        var storeNode = function(node){
+            var path = getNodePath(node);
             if(!currentNodes[path]){
                 console.log("storing node:"+JSON.stringify(node));
                 currentNodes[path] = node;
@@ -284,12 +300,12 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
                 var pathloaded = function(err,node){
                     storeNode(node);
 
-                    INSERTARR(pathes,currentCore.getStringPath(node));
+                    INSERTARR(pathes,getNodePath(node));
                     if(childrenaswell){
                         currentCore.loadChildren(node,function(err,children){
                             for(var i=0;i<children.length;i++){
                                 storeNode(children[i]);
-                                INSERTARR(pathes,currentCore.getStringPath(children[i]));
+                                INSERTARR(pathes,getNodePath(children[i]));
                             }
                             loaddone();
                         });
@@ -365,13 +381,13 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
         this.getParentId = function(){
             var parent = core.getParent(node);
             if(parent){
-                return core.getStringPath(parent);
+                return getNodePath(parent);
             } else {
                 return null;
             }
         };
         this.getId = function(){
-            return core.getStringPath(node);
+            return getNodePath(node);
         };
         this.getChildrenIds = function(){
             return core.getChildrenRelids(node);
@@ -400,6 +416,14 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','js/cache','
         };
         this.getAttributeNames = function(){
             return core.getAttributeNames(node);
+        };
+
+        var getNodePath = function(node){
+            var path = core.getStringPath(node);
+            if(path === ""){
+                path = "root";
+            }
+            return path;
         };
 
     };
