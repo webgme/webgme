@@ -21,6 +21,11 @@ var Server = function(parameters){
                 clientsrcfolder = "/../client";
             }
 
+            if(req.url.indexOf('/core/') === 0) {
+                logger.debug("req.url");
+                clientsrcfolder = "/../../../corejs";
+            }
+
             FS.readFile(__dirname + clientsrcfolder +req.url, function(err,data){
                 if(err){
                     res.writeHead(500);
