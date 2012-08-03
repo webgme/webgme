@@ -25,7 +25,7 @@ function (ASSERT, PerTree, UTIL) {
 			} while( data[relid] !== undefined );
 		}
 
-		return relid;
+		return "" + relid;
 	};
 
 	// make relids deterministic
@@ -46,7 +46,7 @@ function (ASSERT, PerTree, UTIL) {
 	}
 
 	var isValidRelid = function (relid) {
-		return typeof relid === "number" || parseInt(relid, 10).toString() === relid;
+		return typeof relid === "string" && parseInt(relid, 10).toString() === relid;
 	};
 
 	var isValidPath = function (path) {
@@ -457,12 +457,48 @@ function (ASSERT, PerTree, UTIL) {
 
 			if( target !== undefined ) {
 				ASSERT(node);
-				target = pertree.joinStringPaths(pertree.getStringPath(node), target);
+				target = pertree.joinStringPaths(pertree.getStringPath(node), "" + target);
 			}
 
 			return target;
 		};
 
+		var getOutsidePointerPath = function (node, name, source) {
+			ASSERT(isValidNode(node) && typeof name === "string");
+			ASSERT(typeof source === "string");
+
+			var target;
+
+			do {
+				var child = pertree.getChild(node, OVERLAYS);
+				ASSERT(child);
+
+				child = pertree.getChild(child, source);
+				if( child ) {
+					target = pertree.getProperty(child, name);
+					if( target !== undefined ) {
+						break;
+					}
+				}
+
+				if( source.length === 0 ) {
+					source = pertree.getRelid(node);
+				}
+				else {
+					source = pertree.getRelid(node) + "/" + source;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+
+			if( target !== undefined ) {
+				ASSERT(node);
+				target = pertree.joinStringPaths(pertree.getStringPath(node), target);
+			}
+
+			return target;
+		};
+		
 		var loadPointer = function (node, name, callback) {
 			ASSERT(isValidNode(node) && name && typeof callback === "function");
 
@@ -692,6 +728,7 @@ function (ASSERT, PerTree, UTIL) {
 			// relations
 			getPointerNames: getPointerNames,
 			getPointerPath: getPointerPath,
+			getOutsidePointerPath: getOutsidePointerPath,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,
 			setPointer: setPointer,

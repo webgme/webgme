@@ -259,7 +259,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests) {
 					else {
 						tests(opt, mongo, root, function(err, newroot) {
 							if( err ) {
-								console.log("Test error: " + err);
+								console.log(err.toString());
 								argv.splice(i, 0, "-end");
 							}
 							else if( typeof newroot === "string" ){

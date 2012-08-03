@@ -108,11 +108,11 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 
 				if( obj.ptr ) {
 					if( obj.type ) {
-						callback(new Error("core error: relid conflict for derived object"));
+						callback(new Error("core relid conflict for derived object"));
 						return;
 					}
-					else if( obj.child ) {
-						callback(new Error("core error: pointer fo nonexistent object"));
+					else if( !obj.child ) {
+						callback(new Error("core pointer for nonexistent object"));
 						return;
 					}
 
@@ -148,12 +148,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 				loadChild(node.type, relid, join.asyncSet("type"));
 			}
 
-			// TODO: dirty trick to load pointer for not yet loaded child
-			var path = corerels.getPointerPath({
-				parent: node,
-				relid: relid,
-				data: EMPTYNODE.data
-			}, PROTOTYPE);
+			var path = corerels.getOutsidePointerPath(node, PROTOTYPE, "" + relid);
 
 			if( typeof path === "string" ) {
 				// TODO, we should share as much of the lower part as possible
@@ -165,7 +160,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 
 		var loadByPath = function (node, path, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
-			ASSERT(corerels.isValidType(path));
+			ASSERT(corerels.isValidPath(path));
 
 			path = corerels.parseStringPath(path);
 
@@ -192,7 +187,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 			var join = new UTIL.AsyncArray(callback);
 
 			for( var i = 0; i < relids.length; ++i ) {
-				loadChild(node, relids[i], join.asyncAdd());
+				loadChild(node, relids[i], join.asyncPush());
 			}
 
 			join.wait();

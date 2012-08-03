@@ -13,7 +13,7 @@ CoreType) {
 	var core;
 	var nodes = {};
 
-	var attributeNames = null; // [ "name", "attr" ];
+	var attributeNames = null; //[ "name", "attr" ];
 	var pointerNames = null; // [ "ptr", "typ" ];
 
 	var createNode = function (child, parent, type) {
@@ -150,7 +150,7 @@ CoreType) {
 
 		join.push(getAttributeInfo(node));
 		loadPointerInfo(node, join.asyncPush());
-		loadCollectionInfo(node, join.asyncPush());
+//		loadCollectionInfo(node, join.asyncPush());
 
 		join.wait();
 	};
@@ -168,28 +168,10 @@ CoreType) {
 		}, function (child, callback) {
 			callback(null);
 		}, function (err) {
-			console.log(err ? "Printing error " + err : "Printing done");
+			if( !err ) {
+				console.log("Printing done");
+			}
 			callback(err);
-		});
-	};
-
-	tests[7] = function (storage, root, callback) {
-		core = new Core(storage);
-
-		core.loadRoot(root, function (err, node) {
-			if(err) {
-				callback(err);
-			}
-			else {
-				printTreeInfo(node, function(err) {
-					if(err) {
-						callback(err);
-					}
-					else{
-						callback(null, root);
-					}
-				});
-			}
 		});
 	};
 
@@ -349,6 +331,26 @@ CoreType) {
 
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
+		});
+	};
+
+	tests[5] = function (storage, root, callback) {
+		core = new CoreType(storage);
+
+		core.loadRoot(root, function (err, node) {
+			if(err) {
+				callback(err);
+			}
+			else {
+				printTreeInfo(node, function(err) {
+					if(err) {
+						callback(err);
+					}
+					else{
+						callback(null, root);
+					}
+				});
+			}
 		});
 	};
 
