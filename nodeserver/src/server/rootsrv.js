@@ -30,16 +30,21 @@ storagesrv.emit('open',function(err){
         socket.on('modifyRoot',function(oldroot,newroot){
             console.log("root arived: "+oldroot+" -> "+newroot);
             if(oldroot === currentRoot || currentRoot === null){
-                rootHistory.push(newroot);
-                storagesrv.emit('save',{"_id":"***root***","value":newroot},function(err){
-                    if(err){
-                        console.log("saving new root failed: "+err);
-                    }else{
-                        currentRoot = newroot;
-                        socket.broadcast.emit('newRoot',currentRoot);
-                        socket.emit('newRoot',currentRoot);
-                    }
-                });
+                if(newroot){
+                    rootHistory.push(newroot);
+                    storagesrv.emit('save',{"_id":"***root***","value":newroot},function(err){
+                        if(err){
+                            console.log("saving new root failed: "+err);
+                        }else{
+                            currentRoot = newroot;
+                            socket.broadcast.emit('newRoot',currentRoot);
+                            socket.emit('newRoot',currentRoot);
+                        }
+                    });
+                }
+                else{
+                    console.log("invalid new root: "+newroot);
+                }
             }else{
                 console.log("wrong oldroot:"+currentRoot+" != "+oldroot);
             }

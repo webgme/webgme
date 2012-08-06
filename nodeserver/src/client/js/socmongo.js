@@ -1,52 +1,34 @@
-define([ "js/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
+define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
     "use strict";
 
     var Mongo = function (options) {
         var ROOTNAME = "***root***";
-        var socket = io.connect(options.mongosrv);
+        var socket = null;
         var connected = false;
         var isopen = false;
 
-        socket.on('connect',function(){
-            connected=true;
-        });
         var open = function (callback) {
-            if(connected){
-                socket.emit('open',function(err){
+            var tempsocket = io.connect(options.mongosrv);
+            tempsocket.on('connect',function(){
+                tempsocket.emit('open',function(err){
                     if(err){
-                        console.log("error during database opening: "+err);
+                        callback(err);
                     }
                     else{
+                        socket = tempsocket;
                         isopen = true;
                         callback(null);
                     }
                 });
-            }
-            else{
-                var timeout = setInterval(function(){
-                    if(connected){
-                        clearInterval(timeout);
-                        socket.emit('open',function(err){
-                            if(err){
-                                console.log("error during database opening: "+err);
-                            }
-                            else{
-                                isopen = true;
-                                callback(null);
-                            }
-                        });
-                    }
-                    else{
-                        console.log("unable to connect via socket.io!!!");
-                    }
-                },1000);
-            }
+            });
         };
         var opened = function () {
-            return connected && isopen;
+            return isopen;
         };
         var close = function (callback) {
-            socket.emit('close',function(){
+            var tempsocket = socket;
+            socket = null;
+            tempsocket.emit('close',function(){
                 isopen=false;
                 if(callback){
                     callback(null);
@@ -54,22 +36,53 @@ define([ "js/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             });
         };
         var load = function (key, callback) {
-            socket.emit('load',key,callback);
+            if(socket){
+                socket.emit('load',key,callback);
+            }
+            else{
+                callback("[load]there is no valid connection to the server!!!");
+            }
         };
         var save = function (node, callback) {
-            socket.emit('save',node,callback);
+            if(socket){
+                socket.emit('save',node,callback);
+            }
+            else{
+                callback("[save]there is no valid connection to the server!!!");
+            }
         };
         var remove = function (key, callback) {
-            socket.emit('remove',key,callback);
+            if(socket){
+                socket.emit('remove',key,callback);
+            }
+            else{
+                callback("[remove]there is no valid connection to the server!!!");
+            }
         };
         var dumpAll = function (callback) {
-            socket.emit('dumpAll',callback);
+            if(socket){
+                socket.emit('dumpAll',callback);
+            }
+            else{
+                callback("[dumpAll]there is no valid connection to the server!!!");
+            }
         };
         var removeAll = function (callback) {
-            socket.emit('removeAll',callback);
+            if(socket){
+                socket.emit('removeAll',callback);
+            }
+            else{
+                callback("[removeAll]there is no valid connection to the server!!!");
+            }
+
         };
         var searchId = function (beginning, callback) {
-            socket.emit('searchId',beginning,callback);
+            if(socket){
+                socket.emit('searchId',beginning,callback);
+            }
+            else{
+                callback("[searchId]there is no valid connection to the server!!!");
+            }
         };
         var loadRoot = function(callback){
             load(ROOTNAME,function(err,node){

@@ -14,7 +14,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
 
     Client = function(options){
         var self = this,
-            rootServer = io.connect(options.rootsrv),
             _storage = new SM(options),
             storage = new CACHE(_storage),
             selectedObjectId = null,
@@ -23,44 +22,10 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             currentRoot = null,
             currentCore = null,
             clipboard = null,
-            corealreadyarrived = null/*,
+            rootServer = null/*,
             previousNodes = {},
             previousRoot = null,
             previousCore = null*/;
-
-        var earlycore = function(){
-            currentRoot = corealreadyarrived;
-            corealreadyarrived = null;
-            currentNodes = {};
-            currentCore = new CORE(storage);
-            currentCore.loadRoot(currentRoot,function(err,node){
-                storeNode(node);
-                updateAllUser(null);
-            });
-        };
-
-        storage.open(function(){
-            logger.debug('storage opened');
-            if(corealreadyarrived){
-                earlycore();
-            }
-        });
-
-        rootServer.on('newRoot',function(newroot){
-            logger.debug('new root key arrived: '+newroot);
-            if(storage.opened()){
-                currentRoot = newroot;
-                currentNodes = {};
-                currentCore = new CORE(storage);
-                currentCore.loadRoot(currentRoot,function(err,node){
-                    storeNode(node);
-                    updateAllUser(null);
-                });
-            }
-            else{
-                corealreadyarrived = newroot;
-            }
-        });
 
         /*event functions to relay information between users*/
         $.extend(this, new EventDispatcher());
@@ -78,11 +43,42 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         /*User Interface handling*/
         this.addUI = function(ui){
             var guid = GUID();
+            var count = 0;
+            for(var i in users){
+                count++;
+            }
+            if(count === 0){
+                /*in case of the first user we have to connect...*/
+                storage.open(function(){
+                    rootServer = io.connect(options.rootsrv);
+                    rootServer.on('newRoot',function(newroot){
+                        currentRoot = newroot;
+                        currentNodes = {};
+                        currentCore = new CORE(storage);
+                        currentCore.loadRoot(currentRoot,function(err,node){
+                            storeNode(node);
+                            updateAllUser(null);
+                        });
+                    });
+                });
+            }
             users[guid]  = {UI:ui,PATTERNS:{},PATHES:[]};
             return guid;
         };
         this.removeUI = function(guid){
             delete users[guid];
+            var count = 0;
+            for(var i in users){
+                count++;
+            }
+            if(count === 0){
+                storage.close();
+                currentCore = null;
+                currentNodes = {};
+                currentRoot = null;
+                clipboard = null;
+
+            }
         };
         this.updateTerritory = function(userID,patterns){
             if(_.isEqual(patterns,users[userID].PATTERNS)){
@@ -174,6 +170,15 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 baseId = parameters.baseId || "object";
                 child = currentCore.createNode(currentNodes[parameters.parentId]);
                 currentCore.setAttribute(child,"BASE",baseId);
+                if(baseId === "connection"){
+                    currentCore.setRegistry(child,"isConnection",true);
+                    currentCore.setAttribute(child,"name","defaultConn");
+                }
+                else{
+                    currentCore.setRegistry(child,"isConnection",false);
+                    currentCore.setRegistry(child,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
+                    currentCore.setAttribute(child,"name","defaultObj");
+                }
                 modifyRootOnServer(child);
             }
             else{
@@ -213,6 +218,8 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     currentCore.setAttribute(connection,"BASE",baseId);
                     currentCore.setPointer(connection,"source",currentNodes[parameters.sourceId]);
                     currentCore.setPointer(connection,"target",currentNodes[parameters.targetId]);
+                    currentCore.setAttribute(connection,"name","defaultConn");
+                    currentCore.setRegistry(connection,"isConnection",true);
                     modifyRootOnServer(connection);
                 }
                 else{
@@ -265,11 +272,23 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
 
         /*helping funcitons*/
         var modifyRootOnServer = function(node){
-            var newkey;
-            var persistdone = function(err){
-                rootServer.emit('modifyRoot',currentRoot,newkey);
-            };
-            newkey = currentCore.persist(currentCore.getRoot(node),persistdone);
+            if(currentCore){
+                var newkey;
+                var persistdone = function(err){
+                    if(err){
+                        logger.error("error during persist: "+err);
+                    }
+                    else{
+                        if(rootServer){
+                            rootServer.emit('modifyRoot',currentRoot,newkey);
+                        }
+                    }
+                };
+                newkey = currentCore.persist(currentCore.getRoot(node),persistdone);
+            }
+            else{
+                logger.error("There is no CORE!!!");
+            }
         };
         var getNodePath = function(node){
             var path = currentCore.getStringPath(node);
