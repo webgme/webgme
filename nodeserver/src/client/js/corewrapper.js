@@ -112,7 +112,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         }
                     }
                 }
-                modifyRootOnServer(currentNodes[path]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l122] no such object: "+path);
@@ -140,16 +140,25 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             clipboard = ids;
         };
         this.pasteNodes = function(parentpath){
-            var parent = currentNodes[parentpath];
+            /*var parent = currentNodes[parentpath];
             for(var i=0;i<clipboard.length;i++){
                 storeNode(currentCore.copyNode(currentNodes[clipboard[i]],parent));
             }
-            modifyRootOnServer(parent);
+            */
+            var nodesCopied = function(err,copyarr){
+                if(err){
+                    logger.error("hibaa "+err);
+                }
+                else{
+                    modifyRootOnServer();
+                }
+            };
+            copyMultiplePathes(clipboard,parentpath,nodesCopied);
         };
         this.deleteNode = function(path){
             if(currentNodes[path]){
                 currentCore.deleteNode(currentNodes[path]);
-                modifyRootOnServer(currentNodes[path]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l112] no such object: "+path);
@@ -160,7 +169,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             for(i=0;i<pathes.length;i++){
                 currentCore.deleteNode(currentNodes[pathes[i]]);
             }
-            modifyRootOnServer(currentNodes[pathes[0]]);
+            modifyRootOnServer();
         };
         this.createChild = function(parameters){
             var baseId,
@@ -179,7 +188,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     currentCore.setRegistry(child,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
                     currentCore.setAttribute(child,"name","defaultObj");
                 }
-                modifyRootOnServer(child);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l128]fraudulent child creation: "+JSON.stringify(parameters));
@@ -191,7 +200,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         this.makePointer = function(id,name,to){
             if(currentNodes[id] && currentNodes[to]){
                 currentCore.setPointer(currentNodes[id],name,currentNodes[to]);
-                modifyRootOnServer(currentNodes[id]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l144] wrong pointer creation");
@@ -200,7 +209,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         this.delPointer = function(path,name){
             if(currentNodes[path]){
                 currentCore.deletePointer(currentNodes[path],name);
-                modifyRootOnServer(currentNodes[path]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l144] no such object: "+path);
@@ -220,7 +229,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     currentCore.setPointer(connection,"target",currentNodes[parameters.targetId]);
                     currentCore.setAttribute(connection,"name","defaultConn");
                     currentCore.setRegistry(connection,"isConnection",true);
-                    modifyRootOnServer(connection);
+                    modifyRootOnServer();
                 }
                 else{
                     logger.error("not all object available for the connection: "+JSON.stringify(parameters));
@@ -263,7 +272,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         }
                     }
                 }
-                modifyRootOnServer(currentNodes[parameters.parentId]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("fraudulent intelligent paste: "+JSON.stringify(parameters));
@@ -271,7 +280,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         };
 
         /*helping funcitons*/
-        var modifyRootOnServer = function(node){
+        var modifyRootOnServer = function(){
             if(currentCore){
                 var newkey;
                 var persistdone = function(err){
@@ -284,7 +293,11 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         }
                     }
                 };
-                newkey = currentCore.persist(currentCore.getRoot(node),persistdone);
+                var k = [];
+                for(var i in currentNodes) if (currentNodes.hasOwnProperty(i)){
+                    k.push(i);
+                }
+                newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),persistdone);
             }
             else{
                 logger.error("There is no CORE!!!");
@@ -393,6 +406,72 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
             for(i in users){
                 updateUser(i,users[i].PATTERNS,userupdated);
+            }
+        };
+        var moveNode = function(path,parentpath){
+            var node = currentNodes[path];
+            var parent = currentNodes[parentpath];
+            if(node && parent){
+                var newnode = currentCore.moveNode(node,parent);
+                storeNode(newnode);
+                delete currentNodes[path];
+                return currentNodes[getNodePath(newnode)];
+            }
+            else{
+                logger.error("missing object for move!!!");
+            }
+        };
+        var copyMultiplePathes = function(pathes,parentpath,callback){
+            var tempfrom,tempfrompath,tempfrompathes=[];
+            var tempto,temptopathes=[];
+            var temp = {};
+            var returnarr = [];
+            var pathes
+            var parent = currentNodes[parentpath];
+            if(parent){
+                tempfrom = currentCore.createNode(parent);
+                storeNode(tempfrom);
+                tempfrompath = getNodePath(tempfrom);
+                for(var i=0;i<pathes.length;i++){
+                    var tpath = {parentpath:getNodePath(currentCore.getParent(currentNodes[pathes[i]]))};
+                    var tnode = moveNode(pathes[i],tempfrompath);
+                    tpath.path = getNodePath(tnode);
+                    tempfrompathes.push(tpath);
+                }
+                tempto = currentCore.copyNode(tempfrom,parent);
+                storeNode(tempto);
+                var temptopathes = currentCore.getChildrenRelids(tempto);
+                for(i=0;i<tempfrompathes.length;i++){
+                    var trelid = currentNodes[tempfrompathes[i].path].relid;
+                    var tnode = moveNode(tempfrompathes[i].path,tempfrompathes[i].parentpath);
+                    temp[trelid] = getNodePath(tnode);
+                }
+                currentCore.loadChildren(tempto,function(err,children){
+                    if(err){
+                        logger.error("failed to load copied children!!! "+err);
+                        callback("cannot paste, ROLLBACK");
+                    }
+                    else{
+                        for(var i=0;i<children.length;i++){
+                            storeNode(children[i]);
+                            var t = getNodePath(children[i]);
+                            var t2 = children[i].relid;
+                            var tnode = moveNode(t,parentpath);
+                            returnarr.push({from:temp[t2],to:getNodePath(tnode)});
+                        }
+
+                        delete currentNodes[getNodePath(tempfrom)];
+                        delete currentNodes[getNodePath(tempto)];
+                        currentCore.deleteNode(tempfrom);
+                        currentCore.deleteNode(tempto);
+                        callback(null,returnarr);
+                    }
+                });
+
+
+            }
+            else{
+                logger.error("wrong parameters for the paste operation!!!");
             }
         };
     };
