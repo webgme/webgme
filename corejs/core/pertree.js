@@ -235,7 +235,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(node.parent === null && !node.relid);
 
 			mutate(parent);
-			parent.data[relid] = node.data;
+			parent.data[relid] = node.data[KEYNAME] || node.data;
 
 			node.parent = parent;
 			node.relid = relid;
