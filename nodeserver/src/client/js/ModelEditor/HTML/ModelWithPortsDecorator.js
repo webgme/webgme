@@ -5,11 +5,13 @@ define(['logManager',
     'nodeAttributeNames',
     'nodeRegistryNames',
     './Port.js',
+    'text!ModelEditorHTML/ModelWithPortsTmpl.html',
     'css!ModelEditorHTMLCSS/ModelWithPortsDecorator'], function (logManager,
                                                                  util,
                                                                  nodeAttributeNames,
                                                                  nodeRegistryNames,
-                                                                 Port) {
+                                                                 Port,
+                                                                 modelWithPortsTmpl) {
 
     var ModelWithPortsDecorator;
 
@@ -31,47 +33,47 @@ define(['logManager',
 
     ModelWithPortsDecorator.prototype.render = function () {
         var node = this.project.getNode(this.id),
-            self = this;
+            self = this,
+            data = { "pid" : this.id};
 
         this.parentContainer.addClass("modelWithPorts");
 
-        //create content controls
-        this.skinParts.title = $('<div/>');
-        this.skinParts.title.addClass("modelTitle");
-        this.parentContainer.append(this.skinParts.title);
+        this.parentContainer.append($(_.template(modelWithPortsTmpl, data)));
 
-        //apply content to controls
+        this.parentContainer.addClass("finishConn");
+        this.parentContainer.attr("data-id", this.id);
+
+        //create content controls
+        this.skinParts.title = this.parentContainer.find(".modelTitle");
         this.skinParts.title.text(node.getAttribute(nodeAttributeNames.name));
 
-        //create container for ports
-        this.skinParts.childrenContainer = $('<div/>', {
-            "class" : "children"
-        });
-        this.parentContainer.append(this.skinParts.childrenContainer);
+        this.skinParts.childrenContainer = this.parentContainer.find(".children");
 
-        this.skinParts.leftPorts = $('<div/>', {
-            "class" : "ports left"
-        });
-        this.skinParts.childrenContainer.append(this.skinParts.leftPorts);
+        this.skinParts.leftPorts = this.parentContainer.find(".ports.left");
+        this.skinParts.centerPorts = this.parentContainer.find(".ports.center");
+        this.skinParts.rightPorts = this.parentContainer.find(".ports.right");
 
-        this.skinParts.centerPorts = $('<div/>', {
-            "class" : "ports center"
-        });
-        this.skinParts.childrenContainer.append(this.skinParts.centerPorts);
+        this.skinParts.bottomConnRect = this.parentContainer.find(".myConnRect.bottom");
+        this.skinParts.topConnRect = this.parentContainer.find(".myConnRect.top");
 
-        this.skinParts.rightPorts = $('<div/>', {
-            "class" : "ports right"
-        });
-        this.skinParts.childrenContainer.append(this.skinParts.rightPorts);
+        this.skinParts.connLeft =  this.parentContainer.find("#connLeft");
+        this.skinParts.connRight =  this.parentContainer.find("#connRight");
+
+        /*this.skinParts.bottomConnRect.hide();
+        this.skinParts.topConnRect.hide();*/
 
         //hook up double click for node title edit
-        this.skinParts.title.dblclick(function () {
+        this.skinParts.title.dblclick(function (event) {
             self._editNodeTitle.call(self);
+            event.stopPropagation();
+            event.preventDefault();
         });
 
-        this._updateModelComponent();
+        //this._updateModelComponent();
 
         this._renderPorts();
+
+        this.ownerComponent.afterDecoratorUpdate();
     };
 
     ModelWithPortsDecorator.prototype.update = function () {
@@ -87,10 +89,12 @@ define(['logManager',
         case "load":
             if (this.childrenIds.indexOf(eid) !== -1) {
                 if (this.ports.hasOwnProperty(eid) !== true) {
+                    this.ownerComponent.beforeDecoratorUpdate();
                     childNode = this.project.getNode(eid);
                     if (childNode && childNode.getAttribute(nodeAttributeNames.isPort) === true) {
                         this._renderPort(childNode, false);
                     }
+                    this.ownerComponent.afterDecoratorUpdate();
                 }
             }
             break;
@@ -106,7 +110,12 @@ define(['logManager',
             updatedChildrenIds,
             diffChildrenIds,
             i,
-            childPort;
+            childPort,
+            leftPorts = 0,
+            rightPorts = 0;
+
+        //let the ModelComponent know that the decorator starts refreshing itself
+        this.ownerComponent.beforeDecoratorUpdate();
 
         if (objectId === this.id) {
             //the container node has been changed
@@ -122,7 +131,7 @@ define(['logManager',
 
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 if (this.ports[diffChildrenIds[i]]) {
-                    this.ownerComponent.unregisterSubcomponents([diffChildrenIds[i]]);
+                    //this.ownerComponent.unregisterSubcomponents([diffChildrenIds[i]]);
                     this.ports[diffChildrenIds[i]].el.remove();
                     delete this.ports[diffChildrenIds[i]];
                 }
@@ -142,18 +151,38 @@ define(['logManager',
         } else {
             //a port has changed
             //here we are only interested in name change
+            //TODO: left or right orientation????
             if (this.ports[objectId]) {
                 this.ports[objectId].update({"title" : updatedObject.getAttribute(nodeAttributeNames.name)});
             }
         }
 
+        //reset side connectability
+        leftPorts = this.skinParts.leftPorts.find(".port");
+        rightPorts = this.skinParts.rightPorts.find(".port");
+
+        if (leftPorts.length === 0) {
+            if (this.skinParts.connLeft.hasClass("connEndPoint") === false) {
+                this.skinParts.connLeft.addClass("connEndPoint");
+            }
+        } else {
+            this.skinParts.connLeft.removeClass("connEndPoint");
+        }
+
+        if (rightPorts.length === 0) {
+            if (this.skinParts.connRight.hasClass("connEndPoint") === false) {
+                this.skinParts.connRight.addClass("connEndPoint");
+            }
+        } else {
+            this.skinParts.connRight.removeClass("connEndPoint");
+        }
+
+        //fix the layout of the ports
         this._refreshChildrenContainer();
-    };
 
-    ModelWithPortsDecorator.prototype._updateModelComponent = function () {
-        this.ownerComponent.decoratorUpdated();
+        //let the ModelComponent know that the decorator has finished refreshing itself
+        this.ownerComponent.afterDecoratorUpdate();
     };
-
 
     ModelWithPortsDecorator.prototype._editNodeTitle = function () {
         var self = this;
@@ -163,8 +192,10 @@ define(['logManager',
 
         // Replace node with <input>
         this.skinParts.title.editInPlace("modelTitle", function (newTitle) {
+            self.ownerComponent.beforeDecoratorUpdate();
             self.project.setAttributes(self.id, "name", newTitle);
             self._refreshChildrenContainer();
+            self.ownerComponent.afterDecoratorUpdate();
         });
 
         //hook up double click for further node title edit
@@ -206,11 +237,17 @@ define(['logManager',
             portContainer = this.skinParts.rightPorts;
         }
 
+        if (portOrientation === "E") {
+            this.skinParts.connRight.removeClass("connEndPoint");
+        } else {
+            this.skinParts.connLeft.removeClass("connEndPoint");
+        }
+
         this.ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodeAttributeNames.name),
             "orientation": portOrientation,
             "modelEditorCanvas": this.ownerComponent.parentComponent});
         portContainer.append(this.ports[portId].el);
-        this.ownerComponent.registerSubcomponents([portId]);
+        //this.ownerComponent.registerSubcomponents([portId]);
 
         if (ignoreChildrenContainerRefresh !== true) {
             this._refreshChildrenContainer();
@@ -227,43 +264,26 @@ define(['logManager',
             this.skinParts.centerPorts.outerWidth(childrenContainerWidth - leftPortsWidth - rightPortsWidth);
         }
 
-        //and let the parent object know about the bounding box change
-        this._updateModelComponent();
+        this.skinParts.bottomConnRect.css("left", (this.parentContainer.width() - this.skinParts.bottomConnRect.outerWidth()) / 2);
+        this.skinParts.topConnRect.css("left", (this.parentContainer.width() - this.skinParts.topConnRect.outerWidth()) / 2);
     };
 
-    ModelWithPortsDecorator.prototype.getConnectionPointsById = function (sourceId) {
-        var result = [],
-            i,
-            bL = parseInt(this.parentContainer.css("border-left-width"), 10),
-            bT = parseInt(this.parentContainer.css("border-top-width"), 10);
-
-        //when this component know about the requested subcomponent
-        //get its coordinate in the local model's coordinate system
-        if (this.ports[sourceId]) {
-            result = this.ports[sourceId].getConnectionPoints();
-
-            for (i = 0; i < result.length; i += 1) {
-                result[i].x += bL;
-                result[i].y += bT;
-            }
-        }
-
-        return result;
-    };
-
+    //TODO: enable this kind of override (if method exist, it will give back the connection area)
     //decorator might want to override the owner element's connection points
-    ModelWithPortsDecorator.prototype.getConnectionPoints = function () {
+    /*ModelWithPortsDecorator.prototype.getConnectionPoints = function () {
         var bBox = this.ownerComponent.getBoundingBox(),
             result = [];
 
-        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height});
-        result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y});
+        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height, connectorLength : 20});
+        result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y, connectorLength : 20});
 
         return result;
-    };
+    };*/
 
     ModelWithPortsDecorator.prototype.destroy = function () {
         var i;
+
+        this.ownerComponent.beforeDecoratorUpdate();
 
         this.project.updateTerritory(this.territoryId, []);
 

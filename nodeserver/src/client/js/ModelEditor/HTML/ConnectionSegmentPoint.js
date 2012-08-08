@@ -220,6 +220,9 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype._onSegmentPointDragMove = function (dx, dy, x, y, event) {
+        var grid = 10,
+            snapDistance = 10;
+
         if (this.validDrag === false) {
             if ((Math.abs(dx) >= this.settings.minDragDistance) || (Math.abs(dy) >= this.settings.minDragDistance)) {
                 this.validDrag = true;
@@ -228,6 +231,26 @@ define(['logManager',
         if (this.validDrag === true) {
             this.x = this.oldPos.x + dx;
             this.y = this.oldPos.y + dy;
+
+            if (this.prevSegmentPoint) {
+                if (Math.abs(this.prevSegmentPoint.x - this.x) < snapDistance) {
+                    this.x = this.prevSegmentPoint.x;
+                }
+                if (Math.abs(this.prevSegmentPoint.y - this.y) < snapDistance) {
+                    this.y = this.prevSegmentPoint.y;
+                }
+            }
+            if (this.nextSegmentPoint) {
+                if (Math.abs(this.nextSegmentPoint.x - this.x) < snapDistance) {
+                    this.x = this.nextSegmentPoint.x;
+                }
+                if (Math.abs(this.nextSegmentPoint.y - this.y) < snapDistance) {
+                    this.y = this.nextSegmentPoint.y;
+                }
+            }
+
+            /*this.x = this.oldPos.x + Math.round(dx / grid) * grid;
+            this.y = this.oldPos.y + Math.round(dy / grid) * grid;*/
             this.redrawControls();
         }
         event.stopPropagation();

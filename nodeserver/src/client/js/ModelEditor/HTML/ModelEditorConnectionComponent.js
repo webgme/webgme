@@ -160,6 +160,51 @@ define(['logManager',
                                                                     "lineType": this._pathAttributes.lineType }));
             }
         }
+
+        for (i = 0; i < this._segmentPoints.length; i += 1) {
+            if (i > 0) {
+                this._segmentPoints[i].prevSegmentPoint = this._segmentPoints[i - 1];
+            } else {
+                if (this._sourceCoordinates) {
+                    this._segmentPoints[i].prevSegmentPoint = { "x": this._sourceCoordinates.x,
+                                                                "y":  this._sourceCoordinates.y };
+
+                    this._adjustNeighbourSegmentPointByEndCoordConnectorLength(this._segmentPoints[i].prevSegmentPoint, this._sourceCoordinates);
+                }
+            }
+
+            if (i < this._segmentPoints.length - 1) {
+                this._segmentPoints[i].nextSegmentPoint = this._segmentPoints[i + 1];
+            } else {
+                if (this._targetCoordinates) {
+                    this._segmentPoints[i].nextSegmentPoint = { "x": this._targetCoordinates.x,
+                        "y":  this._targetCoordinates.y };
+
+                    this._adjustNeighbourSegmentPointByEndCoordConnectorLength(this._segmentPoints[i].nextSegmentPoint, this._targetCoordinates);
+                }
+            }
+        }
+    };
+
+    ModelEditorConnectionComponent.prototype._adjustNeighbourSegmentPointByEndCoordConnectorLength = function (nSegmentPoint, endCoord) {
+        if (endCoord.hasOwnProperty("connectorLength")) {
+            switch (endCoord.dir) {
+            case "N":
+                nSegmentPoint.y -= endCoord.connectorLength;
+                break;
+            case "S":
+                nSegmentPoint.y += endCoord.connectorLength;
+                break;
+            case "E":
+                nSegmentPoint.x += endCoord.connectorLength;
+                break;
+            case "W":
+                nSegmentPoint.x -= endCoord.connectorLength;
+                break;
+            default:
+                break;
+            }
+        }
     };
 
     ModelEditorConnectionComponent.prototype._onMouseDown = function (event) {
@@ -391,8 +436,8 @@ define(['logManager',
                 this._skinParts.srcDragPoint.css({
                     "width": dragPointOpts.width,
                     "height": dragPointOpts.height,
-                    "left": this._sourceCoordinates.x - dragPointOpts.width / 2,
-                    "top": this._sourceCoordinates.y - dragPointOpts.width / 2
+                    "left": this._sourceCoordinates.x - dragPointOpts.width / 2 - 1, /* -1 because of border left*/
+                    "top": this._sourceCoordinates.y - dragPointOpts.height / 2 - 1 /*-1 because of border top*/
                 });
             }
         }
@@ -402,8 +447,8 @@ define(['logManager',
                 this._skinParts.tgtDragPoint.css({
                     "width": dragPointOpts.width,
                     "height": dragPointOpts.height,
-                    "left": this._targetCoordinates.x - dragPointOpts.width / 2,
-                    "top": this._targetCoordinates.y - dragPointOpts.width / 2
+                    "left": this._targetCoordinates.x - dragPointOpts.width / 2 - 1, /* -1 because of border left*/
+                    "top": this._targetCoordinates.y - dragPointOpts.height / 2 - 1 /*-1 because of border top*/
                 });
             }
         }
@@ -520,6 +565,14 @@ define(['logManager',
             this._repositionDragPoints({"source": true,
                 "target": true});
         }
+    };
+
+    ModelEditorConnectionComponent.prototype.setSourceCoordinates = function (srcCoordinates) {
+        this.setEndpointCoordinates(srcCoordinates, this._targetCoordinates);
+    };
+
+    ModelEditorConnectionComponent.prototype.setTargetCoordinates = function (tgtCoordinates) {
+        this.setEndpointCoordinates(this._sourceCoordinates, tgtCoordinates);
     };
 
     ModelEditorConnectionComponent.prototype._render = function () {
@@ -683,8 +736,11 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype.addSegmentPoint = function (count, x, y, cx, cy) {
-        var d = { "x": x,
-            "y": y };
+        var grid = 10,
+            /*d = { "x": Math.round(x / grid) * grid,
+            "y": Math.round(y / grid) * grid };*/
+            d = { "x": x,
+                "y": y };
 
         if (cx) {
             d.cx = cx;

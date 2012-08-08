@@ -47,8 +47,11 @@
 }
 
 .model.modelWithPorts.connection-end-state-hover {
-    border: 2px solid #ff7800;
-    background-color: #ff7800;
+    border-color: #F7B400;
+    background-color: #F7B478;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
 }
 
 /*PORTS children*/
@@ -66,15 +69,83 @@
 
 .ports.left {
     text-align: left;
-    padding-left: 4px;
+    left: -7px;
+    position: relative;
 }
 
 .ports.right {
     text-align: right;
-    padding-right: 4px;
+    right: -7px;
+    position: relative;
 }
 
 .ports.center {
     min-width: 30px;
     height: 1px;
+}
+
+.modelWithPorts .connEndPoint.top,
+.modelWithPorts .connEndPoint.bottom {
+    height: 3px;
+    background-color: #ff0000;
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    display: inline-block;
+}
+
+.modelWithPorts .connEndPoint.bottom {
+    bottom: -2px;
+}
+
+.modelWithPorts .connEndPoint.top {
+    top: -2px;
+}
+
+.modelWithPorts .connEndPoint.left,
+.modelWithPorts .connEndPoint.right {
+    width: 3px;
+    background-color: #ff0000;
+    position: absolute;
+    top: 15px;
+    bottom: 15px;
+    display: inline-block;
+}
+
+.modelWithPorts .connEndPoint.left {
+    left: -2px;
+}
+
+.modelWithPorts .connEndPoint.right {
+    right: -2px;
+}
+
+.model.modelWithPorts .myConnRect {
+    background-color: #FEFEFE;
+    height: 12px;
+    width: 12px;
+    position: absolute;
+    left: 30px;
+    cursor: pointer;
+    border: 1px solid #0000FF;
+    display: none;
+}
+
+.modelWithPorts .myConnRect.bottom {
+    bottom: -6px;
+}
+
+.modelWithPorts .myConnRect.top {
+    top: -6px;
+}
+
+.model.modelWithPorts:hover .myConnRect {
+    display: block;
+}
+
+.model.modelWithPorts .myConnRect:hover {
+    border-color: rgba(82, 168, 236, 0.8);
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
 }

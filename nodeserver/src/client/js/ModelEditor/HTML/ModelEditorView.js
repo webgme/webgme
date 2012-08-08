@@ -7,18 +7,22 @@ define(['logManager',
     './ComponentBase.js',
     './ModelEditorModelComponent.js',
     './ModelEditorConnectionComponent.js',
+    './ConnectionPointManager.js',
     'css!ModelEditorHTMLCSS/ModelEditorView'], function (logManager,
                                     util,
                                     commonUtil,
                                     raphaeljs,
                                     ComponentBase,
                                     ModelEditorModelComponent,
-                                    ModelEditorConnectionComponent) {
+                                    ModelEditorConnectionComponent,
+                                    ConnectionPointManager) {
 
     var ModelEditorView;
 
     ModelEditorView = function (containerElement) {
         this._logger = logManager.create("ModelEditorView_" + containerElement);
+
+        this._connectionPointManager = new ConnectionPointManager();
 
         this._el = $("#" + containerElement);
 
@@ -106,10 +110,23 @@ define(['logManager',
                 "stroke": this._connectionInDraw.strokeColor,
                 "stroke-dasharray": this._connectionInDraw.lineType}
         ).hide();
+
+        /*this._skinParts.childrenContainer.on("click", ".model .port", function (event) {
+            alert($(this).html());
+        });*/
+
+        this._skinParts.selectionOutline = $('<div/>', {
+            "class" : "selectionOutline"
+        });
+        this._skinParts.childrenContainer.append(this._skinParts.selectionOutline);
+        this._skinParts.selectionOutline.hide();
     };
 
     ModelEditorView.prototype.clear = function () {
         var i;
+
+        this._hideSelectionOutline();
+
         for (i in this._childComponents) {
             if (this._childComponents.hasOwnProperty(i)) {
                 this._childComponents[i].destroy();
@@ -180,7 +197,8 @@ define(['logManager',
     };
 
     ModelEditorView.prototype.deleteComponent = function (component) {
-        var componentId = component.getId();
+        var componentId = component.getId(),
+            endPointsToUpdate = [];
         if (this._childComponents[componentId]) {
             this._childComponents[componentId].destroy();
             delete this._childComponents[componentId];
@@ -188,7 +206,12 @@ define(['logManager',
 
         //if it was a connection
         if (this._connectionList[componentId]) {
+            endPointsToUpdate.push(this._connectionList[componentId].sourceId, this._connectionList[componentId].targetId);
+
             delete this._connectionList[componentId];
+
+            this._connectionPointManager.unregisterConnection(componentId);
+            this._updateConnectionsWithEndPoint(endPointsToUpdate);
         }
     };
 
@@ -229,16 +252,9 @@ define(['logManager',
     };
 
     ModelEditorView.prototype._drawConnectionTo = function (toPosition) {
-        var srcConnectionPoints,
-            pathDefinition,
-            sourceId = this._connectionInDraw.source,
-            closestConnPoints;
-
-        if (this._childComponents[sourceId]) {
-            srcConnectionPoints = this._childComponents[sourceId].getConnectionPoints();
-        } else if (this._displayedComponentIDs[sourceId]) {
-            srcConnectionPoints = this._childComponents[this._displayedComponentIDs[sourceId]].getConnectionPointsById(sourceId);
-        }
+        var pathDefinition,
+            closestConnPoints,
+            srcConnectionPoints = this._getConnectionPointsById(this._connectionInDraw.source);
 
         closestConnPoints = this._getClosestPoints(srcConnectionPoints, [toPosition]);
         srcConnectionPoints = srcConnectionPoints[closestConnPoints[0]];
@@ -329,6 +345,10 @@ define(['logManager',
 
         //check if current children container's width and height are big enough to contain the children
         this._adjustChildrenContainerSize(childComponentId);
+
+        if (this._selectedComponentIds.indexOf(childComponentId) !== -1) {
+            this._showSelectionOutline();
+        }
     };
 
     ModelEditorView.prototype._positionChildOnCanvas = function (childComponentId) {
@@ -337,7 +357,11 @@ define(['logManager',
             pX = parseInt(childComponentEl.css("left"), 10),
             pY = parseInt(childComponentEl.css("top"), 10),
             posXDelta,
-            posYDelta;
+            posYDelta,
+            i,
+            childbBox,
+            shiftValue = 30,
+            posChanged = false;
 
         //correct the children position based on this skin's granularity
         posXDelta = pX % this._gridSize;
@@ -346,9 +370,31 @@ define(['logManager',
         if ((posXDelta !== 0) || (posYDelta !== 0)) {
             pX += (posXDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posXDelta : this._gridSize - posXDelta);
             pY += (posYDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posYDelta : this._gridSize - posYDelta);
+            posChanged = true;
+        }
 
+        //check if position has to be adjusted to not to put it on some other model
+        for (i in this._childComponents) {
+            if (this._childComponents.hasOwnProperty(i)) {
+                if (i !== childComponentId) {
+                    childbBox = this._childComponents[i].getBoundingBox();
+                    if (childbBox) {
+                        if (childbBox.x === pX && childbBox.y === pY) {
+                            pX += shiftValue;
+                            pY += shiftValue;
+                            posChanged = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        //if ((posXDelta !== 0) || (posYDelta !== 0)) {
+        if (posChanged === true) {
             childComponent.setPosition(pX, pY);
         }
+
+        //}
     };
 
     ModelEditorView.prototype._adjustChildrenContainerSize = function (childComponentId) {
@@ -498,6 +544,8 @@ define(['logManager',
             }
         }
 
+        this._showSelectionOutline();
+
         this._logger.debug("selected components: " + this._selectedComponentIds);
     };
 
@@ -535,6 +583,8 @@ define(['logManager',
         }
 
         this._selectedComponentIds = [];
+
+        this._hideSelectionOutline();
     };
 
     /*
@@ -694,6 +744,8 @@ define(['logManager',
 
         this._logger.debug("_onDraggableStart: " + draggedComponentId);
 
+        this._hideSelectionOutline();
+
         //simple drag means reposition
         //when CTRL key is pressed when drag starts, selected models have to be copy-pasted
         this._dragOptions = {};
@@ -813,6 +865,7 @@ define(['logManager',
         //remove UI helpers
         this._skinParts.dragPosPanel.hide();
 
+        this._showSelectionOutline();
 
     };
 
@@ -932,39 +985,82 @@ define(['logManager',
         var connection = this._childComponents[connectionId],
             sourceId = this._connectionList[connectionId].sourceId,
             targetId = this._connectionList[connectionId].targetId,
-            sourceConnectionPoints,
-            targetConnectionPoints,
+            sourceConnectionPoints = this._getConnectionPointsById(sourceId),
+            targetConnectionPoints = this._getConnectionPointsById(targetId),
             sourceCoordinates,
             targetCoordinates,
-            closestConnPoints;
+            closestConnPoints,
+            connUpdateInfo,
+            i,
+            selfOffset = this._skinParts.childrenContainer.offset();
 
-        if ((this._childComponents[sourceId] || this._displayedComponentIDs[sourceId]) &&
-                (this._childComponents[targetId] || this._displayedComponentIDs[targetId])) {
-            //both of the connection endpoints are known
+        if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
-            //find the source end end coordinates and pass it to the connection
-            if (this._childComponents[sourceId]) {
-                sourceConnectionPoints = this._childComponents[sourceId].getConnectionPoints();
-            } else {
-                sourceConnectionPoints = this._childComponents[this._displayedComponentIDs[sourceId]].getConnectionPointsById(sourceId);
-            }
+            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints);
+            sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
+            targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
 
-            if (this._childComponents[targetId]) {
-                targetConnectionPoints = this._childComponents[targetId].getConnectionPoints();
-            } else {
-                targetConnectionPoints = this._childComponents[this._displayedComponentIDs[targetId]].getConnectionPointsById(targetId);
-            }
-
-            if ((sourceConnectionPoints.length > 0) && (targetConnectionPoints.length > 0)) {
-                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints);
-                sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
-                targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
-            }
-
-            connection.setEndpointCoordinates(sourceCoordinates, targetCoordinates);
+            connUpdateInfo = this._connectionPointManager.registerConnection(connectionId, sourceCoordinates.id, targetCoordinates.id);
+            //connection.setEndpointCoordinates(sourceCoordinates, targetCoordinates);
         } else {
-            connection.setEndpointCoordinates(null, null);
+            connUpdateInfo = this._connectionPointManager.unregisterConnection(connectionId);
+            //connection.setEndpointCoordinates(null, null);
         }
+
+        for (i in connUpdateInfo) {
+            if (connUpdateInfo.hasOwnProperty(i)) {
+                if (this._childComponents.hasOwnProperty(i)) {
+                    if (connUpdateInfo[i].src) {
+                        connUpdateInfo[i].src.x -= selfOffset.left;
+                        connUpdateInfo[i].src.y -= selfOffset.top;
+                    }
+
+                    if (connUpdateInfo[i].tgt) {
+                        connUpdateInfo[i].tgt.x -= selfOffset.left;
+                        connUpdateInfo[i].tgt.y -= selfOffset.top;
+                    }
+
+                    if ((connUpdateInfo[i].src && connUpdateInfo[i].tgt) || (connUpdateInfo[i].src === null && connUpdateInfo[i].tgt === null)) {
+                        this._childComponents[i].setEndpointCoordinates(connUpdateInfo[i].src, connUpdateInfo[i].tgt);
+                    } else if (connUpdateInfo[i].src) {
+                        this._childComponents[i].setSourceCoordinates(connUpdateInfo[i].src);
+                    } else if (connUpdateInfo[i].tgt) {
+                        this._childComponents[i].setTargetCoordinates(connUpdateInfo[i].tgt);
+                    }
+                }
+            }
+        }
+    };
+
+    ModelEditorView.prototype._getConnectionPointsById = function (objectId) {
+        var selfOffset = this._skinParts.childrenContainer.offset(),
+            objectConnectionPointAreas = this._skinParts.childrenContainer.find(".connEndPoint[data-id='" + objectId + "']"),
+            objectConnectionPoints = [],
+            self = this;
+
+        if (objectConnectionPointAreas.length > 0) {
+            objectConnectionPointAreas.each(function () {
+                var pointOffset = $(this).offset(),
+                    w = $(this).width(),
+                    h = $(this).height(),
+                    connData = $(this).attr("data-or").split(","),
+                    i,
+                    cOrientation,
+                    cConnectorLength,
+                    connAreaId = self._connectionPointManager.registerConnectionArea($(this));
+
+                for (i = 0; i < connData.length; i += 1) {
+                    cOrientation = connData[i].substring(0, 1);
+                    cConnectorLength = parseInt(connData[i].substring(1), 10);
+
+                    objectConnectionPoints.push({ "dir": cOrientation, x: pointOffset.left - selfOffset.left + w / 2, y: pointOffset.top - selfOffset.top + h / 2, connectorLength: cConnectorLength, id: connAreaId});
+                }
+
+
+            });
+        }
+
+        return objectConnectionPoints;
     };
 
     /*
@@ -1053,6 +1149,154 @@ define(['logManager',
 
     /*
      * END OF - KEYBOARD HANDLING
+     */
+
+    /*
+     * SELECTION OUTLINE
+     */
+
+    ModelEditorView.prototype._showSelectionOutline = function () {
+        var bBox = this._getSelectionBoundingBox(),
+            margin = 15,
+            cW = this._skinParts.childrenContainer.outerWidth(),
+            cH = this._skinParts.childrenContainer.outerHeight(),
+            self = this;
+
+        if (bBox.hasOwnProperty("x")) {
+
+            bBox.x -= margin;
+            bBox.y -= margin;
+            bBox.x2 += margin;
+            bBox.y2 += margin;
+
+            if (bBox.x < 0) {
+                bBox.x = 0;
+            }
+
+            if (bBox.y < 0) {
+                bBox.y = 0;
+            }
+
+            if (bBox.x2 > cW) {
+                bBox.x2 = cW;
+            }
+
+            if (bBox.y2 > cH) {
+                bBox.y2 = cH;
+            }
+
+            bBox.w = bBox.x2 - bBox.x;
+            bBox.h = bBox.y2 - bBox.y;
+
+            this._skinParts.selectionOutline.empty();
+
+            this._skinParts.selectionOutline.css({ "left": bBox.x,
+                                                  "top": bBox.y,
+                                                  "width": bBox.w,
+                                                  "height": bBox.h });
+            this._skinParts.selectionOutline.show();
+
+            /* ADD BUTTONS TO SELECTION OUTLINE */
+            this._skinParts.deleteSelection = $('<div/>', {
+                "class" : "deleteSelectionBtn selectionBtn"
+            });
+            this._skinParts.selectionOutline.append(this._skinParts.deleteSelection);
+
+            this._skinParts.copySelection = $('<div/>', {
+                "class" : "copySelectionBtn selectionBtn"
+            });
+            this._skinParts.selectionOutline.append(this._skinParts.copySelection);
+
+            this._skinParts.advancedSelection = $('<div/>', {
+                "class" : "advancedSelectionBtn selectionBtn"
+            });
+            this._skinParts.selectionOutline.append(this._skinParts.advancedSelection);
+
+            this._skinParts.deleteSelection.on("mousedown", function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+                self.onDelete(self._selectedComponentIds);
+                self._hideSelectionOutline();
+            });
+
+            this._skinParts.copySelection.on("mousedown", function (event) {
+                var copyOpts = {},
+                    i,
+                    cBBox;
+
+                event.stopPropagation();
+                event.preventDefault();
+
+                for (i = 0; i < self._selectedComponentIds.length; i += 1) {
+                    cBBox = self._childComponents[self._selectedComponentIds[i]].getBoundingBox();
+                    if (cBBox) {
+                        copyOpts[self._selectedComponentIds[i]] = { "x": cBBox.x,
+                                                                    "y": cBBox.y};
+                    } else {
+                        copyOpts[self._selectedComponentIds[i]] = { "x": 100,
+                                                                    "y": 100};
+                    }
+                }
+
+                self.onDragCopy(copyOpts);
+            });
+
+            this._skinParts.advancedSelection.on("mousedown", function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+            });
+
+            /* END OF - ADD BUTTONS TO SELECTION OUTLINE*/
+        } else {
+            this._hideSelectionOutline();
+        }
+
+    };
+
+    ModelEditorView.prototype._hideSelectionOutline = function () {
+        if (this._skinParts.selectionOutline) {
+            this._skinParts.selectionOutline.empty();
+            this._skinParts.selectionOutline.hide();
+        }
+    };
+
+    ModelEditorView.prototype._getSelectionBoundingBox = function () {
+        var bBox = {},
+            i,
+            id,
+            childBBox;
+
+        for (i = 0; i < this._selectedComponentIds.length; i += 1) {
+            id = this._selectedComponentIds[i];
+
+            childBBox = this._childComponents[id].getBoundingBox();
+
+            if (childBBox) {
+
+                if (i === 0) {
+                    bBox = $.extend(true, {}, childBBox);
+                } else {
+                    if (bBox.x > childBBox.x) {
+                        bBox.x = childBBox.x;
+                    }
+                    if (bBox.y > childBBox.y) {
+                        bBox.y = childBBox.y;
+                    }
+                    if (bBox.x2 < childBBox.x2) {
+                        bBox.x2 = childBBox.x2;
+                    }
+                    if (bBox.y2 < childBBox.y2) {
+                        bBox.y2 = childBBox.y2;
+                    }
+                }
+            }
+        }
+
+        return bBox;
+    };
+
+    /*
+     * END OF - SELECTION OUTLINE
      */
 
     ModelEditorView.prototype.saveConnectionSegmentPoints = function (connId, segmentPointsToSave) {

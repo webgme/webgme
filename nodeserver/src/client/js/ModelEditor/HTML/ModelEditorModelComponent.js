@@ -42,9 +42,6 @@ define(['logManager',
     };
 
     ModelEditorModelComponent.prototype._onDestroy = function () {
-        //remove extra connection rectangle from DOM
-        this._skinParts.connectionRect.remove();
-
         if (this._decoratorInstance) {
             this._decoratorInstance.destroy();
         }
@@ -56,8 +53,6 @@ define(['logManager',
         /*MODELEDITORCOMPONENT CONSTANTS*/
 
         this._zIndex = 10;
-        this._connectionRectProps = { "width" : 10/*,
-                                        "color": "rgba(255,0,0,0.2)"*/}; //TODO: remove color if not needed anymore
 
         /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
 
@@ -112,67 +107,9 @@ define(['logManager',
     };
 
     ModelEditorModelComponent.prototype._initializeModelUI = function () {
-        var self = this,
-            selfId = this.getId();
+        var self = this;
 
-        //create a thin edge around it that can be used to initiate connection drawing
-        this._skinParts.connectionRect = $('<div/>', {
-            "id": "connectionRect_" + this.getId()
-        });
-        this._skinParts.connectionRect.css({"z-index": this._zIndex - 1,
-                                            "cursor": "crosshair" });
-
-        if (this._connectionRectProps.color) {
-            this._skinParts.connectionRect.css({ "backgroundColor": this._connectionRectProps.color });
-        }
-
-        this._skinParts.connectionRect.insertBefore(this.el);
-
-        this._skinParts.connectionRect.draggable({
-            helper: function () {
-                return $("<div class='draw-connection-drag-helper'></div>").data("sourceId", selfId);
-            },
-            scroll: true,
-            cursor: 'crosshair',
-            cursorAt: { left: 0,
-                        top: 0 },
-            start: function (event) {
-                self._skinParts.connectionRect.addClass("connection-source");
-                self.parentComponent.startDrawConnection(selfId);
-                event.stopPropagation();
-            },
-            stop: function (event) {
-                self._skinParts.connectionRect.removeClass("connection-source");
-                self.parentComponent.endDrawConnection();
-                event.stopPropagation();
-            },
-            drag: function (event) {
-                self.parentComponent.onDrawConnection(event);
-            }
-        });
-
-        this._skinParts.connectionRect.bind("mousedown", function (event) {
-            event.stopPropagation();
-        });
-
-        //make the whole parent container to be able to accept connection end drop
-        this.el.droppable({
-            accept: ".connection-source",
-            hoverClass: "connection-end-state-hover",
-            drop: function (event, ui) {
-                var data = $.extend(true, {}, ui.helper.data());
-                data.targetId = selfId;
-
-                ui.helper.data("dropHandled", true);
-
-                self.parentComponent.createConnection(data);
-                event.stopPropagation();
-            }
-        });
-
-        this._repositionConnectionRect();
-
-        //hook up mousedown
+         //hook up mousedown
         this.el.bind('mousedown', function (event) {
             self._onMouseDown(event);
         });
@@ -204,39 +141,17 @@ define(['logManager',
         event.preventDefault();
     };
 
-    ModelEditorModelComponent.prototype.decoratorUpdated = function () {
-        this._repositionConnectionRect();
-        this._notifyParentAboutBBoxChange();
-    };
-
     ModelEditorModelComponent.prototype._setPosition = function (pX, pY) {
         //if position is different than the given one
         this.el.css({   "left": pX,
             "top": pY });
-
-        //fix the connection rect around it
-        this._repositionConnectionRect();
     };
 
     ModelEditorModelComponent.prototype.setPosition = function (pX, pY) {
         this._setPosition(pX, pY);
     };
 
-    ModelEditorModelComponent.prototype._repositionConnectionRect = function () {
-        var bBox = this.getBoundingBox();
-
-        if (this._skinParts.connectionRect) {
-            this._skinParts.connectionRect.css({
-                "position": "absolute",
-                "left": bBox.x - this._connectionRectProps.width,
-                "top": bBox.y - this._connectionRectProps.width,
-                "width": bBox.width + this._connectionRectProps.width * 2,
-                "height": bBox.height + this._connectionRectProps.width * 2
-            });
-        }
-    };
-
-    ModelEditorModelComponent.prototype.getConnectionPoints = function () {
+    /*ModelEditorModelComponent.prototype.getConnectionPoints = function () {
         var bBox = this.getBoundingBox(),
             result = [];
 
@@ -246,13 +161,13 @@ define(['logManager',
             }
         }
 
-        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height});
-        result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y});
-        result.push({ "dir": "E", x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2});
-        result.push({ "dir": "W", x: bBox.x, y: bBox.y + bBox.height / 2});
+        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height, connectorLength : 20});
+        result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y, connectorLength : 20});
+        result.push({ "dir": "E", x: bBox.x + bBox.width, y: bBox.y + bBox.height / 2, connectorLength : 20});
+        result.push({ "dir": "W", x: bBox.x, y: bBox.y + bBox.height / 2, connectorLength : 20});
 
         return result;
-    };
+    };*/
 
     ModelEditorModelComponent.prototype._notifyParentAboutBBoxChange = function () {
         if (this.parentComponent) {
@@ -278,22 +193,26 @@ define(['logManager',
         this._notifyParentAboutBBoxChange();
     };
 
-    ModelEditorModelComponent.prototype.getConnectionPointsById = function (sourceId) {
+    /*ModelEditorModelComponent.prototype.getConnectionPointsById = function (sourceId) {
         var result = [],
             i,
-            bBox = this.getBoundingBox();
+            bBox = this.getBoundingBox(),
+            myOffset = this.getBoundingBox(true);
 
         if (this._decoratorInstance) {
             result = this._decoratorInstance.getConnectionPointsById(sourceId);
 
             for (i = 0; i < result.length; i += 1) {
-                result[i].x += bBox.x;
-                result[i].y += bBox.y;
+                //result[i].x += bBox.x;
+                //result[i].y += bBox.y;*/
+
+                /*result[i].x = result[i].x - myOffset.x + bBox.x;
+                result[i].y = result[i].y - myOffset.y + bBox.y;
             }
         }
 
         return result;
-    };
+    };*/
 
     ModelEditorModelComponent.prototype.registerSubcomponents = function (subComponentIds) {
         var list = {},
@@ -316,6 +235,125 @@ define(['logManager',
 
         this.parentComponent.unregisterSubcomponents(list);
     };
+
+    /*
+     * AUTOMATICALLY HOOK UP ACTIONS / EVENT HANDLERS FOR KNOWN CLASSES
+     */
+
+    ModelEditorModelComponent.prototype.beforeDecoratorUpdate = function () {
+        this._unregisterKnownHandles();
+    };
+
+    ModelEditorModelComponent.prototype.afterDecoratorUpdate = function () {
+        this._registerKnownHandles();
+        this._notifyParentAboutBBoxChange();
+    };
+
+    ModelEditorModelComponent.prototype._registerKnownHandles = function () {
+        var connStartElements = this.el.find(".startConn"),
+            connFinishElements = this.el.find(".finishConn"),
+            connEndPoints  = this.el.find(".connEndPoint"),
+            connEndPointIds = [],
+            self = this;
+
+        if (this.el.hasClass("startConn")) {
+            connStartElements.push(this.el[0]);
+        }
+
+        if (this.el.hasClass("finishConn")) {
+            connFinishElements.push(this.el[0]);
+        }
+
+        if (this.el.hasClass("connEndPoint")) {
+            connEndPoints.push(this.el[0]);
+        }
+
+        //register connection-draw start handler
+        connStartElements.draggable({
+            helper: function () {
+                return $("<div class='draw-connection-drag-helper'></div>").data("sourceId", $(this).attr("data-id"));
+            },
+            scroll: true,
+            cursor: 'pointer',
+            cursorAt: {
+                left: 0,
+                top: 0
+            },
+            start: function (event) {
+                $(this).addClass("connection-source");
+                self.parentComponent.startDrawConnection($(this).attr("data-id"));
+                event.stopPropagation();
+            },
+            stop: function (event) {
+                self.parentComponent.endDrawConnection($(this).attr("data-id"));
+                $(this).removeClass("connection-source");
+                event.stopPropagation();
+            },
+            drag: function (event) {
+                self.parentComponent.onDrawConnection(event);
+            }
+        });
+
+        //register connection end accept handler
+        connFinishElements.droppable({
+            accept: ".connection-source",
+            //activeClass: "ui-state-active",
+            hoverClass: "connection-end-state-hover",
+            greedy: true,
+            drop: function (event, ui) {
+                var data = $.extend(true, {}, ui.helper.data());
+                data.targetId = $(this).attr("data-id");
+
+                ui.helper.data("dropHandled", true);
+
+                self.parentComponent.createConnection(data);
+                event.stopPropagation();
+            }
+        });
+
+        //register connection endpoint areas
+        connEndPoints.each(function () {
+            connEndPointIds.push($(this).attr("data-id"));
+        });
+
+        this.registerSubcomponents(connEndPointIds);
+    };
+
+    ModelEditorModelComponent.prototype._unregisterKnownHandles = function () {
+        var connStartElements = this.el.find(".startConn"),
+            connFinishElements = this.el.find(".finishConn"),
+            connEndPoints  = this.el.find(".connEndPoint"),
+            connEndPointIds = [];
+
+        if (this.el.hasClass("startConn")) {
+            connStartElements.push(this.el[0]);
+        }
+
+        if (this.el.hasClass("finishConn")) {
+            connFinishElements.push(this.el[0]);
+        }
+
+        if (this.el.hasClass("connEndPoint")) {
+            connEndPoints.push(this.el[0]);
+        }
+
+        //register connection-draw start handler
+        connStartElements.draggable("destroy");
+
+        //register connection end accept handler
+        connFinishElements.droppable("destroy");
+
+        //register connection endpoint areas
+        connEndPoints.each(function () {
+            connEndPointIds.push($(this).attr("data-id"));
+        });
+
+        this.unregisterSubcomponents(connEndPointIds);
+    };
+
+    /*
+     *
+     */
 
     return ModelEditorModelComponent;
 });

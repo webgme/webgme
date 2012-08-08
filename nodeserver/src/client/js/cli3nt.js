@@ -164,7 +164,7 @@ define(['logManager','eventDispatcher', 'commonUtil', '/socket.io/socket.io.js']
                 baseId = parameters.baseId || "connection";
                 //guid = commonUtil.guid();
                 //TODO: just to make recognisable ID for connection.... delete at some point please
-                guid = "conn_" + parameters.sourceId + "_" + parameters.targetId;
+                guid = "conn_" + parameters.sourceId + "_" + parameters.targetId + "_" + commonUtil.guid();
                 attributes = {name:guid};
                 commands.push({type:"createChild",baseId:baseId,parentId:parameters.parentId,newguid:guid});
                 commands.push({type:"point",id:guid,name:"source",to:parameters.sourceId});

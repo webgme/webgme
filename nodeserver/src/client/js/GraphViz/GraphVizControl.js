@@ -215,8 +215,10 @@ define(['logManager',
 
             for (i = 0; i < childrenDiff.length; i += 1) {
                 childId = childrenDiff[i];
-                this._graphVizView.deleteObject(this._components[childId].componentInstance, this._components[objectId].componentInstance);
-                delete this._components[childId];
+                if (this._components[childId] && this._components[childId].componentInstance) {
+                    this._graphVizView.deleteObject(this._components[childId].componentInstance, this._components[objectId].componentInstance);
+                    delete this._components[childId];
+                }
             }
 
             //Handle children addition
