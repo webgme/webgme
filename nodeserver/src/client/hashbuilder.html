@@ -1,0 +1,124 @@
+<html>
+<head>
+    <script src="lib/require/require.js"></script>
+    <title>This page build up a hash</title>
+    <script>
+        require(["js/socmongo","core/core2","../common/commonUtil","/socket.io/socket.io.js"],function(MNG,CORE,COMMON){
+            var roothash = null;
+            var storage = null;
+            var COUNT = 100;
+            var rootServer = io.connect(COMMON.hashbasedconfig.rootsrv);
+            rootServer.on('connect',function(){
+                alert("the root server is connected!!!");
+            });
+            rootServer.on('newRoot',function(newroot){
+                alert("new root arrived!!! "+newroot);
+                roothash = newroot;
+            });
+
+            openstorage = function(){
+                storage = new MNG(COMMON.hashbasedconfig);
+                storage.open(function(){
+                    alert("the storage opened, you can use other functions now");
+                });
+            };
+            build = function(){
+                var core = new CORE(storage);
+                var objects = [];
+                var createNode = function(parentId,name){
+                    var newobj;
+                    if(core){
+                        if(parentId == null){
+                            objects = [];
+                            newobj = core.createNode();
+                            core.setAttribute(newobj,"name","gyoker");
+                            core.setAttribute(newobj,"BASE","object");
+                            core.setRegistry(newobj,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
+                            core.setRegistry(newobj,"isConnection",false);
+                        }
+                        else{
+                            newobj = core.createNode(objects[parentId]);
+                            core.setAttribute(newobj,"name",name || "default");
+                            core.setAttribute(newobj,"BASE","object");
+                            core.setRegistry(newobj,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
+                            core.setRegistry(newobj,"isConnection",false);
+                        }
+                        objects.push(newobj);
+                    }
+                };
+                var createConnection = function(connId,fromId,toId){
+                    if(core){
+                        core.setAttribute(objects[connId],"BASE","connection");
+                        core.setRegistry(objects[connId],"isConnection",true);
+                        core.setPointer(objects[connId],"source",objects[fromId]);
+                        core.setPointer(objects[connId],"target",objects[toId]);
+                    }
+                };
+                if( storage && storage.opened()){
+                    createNode();
+                    for(var i=0;i<COUNT;i++){
+                        createNode(Math.round(Math.random() * (i-1)),"obj"+i);
+                    }
+                    /*
+                    for(i=0;i<COUNT;i++){
+                        var connect = Math.round(Math.random() * 100) > 30;
+                        if(connect){
+                            createConnection(i,Math.round(Math.random() * COUNT),Math.round(Math.random() * COUNT));
+                        }
+                    }*/
+                    var newkey = core.persist(objects[0],function(err){
+                        if(err){
+
+                        }
+                        else{
+                            rootServer.emit('modifyRoot',null,newkey);
+                        }
+                    });
+                }
+                else{
+                    alert("the storage is not opened!!!");
+                }
+            };
+            move = function(){
+                if(storage && storage.opened()){
+                    var core = new CORE(storage);
+                    core.loadRoot(roothash,function(err,root){
+                        if(err){
+                            alert("unable to load the root!!!");
+                        }else{
+                            core.loadChildren(root,function(err,children){
+                                if(err){
+                                    alert("cannot load children!!!");
+                                }else{
+                                    var childid = Math.round(Math.random()*(children.length-1));
+                                    var position = core.getRegistry(children[childid],"position");
+                                    position.x+=10;
+                                    position.y+=10;
+                                    core.setRegistry(children[childid],"position",position);
+                                    var newkey = core.persist(root,function(err){
+                                        if(err){
+                                            alert("the move was not successfull!!!");
+                                        }
+                                        else{
+                                            alert("object "+core.getAttribute(children[childid],"name")+" was moved!!!");
+                                            rootServer.emit('modifyRoot',roothash,newkey);
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+                else{
+                    alert("the storage is not opened!!![2]");
+                }
+            };
+        });
+    </script>
+</head>
+<body>
+    <input id="openbutton" type="button" value="open" onclick="openstorage()">
+    <input id="buildbutton" type="button" value="build" onclick="build()">
+    <input id="movebutton" type="button" value="move" onclick="move()">
+</body>
+</html>

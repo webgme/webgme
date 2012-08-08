@@ -140,20 +140,15 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             clipboard = ids;
         };
         this.pasteNodes = function(parentpath){
-            /*var parent = currentNodes[parentpath];
-            for(var i=0;i<clipboard.length;i++){
-                storeNode(currentCore.copyNode(currentNodes[clipboard[i]],parent));
-            }
-            */
-            var nodesCopied = function(err,copyarr){
+            copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
                 if(err){
-                    logger.error("hibaa "+err);
+                    logger.error("error during multiple paste!!! "+err);
+                    rollBackModification();
                 }
                 else{
                     modifyRootOnServer();
                 }
-            };
-            copyMultiplePathes(clipboard,parentpath,nodesCopied);
+            });
         };
         this.deleteNode = function(path){
             if(currentNodes[path]){
@@ -240,52 +235,62 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         this.intellyPaste = function(parameters){
-            var i,
-                newnode,
-                simplepaste=true;
+            var pathestocopy = [],
+                simplepaste = true;
             if(parameters.parentId && currentNodes[parameters.parentId]){
-                for(i in parameters){
-                    if(i !== "parentId"){
+                for(var i in parameters){
+                    if(parameters.hasOwnProperty(i) && i !== "parentId"){
+                        pathestocopy.push(i);
                         simplepaste = false;
-                        if(currentNodes[i]){
-                            newnode = currentCore.copyNode(currentNodes[i], currentNodes[parameters.parentId]);
-                            storeNode(newnode);
-                            for(var j in parameters[i].attributes){
-                                currentCore.setAttribute(newnode,j,parameters[i].attributes[j]);
-                            }
-                            for(j in parameters[i].registry){
-                                currentCore.setRegistry((newnode,j,parameters[i].registry[j]));
-                            }
-                        }
-                        else{
-                            logger.error("[l198]the object not found:"+i);
-                        }
                     }
                 }
+
                 if(simplepaste){
-                    for(i=0;i<clipboard.length;i++){
-                        if(currentNodes[clipboard[i]]){
-                            newnode = currentCore.copyNode(currentNodes[clipboard[i]],currentNodes[parameters.parentId]);
-                        }
-                        else{
-                            logger.error("[l208]the object not found:"+clipboard[i]);
-                        }
-                    }
+                    pathestocopy = clipboard;
                 }
-                modifyRootOnServer();
+                copyMultiplePathes(pathestocopy,parameters.parentId,function(err,copyarr){
+                    if(err){
+                        logger.error("error happened during paste!!! "+err);
+                        rollBackModification();
+                    }
+                    else{
+                        for(var i=0;i<copyarr.length;i++){
+                            var from = copyarr[i].from;
+                            var to = copyarr[i].to;
+                            if(parameters.hasOwnProperty(from)){
+                                for(var j in parameters[from].attributes){
+                                    currentCore.setAttribute(currentNodes[to],j,parameters[from].attributes[j]);
+                                }
+                                for(var j in parameters[from].registry){
+                                    currentCore.setRegistry(currentNodes[to],j,parameters[from].registry[j]);
+                                }
+                            }
+                        }
+                        modifyRootOnServer();
+                    }
+                });
             }
             else{
-                logger.error("fraudulent intelligent paste: "+JSON.stringify(parameters));
+                logger.error("new parent not found!!! "+JSON.stringify(parameters));
             }
         };
 
         /*helping funcitons*/
+        var rollBackModification = function(){
+            currentNodes = {};
+            currentCore = new CORE(storage);
+            currentCore.loadRoot(currentRoot,function(err,node){
+                storeNode(node);
+                updateAllUser(null);
+            });
+        };
         var modifyRootOnServer = function(){
             if(currentCore){
                 var newkey;
                 var persistdone = function(err){
                     if(err){
                         logger.error("error during persist: "+err);
+                        rollBackModification();
                     }
                     else{
                         if(rootServer){
@@ -378,7 +383,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         var updateUser = function(userID,patterns,callback){
-            users[userID].PATTERNS = patterns;
+            users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
             if(currentCore){
                 buildTerritory(patterns,function(newpathes){
                 generateTerritoryEvents(userID,newpathes);
