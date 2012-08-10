@@ -5,7 +5,7 @@ var objCounter = 0;
 var emptyObject = function(){
     return { _id:"obj"+objectCounter,
         attributes:{"name":"obj"+objectCounter++,"payload":payload, "attr1" : "value1", "attr2": "value2"},
-        registry:{  "position" : { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)},
+        registry:{  "position" : { "x" : 100, "y":  100},
                     "isConnection" : false},
         relations:{parentId:null,
             childrenIds:[],
@@ -72,6 +72,9 @@ var rGenerateTree = function(level,maxlevel,maxchildren){
     }
     root.relations.baseId = commonbase._id;
     commonbase.relations.inheritorIds.push(root._id);
+
+    root.registry.position = { "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)};
+
     if(level<maxlevel){
         for(i=0;i<maxchildren;i++){
             children = rGenerateTree(level+1,maxlevel,maxchildren);

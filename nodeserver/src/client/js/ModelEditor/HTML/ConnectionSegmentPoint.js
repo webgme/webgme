@@ -220,8 +220,7 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype._onSegmentPointDragMove = function (dx, dy, x, y, event) {
-        var grid = 10,
-            snapDistance = 10;
+        var snapDistance = 10;
 
         if (this.validDrag === false) {
             if ((Math.abs(dx) >= this.settings.minDragDistance) || (Math.abs(dy) >= this.settings.minDragDistance)) {

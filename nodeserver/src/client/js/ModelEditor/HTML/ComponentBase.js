@@ -1,6 +1,6 @@
 "use strict";
 
-define([], function () {
+define(['jquery'], function (jquery) {
 
     var ComponentBase;
 
@@ -25,7 +25,7 @@ define([], function () {
     ComponentBase.prototype.render = function () {};
 
     ComponentBase.prototype.destroy = function () {
-        var i;
+        var self = this;
 
         //component specific cleanup
         //i.e.: delete its own territory
@@ -33,7 +33,10 @@ define([], function () {
 
         //finally remove itself from DOM
         if (this.el) {
-            this.el.remove();
+            this.el.fadeOut('slow', function () {
+                self.el.empty();
+                self.el.remove();
+            });
         }
     };
 

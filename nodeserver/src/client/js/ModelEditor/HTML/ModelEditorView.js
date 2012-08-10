@@ -1,6 +1,7 @@
 "use strict";
 
-define(['logManager',
+define(['jquery',
+    'logManager',
     'clientUtil',
     'commonUtil',
     'raphaeljs',
@@ -8,14 +9,15 @@ define(['logManager',
     './ModelEditorModelComponent.js',
     './ModelEditorConnectionComponent.js',
     './ConnectionPointManager.js',
-    'css!ModelEditorHTMLCSS/ModelEditorView'], function (logManager,
-                                    util,
-                                    commonUtil,
-                                    raphaeljs,
-                                    ComponentBase,
-                                    ModelEditorModelComponent,
-                                    ModelEditorConnectionComponent,
-                                    ConnectionPointManager) {
+    'css!ModelEditorHTMLCSS/ModelEditorView'], function (jquery,
+                                                         logManager,
+                                                        util,
+                                                        commonUtil,
+                                                        raphaeljs,
+                                                        ComponentBase,
+                                                        ModelEditorModelComponent,
+                                                        ModelEditorConnectionComponent,
+                                                        ConnectionPointManager) {
 
     var ModelEditorView;
 
@@ -111,10 +113,6 @@ define(['logManager',
                 "stroke-dasharray": this._connectionInDraw.lineType}
         ).hide();
 
-        /*this._skinParts.childrenContainer.on("click", ".model .port", function (event) {
-            alert($(this).html());
-        });*/
-
         this._skinParts.selectionOutline = $('<div/>', {
             "class" : "selectionOutline"
         });
@@ -156,10 +154,11 @@ define(['logManager',
         if (objDescriptor.kind === "MODEL") {
             newComponent = this._childComponents[componentId] = new ModelEditorModelComponent(objDescriptor);
 
-            this._skinParts.childrenContainer.append(this._childComponents[componentId].el);
+            this._skinParts.childrenContainer.append(this._childComponents[componentId].el.hide());
 
             //hook up reposition handler
             this._childComponents[componentId].el.css("cursor", "move");
+
             this._childComponents[componentId].el.draggable({
                 zIndex: 100000,
                 grid: [self._gridSize, self._gridSize],
@@ -179,6 +178,9 @@ define(['logManager',
 
             //finally render component
             this._childComponents[objDescriptor.id].render();
+
+            this._childComponents[componentId].el.fadeIn('slow', function () {});
+
         } else if (objDescriptor.kind === "CONNECTION") {
             //if it is a CONNECTION, store its info in the connection list
             //if not both ends are already shown the connection will be created when the end-objects appear on the canvas
@@ -199,19 +201,34 @@ define(['logManager',
     ModelEditorView.prototype.deleteComponent = function (component) {
         var componentId = component.getId(),
             endPointsToUpdate = [];
-        if (this._childComponents[componentId]) {
-            this._childComponents[componentId].destroy();
-            delete this._childComponents[componentId];
-        }
 
-        //if it was a connection
-        if (this._connectionList[componentId]) {
-            endPointsToUpdate.push(this._connectionList[componentId].sourceId, this._connectionList[componentId].targetId);
+        if (this._dragOptions) {
+            this._dragOptions.revert = true;
+            this._dragOptions.revertCallback = { "fn": this.deleteComponent,
+                                                 "arg": component };
+            //manually trigger drag-end
+            $('.ui-draggable-dragging').trigger('mouseup');
+        } else {
+            //remove it from the selection (if in there)
+            if (this._selectedComponentIds.indexOf(componentId) !== -1) {
+                this._deselect(componentId, true);
+                this._refreshSelectionOutline();
+            }
 
-            delete this._connectionList[componentId];
+            if (this._childComponents[componentId]) {
+                this._childComponents[componentId].destroy();
+                delete this._childComponents[componentId];
+            }
 
-            this._connectionPointManager.unregisterConnection(componentId);
-            this._updateConnectionsWithEndPoint(endPointsToUpdate);
+            //if it was a connection
+            if (this._connectionList[componentId]) {
+                endPointsToUpdate.push(this._connectionList[componentId].sourceId, this._connectionList[componentId].targetId);
+
+                delete this._connectionList[componentId];
+
+                this._connectionPointManager.unregisterConnection(componentId);
+                this._updateConnectionsWithEndPoint(endPointsToUpdate);
+            }
         }
     };
 
@@ -347,7 +364,7 @@ define(['logManager',
         this._adjustChildrenContainerSize(childComponentId);
 
         if (this._selectedComponentIds.indexOf(childComponentId) !== -1) {
-            this._showSelectionOutline();
+            this._refreshSelectionOutline();
         }
     };
 
@@ -625,7 +642,7 @@ define(['logManager',
     ModelEditorView.prototype._onBackgroundMouseMove = function (event) {
         var mousePos = this._getMousePos(event);
 
-        if (this._selectionRubberBand.isDrawing && this._selectionRubberBand.isDrawing === true) {
+        if (this._selectionRubberBand && this._selectionRubberBand.isDrawing === true) {
             this._selectionRubberBand.bBox.x2 = mousePos.mX;
             this._selectionRubberBand.bBox.y2 = mousePos.mY;
             this._drawSelectionRubberBand();
@@ -635,7 +652,7 @@ define(['logManager',
     ModelEditorView.prototype._onBackgroundMouseUp = function (event) {
         var mousePos = this._getMousePos(event);
 
-        if (this._selectionRubberBand.isDrawing && this._selectionRubberBand.isDrawing === true) {
+        if (this._selectionRubberBand && this._selectionRubberBand.isDrawing === true) {
             this._selectionRubberBand.bBox.x2 = mousePos.mX;
             this._selectionRubberBand.bBox.y2 = mousePos.mY;
 
@@ -763,6 +780,7 @@ define(['logManager',
         this._dragOptions.delta = { "x": 0, "y": 0 };
         this._dragOptions.startPos = { "x": 0, "y": 0 };
         this._dragOptions.draggedComponentId = draggedComponentId;
+        this._dragOptions.helper = helper;
 
         for (i = 0; i < this._selectedComponentIds.length; i += 1) {
             id = this._selectedComponentIds[i];
@@ -814,6 +832,66 @@ define(['logManager',
             "top": this._dragOptions.selectionBBox.y + this._dragOptions.selectionBBox.h + 10 });
         this._skinParts.dragPosPanel.show();
         this._logger.debug("Start dragging from original position X: " + this._dragOptions.startPos.x + ", Y: " + this._dragOptions.startPos.y);
+
+
+        //TODO: remove
+        //this._kamuDelete();
+    };
+
+    ModelEditorView.prototype._kamuDelete = function () {
+        var firstId,
+            self = this;
+
+        if (this._selectedComponentIds.length > 0) {
+            firstId = this._selectedComponentIds[0];
+
+            if (firstId === this._dragOptions.draggedComponentId) {
+                if (this._selectedComponentIds.length > 1) {
+                    firstId = this._selectedComponentIds[1];
+                }
+            }
+        }
+
+        this._kamuTimeout = null;
+
+        if (firstId) {
+            this._logger.warning("KAMUDELETE scheduled for: " + firstId);
+            this._kamuTimeout = setTimeout(function () {
+                self._kamuConcreteDelete(firstId);
+            }, 1000);
+        }
+    };
+
+    ModelEditorView.prototype._kamuConcreteDelete = function (iiiid) {
+        this.onDelete([iiiid]);
+    };
+
+    /*ModelEditorView.prototype._kamuReposition = function () {
+        var firstId,
+            self = this;
+
+        if (this._selectedComponentIds.length > 0) {
+            firstId = this._selectedComponentIds[0];
+
+            if (firstId === this._dragOptions.draggedComponentId) {
+                if (this._selectedComponentIds.length > 1) {
+                    firstId = this._selectedComponentIds[1];
+                }
+            }
+        }
+
+        this._kamuTimeout = null;
+
+        if (firstId) {
+            this._logger.warning("KAMUREPOSITION scheduled for: " + firstId);
+            this._kamuTimeout = setTimeout(function () {
+                self._kamuConcreteDelete(firstId);
+            }, 1000);
+        }
+    };*/
+
+    ModelEditorView.prototype._kamuConcreteReposition = function (iiiid) {
+        this.onDelete([iiiid]);
     };
 
     ModelEditorView.prototype._onDraggableStop = function (event, helper) {
@@ -826,16 +904,72 @@ define(['logManager',
             childPosY,
             copyOpts = {};
 
+        if (this._kamuTimeout) {
+            clearTimeout(this._kamuTimeout);
+            this._kamuTimeout = null;
+        }
+
+        if (this._dragOptions.revert) {
+            this._dragOptions.revert = true;
+            this._revertDrag(this._dragOptions.revertCallback);
+        } else {
+            //move all the selected children
+            for (i = 0; i < this._selectedComponentIds.length; i += 1) {
+                id = this._selectedComponentIds[i];
+                childPosX = this._dragOptions.draggedElements[id].originalPosition.x + dX;
+                childPosX = (childPosX < 0) ? 0 : childPosX;
+
+                childPosY = this._dragOptions.draggedElements[id].originalPosition.y + dY;
+                childPosY = (childPosY < 0) ? 0 : childPosY;
+
+                copyOpts[id] = { "x": childPosX, "y": childPosY };
+
+                if (this._dragOptions.mode === this._dragModes.copy) {
+                    this._dragOptions.draggedElements[id].el.remove();
+                } else {
+                    if ($.isFunction(this._childComponents[id].setPosition)) {
+                        this._childComponents[id].setPosition(childPosX, childPosY);
+                    }
+                    //this._childComponents[id].setPosition(childPosX, childPosY);
+                }
+            }
+
+            if (this._dragOptions.mode === this._dragModes.copy) {
+                //TODO: copyOpts here should not contain x,y for connections
+                this.onDragCopy(copyOpts);
+            } else {
+                this.onReposition(copyOpts);
+            }
+
+            //delete dragOptions
+            for (i in this._dragOptions) {
+                if (this._dragOptions.hasOwnProperty(i)) {
+                    delete this._dragOptions[i];
+                }
+            }
+            this._dragOptions = null;
+
+            //remove UI helpers
+            this._skinParts.dragPosPanel.hide();
+
+            this._showSelectionOutline();
+        }
+    };
+
+    ModelEditorView.prototype._revertDrag = function (callBackOpts) {
+        var i,
+            id,
+            childPosX,
+            childPosY,
+            affectedConnectionEndPoints = [],
+            subComponentId,
+            self = this;
+
         //move all the selected children
         for (i = 0; i < this._selectedComponentIds.length; i += 1) {
             id = this._selectedComponentIds[i];
-            childPosX = this._dragOptions.draggedElements[id].originalPosition.x + dX;
-            childPosX = (childPosX < 0) ? 0 : childPosX;
-
-            childPosY = this._dragOptions.draggedElements[id].originalPosition.y + dY;
-            childPosY = (childPosY < 0) ? 0 : childPosY;
-
-            copyOpts[id] = { "x": childPosX, "y": childPosY };
+            childPosX = this._dragOptions.draggedElements[id].originalPosition.x;
+            childPosY = this._dragOptions.draggedElements[id].originalPosition.y;
 
             if (this._dragOptions.mode === this._dragModes.copy) {
                 this._dragOptions.draggedElements[id].el.remove();
@@ -843,15 +977,22 @@ define(['logManager',
                 if ($.isFunction(this._childComponents[id].setPosition)) {
                     this._childComponents[id].setPosition(childPosX, childPosY);
                 }
-                //this._childComponents[id].setPosition(childPosX, childPosY);
             }
         }
 
-        if (this._dragOptions.mode === this._dragModes.copy) {
-            //TODO: copyOpts here should not contain x,y for connections
-            this.onDragCopy(copyOpts);
-        } else {
-            this.onReposition(copyOpts);
+        if (this._dragOptions.mode === this._dragModes.reposition) {
+            for (i = 0; i < this._selectedComponentIds.length; i += 1) {
+                affectedConnectionEndPoints.push(this._selectedComponentIds[i]);
+                //TODO: _displayedComponentIDs are not handled correctly in the new decorator FIXIT!
+                for (subComponentId in this._displayedComponentIDs) {
+                    if (this._displayedComponentIDs.hasOwnProperty(subComponentId)) {
+                        if (this._displayedComponentIDs[subComponentId] === this._selectedComponentIds[i]) {
+                            affectedConnectionEndPoints.push(subComponentId);
+                        }
+                    }
+                }
+            }
+            this._updateConnectionsWithEndPoint(affectedConnectionEndPoints);
         }
 
         //delete dragOptions
@@ -867,6 +1008,9 @@ define(['logManager',
 
         this._showSelectionOutline();
 
+        if (callBackOpts && callBackOpts.fn) {
+            callBackOpts.fn.call(self, callBackOpts.arg);
+        }
     };
 
     ModelEditorView.prototype._onDraggableDrag = function (event, helper) {
@@ -1154,6 +1298,12 @@ define(['logManager',
     /*
      * SELECTION OUTLINE
      */
+
+    ModelEditorView.prototype._refreshSelectionOutline = function () {
+        if (this._skinParts.selectionOutline.is(":visible")) {
+            this._showSelectionOutline();
+        }
+    };
 
     ModelEditorView.prototype._showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
