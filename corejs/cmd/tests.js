@@ -186,7 +186,7 @@ CoreType) {
 		createNode("f", "b");
 
 		for(var i in nodes) {
-			for(var j in {a: 1}) {
+			for(var j in nodes) {
 				core.setPointer(nodes[i], "ptr" + j, nodes[j]);
 			}
 		}

@@ -342,7 +342,7 @@ function (ASSERT, SHA1, UTIL) {
 			return {
 				common: common.join("/"),
 				first: first.slice(i).join("/"),
-				firstLength: second.length - i,
+				firstLength: first.length - i,
 				second: second.slice(i).join("/")
 			};
 		};
