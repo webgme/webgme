@@ -21,13 +21,10 @@ function (ASSERT, SHA1, UTIL) {
 		return typeof relid === "string";
 	};
 
-	var EMPTY_STRING = "";
-
 	var joinStringPaths = function (first, second) {
 		ASSERT(typeof first === "string" && typeof second === "string");
 
-		return second === EMPTY_STRING ? first : (first === EMPTY_STRING ? second : first + "/"
-		+ second);
+		return second ? (first ? first + "/" + second : second) : first;
 	};
 
 	var PersistentTree = function (storage) {
@@ -271,9 +268,9 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(isValidNode(node));
 			ASSERT(base === undefined || isValidNode(base));
 
-			var path = EMPTY_STRING;
+			var path = "";
 			while( node.parent && node !== base ) {
-				if( path === EMPTY_STRING ) {
+				if( path === "" ) {
 					path = node.relid;
 				}
 				else {
@@ -288,7 +285,7 @@ function (ASSERT, SHA1, UTIL) {
 		var parseStringPath = function (path) {
 			ASSERT(typeof path === "string");
 
-			return path.length === 0 ? [] : path.split("/").reverse();
+			return path ? path.split("/").reverse() : [];
 		};
 
 		var getRelid = function (node) {
@@ -329,6 +326,25 @@ function (ASSERT, SHA1, UTIL) {
 			}
 
 			return [ a[i], b[j] ];
+		};
+
+		var getCommonPathPrefixData = function (first, second) {
+			ASSERT(typeof first === "string" && typeof second === "string");
+			
+			first = first ? first.split("/") : [];
+			second = second ? second.split("/") : [];
+
+			var common = [];
+			for(var i = 0; first[i] === second[i] && i < first.length; ++i) {
+				common.push(first[i]);
+			}
+			
+			return {
+				common: common.join("/"),
+				first: first.slice(i).join("/"),
+				firstLength: second.length - i,
+				second: second.slice(i).join("/")
+			};
 		};
 
 		var isAncestorOf = function (first, second) {
@@ -631,6 +647,7 @@ function (ASSERT, SHA1, UTIL) {
 			getStringPath: getStringPath,
 			joinStringPaths: joinStringPaths,
 			parseStringPath: parseStringPath,
+			getCommonPathPrefixData: getCommonPathPrefixData,
 			getRoot: getRoot,
 			getRelid: getRelid,
 			getCommonAncestor: getCommonAncestor,

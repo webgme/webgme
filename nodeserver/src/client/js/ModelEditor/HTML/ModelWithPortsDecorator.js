@@ -111,11 +111,12 @@ define(['logManager',
             diffChildrenIds,
             i,
             childPort,
-            leftPorts = 0,
-            rightPorts = 0;
+            leftPorts,
+            rightPorts;
 
         //let the ModelComponent know that the decorator starts refreshing itself
-        this.ownerComponent.beforeDecoratorUpdate();
+        //TODO: theoretically is enough to resubscribe to events, they will be subscribed to only once
+        //this.ownerComponent.beforeDecoratorUpdate();
 
         if (objectId === this.id) {
             //the container node has been changed
@@ -283,9 +284,9 @@ define(['logManager',
     ModelWithPortsDecorator.prototype.destroy = function () {
         var i;
 
-        this.ownerComponent.beforeDecoratorUpdate();
+        //this.ownerComponent.beforeDecoratorUpdate();
 
-        this.project.updateTerritory(this.territoryId, []);
+        this.project.updateTerritory(this.territoryId, {});
 
         for (i in this.ports) {
             if (this.ports.hasOwnProperty(i)) {

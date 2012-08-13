@@ -180,19 +180,21 @@ CoreType) {
 
 		createNode("a");
 		createNode("b", "a");
-		createNode("c", "a");
-		createNode("d", "b");
-		createNode("e", "b");
+		createNode("c", "b");
+		createNode("d", "c");
+		createNode("e", "a");
+		createNode("f", "b");
 
-		core.setPointer(nodes.b, "ptr", nodes.e);
-		core.setPointer(nodes.c, "ptr", nodes.a);
-		core.setPointer(nodes.d, "ptr", nodes.c);
-		// core.deletePointer(nodes.c, "ptr");
+		for(var i in nodes) {
+			for(var j in {a: 1}) {
+				core.setPointer(nodes[i], "ptr" + j, nodes[j]);
+			}
+		}
+		
+		//core.deleteNode(nodes.d);
 
-		// core.deleteNode(nodes.d);
-
-		nodes.f = core.copyNode(nodes.b, nodes.c);
-		core.setAttribute(nodes.f, "name", "f");
+		nodes.g = core.copyNode(nodes.c, nodes.f);
+		core.setAttribute(nodes.g, "name", "g");
 
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
@@ -338,7 +340,7 @@ CoreType) {
 	};
 
 	tests[5] = function (storage, root, callback) {
-		core = new CoreType(storage);
+		core = new Core(storage);
 
 		core.loadRoot(root, function (err, node) {
 			if( err ) {

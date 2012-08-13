@@ -90,7 +90,7 @@ function (ASSERT, PerTree, UTIL) {
 			var keys = Object.keys(pertree.getProperty(node, ATTRIBUTES));
 			var i = keys.length;
 			while( --i >= 0 ) {
-				if( keys[i].charAt(0) === "_" ) {
+				if( keys[i].charAt(0) === "" ) {
 					keys.splice(i, 1);
 				}
 			}
@@ -307,6 +307,7 @@ function (ASSERT, PerTree, UTIL) {
 
 					for( var i = 0; i < list.length; ++i ) {
 						var entry = list[i];
+
 						if( entry.p ) {
 							var newSource, newTarget;
 
@@ -345,20 +346,168 @@ function (ASSERT, PerTree, UTIL) {
 			return newnode;
 		};
 
-		// TODO: this is the lazy solution, make it fast
+		var copyNode2 = function (node, parent) {
+			ASSERT(isValidNode(node) && isValidNode(parent));
+
+			var newNode;
+
+			if( parent ) {
+				var ancestor = pertree.getCommonAncestor(node, parent);
+				ASSERT(ancestor[0] === ancestor[1]);
+
+				// cannot copy inside of itself
+				if( ancestor[0] === node ) {
+					return null;
+				}
+
+				newNode = pertree.copyNode(node);
+				var relid = createRelid(parent.data, node.relid);
+				pertree.setParent(newNode, parent, relid);
+
+				var ancestorOverlays = pertree.getChild(ancestor[0], OVERLAYS);
+				var ancestorNewPath = pertree.getStringPath(newNode, ancestor[0]);
+
+				var base = pertree.getParent(node);
+				var baseOldPath = pertree.getRelid(node);
+				var aboveAncestor = true;
+
+				while( base ) {
+					var baseOverlays = pertree.getChild(base, OVERLAYS);
+					var list = overlayQuery(baseOverlays, baseOldPath);
+
+					var relativePath = aboveAncestor ? pertree.getStringPath(base, ancestor[0])
+					: pertree.getStringPath(ancestor[0], base);
+
+					for( var i = 0; i < list.length; ++i ) {
+						var entry = list[i];
+
+						if( entry.p ) {
+							ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
+							ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
+
+							var source, target, overlays;
+							if( aboveAncestor ) {
+								source = ancestorNewPath + entry.s.substr(baseOldPath.length);
+								target = relativePath + entry.t;
+								overlays = ancestorOverlays;
+							}
+							else if( base === ancestor[0] ) {
+
+								var data = pertree
+								.getCommonPathPrefixData(ancestorNewPath, entry.t);
+
+								overlays = newNode;
+								while( data.firstLength-- > 0 ) {
+									overlays = pertree.getParent(overlays);
+								}
+								overlays = pertree.getChild(overlays, OVERLAYS);
+
+								source = pertree.joinStringPaths(data.first, entry.s
+								.substry(baseOldPath.length + 1));
+								target = data.second;
+							}
+							else {
+								ASSERT(entry.s.substr(0, relativePath.length) === relativePath);
+
+								source = relativePath + "/" + ancestorNewPath
+								+ entry.s.substr(relativePath.length);
+								target = entry.t;
+								overlays = baseOverlays;
+							}
+
+							overlayInsert(overlays, source, entry.n, target);
+						}
+					}
+
+					aboveAncestor = aboveAncestor && base !== ancestor[0];
+
+					baseOldPath = pertree.getRelid(base) + "/" + baseOldPath;
+					base = pertree.getParent(base);
+				}
+			}
+			else {
+				newNode = pertree.copyNode(node);
+			}
+
+			return newNode;
+		};
+
 		var moveNode = function (node, parent) {
 			ASSERT(isValidNode(node) && isValidNode(parent));
 
-			if( parent === pertree.getParent(node) ) {
-				return node;
+			var ancestor = pertree.getCommonAncestor(node, parent);
+			ASSERT(ancestor[0] === ancestor[1]);
+
+			// cannot move inside of itself
+			if( ancestor[0] === node ) {
+				return null;
 			}
 
-			var newnode = copyNode(node, parent);
-			if( newnode ) {
-				deleteNode(node);
+			var relid = createRelid(parent.data, node.relid);
+
+			var ancestorOverlays = pertree.getChild(ancestor[0], OVERLAYS);
+			var ancestorNewNodePath = pertree.joinStringPaths(pertree.getStringPath(parent,
+			ancestor[0]), relid);
+
+			var base = pertree.getParent(node);
+			var baseOldNodePath = pertree.getRelid(node);
+			var baseBelowAncestor = false;
+
+			while( base ) {
+				var baseOverlays = pertree.getChild(base, OVERLAYS);
+				var list = overlayQuery(baseOverlays, baseOldNodePath);
+
+				var ancestorBasePath = baseBelowAncestor ? pertree.getStringPath(ancestor[0], base)
+				: pertree.getStringPath(base, ancestor[0]);
+
+				for( var i = 0; i < list.length; ++i ) {
+					var entry = list[i];
+
+					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
+
+					var newSource, newTarget;
+					if( entry.p ) {
+						if( baseBelowAncestor ) {
+							ASSERT(entry.s.substr(0, ancestorBasePath.length) === ancestorBasePath);
+
+							newSource = ancestorBasePath + "/" + ancestorNewNodePath
+							+ entry.s.substr(ancestorBasePath.length);
+
+							overlayInsert(baseOverlays, newSource, entry.n, entry.t);
+						}
+						else {
+							ASSERT(entry.s.substr(0, baseOldNodePath.length) === baseOldNodePath);
+
+							newSource = ancestorNewNodePath
+							+ entry.s.substr(baseOldNodePath.length);
+							newTarget = ancestorBasePath + entry.t;
+
+							overlayInsert(ancestorOverlays, newSource, entry.n, newTarget);
+						}
+					}
+					else {
+						if( baseBelowAncestor ) {
+							ASSERT(entry.t.substr(0, ancestorBasePath.length) === ancestorBasePath);
+
+							newTarget = ancestorBasePath + "/" + ancestorNewNodePath
+							+ entry.t.substr(ancestorBasePath.length);
+
+//							overlayInsert(baseOverlays)
+						}
+						else {
+						}
+					}
+				}
+
+				if( base === ancestor[0] ) {
+					baseBelowAncestor = true;
+				}
+
+				baseOldNodePath = pertree.getRelid(base) + "/" + baseOldNodePath;
+				base = pertree.getParent(base);
 			}
 
-			return newnode;
+			return null;
 		};
 
 		var persist = function (root, callback) {
@@ -395,12 +544,10 @@ function (ASSERT, PerTree, UTIL) {
 			children.wait();
 		};
 
-		var EMPTY_STRING = "";
-
 		var getPointerNames = function (node) {
 			ASSERT(isValidNode(node));
 
-			var source = EMPTY_STRING;
+			var source = "";
 			var names = [];
 
 			do {
@@ -414,7 +561,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( source === EMPTY_STRING ) {
+				if( source === "" ) {
 					source = pertree.getRelid(node);
 				}
 				else {
@@ -430,7 +577,7 @@ function (ASSERT, PerTree, UTIL) {
 		var getPointerPath = function (node, name) {
 			ASSERT(isValidNode(node) && typeof name === "string");
 
-			var source = EMPTY_STRING;
+			var source = "";
 			var target;
 
 			do {
@@ -445,7 +592,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( source === EMPTY_STRING ) {
+				if( source === "" ) {
 					source = pertree.getRelid(node);
 				}
 				else {
@@ -502,7 +649,7 @@ function (ASSERT, PerTree, UTIL) {
 		var loadPointer = function (node, name, callback) {
 			ASSERT(isValidNode(node) && name && typeof callback === "function");
 
-			var source = EMPTY_STRING;
+			var source = "";
 			var target;
 
 			do {
@@ -517,7 +664,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( source === EMPTY_STRING ) {
+				if( source === "" ) {
 					source = pertree.getRelid(node);
 				}
 				else {
@@ -539,7 +686,7 @@ function (ASSERT, PerTree, UTIL) {
 		var getCollectionNames = function (node) {
 			ASSERT(isValidNode(node));
 
-			var target = EMPTY_STRING;
+			var target = "";
 			var names = [];
 
 			do {
@@ -555,7 +702,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( target === EMPTY_STRING ) {
+				if( target === "" ) {
 					target = pertree.getRelid(node);
 				}
 				else {
@@ -574,7 +721,7 @@ function (ASSERT, PerTree, UTIL) {
 			name += COLLSUFFIX;
 
 			var result = new UTIL.AsyncArray(callback);
-			var target = EMPTY_STRING;
+			var target = "";
 
 			do {
 				var child = pertree.getChild(node, OVERLAYS);
@@ -591,7 +738,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( target === EMPTY_STRING ) {
+				if( target === "" ) {
 					target = pertree.getRelid(node);
 				}
 				else {
@@ -610,7 +757,7 @@ function (ASSERT, PerTree, UTIL) {
 			name += COLLSUFFIX;
 
 			var result = [];
-			var target = EMPTY_STRING;
+			var target = "";
 
 			do {
 				var child = pertree.getChild(node, OVERLAYS);
@@ -629,7 +776,7 @@ function (ASSERT, PerTree, UTIL) {
 					}
 				}
 
-				if( target === EMPTY_STRING ) {
+				if( target === "" ) {
 					target = pertree.getRelid(node);
 				}
 				else {
@@ -645,7 +792,7 @@ function (ASSERT, PerTree, UTIL) {
 		var deletePointer = function (node, name) {
 			ASSERT(isValidNode(node) && typeof name === "string");
 
-			var source = EMPTY_STRING;
+			var source = "";
 
 			do {
 				var overlays = pertree.getChild(node, OVERLAYS);
@@ -657,7 +804,7 @@ function (ASSERT, PerTree, UTIL) {
 					return true;
 				}
 
-				if( source === EMPTY_STRING ) {
+				if( source === "" ) {
 					source = pertree.getRelid(node);
 				}
 				else {

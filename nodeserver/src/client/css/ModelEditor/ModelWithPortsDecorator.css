@@ -1,6 +1,6 @@
 .model.modelWithPorts {
-    min-height: 100px;
-    min-width: 100px;
+    min-height: 70px;
+    min-width: 70px;
     float: left;
     border: 2px solid #666666;
     background-color: #ccc;
@@ -18,17 +18,12 @@
 .model.modelWithPorts div.modelTitle {
     color: #fff;
     text-shadow: #000 0 1px;
-    box-shadow: 5px;
     padding: 5px;
-    font-size: 11px;
+    font-size: 9px;
     font-weight: bold;
     text-transform: uppercase;
     background: -moz-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
-    background: -webkit-gradient(linear, left top, right top,
-    color-stop(0, rgb(0,0,0)),
-    color-stop(0.50, rgb(79,79,79)),
-    color-stop(1, rgb(21,21,21)));
-    background: -webkit-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
+    background: -webkit-gradient(linear, left top, right top,color-stop(0, rgb(0,0,0)),color-stop(0.50, rgb(79,79,79)),color-stop(1, rgb(21,21,21)));
     background: -ms-linear-gradient(left center, rgb(0,0,0), rgb(79,79,79), rgb(21,21,21));
     border-bottom: 1px solid #ddd;
     -webkit-border-top-left-radius: 10px;
@@ -86,7 +81,7 @@
 
 .modelWithPorts .connEndPoint.top,
 .modelWithPorts .connEndPoint.bottom {
-    height: 3px;
+    height: 0;
     background-color: #ff0000;
     position: absolute;
     left: 15px;
@@ -104,7 +99,7 @@
 
 .modelWithPorts .connEndPoint.left,
 .modelWithPorts .connEndPoint.right {
-    width: 3px;
+    width: 0;
     background-color: #ff0000;
     position: absolute;
     top: 15px;
