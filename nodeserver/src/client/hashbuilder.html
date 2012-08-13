@@ -6,7 +6,7 @@
         require(["js/socmongo","core/core2","../common/commonUtil","/socket.io/socket.io.js"],function(MNG,CORE,COMMON){
             var roothash = null;
             var storage = null;
-            var COUNT = 100;
+            var COUNT = 1000;
             var rootServer = io.connect(COMMON.hashbasedconfig.rootsrv);
             rootServer.on('connect',function(){
                 alert("the root server is connected!!!");
@@ -33,6 +33,7 @@
                             newobj = core.createNode();
                             core.setAttribute(newobj,"name","gyoker");
                             core.setAttribute(newobj,"BASE","object");
+                            core.setAttribute(newobj,"isPort",false);
                             core.setRegistry(newobj,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
                             core.setRegistry(newobj,"isConnection",false);
                         }
@@ -40,6 +41,7 @@
                             newobj = core.createNode(objects[parentId]);
                             core.setAttribute(newobj,"name",name || "default");
                             core.setAttribute(newobj,"BASE","object");
+                            core.setAttribute(newobj,"isPort",true);
                             core.setRegistry(newobj,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
                             core.setRegistry(newobj,"isConnection",false);
                         }
@@ -59,8 +61,7 @@
                     for(var i=0;i<COUNT;i++){
                         createNode(Math.round(Math.random() * (i-1)),"obj"+i);
                     }
-                    /*
-                    for(i=0;i<COUNT;i++){
+                    /*for(i=1;i<COUNT;i++){
                         var connect = Math.round(Math.random() * 100) > 30;
                         if(connect){
                             createConnection(i,Math.round(Math.random() * COUNT),Math.round(Math.random() * COUNT));

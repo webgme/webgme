@@ -10,6 +10,7 @@ define([   'order!jquery',
     'commonUtil',
     'clientUtil',
     'order!js/cli3nt',
+    'order!js/corewrapper',
     'order!js/ObjectBrowser/TreeBrowserControl',
     'order!js/ObjectBrowser/JSTreeBrowserWidget',
     'order!js/ObjectBrowser/DynaTreeBrowserWidget',
@@ -27,6 +28,7 @@ define([   'order!jquery',
                                                             commonUtil,
                                                             util,
                                                             Client,
+                                                            Core,
                                                             TreeBrowserControl,
                                                             JSTreeBrowserWidget,
                                                             DynaTreeBrowserWidget,
@@ -158,7 +160,12 @@ define([   'order!jquery',
             serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
         }
 
-        client = new Client(serverLocation);
+        if(commonUtil.hashbasedconfig.inuse){
+            client = new Core(commonUtil.hashbasedconfig);
+        }
+        else{
+            client = new Client(serverLocation);
+        }
         //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
         tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 

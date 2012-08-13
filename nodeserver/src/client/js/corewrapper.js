@@ -333,7 +333,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 }
             };
             var loadpath = function(path,childrenaswell){
-                counter++;
                 var pathloaded = function(err,node){
                     storeNode(node);
 
@@ -359,6 +358,10 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 }
             };
 
+            counter = 0;
+            for(i in patterns){
+                counter++;
+            }
             for(i in patterns){
                 loadpath(i,patterns[i].children !== undefined);
             }
@@ -493,7 +496,13 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             return getNodePath(node);
         };
         this.getChildrenIds = function(){
-            return core.getChildrenRelids(node);
+            var children = core.getChildrenRelids(node);
+            var ownpath = core.getStringPath(node);
+            ownpath += ownpath === "" ? "" : "/";
+            for(var i=0;i<children.length;i++){
+                children[i]=ownpath+children[i];
+            }
+            return children;
         };
         this.getBaseId = function(){
             /*return null;*/

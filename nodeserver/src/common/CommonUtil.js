@@ -106,8 +106,14 @@ define([], function () {
             }
         },
         hashbasedconfig: {
-            mongosrv: "http://localhost:888",
-            rootsrv: "http://localhost:999"
+            inuse          : true,
+            serverlocation : "http://localhost",
+            dataport       : 888,
+            rootport       : 999,
+            mongosrv       : "http://localhost:888",
+            rootsrv        : "http://localhost:999",
+            project        : "hash",
+            branch         : "test"
         }
     };
 });
