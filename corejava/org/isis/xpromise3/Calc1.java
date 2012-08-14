@@ -20,11 +20,9 @@ package org.isis.xpromise3;
 
 public abstract class Calc1<Type, Arg> extends Promise<Type> {
 	public Calc1(Promise<Arg> arg) {
-		
 	}
 
 	public Calc1(Arg arg) {
-		
 	}
 	
 	public abstract Promise<Type> calc(Arg arg1);

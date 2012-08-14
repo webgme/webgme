@@ -20,25 +20,23 @@ package org.isis.xpromise3;
 
 public class PromiseFileCount { 
 
-	static final class LoadDirectory extends Calc1<String[], String> {
-		public LoadDirectory(String arg) {
-			super(arg);
-		}
-		
-		public Promise<String[]> calc(String path) {
-			assert(path != null);
-			
-			int size = 5 - path.length();
-			if( size < 0 ) {
-				size = 0;
+	static final Promise<String[]> loadDirectory(String path) {
+		return new Calc1<String[], String>(path) {
+			public Promise<String[]> calc(String path) {
+				assert(path != null);
+				
+				int size = 5 - path.length();
+				if( size < 0 ) {
+					size = 0;
+				}
+				
+				String[] list = new String[size];
+				for(int i = 0; i < size; ++i)
+					list[i] = path + "/"+ i;
+				
+				return new Constant<String[]>(list);
 			}
-			
-			String[] list = new String[size];
-			for(int i = 0; i < size; ++i)
-				list[i] = path + "/"+ i;
-			
-			return new Constant<String[]>(list);
-		}
+		};
 	};
 	
 	static final class GetDirectorySize extends Calc1<Integer, String> {
@@ -49,7 +47,7 @@ public class PromiseFileCount {
 		public Promise<Integer> calc(String dir) {
 			assert(dir != null);
 			
-			Promise<String[]> subdirs = new LoadDirectory(dir);
+			Promise<String[]> subdirs = loadDirectory(dir);
 			return new Calc1<Integer, String[]>(subdirs) {
 				public Promise<Integer> calc(String[] subdirs) {
 					assert(subdirs != null);
