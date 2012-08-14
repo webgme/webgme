@@ -74,6 +74,14 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.removeControls = function () {
+        this._removingControls = true;
+
+        //send mouseup to document to fake drag-end
+        //TODO: make sure to send mouseup only if the point or control points are really dragged
+        var fakeMouseUp = document.createEvent('MouseEvent');
+        fakeMouseUp.initEvent('mouseup', true, true);
+        document.dispatchEvent(fakeMouseUp);
+
         //unhook drag handlers
         if (this.midPoint) {
             this.midPoint.undrag();
@@ -103,6 +111,7 @@ define(['logManager',
             this.line.remove();
             this.line = null;
         }
+        this._removingControls = false;
     };
 
     ConnectionSegmentPoint.prototype.addControls = function () {
@@ -256,8 +265,10 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype._onSegmentPointDragEnd = function (event) {
-        if (this.validDrag === true) {
-            this.connectionComponent.saveSegmentPoints();
+        if (this._removingControls !== true) {
+            if (this.validDrag === true) {
+                this.connectionComponent.saveSegmentPoints();
+            }
         }
         event.stopPropagation();
     };
@@ -276,7 +287,9 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.onControlPointBeforeDragEnd = function (event) {
-        this.connectionComponent.saveSegmentPoints();
+        if (this._removingControls !== true) {
+            this.connectionComponent.saveSegmentPoints();
+        }
         event.stopPropagation();
     };
     /*END OF BEFORE CONTROL POINT EVENT HANDLERS*/
@@ -294,7 +307,9 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.onControlPointAfterDragEnd = function (event) {
-        this.connectionComponent.saveSegmentPoints();
+        if (this._removingControls !== true) {
+            this.connectionComponent.saveSegmentPoints();
+        }
         event.stopPropagation();
     };
     /*END OF AFTER-CONTROL POINT EVENT HANDLERS*/
