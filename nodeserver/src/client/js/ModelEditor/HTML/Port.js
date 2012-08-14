@@ -47,5 +47,17 @@ define(['logManager',
         }
     };
 
+    Port.prototype.destroy = function (options) {
+        var self = this;
+
+        //finally remove itself from DOM
+        if (this.el) {
+            this.el.fadeOut('slow', function () {
+                self.el.empty();
+                self.el.remove();
+            });
+        }
+    };
+
     return Port;
 });

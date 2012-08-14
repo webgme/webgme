@@ -210,6 +210,11 @@ define(['jquery',
             //manually trigger drag-end
             $('.ui-draggable-dragging').trigger('mouseup');
         } else {
+            if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
+                //manually trigger drag-end
+                $('.ui-draggable-dragging').trigger('mouseup');
+            }
+
             //remove it from the selection (if in there)
             if (this._selectedComponentIds.indexOf(componentId) !== -1) {
                 this._deselect(componentId, true);
@@ -234,6 +239,12 @@ define(['jquery',
     };
 
     ModelEditorView.prototype.updateComponent = function (component, objDescriptor) {
+
+        if (this._connectionInDraw && this._connectionInDraw.source === objDescriptor.id) {
+            //manually trigger drag-end
+            $('.ui-draggable-dragging').trigger('mouseup');
+        }
+
         if (this._childComponents[objDescriptor.id]) {
             this._childComponents[objDescriptor.id].update(objDescriptor);
         }
