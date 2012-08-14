@@ -62,7 +62,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     });
                 });
             }
-            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[]};
+            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{}};
             return guid;
         };
         this.removeUI = function(guid){
@@ -377,12 +377,16 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
 
             /*others*/
             for(i=0;i<newpathes.length;i++){
+                var newkey = currentCore.getKey(currentNodes[newpathes[i]]);
                 if(user.PATHES.indexOf(newpathes[i]) === -1){
                     user.UI.onEvent("load",newpathes[i]);
                 }
                 else{
-                    user.UI.onEvent("update",newpathes[i]);
+                    if(user.KEYS[newpathes[i]] !== newkey){
+                        user.UI.onEvent("update",newpathes[i]);
+                    }
                 }
+                user.KEYS[newpathes[i]] = newkey;
             }
         };
         var updateUser = function(userID,patterns,callback){
