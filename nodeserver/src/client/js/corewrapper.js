@@ -22,7 +22,9 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             currentRoot = null,
             currentCore = null,
             clipboard = null,
-            rootServer = null/*,
+            rootServer = null,
+            pendingRoot = null,
+            updating = false/*,
             previousNodes = {},
             previousRoot = null,
             previousCore = null*/;
@@ -41,7 +43,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         };
 
         /*User Interface handling*/
-        this.addUI = function(ui){
+        this.addUI = function(ui,oneevent){
             var guid = GUID();
             var count = 0;
             for(var i in users){
@@ -52,17 +54,11 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 storage.open(function(){
                     rootServer = io.connect(options.rootsrv);
                     rootServer.on('newRoot',function(newroot){
-                        currentRoot = newroot;
-                        currentNodes = {};
-                        currentCore = new CORE(storage);
-                        currentCore.loadRoot(currentRoot,function(err,node){
-                            storeNode(node);
-                            updateAllUser(null);
-                        });
+                        newRoot(newroot);
                     });
                 });
             }
-            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{}};
+            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false};
             return guid;
         };
         this.removeUI = function(guid){
@@ -248,29 +244,44 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 if(simplepaste){
                     pathestocopy = clipboard;
                 }
-                copyMultiplePathes(pathestocopy,parameters.parentId,function(err,copyarr){
-                    if(err){
-                        logger.error("error happened during paste!!! "+err);
-                        rollBackModification();
+                if(pathestocopy.length < 1){
+                    logger.error("there is nothing to copy!!!");
+                } else if(pathestocopy.length === 1){
+                    var newnode = currentCore.copyNode(currentNodes[pathestocopy[0]],currentNodes[parameters.parentId]);
+                    storeNode(newnode);
+                    if(parameters.hasOwnProperty(pathestocopy[0])){
+                        for(var j in parameters[pathestocopy[0]].attributes){
+                            currentCore.setAttribute(newnode,j,parameters[pathestocopy[0]].attributes[j]);
+                        }
+                        for(j in parameters[pathestocopy[0]].registry){
+                            currentCore.setRegistry(newnode,j,parameters[pathestocopy[0]].registry[j]);
+                        }
                     }
-                    else{
-                        for(var i=0;i<copyarr.length;i++){
-                            var from = copyarr[i].from;
-                            var to = copyarr[i].to;
-                            if(parameters.hasOwnProperty(from)){
-                                for(var j in parameters[from].attributes){
-                                    currentCore.setAttribute(currentNodes[to],j,parameters[from].attributes[j]);
-                                }
-                                for(var j in parameters[from].registry){
-                                    currentCore.setRegistry(currentNodes[to],j,parameters[from].registry[j]);
+                    modifyRootOnServer();
+                } else {
+                    copyMultiplePathes(pathestocopy,parameters.parentId,function(err,copyarr){
+                        if(err){
+                            logger.error("error happened during paste!!! "+err);
+                            rollBackModification();
+                        }
+                        else{
+                            for(var i=0;i<copyarr.length;i++){
+                                var from = copyarr[i].from;
+                                var to = copyarr[i].to;
+                                if(parameters.hasOwnProperty(from)){
+                                    for(var j in parameters[from].attributes){
+                                        currentCore.setAttribute(currentNodes[to],j,parameters[from].attributes[j]);
+                                    }
+                                    for(j in parameters[from].registry){
+                                        currentCore.setRegistry(currentNodes[to],j,parameters[from].registry[j]);
+                                    }
                                 }
                             }
+                            modifyRootOnServer();
                         }
-                        modifyRootOnServer();
-                    }
-                });
-            }
-            else{
+                    });
+                }
+            } else{
                 logger.error("new parent not found!!! "+JSON.stringify(parameters));
             }
         };
@@ -284,6 +295,15 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 updateAllUser(null);
             });
         };
+        var newRoot = function(newroot){
+            currentRoot = newroot;
+            currentNodes = {};
+            currentCore = new CORE(storage);
+            currentCore.loadRoot(currentRoot,function(err,node){
+                storeNode(node);
+                updateAllUser(null);
+            });
+        }
         var modifyRootOnServer = function(){
             if(currentCore){
                 var newkey;
@@ -318,7 +338,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         var storeNode = function(node){
             var path = getNodePath(node);
             if(!currentNodes[path]){
-                console.log("storing node:"+JSON.stringify(node));
                 currentNodes[path] = node;
             }
         };
@@ -354,7 +373,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     pathloaded(null,currentNodes[path]);
                 }
                 else{
-                    currentCore.loadByPath(path,pathloaded);
+                    currentCore.loadByPath(currentNodes["root"],path,pathloaded);
                 }
             };
 
@@ -368,10 +387,11 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         };
         var generateTerritoryEvents = function(userID,newpathes){
             var user = users[userID];
+            var events = [];
             /*unload*/
             for(var i=0;i<user.PATHES.length;i++){
                 if(newpathes.indexOf(user.PATHES[i]) === -1){
-                    user.UI.onEvent("unload",user.PATHES[i]);
+                    events.push({etype:"unload",eid:user.PATHES[i]});
                 }
             }
 
@@ -379,14 +399,24 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             for(i=0;i<newpathes.length;i++){
                 var newkey = currentCore.getKey(currentNodes[newpathes[i]]);
                 if(user.PATHES.indexOf(newpathes[i]) === -1){
-                    user.UI.onEvent("load",newpathes[i]);
+                    events.push({etype:"load",eid:newpathes[i]});
                 }
                 else{
                     if(user.KEYS[newpathes[i]] !== newkey){
-                        user.UI.onEvent("update",newpathes[i]);
+                        events.push({etype:"update",eid:newpathes[i]});
                     }
                 }
                 user.KEYS[newpathes[i]] = newkey;
+            }
+
+            /*depending on the oneevent attribute we send it in one array or in events...*/
+            if(user.ONEEVENT){
+                user.UI.onOneEvent(events);
+            }
+            else{
+                for(i=0;i<events.length;i++){
+                    user.UI.onEvent(events[i].etype,events[i].eid);
+                }
             }
         };
         var updateUser = function(userID,patterns,callback){
@@ -426,7 +456,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             if(node && parent){
                 var newnode = currentCore.moveNode(node,parent);
                 storeNode(newnode);
-                delete currentNodes[path];
+                //delete currentNodes[path];
                 return currentNodes[getNodePath(newnode)];
             }
             else{
