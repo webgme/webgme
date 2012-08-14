@@ -230,6 +230,7 @@ function (ASSERT, SHA1, UTIL) {
 		var setParent = function (node, parent, relid) {
 			ASSERT(isValidNode(node) && isValidRelid(relid));
 			ASSERT(node.parent === null && !node.relid);
+			ASSERT(parent.data[relid] === undefined);
 
 			mutate(parent);
 			parent.data[relid] = node.data[KEYNAME] || node.data;

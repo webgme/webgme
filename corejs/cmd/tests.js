@@ -193,8 +193,8 @@ CoreType) {
 		
 		//core.deleteNode(nodes.d);
 
-		nodes.g = core.copyNode(nodes.c, nodes.f);
-		core.setAttribute(nodes.g, "name", "g");
+		core.moveNode(nodes.c, nodes.f);
+//		core.setAttribute(nodes.g, "name", "g");
 
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
