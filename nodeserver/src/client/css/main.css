@@ -1,5 +1,6 @@
 @import url("bootstrap.css");
 @import url("qtip/jquery.qtip.css");
+@import url("../design/css/jquery.gritter.css");
 /* OWN STYLES */
 html,body {
     margin: 0;

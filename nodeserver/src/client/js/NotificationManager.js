@@ -9,8 +9,10 @@
  * -------- NOTIFICATIONMANAGER -------
  */
 
-define(['lib/jquery/jquery.jgrowl.min',
-        'clientUtil'], function (myjgrowl, util) {
+define(['jquery',
+        'lib/jquery/jquery.jgrowl.min',
+        'lib/jquery/jquery.gritter.min',
+        'clientUtil'], function (jquery, myjgrowl, mygritter, util) {
 
     //load its own CSS file
     util.loadCSS('css/jgrowl/jquery.jgrowl.css');
@@ -19,7 +21,14 @@ define(['lib/jquery/jquery.jgrowl.min',
 
     return {
         displayMessage : function (msg) {
-            $.jGrowl(msg);
+            //$.jGrowl(msg);
+
+            $.gritter.add({
+                title: '',
+                text: msg,
+                time: 3000
+            });
+
         }
     };
 });

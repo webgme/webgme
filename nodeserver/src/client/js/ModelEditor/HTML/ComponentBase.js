@@ -12,6 +12,7 @@ define(['jquery'], function () {
         this.el = $('<div/>').attr("id", guid);
 
         this._skinParts = {};
+        this._name = "";
 
         this.getId = function () {
             return guid;
@@ -21,6 +22,10 @@ define(['jquery'], function () {
             return type;
         };
     };
+
+    ComponentBase.prototype.getName = function () {
+        return this._name;
+    }
 
     ComponentBase.prototype.render = function () {};
 

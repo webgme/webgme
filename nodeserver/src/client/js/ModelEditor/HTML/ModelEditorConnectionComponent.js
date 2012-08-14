@@ -127,6 +127,8 @@ define(['logManager',
         var i,
             segmentPointList;
 
+        this._name = objDescriptor.name || "";
+
         /*PathAttributes*/
         this._pathAttributes.arrowStart = objDescriptor.arrowStart || "oval";
         this._pathAttributes.arrowEnd = objDescriptor.arrowEnd || "oval";
