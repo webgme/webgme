@@ -160,10 +160,9 @@ define([   'order!jquery',
             serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
         }
 
-        if(commonUtil.hashbasedconfig.inuse){
+        if (commonUtil.hashbasedconfig.inuse) {
             client = new Core(commonUtil.hashbasedconfig);
-        }
-        else{
+        } else {
             client = new Client(serverLocation);
         }
         //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
