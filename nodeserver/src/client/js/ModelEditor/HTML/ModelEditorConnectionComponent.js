@@ -241,8 +241,6 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype.onSelect = function (isMultiple) {
-        var self = this;
-
         this._highlightPath();
         if (isMultiple === false) {
             this._showConnectionEndEditControls();
@@ -736,10 +734,7 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype.addSegmentPoint = function (count, x, y, cx, cy) {
-        var grid = 10,
-            /*d = { "x": Math.round(x / grid) * grid,
-            "y": Math.round(y / grid) * grid };*/
-            d = { "x": x,
+        var d = { "x": x,
                 "y": y };
 
         if (cx) {
@@ -751,6 +746,14 @@ define(['logManager',
         }
 
         this.saveSegmentPoints({"add": { "count": count, desc: d }});
+    };
+
+    ModelEditorConnectionComponent.prototype.getClonedEl = function () {
+        var clonedEl;
+
+        clonedEl = this.el.clone().attr("id", this.getId() + "_clone");
+
+        return clonedEl;
     };
 
     return ModelEditorConnectionComponent;

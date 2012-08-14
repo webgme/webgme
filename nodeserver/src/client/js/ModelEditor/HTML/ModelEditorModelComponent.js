@@ -42,6 +42,9 @@ define(['logManager',
     };
 
     ModelEditorModelComponent.prototype._onDestroy = function () {
+
+        this._unregisterKnownHandles();
+
         if (this._decoratorInstance) {
             this._decoratorInstance.destroy();
         }
@@ -313,7 +316,10 @@ define(['logManager',
 
         //register connection endpoint areas
         connEndPoints.each(function () {
-            connEndPointIds.push($(this).attr("data-id"));
+            var cid = $(this).attr("data-id");
+            if (connEndPointIds.indexOf(cid) === -1) {
+                connEndPointIds.push(cid);
+            }
         });
 
         this.registerSubcomponents(connEndPointIds);
@@ -323,7 +329,8 @@ define(['logManager',
         var connStartElements = this.el.find(".startConn"),
             connFinishElements = this.el.find(".finishConn"),
             connEndPoints  = this.el.find(".connEndPoint"),
-            connEndPointIds = [];
+            connEndPointIds = [],
+            self = this;
 
         if (this.el.hasClass("startConn")) {
             connStartElements.push(this.el[0]);
@@ -337,23 +344,67 @@ define(['logManager',
             connEndPoints.push(this.el[0]);
         }
 
-        //register connection-draw start handler
-        connStartElements.draggable("destroy");
-
-        //register connection end accept handler
-        connFinishElements.droppable("destroy");
-
         //register connection endpoint areas
         connEndPoints.each(function () {
-            connEndPointIds.push($(this).attr("data-id"));
+            var cid = $(this).attr("data-id");
+            if (connEndPointIds.indexOf(cid) === -1) {
+                connEndPointIds.push(cid);
+            }
+
+            if (self._destroying === true) {
+                $(this).removeClass("connEndPoint");
+            }
         });
 
         this.unregisterSubcomponents(connEndPointIds);
+
+        //unregister connection-draw start handler
+        connStartElements.draggable("destroy");
+
+        //unregister connection end accept handler
+        connFinishElements.droppable("destroy");
     };
 
     /*
      *
      */
+
+    ModelEditorModelComponent.prototype.getClonedEl = function () {
+        var clonedEl = this.el.clone().attr("id", this.getId() + "_clone"),
+            connStartElements = clonedEl.find(".startConn"),
+            connFinishElements = clonedEl.find(".finishConn"),
+            connEndPoints  = clonedEl.find(".connEndPoint");
+
+        if (clonedEl.hasClass("startConn")) {
+            connStartElements.push(clonedEl[0]);
+        }
+
+        if (clonedEl.hasClass("finishConn")) {
+            connFinishElements.push(clonedEl[0]);
+        }
+
+        if (clonedEl.hasClass("connEndPoint")) {
+            connEndPoints.push(clonedEl[0]);
+        }
+
+        //register connection endpoint areas
+        connEndPoints.each(function () {
+            $(this).attr("data-id", "");
+            $(this).removeClass("connEndPoint");
+        });
+
+        connFinishElements.each(function () {
+            $(this).attr("data-id", "");
+            $(this).removeClass("finishConn");
+        });
+
+        connStartElements.each(function () {
+            $(this).attr("data-id", "");
+            $(this).removeClass("startConn");
+        });
+
+        return clonedEl;
+    };
 
     return ModelEditorModelComponent;
 });

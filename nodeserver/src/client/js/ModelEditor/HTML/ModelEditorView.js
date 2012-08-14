@@ -202,7 +202,8 @@ define(['jquery',
         var componentId = component.getId(),
             endPointsToUpdate = [];
 
-        if (this._dragOptions) {
+        //if there is dragging and the item-to-be-deleted is part of the current selection
+        if (this._dragOptions && this._selectedComponentIds.indexOf(componentId) !== -1) {
             this._dragOptions.revert = true;
             this._dragOptions.revertCallback = { "fn": this.deleteComponent,
                                                  "arg": component };
@@ -244,6 +245,8 @@ define(['jquery',
 
             this._updateConnectionCoordinates(objDescriptor.id);
         }
+
+        this._refreshSelectionOutline();
     };
 
     ModelEditorView.prototype._getMousePos = function (e) {
@@ -380,38 +383,57 @@ define(['jquery',
             shiftValue = 30,
             posChanged = false;
 
-        //correct the children position based on this skin's granularity
-        posXDelta = pX % this._gridSize;
-        posYDelta = pY % this._gridSize;
+        //if the relocated model is currently dragged, set back the actual dragged position (only in relocation mode)
+        //if the drag is a drag-copy, let the model have its new coordinates
+        if (this._dragOptions && this._dragOptions.mode === this._dragModes.reposition && this._dragOptions.draggedElements.hasOwnProperty(childComponentId)) {
+            childComponentEl.css({   "left": pX,
+                "top": pY });
 
-        if ((posXDelta !== 0) || (posYDelta !== 0)) {
-            pX += (posXDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posXDelta : this._gridSize - posXDelta);
-            pY += (posYDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posYDelta : this._gridSize - posYDelta);
-            posChanged = true;
-        }
+            pX = this._dragOptions.draggedElements[childComponentId].originalPosition.x + this._dragOptions.delta.x;
+            pX = (pX < 0) ? 0 : pX;
 
-        //check if position has to be adjusted to not to put it on some other model
-        for (i in this._childComponents) {
-            if (this._childComponents.hasOwnProperty(i)) {
-                if (i !== childComponentId) {
-                    childbBox = this._childComponents[i].getBoundingBox();
-                    if (childbBox) {
-                        if (childbBox.x === pX && childbBox.y === pY) {
-                            pX += shiftValue;
-                            pY += shiftValue;
-                            posChanged = true;
+            pY = this._dragOptions.draggedElements[childComponentId].originalPosition.y + this._dragOptions.delta.y;
+            pY = (pY < 0) ? 0 : pY;
+
+            childComponentEl.css({   "left": pX,
+                "top": pY });
+        } else {
+            //component is not participating in drag
+            //correct the children position based on this skin's granularity
+            posXDelta = pX % this._gridSize;
+            posYDelta = pY % this._gridSize;
+
+            if ((posXDelta !== 0) || (posYDelta !== 0)) {
+                pX += (posXDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posXDelta : this._gridSize - posXDelta);
+                pY += (posYDelta < Math.floor(this._gridSize / 2) + 1 ? -1 * posYDelta : this._gridSize - posYDelta);
+                posChanged = true;
+            }
+
+            //check if position has to be adjusted to not to put it on some other model
+            for (i in this._childComponents) {
+                if (this._childComponents.hasOwnProperty(i)) {
+                    if (i !== childComponentId) {
+                        childbBox = this._childComponents[i].getBoundingBox();
+                        if (childbBox) {
+                            if (childbBox.x === pX && childbBox.y === pY) {
+                                pX += shiftValue;
+                                pY += shiftValue;
+                                posChanged = true;
+                            }
                         }
                     }
                 }
             }
+
+            //if ((posXDelta !== 0) || (posYDelta !== 0)) {
+            if (posChanged === true) {
+                childComponent.setPosition(pX, pY);
+            }
+
+            //}
         }
 
-        //if ((posXDelta !== 0) || (posYDelta !== 0)) {
-        if (posChanged === true) {
-            childComponent.setPosition(pX, pY);
-        }
 
-        //}
     };
 
     ModelEditorView.prototype._adjustChildrenContainerSize = function (childComponentId) {
@@ -788,7 +810,7 @@ define(['jquery',
             this._dragOptions.draggedElements[id] = {};
 
             if (this._dragOptions.mode === this._dragModes.copy) {
-                this._dragOptions.draggedElements[id].el = this._childComponents[id].el.clone().attr("id", id + "_clone").css("opacity", "0.5");
+                this._dragOptions.draggedElements[id].el = this._childComponents[id].getClonedEl().css("opacity", "0.5");
                 this._skinParts.childrenContainer.append(this._dragOptions.draggedElements[id].el);
             } else {
                 this._dragOptions.draggedElements[id].el = this._childComponents[id].el;
@@ -832,66 +854,6 @@ define(['jquery',
             "top": this._dragOptions.selectionBBox.y + this._dragOptions.selectionBBox.h + 10 });
         this._skinParts.dragPosPanel.show();
         this._logger.debug("Start dragging from original position X: " + this._dragOptions.startPos.x + ", Y: " + this._dragOptions.startPos.y);
-
-
-        //TODO: remove
-        //this._kamuDelete();
-    };
-
-    ModelEditorView.prototype._kamuDelete = function () {
-        var firstId,
-            self = this;
-
-        if (this._selectedComponentIds.length > 0) {
-            firstId = this._selectedComponentIds[0];
-
-            if (firstId === this._dragOptions.draggedComponentId) {
-                if (this._selectedComponentIds.length > 1) {
-                    firstId = this._selectedComponentIds[1];
-                }
-            }
-        }
-
-        this._kamuTimeout = null;
-
-        if (firstId) {
-            this._logger.warning("KAMUDELETE scheduled for: " + firstId);
-            this._kamuTimeout = setTimeout(function () {
-                self._kamuConcreteDelete(firstId);
-            }, 1000);
-        }
-    };
-
-    ModelEditorView.prototype._kamuConcreteDelete = function (iiiid) {
-        this.onDelete([iiiid]);
-    };
-
-    /*ModelEditorView.prototype._kamuReposition = function () {
-        var firstId,
-            self = this;
-
-        if (this._selectedComponentIds.length > 0) {
-            firstId = this._selectedComponentIds[0];
-
-            if (firstId === this._dragOptions.draggedComponentId) {
-                if (this._selectedComponentIds.length > 1) {
-                    firstId = this._selectedComponentIds[1];
-                }
-            }
-        }
-
-        this._kamuTimeout = null;
-
-        if (firstId) {
-            this._logger.warning("KAMUREPOSITION scheduled for: " + firstId);
-            this._kamuTimeout = setTimeout(function () {
-                self._kamuConcreteDelete(firstId);
-            }, 1000);
-        }
-    };*/
-
-    ModelEditorView.prototype._kamuConcreteReposition = function (iiiid) {
-        this.onDelete([iiiid]);
     };
 
     ModelEditorView.prototype._onDraggableStop = function (event, helper) {
@@ -903,11 +865,6 @@ define(['jquery',
             childPosX,
             childPosY,
             copyOpts = {};
-
-        if (this._kamuTimeout) {
-            clearTimeout(this._kamuTimeout);
-            this._kamuTimeout = null;
-        }
 
         if (this._dragOptions.revert) {
             this._dragOptions.revert = true;
@@ -1126,8 +1083,7 @@ define(['jquery',
     };
 
     ModelEditorView.prototype._updateConnectionCoordinates = function (connectionId) {
-        var connection = this._childComponents[connectionId],
-            sourceId = this._connectionList[connectionId].sourceId,
+        var sourceId = this._connectionList[connectionId].sourceId,
             targetId = this._connectionList[connectionId].targetId,
             sourceConnectionPoints = this._getConnectionPointsById(sourceId),
             targetConnectionPoints = this._getConnectionPointsById(targetId),
@@ -1145,10 +1101,8 @@ define(['jquery',
             targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
 
             connUpdateInfo = this._connectionPointManager.registerConnection(connectionId, sourceCoordinates.id, targetCoordinates.id);
-            //connection.setEndpointCoordinates(sourceCoordinates, targetCoordinates);
         } else {
             connUpdateInfo = this._connectionPointManager.unregisterConnection(connectionId);
-            //connection.setEndpointCoordinates(null, null);
         }
 
         for (i in connUpdateInfo) {

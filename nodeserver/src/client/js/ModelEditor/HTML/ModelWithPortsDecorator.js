@@ -115,8 +115,7 @@ define(['logManager',
             rightPorts;
 
         //let the ModelComponent know that the decorator starts refreshing itself
-        //TODO: theoretically is enough to resubscribe to events, they will be subscribed to only once
-        //this.ownerComponent.beforeDecoratorUpdate();
+        this.ownerComponent.beforeDecoratorUpdate();
 
         if (objectId === this.id) {
             //the container node has been changed
@@ -152,7 +151,7 @@ define(['logManager',
         } else {
             //a port has changed
             //here we are only interested in name change
-            //TODO: left or right orientation????
+            //TODO: left or right orientation should be recalculated on port update????
             if (this.ports[objectId]) {
                 this.ports[objectId].update({"title" : updatedObject.getAttribute(nodeAttributeNames.name)});
             }
@@ -269,22 +268,8 @@ define(['logManager',
         this.skinParts.topConnRect.css("left", (this.parentContainer.width() - this.skinParts.topConnRect.outerWidth()) / 2);
     };
 
-    //TODO: enable this kind of override (if method exist, it will give back the connection area)
-    //decorator might want to override the owner element's connection points
-    /*ModelWithPortsDecorator.prototype.getConnectionPoints = function () {
-        var bBox = this.ownerComponent.getBoundingBox(),
-            result = [];
-
-        result.push({ "dir": "S", x: bBox.x + bBox.width / 2, y: bBox.y + bBox.height, connectorLength : 20});
-        result.push({ "dir": "N", x:  bBox.x + bBox.width / 2, y: bBox.y, connectorLength : 20});
-
-        return result;
-    };*/
-
     ModelWithPortsDecorator.prototype.destroy = function () {
         var i;
-
-        //this.ownerComponent.beforeDecoratorUpdate();
 
         this.project.updateTerritory(this.territoryId, {});
 

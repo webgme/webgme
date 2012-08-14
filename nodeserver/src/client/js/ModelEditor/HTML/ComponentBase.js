@@ -1,6 +1,6 @@
 "use strict";
 
-define(['jquery'], function (jquery) {
+define(['jquery'], function () {
 
     var ComponentBase;
 
@@ -27,13 +27,16 @@ define(['jquery'], function (jquery) {
     ComponentBase.prototype.destroy = function () {
         var self = this;
 
+        this._destroying = true;
+
         //component specific cleanup
         //i.e.: delete its own territory
-        this.onDestroy();
+        //this.onDestroy();
 
         //finally remove itself from DOM
         if (this.el) {
             this.el.fadeOut('slow', function () {
+                self.onDestroy();
                 self.el.empty();
                 self.el.remove();
             });
