@@ -57,6 +57,8 @@ define(['logManager',
 
         this._zIndex = 10;
 
+        this._name = objDescriptor.name || "";
+
         /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
 
         /*instance variables*/
@@ -187,6 +189,8 @@ define(['logManager',
     };
 
     ModelEditorModelComponent.prototype.update = function (objDescriptor) {
+        this._name = objDescriptor.name || "";
+
         this._setPosition(objDescriptor.position.x, objDescriptor.position.y);
 
         if (this._decoratorInstance) {

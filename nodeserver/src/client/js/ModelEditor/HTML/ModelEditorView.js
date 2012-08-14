@@ -5,6 +5,7 @@ define(['jquery',
     'clientUtil',
     'commonUtil',
     'raphaeljs',
+    'notificationManager',
     './ComponentBase.js',
     './ModelEditorModelComponent.js',
     './ModelEditorConnectionComponent.js',
@@ -14,6 +15,7 @@ define(['jquery',
                                                         util,
                                                         commonUtil,
                                                         raphaeljs,
+                                                        notificationManager,
                                                         ComponentBase,
                                                         ModelEditorModelComponent,
                                                         ModelEditorConnectionComponent,
@@ -200,7 +202,8 @@ define(['jquery',
 
     ModelEditorView.prototype.deleteComponent = function (component) {
         var componentId = component.getId(),
-            endPointsToUpdate = [];
+            endPointsToUpdate = [],
+            componentName = component.getName();
 
         //if there is dragging and the item-to-be-deleted is part of the current selection
         if (this._dragOptions && this._selectedComponentIds.indexOf(componentId) !== -1) {
@@ -222,6 +225,9 @@ define(['jquery',
             }
 
             if (this._childComponents[componentId]) {
+                if (_.isString(componentName) && componentName !== "") {
+                    notificationManager.displayMessage("Object '" + componentName + "' has been deleted.");
+                }
                 this._childComponents[componentId].destroy();
                 delete this._childComponents[componentId];
             }
