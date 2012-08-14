@@ -132,7 +132,7 @@ define(['logManager',
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 if (this.ports[diffChildrenIds[i]]) {
                     //this.ownerComponent.unregisterSubcomponents([diffChildrenIds[i]]);
-                    this.ports[diffChildrenIds[i]].el.remove();
+                    this.ports[diffChildrenIds[i]].destroy();
                     delete this.ports[diffChildrenIds[i]];
                 }
             }

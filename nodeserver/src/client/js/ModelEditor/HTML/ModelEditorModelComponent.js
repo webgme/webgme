@@ -327,6 +327,7 @@ define(['logManager',
 
     ModelEditorModelComponent.prototype._unregisterKnownHandles = function () {
         var connStartElements = this.el.find(".startConn"),
+            connStartElementsDragging = this.el.find(".ui-draggable-dragging"),
             connFinishElements = this.el.find(".finishConn"),
             connEndPoints  = this.el.find(".connEndPoint"),
             connEndPointIds = [],
@@ -343,6 +344,10 @@ define(['logManager',
         if (this.el.hasClass("connEndPoint")) {
             connEndPoints.push(this.el[0]);
         }
+
+        //stop drag if anything is being dragged right now
+        //i.e. drawing connection from 'here'
+        connStartElementsDragging.trigger('mouseup');
 
         //register connection endpoint areas
         connEndPoints.each(function () {
