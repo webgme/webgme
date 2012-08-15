@@ -20,7 +20,8 @@ package org.isis.xpromise3;
 
 public class PromiseFileCount { 
 
-	static final Promise<String[]> loadDirectory(String path) {
+	static Promise<String[]> loadDirectory(String path) {
+		assert(path != null);
 		return new Calc1<String[], String>(path) {
 			public Promise<String[]> calc(String path) {
 				assert(path != null);
@@ -39,38 +40,29 @@ public class PromiseFileCount {
 		};
 	};
 	
-	static final class GetDirectorySize extends Calc1<Integer, String> {
-		public GetDirectorySize(String arg) {
-			super(arg);
-		}
+	static Promise<Integer> getDirectorySize(String path) {
+		assert(path != null);
+		return new Calc1<Integer, String[]>(loadDirectory(path)) {
+			public Promise<Integer> calc(String[] subdirs) {
+				assert( subdirs != null );
 
-		public Promise<Integer> calc(String dir) {
-			assert(dir != null);
-			
-			Promise<String[]> subdirs = loadDirectory(dir);
-			return new Calc1<Integer, String[]>(subdirs) {
-				public Promise<Integer> calc(String[] subdirs) {
-					assert(subdirs != null);
-
-					@SuppressWarnings("unchecked")
-					Promise<Integer>[] sizes = new Promise[subdirs.length];
-					for(int i = 0; i < sizes.length; ++i) {
-						sizes[i] = new GetDirectorySize(subdirs[i]);
-					}
-
-					return new CalcA<Integer, Integer>(sizes) {
-						public Promise<Integer> calc(Integer[] sizes) {
-							assert(sizes != null);
-
-							int s = 1;
-							for(int i = 0; i < sizes.length; ++i)
-								s += sizes[i];
-
-							return new Constant<Integer>(s);
-						}
-					};
+				PromiseArray<Integer> array = new PromiseArray<Integer>();
+				for(int i = 0; i < subdirs.length; ++i) {
+					array.add(getDirectorySize(subdirs[i]));
 				}
-			};
-		}
+
+				return new Calc1<Integer, Integer[]>(array) {
+					public Promise<Integer> calc(Integer[] sizes) {
+						assert(sizes != null);
+
+						int s = 1;
+						for(int i = 0; i < sizes.length; ++i)
+							s += sizes[i];
+
+						return new Constant<Integer>(s);
+					}
+				};
+			}
+		};
 	};
 }
