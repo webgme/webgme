@@ -397,7 +397,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
 
             /*others*/
             for(i=0;i<newpathes.length;i++){
-                var newkey = currentCore.getKey(currentNodes[newpathes[i]]);
+                var newkey = currentCore.getSingleNodeHash(currentNodes[newpathes[i]]);
                 if(user.PATHES.indexOf(newpathes[i]) === -1){
                     events.push({etype:"load",eid:newpathes[i]});
                 }
