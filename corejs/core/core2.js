@@ -4,9 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define(
-[ "core/assert", "core/pertree", "core/util" ],
-function (ASSERT, PerTree, UTIL) {
+define([ "core/assert", "core/pertree", "core/util", "core/lib/sha1" ], function (ASSERT, PerTree,
+UTIL, SHA1) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -252,6 +251,31 @@ function (ASSERT, PerTree, UTIL) {
 			return node;
 		};
 
+		var getSingleNodeHash = function (node) {
+			ASSERT(isValidNode(node));
+
+			var data = {
+				attr: pertree.getProperty(node, ATTRIBUTES),
+				children: pertree.getChildrenRelids(node)
+			};
+			var prefix = "";
+
+			while( node ) {
+				var rels = pertree.getProperty2(node, OVERLAYS, prefix);
+				data[prefix] = rels;
+
+				if( prefix === "" ) {
+					prefix = pertree.getRelid(node);
+				}
+				else {
+					prefix = pertree.getRelid(node) + "/" + prefix;
+				}
+				node = pertree.getParent(node);
+			}
+
+			return SHA1(JSON.stringify(data));
+		};
+
 		var deleteNode = function (node) {
 			ASSERT(isValidNode(node));
 
@@ -398,7 +422,7 @@ function (ASSERT, PerTree, UTIL) {
 					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
 
 					var tmp;
-					if( ! entry.p ) {
+					if( !entry.p ) {
 						tmp = entry.s;
 						entry.s = entry.t;
 						entry.t = tmp;
@@ -436,7 +460,7 @@ function (ASSERT, PerTree, UTIL) {
 						overlays = baseOverlays;
 					}
 
-					if( ! entry.p ) {
+					if( !entry.p ) {
 						tmp = entry.s;
 						entry.s = entry.t;
 						entry.t = tmp;
@@ -827,7 +851,9 @@ function (ASSERT, PerTree, UTIL) {
 			setPointer: setPointer,
 			getCollectionNames: getCollectionNames,
 			getCollectionPaths: getCollectionPaths,
-			loadCollection: loadCollection
+			loadCollection: loadCollection,
+
+			getSingleNodeHash: getSingleNodeHash
 		};
 	};
 

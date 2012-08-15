@@ -323,7 +323,12 @@ CoreType) {
 		createNode("a");
 		createNode("b", "a");
 		createNode("c", "a");
-		core.setPointer(nodes.b, "ptr", nodes.c);
+//		core.setPointer(nodes.b, "ptr", nodes.c);
+
+		nodes.x = core.createNode(nodes.a);
+		nodes.y = core.createNode(nodes.a);
+		console.log(core.getSingleNodeHash(nodes.x));
+		console.log(core.getSingleNodeHash(nodes.y));
 		
 		core.persist(nodes.a, function (err) {
 			if( err ) {
