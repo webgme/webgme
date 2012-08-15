@@ -33,7 +33,7 @@ CoreType) {
 
 		var name = "";
 		while( node ) {
-			name = core.getAttribute(node, "name") + name;
+			name = (core.getAttribute(node, "name") || "?") + name;
 			node = core.getParent(node);
 		}
 		return name;
@@ -53,8 +53,8 @@ CoreType) {
 			if( !err ) {
 				ASSERT(Array.isArray(array));
 				array.sort(function (nodea, nodeb) {
-					var namea = core.getAttribute(nodea, "name");
-					var nameb = core.getAttribute(nodeb, "name");
+					var namea = core.getAttribute(nodea, "name") || "?";
+					var nameb = core.getAttribute(nodeb, "name") || "?";
 					ASSERT(typeof namea === "string" && typeof nameb === "string");
 
 					return namea.localeCompare(nameb);
@@ -185,16 +185,16 @@ CoreType) {
 		createNode("e", "a");
 		createNode("f", "b");
 
-		for(var i in nodes) {
-			for(var j in nodes) {
+		for( var i in nodes ) {
+			for( var j in nodes ) {
 				core.setPointer(nodes[i], "ptr" + j, nodes[j]);
 			}
 		}
-		
-		//core.deleteNode(nodes.d);
+
+		// core.deleteNode(nodes.d);
 
 		core.moveNode(nodes.c, nodes.f);
-//		core.setAttribute(nodes.g, "name", "g");
+		// core.setAttribute(nodes.g, "name", "g");
 
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
@@ -318,24 +318,29 @@ CoreType) {
 	};
 
 	tests[4] = function (storage, root, callback) {
-		core = new CoreType(storage);
+		core = new Core(storage);
 
-		nodes.a = core.createNode();
-		core.setAttribute(nodes.a, "name", "a");
-
-		nodes.b = core.createNode(nodes.a);
-		core.setAttribute(nodes.b, "name", "b");
-
-		nodes.c = core.createNode(nodes.a, nodes.b);
-		core.setAttribute(nodes.c, "name", "c");
-
-		core.setAttribute(nodes.b, "text", "b");
-
-		nodes.d = core.createNode(nodes.b);
-		core.setAttribute(nodes.d, "name", "d");
-
+		createNode("a");
+		createNode("b", "a");
+		createNode("c", "a");
+		core.setPointer(nodes.b, "ptr", nodes.c);
+		
 		core.persist(nodes.a, function (err) {
-			callback(err, core.getKey(nodes.a));
+			if( err ) {
+				callback(err);
+			}
+			else {
+				nodes.d = core.createNode(nodes.a);
+				core.moveNode(nodes.c, nodes.d);
+//				nodes.e = core.copyNode(nodes.d, nodes.a);
+//				core.moveNode(nodes.c, nodes.a);
+//				core.moveNode(nodes.e, nodes.a);
+//				core.deleteNode(nodes.d);
+
+				core.persist(nodes.a, function (err) {
+					callback(err, core.getKey(nodes.a));
+				});
+			}
 		});
 	};
 
