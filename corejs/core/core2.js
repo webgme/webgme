@@ -395,6 +395,8 @@ function (ASSERT, PerTree, UTIL) {
 				for( var i = 0; i < list.length; ++i ) {
 					var entry = list[i];
 
+					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
+
 					var tmp;
 					if( ! entry.p ) {
 						tmp = entry.s;
@@ -444,7 +446,6 @@ function (ASSERT, PerTree, UTIL) {
 						target = tmp;
 					}
 
-					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
 					overlayInsert(overlays, source, entry.n, target);
 				}
 

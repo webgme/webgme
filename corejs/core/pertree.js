@@ -27,38 +27,53 @@ function (ASSERT, SHA1, UTIL) {
 		return second ? (first ? first + "/" + second : second) : first;
 	};
 
+	var getRawPath = function(node) {
+		var path = "";
+		while( node && node.relid !== undefined ) {
+			if( path === "" ) {
+				path = node.relid;
+			}
+			else {
+				path = node.relid + "/" + path;
+			}
+			node = node.parent;
+		}
+		return path;
+	};
+	
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
 		var KEYNAME = storage.KEYNAME;
 
 		var isValidNode = function (node) {
-			var valid = node && node.data && typeof node.data === "object";
-			valid = valid
-			&& (node.parent === null || (node.parent.data && typeof node.parent.data === "object"));
+			var error;
+			var verify = function(text, cond) {
+				if( !error && !cond ) {
+					error = text;
+				}
+			};
 
-			valid = valid && (node.data._mutable === undefined || node.data._mutable === true);
-			valid = valid
-			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
+			verify("node structure", node && node.data && typeof node.data === "object");
+			verify("parent structure", node.parent === null || (node.parent.data && typeof node.parent.data === "object"));
+			verify("mutable flag", node.data._mutable === undefined || node.data._mutable === true);
+			verify("parent mutability", node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
+			verify("node relid", node.relid === undefined || isValidRelid(node.relid));
 
-			valid = valid && (node.relid === undefined || isValidRelid(node.relid));
-
-			if( valid ) {
+			if( !error ) {
 				var key = node.data[KEYNAME];
-				valid = valid && (key === undefined || key === false || isValidKey(key));
-
-				valid = valid
-				&& (node.parent === null || !key || node.parent.data[node.relid] === key);
-				valid = valid
-				&& (node.parent === null || key || node.parent.data[node.relid] === node.data);
-				valid = valid && (!node.data._mutable || typeof key !== "string");
+				verify("node hashkey", key === undefined || key === false || isValidKey(key));
+				verify("data match 1", node.parent === null || !key || node.parent.data[node.relid] === key);
+				verify("data match 2", node.parent === null || key || node.parent.data[node.relid] === node.data);
+				verify("mutable key", !node.data._mutable || typeof key !== "string");
 			}
 
-			if( !valid ) {
-				console.log("Wrong node: " + JSON.stringify(node));
+			if( error ) {
+				console.log("WRONG NODE: " + error + " error at path '" + getRawPath(node) + "'");
+				console.log(node);
 			}
 
-			return valid;
+			return !error;
 		};
 
 		var getKey = function (node) {
@@ -402,7 +417,6 @@ function (ASSERT, SHA1, UTIL) {
 
 				if( node.parent ) {
 					mutate(node.parent);
-
 					node.parent.data[node.relid] = copy;
 				}
 			}
