@@ -185,10 +185,12 @@ define(['logManager',
     };
 
     ModelWithPortsDecorator.prototype._editNodeTitle = function () {
-        var self = this;
+        var self = this,
+            alreadyEdit = this.skinParts.title.find(":input").length > 0;
 
-        //unbind dblclick for the time of edit
-        this.skinParts.title.unbind("dblclick");
+        if (alreadyEdit === true) {
+            return;
+        }
 
         // Replace node with <input>
         this.skinParts.title.editInPlace("modelTitle", function (newTitle) {
@@ -196,11 +198,6 @@ define(['logManager',
             self.project.setAttributes(self.id, "name", newTitle);
             self._refreshChildrenContainer();
             self.ownerComponent.afterDecoratorUpdate();
-        });
-
-        //hook up double click for further node title edit
-        this.skinParts.title.dblclick(function () {
-            self._editNodeTitle.call(self);
         });
     };
 
