@@ -215,7 +215,8 @@ define(['jquery',
         } else {
             if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
                 //manually trigger drag-end
-                $('.ui-draggable-dragging').trigger('mouseup');
+                //$('.ui-draggable-dragging').trigger('mouseup');
+                this._cancelDrag(componentId);
             }
 
             //remove it from the selection (if in there)
@@ -248,8 +249,11 @@ define(['jquery',
 
         if (this._connectionInDraw && this._connectionInDraw.source === objDescriptor.id) {
             //manually trigger drag-end
-            $('.ui-draggable-dragging').trigger('mouseup');
+            //$('.ui-draggable-dragging').trigger('mouseup');
+            this._cancelDrag(objDescriptor.id);
         }
+
+        component.el.removeClass("connection-end-state-hover");
 
         if (this._childComponents[objDescriptor.id]) {
             this._childComponents[objDescriptor.id].update(objDescriptor);
@@ -264,6 +268,12 @@ define(['jquery',
         }
 
         this._refreshSelectionOutline();
+    };
+
+    ModelEditorView.prototype._cancelDrag = function (dataId) {
+        $('.connection-source[data-id="' + dataId + '"]').removeClass("connection-source");
+        $('.connection-end-state-hover').removeClass("connection-end-state-hover");
+        $('.ui-draggable-dragging').trigger('mouseup');
     };
 
     ModelEditorView.prototype._getMousePos = function (e) {

@@ -25,7 +25,7 @@ define(['jquery'], function () {
 
     ComponentBase.prototype.getName = function () {
         return this._name;
-    }
+    };
 
     ComponentBase.prototype.render = function () {};
 
@@ -36,15 +36,17 @@ define(['jquery'], function () {
 
         //component specific cleanup
         //i.e.: delete its own territory
-        //this.onDestroy();
-
-        //finally remove itself from DOM
-        if (this.el) {
-            this.el.fadeOut('slow', function () {
-                self.onDestroy();
+        if ($.isFunction(this.onDestroyAsync)) {
+            this.onDestroyAsync(function () {
                 self.el.empty();
                 self.el.remove();
             });
+        } else {
+            if ($.isFunction(this.onDestroy)) {
+                this.onDestroy();
+            }
+            this.el.empty();
+            this.el.remove();
         }
     };
 

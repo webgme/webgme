@@ -26,9 +26,9 @@ define(['logManager',
         /*
          * OVERRIDE COMPONENTBASE MEMBERS
          */
-        this.onDestroy = function () {
+        /*this.onDestroy = function () {
             this._onDestroy();
-        };
+        };*/
 
         this.render = function () {
             this._render();
@@ -41,7 +41,7 @@ define(['logManager',
         this._initialize(objDescriptor);
     };
 
-    ModelEditorModelComponent.prototype._onDestroy = function () {
+    /*ModelEditorModelComponent.prototype._onDestroy = function () {
 
         this._unregisterKnownHandles();
 
@@ -50,6 +50,22 @@ define(['logManager',
         }
 
         this._logger.debug("onDestroy");
+    };*/
+
+    ModelEditorModelComponent.prototype.onDestroyAsync = function (callbackFn) {
+        var self = this;
+
+        this.el.fadeOut('slow', function () {
+            self._unregisterKnownHandles();
+
+            if (self._decoratorInstance) {
+                self._decoratorInstance.destroy();
+            }
+
+            self._logger.debug("onDestroy");
+
+            callbackFn.call(self);
+        });
     };
 
     ModelEditorModelComponent.prototype._initialize = function (objDescriptor) {
@@ -332,6 +348,8 @@ define(['logManager',
     ModelEditorModelComponent.prototype._unregisterKnownHandles = function () {
         var connStartElements = this.el.find(".startConn"),
             connStartElementsDragging = this.el.find(".ui-draggable-dragging"),
+            connSourcesOther = this.el.find(".connection-source"),
+            connEndStateHover = this.el.find(".connection-end-state-hover"),
             connFinishElements = this.el.find(".finishConn"),
             connEndPoints  = this.el.find(".connEndPoint"),
             connEndPointIds = [],
@@ -351,6 +369,11 @@ define(['logManager',
 
         //stop drag if anything is being dragged right now
         //i.e. drawing connection from 'here'
+        connSourcesOther.removeClass("connection-source");
+        if (connSourcesOther.length > 0) {
+            $('.connection-end-state-hover').removeClass("connection-end-state-hover");
+        }
+        connEndStateHover.removeClass("connection-end-state-hover");
         connStartElementsDragging.trigger('mouseup');
 
         //register connection endpoint areas

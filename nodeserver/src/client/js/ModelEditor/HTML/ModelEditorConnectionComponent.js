@@ -33,9 +33,9 @@ define(['logManager',
         /*
          * OVERRIDE COMPONENTBASE MEMBERS
          */
-        this.onDestroy = function () {
+        /*this.onDestroy = function () {
             this._onDestroy();
-        };
+        };*/
 
         this.render = function () {
             this._render();
@@ -226,7 +226,7 @@ define(['logManager',
         event.preventDefault();
     };
 
-    ModelEditorConnectionComponent.prototype._onDestroy = function () {
+    /*ModelEditorConnectionComponent.prototype._onDestroy = function () {
         //end edit mode (if editing right now)
         this._endEditMode();
 
@@ -240,7 +240,42 @@ define(['logManager',
         }
 
         this._logger.debug("_onDestroy");
+    };*/
+
+    ModelEditorConnectionComponent.prototype.onDestroyAsync = function (callbackFn) {
+        var self = this,
+            pathVisElements = this._paper.set();
+
+        //end edit mode (if editing right now)
+        this._endEditMode();
+
+        if (this._skinParts.path) {
+            pathVisElements.push(this._skinParts.path);
+        }
+
+        if (this._skinParts.pathShadow) {
+            pathVisElements.push(this._skinParts.pathShadow);
+        }
+
+        pathVisElements.animate({"opacity": 0}, 800, "linear", function () {
+            pathVisElements.clear();
+
+            if (self._skinParts.path) {
+                self._skinParts.path.remove();
+                delete self._skinParts.path;
+            }
+
+            if (self._skinParts.pathShadow) {
+                self._skinParts.pathShadow.remove();
+                delete self._skinParts.pathShadow;
+            }
+
+            self._logger.debug("onDestroy");
+
+            callbackFn.call(self);
+        });
     };
+
 
     ModelEditorConnectionComponent.prototype.onSelect = function (isMultiple) {
         this._highlightPath();
