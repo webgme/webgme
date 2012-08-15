@@ -247,6 +247,7 @@ define(['jquery',
 
     ModelEditorView.prototype.updateComponent = function (component, objDescriptor) {
 
+
         if (this._connectionInDraw && this._connectionInDraw.source === objDescriptor.id) {
             //manually trigger drag-end
             //$('.ui-draggable-dragging').trigger('mouseup');
