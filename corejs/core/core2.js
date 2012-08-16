@@ -255,7 +255,8 @@ UTIL, SHA1) {
 			ASSERT(isValidNode(node));
 
 			var data = {
-				attr: pertree.getProperty(node, ATTRIBUTES),
+				attributes: pertree.getProperty(node, ATTRIBUTES),
+				registry: pertree.getProperty(node, REGISTRY),
 				children: pertree.getChildrenRelids(node)
 			};
 			var prefix = "";
