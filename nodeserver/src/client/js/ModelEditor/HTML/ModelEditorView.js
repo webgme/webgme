@@ -65,11 +65,27 @@ define(['jquery',
                                   "strokeColor" : "#FF7800",
                                   "lineType": "-" };
 
+
         //node title
         this._skinParts = {};
+        this._skinParts.modelEditorTop = $('<div/>');
+        this._skinParts.modelEditorTop.addClass("modelEditorTop");
+        this._el.append(this._skinParts.modelEditorTop);
+
+
         this._skinParts.title = $('<div/>');
         this._skinParts.title.addClass("modelEditorViewTitle");
-        this._el.append(this._skinParts.title);
+        this._skinParts.modelEditorTop.append(this._skinParts.title);
+
+        this._skinParts.fullRefreshBtn = $('<div/>');
+        this._skinParts.fullRefreshBtn.addClass("modelEditorViewFullRefresh");
+        this._skinParts.fullRefreshBtn.attr("title", "Full refresh");
+        this._skinParts.modelEditorTop.append(this._skinParts.fullRefreshBtn);
+        this._skinParts.fullRefreshBtn.on("click", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self.onFullRefresh();
+        });
 
         //children container
         this._skinParts.childrenContainer = $('<div/>', {
@@ -1479,6 +1495,10 @@ define(['jquery',
 
     ModelEditorView.prototype.onDoubleClick = function (componentId) {
         this._logger.warning("onDoubleClick is not overridden in Controller...componentId: '" + componentId + "'");
+    };
+
+    ModelEditorView.prototype.onFullRefresh = function () {
+        this._logger.warning("onFullRefresh is not overridden in Controller...");
     };
     /*ENDOF -  PUBLIC API TO OVERRIDE*/
 

@@ -98,6 +98,10 @@ define(['logManager',
         this._modelEditorView.onDoubleClick = function (componentId) {
             self._client.setSelectedObjectId(componentId);
         };
+
+        this._modelEditorView.onFullRefresh = function () {
+            self._client.fullRefresh();
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         this._initialize();
