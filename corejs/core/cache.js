@@ -35,6 +35,7 @@ define([ "core/assert" ], function (ASSERT) {
 			storage.close(callback);
 		};
 
+		var loadDepth = 0;
 		var load = function (key, callback) {
 			ASSERT(typeof key === "string");
 
@@ -45,7 +46,15 @@ define([ "core/assert" ], function (ASSERT) {
 				}
 				else {
 					ASSERT(obj[KEYNAME] === key);
-					callback(null, obj);
+					
+					if( loadDepth < 20 ) {
+						loadDepth += 1;
+						callback(null, obj);
+						loadDepth -= 1;
+					}
+					else {
+						setTimeout(callback, 0, null, obj);
+					}
 				}
 			}
 			else {

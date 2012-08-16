@@ -27,7 +27,7 @@ function (ASSERT, SHA1, UTIL) {
 		return second ? (first ? first + "/" + second : second) : first;
 	};
 
-	var getRawPath = function(node) {
+	var getRawPath = function (node) {
 		var path = "";
 		while( node && node.relid !== undefined ) {
 			if( path === "" ) {
@@ -40,7 +40,7 @@ function (ASSERT, SHA1, UTIL) {
 		}
 		return path;
 	};
-	
+
 	var PersistentTree = function (storage) {
 		ASSERT(storage);
 
@@ -48,24 +48,38 @@ function (ASSERT, SHA1, UTIL) {
 
 		var isValidNode = function (node) {
 			var error;
-			var verify = function(text, cond) {
+			var verify = function (text, cond) {
 				if( !error && !cond ) {
 					error = text;
 				}
 			};
 
-			verify("node structure", node && node.data && typeof node.data === "object");
-			verify("parent structure", node.parent === null || (node.parent.data && typeof node.parent.data === "object"));
-			verify("mutable flag", node.data._mutable === undefined || node.data._mutable === true);
-			verify("parent mutability", node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true);
-			verify("node relid", node.relid === undefined || isValidRelid(node.relid));
+			verify("nonobject node", typeof node === "object" );
+			verify("node structure", !error && (node && node.data && typeof node.data === "object"));
+
+			verify("parent structure", !error
+			&& (node.parent === null || (node.parent.data && typeof node.parent.data === "object")));
+
+			verify("mutable flag", !error
+			&& (node.data._mutable === undefined || node.data._mutable === true));
+
+			verify("parent mutability", !error
+			&& (node.parent === null || node.data._mutable === undefined || node.parent.data._mutable === true));
+
+			verify("node relid", !error && (node.relid === undefined || isValidRelid(node.relid)));
 
 			if( !error ) {
 				var key = node.data[KEYNAME];
-				verify("node hashkey", key === undefined || key === false || isValidKey(key));
-				verify("data match 1", node.parent === null || !key || node.parent.data[node.relid] === key);
-				verify("data match 2", node.parent === null || key || node.parent.data[node.relid] === node.data);
-				verify("mutable key", !node.data._mutable || typeof key !== "string");
+				verify("node hashkey", !error
+				&& (key === undefined || key === false || isValidKey(key)));
+
+				verify("data match 1", !error
+				&& (node.parent === null || !key || node.parent.data[node.relid] === key));
+
+				verify("data match 2", !error
+				&& (node.parent === null || key || node.parent.data[node.relid] === node.data));
+
+				verify("mutable key", !error && (!node.data._mutable || typeof key !== "string"));
 			}
 
 			if( error ) {
@@ -346,15 +360,15 @@ function (ASSERT, SHA1, UTIL) {
 
 		var getCommonPathPrefixData = function (first, second) {
 			ASSERT(typeof first === "string" && typeof second === "string");
-			
+
 			first = first ? first.split("/") : [];
 			second = second ? second.split("/") : [];
 
 			var common = [];
-			for(var i = 0; first[i] === second[i] && i < first.length; ++i) {
+			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
 				common.push(first[i]);
 			}
-			
+
 			return {
 				common: common.join("/"),
 				first: first.slice(i).join("/"),
@@ -505,11 +519,11 @@ function (ASSERT, SHA1, UTIL) {
 
 		// TODO: rewrite it using UTIL.AsyncJoin
 		var persist = function (node, callback) {
-			ASSERT(isValidNode(node) && isMutable(node));
+			ASSERT(isValidNode(node));
 			ASSERT(getKey(node) !== undefined);
 
 			var saver = new Saver(callback);
-			var key = saver.save(node.data);
+			var key = isMutable(node) ? saver.save(node.data) : getKey(node);
 			saver.done(null);
 
 			if( node.parent ) {
