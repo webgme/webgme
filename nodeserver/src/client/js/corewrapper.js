@@ -85,6 +85,14 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 });
             }
         };
+        this.fullRefresh = function(){
+            /*this call generates events to all ui with the current territory*/
+            for(var i in users){
+                for(var j=0;j<users[i].PATHES.length;j++){
+                    users[i].UI.onEvent('update',users[i].PATHES[j]);
+                }
+            }
+        };
 
         /*getting a node*/
         this.getNode = function(path){
