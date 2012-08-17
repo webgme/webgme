@@ -275,17 +275,34 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 					var tag = core.getAttribute(node, "#tag");
 					var names = core.getAttributeNames(node);
 
+					var targetId, targetPath;
+					
 					for( var i = 0; i < names.length; ++i ) {
 						var name = names[i];
 						var type = (DTD[tag] || {})[name];
 						if( type === IDREF ) {
-							var targetId = core.getAttribute(node, name);
-							var targetPath = ids[targetId];
+							targetId = core.getAttribute(node, name);
+							targetPath = ids[targetId];
 							if( targetPath === undefined ) {
 								console.log("Missing id " + targetId);
 							}
 							else {
 								resolveAddPointer(node, name, targetPath, join.add());
+							}
+						}
+						else if( type === IDREFS ) {
+							targetId = core.getAttribute(node, name);
+							ASSERT(typeof targetId === "string");
+							
+							targetId = targetId === "" ? [] : targetId.split(" ");
+							for(var j = 0; j < targetId.length; ++j) {
+								targetPath = ids[targetId[j]];
+								if( targetPath === undefined ) {
+									console.log("Missing id " + targetId[j]);
+								}
+								else {
+									resolveAddPointer(node, name + "-" + j, targetPath, join.add());
+								}
 							}
 						}
 					}

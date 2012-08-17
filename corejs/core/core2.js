@@ -235,7 +235,7 @@ UTIL, SHA1) {
 			return list;
 		};
 
-		var createNode = function (parent) {
+		var createNode = function (parent, relid) {
 			ASSERT(!parent || isValidNode(parent));
 
 			var node = pertree.createRoot();
@@ -244,7 +244,7 @@ UTIL, SHA1) {
 			pertree.createChild(node, OVERLAYS);
 
 			if( parent ) {
-				var relid = createRelid(parent.data);
+				relid = relid || createRelid(parent.data);
 				pertree.setParent(node, parent, relid);
 			}
 

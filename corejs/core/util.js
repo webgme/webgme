@@ -170,7 +170,9 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 						closeNode(requests[0].n, openNodeDone);
 					}
 
-					preloadChildren();
+					if( requests ) {
+						preloadChildren();
+					}
 				}
 			}
 		};

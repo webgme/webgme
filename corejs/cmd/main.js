@@ -11,9 +11,8 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs(
-[ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta", "cmd/tests" ],
-function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests) {
+requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta", "cmd/tests", "cmd/parsedata" ],
+function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -34,6 +33,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests) {
 		console.log("  -dumptree\t\t\tdumps the current root as a json object");
 		console.log("  -traverse\t\t\tloads all core objects from the current tree");
 		console.log("  -parsemeta\t\t\tparses the current xml root as a meta project");
+		console.log("  -parsedata\t\t\tparses the current xml root as a gme project");
 		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
 		console.log("");
 	}
@@ -231,6 +231,30 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests) {
 				}
 				else {
 					parsemeta(mongo, root, function(err, key) {
+						if(err) {
+							console.log(err);
+							argv.splice(i, 0, "-end");
+						}
+						else {
+							console.log("Root key = " + key);
+							root = key;
+						}
+						next();
+					});
+				}
+			}
+			else if( cmd === "-parsedata" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else if( !root ) {
+					console.log("Root not selected");
+					argv.splice(i, 0, "-end");
+					next();
+				}
+				else {
+					parsedata(mongo, root, function(err, key) {
 						if(err) {
 							console.log(err);
 							argv.splice(i, 0, "-end");
