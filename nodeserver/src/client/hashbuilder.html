@@ -6,7 +6,7 @@
         require(["js/socmongo","core/core2","../common/commonUtil","/socket.io/socket.io.js"],function(MNG,CORE,COMMON){
             var roothash = null;
             var storage = null;
-            var COUNT = 1000;
+            var COUNT = 10000;
             var rootServer = io.connect(COMMON.hashbasedconfig.rootsrv);
             rootServer.on('connect',function(){
                 alert("the root server is connected!!!");

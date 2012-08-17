@@ -110,8 +110,8 @@ define([], function () {
             serverlocation : "http://localhost",
             dataport       : 888,
             rootport       : 999,
-            mongosrv       : "http://localhost:888",
-            rootsrv        : "http://localhost:999",
+            mongosrv       : "http://localhost:8081/data",
+            rootsrv        : "http://localhost:8081/root",
             project        : "hash",
             branch         : "test"
         }

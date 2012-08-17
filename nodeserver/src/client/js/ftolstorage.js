@@ -88,11 +88,15 @@ define([ "core/assert" ], function (ASSERT) {
         };
 
         var sync = function(){
-            var savequeue = JSON.parse(OBJECTS.getItem(projectinfo+SAVELIST));
+            var savequeue = JSON.parse(OBJECTS.getItem(projectinfo+SAVELIST)) || [];
             if(savequeue.length === 0){
-                var delqueue = JSON.parse(OBJECTS.getItem(projectinfo+DELETELIST));
+                var delqueue = JSON.parse(OBJECTS.getItem(projectinfo+DELETELIST)) || [];
                 if(delqueue.length > 0){
-
+                    var key = delqueue.pop();
+                    OBJECTS.setItem(projectinfo+DELETELIST,JSON.stringify(delqueue));
+                    remove(key,function(err){
+                        /*TODO*/
+                    });
                 }
             } else {
                 var node = savequeue.pop();
@@ -116,5 +120,7 @@ define([ "core/assert" ], function (ASSERT) {
             searchId: storage.searchId
         }
     };
+
+    return Cache;
 });
 

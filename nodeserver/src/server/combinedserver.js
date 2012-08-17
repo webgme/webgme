@@ -61,7 +61,6 @@ var Server = function(parameters){
 
     dataserver.on('connection',function(socket){
         socket.on('open', function (callback) {
-            console.log("NYITAS");
             if(opened){
                 callback(null);
             }

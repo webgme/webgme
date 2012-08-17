@@ -1,4 +1,4 @@
-define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE){
+define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftolstorage','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST){
     var logger,
         Client,
         CommandQueue,
@@ -15,7 +15,8 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
     Client = function(options){
         var self = this,
             _storage = new SM(options),
-            storage = new CACHE(_storage),
+            cache = new CACHE(_storage),
+            storage = new FTOLST(cache,"temporaryinfo"),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
