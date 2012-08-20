@@ -16,7 +16,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 		var paradigm = core.createNode(metaroot);
 
 		var copyAttributes = function (xmlNode, metaNode, attrs) {
-			ASSERT(xmlNode, metaNode, attrs);
+			ASSERT(xmlNode && metaNode && attrs);
 
 			for( var key in attrs ) {
 				var value = core.getAttribute(xmlNode, key);
@@ -71,7 +71,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				++pending;
 				getXmlChildByTag(xmlNode, tagName, function (err, node) {
 					if( !err && node ) {
-						var text = core.getAttribute(node, "text") || "";
+						var text = core.getAttribute(node, "#text") || "";
 						core.setAttribute(metaNode, attrName, text);
 					}
 					done(err);
