@@ -53,7 +53,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 		var unresolved = [];
 
 		var timerhandle = setInterval(function () {
-			console.log("  at line " + parser._parser.line + " (" + total + " objects, " + idCount
+			console.log("  at line " + parser._parser.line + " (" + total + " xml objects, " + idCount
 			+ " ids, " + unresolved.length + " idrefs)");
 		}, CONFIG.parser.reportingTime);
 
@@ -85,7 +85,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 				else if( --persisting === 0 ) {
 					var key = core.getKey(tags[0].node);
 
-					console.log("Parsing done (" + total + " objects, " + idCount + " ids, "
+					console.log("Parsing done (" + total + " xml objects, " + idCount + " ids, "
 					+ unresolved.length + " idrefs)");
 					console.log("Root key = " + key);
 
@@ -346,7 +346,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 			}, CONFIG.parser.reportingTime);
 
 			// resolve concurrently
-			for(var i = 0; i < 20; ++i) {
+			for( var i = 0; i < 20 && done < unresolved.length; ++i ) {
 				--done;
 				next(null);
 			}

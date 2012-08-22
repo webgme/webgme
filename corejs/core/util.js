@@ -244,6 +244,15 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 				return fire;
 			},
 
+			fail: function (err) {
+				ASSERT(err);
+
+				if( missing > 0 ) {
+					missing = -1;
+					callback(err);
+				}
+			},
+
 			wait: function () {
 				ASSERT(missing !== 0);
 
@@ -343,6 +352,15 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 				}
 
 				return setter(prop);
+			},
+
+			fail: function (err) {
+				ASSERT(err);
+
+				if( missing > 0 ) {
+					missing = -1;
+					callback(err);
+				}
 			},
 
 			wait: function () {

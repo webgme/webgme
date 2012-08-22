@@ -126,6 +126,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 								argv.splice(i, 0, "-end");
 							}
 							else {
+								ASSERT(typeof key === "string");
 								root = key;
 							}
 							next();
@@ -158,6 +159,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 							}
 							else {
 								console.log("Found root = " + key);
+								ASSERT(typeof key === "string");
 								root = key;
 							}
 							next();
@@ -237,6 +239,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 						}
 						else {
 							console.log("Root key = " + key);
+							ASSERT(typeof key === "string");
 							root = key;
 						}
 						next();
@@ -261,6 +264,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 						}
 						else {
 							console.log("Root key = " + key);
+							ASSERT(typeof key === "string");
 							root = key;
 						}
 						next();
