@@ -28,7 +28,7 @@ UTIL, SHA1) {
 	};
 
 	// make relids deterministic
-	if( true ) {
+	if( false ) {
 		var nextRelid = 0;
 		createRelid = function (data, relid) {
 			ASSERT(data && typeof data === "object");
@@ -581,6 +581,33 @@ UTIL, SHA1) {
 			return target;
 		};
 
+		var hasPointer = function (node, name) {
+			ASSERT(isValidNode(node) && typeof name === "string");
+
+			var source = "";
+
+			do {
+				var child = pertree.getChild(node, OVERLAYS);
+				ASSERT(child);
+
+				child = pertree.getChild(child, source);
+				if( child && pertree.getProperty(child, name) !== undefined ) {
+					return true;
+				}
+
+				if( source === "" ) {
+					source = pertree.getRelid(node);
+				}
+				else {
+					source = pertree.getRelid(node) + "/" + source;
+				}
+
+				node = pertree.getParent(node);
+			} while( node );
+
+			return false;
+		};
+
 		var getOutsidePointerPath = function (node, name, source) {
 			ASSERT(isValidNode(node) && typeof name === "string");
 			ASSERT(typeof source === "string");
@@ -846,6 +873,7 @@ UTIL, SHA1) {
 			// relations
 			getPointerNames: getPointerNames,
 			getPointerPath: getPointerPath,
+			hasPointer: hasPointer,
 			getOutsidePointerPath: getOutsidePointerPath,
 			loadPointer: loadPointer,
 			deletePointer: deletePointer,

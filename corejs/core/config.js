@@ -23,7 +23,7 @@ define(function () {
 		},
 
 		reader: {
-			concurrentReads: 100,
+			concurrentReads: 20,
 			reportingTime: 2000
 		}
 	};

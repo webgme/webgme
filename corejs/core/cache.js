@@ -12,6 +12,7 @@ define([ "core/assert" ], function (ASSERT) {
 
 		var KEYNAME = storage.KEYNAME;
 
+		var backup = {};
 		var cache = {};
 
 		var isEmpty = function () {
@@ -39,15 +40,15 @@ define([ "core/assert" ], function (ASSERT) {
 		var load = function (key, callback) {
 			ASSERT(typeof key === "string");
 
-			var obj = cache[key];
+			var obj = cache[key] || backup[key];
 			if( obj !== undefined ) {
 				if( obj.loading && obj.callbacks ) {
 					obj.callbacks.push(callback);
 				}
 				else {
 					ASSERT(obj[KEYNAME] === key);
-					
-					if( loadDepth < 20 ) {
+
+					if( loadDepth < 5 ) {
 						loadDepth += 1;
 						callback(null, obj);
 						loadDepth -= 1;
@@ -68,20 +69,17 @@ define([ "core/assert" ], function (ASSERT) {
 				storage.load(key, function (err, obj2) {
 					ASSERT(err || obj2);
 
-					obj = cache[key];
-					if( obj && obj.callbacks ) {
-						ASSERT(obj.callbacks === callbacks);
+					ASSERT(cache[key].callbacks === callbacks);
 
-						if( err ) {
-							delete cache[key];
-						}
-						else {
-							cache[key] = obj2;
-						}
+					if( err ) {
+						delete cache[key];
+					}
+					else {
+						cache[key] = obj2;
+					}
 
-						for( var i = 0; i < callbacks.length; ++i ) {
-							callbacks[i](err, obj2);
-						}
+					for( var i = 0; i < callbacks.length; ++i ) {
+						callbacks[i](err, obj2);
 					}
 				});
 			}
@@ -104,6 +102,7 @@ define([ "core/assert" ], function (ASSERT) {
 			}
 
 			// TODO: hack, the higher level layer decides what is permanent
+			// TODO: check why this is needed (I do not remember any more)
 			if( item && key.length === 41 && keyregexp.test(key) ) {
 				ASSERT(item[KEYNAME] === key);
 				callback(null);
@@ -134,6 +133,19 @@ define([ "core/assert" ], function (ASSERT) {
 			storage.removeAll(callback);
 		};
 
+		var flush = function () {
+			backup = {};
+			for( var key in cache ) {
+				var item = cache[key];
+				if( !item.loading && !item.callbacks ) {
+					ASSERT(item[KEYNAME] === key);
+
+					backup[key] = item;
+					delete cache[key];
+				}
+			}
+		};
+
 		return {
 			open: open,
 			opened: storage.opened,
@@ -144,7 +156,8 @@ define([ "core/assert" ], function (ASSERT) {
 			remove: remove,
 			dumpAll: storage.dumpAll,
 			removeAll: removeAll,
-			searchId: storage.searchId
+			searchId: storage.searchId,
+			flush: flush
 		};
 	};
 

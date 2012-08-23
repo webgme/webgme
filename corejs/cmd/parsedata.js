@@ -9,7 +9,9 @@ Core, UTIL, CONFIG, Cache) {
 	"use strict";
 
 	return function (storage, key, callback) {
-		var core = new Core(new Cache(storage));
+		var cache = new Cache(storage);
+		var core = new Core(cache);
+		// var core = new Core(storage);
 
 		var project = core.createNode();
 
@@ -98,7 +100,7 @@ Core, UTIL, CONFIG, Cache) {
 			});
 		};
 
-		var loadRegistryNodes = function (xmlNode, callback2) {
+		var loadSelfRegistry = function (xmlNode, callback2) {
 			ASSERT(xmlNode && callback2);
 
 			var registry = {};
@@ -120,14 +122,15 @@ Core, UTIL, CONFIG, Cache) {
 			};
 
 			if( core.getAttribute(xmlNode, "#tag") === "regnode"
-			&& core.getAttribute(xmlNode, "isopaque") === "yes" ) {
+			&& (core.getAttribute(xmlNode, "isopaque") === "yes" || core.getAttribute(xmlNode,
+			"status") === "meta") ) {
 				addValue(xmlNode, "", join.add());
 			}
 
 			var addValues = function (xmlNode, prefix, callback3) {
 				ASSERT(xmlNode && prefix && callback3);
 
-				loadRegistryNodes(xmlNode, function (err, reg) {
+				loadSelfRegistry(xmlNode, function (err, reg) {
 					if( !err ) {
 						for( var key in reg ) {
 							var name = key ? prefix + "." + key : prefix;
@@ -156,11 +159,57 @@ Core, UTIL, CONFIG, Cache) {
 			});
 		};
 
+		var loadAllRegistry = function (xmlNode, callback2) {
+			ASSERT(xmlNode && callback2);
+			ASSERT(typeof core.getAttribute(xmlNode, "guid") === "string");
+
+			var loadBaseRegistry = function (xmlNode, callback2) {
+				ASSERT(xmlNode && callback2);
+
+				core.loadPointer(xmlNode, "derivedfrom", function (err, xmlBase) {
+					if( err ) {
+						callback2(err);
+					}
+					else if( !xmlBase ) {
+						limitCallDepth(callback2, err, {});
+					}
+					else {
+						loadAllRegistry(xmlBase, callback2);
+					}
+				});
+			};
+
+			var join = new UTIL.AsyncObject(function (err, obj) {
+				if( err ) {
+					callback2(err);
+				}
+				else {
+					var registry = {};
+
+					for( var key in obj.base ) {
+						registry[key] = obj.base[key];
+					}
+					for( key in obj.self ) {
+						registry[key] = obj.self[key];
+					}
+
+					callback2(null, registry);
+				}
+			});
+
+			loadSelfRegistry(xmlNode, join.asyncSet("self"));
+			loadBaseRegistry(xmlNode, join.asyncSet("base"));
+
+			join.wait();
+		};
+
 		var positionRegexp = new RegExp("^([0-9]*),([0-9]*)$");
 
 		var parseRegistry = function (xmlNode, dataNode, callback2) {
 			ASSERT(xmlNode && dataNode && callback2);
-			loadRegistryNodes(xmlNode, function (err, registry) {
+
+			loadSelfRegistry(xmlNode, function (err, registry) {
+				// loadAllRegistry(xmlNode, function (err, registry) {
 				if( !err ) {
 					for( var key in registry ) {
 						if( key.substr(-9) === ".Position" ) {
@@ -185,7 +234,8 @@ Core, UTIL, CONFIG, Cache) {
 				cdate: "created",
 				mdate: "modified",
 				metaname: "#metaname",
-				"#tag": "#type"
+				"#tag": "#type",
+				guid: "#guid"
 			});
 
 			copyChildTexts(xmlNode, project, {
@@ -219,7 +269,69 @@ Core, UTIL, CONFIG, Cache) {
 					copyAttributes(xmlNode, model, {
 						kind: "#kind",
 						role: "#role",
-						"#tag": "#type"
+						"#tag": "#type",
+						guid: "#guid"
+					});
+
+					copyChildTexts(xmlNode, model, {
+						name: "name"
+					}, join.add());
+
+					parseAttributes(xmlNode, model, join.add());
+					parseRegistry(xmlNode, model, join.add());
+
+					var tag = core.getAttribute(xmlNode, "#tag");
+
+					core.setRegistry(model, "isConnection", tag === "connection");
+
+					if( tag === "connection" || tag === "reference"
+					|| core.hasPointer(xmlNode, "derivedfrom") ) {
+						unresolved.push(xmlNode);
+					}
+
+					join.wait();
+				}
+			});
+		};
+
+		var parseXmlBase = function (xmlNode, callback2) {
+			ASSERT(xmlNode && callback2);
+
+			core.loadPointer(xmlNode, "derivedfrom", function (err, xmlType) {
+				if( err ) {
+					callback2(err);
+				}
+				else if( !xmlType ) {
+					limitCallDepth(callback2, null, null);
+				}
+				else {
+					parseXmlNode(xmlType, callback2);
+				}
+			});
+		};
+
+		parsers.model_slow = function (xmlNode, callback2) {
+			var join = new UTIL.AsyncObject(function (err, obj) {
+				if( err ) {
+					callback2(err);
+				}
+				else {
+					var model = core.createNode(obj.parent);
+
+					var join = new UTIL.AsyncJoin(function (err) {
+						if( err ) {
+							callback2(err);
+						}
+						else {
+							limitCallDepth(callback2, null, model);
+						}
+					});
+
+					copyAttributes(xmlNode, model, {
+						kind: "#kind",
+						role: "#role",
+						"#tag": "#type",
+						guid: "#guid"
 					});
 
 					copyChildTexts(xmlNode, model, {
@@ -240,6 +352,13 @@ Core, UTIL, CONFIG, Cache) {
 					join.wait();
 				}
 			});
+
+			parseXmlNode(core.getParent(xmlNode), join.asyncSet("parent"));
+			parseXmlBase(xmlNode, join.asyncSet("base"));
+			join.wait();
+
+			parseXmlNode(core.getParent(xmlNode), function (err, parent) {
+			});
 		};
 
 		parsers.folder = parsers.model;
@@ -249,10 +368,24 @@ Core, UTIL, CONFIG, Cache) {
 
 		var parsedCount = 0;
 		var alreadyParsed = {};
+		var unsavedObjects = 0;
+		var persisting = false;
 
 		var executeParser = function (path, parserFunction, xmlNode, callback2) {
 			ASSERT(typeof path === "string" && parserFunction && xmlNode && callback2);
 			ASSERT(alreadyParsed[path] === undefined);
+
+			if( ++unsavedObjects >= 5000 && !persisting ) {
+				persisting = true;
+				cache.flush();
+				core.persist(project, function (err) {
+					persisting = false;
+					if( err ) {
+						console.log("Error during intermediate persisting" + err);
+					}
+				});
+				unsavedObjects = 0;
+			}
 
 			alreadyParsed[path] = {
 				parsing: true,
@@ -280,26 +413,39 @@ Core, UTIL, CONFIG, Cache) {
 			});
 		};
 
-		var parseXmlNode = function (node, callback2) {
-			ASSERT(node && callback2);
+		var callDepth = 0;
 
-			var path = core.getStringPath(node);
+		var limitCallDepth = function (func, arg1, arg2) {
+			if( callDepth < 50 ) {
+				++callDepth;
+				func(arg1, arg2);
+				--callDepth;
+			}
+			else {
+				setTimeout(func, 0, arg1, arg2);
+			}
+		};
+
+		var parseXmlNode = function (xmlNode, callback2) {
+			ASSERT(xmlNode && callback2);
+
+			var path = core.getStringPath(xmlNode);
 			var data = alreadyParsed[path];
 			if( data ) {
 				if( data.parsing && data.callbacks ) {
 					data.callbacks.push(callback2);
 				}
 				else {
-					callback2(null, data);
+					limitCallDepth(callback2, null, data);
 				}
 			}
 			else {
-				var tag = core.getAttribute(node, "#tag");
+				var tag = core.getAttribute(xmlNode, "#tag");
 				if( parsers[tag] ) {
-					executeParser(path, parsers[tag], node, callback2);
+					executeParser(path, parsers[tag], xmlNode, callback2);
 				}
 				else {
-					callback2(null, null);
+					limitCallDepth(callback2, null, null);
 				}
 			}
 		};
@@ -356,18 +502,59 @@ Core, UTIL, CONFIG, Cache) {
 			}
 		};
 
-		var resolveSetPointer = function (xmlNode, ptrName, dataNode, ptrName2, callback2) {
-			ASSERT(xmlNode && ptrName && dataNode && ptrName2 && callback);
+		var resolveConnectionPointers = function (xmlNode, dataNode, callback2) {
+			ASSERT(xmlNode && dataNode && callback2 instanceof Function);
 
-			core.loadPointer(xmlNode, ptrName, function (err, xmlTarget) {
-				if( !err ) {
-					var dataTarget = alreadyParsed[core.getStringPath(xmlTarget)];
-					ASSERT(dataTarget);
-					
-					core.setPointer(dataNode, ptrName2, dataTarget);
+			core.loadChildren(xmlNode, function (err, xmlChildren) {
+				if( err ) {
+					callback2(err);
 				}
-				callback2(err);
+				else {
+					for( var i = 0; i < xmlChildren.length; ++i ) {
+						var xmlChild = xmlChildren[i];
+						var xmlTargetPath, dataTarget;
+
+						if( core.getAttribute(xmlChild, "#tag") === "connpoint" ) {
+							var role = core.getAttribute(xmlChild, "role");
+
+							if( role === "src" ) {
+								xmlTargetPath = core.getPointerPath(xmlChild, "target");
+								ASSERT(typeof xmlTargetPath === "string");
+								
+								dataTarget = alreadyParsed[xmlTargetPath];
+								ASSERT(dataTarget);
+
+								core.setPointer(dataNode, "source", dataTarget);
+							}
+							else if( role === "dst" ) {
+								xmlTargetPath = core.getPointerPath(xmlChild, "target");
+								ASSERT(typeof xmlTargetPath === "string");
+								
+								dataTarget = alreadyParsed[xmlTargetPath];
+								ASSERT(dataTarget);
+
+								core.setPointer(dataNode, "target", dataTarget);
+							}
+							else {
+								console.log("Warning: unknown connection role: " + role);
+							}
+						}
+					}
+					callback2(null);					
+				}
 			});
+		};
+
+		var resolveBaseType = function (xmlNode, dataNode) {
+			ASSERT(xmlNode && dataNode);
+
+			var xmlTargetPath = core.getPointerPath(xmlNode, "derivedfrom");
+			ASSERT(typeof xmlTargetPath === "string");
+
+			var dataTarget = alreadyParsed[xmlTargetPath];
+			ASSERT(dataTarget);
+
+			core.setPointer(dataNode, "base", dataTarget);
 		};
 
 		var resolvePointers = function (xmlNode, callback2) {
@@ -376,40 +563,18 @@ Core, UTIL, CONFIG, Cache) {
 			var dataNode = alreadyParsed[core.getStringPath(xmlNode)];
 			ASSERT(dataNode);
 
+			var join = new UTIL.AsyncJoin(callback2);
+
 			var tag = core.getAttribute(xmlNode, "#tag");
 			if( tag === "connection" ) {
-				core.loadChildren(xmlNode, function (err, xmlChildren) {
-					if( err ) {
-						callback2(err);
-					}
-					else {
-						var join = new UTIL.AsyncJoin(callback2);
-
-						for( var i = 0; i < xmlChildren.length; ++i ) {
-							var xmlChild = xmlChildren[i];
-							if( core.getAttribute(xmlChild, "#tag") === "connpoint" ) {
-								var role = core.getAttribute(xmlChild, "role");
-								if( role === "src" ) {
-									resolveSetPointer(xmlChild, "target", dataNode, "source", join
-									.add());
-								}
-								else if( role === "dst" ) {
-									resolveSetPointer(xmlChild, "target", dataNode, "target", join
-									.add());
-								}
-								else {
-									console.log("Warning: unknown connection role: " + role);
-								}
-							}
-						}
-
-						join.wait();
-					}
-				});
+				resolveConnectionPointers(xmlNode, dataNode, join.add());
 			}
-			else {
-				callback2(null);
+
+			if( core.hasPointer(xmlNode, "derivedfrom") ) {
+				resolveBaseType(xmlNode, dataNode);
 			}
+
+			join.wait();
 		};
 
 		var resolveUnresolved = function (callback2) {
@@ -438,7 +603,7 @@ Core, UTIL, CONFIG, Cache) {
 					}
 					else if( index < unresolved.length ) {
 						var xmlNode = unresolved[index++];
-						resolvePointers(xmlNode, next);
+						limitCallDepth(resolvePointers, xmlNode, next);
 					}
 				}
 			};
@@ -449,7 +614,7 @@ Core, UTIL, CONFIG, Cache) {
 			}, CONFIG.parser.reportingTime);
 
 			// resolve concurrently
-			for( var i = 0; i < 20 && done < unresolved.length; ++i ) {
+			for( var i = 0; i < 200 && done < unresolved.length; ++i ) {
 				--done;
 				next(null);
 			}
