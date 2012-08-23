@@ -520,7 +520,7 @@ Core, UTIL, CONFIG, Cache) {
 							if( role === "src" ) {
 								xmlTargetPath = core.getPointerPath(xmlChild, "target");
 								ASSERT(typeof xmlTargetPath === "string");
-								
+
 								dataTarget = alreadyParsed[xmlTargetPath];
 								ASSERT(dataTarget);
 
@@ -529,7 +529,7 @@ Core, UTIL, CONFIG, Cache) {
 							else if( role === "dst" ) {
 								xmlTargetPath = core.getPointerPath(xmlChild, "target");
 								ASSERT(typeof xmlTargetPath === "string");
-								
+
 								dataTarget = alreadyParsed[xmlTargetPath];
 								ASSERT(dataTarget);
 
@@ -540,7 +540,7 @@ Core, UTIL, CONFIG, Cache) {
 							}
 						}
 					}
-					callback2(null);					
+					callback2(null);
 				}
 			});
 		};
@@ -548,13 +548,36 @@ Core, UTIL, CONFIG, Cache) {
 		var resolveBaseType = function (xmlNode, dataNode) {
 			ASSERT(xmlNode && dataNode);
 
-			var xmlTargetPath = core.getPointerPath(xmlNode, "derivedfrom");
-			ASSERT(typeof xmlTargetPath === "string");
+			var xmlBasePath = core.getPointerPath(xmlNode, "derivedfrom");
+			ASSERT(typeof xmlBasePath === "string");
 
-			var dataTarget = alreadyParsed[xmlTargetPath];
-			ASSERT(dataTarget);
+			var dataBase = alreadyParsed[xmlBasePath];
+			ASSERT(dataBase);
 
-			core.setPointer(dataNode, "base", dataTarget);
+			core.setPointer(dataNode, "base", dataBase);
+
+			/* This does not work yet, infinite cycle, base is not yet processed, etc. 
+			 * 
+			// inherit registry
+			var xmlBase = dataBase;
+			for( ;; ) {
+				var names = core.getRegistryNames(base);
+				for( var i = 0; i < names.length; ++i ) {
+					var name = names[i];
+					if( core.getRegistry(dataNode, name) === undefined ) {
+						core.setRegistry(dataNode, name, core.getRegistry(base, name));
+					}
+				}
+
+				xmlBasePath = core.getPointerPath(xmlNode, "derivedfrom");
+				if( typeof xmlBasePath !== "string" ) {
+					break;
+				}
+
+				base = alreadyParsed[xmlBasePath];
+				ASSERT(base);
+			}
+			*/
 		};
 
 		var resolvePointers = function (xmlNode, callback2) {

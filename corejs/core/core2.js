@@ -97,6 +97,20 @@ UTIL, SHA1) {
 			return keys;
 		};
 
+		var getRegistryNames = function (node) {
+			ASSERT(isValidNode(node));
+
+			var keys = Object.keys(pertree.getProperty(node, REGISTRY));
+			var i = keys.length;
+			while( --i >= 0 ) {
+				if( keys[i].charAt(0) === "" ) {
+					keys.splice(i, 1);
+				}
+			}
+
+			return keys;
+		};
+
 		var getAttribute = function (node, name) {
 			return pertree.getProperty2(node, ATTRIBUTES, name);
 		};
@@ -866,6 +880,7 @@ UTIL, SHA1) {
 			getAttribute: getAttribute,
 			setAttribute: setAttribute,
 			delAttribute: delAttribute,
+			getRegistryNames: getRegistryNames,
 			getRegistry: getRegistry,
 			setRegistry: setRegistry,
 			delRegistry: delRegistry,
