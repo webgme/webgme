@@ -197,7 +197,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             clipboard = ids;
         };
         this.pasteNodes = function(parentpath){
-            /*copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
+            copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
                 if(err){
                     logger.error("error during multiple paste!!! "+err);
                     rollBackModification();
@@ -205,8 +205,8 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 else{
                     modifyRootOnServer();
                 }
-            });*/
-            var parent = currentNodes[parentpath];
+            });
+            /*var parent = currentNodes[parentpath];
             if(parent){
                 for(var i=0;i<clipboard.length;i++){
                     var fromnode = currentNodes[clipboard[i]];
@@ -228,7 +228,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 modifyRootOnServer();
             } else {
                 logger.error("wrong parent to paste: "+parentpath);
-            }
+            }*/
         };
         this.deleteNode = function(path){
             if(currentNodes[path]){
