@@ -161,7 +161,7 @@ define([   'order!jquery',
         }
 
         if (commonUtil.hashbasedconfig.inuse) {
-            client = new Core(commonUtil.hashbasedconfig);
+            client = new Core(commonUtil.combinedserver);
         } else {
             client = new Client(serverLocation);
         }

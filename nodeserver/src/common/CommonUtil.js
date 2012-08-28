@@ -114,6 +114,21 @@ define([], function () {
             rootsrv        : "http://localhost:8081/root",
             project        : "hash",
             branch         : "test"
+        },
+        combinedserver: {
+            ip              : "129.59.104.16",
+            port            : 8081,
+            mongosrv        : "/datamongo",
+            rootsrv         : "/root",
+            logsrv          : "/log",
+            branchfile      : "combined.tpf",
+            mongoip         : /*"129.59.105.195"*/"129.59.104.16",
+            mongoport       : 27017,
+            mongocollection : "storage"/*"test"*/,
+            mongodatabase   : "combined",
+            storage         : "file",
+            logfile         : "comblog.log"
         }
+
     };
 });

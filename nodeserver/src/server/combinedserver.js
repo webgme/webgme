@@ -4,6 +4,7 @@ var commonUtil = require('./../common/CommonUtil.js');
 LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
+var MONGO = require('mongodb');
 
 var Server = function(parameters){
     var http = require('http').createServer(function(req, res){
@@ -53,19 +54,126 @@ var Server = function(parameters){
         io = require('socket.io').listen(http);
 
     io.set('log level', 1); // reduce logging
-    http.listen(parameters.ServerPort);
+    http.listen(parameters.port);
 
-    var dataserver = io.of('/data');
+
+    var datafileserver = io.of('/datafile');
+    var datamongoserver = io.of('/datamongo');
     var rootserver = io.of('/root');
+    var logserver = io.of('/log');
     var opened = false;
+    var idregexp = new RegExp("^[#0-9a-zA-Z_]*$");
+    var mongodatabase = null;
+    var mongocollection = null;
+    var mongoopened = false;
 
-    dataserver.on('connection',function(socket){
+    datamongoserver.on('connection',function(socket){
+        socket.on('open', function (callback) {
+            if(mongoopened){
+                callback(null);
+            } else {
+                mongodatabase = new MONGO.Db(parameters.mongodatabase, new MONGO.Server(parameters.mongoip,parameters.mongoport));
+                var abort = function (err) {
+                    mongodatabase.close();
+                    mongodatabase = null;
+                    callback(err);
+                };
+
+                mongodatabase.open(function (err1) {
+                    if( err1 ) {
+                        abort(err1);
+                    }
+                    else {
+                        mongodatabase.collection(parameters.mongocollection, function (err2, result) {
+                            if( err2 ) {
+                                abort(err2);
+                            }
+                            else {
+                                mongocollection = result;
+                                mongoopened = true;
+                                callback(null);
+                            }
+                        });
+                    }
+                });
+            }
+        });
+        socket.on('load',function(key,callback){
+            mongocollection.findOne({
+                _id: key
+            }, callback);
+        });
+        socket.on('save',function(node,callback){
+            mongocollection.save(node, callback);
+        });
+        socket.on('remove',function(key,callback){
+            mongocollection.remove({
+                _id: key
+            }, callback);
+        });
+        socket.on('close',function(callback){
+            mongodatabase.lastError({
+                fsync: true
+            }, function (err, data) {
+                mongodatabase.close(function () {
+                    mongocollection = null;
+                    mongodatabase = null;
+                    if( callback ) {
+                        callback();
+                    }
+                });
+            });
+        });
+        socket.on('removeAll',function(callback){
+            mongocollection.remove(function(err){
+                callback(err);
+            });
+        });
+        socket.on('searchId',function(beginning,callback){
+            if( !idregexp.test(beginning) ) {
+                callback("mongodb id " + beginning + " not valid");
+            }
+            else {
+                mongocollection.find({
+                    _id: {
+                        $regex: "^" + beginning
+                    }
+                }, {
+                    limit: 2
+                }).toArray(function (err, docs) {
+                        if( err ) {
+                            callback(err);
+                        }
+                        else if( docs.length === 0 ) {
+                            callback("mongodb id " + beginning + " not found");
+                        }
+                        else if( docs.length !== 1 ) {
+                            callback("mongodb id " + beginning + " not unique");
+                        }
+                        else {
+                            callback(null, docs[0]._id);
+                        }
+                    });
+            }
+        });
+        socket.on('dumpAll',function(callback){
+            mongocollection.find().each(function (err, item) {
+                if( err || item === null ) {
+                    callback(err);
+                }
+                else {
+                    console.log(item);
+                }
+            });
+        });
+    });
+    datafileserver.on('connection',function(socket){
         socket.on('open', function (callback) {
             if(opened){
                 callback(null);
             }
             else{
-                var filepath = "../test/"+"combined.tpf";
+                var filepath = "../test/"+parameters.branchfile;
                 FS.readFile(filepath, 'utf8', function (err, data) {
                     if(err){
                         callback(err);
@@ -155,9 +263,22 @@ var Server = function(parameters){
                 console.log("wrong oldroot:"+currentRoot+" != "+oldroot);
             }
         });
+        socket.on('undoRoot',function(){
+
+        });
 
     });
-    var internaldataconn = require('socket.io-client').connect('http://localhost:'+parameters.ServerPort+'/data');
+    logserver.on('connection',function(socket){
+        console.log("new connection to logserver "+socket.id);
+        socket.on('log',function(msg){
+            if(parameters.logfile){
+                FS.appendFileSync("../test/"+parameters.logfile,"["+socket.id+"] "+msg+"\n","utf8");
+            } else{
+                console.log("["+socket.id+"] "+msg);
+            }
+        });
+    });
+    var internaldataconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.mongosrv);
     var currentRoot = null;
     var rootHistory = [];
 
@@ -179,6 +300,6 @@ var Server = function(parameters){
     });
 };
 
-var server = new Server(commonUtil.standalone);
+var server = new Server(commonUtil.combinedserver);
 
 

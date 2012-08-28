@@ -1,4 +1,4 @@
-define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftolstorage','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST){
+define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftolstorage','js/logger','js/logstorage','js/logcore','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST,LogSrv,LogST,LCORE){
     var logger,
         Client,
         CommandQueue,
@@ -15,8 +15,10 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
     Client = function(options){
         var self = this,
             _storage = new SM(options),
-            cache = new CACHE(_storage),
-            storage = new FTOLST(cache,"temporaryinfo"),
+            /*cache = new CACHE(_storage),*/
+            realstorage = new FTOLST(/*cache*/_storage,"temporaryinfo"),
+            logsrv = /*new LogSrv(options.ip+":"+options.port+options.logsrv),*/null,
+            storage = new LogST(realstorage/*_storage,logsrv*/),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
@@ -24,7 +26,9 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             currentCore = null,
             clipboard = null,
             rootServer = null,
-            pendingRoot = null,
+            rootServerOut = false,
+            lastValidRoot = null,
+            rootRetry = false,
             updating = false/*,
             previousNodes = {},
             previousRoot = null,
@@ -53,10 +57,54 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             if(count === 0){
                 /*in case of the first user we have to connect...*/
                 storage.open(function(){
-                    rootServer = io.connect(options.rootsrv);
+                    if(rootServer === null){
+                        rootServer = io.connect(options.ip && options.port ? options.ip+":"+options.port+options.rootsrv : options.rootsrv);
+                    }
                     rootServer.on('newRoot',function(newroot){
-                        newRoot(newroot);
+                        if(newroot === lastValidRoot){
+                            if(rootRetry){
+                                rootRetry = false;
+                                newRoot(newRoot,true);
+                            } else {
+                                if( newroot !== currentRoot ){
+                                    rootRetry = true;
+                                    modifyRootOnServer(true);
+                                }
+                            }
+                        } else {
+                            newRoot(newroot,true);
+                        }
                     });
+                    rootServer.on('connect',function(){
+                        console.log('CONNECT - ROOTSRV');
+                        if(rootServerOut){
+                            rootServerOut = false;
+                            if( lastValidRoot !== currentRoot ){
+                                modifyRootOnServer(true);
+                            }
+                        }
+                    });
+                    rootServer.on('connect_failed',function(){
+                        rootServerOut = true;
+                        console.log('CONNECT_FAILED - ROOTSRV');
+                    });
+                    rootServer.on('disconnect',function(){
+                        rootServerOut = true;
+                        console.log('DISCONNECT - ROOTSRV');
+                    });
+                    rootServer.on('reconnect_failed', function(){
+                        rootServerOut = true;
+                        console.log('RECONNECT_FAILED - ROOTSRV');
+                    });
+                    rootServer.on('reconnect', function(){
+                        rootServerOut = true;
+                        console.log('RECONNECT - ROOTSRV');
+                    });
+                    rootServer.on('reconnecting', function(){
+                        rootServerOut = true;
+                        console.log('RECONNECTING - ROOTSRV');
+                    });
+
                 });
             }
             users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false};
@@ -90,7 +138,11 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             /*this call generates events to all ui with the current territory*/
             for(var i in users){
                 for(var j=0;j<users[i].PATHES.length;j++){
-                    users[i].UI.onEvent('update',users[i].PATHES[j]);
+                    if(currentNodes[users[i].PATHES[j]]){
+                        users[i].UI.onEvent('update',users[i].PATHES[j]);
+                    } else {
+                        users[i].UI.onEvent('unload',users[i].PATHES[j]);
+                    }
                 }
             }
         };
@@ -135,7 +187,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         }
                     }
                 }
-                modifyRootOnServer(currentNodes[path]);
+                modifyRootOnServer();
             }
             else{
                 logger.error("[l92] no such object: "+path);
@@ -145,7 +197,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             clipboard = ids;
         };
         this.pasteNodes = function(parentpath){
-            copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
+            /*copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
                 if(err){
                     logger.error("error during multiple paste!!! "+err);
                     rollBackModification();
@@ -153,7 +205,30 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 else{
                     modifyRootOnServer();
                 }
-            });
+            });*/
+            var parent = currentNodes[parentpath];
+            if(parent){
+                for(var i=0;i<clipboard.length;i++){
+                    var fromnode = currentNodes[clipboard[i]];
+                    if(fromnode){
+                        var tempnode = currentCore.copyNode(fromnode,parent);
+                        if(tempnode){
+                            storeNode(tempnode);
+                        } else {
+                            logger.error("error during node copy: "+clipboard[i]);
+                            rollBackModification();
+                            return;
+                        }
+                    } else {
+                        logger.error("wrong item on clipboard: "+clipboard[i]);
+                        rollBackModification();
+                        return;
+                    }
+                }
+                modifyRootOnServer();
+            } else {
+                logger.error("wrong parent to paste: "+parentpath);
+            }
         };
         this.deleteNode = function(path){
             if(currentNodes[path]){
@@ -178,16 +253,16 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             if(parameters.parentId){
                 baseId = parameters.baseId || "object";
                 child = currentCore.createNode(currentNodes[parameters.parentId]);
-                currentCore.setAttribute(child,"BASE",baseId);
                 if(baseId === "connection"){
                     currentCore.setRegistry(child,"isConnection",true);
                     currentCore.setAttribute(child,"name","defaultConn");
                 }
                 else{
                     currentCore.setRegistry(child,"isConnection",false);
-                    currentCore.setRegistry(child,"position",{ "x" : Math.round(Math.random() * 1000), "y":  Math.round(Math.random() * 1000)});
+                    currentCore.setRegistry(child,"position",{ "x" : Math.round(Math.random() * 100), "y":  Math.round(Math.random() * 100)});
                     currentCore.setAttribute(child,"name","defaultObj");
                 }
+                currentCore.setAttribute(child,"isPort",true);
                 modifyRootOnServer();
             }
             else{
@@ -224,7 +299,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 if(currentNodes[parameters.parentId] && currentNodes[parameters.sourceId] && currentNodes[parameters.targetId]){
                     connection = currentCore.createNode(currentNodes[parameters.parentId]);
                     storeNode(connection);
-                    currentCore.setAttribute(connection,"BASE",baseId);
                     currentCore.setPointer(connection,"source",currentNodes[parameters.sourceId]);
                     currentCore.setPointer(connection,"target",currentNodes[parameters.targetId]);
                     currentCore.setAttribute(connection,"name","defaultConn");
@@ -298,40 +372,57 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         /*helping funcitons*/
         var rollBackModification = function(){
             currentNodes = {};
-            currentCore = new CORE(storage);
+            currentCore = new LCORE(new CORE(storage),logsrv);
+            currentRoot = lastValidRoot;
             currentCore.loadRoot(currentRoot,function(err,node){
                 storeNode(node);
                 updateAllUser(null);
             });
         };
-        var newRoot = function(newroot){
-            currentRoot = newroot;
-            currentNodes = {};
-            currentCore = new CORE(storage);
-            currentCore.loadRoot(currentRoot,function(err,node){
-                storeNode(node);
-                updateAllUser(null);
-            });
-        }
-        var modifyRootOnServer = function(){
+        var newRoot = function(newroot,fromserver){
+            if(fromserver){
+                lastValidRoot = newroot;
+            }
+            if(newroot !== currentRoot){
+                currentRoot = newroot;
+                currentNodes = {};
+                currentCore = new LCORE(new CORE(storage),logsrv);
+                currentCore.loadRoot(currentRoot,function(err,node){
+                    storeNode(node);
+                    updateAllUser(null);
+                });
+            }
+        };
+        var modifyRootOnServer = function(skippersist){
             if(currentCore){
-                var newkey;
-                var persistdone = function(err){
-                    if(err){
-                        logger.error("error during persist: "+err);
-                        rollBackModification();
-                    }
-                    else{
-                        if(rootServer){
-                            rootServer.emit('modifyRoot',currentRoot,newkey);
+                if(!skippersist){
+                    var newkey;
+                    var persistdone = function(err){
+                        if(err){
+                            logger.error("error during persist: "+err);
+                            rollBackModification();
                         }
+                        else{
+                            if(newkey){
+                                if(rootServer){
+                                    rootServer.emit('modifyRoot',lastValidRoot,newkey);
+                                }
+
+                            } else {
+                                logger.error("persist resulted in null key!!!");
+                                newRoot(lastValidRoot,true);
+                            }
+                        }
+                    };
+                    var k = [];
+                    for(var i in currentNodes) if (currentNodes.hasOwnProperty(i)){
+                        k.push(i);
                     }
-                };
-                var k = [];
-                for(var i in currentNodes) if (currentNodes.hasOwnProperty(i)){
-                    k.push(i);
+                    newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),persistdone);
+                    newRoot(newkey,false);
+                } else {
+                    rootServer.emit('modifyRoot',lastValidRoot,currentRoot);
                 }
-                newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),persistdone);
             }
             else{
                 logger.error("There is no CORE!!!");
@@ -362,20 +453,24 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             };
             var loadpath = function(path,childrenaswell){
                 var pathloaded = function(err,node){
-                    storeNode(node);
+                    if(err || node === undefined || node === null){
+                        console.log("something wrong with the path: "+path+"  - error: "+err);
+                    } else {
+                        storeNode(node);
 
-                    INSERTARR(pathes,getNodePath(node));
-                    if(childrenaswell){
-                        currentCore.loadChildren(node,function(err,children){
-                            for(var i=0;i<children.length;i++){
-                                storeNode(children[i]);
-                                INSERTARR(pathes,getNodePath(children[i]));
-                            }
+                        INSERTARR(pathes,getNodePath(node));
+                        if(childrenaswell){
+                            currentCore.loadChildren(node,function(err,children){
+                                for(var i=0;i<children.length;i++){
+                                    storeNode(children[i]);
+                                    INSERTARR(pathes,getNodePath(children[i]));
+                                }
+                                loaddone();
+                            });
+                        }
+                        else{
                             loaddone();
-                        });
-                    }
-                    else{
-                        loaddone();
+                        }
                     }
                 };
                 if(currentNodes[path]){
@@ -465,7 +560,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             if(node && parent){
                 var newnode = currentCore.moveNode(node,parent);
                 storeNode(newnode);
-                //delete currentNodes[path];
+                delete currentNodes[path];
                 return currentNodes[getNodePath(newnode)];
             }
             else{
@@ -549,7 +644,11 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         };
         this.getBaseId = function(){
             /*return null;*/
-            return core.getAttribute(node,"BASE");
+            if(core.getRegistry(node,"isConnection") === true){
+                return "connection";
+            } else {
+                return "object";
+            }
         };
         this.getInheritorIds = function(){
             return null;

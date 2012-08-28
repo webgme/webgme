@@ -17,6 +17,7 @@ define([ "core/assert" ], function (ASSERT) {
                     callback(err);
                 } else {
                     storageAvailable = true;
+                    OBJECTS.clear();
                     callback(null);
                 }
             });
@@ -37,10 +38,14 @@ define([ "core/assert" ], function (ASSERT) {
                             console.log("fault tolerant storage "+err);
                             callback(err);
                         } else {
-                            OBJECTS.setItem(projectinfo+node[KEYNAME],JSON.stringify(node));
-                            storageAvailable = true;
-                            callback(null,node);
-                            sync();
+                            if(node){
+                                OBJECTS.setItem(projectinfo+node[KEYNAME],JSON.stringify(node));
+                                storageAvailable = true;
+                                callback(null,node);
+                                sync();
+                            } else {
+                                callback(null,node);
+                            }
                         }
                     });
                 }
@@ -54,7 +59,9 @@ define([ "core/assert" ], function (ASSERT) {
                         console.log("fault tolerant storage save "+err);
                         var savequeue = JSON.parse(OBJECTS.getItem(projectinfo+SAVELIST)) || [];
                         savequeue.push(node);
+                        OBJECTS.setItem(projectinfo+SAVELIST,JSON.stringify(savequeue));
                         storageAvailable = false;
+                        storage.whenAvailable(availableAgain);
                         callback(null);
                     } else {
                         storageAvailable = true;
@@ -72,7 +79,9 @@ define([ "core/assert" ], function (ASSERT) {
                         console.log("fault tolerant storage delete "+err);
                         var delqueue = JSON.parse(OBJECTS.getItem(projectinfo+DELETELIST)) || [];
                         delqueue.push(key);
+                        OBJECTS.setItem(projectinfo+DELETELIST,JSON.stringify(delqueue));
                         storageAvailable = false;
+                        storage.whenAvailable(availableAgain);
                         callback(null);
                     } else {
                         storageAvailable = true;
@@ -106,6 +115,12 @@ define([ "core/assert" ], function (ASSERT) {
                 });
             }
         };
+
+        var availableAgain = function(){
+            storageAvailable = true;
+            sync();
+        };
+
 
         return {
             open: open,
