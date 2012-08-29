@@ -18,7 +18,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             /*cache = new CACHE(_storage),*/
             realstorage = new FTOLST(/*cache*/_storage,"temporaryinfo"),
             logsrv = /*new LogSrv(options.ip+":"+options.port+options.logsrv),*/null,
-            storage = new LogST(realstorage/*_storage,logsrv*/),
+            storage = new LogST(/*realstorage*/_storage/*,logsrv*/),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
@@ -418,8 +418,32 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     for(var i in currentNodes) if (currentNodes.hasOwnProperty(i)){
                         k.push(i);
                     }
-                    newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),persistdone);
-                    newRoot(newkey,false);
+                    newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),function(err){
+                        if(err){
+                            persistdone(err);
+                        } else {
+                            if(newkey){
+                                persistdone(null);
+                            } else {
+                                var timer = setInterval(function(){
+                                    if(newkey){
+                                        clearInterval(timer);
+                                        persistdone(null);
+                                    }
+                                },1);
+                            }
+                        }
+                    });
+                    if(newkey){
+                        newRoot(newkey,false);
+                    } else {
+                        var timer2 = setInterval(function(){
+                            if(newkey){
+                                clearInterval(timer2);
+                                newRoot(newkey,false);
+                            }
+                        },1);
+                    }
                 } else {
                     rootServer.emit('modifyRoot',lastValidRoot,currentRoot);
                 }

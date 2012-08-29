@@ -242,7 +242,7 @@ var Server = function(parameters){
         }
 
         socket.on('modifyRoot',function(oldroot,newroot){
-            console.log("root arived: "+oldroot+" -> "+newroot);
+            /*console.log("root arived: "+oldroot+" -> "+newroot);
             if(oldroot === currentRoot || currentRoot === null){
                 if(newroot){
                     rootHistory.push(newroot);
@@ -261,7 +261,34 @@ var Server = function(parameters){
                 }
             }else{
                 console.log("wrong oldroot:"+currentRoot+" != "+oldroot);
-            }
+            }*/
+            console.log("ROOT "+newroot+" arrived from "+socket.id);
+            internaldataconn.emit('load',"***root***",function(err,root){
+                if(err){
+                    console.log("error during database update 1");
+                } else {
+                    root = root || {_id:"***root***",value:[]};
+                    console.log("kecso "+JSON.stringify(root)+" : "+oldroot+" : "+newroot);
+                    if(root.value[0] === oldroot || root.value[0] === null || root.value[0] === undefined){
+                        if(newroot){
+                            root.value.unshift(newroot);
+                            internaldataconn.emit('save',root,function(err){
+                                if(err){
+                                    console.log("error during database update 2 - "+err);
+                                } else {
+                                    currentRoot = newroot;
+                                    socket.broadcast.emit('newRoot',newroot);
+                                    socket.emit('newRoot',newroot);
+                                }
+                            });
+                        } else {
+                            console.log("not valid new root!!!");
+                        }
+                    } else {
+                        console.log("wrong old root "+oldroot+" != "+root.value[0]);
+                    }
+                }
+            });
         });
         socket.on('undoRoot',function(){
 
