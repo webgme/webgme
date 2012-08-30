@@ -320,7 +320,7 @@ var Server = function(parameters){
                     }
                     else{
                         if(rootkey){
-                            currentRoot = rootkey.value;
+                            currentRoot = rootkey.value[0] || null;
                         }
                     }
                 });

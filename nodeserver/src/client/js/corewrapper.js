@@ -18,7 +18,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             /*cache = new CACHE(_storage),*/
             realstorage = new FTOLST(/*cache*/_storage,"temporaryinfo"),
             logsrv = /*new LogSrv(options.ip+":"+options.port+options.logsrv),*/null,
-            storage = new LogST(/*realstorage*/_storage/*,logsrv*/),
+            storage = new LogST(realstorage/*_storage,logsrv*/),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
@@ -417,11 +417,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                             }
                         }
                     };
-                    var k = [];
-                    for(var i in currentNodes) if (currentNodes.hasOwnProperty(i)){
-                        k.push(i);
-                    }
-                    newkey = currentCore.persist(currentCore.getRoot(currentNodes[k[0]]),function(err){
+                    newkey = currentCore.persist(currentCore.getRoot(currentNodes["root"]),function(err){
                         if(err){
                             persistdone(err);
                         } else {
