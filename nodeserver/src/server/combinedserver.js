@@ -242,33 +242,12 @@ var Server = function(parameters){
         }
 
         socket.on('modifyRoot',function(oldroot,newroot){
-            /*console.log("root arived: "+oldroot+" -> "+newroot);
-            if(oldroot === currentRoot || currentRoot === null){
-                if(newroot){
-                    rootHistory.push(newroot);
-                    internaldataconn.emit('save',{"_id":"***root***","value":newroot},function(err){
-                        if(err){
-                            console.log("saving new root failed: "+err);
-                        }else{
-                            currentRoot = newroot;
-                            socket.broadcast.emit('newRoot',currentRoot);
-                            socket.emit('newRoot',currentRoot);
-                        }
-                    });
-                }
-                else{
-                    console.log("invalid new root: "+newroot);
-                }
-            }else{
-                console.log("wrong oldroot:"+currentRoot+" != "+oldroot);
-            }*/
             console.log("ROOT "+newroot+" arrived from "+socket.id);
             internaldataconn.emit('load',"***root***",function(err,root){
                 if(err){
                     console.log("error during database update 1");
                 } else {
                     root = root || {_id:"***root***",value:[]};
-                    console.log("kecso "+JSON.stringify(root)+" : "+oldroot+" : "+newroot);
                     if(root.value[0] === oldroot || root.value[0] === null || root.value[0] === undefined){
                         if(newroot){
                             root.value.unshift(newroot);
@@ -291,7 +270,30 @@ var Server = function(parameters){
             });
         });
         socket.on('undoRoot',function(){
+            console.log(" UNDO ROOT arrived from "+socket.id);
+            internaldataconn.emit('load',"***root***",function(err,root){
+                if(err){
+                    console.log("error during database update 3");
+                } else {
+                    root = root || {_id:"***root***",value:[]};
+                    if(root.value.length > 1){
+                        root.value.shift();
+                        var newroot = root.value[0];
+                        internaldataconn.emit('save',root,function(err){
+                            if(err){
+                                console.log("error during database update 4 - "+err);
+                            } else {
+                                currentRoot = newroot;
+                                socket.broadcast.emit('newRoot',newroot);
+                                socket.emit('newRoot',newroot);
+                            }
+                        });
 
+                    } else {
+                        console.log("already at the earliest root!!!");
+                    }
+                }
+            });
         });
 
     });

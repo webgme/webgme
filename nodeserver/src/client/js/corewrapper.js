@@ -146,6 +146,9 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 }
             }
         };
+        this.undo = function(){
+            rootServer.emit('undoRoot');
+        };
 
         /*getting a node*/
         this.getNode = function(path){

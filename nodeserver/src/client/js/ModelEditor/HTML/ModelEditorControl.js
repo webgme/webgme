@@ -102,6 +102,10 @@ define(['logManager',
         this._modelEditorView.onFullRefresh = function () {
             self._client.fullRefresh();
         };
+
+        this._modelEditorView.onUndo = function () {
+            self._client.undo();
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         this._initialize();

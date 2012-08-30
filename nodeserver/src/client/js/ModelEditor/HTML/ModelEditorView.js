@@ -86,6 +86,15 @@ define(['jquery',
             event.preventDefault();
             self.onFullRefresh();
         });
+        this._skinParts.undoBtn = $('<div/>');
+        this._skinParts.undoBtn.addClass("modelEditorViewUndo");
+        this._skinParts.undoBtn.attr("title", "Undo");
+        this._skinParts.modelEditorTop.append(this._skinParts.undoBtn);
+        this._skinParts.undoBtn.on("click", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self.onUndo();
+        });
 
         //children container
         this._skinParts.childrenContainer = $('<div/>', {
