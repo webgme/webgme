@@ -243,9 +243,20 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         this.delMoreNodes = function(pathes){
-            var i;
+            var i,
+                candelete = [];
             for(i=0;i<pathes.length;i++){
-                currentCore.deleteNode(currentNodes[pathes[i]]);
+                var node = self.getNode(pathes[i]);
+                if(pathes.indexOf(node.getParentId()) === -1){
+                    candelete.push(true);
+                } else {
+                    candelete.push(false);
+                }
+            }
+            for(i=0;i<pathes.length;i++){
+                if(candelete[i]){
+                    currentCore.deleteNode(currentNodes[pathes[i]]);
+                }
             }
             modifyRootOnServer();
         };

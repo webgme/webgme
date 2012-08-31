@@ -149,10 +149,11 @@ define(['logManager',
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         treeBrowser.onNodeDelete = function (selectedIds) {
-            var i;
+            /*var i;
             for (i = 0; i < selectedIds.length; i += 1) {
                 client.deleteNode(selectedIds[i]);
-            }
+            }*/
+            client.delMoreNodes(selectedIds);
         };
 
         //called from the TreeBrowserWidget when a node has been renamed

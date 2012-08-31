@@ -78,10 +78,11 @@ define(['logManager',
         };
 
         this._modelEditorView.onDelete = function (ids) {
-            var i;
+            /*var i;
             for (i = 0; i < ids.length; i += 1) {
                 self._client.deleteNode(ids[i]);
-            }
+            }*/
+            self._client.delMoreNodes(ids);
         };
 
         this._modelEditorView.onSaveConnectionSegmentPoints = function (connId, segmentPointsToSave) {
