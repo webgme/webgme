@@ -64,7 +64,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         if(newroot === lastValidRoot){
                             if(rootRetry){
                                 rootRetry = false;
-                                newRoot(newRoot,true);
+                                newRoot(newroot,true);
                             } else {
                                 if( newroot !== currentRoot ){
                                     rootRetry = true;
