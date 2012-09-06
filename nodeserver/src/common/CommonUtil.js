@@ -124,7 +124,7 @@ define([], function () {
             /*branchfile      : "combined.tpf",*/
             mongoip         : "129.59.105.195",
             mongoport       : 27017,
-            mongocollection : "basic", /*other possible collections currently: SFdemo, IFV*/
+            mongocollection : "IFV", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             /*storage         : "mongo",*/
             logging         : false,
