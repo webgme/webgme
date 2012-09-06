@@ -310,12 +310,13 @@ var Server = function(parameters){
 
     });
     logserver.on('connection',function(socket){
-        console.log("new connection to logserver "+socket.id);
         socket.on('log',function(msg){
-            if(parameters.logfile){
-                FS.appendFileSync("../test/"+parameters.logfile,"["+socket.id+"] "+msg+"\n","utf8");
-            } else{
-                console.log("["+socket.id+"] "+msg);
+            if(parameters.logging){
+                if(parameters.logfile){
+                    FS.appendFileSync("../test/"+parameters.logfile,"["+socket.id+"] "+msg+"\n","utf8");
+                } else{
+                    console.log("["+socket.id+"] "+msg);
+                }
             }
         });
     });
@@ -343,15 +344,17 @@ var Server = function(parameters){
     });
 
     var log = function(msg){
-        if(canlog){
-            internallogconn.emit('log',msg);
-        } else {
-            if(internallogconn === null){
-                internallogconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.logsrv);
-                internallogconn.on('connect',function(){
-                    canlog = true;
-                    log(msg);
-                });
+        if(parameters.logging){
+            if(canlog){
+                internallogconn.emit('log',msg);
+            } else {
+                if(internallogconn === null){
+                    internallogconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.logsrv);
+                    internallogconn.on('connect',function(){
+                        canlog = true;
+                        log(msg);
+                    });
+                }
             }
         }
     };

@@ -116,17 +116,18 @@ define([], function () {
             branch         : "test"
         },
         combinedserver: {
-            ip              : "129.59.104.16",
-            port            : 8081,
+            ip              : "129.59.104.16", /*should be the IP where the combinedserver run*/
+            port            : 80,
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
             logsrv          : "/log",
-            branchfile      : "combined.tpf",
-            mongoip         : /*"129.59.105.195"*/"129.59.104.16",
+            /*branchfile      : "combined.tpf",*/
+            mongoip         : "129.59.105.195",
             mongoport       : 27017,
-            mongocollection : "storage"/*"test"*/,
-            mongodatabase   : "combined",
-            storage         : "file",
+            mongocollection : "basic", /*other possible collections currently: SFdemo, IFV*/
+            mongodatabase   : "demo",
+            /*storage         : "mongo",*/
+            logging         : false,
             logfile         : "comblog.log"
         }
 
