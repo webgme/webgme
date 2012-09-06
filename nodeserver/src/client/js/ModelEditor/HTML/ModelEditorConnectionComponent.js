@@ -226,7 +226,7 @@ define(['logManager',
         event.preventDefault();
     };
 
-    /*ModelEditorConnectionComponent.prototype._onDestroy = function () {
+    ModelEditorConnectionComponent.prototype.onDestroy = function () {
         //end edit mode (if editing right now)
         this._endEditMode();
 
@@ -239,10 +239,10 @@ define(['logManager',
             delete this._skinParts.pathShadow;
         }
 
-        this._logger.debug("_onDestroy");
-    };*/
+        this._logger.debug("onDestroy");
+    };
 
-    ModelEditorConnectionComponent.prototype.onDestroyAsync = function (callbackFn) {
+    /*ModelEditorConnectionComponent.prototype.onDestroyAsync = function (callbackFn) {
         var self = this,
             pathVisElements = this._paper.set();
 
@@ -274,7 +274,7 @@ define(['logManager',
 
             callbackFn.call(self);
         });
-    };
+    };*/
 
 
     ModelEditorConnectionComponent.prototype.onSelect = function (isMultiple) {
@@ -615,6 +615,15 @@ define(['logManager',
 
         if (this._sourceCoordinates !== null && this._targetCoordinates !== null) {
             this._logger.debug("_render, valid endpoints, drawing");
+
+            if (this._sourceCoordinates.x < 0 || this._sourceCoordinates.y < 0) {
+                this._logger.debug("negative _sourceCoordinates");
+            }
+
+            if (this._targetCoordinates.x < 0 || this._targetCoordinates.y < 0) {
+                this._logger.debug("negative _targetCoordinates");
+            }
+
             this._skinParts.path.show();
             this._skinParts.pathShadow.show();
             this._redrawConnection();

@@ -41,7 +41,7 @@ define(['logManager',
         this._initialize(objDescriptor);
     };
 
-    /*ModelEditorModelComponent.prototype._onDestroy = function () {
+    ModelEditorModelComponent.prototype.onDestroy = function () {
 
         this._unregisterKnownHandles();
 
@@ -50,9 +50,9 @@ define(['logManager',
         }
 
         this._logger.debug("onDestroy");
-    };*/
+    };
 
-    ModelEditorModelComponent.prototype.onDestroyAsync = function (callbackFn) {
+    /*ModelEditorModelComponent.prototype.onDestroyAsync = function (callbackFn) {
         var self = this;
 
         this.el.fadeOut('slow', function () {
@@ -66,7 +66,7 @@ define(['logManager',
 
             callbackFn.call(self);
         });
-    };
+    };*/
 
     ModelEditorModelComponent.prototype._initialize = function (objDescriptor) {
         /*MODELEDITORCOMPONENT CONSTANTS*/

@@ -50,8 +50,6 @@ define(['jquery'], function () {
         }
     };
 
-    ComponentBase.prototype.onDestroy = function () {};
-
     ComponentBase.prototype.getBoundingBox = function (absolute) {
         var bBox = {    "x": absolute === true ? $(this.el).offset().left : parseInt($(this.el).css("left"), 10),
             "y": absolute === true ? $(this.el).offset().top : parseInt($(this.el).css("top"), 10),

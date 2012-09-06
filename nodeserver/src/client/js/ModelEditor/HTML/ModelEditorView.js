@@ -181,7 +181,7 @@ define(['jquery',
         if (objDescriptor.kind === "MODEL") {
             newComponent = this._childComponents[componentId] = new ModelEditorModelComponent(objDescriptor);
 
-            this._skinParts.childrenContainer.append(this._childComponents[componentId].el.hide());
+            this._skinParts.childrenContainer.append(this._childComponents[componentId].el/*.hide()*/);
 
             //hook up reposition handler
             this._childComponents[componentId].el.css("cursor", "move");
@@ -206,7 +206,7 @@ define(['jquery',
             //finally render component
             this._childComponents[objDescriptor.id].render();
 
-            this._childComponents[componentId].el.fadeIn('slow', function () {});
+            //this._childComponents[componentId].el.fadeIn('slow', function () {});
 
         } else if (objDescriptor.kind === "CONNECTION") {
             //if it is a CONNECTION, store its info in the connection list
