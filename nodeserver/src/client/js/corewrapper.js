@@ -17,8 +17,8 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             _storage = new SM(options),
             /*cache = new CACHE(_storage),*/
             realstorage = new FTOLST(/*cache*/_storage,"temporaryinfo"),
-            logsrv = /*new LogSrv(options.ip+":"+options.port+options.logsrv),*/null,
-            storage = new LogST(realstorage/*_storage,logsrv*/),
+            logsrv = new LogSrv(options.ip+":"+options.port+options.logsrv),/*null,*/
+            storage = new LogST(realstorage/*_storage*/,logsrv),
             selectedObjectId = null,
             users = {},
             currentNodes = {},

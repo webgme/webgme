@@ -68,7 +68,9 @@ var Server = function(parameters){
     var mongoopened = false;
 
     datamongoserver.on('connection',function(socket){
+        log("["+socket.id+"][DATASRV] connection");
         socket.on('open', function (callback) {
+            log("["+socket.id+"][DATASRV] open()");
             if(mongoopened){
                 callback(null);
             } else {
@@ -99,19 +101,23 @@ var Server = function(parameters){
             }
         });
         socket.on('load',function(key,callback){
+            log("["+socket.id+"][DATASRV] load("+JSON.stringify(key)+")");
             mongocollection.findOne({
                 _id: key
             }, callback);
         });
         socket.on('save',function(node,callback){
+            log("["+socket.id+"][DATASRV] save("+JSON.stringify(node)+")");
             mongocollection.save(node, callback);
         });
         socket.on('remove',function(key,callback){
+            log("["+socket.id+"][DATASRV] remove("+JSON.stringify(key)+")");
             mongocollection.remove({
                 _id: key
             }, callback);
         });
         socket.on('close',function(callback){
+            log("["+socket.id+"][DATASRV] close()");
             mongodatabase.lastError({
                 fsync: true
             }, function (err, data) {
@@ -125,11 +131,13 @@ var Server = function(parameters){
             });
         });
         socket.on('removeAll',function(callback){
+            log("["+socket.id+"][DATASRV] removeAll()");
             mongocollection.remove(function(err){
                 callback(err);
             });
         });
         socket.on('searchId',function(beginning,callback){
+            log("["+socket.id+"][DATASRV] searchId("+JSON.stringify(beginning)+")");
             if( !idregexp.test(beginning) ) {
                 callback("mongodb id " + beginning + " not valid");
             }
@@ -157,6 +165,7 @@ var Server = function(parameters){
             }
         });
         socket.on('dumpAll',function(callback){
+            log("["+socket.id+"][DATASRV] dumpAll()");
             mongocollection.find().each(function (err, item) {
                 if( err || item === null ) {
                     callback(err);
@@ -237,11 +246,13 @@ var Server = function(parameters){
         });
     });
     rootserver.on('connection',function(socket){
+        log("["+socket.id+"][ROOTSRV] connection");
         if(currentRoot){
             socket.emit('newRoot',currentRoot);
         }
 
         socket.on('modifyRoot',function(oldroot,newroot){
+            log("["+socket.id+"][ROOTSRV] modifyRoot("+JSON.stringify(oldroot)+","+JSON.stringify(newroot)+")");
             console.log("ROOT "+newroot+" arrived from "+socket.id);
             internaldataconn.emit('load',"***root***",function(err,root){
                 if(err){
@@ -270,6 +281,7 @@ var Server = function(parameters){
             });
         });
         socket.on('undoRoot',function(){
+            log("["+socket.id+"][ROOTSRV] undoRoot()");
             console.log(" UNDO ROOT arrived from "+socket.id);
             internaldataconn.emit('load',"***root***",function(err,root){
                 if(err){
@@ -308,6 +320,8 @@ var Server = function(parameters){
         });
     });
     var internaldataconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.mongosrv);
+    var internallogconn = null;
+    var canlog = false;
     var currentRoot = null;
     var rootHistory = [];
 
@@ -327,6 +341,20 @@ var Server = function(parameters){
             }
         },1000);
     });
+
+    var log = function(msg){
+        if(canlog){
+            internallogconn.emit('log',msg);
+        } else {
+            if(internallogconn === null){
+                internallogconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.logsrv);
+                internallogconn.on('connect',function(){
+                    canlog = true;
+                    log(msg);
+                });
+            }
+        }
+    };
 };
 
 var server = new Server(commonUtil.combinedserver);

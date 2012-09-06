@@ -10,6 +10,7 @@ define([ "core/assert" ], function (ASSERT) {
         var numOfEntry = 0;
         var OBJECTS = localStorage;
         var storageAvailable = false;
+        var DELAY = 0;
 
         var open = function(callback){
             storage.open(function(err){
@@ -49,7 +50,7 @@ define([ "core/assert" ], function (ASSERT) {
                         }
                     });
                 }
-            },0);
+            },DELAY);
         };
         var save = function(node,callback){
             setTimeout(function(){
@@ -69,7 +70,7 @@ define([ "core/assert" ], function (ASSERT) {
                         sync();
                     }
                 });
-            },0);
+            },DELAY);
         };
         var remove = function(key,callback){
             setTimeout(function(){
@@ -89,7 +90,7 @@ define([ "core/assert" ], function (ASSERT) {
                         sync();
                     }
                 });
-            },0);
+            },DELAY);
         };
         var removeAll = function(callback){
             /*TODO*/
