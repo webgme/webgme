@@ -356,13 +356,23 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     }
                     modifyRootOnServer();
                 } else {
-                    copyMultiplePathes(pathestocopy,parameters.parentId,function(err,copyarr){
+                    /*copyMultiplePathes*/nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
                         if(err){
                             logger.error("error happened during paste!!! "+err);
                             rollBackModification();
                         }
                         else{
-                            for(var i=0;i<copyarr.length;i++){
+                            for(var i in copyarr){
+                                if(copyarr.hasOwnProperty(i) && parameters.hasOwnProperty(i)){
+                                    for(var j in parameters[i].attributes){
+                                        currentCore.setAttribute(currentNodes[copyarr[i].topath],j,parameters[i].attributes[j]);
+                                    }
+                                    for(j in parameters[i].registry){
+                                        currentCore.setRegistry(currentNodes[copyarr[i].topath],j,parameters[i].registry[j]);
+                                    }
+                                }
+                            }
+                            /*for(var i=0;i<copyarr.length;i++){
                                 var from = copyarr[i].from;
                                 var to = copyarr[i].to;
                                 if(parameters.hasOwnProperty(from)){
@@ -373,7 +383,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                                         currentCore.setRegistry(currentNodes[to],j,parameters[from].registry[j]);
                                     }
                                 }
-                            }
+                            }*/
                             modifyRootOnServer();
                         }
                     });
@@ -601,13 +611,92 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 logger.error("missing object for move!!!");
             }
         };
+        var nuCopy = function(pathes,parentpath,callback){
+            var retarr = {},
+                parent = currentNodes[parentpath];
+
+            if(parent){
+                for(var i=0;i<pathes.length;i++){
+                    retarr[pathes[i]] = {};
+                }
+                var tempfrom = currentCore.createNode(parent);
+                for(i=0;i<pathes.length;i++){
+                    retarr[pathes[i]].origparent = getNodePath(currentCore.getParent(currentNodes[pathes[i]]));
+                    var node = currentCore.moveNode(currentNodes[pathes[i]],tempfrom);
+                    retarr[pathes[i]].fromrelid = currentCore.getStringPath(node,tempfrom);
+                }
+                var tempto = currentCore.copyNode(tempfrom,parent);
+                currentCore.loadChildren(tempto,function(err,children){
+                    if(err){
+                        logger.error("cannot load copied children: "+err);
+                        callback(err,null);
+                    } else {
+                        for(i=0;i<children.length;i++){
+                            var index = null;
+                            for(var j in retarr){
+                                if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempto)){
+                                    index = j;
+                                    break;
+                                }
+                            }
+
+                            if(index){
+                                var node = currentCore.moveNode(children[i],parent);
+                                storeNode(node);
+                                retarr[index].topath = getNodePath(node);
+                            }else{
+                                logger.error("copy resulted in wrong children");
+                                callback("wrong copy",null);
+                                return;
+                            }
+                        }
+
+                        currentCore.loadChildren(tempfrom,function(err,children){
+                            if(err){
+                                logger.error("original nodes unreachable: "+err);
+                                callback(err,null);
+                            } else {
+                                for(i=0;i<children.length;i++){
+                                    var index = null;
+                                    for(var j in retarr){
+                                        if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempfrom)){
+                                            index = j;
+                                            break;
+                                        }
+                                    }
+
+                                    if(index){
+                                        var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
+                                        storeNode(node);
+                                        retarr[index].newfrom = getNodePath(node);
+                                        if(index !== retarr[index].newfrom){
+                                            delete currentNodes[index];
+                                        }
+                                    }else{
+                                        logger.error("copy lost original children");
+                                        callback("wrong copy",null);
+                                        return;
+                                    }
+                                }
+
+                                currentCore.deleteNode(tempfrom);
+                                currentCore.deleteNode(tempto);
+                                callback(null,retarr);
+                            }
+                        });
+                    }
+                });
+            } else {
+                logger.error("invalid parent in multiCopy");
+                callback("invalid parent",null);
+            }
+        };
         var copyMultiplePathes = function(pathes,parentpath,callback){
-            var tempfrom,tempfrompath,tempfrompathes=[];
-            var tempto,temptopathes=[];
-            var temp = {};
-            var returnarr = [];
-            var pathes
-            var parent = currentNodes[parentpath];
+            var tempfrom,tempfrompath,tempfrompathes=[],
+                tempto,temptopathes=[],
+                temp = {},
+                returnarr = [],
+                parent = currentNodes[parentpath];
             if(parent){
                 tempfrom = currentCore.createNode(parent);
                 storeNode(tempfrom);
