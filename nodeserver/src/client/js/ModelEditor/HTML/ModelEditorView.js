@@ -181,7 +181,7 @@ define(['jquery',
         if (objDescriptor.kind === "MODEL") {
             newComponent = this._childComponents[componentId] = new ModelEditorModelComponent(objDescriptor);
 
-            this._skinParts.childrenContainer.append(this._childComponents[componentId].el.hide());
+            this._skinParts.childrenContainer.append(this._childComponents[componentId].el/*.hide()*/);
 
             //hook up reposition handler
             this._childComponents[componentId].el.css("cursor", "move");
@@ -206,7 +206,7 @@ define(['jquery',
             //finally render component
             this._childComponents[objDescriptor.id].render();
 
-            this._childComponents[componentId].el.fadeIn('slow', function () {});
+            //this._childComponents[componentId].el.fadeIn('slow', function () {});
 
         } else if (objDescriptor.kind === "CONNECTION") {
             //if it is a CONNECTION, store its info in the connection list
@@ -338,7 +338,7 @@ define(['jquery',
     };
 
     //figure out the shortest side to choose between the two
-    ModelEditorView.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints) {
+    ModelEditorView.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
         var d = {},
             dis = [],
             i,
@@ -347,21 +347,40 @@ define(['jquery',
             dy,
             result = [];
 
-        for (i = 0; i < srcConnectionPoints.length; i += 1) {
-            if (srcConnectionPoints.hasOwnProperty(i)) {
-                for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    if (tgtConnectionPoints.hasOwnProperty(j)) {
-                        dx = Math.abs(srcConnectionPoints[i].x - tgtConnectionPoints[j].x);
-                        dy = Math.abs(srcConnectionPoints[i].y - tgtConnectionPoints[j].y);
+        if (segmentPoints && segmentPoints.length > 0) {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                if (srcConnectionPoints.hasOwnProperty(i)) {
+                    for (j = 0; j < tgtConnectionPoints.length; j += 1) {
+                        if (tgtConnectionPoints.hasOwnProperty(j)) {
+                            dx = Math.abs(srcConnectionPoints[i].x - segmentPoints[0].x) + Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1].x);
+                            dy = Math.abs(srcConnectionPoints[i].y - segmentPoints[0].y) + Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1].y);
 
-                        if (dis.indexOf(dy + dy) === -1) {
-                            dis.push(dx + dy);
-                            d[dis[dis.length - 1]] = [i, j];
+                            if (dis.indexOf(dy + dy) === -1) {
+                                dis.push(dx + dy);
+                                d[dis[dis.length - 1]] = [i, j];
+                            }
                         }
                     }
                 }
-            }
 
+            }
+        } else {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                if (srcConnectionPoints.hasOwnProperty(i)) {
+                    for (j = 0; j < tgtConnectionPoints.length; j += 1) {
+                        if (tgtConnectionPoints.hasOwnProperty(j)) {
+                            dx = Math.abs(srcConnectionPoints[i].x - tgtConnectionPoints[j].x);
+                            dy = Math.abs(srcConnectionPoints[i].y - tgtConnectionPoints[j].y);
+
+                            if (dis.indexOf(dy + dy) === -1) {
+                                dis.push(dx + dy);
+                                d[dis[dis.length - 1]] = [i, j];
+                            }
+                        }
+                    }
+                }
+
+            }
         }
 
         if (dis.length !== 0) {
@@ -1138,6 +1157,7 @@ define(['jquery',
     ModelEditorView.prototype._updateConnectionCoordinates = function (connectionId) {
         var sourceId = this._connectionList[connectionId].sourceId,
             targetId = this._connectionList[connectionId].targetId,
+            segmentPoints = this._childComponents[connectionId]._segmentPoints,
             sourceConnectionPoints = this._getConnectionPointsById(sourceId),
             targetConnectionPoints = this._getConnectionPointsById(targetId),
             sourceCoordinates,
@@ -1149,7 +1169,7 @@ define(['jquery',
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
-            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints);
+            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
             sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
             targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
 
