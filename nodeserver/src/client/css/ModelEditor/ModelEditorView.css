@@ -42,8 +42,9 @@
     display: inline-block;
 
 
-    background: url(../../img/adv.png) no-repeat;
+    background: url(../../img/undo.png) no-repeat;
     background-color: #E0E0E0;
+    background-position-y: 3px;
     /*position: absolute;*/
     z-index: 100000;
     width: 26px;
