@@ -355,7 +355,7 @@ define(['logManager',
                             nodes[objectId].state = stateLoaded;
 
                             //if there is no more children of the current node, remove it from the territory
-                            if ((updatedObject.getChildrenIds()).length === 0) {
+                            if ((updatedObject.getChildrenIds()).length === 0 && objectId !== "root") {
                                 removeFromTerritory.push({ "nodeid" : objectId });
                                 delete selfPatterns[objectId];
                             }
