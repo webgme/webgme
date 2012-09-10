@@ -47,13 +47,19 @@ define([   'order!jquery',
         logManager.excludeComponent("ModelEditorSVGWidget");
         logManager.excludeComponent("ModelEditorControl");
         logManager.excludeComponent("ModelEditorSVGConnection*");
-        //logManager.excludeComponent("ModelEditorCanvasComponent*");
-        //logManager.excludeComponent("ModelEditorModelComponent*");
-        //logManager.excludeComponent("ModelEditorConnectionComponent*");
-        //logManager.excludeComponent("Port*");
 
-        //logManager.excludeComponent("ModelEditorView_*");
-        //logManager.excludeComponent("HTML_ModelEditorControl");
+        //logManager.excludeComponent("ModelEditorCanvasComponent*");
+        logManager.excludeComponent("ModelEditorModelComponent*");
+        logManager.excludeComponent("ModelWithPortsDecorator*");
+        logManager.excludeComponent("Port*");
+        logManager.excludeComponent("ModelEditorConnectionComponent*");
+        logManager.excludeComponent("Port*");
+
+        logManager.excludeComponent("ModelEditorView_*");
+        logManager.excludeComponent("HTML_ModelEditorControl");
+
+        logManager.excludeComponent("GraphVizControl");
+        logManager.excludeComponent("GraphVizObject*");
 
 
     }
@@ -146,6 +152,22 @@ define([   'order!jquery',
 
         setActiveVisualizer(vis);
         event.stopPropagation();
+    });
+
+    $("#projectHistoryPanel").find('a.btnFullRefresh').on("click", function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (client) {
+            client.fullRefresh();
+        }
+    });
+
+    $("#projectHistoryPanel").find('a.btnUndo').on("click", function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (client) {
+            client.undo();
+        }
     });
 
     doConnect = function () {
