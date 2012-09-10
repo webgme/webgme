@@ -146,6 +146,9 @@ define(['logManager',
             this._removeContainmentLines();
             if (this.parentObject) {
                 this.parentObject._drawContainmentLines();
+            } else {
+
+                    this._graphVizView.setWidth( 100);
             }
         }
     };

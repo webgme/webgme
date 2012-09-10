@@ -535,6 +535,11 @@ define(['logManager',
             }
         }
 
+        //select 'Custom' is nothing else is selected
+        if (checkedString !== "") {
+            this._setPointerTypeModalDialog.find('input[type="radio"]').attr('checked', 'checked');
+        }
+
         this._setPointerTypeModalDialog.modal({
             keyboard: false
         });
