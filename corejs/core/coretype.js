@@ -141,7 +141,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 
 				}
 
-				callback(null, obj.child);
+				UTIL.immediateCallback(callback, null, obj.child);
 			});
 
 			corerels.loadChild(node, relid, join.asyncSet("child"));
@@ -171,7 +171,7 @@ define([ "core/assert", "core/core2", "core/util" ], function (ASSERT, CoreRels,
 					callback(err);
 				}
 				else if( !node || path.length === 0 ) {
-					callback(null, node);
+					UTIL.immediateCallback(callback, null, node);
 				}
 				else {
 					var relid = path.pop();

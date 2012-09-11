@@ -691,7 +691,7 @@ UTIL, SHA1) {
 				pertree.loadByPath(node, target, callback);
 			}
 			else {
-				callback(null, null);
+				UTIL.immediateCallback(callback, null, null);
 			}
 		};
 

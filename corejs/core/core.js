@@ -83,7 +83,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				}
 
 				if( callback && (err || --counter === 0) ) {
-					callback(err, children);
+					UTIL.immediateCallback(callback, err, children);
 					callback = null;
 				}
 			};
@@ -126,7 +126,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 			// TODO: there is a race between deleting collections and pointers
 			UTIL.depthFirstSearch(loadChildren, node, function (node2, callback2) {
-				callback2(null);
+				UTIL.immediateCallback(callback2, null);
 			}, function (node2, callback2) {
 				deleteAllReferences(node2, callback2);
 			}, function (err) {
@@ -135,7 +135,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 				}
 				else {
 					pertree.delParent(node);
-					callback(null);
+					UTIL.immediateCallback(callback, null);
 				}
 			});
 		};
@@ -164,7 +164,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 
 			var path = pertree.getProperty2(node, POINTERS, name);
 			if( path === undefined ) {
-				callback(null, null);
+				UTIL.immediateCallback(callback, null, null);
 			}
 			else {
 				ASSERT(typeof path === "string");
@@ -227,13 +227,13 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 							}
 
 							pertree.delProperty(pointers, name);
-							callback(null);
+							UTIL.immediateCallback(callback, null);
 						}
 					}
 				});
 			}
 			else {
-				callback(null);
+				UTIL.immediateCallback(callback, null);
 			}
 		};
 
@@ -258,7 +258,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 						if( path === nodepath ) {
 							pertree.delProperty2(source, POINTERS, name);
 							if( --missing === 0 ) {
-								callback(null);
+								UTIL.immediateCallback(callback, null);
 							}
 						}
 						else {
@@ -278,7 +278,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 			}
 
 			if( missing === 0 ) {
-				callback(null);
+				UTIL.immediateCallback(callback, null);
 			}
 		};
 
@@ -311,7 +311,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 					var targetpath = pertree.getStringPath(target);
 					pertree.setProperty(pointers, name, targetpath);
 
-					callback(null);
+					UTIL.immediateCallback(callback, null);
 				}
 			});
 		};

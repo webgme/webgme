@@ -242,7 +242,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 			}
 			else {
 				ASSERT(typeof node === "object");
-				callback(null, node);
+				UTIL.immediateCallback(callback, null, node);
 			}
 		};
 
@@ -256,7 +256,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 				}
 				else {
 					core.setPointer(source, name, target);
-					callback(null);
+					UTIL.immediateCallback(callback, null);
 				}
 			});
 		};
@@ -328,7 +328,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 					}
 					else if( ++done === unresolved.length ) {
 						ASSERT(index === done);
-						callback(null);
+						UTIL.immediateCallback(callback, null);
 					}
 					else if( index < unresolved.length ) {
 						var path = unresolved[index++];

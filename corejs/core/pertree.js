@@ -191,7 +191,7 @@ function (ASSERT, SHA1, UTIL) {
 			var child = node.data[relid];
 
 			if( child === undefined ) {
-				callback(null, undefined);
+				UTIL.immediateCallback(callback, null, undefined);
 			}
 			else if( typeof child === "string" ) {
 				ASSERT(isValidKey(child));
@@ -208,7 +208,7 @@ function (ASSERT, SHA1, UTIL) {
 			else {
 				ASSERT(typeof child === "object");
 
-				callback(null, {
+				UTIL.immediateCallback(callback, null, {
 					data: child,
 					parent: node,
 					relid: relid
@@ -229,7 +229,7 @@ function (ASSERT, SHA1, UTIL) {
 					callback(err);
 				}
 				else if( !node || path.length === 0 ) {
-					callback(null, node);
+					UTIL.immediateCallback(callback, null, node);
 				}
 				else {
 					var relid = path.pop();

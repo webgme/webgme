@@ -60,7 +60,7 @@ CoreType) {
 					return namea.localeCompare(nameb);
 				});
 			}
-			callback2(err, array);
+			UTIL.immediateCallback(callback2, err, array);
 		});
 	};
 
@@ -79,7 +79,7 @@ CoreType) {
 				callback(err);
 			}
 			else {
-				callback(null, array.join(", "));
+				UTIL.immediateCallback(callback, null, array.join(", "));
 			}
 		});
 
@@ -89,7 +89,7 @@ CoreType) {
 					callback(err);
 				}
 				else {
-					callback(null, name + "=" + getNodeName(target));
+					UTIL.immediateCallback(callback, null, name + "=" + getNodeName(target));
 				}
 			});
 		};
@@ -108,7 +108,7 @@ CoreType) {
 				callback(err);
 			}
 			else {
-				callback(null, array.join(", "));
+				UTIL.immediateCallback(callback, null, array.join(", "));
 			}
 		});
 
@@ -118,7 +118,7 @@ CoreType) {
 					callback(err);
 				}
 				else {
-					callback(null, name + "-inv=" + getNodeNameArray(targets));
+					UTIL.immediateCallback(callback, null, name + "-inv=" + getNodeNameArray(targets));
 				}
 			});
 		};
@@ -144,7 +144,7 @@ CoreType) {
 					}
 					line += array[i];
 				}
-				callback(null, line);
+				UTIL.immediateCallback(callback, null, line);
 			}
 		});
 
@@ -166,7 +166,7 @@ CoreType) {
 				callback(err);
 			});
 		}, function (child, callback) {
-			callback(null);
+			UTIL.immediateCallback(callback, null);
 		}, function (err) {
 			if( !err ) {
 				console.log("Printing done");
@@ -247,7 +247,7 @@ CoreType) {
 		});
 		printStats("lavels", core.getLevel);
 
-		callback(null);
+		UTIL.immediateCallback(callback, null);
 	};
 
 	tests[3] = function (storage, root, callback) {
@@ -309,7 +309,7 @@ CoreType) {
 
 				finish.wait();
 			}, function (child, callback2) {
-				callback2(null);
+				UTIL.immediateCallback(callback2, null);
 			}, function (err) {
 				console.log("Printing done");
 				callback(err, root);
@@ -362,7 +362,7 @@ CoreType) {
 						callback(err);
 					}
 					else {
-						callback(null, root);
+						UTIL.immediateCallback(callback, null, root);
 					}
 				});
 			}

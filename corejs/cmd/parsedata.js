@@ -39,11 +39,11 @@ Core, UTIL, CONFIG, Cache) {
 				else {
 					for( var i = 0; i < children.length; ++i ) {
 						if( core.getAttribute(children[i], "#tag") === tagName ) {
-							callback2(null, children[i]);
+							UTIL.immediateCallback(callback2, null, children[i]);
 							return;
 						}
 					}
-					callback2(null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 			});
 		};
@@ -193,7 +193,7 @@ Core, UTIL, CONFIG, Cache) {
 						registry[key] = obj.self[key];
 					}
 
-					callback2(null, registry);
+					UTIL.immediateCallback(callback2, null, registry);
 				}
 			});
 
@@ -262,7 +262,7 @@ Core, UTIL, CONFIG, Cache) {
 							callback2(err);
 						}
 						else {
-							callback2(null, model);
+							UTIL.immediateCallback(callback2, null, model);
 						}
 					});
 
@@ -498,7 +498,7 @@ Core, UTIL, CONFIG, Cache) {
 			}
 			else {
 				ASSERT(typeof node === "object");
-				callback(null, node);
+				UTIL.immediateCallback(callback, null, node);
 			}
 		};
 
@@ -540,7 +540,7 @@ Core, UTIL, CONFIG, Cache) {
 							}
 						}
 					}
-					callback2(null);
+					UTIL.immediateCallback(callback2, null);
 				}
 			});
 		};
@@ -622,7 +622,7 @@ Core, UTIL, CONFIG, Cache) {
 							clearInterval(timerHandle);
 							timerHandle = null;
 						}
-						callback2(null);
+						UTIL.immediateCallback(callback2, null);
 					}
 					else if( index < unresolved.length ) {
 						var xmlNode = unresolved[index++];
@@ -659,7 +659,7 @@ Core, UTIL, CONFIG, Cache) {
 					parseXmlNode(node, callback3);
 				}
 			}, function (node, callback3) {
-				callback3(null);
+				UTIL.immediateCallback(callback3, null);
 			}, function (err2) {
 				if( timerHandle ) {
 					clearInterval(timerHandle);

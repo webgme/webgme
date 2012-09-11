@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert" ], function (ASSERT) {
+define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 	"use strict";
 
 	var Cache = function (storage) {
@@ -36,7 +36,6 @@ define([ "core/assert" ], function (ASSERT) {
 			storage.close(callback);
 		};
 
-		var loadDepth = 0;
 		var load = function (key, callback) {
 			ASSERT(typeof key === "string");
 
@@ -47,15 +46,7 @@ define([ "core/assert" ], function (ASSERT) {
 				}
 				else {
 					ASSERT(obj[KEYNAME] === key);
-
-					if( loadDepth < 5 ) {
-						loadDepth += 1;
-						callback(null, obj);
-						loadDepth -= 1;
-					}
-					else {
-						setTimeout(callback, 0, null, obj);
-					}
+					UTIL.immediateCallback(callback, null, obj);
 				}
 			}
 			else {
@@ -103,10 +94,11 @@ define([ "core/assert" ], function (ASSERT) {
 				callbacks.length = 0;
 			}
 
-			// TODO: hack because the higher level layer decides what are write-once objects
+			// TODO: hack because the higher level layer decides what are
+			// write-once objects
 			if( item && key.length === 41 && keyregexp.test(key) ) {
 				ASSERT(item[KEYNAME] === key);
-				callback(null);
+				UTIL.immediateCallback(callback, null);
 			}
 			else {
 				storage.save(obj, callback);

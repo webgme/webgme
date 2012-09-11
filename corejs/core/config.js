@@ -25,6 +25,10 @@ define(function () {
 		reader: {
 			concurrentReads: 20,
 			reportingTime: 2000
+		},
+		
+		callbacks: {
+			maxDepth: 5
 		}
 	};
 });

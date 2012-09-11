@@ -373,6 +373,39 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 	};
 
+	var callbackDepth = CONFIG.callbacks.maxDepth || 5;
+	var immediateCallback = function (callback, arg1, arg2) {
+		ASSERT(typeof callback === "function");
+		ASSERT(arguments.length >= 1 && arguments.length <= 3);
+
+		if( callbackDepth > 0 ) {
+			--callbackDepth;
+
+			if( arguments.length === 1 ) {
+				callback();
+			}
+			else if( arguments.length === 2 ) {
+				callback(arg1);
+			}
+			else {
+				callback(arg1, arg2);
+			}
+
+			++callbackDepth;
+		}
+		else {
+			if( arguments.length === 1 ) {
+				setTimeout(callback, 0);
+			}
+			else if( arguments.length === 2 ) {
+				setTimeout(callback, 0, arg1);
+			}
+			else {
+				setTimeout(callback, 0, arg1, arg2);
+			}
+		}
+	};
+
 	return {
 		binarySearch: binarySearch,
 		binaryInsert: binaryInsert,
@@ -384,6 +417,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		depthFirstSearch: depthFirstSearch,
 		AsyncJoin: AsyncJoin,
 		AsyncArray: AsyncArray,
-		AsyncObject: AsyncObject
+		AsyncObject: AsyncObject,
+		immediateCallback: immediateCallback
 	};
 });

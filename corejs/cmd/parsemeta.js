@@ -36,7 +36,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				else {
 					for( var i = 0; i < children.length; ++i ) {
 						if( core.getAttribute(children[i], "name") === name ) {
-							callback2(null, children[i]);
+							UTIL.immediateCallback(callback2, null, children[i]);
 							return;
 						}
 					}
@@ -46,7 +46,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 						getXmlNodeByName(node, name, callback2);
 					}
 					else {
-						callback2(null, null);
+						UTIL.immediateCallback(callback2, null, null);
 					}
 				}
 			});
@@ -93,11 +93,11 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				else {
 					for( var i = 0; i < children.length; ++i ) {
 						if( core.getAttribute(children[i], "#tag") === name ) {
-							callback2(null, children[i]);
+							UTIL.immediateCallback(callback2, null, children[i]);
 							return;
 						}
 					}
-					callback2(null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 			});
 		};
@@ -144,7 +144,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 					meta.callbacks.push(callback2);
 				}
 				else {
-					callback2(null, meta);
+					UTIL.immediateCallback(callback2, null, meta);
 				}
 			}
 			else {
@@ -153,7 +153,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 					executeParser(path, parsers[tag], node, callback2);
 				}
 				else {
-					callback2(null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 			}
 		};
@@ -191,7 +191,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				"#tag": "#tag"
 			});
 
-			callback2(null, metaNode);
+			UTIL.immediateCallback(callback2, null, metaNode);
 		};
 
 		var getParsedNodeByName = function (xmlNode, name, callback2) {
@@ -203,7 +203,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				}
 				else if( !node ) {
 					console.log("Warning: could not resolve \"" + name + "\" element");
-					callback2(null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 				else {
 					parseXmlNode(node, callback2);
@@ -298,7 +298,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				});
 			}
 			else {
-				callback2(null, null);
+				UTIL.immediateCallback(callback2, null, null);
 			}
 		};
 
@@ -323,7 +323,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 						parseXmlNode(node, callback2);
 					}
 				}, function (node, callback2) {
-					callback2(null);
+					UTIL.immediateCallback(callback2, null);
 				}, function (err2) {
 					if( err2 ) {
 						callback("Building error: " + JSON.stringify(err2));
