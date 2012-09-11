@@ -371,7 +371,7 @@ CoreType) {
 
 	return function (number, storage, root, callback) {
 		if( !tests[number] ) {
-			callback("no such test program");
+			callback(new Error("no such test program"));
 		}
 		else {
 			console.log("Running test " + number);

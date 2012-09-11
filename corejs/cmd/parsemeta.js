@@ -317,7 +317,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 				root,
 				function (node, callback2) {
 					if( core.getLevel(node) === 1 && core.getAttribute(node, "#tag") !== "paradigm" ) {
-						callback2("Not a meta paradigm");
+						callback2(new Error("Not a meta paradigm"));
 					}
 					else {
 						parseXmlNode(node, callback2);
@@ -326,7 +326,7 @@ function (ASSERT, Core, UTIL, CONFIG) {
 					UTIL.immediateCallback(callback2, null);
 				}, function (err2) {
 					if( err2 ) {
-						callback("Building error: " + JSON.stringify(err2));
+						callback(new Error("Building error: " + JSON.stringify(err2)));
 					}
 					else {
 						console.log("Building done");

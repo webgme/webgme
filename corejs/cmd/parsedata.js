@@ -653,7 +653,7 @@ Core, UTIL, CONFIG, Cache) {
 			UTIL.depthFirstSearch(core.loadChildren, root, function (node, callback3) {
 				++objectCount;
 				if( core.getLevel(node) === 1 && core.getAttribute(node, "#tag") !== "project" ) {
-					callback3("Not a gme project");
+					callback3(new Error("Not a gme project"));
 				}
 				else {
 					parseXmlNode(node, callback3);
@@ -667,14 +667,14 @@ Core, UTIL, CONFIG, Cache) {
 				}
 
 				if( err2 ) {
-					callback2("Building error: " + err2);
+					callback2(new Error("Building error: " + err2));
 				}
 				else {
 					console.log("Building done (" + parsedCount + " gme objects, "
 					+ unresolved.length + " unresolved)");
 					resolveUnresolved(function (err2) {
 						if( err2 ) {
-							callback2("Resolving error: " + err2);
+							callback2(new Error("Resolving error: " + err2));
 						}
 						else {
 							console.log("Resolving done");

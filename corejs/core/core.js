@@ -212,7 +212,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 						var nodepath = pertree.getStringPath(node);
 						var index = array.indexOf(nodepath);
 						if( index < 0 ) {
-							callback("core data corruption: pointer not found in collection");
+							callback(new Error("core data corruption: pointer not found in collection"));
 						}
 						else {
 							if( array.length === 1 ) {
@@ -263,7 +263,7 @@ define([ "core/assert", "core/pertree", "core/util" ], function (ASSERT, PerTree
 						}
 						else {
 							missing = 0;
-							callback("core data corruption: incorrect pointer value");
+							callback(new Error("core data corruption: incorrect pointer value"));
 						}
 					}
 				}

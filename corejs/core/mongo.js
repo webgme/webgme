@@ -118,7 +118,7 @@ UTIL) {
 			ASSERT(collection && typeof beginning === "string" && callback);
 
 			if( !idregexp.test(beginning) ) {
-				callback("mongodb id " + beginning + " not valid");
+				callback(new Error("mongodb id " + beginning + " not valid"));
 			}
 			else {
 				collection.find({
@@ -132,10 +132,10 @@ UTIL) {
 						callback(err);
 					}
 					else if( docs.length === 0 ) {
-						callback("mongodb id " + beginning + " not found");
+						callback(new Error("mongodb id " + beginning + " not found"));
 					}
 					else if( docs.length !== 1 ) {
-						callback("mongodb id " + beginning + " not unique");
+						callback(new Error("mongodb id " + beginning + " not unique"));
 					}
 					else {
 						callback(null, docs[0]._id);
