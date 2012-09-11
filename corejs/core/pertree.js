@@ -478,7 +478,7 @@ function (ASSERT, SHA1, UTIL) {
 				error = error || err;
 
 				if( --counter === 0 ) {
-					callback(error);
+					setTimeout(callback, 0, error);
 					callback = null;
 				}
 			};

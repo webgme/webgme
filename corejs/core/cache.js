@@ -103,8 +103,7 @@ define([ "core/assert" ], function (ASSERT) {
 				callbacks.length = 0;
 			}
 
-			// TODO: hack, the higher level layer decides what is permanent
-			// TODO: check why this is needed (I do not remember any more)
+			// TODO: hack because the higher level layer decides what are write-once objects
 			if( item && key.length === 41 && keyregexp.test(key) ) {
 				ASSERT(item[KEYNAME] === key);
 				callback(null);
