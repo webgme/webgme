@@ -69,17 +69,18 @@ define([ "core/assert" ], function (ASSERT) {
 				storage.load(key, function (err, obj2) {
 					ASSERT(err || obj2);
 
-					ASSERT(cache[key].callbacks === callbacks);
+					if( callbacks.length !== 0 ) {
+						ASSERT(cache[key].callbacks === callbacks);
+						if( err ) {
+							delete cache[key];
+						}
+						else {
+							cache[key] = obj2;
+						}
 
-					if( err ) {
-						delete cache[key];
-					}
-					else {
-						cache[key] = obj2;
-					}
-
-					for( var i = 0; i < callbacks.length; ++i ) {
-						callbacks[i](err, obj2);
+						for( var i = 0; i < callbacks.length; ++i ) {
+							callbacks[i](err, obj2);
+						}
 					}
 				});
 			}
@@ -99,6 +100,7 @@ define([ "core/assert" ], function (ASSERT) {
 				for( var i = 0; i < callbacks.length; ++i ) {
 					callbacks[i](null, obj);
 				}
+				callbacks.length = 0;
 			}
 
 			// TODO: hack, the higher level layer decides what is permanent
@@ -123,6 +125,7 @@ define([ "core/assert" ], function (ASSERT) {
 				for( var i = 0; i < callbacks.length; ++i ) {
 					callbacks[i](null, null);
 				}
+				callbacks.length = 0;
 			}
 
 			storage.remove(key, callback);
