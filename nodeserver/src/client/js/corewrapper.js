@@ -1,4 +1,4 @@
-define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftolstorage','js/logger','js/logstorage','js/logcore','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST,LogSrv,LogST,LCORE){
+define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftstore','js/logger','js/logstorage','js/logcore','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST,LogSrv,LogST,LCORE){
     var logger,
         Client,
         CommandQueue,
@@ -12,13 +12,17 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
     GUID = commonUtil.guid;
     INSERTARR = commonUtil.insertIntoArray;
 
+    var timestamp = function(){
+        return ""+ (new Date()).getTime();
+    };
     Client = function(options){
         var self = this,
+            timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){};
             _storage = new SM(options),
-            /*cache = new CACHE(_storage),*/
-            realstorage = new FTOLST(/*cache*/_storage,"temporaryinfo"),
+            realstorage = options.faulttolerant ? new FTOLST(_storage,"temporaryinfo") : _storage,
+            cache = options.cache ? new CACHE(realstorage) : realstorage,
             logsrv = options.logging ? new LogSrv(options.ip+":"+options.port+options.logsrv) : null,
-            storage = new LogST(realstorage/*_storage*/,logsrv),
+            storage = new LogST(cache,logsrv),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
@@ -486,12 +490,14 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         var buildTerritory = function(patterns,callback){
+            timelog("[MEAS002][in]");
             var i;
             var pathes = [];
             var counter = 0;
 
             var loaddone = function(){
                 if(--counter === 0){
+                    timelog("[MEAS002][out]");
                     callback(pathes);
                 }
             };
@@ -527,13 +533,24 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
 
             counter = 0;
             for(i in patterns){
-                counter++;
+                if(patterns.hasOwnProperty(i)){
+                    counter++;
+                }
             }
-            for(i in patterns){
-                loadpath(i,patterns[i].children !== undefined);
+            if(counter>0){
+                for(i in patterns){
+                    if(patterns.hasOwnProperty(i)){
+                        loadpath(i,patterns[i].children !== undefined);
+                    }
+                }
+            } else {
+                if(callback){
+                    callback([]);
+                }
             }
         };
         var generateTerritoryEvents = function(userID,newpathes){
+            timelog("[MEAS003][in]"+userID);
             var user = users[userID];
             var events = [];
             /*unload*/
@@ -566,36 +583,51 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     user.UI.onEvent(events[i].etype,events[i].eid);
                 }
             }
+            timelog("[MEAS003][out]"+userID);
         };
         var updateUser = function(userID,patterns,callback){
+            timelog("[MEAS001][in]"+userID);
             users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
             if(currentCore){
                 buildTerritory(patterns,function(newpathes){
-                generateTerritoryEvents(userID,newpathes);
-                users[userID].PATHES = newpathes;
-                if(callback){
-                    callback();
-                }
-            });
+                    generateTerritoryEvents(userID,newpathes);
+                    users[userID].PATHES = newpathes;
+                    timelog("[MEAS001][out]"+userID);
+                    if(callback){
+                        callback();
+                    }
+                });
             }
             else{
                 logger.debug("we do not have root yet...");
             }
         };
         var updateAllUser = function(callback){
+            timelog("[MEAS000][in]");
             var counter = 0;
             var userupdated = function(){
                 if(--counter === 0){
+                    timelog("[MEAS000][out]");
                     if(callback){
                         callback();
                     }
                 }
             }
             for(var i in users){
-                counter++;
+                if(users.hasOwnProperty(i)){
+                    counter++;
+                }
             }
-            for(i in users){
-                updateUser(i,users[i].PATTERNS,userupdated);
+            if(counter>0){
+                for(i in users){
+                    if(users.hasOwnProperty(i)){
+                        updateUser(i,users[i].PATTERNS,userupdated);
+                    }
+                }
+            } else {
+                if(callback){
+                    callback();
+                }
             }
         };
         var moveNode = function(path,parentpath){

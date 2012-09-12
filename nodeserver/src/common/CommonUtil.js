@@ -124,11 +124,14 @@ define([], function () {
             /*branchfile      : "combined.tpf",*/
             mongoip         : "129.59.105.195",
             mongoport       : 27017,
-            mongocollection : "IFV", /*possible collections currently: basic,SFdemo, IFV*/
+            mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             /*storage         : "mongo",*/
             logging         : false,
-            logfile         : "comblog.log"
+            logfile         : "comblog.log",
+            cache           : true,
+            faulttolerant   : true,
+            timelog         : true
         }
 
     };
