@@ -36,7 +36,7 @@ require.config({
 require(
     [
         'domReady',
-        'js/webGME'
+        'js/WebGME'
     ],
     function (domReady, webGME) {
         domReady(function () {

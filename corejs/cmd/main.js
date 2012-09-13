@@ -11,13 +11,14 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta", "cmd/tests", "cmd/parsedata" ],
-function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata) {
+requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml",
+	"cmd/parsemeta", "cmd/tests", "cmd/parsedata" ], function (ASSERT, Mongo, PerTree, Core, UTIL,
+readxml, parsemeta, tests, parsedata) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
 
-	if( argv.length <= 0 || argv[0] === "-help") {
+	if( argv.length <= 0 || argv[0] === "-help" ) {
 		console.log("Usage: node main.js [commands]");
 		console.log("");
 		console
@@ -35,6 +36,7 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 		console.log("  -parsemeta\t\t\tparses the current xml root as a meta project");
 		console.log("  -parsedata\t\t\tparses the current xml root as a gme project");
 		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
+		console.log("  -writeroot\t\t\twrites the current root for visualization");
 		console.log("");
 	}
 	else {
@@ -232,8 +234,8 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 					next();
 				}
 				else {
-					parsemeta(mongo, root, function(err, key) {
-						if(err) {
+					parsemeta(mongo, root, function (err, key) {
+						if( err ) {
 							console.log(err);
 							argv.splice(i, 0, "-end");
 						}
@@ -257,8 +259,8 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 					next();
 				}
 				else {
-					parsedata(mongo, root, function(err, key) {
-						if(err) {
+					parsedata(mongo, root, function (err, key) {
+						if( err ) {
 							console.log(err);
 							argv.splice(i, 0, "-end");
 						}
@@ -285,18 +287,43 @@ function (ASSERT, Mongo, PerTree, Core, UTIL, readxml, parsemeta, tests, parseda
 						next();
 					}
 					else {
-						tests(opt, mongo, root, function(err, newroot) {
+						tests(opt, mongo, root, function (err, newroot) {
 							if( err ) {
 								console.log(err.toString());
 								argv.splice(i, 0, "-end");
 							}
-							else if( typeof newroot === "string" ){
+							else if( typeof newroot === "string" ) {
 								console.log("New root = " + newroot);
 								root = newroot;
 							}
 							next();
 						});
 					}
+				}
+			}
+			else if( cmd === "-writeroot" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else if( !root ) {
+					console.log("Root not selected");
+					argv.splice(i, 0, "-end");
+					next();
+				}
+				else {
+					mongo.save({
+						_id: "***root***",
+						value: [ root ]
+					}, function (err) {
+						if( err ) {
+							console.log("Could not write root: " + err);
+						}
+						else {
+							console.log("***root*** set to " + root);
+						}
+						next();
+					});
 				}
 			}
 			else {

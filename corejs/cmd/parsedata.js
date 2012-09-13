@@ -8,6 +8,11 @@ define([ "core/assert", "core/core2", "core/util", "core/config", "core/cache" ]
 Core, UTIL, CONFIG, Cache) {
 	"use strict";
 
+	var supportedAspects = [ "SignalFlowAspect", "Architectural" ];
+	var supportedPortRoles = [ "InputSignals", "OutputSignals", "Metric", "Parameter", "Property",
+		"CADParameter", "CADProperty", "ComplexityMetric", "CyberParameter",
+		"ValueFlowTypeSpecification", "CADModelInputPort" ];
+
 	return function (storage, key, callback) {
 		var cache = new Cache(storage);
 		var core = new Core(cache);
@@ -203,21 +208,28 @@ Core, UTIL, CONFIG, Cache) {
 			join.wait();
 		};
 
-		var positionRegexp = new RegExp("^([0-9]*),([0-9]*)$");
+		var positionKeyRegExp = new RegExp("^PartRegs\\.([^\\.]*)\\.Position$");
+		var positionValRegExp = new RegExp("^([0-9]*),([0-9]*)$");
 
 		var parseRegistry = function (xmlNode, dataNode, callback2) {
 			ASSERT(xmlNode && dataNode && callback2);
+
+			core.setRegistry(dataNode, "position", {
+				x: 0,
+				y: 0
+			});
 
 			loadSelfRegistry(xmlNode, function (err, registry) {
 				// loadAllRegistry(xmlNode, function (err, registry) {
 				if( !err ) {
 					for( var key in registry ) {
-						if( key.substr(-9) === ".Position" ) {
-							var match = positionRegexp.exec(registry[key]);
-							if( match ) {
+						var matchKey = positionKeyRegExp.exec(key);
+						if( matchKey && supportedAspects.indexOf(matchKey[1]) >= 0 ) {
+							var matchVal = positionValRegExp.exec(registry[key]);
+							if( matchVal ) {
 								core.setRegistry(dataNode, "position", {
-									x: match[1],
-									y: match[2]
+									x: parseInt(matchVal[1], 10),
+									y: parseInt(matchVal[2], 10)
 								});
 							}
 						}
@@ -280,9 +292,11 @@ Core, UTIL, CONFIG, Cache) {
 					parseAttributes(xmlNode, model, join.add());
 					parseRegistry(xmlNode, model, join.add());
 
-					var tag = core.getAttribute(xmlNode, "#tag");
-
+					var tag = core.getRegistry(model, "#type");
 					core.setRegistry(model, "isConnection", tag === "connection");
+
+					var role = core.getRegistry(model, "#role");
+					core.setAttribute(model, "isPort", supportedPortRoles.indexOf(role) >= 0);
 
 					if( tag === "connection" || tag === "reference"
 					|| core.hasPointer(xmlNode, "derivedfrom") ) {
@@ -307,57 +321,6 @@ Core, UTIL, CONFIG, Cache) {
 				else {
 					parseXmlNode(xmlType, callback2);
 				}
-			});
-		};
-
-		parsers.model_slow = function (xmlNode, callback2) {
-			var join = new UTIL.AsyncObject(function (err, obj) {
-				if( err ) {
-					callback2(err);
-				}
-				else {
-					var model = core.createNode(obj.parent);
-
-					var join = new UTIL.AsyncJoin(function (err) {
-						if( err ) {
-							callback2(err);
-						}
-						else {
-							limitCallDepth(callback2, null, model);
-						}
-					});
-
-					copyAttributes(xmlNode, model, {
-						kind: "#kind",
-						role: "#role",
-						"#tag": "#type",
-						guid: "#guid"
-					});
-
-					copyChildTexts(xmlNode, model, {
-						name: "name"
-					}, join.add());
-
-					parseAttributes(xmlNode, model, join.add());
-					parseRegistry(xmlNode, model, join.add());
-
-					var tag = core.getAttribute(xmlNode, "#tag");
-
-					core.setRegistry(model, "isConnection", tag === "connection");
-
-					if( tag === "connection" || tag === "reference" ) {
-						unresolved.push(xmlNode);
-					}
-
-					join.wait();
-				}
-			});
-
-			parseXmlNode(core.getParent(xmlNode), join.asyncSet("parent"));
-			parseXmlBase(xmlNode, join.asyncSet("base"));
-			join.wait();
-
-			parseXmlNode(core.getParent(xmlNode), function (err, parent) {
 			});
 		};
 
@@ -556,28 +519,19 @@ Core, UTIL, CONFIG, Cache) {
 
 			core.setPointer(dataNode, "base", dataBase);
 
-			/* This does not work yet, infinite cycle, base is not yet processed, etc. 
+			/*
+			 * This does not work yet, infinite cycle, base is not yet
+			 * processed, etc. // inherit registry var xmlBase = dataBase; for( ;; ) {
+			 * var names = core.getRegistryNames(base); for( var i = 0; i <
+			 * names.length; ++i ) { var name = names[i]; if(
+			 * core.getRegistry(dataNode, name) === undefined ) {
+			 * core.setRegistry(dataNode, name, core.getRegistry(base, name)); } }
 			 * 
-			// inherit registry
-			var xmlBase = dataBase;
-			for( ;; ) {
-				var names = core.getRegistryNames(base);
-				for( var i = 0; i < names.length; ++i ) {
-					var name = names[i];
-					if( core.getRegistry(dataNode, name) === undefined ) {
-						core.setRegistry(dataNode, name, core.getRegistry(base, name));
-					}
-				}
-
-				xmlBasePath = core.getPointerPath(xmlNode, "derivedfrom");
-				if( typeof xmlBasePath !== "string" ) {
-					break;
-				}
-
-				base = alreadyParsed[xmlBasePath];
-				ASSERT(base);
-			}
-			*/
+			 * xmlBasePath = core.getPointerPath(xmlNode, "derivedfrom"); if(
+			 * typeof xmlBasePath !== "string" ) { break; }
+			 * 
+			 * base = alreadyParsed[xmlBasePath]; ASSERT(base); }
+			 */
 		};
 
 		var resolvePointers = function (xmlNode, callback2) {

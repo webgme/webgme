@@ -58,11 +58,9 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 				};
 
 				storage.load(key, function (err, obj2) {
-					ASSERT(err || obj2);
-
 					if( callbacks.length !== 0 ) {
 						ASSERT(cache[key].callbacks === callbacks);
-						if( err ) {
+						if( err || !obj2 ) {
 							delete cache[key];
 						}
 						else {

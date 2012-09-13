@@ -54,7 +54,7 @@ function (ASSERT, SHA1, UTIL) {
 				}
 			};
 
-			verify("nonobject node", typeof node === "object" );
+			verify("non-object node", typeof node === "object" );
 			verify("node structure", !error && (node && node.data && typeof node.data === "object"));
 
 			verify("parent structure", !error
