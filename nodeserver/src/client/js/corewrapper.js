@@ -15,6 +15,9 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
     var timestamp = function(){
         return ""+ (new Date()).getTime();
     };
+    var elapsedTime = function(start){
+        return ""+ ((new Date()).getTime()-start);
+    };
     Client = function(options){
         var self = this,
             timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){};
@@ -360,7 +363,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     }
                     modifyRootOnServer();
                 } else {
-                    /*copyMultiplePathes*/nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
+                    nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
                         if(err){
                             logger.error("error happened during paste!!! "+err);
                             rollBackModification();
@@ -376,18 +379,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                                     }
                                 }
                             }
-                            /*for(var i=0;i<copyarr.length;i++){
-                                var from = copyarr[i].from;
-                                var to = copyarr[i].to;
-                                if(parameters.hasOwnProperty(from)){
-                                    for(var j in parameters[from].attributes){
-                                        currentCore.setAttribute(currentNodes[to],j,parameters[from].attributes[j]);
-                                    }
-                                    for(j in parameters[from].registry){
-                                        currentCore.setRegistry(currentNodes[to],j,parameters[from].registry[j]);
-                                    }
-                                }
-                            }*/
                             modifyRootOnServer();
                         }
                     });
@@ -489,15 +480,16 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 currentNodes[path] = node;
             }
         };
-        var buildTerritory = function(patterns,callback){
-            timelog("[MEAS002][in]");
+        var buildTerritory = function(userID,patterns,callback){
+            var start = timestamp();
+            timelog("[MEAS002][in]["+userID+"]");
             var i;
             var pathes = [];
             var counter = 0;
 
             var loaddone = function(){
                 if(--counter === 0){
-                    timelog("[MEAS002][out]");
+                    timelog("[MEAS002][out]["+userID+"]{"+elapsedTime(start)+"ms}");
                     callback(pathes);
                 }
             };
@@ -550,7 +542,8 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         var generateTerritoryEvents = function(userID,newpathes){
-            timelog("[MEAS003][in]"+userID);
+            var start = timestamp();
+            timelog("[MEAS003][in]["+userID+"]");
             var user = users[userID];
             var events = [];
             /*unload*/
@@ -583,16 +576,17 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     user.UI.onEvent(events[i].etype,events[i].eid);
                 }
             }
-            timelog("[MEAS003][out]"+userID);
+            timelog("[MEAS003][out]["+userID+"]{"+elapsedTime(start)+"ms}");
         };
         var updateUser = function(userID,patterns,callback){
-            timelog("[MEAS001][in]"+userID);
+            var start = timestamp();
+            timelog("[MEAS001][in]["+userID+"]");
             users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
             if(currentCore){
-                buildTerritory(patterns,function(newpathes){
+                buildTerritory(userID,patterns,function(newpathes){
                     generateTerritoryEvents(userID,newpathes);
                     users[userID].PATHES = newpathes;
-                    timelog("[MEAS001][out]"+userID);
+                    timelog("[MEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
                     if(callback){
                         callback();
                     }
@@ -603,11 +597,12 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
         var updateAllUser = function(callback){
+            var start = timestamp();
             timelog("[MEAS000][in]");
             var counter = 0;
             var userupdated = function(){
                 if(--counter === 0){
-                    timelog("[MEAS000][out]");
+                    timelog("[MEAS000][out]{"+elapsedTime(start)+"ms}");
                     if(callback){
                         callback();
                     }
@@ -658,7 +653,65 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     retarr[pathes[i]].fromrelid = currentCore.getStringPath(node,tempfrom);
                 }
                 var tempto = currentCore.copyNode(tempfrom,parent);
-                currentCore.loadChildren(tempto,function(err,children){
+                currentCore.loadChildren(tempfrom,function(err,children){
+                    if(err){
+                        logger.error("original nodes unreachable: "+err);
+                        callback(err,null);
+                    } else {
+                        for(i=0;i<children.length;i++){
+                            var index = null;
+                            for(var j in retarr){
+                                if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempfrom)){
+                                    index = j;
+                                    break;
+                                }
+                            }
+
+                            if(index){
+                                var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
+                                storeNode(node);
+                                retarr[index].newfrom = getNodePath(node);
+                                if(index !== retarr[index].newfrom){
+                                    delete currentNodes[index];
+                                }
+                            }else{
+                                logger.error("copy lost original children");
+                                callback("wrong copy",null);
+                                return;
+                            }
+                        }
+                        currentCore.loadChildren(tempto,function(err,children){
+                            if(err){
+                                logger.error("cannot load copied children: "+err);
+                                callback(err,null);
+                            } else {
+                                for(i=0;i<children.length;i++){
+                                    var index = null;
+                                    for(var j in retarr){
+                                        if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempto)){
+                                            index = j;
+                                            break;
+                                        }
+                                    }
+
+                                    if(index){
+                                        var node = currentCore.moveNode(children[i],parent);
+                                        storeNode(node);
+                                        retarr[index].topath = getNodePath(node);
+                                    }else{
+                                        logger.error("copy resulted in wrong children");
+                                        callback("wrong copy",null);
+                                        return;
+                                    }
+                                }
+                                currentCore.deleteNode(tempfrom);
+                                currentCore.deleteNode(tempto);
+                                callback(null,retarr);
+                            }
+                        });
+                    }
+                });
+                /*currentCore.loadChildren(tempto,function(err,children){
                     if(err){
                         logger.error("cannot load copied children: "+err);
                         callback(err,null);
@@ -717,62 +770,10 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                             }
                         });
                     }
-                });
+                });*/
             } else {
                 logger.error("invalid parent in multiCopy");
                 callback("invalid parent",null);
-            }
-        };
-        var copyMultiplePathes = function(pathes,parentpath,callback){
-            var tempfrom,tempfrompath,tempfrompathes=[],
-                tempto,temptopathes=[],
-                temp = {},
-                returnarr = [],
-                parent = currentNodes[parentpath];
-            if(parent){
-                tempfrom = currentCore.createNode(parent);
-                storeNode(tempfrom);
-                tempfrompath = getNodePath(tempfrom);
-                for(var i=0;i<pathes.length;i++){
-                    var tpath = {parentpath:getNodePath(currentCore.getParent(currentNodes[pathes[i]]))};
-                    var tnode = moveNode(pathes[i],tempfrompath);
-                    tpath.path = getNodePath(tnode);
-                    tempfrompathes.push(tpath);
-                }
-                tempto = currentCore.copyNode(tempfrom,parent);
-                storeNode(tempto);
-                var temptopathes = currentCore.getChildrenRelids(tempto);
-                for(i=0;i<tempfrompathes.length;i++){
-                    var trelid = currentNodes[tempfrompathes[i].path].relid;
-                    var tnode = moveNode(tempfrompathes[i].path,tempfrompathes[i].parentpath);
-                    temp[trelid] = getNodePath(tnode);
-                }
-                currentCore.loadChildren(tempto,function(err,children){
-                    if(err){
-                        logger.error("failed to load copied children!!! "+err);
-                        callback("cannot paste, ROLLBACK");
-                    }
-                    else{
-                        for(var i=0;i<children.length;i++){
-                            storeNode(children[i]);
-                            var t = getNodePath(children[i]);
-                            var t2 = children[i].relid;
-                            var tnode = moveNode(t,parentpath);
-                            returnarr.push({from:temp[t2],to:getNodePath(tnode)});
-                        }
-
-                        delete currentNodes[getNodePath(tempfrom)];
-                        delete currentNodes[getNodePath(tempto)];
-                        currentCore.deleteNode(tempfrom);
-                        currentCore.deleteNode(tempto);
-                        callback(null,returnarr);
-                    }
-                });
-
-
-            }
-            else{
-                logger.error("wrong parameters for the paste operation!!!");
             }
         };
     };

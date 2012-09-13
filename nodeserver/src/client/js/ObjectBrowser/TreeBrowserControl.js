@@ -379,10 +379,13 @@ define(['logManager',
             case "update":
                 refresh("update", eid);
                 break;
-            case "create":
+            /*case "create":
                 refresh("insert", eid);
                 break;
             case "delete":
+                refresh("update", eid);
+                break;*/
+            case "unload":
                 refresh("update", eid);
                 break;
             }

@@ -276,6 +276,7 @@ var Server = function(parameters){
                         }
                     } else {
                         console.log("wrong old root "+oldroot+" != "+root.value[0]);
+                        socket.emit('newRoot',root.value[0]);
                     }
                 }
             });
