@@ -161,11 +161,12 @@ define(['jquery',
 
         if (objDescriptor.kind === "MODEL") {
             newComponent = this._childComponents[componentId] = new ModelEditorModelComponent(objDescriptor);
+            newComponent._initialize(objDescriptor);
 
-            this._skinParts.childrenContainer.append(this._childComponents[componentId].el/*.hide()*/);
+            //this._skinParts.childrenContainer.append(this._childComponents[componentId].el/*.hide()*/);
 
             //hook up reposition handler
-            this._childComponents[componentId].el.css("cursor", "move");
+            /*this._childComponents[componentId].el.css("cursor", "move");
 
             this._childComponents[componentId].el.draggable({
                 zIndex: 100000,
@@ -182,10 +183,10 @@ define(['jquery',
                 drag: function (event, ui) {
                     return self._onDraggableDrag.call(self, event, ui.helper);
                 }
-            });
+            });*/
 
             //finally render component
-            this._childComponents[objDescriptor.id].render();
+            //this._childComponents[objDescriptor.id].render();
 
             //this._childComponents[componentId].el.fadeIn('slow', function () {});
 
@@ -204,6 +205,37 @@ define(['jquery',
         }
 
         return newComponent;
+    };
+
+    ModelEditorView.prototype._modelInitializationCompleted = function (componentId) {
+        var self = this;
+
+        this._skinParts.childrenContainer.append(this._childComponents[componentId].el);
+
+        //hook up reposition handler
+        this._childComponents[componentId].el.css("cursor", "move");
+
+        this._childComponents[componentId].el.draggable({
+            zIndex: 100000,
+            grid: [self._gridSize, self._gridSize],
+            helper: function (event) {
+                return self._onDraggableHelper.call(self, event, componentId);
+            },
+            start: function (event, ui) {
+                return self._onDraggableStart.call(self, event, ui.helper, componentId);
+            },
+            stop: function (event, ui) {
+                return self._onDraggableStop.call(self, event, ui.helper);
+            },
+            drag: function (event, ui) {
+                return self._onDraggableDrag.call(self, event, ui.helper);
+            }
+        });
+
+        //finally render component
+        this._childComponents[componentId].render();
+
+        //this._childComponents[componentId].el.fadeIn('slow', function () {});
     };
 
     ModelEditorView.prototype.deleteComponent = function (component) {
@@ -1234,7 +1266,8 @@ define(['jquery',
         }
 
         if (registeredIds.length > 0) {
-            this._updateConnectionsWithEndPoint(registeredIds);
+            // TODO: csinálni vmit vele
+            //this._updateConnectionsWithEndPoint(registeredIds);
         }
     };
 
@@ -1252,7 +1285,8 @@ define(['jquery',
         }
 
         if (unregisteredIds.length > 0) {
-            this._updateConnectionsWithEndPoint(unregisteredIds);
+            // TODO: csinálni vmit vele
+            //this._updateConnectionsWithEndPoint(unregisteredIds);
         }
     };
     /*

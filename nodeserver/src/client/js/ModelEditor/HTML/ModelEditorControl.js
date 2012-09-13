@@ -19,7 +19,7 @@ define(['logManager',
         this._logger = logManager.create("HTML_ModelEditorControl");
         this._logger.debug("Created");
 
-        this._territoryId = this._client.addUI(this);
+        this._territoryId = this._client.addUI(this, true);
         this._selfPatterns = {};
 
         this._componentStates = { "loading": 0,
@@ -126,6 +126,9 @@ define(['logManager',
 
             self._currentNodeInfo = { "id": null, "children" : [] };
 
+            self._selfPatterns[nodeId] = { "children": 1 };
+            self._client.updateTerritory(self._territoryId, self._selfPatterns);
+
             if (selectedNode) {
                 self._modelEditorView.updateCanvas(self._getObjectDescriptor(selectedNode));
 
@@ -148,8 +151,7 @@ define(['logManager',
                 self._currentNodeInfo.children = childrenIDs;
             }
 
-            self._selfPatterns[nodeId] = { "children": 1 };
-            self._client.updateTerritory(self._territoryId, self._selfPatterns);
+
 
             self._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
         });
@@ -204,6 +206,17 @@ define(['logManager',
         case "unload":
             this._onUnload(eid);
             break;
+        }
+    };
+
+    // PUBLIC METHODS
+    ModelEditorControl.prototype.onOneEvent = function (events) {
+        var i;
+
+        this._logger.debug("onOneEvent '" + events.length + "' items");
+
+        for (i = 0; i < events.length; i += 1) {
+            this.onEvent(events[i].etype, events[i].eid);
         }
     };
 

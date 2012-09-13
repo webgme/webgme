@@ -48,15 +48,13 @@ define([   'order!jquery',
         logManager.excludeComponent("ModelEditorControl");
         logManager.excludeComponent("ModelEditorSVGConnection*");
 
-        //logManager.excludeComponent("ModelEditorCanvasComponent*");
-        logManager.excludeComponent("ModelEditorModelComponent*");
-        logManager.excludeComponent("ModelWithPortsDecorator*");
-        logManager.excludeComponent("Port*");
-        logManager.excludeComponent("ModelEditorConnectionComponent*");
-        logManager.excludeComponent("Port*");
+        //logManager.excludeComponent("ModelEditorModelComponent*");
+        //logManager.excludeComponent("ModelWithPortsDecorator*");
+        //logManager.excludeComponent("Port*");
+        //logManager.excludeComponent("ModelEditorConnectionComponent*");
 
-        logManager.excludeComponent("ModelEditorView_*");
-        logManager.excludeComponent("HTML_ModelEditorControl");
+        //logManager.excludeComponent("ModelEditorView_*");
+        //logManager.excludeComponent("HTML_ModelEditorControl");
 
         logManager.excludeComponent("GraphVizControl");
         logManager.excludeComponent("GraphVizObject*");

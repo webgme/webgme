@@ -6,7 +6,8 @@ define(['logManager',
     'nodeAttributeNames',
     'nodeRegistryNames',
     './ComponentBase.js',
-    './SimpleModelDecorator.js'], function (logManager,
+    './SimpleModelDecorator.js',
+    'css!ModelEditorHTMLCSS/ModelEditorModelComponent'], function (logManager,
                                          util,
                                          commonUtil,
                                          nodeAttributeNames,
@@ -38,12 +39,12 @@ define(['logManager',
          * END OVERRIDE COMPONENTBASE MEMBERS
          */
 
-        this._initialize(objDescriptor);
+        //this._initialize(objDescriptor);
     };
 
     ModelEditorModelComponent.prototype.onDestroy = function () {
 
-        this._unregisterKnownHandles();
+        //this._unregisterKnownHandles();
 
         if (this._decoratorInstance) {
             this._decoratorInstance.destroy();
@@ -105,22 +106,33 @@ define(['logManager',
             //TODO: enddelete
             decoratorName = './js/ModelEditor/HTML/' + decoratorName + '.js';
 
+            this._logger.debug("require([ decoratorName ] - phase1");
             require([ decoratorName ],
                 function (DecoratorClass) {
-                    self._decoratorInstance = new DecoratorClass(objDescriptor);
+                    self._logger.debug("require([ decoratorName ] - phase3");
+                    self._decoratorInitialized(objDescriptor, DecoratorClass);
                 });
+            this._logger.debug("require([ decoratorName ] - phase2");
+            //this.parentComponent._modelInitializationCompleted(objDescriptor.id);
         } else {
             this._logger.error("Invalid decorator name '" + decoratorName + "'");
         }
+    };
+
+    ModelEditorModelComponent.prototype._decoratorInitialized = function (objDescriptor, DecoratorClass) {
+        this._decoratorInstance = new DecoratorClass(objDescriptor);
+
+        this.parentComponent._modelInitializationCompleted(objDescriptor.id);
     };
 
     ModelEditorModelComponent.prototype._render = function () {
         var self = this;
 
         if (this._decoratorInstance === null) {
-            setTimeout(function () {
+            this._logger.debug("this._decoratorInstance IS null");
+            /*setTimeout(function () {
                 self._render();
-            }, 100);
+            }, 100);*/
         } else {
             this._initializeModelUI();
             this._decoratorInstance.render();

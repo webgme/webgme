@@ -71,6 +71,7 @@ define(['logManager',
 
         //this._updateModelComponent();
 
+        // TODO: temporarily disable port rendering
         this._renderPorts();
 
         this.ownerComponent.afterDecoratorUpdate();
@@ -270,12 +271,13 @@ define(['logManager',
 
         this.project.updateTerritory(this.territoryId, {});
 
-        for (i in this.ports) {
+        //TODO: double check
+        /*for (i in this.ports) {
             if (this.ports.hasOwnProperty(i)) {
                 this.ports[i].el.remove();
                 delete this.ports[i];
             }
-        }
+        }*/
 
         this.logger.debug("Destroyed");
     };
