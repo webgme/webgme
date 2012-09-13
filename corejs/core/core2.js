@@ -417,7 +417,7 @@ UTIL, SHA1) {
 			var aboveAncestor = 1;
 
 			pertree.delParent(node);
-			pertree.setParent(node, parent, createRelid(parent.data, node.relid));
+			pertree.setParent(node, parent, createRelid(parent.data, baseOldPath));
 
 			var ancestorOverlays = pertree.getChild(ancestor[0], OVERLAYS);
 			var ancestorNewPath = pertree.getStringPath(node, ancestor[0]);
