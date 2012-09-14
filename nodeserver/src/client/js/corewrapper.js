@@ -62,8 +62,9 @@ define(['logManager',
             dataLostSync = true;
         };
 
+
         var self = this,
-            timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){};
+            timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){},
             _storage = new SM({server:location.host+options.mongosrv,socketiopar:options.socketiopar}),
             realstorage = options.faulttolerant ? new FTOLST(self,_storage,"temporaryinfo") : _storage,
             cache = options.cache ? new CACHE(realstorage) : realstorage,
