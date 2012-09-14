@@ -135,16 +135,17 @@ define([ "core/assert" ], function (ASSERT) {
         };
 
         return {
-            open: open,
-            opened: storage.opened,
-            close: storage.close,
-            KEYNAME: KEYNAME,
-            load: load,
-            save: save,
-            remove: remove,
-            dumpAll: storage.dumpAll,
-            removeAll: removeAll,
-            searchId: storage.searchId,
+            open      : open,
+            opened    : storage.opened,
+            close     : storage.close,
+            KEYNAME   : KEYNAME,
+            load      : load,
+            save      : save,
+            remove    : remove,
+            dumpAll   : storage.dumpAll,
+            removeAll : removeAll,
+            searchId  : storage.searchId,
+            fsync     : storage.fsync
         }
     };
 

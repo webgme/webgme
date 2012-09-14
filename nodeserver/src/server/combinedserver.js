@@ -127,6 +127,7 @@ var Server = function(parameters){
                     if( callback ) {
                         callback();
                     }
+                    socket.disconnect();
                 });
             });
         });
@@ -173,6 +174,14 @@ var Server = function(parameters){
                 else {
                     console.log(item);
                 }
+            });
+        });
+        socket.on('fsync',function(callback){
+            mongodatabase.lastError({
+                fsync: true,
+                j: true
+            }, function (err, data) {
+                callback(err || data[0].err);
             });
         });
     });
