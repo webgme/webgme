@@ -51,9 +51,9 @@ var Server = function(parameters){
             res.end(data);
         });
     }),
-        io = require('socket.io').listen(http);
+        io = require('socket.io').listen(http,commonUtil.combinedserver.srvsocketpar);
 
-    io.set('log level', 1); // reduce logging
+    //io.set('log level', 1); // reduce logging
     http.listen(parameters.port);
 
 

@@ -121,7 +121,7 @@ define([], function () {
             rootsrv         : "/root",
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
-            mongoport       : 27017,
+            mongoport       : 27017/*888*/,
             mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             logging         : false,
@@ -130,8 +130,13 @@ define([], function () {
             faulttolerant   : true,
             timelog         : false,
             socketiopar     : {
-                'reconnection delay' : 10,
-                'max reconnection attempts' : 50
+                'reconnection delay' : 1,
+                'max reconnection attempts' : 500
+            },
+            srvsocketpar    : {
+                'heartbeat timeout'  : 3,
+                'heartbeat interval' : 1,
+                'log level'          : 1
             }
         }
 
