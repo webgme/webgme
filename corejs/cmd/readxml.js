@@ -73,9 +73,37 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 
 		var tags = [];
 
+		var finishParsing = function(err) {
+			if( err ) {
+				exit(err);
+			}
+			else {
+				core.persist(tags[0].node, function(err) {
+					if( err ) {
+						exit(err);
+					}
+					else {
+						var key = core.getKey(tags[0].node);
+
+						console.log("Parsing done (" + total + " xml objects, " + idCount + " ids, "
+						+ unresolved.length + " idrefs)");
+						console.log("Root key = " + key);
+
+						tags = null;
+						core = null;
+
+						exit(null, key);
+					}
+				});
+			}
+		};
+		
 		var persisting = 1;
-		var persist = function () {
+		var persist = function (last) {
 			ASSERT(tags.length !== 0);
+			if( !last ) {
+				++persisting;
+			}
 			ASSERT(persisting >= 1);
 
 			core.persist(tags[0].node, function (err) {
@@ -83,16 +111,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 					exit(err);
 				}
 				else if( --persisting === 0 ) {
-					var key = core.getKey(tags[0].node);
-
-					console.log("Parsing done (" + total + " xml objects, " + idCount + " ids, "
-					+ unresolved.length + " idrefs)");
-					console.log("Root key = " + key);
-
-					tags = null;
-					core = null;
-
-					exit(null, key);
+					resolveUnresolved(tags[0].node, finishParsing);
 				}
 			});
 		};
@@ -136,8 +155,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 
 			++total;
 			if( ++counter >= CONFIG.parser.persistingLimit ) {
-				++persisting;
-				persist();
+				persist(false);
 				counter = 0;
 			}
 
@@ -180,20 +198,13 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 		});
 
 		parser.on("end", function () {
+			if( timerhandle ) {
+				clearInterval(timerhandle);
+			}
+			console.log("Waiting for remaining objects to be saved ...");
+			
 			ASSERT(tags.length === 1);
-
-			// core.setAttribute(tags[0].node, "#ids", ids);
-			++persisting;
-			persist();
-
-			resolveUnresolved(tags[0].node, function (err) {
-				if( err ) {
-					exit(err);
-				}
-				else {
-					persist();
-				}
-			});
+			persist(true);
 		});
 
 		// We do our caching to avoid concurrent modifications on doubly loaded
@@ -336,10 +347,6 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 					}
 				}
 			};
-
-			if( timerhandle ) {
-				clearInterval(timerhandle);
-			}
 
 			timerhandle = setInterval(function () {
 				console.log("  at object " + index + " out of " + unresolved.length);

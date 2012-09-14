@@ -149,6 +149,7 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 			dumpAll: storage.dumpAll,
 			removeAll: removeAll,
 			searchId: storage.searchId,
+			fsync: storage.fsync,
 			flush: flush
 		};
 	};

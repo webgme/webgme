@@ -200,15 +200,14 @@ function (ASSERT, SHA1, UTIL) {
 					ASSERT(err || data === null || data[KEYNAME] === child);
 
 					if( !err && !data ) {
-						ASSERT(false);
 						err = new Error("child hash not found: " + child);
 					}
 
-					callback(err, err ? undefined : {
+					callback(err, data ? {
 						data: data,
 						parent: node,
 						relid: relid
-					});
+					} : undefined);
 				});
 			}
 			else {
@@ -484,8 +483,10 @@ function (ASSERT, SHA1, UTIL) {
 				error = error || err;
 
 				if( --counter === 0 ) {
-					setTimeout(callback, 0, error);
-					callback = null;
+					storage.fsync(function(err) {
+						callback(error || err);
+						callback = null;
+					});
 				}
 			};
 		};

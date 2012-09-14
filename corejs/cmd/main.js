@@ -126,7 +126,7 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 					else {
 						readxml(mongo, opt, function (err, key) {
 							if( err ) {
-								console.log("XML parsing error: " + err);
+								console.log("XML parsing", err.stack);
 								argv.splice(i, 0, "-end");
 							}
 							else {

@@ -66,6 +66,7 @@ UTIL) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
 
+			// console.log("loading " + key);
 			collection.findOne({
 				_id: key
 			}, callback);
@@ -76,7 +77,11 @@ UTIL) {
 			ASSERT(typeof node._id === "string");
 			ASSERT(collection && callback);
 
-			collection.save(node, callback);
+			// console.log("saving " + node._id);
+			collection.save(node, function (err) {
+				// console.log("saved " + node._id);
+				callback(err);
+			});
 		};
 
 		var remove = function (key, callback) {
@@ -144,6 +149,17 @@ UTIL) {
 			}
 		};
 
+		var fsync = function (callback) {
+			ASSERT(typeof callback === "function");
+
+			database.lastError({
+				fsync: true,
+				j: true
+			}, function (err, data) {
+				callback(err || data[0].err);
+			});
+		};
+
 		return {
 			open: open,
 			opened: opened,
@@ -154,7 +170,8 @@ UTIL) {
 			remove: remove,
 			dumpAll: dumpAll,
 			removeAll: removeAll,
-			searchId: searchId
+			searchId: searchId,
+			fsync: fsync
 		};
 	};
 
