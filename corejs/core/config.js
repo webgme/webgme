@@ -13,7 +13,7 @@ define(function () {
 //			host: "129.59.104.16",		// kecso
 			host: "129.59.105.195",		// cloud
 			port: 27017,
-			database: "test",
+			database: "test2",
 			collection: "storage"
 		},
 
