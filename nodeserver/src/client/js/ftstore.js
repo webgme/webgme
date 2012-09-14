@@ -134,6 +134,12 @@ define([ "core/assert" ], function (ASSERT) {
             storage.removeAll(callback);
         };
 
+        var fsync = function(callback){
+            storage.fsync(function(err){
+                //TODO how to hanlde coming errors
+                callback(null);
+            });
+        };
         return {
             open      : open,
             opened    : storage.opened,
@@ -145,7 +151,7 @@ define([ "core/assert" ], function (ASSERT) {
             dumpAll   : storage.dumpAll,
             removeAll : removeAll,
             searchId  : storage.searchId,
-            fsync     : storage.fsync
+            fsync     : fsync
         }
     };
 
