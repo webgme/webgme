@@ -12,8 +12,8 @@ requirejs.config({
 });
 
 requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml",
-	"cmd/parsemeta", "cmd/tests", "cmd/parsedata" ], function (ASSERT, Mongo, PerTree, Core, UTIL,
-readxml, parsemeta, tests, parsedata) {
+	"cmd/parsemeta", "cmd/tests", "cmd/parsedata", "core/config" ], function (ASSERT, Mongo, PerTree, Core, UTIL,
+readxml, parsemeta, tests, parsedata, CONFIG) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -37,6 +37,7 @@ readxml, parsemeta, tests, parsedata) {
 		console.log("  -parsedata\t\t\tparses the current xml root as a gme project");
 		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
 		console.log("  -writeroot\t\t\twrites the current root for visualization");
+		console.log("  -wait <secs>\t\t\twaits the given number of seconds");
 		console.log("");
 	}
 	else {
@@ -51,8 +52,6 @@ readxml, parsemeta, tests, parsedata) {
 
 			var cmd = argv[i++];
 			if( cmd === "-mongo" ) {
-				console.log("Opening database");
-
 				opt = {
 					host: parm(),
 					port: parm(),
@@ -61,6 +60,9 @@ readxml, parsemeta, tests, parsedata) {
 				};
 				opt.port = opt.port && parseInt(opt.port, 10);
 
+				opt = UTIL.copyOptions(CONFIG.mongodb, opt);
+				console.log("Opening database at " + opt.host);
+				
 				mongo = new Mongo(opt);
 				mongo.open(function (err) {
 					if( err ) {
@@ -76,7 +78,7 @@ readxml, parsemeta, tests, parsedata) {
 					next();
 				}
 				else {
-					console.log("Dumping all data from database...");
+					console.log("Dumping all data from database ...");
 					mongo.dumpAll(function (err) {
 						if( err ) {
 							console.log("Database error: " + err);
@@ -95,7 +97,7 @@ readxml, parsemeta, tests, parsedata) {
 					next();
 				}
 				else {
-					console.log("Erasing all data from database...");
+					console.log("Erasing all data from database ...");
 					mongo.removeAll(function (err) {
 						if( err ) {
 							console.log("Database error: " + err);
@@ -325,6 +327,21 @@ readxml, parsemeta, tests, parsedata) {
 						next();
 					});
 				}
+			}
+			else if( cmd === "-wait" ) {
+				opt = parm();
+				if(typeof opt === "string") {
+					opt = parseInt(opt, 10);
+				}
+				if( typeof opt !== "number" || opt < 0 ) {
+					opt = 1;
+				}
+				
+				console.log("Waiting " + opt + " seconds ...");
+				setTimeout(function() {
+					console.log("Waiting done");
+					next();
+				}, 1000 * opt);
 			}
 			else {
 				if( cmd !== "-end" ) {

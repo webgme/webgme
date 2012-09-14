@@ -54,7 +54,7 @@ function (ASSERT, SHA1, UTIL) {
 				}
 			};
 
-			verify("non-object node", typeof node === "object" );
+			verify("non-object node", typeof node === "object");
 			verify("node structure", !error && (node && node.data && typeof node.data === "object"));
 
 			verify("parent structure", !error
@@ -197,7 +197,13 @@ function (ASSERT, SHA1, UTIL) {
 				ASSERT(isValidKey(child));
 
 				storage.load(child, function (err, data) {
-					ASSERT(err || data[KEYNAME] === child);
+					ASSERT(err || data === null || data[KEYNAME] === child);
+
+					if( !err && !data ) {
+						ASSERT(false);
+						err = new Error("child hash not found: " + child);
+					}
+
 					callback(err, err ? undefined : {
 						data: data,
 						parent: node,
