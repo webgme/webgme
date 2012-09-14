@@ -1,4 +1,4 @@
-define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
+define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], function (ASSERT,notificationManager) {
     "use strict";
 
     var Mongo = function (options) {
@@ -7,11 +7,16 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
         var connected = false;
         var isopen = false;
         var availableCB = null;
+        var dataSrvOutNoteId = null;
 
         var open = function (callback) {
-            var tempsocket = io.connect(options.ip && options.port ? options.ip+":"+options.port+options.mongosrv : options.mongosrv);
+            var tempsocket = io.connect(options.server, options.socketiopar);
             tempsocket.on('connect',function(){
                 connected = true;
+                if(dataSrvOutNoteId){
+                    notificationManager.removeStickyMessage(dataSrvOutNoteId);
+                    dataSrvOutNoteId = null;
+                }
                 if(availableCB){
                     availableCB();
                     availableCB = null;
@@ -32,23 +37,38 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             });
             tempsocket.on('connect_failed',function(){
                 connected = false;
-                console.log('CONNECT_FAILED - SOCMONGO');
+                //console.log('CONNECT_FAILED - SOCMONGO');
+                if(!dataSrvOutNoteId){
+                    dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
+                }
             });
             tempsocket.on('disconnect',function(){
                 connected = false;
-                console.log('DISCONNECT - SOCMONGO');
+                //console.log('DISCONNECT - SOCMONGO');
+                if(!dataSrvOutNoteId){
+                    dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
+                }
             });
             tempsocket.on('reconnect_failed', function(){
                 connected = false;
-                console.log('RECONNECT_FAILED - SOCMONGO');
+                //console.log('RECONNECT_FAILED - SOCMONGO');
+                if(!dataSrvOutNoteId){
+                    dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
+                }
             });
             tempsocket.on('reconnect', function(){
                 connected = false;
-                console.log('RECONNECT - SOCMONGO');
+                //console.log('RECONNECT - SOCMONGO');
+                if(!dataSrvOutNoteId){
+                    dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
+                }
             });
             tempsocket.on('reconnecting', function(){
                 connected = false;
-                console.log('RECONNECTING - SOCMONGO');
+                //console.log('RECONNECTING - SOCMONGO');
+                if(!dataSrvOutNoteId){
+                    dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
+                }
             });
         };
         var opened = function () {

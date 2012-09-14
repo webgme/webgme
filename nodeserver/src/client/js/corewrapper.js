@@ -1,4 +1,26 @@
-define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache','core/core2','js/ftstore','js/logger','js/logstorage','js/logcore','socket.io/socket.io.js'],function(LogManager, EventDispatcher, commonUtil,SM,CACHE,CORE,FTOLST,LogSrv,LogST,LCORE){
+define(['logManager',
+        'eventDispatcher',
+        'commonUtil',
+        'js/socmongo',
+        'core/cache',
+        'core/core2',
+        'js/ftstore',
+        'js/logger',
+        'js/logstorage',
+        'js/logcore',
+        'notificationManager',
+        'socket.io/socket.io.js'],
+        function( LogManager,
+                  EventDispatcher,
+                  commonUtil,
+                  SM,
+                  CACHE,
+                  CORE,
+                  FTOLST,
+                  LogSrv,
+                  LogST,
+                  LCORE,
+                  notificationManager){
     var logger,
         Client,
         CommandQueue,
@@ -19,21 +41,43 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
         return ""+ ((new Date()).getTime()-start);
     };
     Client = function(options){
+        /*Fault Tolerant Data server syncronization functions*/
+        var dataOutSyncNoteId = null;
+        var rootSrvOutNoteId = null;
+        this.dataInSync = function(){
+            if(dataOutSyncNoteId){
+                notificationManager.removeStickyMessage(dataOutSyncNoteId);
+                dataOutSyncNoteId = null;
+            }
+            dataLostSync = false;
+            if(!rootServerOut && currentCore){
+                rootRetry = false;
+                modifyRootOnServer();
+            }
+        };
+        this.dataOutSync = function(){
+            if(dataOutSyncNoteId === null){
+                dataOutSyncNoteId = notificationManager.addStickyMessage("Data is out of sync!!!");
+            }
+            dataLostSync = true;
+        };
+
         var self = this,
             timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){};
-            _storage = new SM(options),
-            realstorage = options.faulttolerant ? new FTOLST(_storage,"temporaryinfo") : _storage,
+            _storage = new SM({server:location.host+options.mongosrv,socketiopar:options.socketiopar}),
+            realstorage = options.faulttolerant ? new FTOLST(self,_storage,"temporaryinfo") : _storage,
             cache = options.cache ? new CACHE(realstorage) : realstorage,
-            logsrv = options.logging ? new LogSrv(options.ip+":"+options.port+options.logsrv) : null,
+            logsrv = options.logging ? new LogSrv(location.host+options.logsrv) : null,
             storage = new LogST(cache,logsrv),
             selectedObjectId = null,
             users = {},
             currentNodes = {},
             currentRoot = null,
             currentCore = null,
-            clipboard = null,
+            clipboard = [],
             rootServer = null,
             rootServerOut = false,
+            dataLostSync = false;
             lastValidRoot = null,
             rootRetry = false,
             updating = false/*,
@@ -54,6 +98,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             }
         };
 
+
         /*User Interface handling*/
         this.addUI = function(ui,oneevent){
             var guid = GUID();
@@ -65,7 +110,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 /*in case of the first user we have to connect...*/
                 storage.open(function(){
                     if(rootServer === null){
-                        rootServer = io.connect(options.ip && options.port ? options.ip+":"+options.port+options.rootsrv : options.rootsrv);
+                        rootServer = io.connect(location.host + options.rootsrv,options.socketiopar);
                     }
                     rootServer.on('newRoot',function(newroot){
                         if(newroot === lastValidRoot){
@@ -73,7 +118,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                                 rootRetry = false;
                                 newRoot(newroot,true);
                             } else {
-                                if( newroot !== currentRoot ){
+                                if( newroot !== currentRoot && !dataLostSync){
                                     rootRetry = true;
                                     modifyRootOnServer(true);
                                 }
@@ -83,33 +128,52 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                         }
                     });
                     rootServer.on('connect',function(){
-                        console.log('CONNECT - ROOTSRV');
+                        //console.log('CONNECT - ROOTSRV');
                         if(rootServerOut){
                             rootServerOut = false;
-                            if( lastValidRoot !== currentRoot ){
+                            if(rootSrvOutNoteId){
+                                notificationManager.removeStickyMessage(rootSrvOutNoteId);
+                                rootSrvOutNoteId = null;
+                            }
+                            if( lastValidRoot !== currentRoot && !dataLostSync){
                                 modifyRootOnServer(true);
                             }
                         }
                     });
                     rootServer.on('connect_failed',function(){
                         rootServerOut = true;
-                        console.log('CONNECT_FAILED - ROOTSRV');
+                        //console.log('CONNECT_FAILED - ROOTSRV');
+                        if(!rootSrvOutNoteId){
+                            rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
+                        }
                     });
                     rootServer.on('disconnect',function(){
                         rootServerOut = true;
-                        console.log('DISCONNECT - ROOTSRV');
+                        //console.log('DISCONNECT - ROOTSRV');
+                        if(!rootSrvOutNoteId){
+                            rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
+                        }
                     });
                     rootServer.on('reconnect_failed', function(){
                         rootServerOut = true;
-                        console.log('RECONNECT_FAILED - ROOTSRV');
+                        //console.log('RECONNECT_FAILED - ROOTSRV');
+                        if(!rootSrvOutNoteId){
+                            rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
+                        }
                     });
                     rootServer.on('reconnect', function(){
                         rootServerOut = true;
-                        console.log('RECONNECT - ROOTSRV');
+                        //console.log('RECONNECT - ROOTSRV');
+                        if(!rootSrvOutNoteId){
+                            rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
+                        }
                     });
                     rootServer.on('reconnecting', function(){
                         rootServerOut = true;
-                        console.log('RECONNECTING - ROOTSRV');
+                        //console.log('RECONNECTING - ROOTSRV');
+                        if(!rootSrvOutNoteId){
+                            rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
+                        }
                     });
 
                 });
@@ -128,7 +192,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 currentCore = null;
                 currentNodes = {};
                 currentRoot = null;
-                clipboard = null;
+                clipboard = [];
 
             }
         };
@@ -207,7 +271,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             clipboard = ids;
         };
         this.pasteNodes = function(parentpath){
-            copyMultiplePathes(clipboard,parentpath,function(err,copyarr){
+            nuCopy(clipboard,parentpath,function(err,copyarr){
                 if(err){
                     logger.error("error during multiple paste!!! "+err);
                     rollBackModification();
@@ -216,29 +280,6 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                     modifyRootOnServer();
                 }
             });
-            /*var parent = currentNodes[parentpath];
-            if(parent){
-                for(var i=0;i<clipboard.length;i++){
-                    var fromnode = currentNodes[clipboard[i]];
-                    if(fromnode){
-                        var tempnode = currentCore.copyNode(fromnode,parent);
-                        if(tempnode){
-                            storeNode(tempnode);
-                        } else {
-                            logger.error("error during node copy: "+clipboard[i]);
-                            rollBackModification();
-                            return;
-                        }
-                    } else {
-                        logger.error("wrong item on clipboard: "+clipboard[i]);
-                        rollBackModification();
-                        return;
-                    }
-                }
-                modifyRootOnServer();
-            } else {
-                logger.error("wrong parent to paste: "+parentpath);
-            }*/
         };
         this.deleteNode = function(path){
             if(currentNodes[path]){
@@ -346,7 +387,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
                 }
 
                 if(simplepaste){
-                    pathestocopy = clipboard;
+                    pathestocopy = clipboard || [];
                 }
                 if(pathestocopy.length < 1){
                     logger.error("there is nothing to copy!!!");
@@ -496,7 +537,7 @@ define(['logManager','eventDispatcher', 'commonUtil', 'js/socmongo','core/cache'
             var loadpath = function(path,childrenaswell){
                 var pathloaded = function(err,node){
                     if(err || node === undefined || node === null){
-                        console.log("something wrong with the path: "+path+"  - error: "+err);
+                        //console.log("something wrong with the path: "+path+"  - error: "+err);
                     } else {
                         storeNode(node);
 

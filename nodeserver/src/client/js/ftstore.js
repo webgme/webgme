@@ -1,12 +1,15 @@
 define([ "core/assert" ], function (ASSERT) {
     "use strict";
 
-    var Cache = function (storage,projectinfo) {
+    var Cache = function (watcher,storage,projectinfo) {
         ASSERT(storage !== null);
 
         var KEYNAME = "_id";
         var PENDING = "pending";
         var OBJECTS = localStorage;
+        var inSync = watcher ? watcher.dataInSync : function(){};
+        var outSync = watcher ? watcher.dataOutSync : function(){};
+
 
         var open = function(callback) {
             storage.open(function(err) {
@@ -37,6 +40,7 @@ define([ "core/assert" ], function (ASSERT) {
                 if(err) {
                     console.log("real save failed "+node[KEYNAME]);
                     storage.whenAvailable(sync);
+                    outSync();
 
                     var data = OBJECTS.getItem(PENDING+node[KEYNAME]);
                     if( data ) {
@@ -70,6 +74,12 @@ define([ "core/assert" ], function (ASSERT) {
         };
 
         var sync = function(){
+            var count = 0;
+            var objectSyncronized = function(){
+                if(--count === 0){
+                    inSync();
+                }
+            };
             var tryToSave = function(obj) {
                 storage.save(obj, function(err) {
                     if( !err ) {
@@ -87,11 +97,13 @@ define([ "core/assert" ], function (ASSERT) {
                                     OBJECTS.setItem(name, JSON.stringify(data));
                                 }
                                 console.log("pending object saved "+ obj[KEYNAME]);
+                                objectSyncronized();
                             }
                         }
                     }
                     else {
                         storage.whenAvailable(sync);
+                        outSync();
                     }
                 });
             };
@@ -103,9 +115,14 @@ define([ "core/assert" ], function (ASSERT) {
                     var data = OBJECTS.getItem(name);
                     data = JSON.parse(data);
                     if( data.projects.indexOf(projectinfo) >= 0 ) {
+                        count++;
                         tryToSave(data.object);
                     }
                 }
+            }
+
+            if(count === 0){
+                inSync();
             }
         };
 
@@ -127,7 +144,7 @@ define([ "core/assert" ], function (ASSERT) {
             remove: remove,
             dumpAll: storage.dumpAll,
             removeAll: removeAll,
-            searchId: storage.searchId
+            searchId: storage.searchId,
         }
     };
 

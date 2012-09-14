@@ -171,7 +171,7 @@ define([   'order!jquery',
     doConnect = function () {
 
         //figure out the server to connect to
-        var serverLocation;
+        /*var serverLocation;
 
         //by default serverlocation is the same server the page loaded from
         if (commonUtil.standalone.ProjectIP === "self") {
@@ -184,7 +184,9 @@ define([   'order!jquery',
             client = new Core(commonUtil.combinedserver);
         } else {
             client = new Client(serverLocation);
-        }
+        }*/
+        client = new Core(commonUtil.combinedserver);
+
         //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
         tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 

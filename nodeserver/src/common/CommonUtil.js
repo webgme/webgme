@@ -116,22 +116,23 @@ define([], function () {
             branch         : "test"
         },
         combinedserver: {
-            ip              : "129.59.104.16", /*should be the IP where the combinedserver run*/
             port            : 80,
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
             logsrv          : "/log",
-            /*branchfile      : "combined.tpf",*/
             mongoip         : "129.59.105.195",
             mongoport       : 27017,
             mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
-            /*storage         : "mongo",*/
             logging         : false,
             logfile         : "comblog.log",
             cache           : true,
             faulttolerant   : true,
-            timelog         : true
+            timelog         : false,
+            socketiopar     : {
+                'reconnection delay' : 10,
+                'max reconnection attempts' : 50
+            }
         }
 
     };

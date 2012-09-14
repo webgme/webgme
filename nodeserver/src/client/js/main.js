@@ -1,6 +1,6 @@
 "use strict";
 
-var DEBUG = true;
+var DEBUG = false;
 var _webGME_jquery_ver = '1.8.0';
 var _webGME_jqueryui_ver = '1.8.22.mousefixed';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
 
