@@ -186,11 +186,14 @@ define(['logManager',
 
     ModelEditorControl.prototype._createObject = function (nodeId) {
         var node = this._client.getNode(nodeId),
-            desc = this._getObjectDescriptor(node),
+            desc = null,
             doCreate = true;
 
         //TODO: heekkkkkkkkk!!!!!!!!!!!!!!!!!!!
         if (node) {
+
+            desc = this._getObjectDescriptor(node);
+
             if (desc.kind === "MODEL") {
                 if (desc.position) {
                     if (desc.position.hasOwnProperty("x") && desc.position.hasOwnProperty("y")) {
