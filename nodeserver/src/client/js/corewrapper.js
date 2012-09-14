@@ -109,6 +109,7 @@ define(['logManager',
             if(count === 0){
                 /*in case of the first user we have to connect...*/
                 storage.open(function(){
+                    var firstopening = true;
                     if(rootServer === null){
                         rootServer = io.connect(location.host + options.rootsrv,options.socketiopar);
                     }
@@ -128,6 +129,10 @@ define(['logManager',
                         }
                     });
                     rootServer.on('connect',function(){
+                        if(firstopening){
+                            notificationManager.displayMessage("Your project is opened!");
+                            firstopening = false;
+                        }
                         //console.log('CONNECT - ROOTSRV');
                         if(rootServerOut){
                             rootServerOut = false;

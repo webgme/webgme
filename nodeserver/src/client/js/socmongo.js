@@ -4,7 +4,6 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
     var Mongo = function (options) {
         var ROOTNAME = "***root***";
         var socket = null;
-        var connected = false;
         var isopen = false;
         var availableCB = null;
         var dataSrvOutNoteId = null;
@@ -12,59 +11,64 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         var open = function (callback) {
             var tempsocket = io.connect(options.server, options.socketiopar);
             tempsocket.on('connect',function(){
-                connected = true;
-                if(dataSrvOutNoteId){
-                    notificationManager.removeStickyMessage(dataSrvOutNoteId);
-                    dataSrvOutNoteId = null;
-                }
-                if(availableCB){
-                    availableCB();
-                    availableCB = null;
-                }
-                console.log('CONNECT - SOCMONGO');
+                //console.log('CONNECT - SOCMONGO');
                 if(!isopen){
                     tempsocket.emit('open',function(err){
                         if(err){
-                            callback(err);
+                            if(callback){
+                                callback(err);
+                                callback = null;
+                            }
                         }
                         else{
                             socket = tempsocket;
                             isopen = true;
-                            callback(null);
+                            if(dataSrvOutNoteId){
+                                notificationManager.removeStickyMessage(dataSrvOutNoteId);
+                                dataSrvOutNoteId = null;
+                            }
+                            if(availableCB){
+                                availableCB();
+                                availableCB = null;
+                            }
+                            if(callback){
+                                callback(null);
+                                callback = null;
+                            }
                         }
                     });
                 }
             });
             tempsocket.on('connect_failed',function(){
-                connected = false;
+                isopen = false;
                 //console.log('CONNECT_FAILED - SOCMONGO');
                 if(!dataSrvOutNoteId){
                     dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
                 }
             });
             tempsocket.on('disconnect',function(){
-                connected = false;
+                isopen = false;
                 //console.log('DISCONNECT - SOCMONGO');
                 if(!dataSrvOutNoteId){
                     dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
                 }
             });
             tempsocket.on('reconnect_failed', function(){
-                connected = false;
+                isopen = false;
                 //console.log('RECONNECT_FAILED - SOCMONGO');
                 if(!dataSrvOutNoteId){
                     dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
                 }
             });
             tempsocket.on('reconnect', function(){
-                connected = false;
+                isopen = false;
                 //console.log('RECONNECT - SOCMONGO');
                 if(!dataSrvOutNoteId){
                     dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
                 }
             });
             tempsocket.on('reconnecting', function(){
-                connected = false;
+                isopen = false;
                 //console.log('RECONNECTING - SOCMONGO');
                 if(!dataSrvOutNoteId){
                     dataSrvOutNoteId = notificationManager.addStickyMessage("Connection to DataServer is down!!!")
@@ -78,7 +82,6 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
             var tempsocket = socket;
             socket = null;
             tempsocket.emit('close',function(){
-                connected = false;
                 isopen=false;
                 if(callback){
                     callback(null);
@@ -88,14 +91,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         var load = function (key, callback) {
             setTimeout(function(){
                 if(socket){
-                    if(connected){
-                        if(isopen){
-                            socket.emit('load',key,callback);
-                        } else {
-                            callback("[load]the network storage is not opened!!!");
-                        }
+                    if(isopen){
+                        socket.emit('load',key,callback);
                     } else {
-                        callback("[load]temporary network problems!!!");
+                        callback("[load]the network storage is not opened!!!");
                     }
                 }
                 else{
@@ -106,14 +105,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         var save = function (node, callback) {
             setTimeout(function(){
                 if(socket){
-                    if(connected){
-                        if(isopen){
-                            socket.emit('save',node,callback);
-                        } else {
-                            callback("[save]the network storage is not opened!!!");
-                        }
+                    if(isopen){
+                        socket.emit('save',node,callback);
                     } else {
-                        callback("[save]temporary network problems!!!");
+                        callback("[save]the network storage is not opened!!!");
                     }
                 }
                 else{
@@ -123,14 +118,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         };
         var remove = function (key, callback) {
             if(socket){
-                if(connected){
-                    if(isopen){
-                        socket.emit('remove',key,callback);
-                    } else {
-                        callback("[remove]the network storage is not opened!!!");
-                    }
+                if(isopen){
+                    socket.emit('remove',key,callback);
                 } else {
-                    callback("[remove]temporary network problems!!!");
+                    callback("[remove]the network storage is not opened!!!");
                 }
             }
             else{
@@ -139,14 +130,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         };
         var dumpAll = function (callback) {
             if(socket){
-                if(connected){
-                    if(isopen){
-                        socket.emit('dumpAll',callback);
-                    } else {
-                        callback("[dumpAll]the network storage is not opened!!!");
-                    }
+                if(isopen){
+                    socket.emit('dumpAll',callback);
                 } else {
-                    callback("[dumpAll]temporary network problems!!!");
+                    callback("[dumpAll]the network storage is not opened!!!");
                 }
             }
             else{
@@ -155,14 +142,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         };
         var removeAll = function (callback) {
             if(socket){
-                if(connected){
-                    if(isopen){
-                        socket.emit('removeAll',callback);
-                    } else {
-                        callback("[removeAll]the network storage is not opened!!!");
-                    }
+                if(isopen){
+                    socket.emit('removeAll',callback);
                 } else {
-                    callback("[removeAll]temporary network problems!!!");
+                    callback("[removeAll]the network storage is not opened!!!");
                 }
             }
             else{
@@ -171,14 +154,10 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         };
         var searchId = function (beginning, callback) {
             if(socket){
-                if(connected){
-                    if(isopen){
-                        socket.emit('searchId',beginning,callback);
-                    } else {
-                        callback("[searchId]the network storage is not opened!!!");
-                    }
+                if(isopen){
+                    socket.emit('searchId',beginning,callback);
                 } else {
-                    callback("[searchId]temporary network problems!!!");
+                    callback("[searchId]the network storage is not opened!!!");
                 }
             }
             else{
