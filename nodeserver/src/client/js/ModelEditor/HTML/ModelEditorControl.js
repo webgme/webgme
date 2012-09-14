@@ -185,10 +185,31 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._createObject = function (nodeId) {
-        var node = this._client.getNode(nodeId);
+        var node = this._client.getNode(nodeId),
+            desc = this._getObjectDescriptor(node),
+            doCreate = true;
 
+        //TODO: heekkkkkkkkk!!!!!!!!!!!!!!!!!!!
         if (node) {
-            this._components[nodeId].componentInstance = this._modelEditorView.createComponent(this._getObjectDescriptor(node));
+            if (desc.kind === "MODEL") {
+                if (desc.position) {
+                    if (desc.position.hasOwnProperty("x") && desc.position.hasOwnProperty("y")) {
+                        if (desc.position.x === 0 && desc.position.y === 0) {
+                            doCreate = false;
+                        }
+                    } else {
+                        doCreate = false;
+                    }
+                } else {
+                    doCreate = false;
+                }
+            }
+        } else {
+            doCreate = false;
+        }
+
+        if (doCreate === true) {
+            this._components[nodeId].componentInstance = this._modelEditorView.createComponent(desc);
             this._components[nodeId].state = this._componentStates.loaded;
         }
     };
