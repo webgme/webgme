@@ -552,7 +552,7 @@ define(['jquery',
         this._logger.debug("onComponentMouseDown: " + componentId);
 
         //mousedown initiates a component selection
-        this._setSelection([componentId], event.ctrlKey);
+        this._setSelection([componentId], event.ctrlKey || event.metaKey);
 
         event.stopPropagation();
         event.preventDefault();
@@ -562,7 +562,7 @@ define(['jquery',
         this._logger.debug("onComponentMouseUp: " + componentId);
 
         //mouseup initiates an already selected component's unselection
-        this._deselect(componentId, event.ctrlKey);
+        this._deselect(componentId, event.ctrlKey || event.metaKey);
 
         //event.stopPropagation();
         //event.preventDefault();
@@ -718,7 +718,7 @@ define(['jquery',
         var mousePos = this._getMousePos(event),
             self = this;
 
-        if (event.ctrlKey !== true) {
+        if (event.ctrlKey || event.metaKey !== true) {
             this._clearSelection();
         }
 
@@ -765,7 +765,7 @@ define(['jquery',
 
             this._drawSelectionRubberBand();
 
-            this._selectChildrenByRubberBand(event.ctrlKey);
+            this._selectChildrenByRubberBand(event.ctrlKey || event.metaKey);
             this._skinParts.rubberBand.hide();
 
             //unbind mousemove and mouseup handlers
@@ -876,7 +876,7 @@ define(['jquery',
         this._dragModes = {"copy": 0,
             "reposition": 1};
 
-        if (event.ctrlKey === true) {
+        if (event.ctrlKey || event.metaKey === true) {
             this._dragOptions.mode = this._dragModes.copy;
         } else {
             this._dragOptions.mode = this._dragModes.reposition;
@@ -1307,19 +1307,19 @@ define(['jquery',
             handled = true;
             break;
         case 65:    //a
-            if (event.ctrlKey) {
+            if (event.ctrlKey || event.metaKey) {
                 this._selectAll();
                 handled = true;
             }
             break;
         case 67:    //c
-            if (event.ctrlKey) {
+            if (event.ctrlKey || event.metaKey) {
                 this.onCopy(this._selectedComponentIds);
                 handled = true;
             }
             break;
         case 86:    //v
-            if (event.ctrlKey) {
+            if (event.ctrlKey || event.metaKey) {
                 this.onPaste();
                 handled = true;
             }
