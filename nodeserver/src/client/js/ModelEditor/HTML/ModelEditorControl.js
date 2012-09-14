@@ -276,7 +276,9 @@ define(['logManager',
 
             for (i = 0; i < childrenDiff.length; i += 1) {
                 childId = childrenDiff[i];
-                this._modelEditorView.deleteComponent(this._components[childId].componentInstance);
+                if (this._components[childId].componentInstance) {
+                    this._modelEditorView.deleteComponent(this._components[childId].componentInstance);
+                }
                 delete this._components[childId];
             }
 
