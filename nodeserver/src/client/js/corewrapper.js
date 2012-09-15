@@ -86,6 +86,7 @@ define(['logManager',
             previousRoot = null,
             previousCore = null*/;
 
+        var waitfornextregistryset = false; //TODO HACK
         /*event functions to relay information between users*/
         $.extend(this, new EventDispatcher());
         this.events = {
@@ -107,6 +108,8 @@ define(['logManager',
             for(var i in users){
                 count++;
             }
+            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false};
+
             if(count === 0){
                 /*in case of the first user we have to connect...*/
                 storage.open(function(){
@@ -184,7 +187,6 @@ define(['logManager',
 
                 });
             }
-            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false};
             return guid;
         };
         this.removeUI = function(guid){
@@ -206,8 +208,19 @@ define(['logManager',
             if(_.isEqual(patterns,users[userID].PATTERNS)){
 
             }else{
-                updateUser(userID,patterns,function(){
-                    logger.debug("user territory updated:"+userID);
+                updateUser(userID,patterns,function(err){
+                    if(err){
+                        //TODO now what the f**k
+                        updateUser(userID,patterns,function(err){
+                            if(err){
+                                console.log("second try for update failed as well...");
+                            } else {
+                                logger.debug("user territory updated, but only for second try: "+userID);
+                            }
+                        });
+                    } else {
+                        logger.debug("user territory updated:"+userID);
+                    }
                 });
             }
         };
@@ -267,7 +280,15 @@ define(['logManager',
                         }
                     }
                 }
-                modifyRootOnServer();
+                if(!waitfornextregistryset){
+                    waitfornextregistryset = true;
+                }
+                setTimeout(function(){
+                    if(waitfornextregistryset){
+                        waitfornextregistryset = false;
+                        modifyRootOnServer();
+                    }
+                },100)
             }
             else{
                 logger.error("[l92] no such object: "+path);
@@ -442,7 +463,11 @@ define(['logManager',
             currentRoot = lastValidRoot;
             currentCore.loadRoot(currentRoot,function(err,node){
                 storeNode(node);
-                updateAllUser(null);
+                updateAllUser(function(err){
+                    if(err){
+                        console.log("now something really f*cked up...");
+                    }
+                });
             });
         };
         var newRoot = function(newroot,fromserver){
@@ -450,12 +475,33 @@ define(['logManager',
                 lastValidRoot = newroot;
             }
             if(newroot !== currentRoot){
-                currentRoot = newroot;
+                /*currentRoot = newroot;
                 currentNodes = {};
                 currentCore = new LCORE(new CORE(storage),logsrv);
                 currentCore.loadRoot(currentRoot,function(err,node){
                     storeNode(node);
                     updateAllUser(null);
+                });*/
+                var tempcore = new LCORE(new CORE(storage),logsrv);
+                tempcore.loadRoot(newroot,function(err,node){
+                    if(!err && node){
+                        currentRoot = newroot;
+                        currentNodes = {};
+                        currentCore = tempcore;
+                        storeNode(node);
+                        updateAllUser(function(err){
+                            if(err){
+                                //TODO now what???
+                                updateAllUser(function(err){
+                                    if(err){
+                                        console.log("updating the whole user bunch failed for the second time as well...");
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        console.log("not ready database, wait for new root");
+                    }
                 });
             }
         };
@@ -537,24 +583,39 @@ define(['logManager',
             var loaddone = function(){
                 if(--counter === 0){
                     timelog("[MEAS002][out]["+userID+"]{"+elapsedTime(start)+"ms}");
-                    callback(pathes);
+                    if(callback){
+                        callback(null,pathes);
+                    }
                 }
             };
             var loadpath = function(path,childrenaswell){
                 var pathloaded = function(err,node){
                     if(err || node === undefined || node === null){
                         //console.log("something wrong with the path: "+path+"  - error: "+err);
+                        if(callback){
+                            var cb = callback;
+                            callback = null;
+                            cb(err || "empty object returned");
+                        }
                     } else {
                         storeNode(node);
 
                         INSERTARR(pathes,getNodePath(node));
                         if(childrenaswell){
                             currentCore.loadChildren(node,function(err,children){
-                                for(var i=0;i<children.length;i++){
-                                    storeNode(children[i]);
-                                    INSERTARR(pathes,getNodePath(children[i]));
+                                if(!err){
+                                    for(var i=0;i<children.length;i++){
+                                        storeNode(children[i]);
+                                        INSERTARR(pathes,getNodePath(children[i]));
+                                    }
+                                    loaddone();
+                                } else {
+                                    if(callback){
+                                        var cb = callback;
+                                        callback = null;
+                                        cb(err);
+                                    }
                                 }
-                                loaddone();
                             });
                         }
                         else{
@@ -584,7 +645,7 @@ define(['logManager',
                 }
             } else {
                 if(callback){
-                    callback([]);
+                    callback(null,[]);
                 }
             }
         };
@@ -630,12 +691,20 @@ define(['logManager',
             timelog("[MEAS001][in]["+userID+"]");
             users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
             if(currentCore){
-                buildTerritory(userID,patterns,function(newpathes){
-                    generateTerritoryEvents(userID,newpathes);
-                    users[userID].PATHES = newpathes;
-                    timelog("[MEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
-                    if(callback){
-                        callback();
+                buildTerritory(userID,patterns,function(err,newpathes){
+                    if(err){
+                        if(callback){
+                            var cb = callback;
+                            callback = null;
+                            cb(err);
+                        }
+                    } else {
+                        generateTerritoryEvents(userID,newpathes);
+                        users[userID].PATHES = newpathes;
+                        timelog("[MEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
+                        if(callback){
+                            callback();
+                        }
                     }
                 });
             }
@@ -647,14 +716,23 @@ define(['logManager',
             var start = timestamp();
             timelog("[MEAS000][in]");
             var counter = 0;
-            var userupdated = function(){
-                if(--counter === 0){
-                    timelog("[MEAS000][out]{"+elapsedTime(start)+"ms}");
+            var userupdated = function(err){
+                if(err){
                     if(callback){
-                        callback();
+                        var cb = callback;
+                        callback = null;
+                        cb(err);
+                    }
+                } else {
+                    if(--counter === 0){
+                        timelog("[MEAS000][out]{"+elapsedTime(start)+"ms}");
+                        if(callback){
+                            callback();
+                        }
                     }
                 }
-            }
+            };
+
             for(var i in users){
                 if(users.hasOwnProperty(i)){
                     counter++;
