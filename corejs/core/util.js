@@ -373,7 +373,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 	};
 
-	var callbackDepth = 10000 || CONFIG.callbacks.maxDepth || 5;
+	var callbackDepth = CONFIG.callbacks.maxDepth || 5;
 	var immediateCallback = function (callback, arg1, arg2) {
 		ASSERT(typeof callback === "function");
 		ASSERT(arguments.length >= 1 && arguments.length <= 3);
