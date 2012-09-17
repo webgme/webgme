@@ -48,10 +48,7 @@ UTIL) {
 		var close = function (callback) {
 			ASSERT(database && collection);
 
-			// to sync data
-			database.lastError({
-				fsync: true
-			}, function (err, data) {
+			fsync(function () {
 				database.close(function () {
 					collection = null;
 					database = null;
@@ -77,11 +74,7 @@ UTIL) {
 			ASSERT(typeof node._id === "string");
 			ASSERT(collection && callback);
 
-			// console.log("saving " + node._id);
-			collection.save(node, function (err) {
-				// console.log("saved " + node._id);
-				callback(err);
-			});
+			collection.save(node, callback);
 		};
 
 		var remove = function (key, callback) {
@@ -152,12 +145,28 @@ UTIL) {
 		var fsync = function (callback) {
 			ASSERT(typeof callback === "function");
 
-			database.lastError({
-				fsync: true,
-				j: true
-			}, function (err, data) {
-				callback(err || data[0].err);
-			});
+			var conns = database.serverConfig.allRawConnections();
+			ASSERT(Array.isArray(conns) && conns.length >= 1);
+
+			var error = null;
+			var synced = 0;
+
+			var fsyncOne = function (conn) {
+				database.lastError({
+					fsync: true
+				}, {
+					connection: conn
+				}, function (err, res) {
+					error = error || err || res[0].err;
+					if( ++synced === conns.length ) {
+						callback(error);
+					}
+				});
+			};
+
+			for( var i = 0; i < conns.length; ++i ) {
+				fsyncOne(conns[i]);
+			}
 		};
 
 		return {
