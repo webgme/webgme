@@ -256,10 +256,10 @@ define(['order!jquery',
                     changeAllowed = self.onNodeTitleChanged.call(self, renamedNode.attr("nId"), oldName, newName);
                 }
 
-                if (changeAllowed !== true) {
+                /*if (changeAllowed !== true) {
                     self.updateNode(renamedNode, { "text": oldName });
                     logger.debug("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not allowed");
-                }
+                }*/
             }
 
             //set focus back to the renamed node
