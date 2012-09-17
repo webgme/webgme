@@ -134,17 +134,24 @@ define([ "core/assert" ], function (ASSERT) {
             storage.removeAll(callback);
         };
 
+        var fsync = function(callback){
+            storage.fsync(function(err){
+                //TODO how to hanlde coming errors
+                callback(null);
+            });
+        };
         return {
-            open: open,
-            opened: storage.opened,
-            close: storage.close,
-            KEYNAME: KEYNAME,
-            load: load,
-            save: save,
-            remove: remove,
-            dumpAll: storage.dumpAll,
-            removeAll: removeAll,
-            searchId: storage.searchId,
+            open      : open,
+            opened    : storage.opened,
+            close     : storage.close,
+            KEYNAME   : KEYNAME,
+            load      : load,
+            save      : save,
+            remove    : remove,
+            dumpAll   : storage.dumpAll,
+            removeAll : removeAll,
+            searchId  : storage.searchId,
+            fsync     : fsync
         }
     };
 

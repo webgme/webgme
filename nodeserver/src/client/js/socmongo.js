@@ -180,21 +180,36 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         var whenAvailable = function(callback){
             availableCB = callback;
         };
+        var fsync = function (callback) {
+            ASSERT(typeof callback === "function");
+
+            if(socket){
+                if(isopen){
+                    socket.emit('fsync',callback);
+                } else {
+                    callback("[fsync]the network storage is not opened!!!");
+                }
+            }
+            else{
+                callback("[fsync]there is no valid connection to the server!!!");
+            }
+        };
 
         return {
-            open: open,
-            opened: opened,
-            close: close,
-            KEYNAME: "_id",
-            load: load,
-            save: save,
-            remove: remove,
-            dumpAll: dumpAll,
-            removeAll: removeAll,
-            searchId: searchId,
-            loadRoot: loadRoot,
-            saveRoot: saveRoot,
-            whenAvailable: whenAvailable
+            open          : open,
+            opened        : opened,
+            close         : close,
+            KEYNAME       : "_id",
+            load          : load,
+            save          : save,
+            remove        : remove,
+            dumpAll       : dumpAll,
+            removeAll     : removeAll,
+            searchId      : searchId,
+            loadRoot      : loadRoot,
+            saveRoot      : saveRoot,
+            whenAvailable : whenAvailable,
+            fsync         : fsync
         };
     };
 

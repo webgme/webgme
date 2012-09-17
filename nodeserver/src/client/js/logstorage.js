@@ -44,19 +44,24 @@ define([], function () {
             log("whenAvailable()");
             storage.whenAvailable(callback);
         };
+        var fsync = function(callback){
+            log("fsync()");
+            storage.fsync(callback);
+        };
 
         return {
-            open: open,
-            opened: storage.opened,
-            close: close,
-            KEYNAME: storage.KEYNAME,
-            load: load,
-            save: save,
-            remove: remove,
-            dumpAll: dumpAll,
-            removeAll: removeAll,
-            searchId: searchId,
-            whenAvailable: whenAvailable
+            open          : open,
+            opened        : storage.opened,
+            close         : close,
+            KEYNAME       : storage.KEYNAME,
+            load          : load,
+            save          : save,
+            remove        : remove,
+            dumpAll       : dumpAll,
+            removeAll     : removeAll,
+            searchId      : searchId,
+            whenAvailable : whenAvailable,
+            fsync         : fsync
         }
     };
 
