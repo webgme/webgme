@@ -124,6 +124,10 @@ define([], function () {
             mongoport       : 27017/*888*/,
             mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
+            mongoopt        : {
+                'auto_reconnect' : true,
+                'poolSize'       : 1
+            },
             logging         : false,
             logfile         : "comblog.log",
             cache           : true,
@@ -137,7 +141,8 @@ define([], function () {
                 'heartbeat timeout'  : 3,
                 'heartbeat interval' : 1,
                 'log level'          : 1
-            }
+            },
+
         }
 
     };
