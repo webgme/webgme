@@ -74,7 +74,7 @@ var Server = function(parameters){
             if(mongoopened){
                 callback(null);
             } else {
-                mongodatabase = new MONGO.Db(parameters.mongodatabase, new MONGO.Server(parameters.mongoip,parameters.mongoport));
+                mongodatabase = new MONGO.Db(parameters.mongodatabase, new MONGO.Server(parameters.mongoip,parameters.mongoport,parameters.mongoopt));
                 var abort = function (err) {
                     mongodatabase.close();
                     mongodatabase = null;
