@@ -26,7 +26,7 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 		console.log("where each command is one of the following.");
 		console.log("");
 		console.log("  -help\t\t\t\tprints out this help");
-		console.log("  -mongo <host> [<port> [<db>]]\tchanges the default mongodb parameters");
+		console.log("  -mongo <host> [<db> [<coll>]]\tchanges the default mongodb parameters");
 		console.log("  -dumpmongo\t\t\tdumps the content of the database");
 		console.log("  -eraseall\t\t\tremoves all objects from the database");
 		console.log("  -readxml <file>\t\treads and parses the given xml file");
@@ -54,14 +54,14 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 			if( cmd === "-mongo" ) {
 				opt = {
 					host: parm(),
-					port: parm(),
 					database: parm(),
-					collection: parm()
+					collection: parm(),
+					port: parm()
 				};
 				opt.port = opt.port && parseInt(opt.port, 10);
 
 				opt = UTIL.copyOptions(CONFIG.mongodb, opt);
-				console.log("Opening database at " + opt.host);
+				console.log("Opening database at " + opt.host + " (" + opt.database + "/" + opt.collection + ")");
 				
 				mongo = new Mongo(opt);
 				mongo.open(function (err) {

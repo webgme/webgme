@@ -44,11 +44,11 @@ Core, UTIL, CONFIG, Cache) {
 				else {
 					for( var i = 0; i < children.length; ++i ) {
 						if( core.getAttribute(children[i], "#tag") === tagName ) {
-							UTIL.immediateCallback(callback2, null, children[i]);
+							callback2(null, children[i]);
 							return;
 						}
 					}
-					UTIL.immediateCallback(callback2, null, null);
+					callback2(null, null);
 				}
 			});
 		};
@@ -155,7 +155,7 @@ Core, UTIL, CONFIG, Cache) {
 					for( var i = 0; i < xmlChildren.length; ++i ) {
 						var xmlChild = xmlChildren[i];
 						var name = core.getAttribute(xmlChild, "name");
-						if( name ) {
+						if( core.getAttribute(xmlChild, "#tag") === "regnode" && name ) {
 							addValues(xmlChild, name, join.add());
 						}
 					}
@@ -176,7 +176,7 @@ Core, UTIL, CONFIG, Cache) {
 						callback2(err);
 					}
 					else if( !xmlBase ) {
-						limitCallDepth(callback2, err, {});
+						callback2(err, {});
 					}
 					else {
 						loadAllRegistry(xmlBase, callback2);
@@ -198,7 +198,7 @@ Core, UTIL, CONFIG, Cache) {
 						registry[key] = obj.self[key];
 					}
 
-					UTIL.immediateCallback(callback2, null, registry);
+					callback2(null, registry);
 				}
 			});
 
@@ -250,13 +250,7 @@ Core, UTIL, CONFIG, Cache) {
 				guid: "#guid"
 			});
 
-			copyChildTexts(xmlNode, project, {
-				name: "name",
-				comment: "comment",
-				author: "author"
-			}, function (err) {
-				callback2(err, err ? undefined : project);
-			});
+			UTIL.immediateCallback(callback2, null, project);
 		};
 
 		var unresolved = [];
@@ -270,12 +264,7 @@ Core, UTIL, CONFIG, Cache) {
 					var model = core.createNode(parent);
 
 					var join = new UTIL.AsyncJoin(function (err) {
-						if( err ) {
-							callback2(err);
-						}
-						else {
-							UTIL.immediateCallback(callback2, null, model);
-						}
+						callback2(err, err ? null : model);
 					});
 
 					copyAttributes(xmlNode, model, {
@@ -284,10 +273,6 @@ Core, UTIL, CONFIG, Cache) {
 						"#tag": "#type",
 						guid: "#guid"
 					});
-
-					copyChildTexts(xmlNode, model, {
-						name: "name"
-					}, join.add());
 
 					parseAttributes(xmlNode, model, join.add());
 					parseRegistry(xmlNode, model, join.add());
@@ -307,6 +292,23 @@ Core, UTIL, CONFIG, Cache) {
 				}
 			});
 		};
+		parsers.folder = parsers.model;
+		parsers.atom = parsers.model;
+		parsers.connection = parsers.model;
+		parsers.reference = parsers.model;
+
+		parsers.name = function (xmlNode, callback2) {
+			var tag = core.getAttribute(xmlNode, "#tag");
+			parseXmlNode(core.getParent(xmlNode), function (err, parent) {
+				if( !err && parent ) {
+					var value = core.getAttribute(xmlNode, "#text") || "";
+					core.setAttribute(parent, tag, value);
+				}
+				UTIL.immediateCallback(callback2, err);
+			});
+		};
+		parsers.author = parsers.name;
+		parsers.comment = parsers.name;
 
 		var parseXmlBase = function (xmlNode, callback2) {
 			ASSERT(xmlNode && callback2);
@@ -316,18 +318,13 @@ Core, UTIL, CONFIG, Cache) {
 					callback2(err);
 				}
 				else if( !xmlType ) {
-					limitCallDepth(callback2, null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 				else {
 					parseXmlNode(xmlType, callback2);
 				}
 			});
 		};
-
-		parsers.folder = parsers.model;
-		parsers.atom = parsers.model;
-		parsers.connection = parsers.model;
-		parsers.reference = parsers.model;
 
 		var parsedCount = 0;
 		var alreadyParsed = {};
@@ -362,7 +359,7 @@ Core, UTIL, CONFIG, Cache) {
 				var callbacks = alreadyParsed[path].callbacks;
 				ASSERT(callbacks.length >= 1);
 
-				if( err ) {
+				if( err || !dataNode ) {
 					delete alreadyParsed[path];
 				}
 				else {
@@ -376,19 +373,6 @@ Core, UTIL, CONFIG, Cache) {
 			});
 		};
 
-		var callDepth = 0;
-
-		var limitCallDepth = function (func, arg1, arg2) {
-			if( callDepth < 50 ) {
-				++callDepth;
-				func(arg1, arg2);
-				--callDepth;
-			}
-			else {
-				setTimeout(func, 0, arg1, arg2);
-			}
-		};
-
 		var parseXmlNode = function (xmlNode, callback2) {
 			ASSERT(xmlNode && callback2);
 
@@ -399,7 +383,7 @@ Core, UTIL, CONFIG, Cache) {
 					data.callbacks.push(callback2);
 				}
 				else {
-					limitCallDepth(callback2, null, data);
+					UTIL.immediateCallback(callback2, null, data);
 				}
 			}
 			else {
@@ -408,7 +392,7 @@ Core, UTIL, CONFIG, Cache) {
 					executeParser(path, parsers[tag], xmlNode, callback2);
 				}
 				else {
-					limitCallDepth(callback2, null, null);
+					UTIL.immediateCallback(callback2, null, null);
 				}
 			}
 		};
@@ -580,7 +564,7 @@ Core, UTIL, CONFIG, Cache) {
 					}
 					else if( index < unresolved.length ) {
 						var xmlNode = unresolved[index++];
-						limitCallDepth(resolvePointers, xmlNode, next);
+						resolvePointers(xmlNode, next);
 					}
 				}
 			};

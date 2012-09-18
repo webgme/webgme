@@ -63,7 +63,6 @@ UTIL) {
 			ASSERT(typeof key === "string");
 			ASSERT(collection && callback);
 
-			// console.log("loading " + key);
 			collection.findOne({
 				_id: key
 			}, callback);
