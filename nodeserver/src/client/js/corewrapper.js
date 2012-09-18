@@ -69,7 +69,7 @@ define(['logManager',
             realstorage = options.faulttolerant ? new FTOLST(self,_storage,"temporaryinfo") : _storage,
             cache = options.cache ? new CACHE(realstorage) : realstorage,
             logsrv = options.logging ? new LogSrv(location.host+options.logsrv) : null,
-            storage = new LogST(cache,logsrv),
+            storage = options.logging ? new LogST(cache,logsrv) : cache,
             selectedObjectId = null,
             users = {},
             currentNodes = {},
@@ -459,7 +459,7 @@ define(['logManager',
         /*helping funcitons*/
         var rollBackModification = function(){
             currentNodes = {};
-            currentCore = new LCORE(new CORE(storage),logsrv);
+            currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
             currentRoot = lastValidRoot;
             currentCore.loadRoot(currentRoot,function(err,node){
                 storeNode(node);
@@ -482,7 +482,7 @@ define(['logManager',
                     storeNode(node);
                     updateAllUser(null);
                 });*/
-                var tempcore = new LCORE(new CORE(storage),logsrv);
+                var tempcore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
                 tempcore.loadRoot(newroot,function(err,node){
                     if(!err && node){
                         currentRoot = newroot;
@@ -572,6 +572,7 @@ define(['logManager',
             if(!currentNodes[path]){
                 currentNodes[path] = node;
             }
+            return path;
         };
         var buildTerritory = function(userID,patterns,callback){
             var start = timestamp();
@@ -598,15 +599,15 @@ define(['logManager',
                             cb(err || "empty object returned");
                         }
                     } else {
-                        storeNode(node);
+                        var mypath = storeNode(node);
 
-                        INSERTARR(pathes,getNodePath(node));
+                        INSERTARR(pathes,mypath);
                         if(childrenaswell){
                             currentCore.loadChildren(node,function(err,children){
                                 if(!err){
                                     for(var i=0;i<children.length;i++){
-                                        storeNode(children[i]);
-                                        INSERTARR(pathes,getNodePath(children[i]));
+                                        var childpath = storeNode(children[i]);
+                                        INSERTARR(pathes,childpath);
                                     }
                                     loaddone();
                                 } else {
@@ -755,9 +756,9 @@ define(['logManager',
             var parent = currentNodes[parentpath];
             if(node && parent){
                 var newnode = currentCore.moveNode(node,parent);
-                storeNode(newnode);
+                var newpath = storeNode(newnode);
                 delete currentNodes[path];
-                return currentNodes[getNodePath(newnode)];
+                return currentNodes[newpath];
             }
             else{
                 logger.error("missing object for move!!!");
@@ -794,8 +795,7 @@ define(['logManager',
 
                             if(index){
                                 var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
-                                storeNode(node);
-                                retarr[index].newfrom = getNodePath(node);
+                                retarr[index].newfrom = storeNode(node);;
                                 if(index !== retarr[index].newfrom){
                                     delete currentNodes[index];
                                 }
@@ -821,8 +821,7 @@ define(['logManager',
 
                                     if(index){
                                         var node = currentCore.moveNode(children[i],parent);
-                                        storeNode(node);
-                                        retarr[index].topath = getNodePath(node);
+                                        retarr[index].topath = storeNode(node);
                                     }else{
                                         logger.error("copy resulted in wrong children");
                                         callback("wrong copy",null);
@@ -836,66 +835,6 @@ define(['logManager',
                         });
                     }
                 });
-                /*currentCore.loadChildren(tempto,function(err,children){
-                    if(err){
-                        logger.error("cannot load copied children: "+err);
-                        callback(err,null);
-                    } else {
-                        for(i=0;i<children.length;i++){
-                            var index = null;
-                            for(var j in retarr){
-                                if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempto)){
-                                    index = j;
-                                    break;
-                                }
-                            }
-
-                            if(index){
-                                var node = currentCore.moveNode(children[i],parent);
-                                storeNode(node);
-                                retarr[index].topath = getNodePath(node);
-                            }else{
-                                logger.error("copy resulted in wrong children");
-                                callback("wrong copy",null);
-                                return;
-                            }
-                        }
-
-                        currentCore.loadChildren(tempfrom,function(err,children){
-                            if(err){
-                                logger.error("original nodes unreachable: "+err);
-                                callback(err,null);
-                            } else {
-                                for(i=0;i<children.length;i++){
-                                    var index = null;
-                                    for(var j in retarr){
-                                        if(retarr[j].fromrelid === currentCore.getStringPath(children[i],tempfrom)){
-                                            index = j;
-                                            break;
-                                        }
-                                    }
-
-                                    if(index){
-                                        var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
-                                        storeNode(node);
-                                        retarr[index].newfrom = getNodePath(node);
-                                        if(index !== retarr[index].newfrom){
-                                            delete currentNodes[index];
-                                        }
-                                    }else{
-                                        logger.error("copy lost original children");
-                                        callback("wrong copy",null);
-                                        return;
-                                    }
-                                }
-
-                                currentCore.deleteNode(tempfrom);
-                                currentCore.deleteNode(tempto);
-                                callback(null,retarr);
-                            }
-                        });
-                    }
-                });*/
             } else {
                 logger.error("invalid parent in multiCopy");
                 callback("invalid parent",null);
@@ -903,6 +842,7 @@ define(['logManager',
         };
     };
     ClientNode = function(node,core){
+        var ownpath = core.getStringPath(node);
         this.getParentId = function(){
             var parent = core.getParent(node);
             if(parent){
@@ -916,7 +856,6 @@ define(['logManager',
         };
         this.getChildrenIds = function(){
             var children = core.getChildrenRelids(node);
-            var ownpath = core.getStringPath(node);
             ownpath += ownpath === "" ? "" : "/";
             for(var i=0;i<children.length;i++){
                 children[i]=ownpath+children[i];
@@ -954,7 +893,7 @@ define(['logManager',
         };
 
         var getNodePath = function(node){
-            var path = core.getStringPath(node);
+            var path = ownpath;
             if(path === ""){
                 path = "root";
             }
