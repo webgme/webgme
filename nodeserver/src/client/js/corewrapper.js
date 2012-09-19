@@ -75,10 +75,11 @@ define(['logManager',
             currentNodes = {},
             currentRoot = null,
             currentCore = null,
+            currentNupathes = {},
             clipboard = [],
             rootServer = null,
             rootServerOut = false,
-            dataLostSync = false;
+            dataLostSync = false,
             lastValidRoot = null,
             rootRetry = false,
             updating = false/*,
@@ -108,7 +109,7 @@ define(['logManager',
             for(var i in users){
                 count++;
             }
-            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false};
+            users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false,SENDEVENTS:true};
 
             if(count === 0){
                 /*in case of the first user we have to connect...*/
@@ -204,11 +205,24 @@ define(['logManager',
 
             }
         };
+        this.disableEventToUI = function(guid){
+            if(users[guid]){
+                users[guid].SENDEVENTS = false;
+            }
+        };
+        this.enableEventToUI = function(guid){
+            if(users[guid]){
+                if(!users[guid].SENDEVENTS){
+                    users[guid].SENDEVENTS = true;
+                    nuUpdateUser(users[guid],users[guid].PATTERNS,currentNupathes);
+                }
+            }
+        };
         this.updateTerritory = function(userID,patterns){
             if(_.isEqual(patterns,users[userID].PATTERNS)){
 
             }else{
-                updateUser(userID,patterns,function(err){
+                /*updateUser*/nuUpdateSingleUser(userID,patterns,function(err){
                     if(err){
                         //TODO now what the f**k
                         updateUser(userID,patterns,function(err){
@@ -227,11 +241,19 @@ define(['logManager',
         this.fullRefresh = function(){
             /*this call generates events to all ui with the current territory*/
             for(var i in users){
-                for(var j=0;j<users[i].PATHES.length;j++){
-                    if(currentNodes[users[i].PATHES[j]]){
-                        users[i].UI.onEvent('update',users[i].PATHES[j]);
-                    } else {
-                        users[i].UI.onEvent('unload',users[i].PATHES[j]);
+                if(users[i].ONEEVENT){
+                    var events = [];
+                    for(var j=0;j<users[i].PATHES.length;j++){
+                        events.push({etype:'update',eid:users[i].PATHES[j]});
+                    }
+                    onOneEvent(events);
+                } else {
+                    for(var j=0;j<users[i].PATHES.length;j++){
+                        if(currentNodes[users[i].PATHES[j]]){
+                            users[i].UI.onEvent('update',users[i].PATHES[j]);
+                        } else {
+                            users[i].UI.onEvent('unload',users[i].PATHES[j]);
+                        }
                     }
                 }
             }
@@ -463,7 +485,7 @@ define(['logManager',
             currentRoot = lastValidRoot;
             currentCore.loadRoot(currentRoot,function(err,node){
                 storeNode(node);
-                updateAllUser(function(err){
+                nuUpdateAll(function(err){
                     if(err){
                         console.log("now something really f*cked up...");
                     }
@@ -475,13 +497,6 @@ define(['logManager',
                 lastValidRoot = newroot;
             }
             if(newroot !== currentRoot){
-                /*currentRoot = newroot;
-                currentNodes = {};
-                currentCore = new LCORE(new CORE(storage),logsrv);
-                currentCore.loadRoot(currentRoot,function(err,node){
-                    storeNode(node);
-                    updateAllUser(null);
-                });*/
                 var tempcore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
                 tempcore.loadRoot(newroot,function(err,node){
                     if(!err && node){
@@ -489,10 +504,10 @@ define(['logManager',
                         currentNodes = {};
                         currentCore = tempcore;
                         storeNode(node);
-                        updateAllUser(function(err){
+                        nuUpdateAll(function(err){
                             if(err){
                                 //TODO now what???
-                                updateAllUser(function(err){
+                                nuUpdateAll(function(err){
                                     if(err){
                                         console.log("updating the whole user bunch failed for the second time as well...");
                                     }
@@ -574,7 +589,7 @@ define(['logManager',
             }
             return path;
         };
-        var buildTerritory = function(userID,patterns,callback){
+        /*var buildTerritory = function(userID,patterns,callback){
             var start = timestamp();
             timelog("[MEAS002][in]["+userID+"]");
             var i;
@@ -649,7 +664,7 @@ define(['logManager',
                     callback(null,[]);
                 }
             }
-        };
+        };*/
         var generateTerritoryEvents = function(userID,newpathes){
             var start = timestamp();
             timelog("[MEAS003][in]["+userID+"]");
@@ -687,7 +702,7 @@ define(['logManager',
             }
             timelog("[MEAS003][out]["+userID+"]{"+elapsedTime(start)+"ms}");
         };
-        var updateUser = function(userID,patterns,callback){
+        /*var updateUser = function(userID,patterns,callback){
             var start = timestamp();
             timelog("[MEAS001][in]["+userID+"]");
             users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
@@ -712,8 +727,8 @@ define(['logManager',
             else{
                 logger.debug("we do not have root yet...");
             }
-        };
-        var updateAllUser = function(callback){
+        };*/
+        /*var updateAllUser = function(callback){
             var start = timestamp();
             timelog("[MEAS000][in]");
             var counter = 0;
@@ -750,7 +765,7 @@ define(['logManager',
                     callback();
                 }
             }
-        };
+        };*/
         var moveNode = function(path,parentpath){
             var node = currentNodes[path];
             var parent = currentNodes[parentpath];
@@ -840,6 +855,197 @@ define(['logManager',
                 callback("invalid parent",null);
             }
         };
+
+        var nuLoading = function(callback){
+            var patterns = [];
+            var nupathes = {};
+
+            var counter = 0;
+            var patternLoaded = function(){
+                if(++counter === patterns.length){
+                    callback(nupathes);
+                }
+            };
+            var addToNupathes = function(node){
+                var id = storeNode(node);
+                if(!nupathes[id]){
+                    nupathes[id] = currentCore.getSingleNodeHash(node);
+                }
+            };
+            var loadPattern = function(basepath,internalcallback){
+                if(!currentNodes[basepath]){
+                    currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
+                        if(!err && node){
+                            addToNupathes(node);
+                            currentCore.loadChildren(node,function(err,children){
+                                if(!err && children){
+                                    for(var i=0;i<children.length;i++){
+                                        addToNupathes(children[i]);
+                                    }
+                                }
+                                internalcallback();
+                            });
+                        } else {
+                            internalcallback();
+                        }
+                    });
+                } else {
+                    addToNupathes(currentNodes[basepath]);
+                    currentCore.loadChildren(currentNodes[basepath],function(err,children){
+                        if(!err && children){
+                            for(var i=0;i<children.length;i++){
+                                addToNupathes(children[i]);
+                            }
+                        }
+                        internalcallback();
+                    });
+                }
+            };
+
+
+            for(var i in users){
+                for(var j in users[i].PATTERNS){
+                    INSERTARR(patterns,j);
+                }
+            }
+            for(i=0;i<patterns.length;i++){
+                loadPattern(patterns[i],patternLoaded);
+            }
+        };
+        var nuUpdateUser = function(user,patterns,nupathes){
+            var newpathes = [];
+            var events = [];
+            user.PATTERNS = JSON.parse(JSON.stringify(patterns));
+            if(user.SENDEVENTS){
+                for(i in patterns){
+                    if(currentNodes[i]){
+                        INSERTARR(newpathes,i);
+                        var children  = currentCore.getChildrenRelids(currentNodes[i]);
+                        var ownpath = i === "root" ? "" : i+"/";
+                        for(var j=0;j<children.length;j++){
+                            INSERTARR(newpathes,ownpath+children[j]);
+                        }
+                    }
+                }
+
+                /*generating events*/
+                /*unload*/
+                for(var i=0;i<user.PATHES.length;i++){
+                    if(newpathes.indexOf(user.PATHES[i]) === -1){
+                        events.push({etype:"unload",eid:user.PATHES[i]});
+                    }
+                }
+
+                /*others*/
+                for(i=0;i<newpathes.length;i++){
+                    if(user.PATHES.indexOf(newpathes[i]) === -1){
+                        events.push({etype:"load",eid:newpathes[i]});
+                    }
+                    else{
+                        if(user.KEYS[newpathes[i]] !== nupathes[newpathes[i]]){
+                            events.push({etype:"update",eid:newpathes[i]});
+                        }
+                    }
+                    user.KEYS[newpathes[i]] = nupathes[newpathes[i]];
+                }
+
+                /*depending on the oneevent attribute we send it in one array or in events...*/
+                if(user.ONEEVENT){
+                    user.UI.onOneEvent(events);
+                }
+                else{
+                    for(i=0;i<events.length;i++){
+                        user.UI.onEvent(events[i].etype,events[i].eid);
+                    }
+                }
+
+                user.PATHES = newpathes;
+            }
+        };
+        var nuUpdateTerritory = function(user,patterns,nupathes,callback){
+            if(user.PATTERNS !== patterns){
+                var counter = 0;
+                var limit = 0;
+                var patternLoaded = function(){
+                    if(++counter === limit){
+                        callback(nupathes);
+                    }
+                };
+                var addToNupathes = function(node){
+                    var id = storeNode(node);
+                    if(!nupathes[id]){
+                        nupathes[id] = currentCore.getSingleNodeHash(node);
+                    }
+                };
+                var loadPattern = function(basepath,internalcallback){
+                    if(!currentNodes[basepath]){
+                        if(currentCore){
+                            currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
+                                if(!err && node){
+                                    addToNupathes(node);
+                                    currentCore.loadChildren(node,function(err,children){
+                                        if(!err && children){
+                                            for(var i=0;i<children.length;i++){
+                                                addToNupathes(children[i]);
+                                            }
+                                        }
+                                        internalcallback();
+                                    });
+                                } else {
+                                    internalcallback();
+                                }
+                            });
+                        } else {
+                            internalcallback();
+                        }
+                    } else {
+                        addToNupathes(currentNodes[basepath]);
+                        currentCore.loadChildren(currentNodes[basepath],function(err,children){
+                            if(!err && children){
+                                for(var i=0;i<children.length;i++){
+                                    addToNupathes(children[i]);
+                                }
+                            }
+                            internalcallback();
+                        });
+                    }
+                };
+
+                for(var i in patterns){
+                    limit++;
+                }
+                if(limit>0){
+                    for(i in patterns){
+                        loadPattern(i,patternLoaded);
+                    }
+                } else {
+                    callback(nupathes);
+                }
+            } else {
+                callback(nupathes);
+            }
+        };
+        var nuUpdateAll = function(callback){
+            var start = timestamp();
+            timelog("[NMEAS000][in]");
+            nuLoading(function(nupathes){
+                currentNupathes = nupathes;
+                for(var i in users){
+                    nuUpdateUser(users[i],users[i].PATTERNS,nupathes);
+                }
+                timelog("[NMEAS000][out]{"+elapsedTime(start)+"ms}");
+                callback();
+            });
+        };
+        var nuUpdateSingleUser = function(userID,patterns,callback){
+            var start = timestamp();
+            timelog("[NMEAS001][in]["+userID+"]");
+            nuUpdateTerritory(users[userID],patterns,currentNupathes,function(nupathes){
+                nuUpdateUser(users[userID],patterns,nupathes);
+                timelog("[NMEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
+                callback();
+            });
+        };
     };
     ClientNode = function(node,core){
         var ownpath = core.getStringPath(node);
@@ -893,7 +1099,7 @@ define(['logManager',
         };
 
         var getNodePath = function(node){
-            var path = ownpath;
+            var path = core.getStringPath(node);
             if(path === ""){
                 path = "root";
             }

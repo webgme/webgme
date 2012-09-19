@@ -134,12 +134,12 @@ define([], function () {
             faulttolerant   : true,
             timelog         : false,
             socketiopar     : {
-                'reconnection delay' : 1,
-                'max reconnection attempts' : 500
+                'reconnection delay' : 10,
+                'max reconnection attempts' : 50
             },
             srvsocketpar    : {
-                'heartbeat timeout'  : 3,
-                'heartbeat interval' : 1,
+                'heartbeat timeout'  : 240,
+                'heartbeat interval' : 60,
                 'log level'          : 1
             },
 
