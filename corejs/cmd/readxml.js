@@ -4,8 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sax", "fs", "core/core2", "core/config", "core/util" ], function (
-ASSERT, SAX, FS, Core, CONFIG, UTIL) {
+define([ "core/assert", "core/lib/sax", "fs", "core/core2", "core/config", "core/util", "core/cache" ], function (
+ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 	"use strict";
 
 	var ID = "id";
@@ -57,7 +57,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL) {
 			+ " ids, " + unresolved.length + " idrefs)");
 		}, CONFIG.parser.reportingTime);
 
-		var core = new Core(storage);
+		var core = new Core(new Cache(storage));
 
 		var exit = function (err, result) {
 			if( timerhandle ) {
