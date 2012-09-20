@@ -482,7 +482,8 @@ define(['logManager',
         /*helping funcitons*/
         var rollBackModification = function(){
             currentNodes = {};
-            currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
+            //currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
+            currentCore = new LCORE(new CORE(storage),logsrv);
             currentRoot = lastValidRoot;
             currentCore.loadRoot(currentRoot,function(err,node){
                 storeNode(node);
@@ -498,7 +499,8 @@ define(['logManager',
                 lastValidRoot = newroot;
             }
             if(newroot !== currentRoot){
-                var tempcore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
+                //var tempcore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
+                var tempcore = new LCORE(new CORE(storage),logsrv);
                 tempcore.loadRoot(newroot,function(err,node){
                     if(!err && node){
                         currentRoot = newroot;

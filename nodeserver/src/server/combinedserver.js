@@ -102,6 +102,7 @@ requirejs(['server/mngsrv','server/rtsrv'],function(MNGSRV,RTSRV){
         });
 
         logserver.on('connection',function(socket){
+            console.log("new connection to logserver!!!");
             socket.on('log',function(msg){
                 if(parameters.logging){
                     if(parameters.logfile){

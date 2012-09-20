@@ -16,7 +16,7 @@ define(['socket.io/socket.io.js'],function(){
                 }
             } else {
                 if(connecting){
-                    console.log("STILL CONNECTING - LOGGER");
+                    //console.log("STILL CONNECTING - LOGGER");
                 } else {
                     connection = io.connect(server);
                     connecting = true;
@@ -27,23 +27,23 @@ define(['socket.io/socket.io.js'],function(){
                     });
                     connection.on('connect_failed',function(){
                         connected = false;
-                        console.log('CONNECT_FAILED - LOGGER');
+                        //console.log('CONNECT_FAILED - LOGGER');
                     });
                     connection.on('disconnect',function(){
                         connected = false;
-                        console.log('DISCONNECT - LOGGER');
+                        //console.log('DISCONNECT - LOGGER');
                     });
                     connection.on('reconnect_failed', function(){
                         connected = false;
-                        console.log('RECONNECT_FAILED - LOGGER');
+                        //console.log('RECONNECT_FAILED - LOGGER');
                     });
                     connection.on('reconnect', function(){
                         connected = false;
-                        console.log('RECONNECT - LOGGER');
+                        //console.log('RECONNECT - LOGGER');
                     });
                     connection.on('reconnecting', function(){
                         connected = false;
-                        console.log('RECONNECTING - LOGGER');
+                        //console.log('RECONNECTING - LOGGER');
                     });
                 }
             }

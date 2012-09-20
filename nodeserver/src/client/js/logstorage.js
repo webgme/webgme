@@ -11,9 +11,9 @@ define(['commonUtil'], function (CU) {
     var LogStorage = function (storage,logger) {
         var log = function(msg){
             if(logger){
-                logger.log(TSSTRING()+"[LogStorage][FC]"+msg);
+                logger.log(TSSTRING()+"[LogStorage]"+msg);
             } else {
-                console.log(TSSTRING()+"[LogStorage][FC]"+msg);
+                console.log(TSSTRING()+"[LogStorage]"+msg);
             }
         };
         var open = function(callback){
