@@ -4,27 +4,22 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
+define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CONFIG) {
 	"use strict";
 
-	var Cache = function (storage) {
+	var Cache = function (storage, options) {
 		ASSERT(storage !== null);
 
+		options = UTIL.copyOptions(CONFIG.cache, options);
+		
 		var KEYNAME = storage.KEYNAME;
-
+		var missing = {};
 		var backup = {};
 		var cache = {};
-
-		var isEmpty = function () {
-			var s;
-			for( s in cache ) {
-				return false;
-			}
-			return true;
-		};
+		var cacheSize = 0;
 
 		var open = function (callback) {
-			ASSERT(!storage.opened() && isEmpty());
+			ASSERT(!storage.opened() && cacheSize === 0);
 
 			storage.open(callback);
 		};
@@ -32,110 +27,159 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 		var close = function (callback) {
 			ASSERT(storage.opened());
 
-			cache = {};
-			storage.close(callback);
+			storage.close(function () {
+				for( var key in missing ) {
+					var callbacks = missing[key];
+
+					var cb;
+					while( (cb = callbacks.pop()) ) {
+						cb(new Error("storage closed"));
+					}
+				}
+
+				missing = {};
+				backup = {};
+				cache = {};
+				cacheSize = 0;
+
+				callback();
+			});
+		};
+
+		var cacheInsert = function (key, obj) {
+			ASSERT(cache[key] === undefined && obj[KEYNAME] === key);
+
+			cache[key] = obj;
+			if( ++cacheSize >= options.maxSize ) {
+				backup = cache;
+				cache = {};
+				cacheSize = 0;
+			}
 		};
 
 		var load = function (key, callback) {
-			ASSERT(typeof key === "string");
+			ASSERT(typeof key === "string" && typeof callback === "function");
 
-			var obj = cache[key] || backup[key];
-			if( obj !== undefined ) {
-				if( obj.loading && obj.callbacks ) {
-					obj.callbacks.push(callback);
-				}
-				else {
-					ASSERT(obj[KEYNAME] === key);
-					UTIL.immediateCallback(callback, null, obj);
-				}
-			}
-			else {
-				var callbacks = [ callback ];
+			if( key.charAt(0) === "#" ) {
+				var obj = cache[key];
+				if( obj === undefined ) {
+					obj = backup[key];
+					if( obj === undefined ) {
+						obj = missing[key];
+						if( obj === undefined ) {
+							obj = [ callback ];
+							missing[key] = obj;
+							storage.load(key, function (err, obj2) {
+								ASSERT(typeof obj2 === "object" || obj2 === undefined);
 
-				cache[key] = {
-					loading: true,
-					callbacks: callbacks
-				};
+								if( obj.length !== 0 ) {
+									ASSERT(missing[key] === obj);
 
-				storage.load(key, function (err, obj2) {
-					if( callbacks.length !== 0 ) {
-						ASSERT(cache[key].callbacks === callbacks);
-						if( err || !obj2 ) {
-							delete cache[key];
+									delete missing[key];
+									if( !err && obj2 ) {
+										cacheInsert(key, obj2);
+									}
+
+									var cb;
+									while( (cb = obj.pop()) ) {
+										cb(err, obj2);
+									}
+								}
+							});
 						}
 						else {
-							cache[key] = obj2;
+							obj.push(callback);
 						}
-
-						for( var i = 0; i < callbacks.length; ++i ) {
-							callbacks[i](err, obj2);
-						}
+						return;
 					}
-				});
+					else {
+						cacheInsert(key, obj);
+					}
+				}
+
+				ASSERT(typeof obj === "object" && obj !== null && obj[KEYNAME] === key);
+				UTIL.immediateCallback(callback, null, obj);
+			}
+			else {
+				storage.load(key, callback);
 			}
 		};
 
-		var keyregexp = new RegExp("#[0-9a-f]{40}");
-
 		var save = function (obj, callback) {
+			ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
+
 			var key = obj[KEYNAME];
-			ASSERT(key && typeof key === "string");
+			ASSERT(typeof key === "string");
 
-			var item = cache[key];
-			cache[key] = obj;
-
-			if( item && item.loading && item.callbacks ) {
-				var callbacks = item.callbacks;
-				for( var i = 0; i < callbacks.length; ++i ) {
-					callbacks[i](null, obj);
+			if( key.charAt(0) === "#" ) {
+				if( cache[key] !== undefined ) {
+					UTIL.immediateCallback(callback);
+					return;
 				}
-				callbacks.length = 0;
+				else {
+					var item = backup[key];
+					cacheInsert(key, obj);
+
+					if( item !== undefined ) {
+						UTIL.immediateCallback(callback);
+						return;
+					}
+					else {
+						item = missing[key];
+						if( item !== undefined ) {
+							delete missing[key];
+
+							var cb;
+							while( (cb = item.pop()) ) {
+								cb(null, obj);
+							}
+						}
+					}
+				}
 			}
 
-			// TODO: hack because the higher level layer decides what are
-			// write-once objects
-			if( item && key.length === 41 && keyregexp.test(key) ) {
-				ASSERT(item[KEYNAME] === key);
-				UTIL.immediateCallback(callback, null);
-			}
-			else {
-				storage.save(obj, callback);
-			}
+			storage.save(obj, callback);
 		};
 
 		var remove = function (key, callback) {
-			ASSERT(key && typeof key === "string");
+			ASSERT(typeof key === "string" && typeof callback === "function");
 
 			var item = cache[key];
-			delete cache[key];
 
-			if( item && item.loading && item.callbacks ) {
-				var callbacks = item.callbacks;
-				for( var i = 0; i < callbacks.length; ++i ) {
-					callbacks[i](null, null);
+			delete cache[key];
+			delete backup[key];
+
+			var callbacks = missing[key];
+			if( callbacks ) {
+				delete missing[key];
+
+				var cb;
+				while( (cb = callbacks.pop()) ) {
+					cb(null, null);
 				}
-				callbacks.length = 0;
 			}
 
 			storage.remove(key, callback);
 		};
 
 		var removeAll = function (callback) {
-			cache = {};
-			storage.removeAll(callback);
-		};
+			ASSERT(typeof callback === "function");
+			
+			for( var key in missing ) {
+				var callbacks = missing[key];
 
-		var flush = function () {
-			backup = {};
-			for( var key in cache ) {
-				var item = cache[key];
-				if( !item.loading && !item.callbacks ) {
-					ASSERT(item[KEYNAME] === key);
-
-					backup[key] = item;
-					delete cache[key];
+				var cb;
+				while( (cb = callbacks.pop()) ) {
+					cb(null, null);
 				}
 			}
+
+			missing = {};
+			backup = {};
+			cache = {};
+			cacheSize = 0;
+
+			storage.removeAll(callback);
 		};
 
 		return {
@@ -149,8 +193,7 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 			dumpAll: storage.dumpAll,
 			removeAll: removeAll,
 			searchId: storage.searchId,
-			fsync: storage.fsync,
-			flush: flush
+			fsync: storage.fsync
 		};
 	};
 

@@ -337,7 +337,6 @@ Core, UTIL, CONFIG, Cache) {
 
 			if( ++unsavedObjects >= 5000 && !persisting ) {
 				persisting = true;
-				cache.flush();
 				core.persist(project, function (err) {
 					persisting = false;
 					if( err ) {
@@ -449,6 +448,26 @@ Core, UTIL, CONFIG, Cache) {
 			}
 		};
 
+		var getCommonPathPrefixData = function (first, second) {
+			ASSERT(typeof first === "string" && typeof second === "string");
+
+			first = first ? first.split("/") : [];
+			second = second ? second.split("/") : [];
+
+			var common = [];
+			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
+				common.push(first[i]);
+			}
+
+			return {
+				common: common.join("/"),
+				first: first.slice(i).join("/"),
+				firstLength: first.length - i,
+				second: second.slice(i).join("/"),
+				secondLength: second.length - i
+			};
+		};
+		
 		var resolveConnectionPointers = function (xmlNode, dataNode, callback2) {
 			ASSERT(xmlNode && dataNode && callback2 instanceof Function);
 
@@ -457,36 +476,46 @@ Core, UTIL, CONFIG, Cache) {
 					callback2(err);
 				}
 				else {
+					var xmlSourcePath, xmlTargetPath;
+					
 					for( var i = 0; i < xmlChildren.length; ++i ) {
 						var xmlChild = xmlChildren[i];
-						var xmlTargetPath, dataTarget;
-
 						if( core.getAttribute(xmlChild, "#tag") === "connpoint" ) {
 							var role = core.getAttribute(xmlChild, "role");
 
-							if( role === "src" ) {
-								xmlTargetPath = core.getPointerPath(xmlChild, "target");
-								ASSERT(typeof xmlTargetPath === "string");
-
-								dataTarget = alreadyParsed[xmlTargetPath];
-								ASSERT(dataTarget);
-
-								core.setPointer(dataNode, "source", dataTarget);
-							}
-							else if( role === "dst" ) {
-								xmlTargetPath = core.getPointerPath(xmlChild, "target");
-								ASSERT(typeof xmlTargetPath === "string");
-
-								dataTarget = alreadyParsed[xmlTargetPath];
-								ASSERT(dataTarget);
-
-								core.setPointer(dataNode, "target", dataTarget);
-							}
-							else {
-								console.log("Warning: unknown connection role: " + role);
-							}
+//							var pointerNames = core.getPointerNames(xmlChild);
+//							if( pointerNames.indexOf("refs-") < 0 ) {
+								if( role === "src" ) {
+									xmlSourcePath = core.getPointerPath(xmlChild, "target");
+									ASSERT(typeof xmlSourcePath === "string");
+								}
+								else if( role === "dst" ) {
+									xmlTargetPath = core.getPointerPath(xmlChild, "target");
+									ASSERT(typeof xmlTargetPath === "string");
+								}
+								else {
+									console.log("Warning: unknown connection role: " + role);
+								}
+//							}
 						}
 					}
+
+					if( xmlSourcePath !== undefined && xmlTargetPath !== undefined ) {
+						var dataSource = alreadyParsed[xmlSourcePath];
+						var dataTarget = alreadyParsed[xmlTargetPath];
+						ASSERT(dataSource && dataTarget);
+
+						var ownPath = core.getStringPath(dataNode);
+						var rel1 = getCommonPathPrefixData(ownPath, core.getStringPath(dataSource));
+						var rel2 = getCommonPathPrefixData(ownPath, core.getStringPath(dataTarget));
+						
+//						console.log(rel1.firstLength, rel1.secondLength, rel2.firstLength, rel2.secondLength);
+						if( rel1.firstLength <= 2 && rel1.secondLength <= 2 && rel2.firstLength <= 2 && rel2.secondLength <= 2 ) {
+							core.setPointer(dataNode, "source", dataSource);
+							core.setPointer(dataNode, "target", dataTarget);
+						}
+					}
+				
 					UTIL.immediateCallback(callback2, null);
 				}
 			});
@@ -531,9 +560,9 @@ Core, UTIL, CONFIG, Cache) {
 				resolveConnectionPointers(xmlNode, dataNode, join.add());
 			}
 
-			if( core.hasPointer(xmlNode, "derivedfrom") ) {
-				resolveBaseType(xmlNode, dataNode);
-			}
+//			if( core.hasPointer(xmlNode, "derivedfrom") ) {
+//				resolveBaseType(xmlNode, dataNode);
+//			}
 
 			join.wait();
 		};

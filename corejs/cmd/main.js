@@ -12,8 +12,8 @@ requirejs.config({
 });
 
 requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml",
-	"cmd/parsemeta", "cmd/tests", "cmd/parsedata", "core/config" ], function (ASSERT, Mongo, PerTree, Core, UTIL,
-readxml, parsemeta, tests, parsedata, CONFIG) {
+	"cmd/parsemeta", "cmd/tests", "cmd/parsedata", "core/config" ], function (ASSERT, Mongo,
+PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata, CONFIG) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -37,6 +37,7 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 		console.log("  -parsedata\t\t\tparses the current xml root as a gme project");
 		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
 		console.log("  -writeroot\t\t\twrites the current root for visualization");
+		console.log("  -readroot\t\t\treads the current root for visualization");
 		console.log("  -wait <secs>\t\t\twaits the given number of seconds");
 		console.log("");
 	}
@@ -61,8 +62,9 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 				opt.port = opt.port && parseInt(opt.port, 10);
 
 				opt = UTIL.copyOptions(CONFIG.mongodb, opt);
-				console.log("Opening database at " + opt.host + " (" + opt.database + "/" + opt.collection + ")");
-				
+				console.log("Opening database at " + opt.host + " (" + opt.database + "/"
+				+ opt.collection + ")");
+
 				mongo = new Mongo(opt);
 				mongo.open(function (err) {
 					if( err ) {
@@ -328,17 +330,42 @@ readxml, parsemeta, tests, parsedata, CONFIG) {
 					});
 				}
 			}
+			else if( cmd === "-readroot" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else {
+					mongo.load("***root***", function (err, data) {
+						if( err ) {
+							console.log(err);
+							argv.splice(i, 0, "-end");
+						}
+						else if( typeof data !== "object" || data === null
+						|| !Array.isArray(data.value) || data.value.length !== 1 ) {
+							console.log("Incorrect ***root*** in database", data);
+							argv.splice(i, 0, "-end");
+						}
+						else {
+							root = data.value[0];
+							console.log("Found root = " + root);
+							ASSERT(typeof root === "string");
+						}
+						next();
+					});
+				}
+			}
 			else if( cmd === "-wait" ) {
 				opt = parm();
-				if(typeof opt === "string") {
+				if( typeof opt === "string" ) {
 					opt = parseInt(opt, 10);
 				}
 				if( typeof opt !== "number" || opt < 0 ) {
 					opt = 1;
 				}
-				
+
 				console.log("Waiting " + opt + " seconds ...");
-				setTimeout(function() {
+				setTimeout(function () {
 					console.log("Waiting done");
 					next();
 				}, 1000 * opt);

@@ -29,6 +29,10 @@ define(function () {
 		
 		callbacks: {
 			maxDepth: 200
+		},
+		
+		cache: {
+			maxSize: 10000
 		}
 	};
 });
