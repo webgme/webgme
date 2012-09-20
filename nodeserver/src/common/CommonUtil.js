@@ -105,6 +105,9 @@ define([], function () {
                 throw error;
             }
         },
+        timestamp : function(){
+            return "" + (new Date()).getTime();
+        },
         hashbasedconfig: {
             inuse          : true,
             serverlocation : "http://localhost",
@@ -122,7 +125,7 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
+            mongocollection : "IFV", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             mongoopt        : {
                 'auto_reconnect' : true,

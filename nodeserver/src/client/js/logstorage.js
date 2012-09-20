@@ -1,52 +1,122 @@
-define([], function () {
+define(['commonUtil'], function (CU) {
     "use strict";
-
+    var GUID = CU.guid;
+    var TSSTRING = function(){
+        return "["+CU.timestamp()+"]";
+    };
+    var TIMESTAMP = CU.timestamp;
+    var ETIMESTRING = function(start){
+        return "{"+ (TIMESTAMP()-start) + "ms}";
+    };
     var LogStorage = function (storage,logger) {
         var log = function(msg){
             if(logger){
-                logger.log("[LogStorage][FC]"+msg);
+                logger.log(TSSTRING()+"[LogStorage][FC]"+msg);
+            } else {
+                console.log(TSSTRING()+"[LogStorage][FC]"+msg);
             }
         };
         var open = function(callback){
-            log("open");
-            storage.open(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"open()";
+            log(text);
+            storage.open(function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
         var close = function(callback){
-            log("close");
-            storage.close(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"close()";
+            log(text);
+            storage.close(function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
         var load = function(key,callback){
-            log("load("+JSON.stringify(key)+")");
-            storage.load(key,callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"load("+key+")";
+            log(text);
+            storage.load(key,function(err,node){
+                log(text+ETIMESTRING(start));
+                callback(err,node);
+            });
         };
         var save = function(node,callback){
-            log("save("+JSON.stringify(node)+")");
-            storage.save(node,callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"save("+node["_id"]+")";
+            log(text);
+            storage.save(node,function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
         var remove = function(key,callback){
-            log("remove("+JSON.stringify(key)+")");
-            storage.remove(key,callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"remove("+key+")";
+            log(text);
+            storage.remove(key,function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
         var removeAll = function(callback){
-            log("removeAll");
-            storage.removeAll(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"removeAll()";
+            log(text);
+            storage.removeAll(function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
 
         var dumpAll = function(callback){
-            log("dumpAll");
-            storage.dumpAll(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"dumpAll()";
+            log(text);
+            storage.dumpAll(function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
         };
         var searchId = function(beggining,callback){
-            log("searchId("+JSON.stringify(beggining)+")");
-            storage.searchId(beggining,callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"searchId("+beggining+")";
+            log(text);
+            storage.searchId(beggining,function(err,node){
+                log(text+ETIMESTRING(start));
+                callback(err,node);
+            });
         };
         var whenAvailable = function(callback){
-            log("whenAvailable()");
-            storage.whenAvailable(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"whenAvailable()";
+            log(text);
+            storage.whenAvailable(function(){
+                log(text+ETIMESTRING(start));
+                callback();
+            });
         };
         var fsync = function(callback){
-            log("fsync()");
-            storage.fsync(callback);
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"fsync()";
+            log(text);
+            storage.fsync(function(err){
+                log(text+ETIMESTRING(start));
+                callback(err);
+            });
+
         };
 
         return {
