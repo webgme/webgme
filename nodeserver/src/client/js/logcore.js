@@ -108,6 +108,7 @@ define(['commonUtil'], function (CU) {
             log(text);
             core.loadByPath(node,path,function(err,node){
                 log(text+ETIMESTRING(start));
+                callback(err,node);
             });
         };
         var loadChildren = function (node, callback) {
