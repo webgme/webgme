@@ -18,11 +18,23 @@ public class Test {
 				}
 			};
 	}
-	
-	public static void main(String[] args) {
+
+	static Promise<Integer> delayed(long delay, final int value) {
+		Promise<Void> timeout = new Timeout(delay);
+		return new FutureCall1<Integer, Void>(timeout) {
+			public Promise<Integer> execute(Void arg1) {
+				return new Constant<Integer>(value);
+			}
+		};
+	}
+
+	public static void main(String[] args) throws Exception {
 		System.out.println("start");
-		Printer<Integer> printer = new Printer<Integer>(fibonacci(25));
-		printer.print();
+		// Promise<Integer> value = fibonacci(25);
+		Promise<Integer> value = delayed(1000, 10);
+		
+		System.out.println(Executor.obtain(value));
+		
 		System.out.println("end");
 	}
 }

@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-public final class Constant<Type> extends Promise<Type> {
+public final class Constant<Type> implements Promise<Type> {
 	private Object value;
 	
 	public Constant(Type value) {
@@ -26,14 +26,14 @@ public final class Constant<Type> extends Promise<Type> {
 			return (Type)value;
 	}
 
-	protected void setParent(Observer<Type> parent) {
+	public void setParent(Observer<Type> parent) {
 		parent.finished();
 	}
 
-	protected void finished() {
+	public void finished() {
 		throw new IllegalStateException();
 	}
 	
-	protected void cancel() {
+	public void cancelPromise() {
 	}
 }

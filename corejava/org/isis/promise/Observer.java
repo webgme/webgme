@@ -33,7 +33,7 @@ final class Observer<Type> {
 		assert(!(old instanceof Constant));
 
 		if (old == null)
-			child.cancel();
+			child.cancelPromise();
 		else
 			child.setParent(this);
 	}
@@ -43,9 +43,7 @@ final class Observer<Type> {
 	}
 	
 	Type getValue() throws Exception {
-		assert(child instanceof Constant);
-
-		return ((Constant<Type>)child).getValue();
+		return child.getValue();
 	}
 	
 	void cancel() {
@@ -55,6 +53,6 @@ final class Observer<Type> {
 			this.child = null;
 		}
 		if (child != null)
-			child.cancel();
+			child.cancelPromise();
 	}
 }

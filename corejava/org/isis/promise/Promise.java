@@ -6,11 +6,12 @@
 
 package org.isis.promise;
 
-public abstract class Promise<Type> {
+public interface Promise<Type> {
+	void setParent(Observer<Type> parent);
 
-	protected abstract void setParent(Observer<Type> parent);
+	Type getValue() throws Exception;
+
+	void finished();
 	
-	protected abstract void finished();
-	
-	protected abstract void cancel();
+	void cancelPromise();
 }
