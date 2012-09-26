@@ -19,7 +19,10 @@ public class Test {
 			};
 	}
 	
-	static void main(String[] args) {
-		
+	public static void main(String[] args) {
+		System.out.println("start");
+		Printer<Integer> printer = new Printer<Integer>(fibonacci(25));
+		printer.print();
+		System.out.println("end");
 	}
 }

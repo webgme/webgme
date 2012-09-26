@@ -6,18 +6,16 @@
 
 package org.isis.ypromise2;
 
-public abstract class FutureCall2<Type, Arg0, Arg1> extends Promise<Type> {
+public abstract class FutureCall1<Type, Arg0> extends Promise<Type> {
 	private int missing;
 	private Observer<Type> parent;
 	private final Observer<Arg0> arg0;
-	private final Observer<Arg1> arg1;
 
-	public FutureCall2(Promise<Arg0> arg0, Promise<Arg1> arg1) {
-		assert (arg0 != null && arg1 != null);
+	public FutureCall1(Promise<Arg0> arg0) {
+		assert (arg0 != null);
 
-		this.missing = 3;
+		this.missing = 2;
 		this.arg0 = new Observer<Arg0>(this, arg0);
-		this.arg1 = new Observer<Arg1>(this, arg1);
 	}
 
 	protected final void setParent(Observer<Type> parent) {
@@ -37,7 +35,7 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Promise<Type> {
 		if (m == 0) {
 			Promise<Type> value;
 			try {
-				value = execute(arg0.getValue(), arg1.getValue());
+				value = execute(arg0.getValue());
 			} catch (Exception exception) {
 				value = new Constant<Type>(exception);
 			}
@@ -45,10 +43,9 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Promise<Type> {
 		}
 	}
 
-	public abstract Promise<Type> execute(Arg0 arg1, Arg1 arg2);
+	public abstract Promise<Type> execute(Arg0 arg1);
 
 	protected final void cancel() {
 		arg0.cancel();
-		arg1.cancel();
 	}
 }

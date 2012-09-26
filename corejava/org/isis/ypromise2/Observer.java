@@ -7,39 +7,54 @@
 package org.isis.ypromise2;
 
 final class Observer<Type> {
-	private Promise<Type> promise;
+	private final Promise<?> parent;
+	private Promise<Type> child;
 
-	Observer(Promise<Type> promise) {
-		assert (promise != null);
+	Observer(Promise<?> parent, Promise<Type> child) {
+		assert (parent != null && child != null);
 
-		this.promise = promise;
-		promise.setObserver(this);
+		this.parent = parent;
+		this.child = child;
+
+		child.setParent(this);
 	}
 
-	void replace(Promise<Type> promise) {
-		assert (promise != null);
+	void setChild(Promise<Type> child) {
+		assert (child != null);
 
-		boolean cancelled = false;
+		Promise<Type> old = null;
 		synchronized (this) {
-			if (this.promise != null)
-				this.promise = promise;
-			else
-				cancelled = true;
+			old = this.child;
+			if (old != null) {
+				this.child = child;
+			}
 		}
+		
+		assert(!(old instanceof Constant));
 
-		if (cancelled)
-			promise.cancel();
+		if (old == null)
+			child.cancel();
 		else
-			promise.setObserver(this);
+			child.setParent(this);
 	}
 
+	void finished() {
+		parent.finished();
+	}
+	
+	Type getValue() throws Exception {
+		assert(child instanceof Constant);
+
+		return ((Constant<Type>)child).getValue();
+	}
+	
 	void cancel() {
-		Promise<Type> promise;
+		Promise<Type> child;
 		synchronized (this) {
-			promise = this.promise;
-			this.promise = null;
+			child = this.child;
+			this.child = null;
 		}
-		if (promise != null)
-			promise.cancel();
+		if (child != null)
+			child.cancel();
 	}
 }
