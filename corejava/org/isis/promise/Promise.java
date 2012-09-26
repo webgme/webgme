@@ -6,14 +6,11 @@
 
 package org.isis.promise;
 
-abstract public class Promise<Type> {
+public abstract class Promise<Type> {
 
-	interface Listener {
-		void done();
-		void fail(Exception exception);
-	};
-
-	abstract Type getValue();
+	protected abstract void setParent(Observer<Type> parent);
 	
-	abstract void register(Listener listener);
+	protected abstract void finished();
+	
+	protected abstract void cancel();
 }

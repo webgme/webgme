@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.ypromise2;
+package org.isis.promise;
 
 public class Printer<Type> extends Promise<Type> {
 	private int missing;

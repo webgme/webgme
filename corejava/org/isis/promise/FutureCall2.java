@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.ypromise2;
+package org.isis.promise;
 
 public abstract class FutureCall2<Type, Arg0, Arg1> extends Promise<Type> {
 	private int missing;

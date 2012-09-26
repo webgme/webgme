@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.ypromise2;
+package org.isis.promise;
 
 final class Observer<Type> {
 	private final Promise<?> parent;

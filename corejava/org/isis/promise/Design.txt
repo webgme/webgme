@@ -1,0 +1,40 @@
+
+Goals and issues:
+
+1) It should be easy to create (closure) functions
+
+We can use anonymous classes to implement a function, but that is tied to
+the creation of a new object. The other option would be to create the
+function object in advance and call it when needed. This would introduce
+a lot of separate function object types, essentially becoming static 
+function objects. But then these static function objects cannot access the
+closed over variables in the closure.
+
+2) Replacement of future objects
+
+Consider a deferred computation X that needs data A, B and C that is not yet
+available. This computation is captured by a (promise) object, and someone 
+is waiting for the completion. When A, B and C becomes available, then the
+computation is executed and it may return another deferred computation Y,
+this time waiting for D and E. In fact, it might be a recursive function and
+return a new instance of the original deferred computation with A', B' and 
+C'. In this situation we should not stack deferred computation objects because
+we just build more and more objects in memory. Therefore, we have to replace
+the deferred computation object X with Y (and discard X), that is the user 
+that is waiting for the completion should be able to wait for Y instead of X.
+ 
+3) Multiple threads safety and starting of computations
+
+Of course, we want multiple threads working on the computation tree, so a
+computation object might be already computed and finalized before the 
+constructor even returns. This means that the computation object might not 
+even know its parent (that needs to be notified at completion time) when it
+gets resolved. This cannot be solved, unless one waits for all deferred
+objects to be created and inked up with their parent and then initiate the
+computation from the root. This solution will not perform that well, since
+essentially all further function calls are deferred until the call returns
+to the event loop, and then we race down the same tree again to start 
+further calls. So we have to live with that fact that parent might not even
+be set (or we might be in the constructor) when the value is resolved.
+
+   
