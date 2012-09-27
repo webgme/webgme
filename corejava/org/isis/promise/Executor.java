@@ -41,6 +41,20 @@ public class Executor {
 		return observer.getValue();
 	}
 
-	private ExecutorService service = Executors.newCachedThreadPool();
+	private static ExecutorService service = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1,
+			TimeUnit.SECONDS, new SynchronousQueue<Runnable>()) {
+		protected void beforeExecute(Thread thread, Runnable command) {
+			System.out.println("before " + System.identityHashCode(command)
+					+ " " + thread.getId());
+		}
 
+		protected void afterExecute(Runnable command, Throwable exception) {
+			System.out.println("after  " + System.identityHashCode(command)
+					+ (exception != null ? exception.toString() : ""));
+		}
+	};
+
+	public static void execute(Runnable command) {
+		service.execute(command);
+	}
 }

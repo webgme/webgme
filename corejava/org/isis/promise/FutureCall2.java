@@ -45,7 +45,7 @@ public abstract class FutureCall2<Type, Arg0, Arg1> implements Promise<Type> {
 		}
 	}
 
-	public abstract Promise<Type> execute(Arg0 arg1, Arg1 arg2);
+	public abstract Promise<Type> execute(Arg0 arg1, Arg1 arg2) throws Exception;
 
 	public final void cancelPromise() {
 		arg0.cancel();
