@@ -12,6 +12,6 @@ public interface Promise<Type> {
 	Type getValue() throws Exception;
 
 	void finished();
-	
+
 	void cancelPromise();
 }

@@ -11,19 +11,19 @@ import java.util.concurrent.*;
 public class Executor {
 
 	public static <Type> Type obtain(Promise<Type> promise) throws Exception {
-		final class Waiter implements Promise<Void> {
+		assert (promise != null);
+
+		final class Waiter extends Future<Void> {
+			Waiter() {
+				super(1);
+			}
+
 			boolean finished = false;
 
-			public void setParent(Observer<Void> parent) {
-			}
-
-			public Void getValue() throws Exception {
-				return null;
-			}
-
-			public synchronized void finished() {
+			public synchronized Promise<Void> execute() {
 				finished = true;
 				this.notify();
+				return null;
 			}
 
 			public void cancelPromise() {
@@ -41,8 +41,9 @@ public class Executor {
 		return observer.getValue();
 	}
 
-	private static ExecutorService service = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 1,
-			TimeUnit.SECONDS, new SynchronousQueue<Runnable>()) {
+	private static ExecutorService service = new ThreadPoolExecutor(0,
+			Integer.MAX_VALUE, 1, TimeUnit.SECONDS,
+			new SynchronousQueue<Runnable>()) {
 		protected void beforeExecute(Thread thread, Runnable command) {
 			System.out.println("before " + System.identityHashCode(command)
 					+ " " + thread.getId());

@@ -7,10 +7,10 @@
 package org.isis.promise;
 
 final class Observer<Type> {
-	private final Promise<?> parent;
+	private final Future<?> parent;
 	private Promise<Type> child;
 
-	Observer(Promise<?> parent, Promise<Type> child) {
+	Observer(Future<?> parent, Promise<Type> child) {
 		assert (parent != null && child != null);
 
 		this.parent = parent;
@@ -29,8 +29,8 @@ final class Observer<Type> {
 				this.child = child;
 			}
 		}
-		
-		assert(!(old instanceof Constant));
+
+		assert (!(old instanceof Constant));
 
 		if (old == null)
 			child.cancelPromise();
@@ -41,11 +41,11 @@ final class Observer<Type> {
 	void finished() {
 		parent.finished();
 	}
-	
+
 	Type getValue() throws Exception {
 		return child.getValue();
 	}
-	
+
 	void cancel() {
 		Promise<Type> child;
 		synchronized (this) {

@@ -9,7 +9,7 @@ package org.isis.promise;
 public abstract class BlockingCall<Type> implements Promise<Type>, Runnable {
 
 	private static final Object NOTHING = new Object();
-	
+
 	private Observer<Type> parent;
 	private Object value;
 
@@ -22,12 +22,12 @@ public abstract class BlockingCall<Type> implements Promise<Type>, Runnable {
 		assert (parent != null);
 
 		Object value;
-		synchronized(this) {
+		synchronized (this) {
 			this.parent = parent;
 			value = this.value;
 		}
-		
-		if( value != NOTHING )
+
+		if (value != NOTHING)
 			parent.finished();
 	}
 
@@ -45,13 +45,13 @@ public abstract class BlockingCall<Type> implements Promise<Type>, Runnable {
 		} catch (Exception exception) {
 			value = exception;
 		}
-		
+
 		Observer<Type> parent;
-		synchronized(this) {
+		synchronized (this) {
 			parent = this.parent;
 		}
 
-		if( parent != null )
+		if (parent != null)
 			parent.finished();
 	}
 

@@ -6,50 +6,23 @@
 
 package org.isis.promise;
 
-public abstract class FutureCall1<Type, Arg0> implements Promise<Type> {
-	private int missing;
-	private Observer<Type> parent;
+public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
+
 	private final Observer<Arg0> arg0;
 
 	public FutureCall1(Promise<Arg0> arg0) {
-		assert (arg0 != null);
+		super(2);
 
-		this.missing = 2;
 		this.arg0 = new Observer<Arg0>(this, arg0);
 	}
 
-	public final void setParent(Observer<Type> parent) {
-		assert(parent != null);
-		
-		this.parent = parent;
-		finished();
+	protected final Promise<Type> execute() throws Exception {
+		return execute(arg0.getValue());
 	}
-	
-	public final void finished() {
-		int m;
-		synchronized (this) {
-			m = --missing;
-		}
-
-		assert (m >= 0);
-		if (m == 0) {
-			Promise<Type> value;
-			try {
-				value = execute(arg0.getValue());
-			} catch (Exception exception) {
-				value = new Constant<Type>(exception);
-			}
-			parent.setChild(value);
-		}
-	}
-
-	public abstract Promise<Type> execute(Arg0 arg1) throws Exception;
 
 	public final void cancelPromise() {
 		arg0.cancel();
 	}
-	
-	public Type getValue() throws Exception {
-		throw new IllegalArgumentException("unresolved promise");
-	}
+
+	public abstract Promise<Type> execute(Arg0 arg1) throws Exception;
 }
