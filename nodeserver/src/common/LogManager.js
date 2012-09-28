@@ -29,7 +29,7 @@ define([], function () {
             "WARNING" : "33",
             "ERROR" : "31"
         },
-        currentLogLevel = logLevels.ERROR,
+        currentLogLevel = logLevels.WARNING,
         useColors = false,
         excludedComponents = [],
         Logger,
