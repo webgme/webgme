@@ -371,7 +371,7 @@ define(['logManager',
                 }
                 else{
                     currentCore.setRegistry(child,"isConnection",false);
-                    currentCore.setRegistry(child,"position",{ "x" : Math.round(Math.random() * 100), "y":  Math.round(Math.random() * 100)});
+                    currentCore.setRegistry(child,"position",{ "x": 100, "y": 100});
                     currentCore.setAttribute(child,"name","defaultObj");
                 }
                 currentCore.setAttribute(child,"isPort",true);
