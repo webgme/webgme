@@ -10,11 +10,11 @@ define(['commonUtil'], function (CU) {
     };
     var LogStorage = function (storage,logger) {
         var log = function(msg){
-            /*if(logger){
+            if(logger){
                 logger.log(TSSTRING()+"[LogStorage]"+msg);
             } else {
                 console.log(TSSTRING()+"[LogStorage]"+msg);
-            }*/
+            }
         };
         var open = function(callback){
             var start = TIMESTAMP();
