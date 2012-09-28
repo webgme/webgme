@@ -584,6 +584,15 @@ define(['logManager',
      * END OF - PUBLIC INTERFACE TO OVERRIDE IN CONTROLLER
      */
 
+    //TODO: check this here...
+    GraphVizView.prototype.destroy = function () {
+        this._el.parent().empty();
+    };
+
+    GraphVizView.prototype.parentContainerSizeChanged = function (nW, nH) {
+        //TODO
+    };
+
 
     return GraphVizView;
 });

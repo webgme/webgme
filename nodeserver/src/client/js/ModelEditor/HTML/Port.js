@@ -42,19 +42,18 @@ define(['logManager',
 
     Port.prototype.update = function (options) {
         if (options.title) {
-            this.skinParts.portTitle.text(options.title);
+            if (this.title !== options.title) {
+                this.title = options.title;
+                this.skinParts.portTitle.text(options.title);
+            }
         }
     };
 
     Port.prototype.destroy = function () {
-        var self = this;
-
         //finally remove itself from DOM
         if (this.el) {
-            this.el.fadeOut('slow', function () {
-                self.el.empty();
-                self.el.remove();
-            });
+            this.el.remove();
+            this.el.empty();
         }
     };
 

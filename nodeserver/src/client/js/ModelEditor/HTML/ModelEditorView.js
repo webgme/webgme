@@ -1546,5 +1546,14 @@ define(['jquery',
     };
     /*ENDOF -  PUBLIC API TO OVERRIDE*/
 
+    //TODO: check this here...
+    ModelEditorView.prototype.destroy = function () {
+        this._el.parent().empty();
+    };
+
+    ModelEditorView.prototype.parentContainerSizeChanged = function (nW, nH) {
+        //TODO
+    };
+
     return ModelEditorView;
 });

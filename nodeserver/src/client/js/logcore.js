@@ -19,11 +19,11 @@ define(['commonUtil'], function (CU) {
 
     var LogCore = function (core,logger) {
         var log = function(msg){
-            if(logger){
+            /*if(logger){
                 logger.log(TSSTRING()+"[LogCore]"+msg);
             } else {
                 console.log(TSSTRING()+"[LogCore]"+msg);
-            }
+            }*/
         };
 
         //check

@@ -14,12 +14,12 @@ define([   'order!jquery',
     'order!js/ObjectBrowser/TreeBrowserControl',
     'order!js/ObjectBrowser/JSTreeBrowserWidget',
     'order!js/ObjectBrowser/DynaTreeBrowserWidget',
-    'js/ModelEditor/SVG/ModelEditorControl',
-    'js/ModelEditor/SVG/ModelEditorSVGWidget',
     'js/ModelEditor/HTML/ModelEditorControl',
     'js/ModelEditor/HTML/ModelEditorView',
     'js/GraphViz/GraphVizControl',
-    'js/GraphViz/GraphVizView'], function (jquery,
+    'js/GraphViz/GraphVizView',
+    'js/ModelEditor2/ModelEditorControl',
+    'js/ModelEditor2/ModelEditorView'], function (jquery,
                                                             jqueryui,
                                                             underscore,
                                                             qtip,
@@ -33,11 +33,11 @@ define([   'order!jquery',
                                                             JSTreeBrowserWidget,
                                                             DynaTreeBrowserWidget,
                                                             ModelEditorControl,
-                                                            ModelEditorSVGWidget,
-                                                            ModelEditorControl2,
                                                             ModelEditorView,
                                                             GraphVizControl,
-                                                            GraphVizView) {
+                                                            GraphVizView,
+                                                            ModelEditorControl2,
+                                                            ModelEditorView2) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -69,22 +69,30 @@ define([   'order!jquery',
         modelEditorHTML,
         doConnect,
         lastContainerWidth = 0,
+        lastContainerHeight = 0,
         resizeMiddlePane,
         graphViz,
-        setActiveVisualizer;
+        setActiveVisualizer,
+        modelEditorView,
+        mainController,
+        mainView,
+        currentNodeId = null;
 
     /*
      * Compute the size of the middle pane window based on current browser size
      */
     lastContainerWidth = 0;
+    lastContainerHeight = 0;
     resizeMiddlePane = function () {
         var cW = $("#contentContainer").width(),
+            cH = $("#contentContainer").height(),
             eW = 0,
             eH = 0,
             horizontalSplit = false;
-        if (cW !== lastContainerWidth) {
+        if (cW !== lastContainerWidth || cH !== lastContainerHeight) {
             $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
             lastContainerWidth = cW;
+            lastContainerHeight = cH;
 
             //by default lay out in vertical split
             /*eW = Math.floor($("#middlePane").width() / 2);
@@ -118,6 +126,11 @@ define([   'order!jquery',
 
             //$("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
 
+            if (modelEditorView) {
+                if ($.isFunction(modelEditorView.parentContainerSizeChanged)) {
+                    modelEditorView.parentContainerSizeChanged(eW, eH);
+                }
+            }
         }
     };
 
@@ -130,17 +143,33 @@ define([   'order!jquery',
     resizeMiddlePane();
 
     setActiveVisualizer = function (visualizer) {
+        //destroy current controller and visualizer
+        if (mainController) {
+            mainController.destroy();
+        }
+        if (mainView) {
+            mainView.destroy();
+        }
+
+        mainController = null;
+        mainView = null;
         if (visualizer === "ModelEditor") {
-            $("#modelEditorContainer1").hide();
-            $("#modelEditorContainer2").show();
-        } else {
-            $("#modelEditorContainer1").show();
-            $("#modelEditorContainer2").hide();
+            mainView = new ModelEditorView("modelEditorHtml");
+            mainController = new ModelEditorControl(client, mainView);
+        } else if (visualizer === "ModelEditor2") {
+            mainView = new ModelEditorView2("modelEditorHtml");
+            mainController = new ModelEditorControl2(client, mainView);
+        } else if (visualizer === "GraphViz") {
+            mainView = new GraphVizView("modelEditorHtml");
+            mainController = new GraphVizControl(client, mainView);
+        }
+
+        if (currentNodeId) {
+            if (mainController) {
+                mainController.selectedObjectChanged(currentNodeId);
+            }
         }
     };
-
-    //hide GraphViz first and hook up radio button
-    setActiveVisualizer("ModelEditor");
 
     $("#visualizerPanel").find('a[class="btn-env"]').click(function (event) {
         var vis = $(this).attr("id");
@@ -187,18 +216,30 @@ define([   'order!jquery',
         }*/
         client = new Core(commonUtil.combinedserver);
 
+        client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
+            currentNodeId = nodeId;
+            if (mainController) {
+                mainController.selectedObjectChanged(currentNodeId);
+            }
+        });
+
         //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
         tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
 
         //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
         //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-        modelEditorHTML = new ModelEditorControl2(client, new ModelEditorView("modelEditorHtml"));
-        graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
+        //modelEditorView = new ModelEditorView("modelEditorHtml");
+        //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
+        //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
+
+        //hide GraphViz first and hook up radio button
+
     };
 
     return {
         start : function () {
             doConnect();
+            setActiveVisualizer("ModelEditor");
         }
     };
 });

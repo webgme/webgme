@@ -35,6 +35,10 @@ div {
     display: block;
 }
 
+div.inline {
+    display: inline-block;
+}
+
 /********WEBKIT SCROLLBAR **********/
 
 *::-webkit-scrollbar{height:10px;width:10px;overflow:visible;}

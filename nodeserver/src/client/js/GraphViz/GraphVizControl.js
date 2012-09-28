@@ -59,47 +59,48 @@ define(['logManager',
 
     GraphVizControl.prototype._initialize = function () {
         var self = this;
-
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            var selectedNode = self._client.getNode(nodeId),
-                i = 0,
-                childrenIDs = [],
-                currentChildId;
-
-            //delete everything from model editor
-            self._graphVizView.clear();
-
-            //clean up local hash map
-            self._components = {};
-
-            if (self._currentNodeInfo.id) {
-                for (i in self._selfPatterns) {
-                    if (self._selfPatterns.hasOwnProperty(i)) {
-                        delete self._selfPatterns[i];
-                    }
-                }
-                self._client.updateTerritory(self._territoryId, self._selfPatterns);
-            }
-
-            self._currentNodeInfo = { "id": null, "children" : [] };
-
-            if (selectedNode) {
-                self._components[nodeId] = {   "componentInstance": null,
-                    "state": self._componentStates.loading,
-                    "children": [] };
-                self._createObject(nodeId);
-
-                //save the given nodeId as the currently handled one
-                self._currentNodeInfo.id = nodeId;
-                self._currentNodeInfo.children = childrenIDs;
-            }
-
-            self._selfPatterns[nodeId] = { "children": 1 };
-            self._client.updateTerritory(self._territoryId, self._selfPatterns);
-
-            self._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
-        });
     };
+
+    GraphVizControl.prototype.selectedObjectChanged = function (nodeId) {
+        var selectedNode = this._client.getNode(nodeId),
+            i = 0,
+            childrenIDs = [],
+            currentChildId;
+
+        //delete everything from model editor
+        this._graphVizView.clear();
+
+        //clean up local hash map
+        this._components = {};
+
+        if (this._currentNodeInfo.id) {
+            for (i in this._selfPatterns) {
+                if (this._selfPatterns.hasOwnProperty(i)) {
+                    delete this._selfPatterns[i];
+                }
+            }
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        }
+
+        this._currentNodeInfo = { "id": null, "children" : [] };
+
+        if (selectedNode) {
+            this._components[nodeId] = {   "componentInstance": null,
+                "state": this._componentStates.loading,
+                "children": [] };
+            this._createObject(nodeId);
+
+            //save the given nodeId as the currently handled one
+            this._currentNodeInfo.id = nodeId;
+            this._currentNodeInfo.children = childrenIDs;
+        }
+
+        this._selfPatterns[nodeId] = { "children": 1 };
+        this._client.updateTerritory(this._territoryId, this._selfPatterns);
+
+        this._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
+    };
+
 
     GraphVizControl.prototype._onExpand = function (objectId) {
         var expandedNode = this._client.getNode(objectId),
@@ -253,6 +254,11 @@ define(['logManager',
 
     GraphVizControl.prototype._onDeletePointer = function (sourceId, pointerName) {
         this._client.delPointer(sourceId, pointerName);
+    };
+
+    //TODO: check this here...
+    GraphVizControl.prototype.destroy = function () {
+        this._client.removeUI(this._territoryId);
     };
 
     return GraphVizControl;

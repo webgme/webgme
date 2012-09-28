@@ -1,8 +1,8 @@
 "use strict";
 
 var DEBUG = false;
-var _webGME_jquery_ver = '1.8.0';
-var _webGME_jqueryui_ver = '1.8.22.mousefixed';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
+var _webGME_jquery_ver = '1.8.2';
+var _webGME_jqueryui_ver = '1.8.23';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
 
 // set the baseUrl for module lookup to '/lib' folder
 require.config({
@@ -29,7 +29,12 @@ require.config({
         "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
         "ModelEditorHTMLCSS": "css/ModelEditor",
         "GraphVizCSS": "css/GraphViz",
-        "GraphViz": "js/GraphViz"
+        "GraphViz": "js/GraphViz",
+
+        "ModelEditor2": "js/ModelEditor2",
+        "nodeAttributeNames2": 'js/ModelEditor2/NodeAttributeNames',
+        "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
+        "ModelEditor2CSS": "css/ModelEditor2"
     }
 });
 

@@ -106,55 +106,53 @@ define(['logManager',
 
     ModelEditorControl.prototype._initialize = function () {
         var self = this;
+    };
 
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            var selectedNode = self._client.getNode(nodeId),
-                i = 0,
-                childrenIDs = [],
-                currentChildId;
+    ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
+        var selectedNode = this._client.getNode(nodeId),
+            i = 0,
+            childrenIDs = [],
+            currentChildId;
 
-            //delete everything from model editor
-            self._modelEditorView.clear();
+        //delete everything from model editor
+        this._modelEditorView.clear();
 
-            //clean up local hash map
-            self._components = {};
+        //clean up local hash map
+        this._components = {};
 
-            if (self._currentNodeInfo.id) {
-                delete self._selfPatterns[self._currentNodeInfo.id];
-                self._client.updateTerritory(self._territoryId, self._selfPatterns);
+        if (this._currentNodeInfo.id) {
+            delete this._selfPatterns[this._currentNodeInfo.id];
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        }
+
+        this._currentNodeInfo = { "id": null, "children" : [] };
+
+        this._selfPatterns[nodeId] = { "children": 1 };
+        this._client.updateTerritory(this._territoryId, this._selfPatterns);
+
+        if (selectedNode) {
+            this._modelEditorView.updateCanvas(this._getObjectDescriptor(selectedNode));
+
+            //get the children IDs of the parent
+            childrenIDs = selectedNode.getChildrenIds();
+
+            for (i = 0; i < childrenIDs.length; i += 1) {
+
+                currentChildId = childrenIDs[i];
+
+                //assume that the child is not yet loaded on the client
+                this._components[currentChildId] = {   "componentInstance": null,
+                    "state": this._componentStates.loading };
+
+                this._createObject(currentChildId);
             }
 
-            self._currentNodeInfo = { "id": null, "children" : [] };
+            //save the given nodeId as the currently handled one
+            this._currentNodeInfo.id = nodeId;
+            this._currentNodeInfo.children = childrenIDs;
+        }
 
-            self._selfPatterns[nodeId] = { "children": 1 };
-            self._client.updateTerritory(self._territoryId, self._selfPatterns);
-
-            if (selectedNode) {
-                self._modelEditorView.updateCanvas(self._getObjectDescriptor(selectedNode));
-
-                //get the children IDs of the parent
-                childrenIDs = selectedNode.getChildrenIds();
-
-                for (i = 0; i < childrenIDs.length; i += 1) {
-
-                    currentChildId = childrenIDs[i];
-
-                    //assume that the child is not yet loaded on the client
-                    self._components[currentChildId] = {   "componentInstance": null,
-                                                            "state": self._componentStates.loading };
-
-                    self._createObject(currentChildId);
-                }
-
-                //save the given nodeId as the currently handled one
-                self._currentNodeInfo.id = nodeId;
-                self._currentNodeInfo.children = childrenIDs;
-            }
-
-
-
-            self._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
-        });
+        this._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
     };
 
     ModelEditorControl.prototype._getObjectDescriptor = function (nodeObj) {
@@ -313,6 +311,11 @@ define(['logManager',
         //self or child unloaded
         //we care about self unload only, since child unload pretty much handled by self update (child added / child removed)
         //this._logger.warning("_onUnload NOT YET IMPLEMENTED - '" + objectId + "'");
+    };
+
+    //TODO: check this here...
+    ModelEditorControl.prototype.destroy = function () {
+        this._client.removeUI(this._territoryId);
     };
 
     return ModelEditorControl;
