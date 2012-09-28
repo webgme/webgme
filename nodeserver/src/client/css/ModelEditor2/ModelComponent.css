@@ -1,0 +1,7 @@
+.model {
+    min-height: 70px;
+    min-width: 70px;
+    float: left;
+    border: 1px solid #666666;
+    background-color: #ccc;
+}

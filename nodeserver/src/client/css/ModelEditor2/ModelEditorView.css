@@ -1,0 +1,89 @@
+.modelEditorView .modelEditorTop {
+    padding: 5px;
+    height: 20px;
+    height: 30px;
+    background-color: #efefef;
+    margin-bottom: 2px;
+}
+
+.modelEditorView .modelEditorViewTitle {
+    font-size: 20px;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.modelEditorView .children .dragPosPanel {
+    font-size: 8px;
+    font-weight:bold;
+    font-family: Verdana;
+    color: #222;
+    background: rgba(224, 224, 224, 0.49);
+    border: rgba(0,0,0,0.25) solid 1px;
+    padding: 2px 4px;
+    display: none;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 80px;
+    z-index: 100000;
+    text-align:center;
+}
+
+.modelEditorView .children .rubberBand {
+    background: rgba(219, 234, 252, 0.49);
+    border: #52A8EC solid 1px;
+    position: absolute;
+    z-index: 100000;
+}
+
+/*DISABLE OUTER BORDER WHEN FOCUSED*/
+.modelEditorView .children:focus
+{
+    outline: none;
+}
+
+.modelEditorView .children .selectionOutline {
+    /*background: rgba(219, 234, 252, 0.49);*/
+    border: #000000 dashed 1px;
+    position: absolute;
+    z-index: 100000;
+    pointer-events: none;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+
+
+
+.modelEditorView .children .selectionOutline .deleteSelectionBtn {
+    top: -13px;
+    right: -13px;
+    background: url(../../img/remove.png) no-repeat;
+}
+
+.modelEditorView .children .selectionOutline .copySelectionBtn {
+    top: -13px;
+    left: -13px;
+    background: url(../../img/copy_2.png) no-repeat;
+}
+
+.modelEditorView .children .selectionOutline .advancedSelectionBtn {
+    bottom: -13px;
+    left: -13px;
+    background: url(../../img/adv.png) no-repeat;
+}
+
+.modelEditorView .children .selectionOutline .selectionBtn {
+    position: absolute;
+    z-index: 100000;
+    width: 26px;
+    height: 26px;
+    background-color: #FFFFFF;
+    border-radius: 13px;
+    pointer-events: all;
+    cursor: pointer;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+}
