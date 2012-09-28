@@ -7,5 +7,5 @@
 package org.isis.promise2;
 
 public interface Consumer {
-	void setValue(int index, Object value);
+	void setArgument(int index, Object argument);
 }

@@ -2,7 +2,7 @@ package org.isis.speedtests;
 
 public final class LockTest {
 
-	static final int ITERATIONS = 100000;
+	static final int ITERATIONS = 10000;
 
 	static final class Counter {
 		int value;
@@ -63,6 +63,20 @@ public final class LockTest {
 				}
 			} });
 			
+			measure(2, new Thread[] { new Thread() {
+				public void run() {
+					for (int i = 0; i < ITERATIONS; ++i) {
+						for(int j = 0; j < counters.length; ++j)
+							if( counters[j] == counters[0] || counters[j] == counters[1]) {
+								synchronized(counters[j]) {
+									++counters[j].value;
+								}
+							}
+							else
+								++counters[j].value;
+					}
+				}
+			} });
 		}
 
 		for (int i = 0; i < best_times.length; ++i) {

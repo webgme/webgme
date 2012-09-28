@@ -10,11 +10,21 @@ public class Constant<Type> implements Promise<Type> {
 	private final Type value;
 
 	public Constant(Type value) {
+		assert (!(value instanceof Promise<?>));
 		this.value = value;
 	}
 
 	@Override
-	public void setConsumer(int index, Consumer parent) {
-		parent.setValue(index, value);
+	public Object getValue() {
+		return value;
+	}
+
+	@Override
+	public void setConsumer(Consumer parent, int index) {
+		throw new IllegalStateException();
+	}
+
+	@Override
+	public void cancel(Exception reason) {
 	}
 }
