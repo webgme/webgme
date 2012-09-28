@@ -20,7 +20,7 @@ public class Constant<Type> implements Promise<Type> {
 	}
 
 	@Override
-	public void setConsumer(Consumer parent, int index) {
+	public void setParent(Consumer parent, int index) {
 		throw new IllegalStateException();
 	}
 
