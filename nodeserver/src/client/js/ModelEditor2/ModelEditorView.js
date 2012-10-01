@@ -524,7 +524,7 @@ define(['jquery',
         for (i in this._displayedComponentIDs) {
             if (this._displayedComponentIDs.hasOwnProperty(i)) {
                 if (this._displayedComponentIDs[i] === componentId) {
-                    connectionEndPointIds.insertUnique(this._displayedComponentIDs[i]);
+                    connectionEndPointIds.insertUnique(i);
                 }
             }
         }
