@@ -7,11 +7,9 @@
 package org.isis.promise3;
 
 public interface Promise<Type> {
-
 	// parent is set once and cannot be changed
-	public void setParent(Promise<?> parent);
+	public void setParent(Promise<?> parent, short index);
 	
 	// if value is a promise, then it must have no parent
-	public void setValue(Promise<?> old, Object value);
-	
+	public void setValue(short index, Object value);
 }
