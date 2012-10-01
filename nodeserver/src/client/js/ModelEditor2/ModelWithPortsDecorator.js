@@ -89,24 +89,11 @@ define(['logManager',
     ModelWithPortsDecorator.prototype.afterAppend = function () {
     };
 
-
-
-
-
-
-
-
-
-
-
-
-
-
     ModelWithPortsDecorator.prototype.update = function (objDescriptor) {
         //we handle the updates in our own territory update handler
         //by default the update should be handled here
         //and once it finishes, call back
-        //this._ownerComponent.decoratorUpdated(inserted/deleted subcomponents);
+        //this._ownerComponent.decoratorUpdated();
     };
 
     // PUBLIC METHODS
@@ -127,9 +114,11 @@ define(['logManager',
 
         this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
 
+        this._refreshSideConnectability();
+
         this._refreshChildrenContainer();
 
-        this._ownerComponent.decoratorUpdated(this._subcomponentsDiff);
+        this._ownerComponent.decoratorUpdated();
 
         delete this._subcomponentsDiff;
     };
@@ -220,14 +209,15 @@ define(['logManager',
                 if (i !== portId) {
                     if (this._ports[i].orientation === this._ports[portId].orientation) {
                         if (portToAppendBefore === null) {
-                            portToAppendBefore = i;
-                        }
-
-                        if ((this._ports[portId].position.y < this._ports[portToAppendBefore].position.y) ||
-                                ((this._ports[portId].position.y === this._ports[portToAppendBefore].position.y) && (this._ports[portId].title < this._ports[portToAppendBefore].title))) {
-                            portToAppendBefore = i;
+                            if ((this._ports[portId].position.y < this._ports[i].position.y) ||
+                                    ((this._ports[portId].position.y === this._ports[i].position.y) && (this._ports[portId].title < this._ports[i].title))) {
+                                portToAppendBefore = i;
+                            }
                         } else {
-                            portToAppendBefore = null;
+                            if ((this._ports[i].position.y < this._ports[portToAppendBefore].position.y) ||
+                                    ((this._ports[i].position.y === this._ports[portToAppendBefore].position.y) && (this._ports[i].title < this._ports[portToAppendBefore].title))) {
+                                portToAppendBefore = i;
+                            }
                         }
                     }
                 }
@@ -256,85 +246,26 @@ define(['logManager',
         }
     };
 
-    /*ModelWithPortsDecorator.prototype._update = function (objectId) {
-        var updatedObject = this._project.getNode(objectId),
-            oldChildrenIds,
-            updatedChildrenIds,
-            diffChildrenIds,
-            i,
-            childPort,
-            leftPorts,
-            rightPorts;
-
-        //let the ModelComponent know that the decorator starts refreshing itself
-        this._ownerComponent.beforeDecoratorUpdate();
-
-        if (objectId === this._id) {
-            //the container node has been changed
-            //- title change
-            //- children added / removed
-            this._skinParts.title.text(updatedObject.getAttribute(nodeAttributeNames.name));
-
-            oldChildrenIds = this._childrenIds.splice(0);
-            updatedChildrenIds = updatedObject.getChildrenIds() || [];
-
-            //Handle children deletion
-            diffChildrenIds = util.arrayMinus(oldChildrenIds, updatedChildrenIds);
-
-            for (i = 0; i < diffChildrenIds.length; i += 1) {
-                if (this._ports[diffChildrenIds[i]]) {
-                    //this._ownerComponent.unregisterSubcomponents([diffChildrenIds[i]]);
-                    this._ports[diffChildrenIds[i]].destroy();
-                    delete this._ports[diffChildrenIds[i]];
-                }
-            }
-
-            //Handle children addition
-            diffChildrenIds = util.arrayMinus(updatedChildrenIds, oldChildrenIds);
-            for (i = 0; i < diffChildrenIds.length; i += 1) {
-                childPort = this._project.getNode(diffChildrenIds[i]);
-                if (childPort && childPort.getAttribute(nodeAttributeNames.isPort) === true) {
-                    this._renderPort(childPort, true);
-                }
-            }
-
-            //finally store the actual children info for the parent
-            this._childrenIds = updatedChildrenIds;
-        } else {
-            //a port has changed
-            //here we are only interested in name change
-            //TODO: left or right orientation should be recalculated on port update????
-            if (this._ports[objectId]) {
-                this._ports[objectId].update({"title" : updatedObject.getAttribute(nodeAttributeNames.name)});
-            }
-        }
-
-        //reset side connectability
-        leftPorts = this._skinParts.leftPorts.find(".port");
-        rightPorts = this._skinParts.rightPorts.find(".port");
+    ModelWithPortsDecorator.prototype._refreshSideConnectability = function () {
+        var leftPorts = this._skinParts.leftPorts.children(),
+            rightPorts = this._skinParts.rightPorts.children();
 
         if (leftPorts.length === 0) {
-            if (this._skinParts.connLeft.hasClass("connEndPoint") === false) {
-                this._skinParts.connLeft.addClass("connEndPoint");
+            if (this._skinParts.connEndPointLeft.hasClass("connEndPoint") === false) {
+                this._skinParts.connEndPointLeft.addClass("connEndPoint");
             }
         } else {
-            this._skinParts.connLeft.removeClass("connEndPoint");
+            this._skinParts.connEndPointLeft.removeClass("connEndPoint");
         }
 
         if (rightPorts.length === 0) {
-            if (this._skinParts.connRight.hasClass("connEndPoint") === false) {
-                this._skinParts.connRight.addClass("connEndPoint");
+            if (this._skinParts.connEndPointRight.hasClass("connEndPoint") === false) {
+                this._skinParts.connEndPointRight.addClass("connEndPoint");
             }
         } else {
-            this._skinParts.connRight.removeClass("connEndPoint");
+            this._skinParts.connEndPointRight.removeClass("connEndPoint");
         }
-
-        //fix the layout of the ports
-        this._refreshChildrenContainer();
-
-        //let the ModelComponent know that the decorator has finished refreshing itself
-        this._ownerComponent.afterDecoratorUpdate();
-    };*/
+    };
 
     ModelWithPortsDecorator.prototype._editNodeTitle = function () {
         var self = this,
@@ -369,9 +300,6 @@ define(['logManager',
     //in the destroy there is no need to touch the UI, it will be cleared out
     //release the territory, release everything needs to be released and return
     ModelWithPortsDecorator.prototype.destroy = function () {
-        var i;
-
-        //this._project.updateTerritory(this._territoryId, {});
         this._project.removeUI(this._territoryId);
 
         delete this._ports;

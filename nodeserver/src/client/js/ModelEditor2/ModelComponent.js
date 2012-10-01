@@ -123,7 +123,7 @@ define(['logManager',
         this._updateConnEndPointsInView(false);
     };
 
-    ModelEditorModelComponent.prototype.decoratorUpdated = function (subcomponentsDiff) {
+    ModelEditorModelComponent.prototype.decoratorUpdated = function () {
         this._updateConnEndPointsInView(true);
         this._registerMouseHandlers();
 

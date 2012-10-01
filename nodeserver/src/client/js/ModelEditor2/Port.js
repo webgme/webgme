@@ -10,7 +10,6 @@ define(['logManager',
     var Port;
 
     Port = function (id, options) {
-        //component's outermost DOM element
         this.id = id;
 
         this.title = options.title || "";
@@ -21,22 +20,24 @@ define(['logManager',
         //get logger instance for this component
         this.logger = logManager.create("Port_" + this.id);
         this.logger.debug("Created");
-
-        //this._initialize();
     };
 
+    Port.prototype._DOMBaseLeftTemplate = $(modelPortLeftTmpl);
+
+    Port.prototype._DOMBaseRightTemplate = $(modelPortRightTmpl);
+
     Port.prototype._initialize = function () {
-        var concretePortTemplate = this.orientation === "W" ? modelPortLeftTmpl : modelPortRightTmpl,
-            portDomString,
-            data = {};
+        var concretePortTemplate = this.orientation === "W" ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
 
-        data.name = this.title;
-        data.pid = this.id;
-        portDomString = _.template(concretePortTemplate, data);
+        this.el = concretePortTemplate.clone();
+        this.el.attr({"id": this.id,
+                      "data-id": this.id});
 
-        this.el = $(portDomString);
         this.skinParts.connectionPoint = this.el.find(".dot");
+        this.skinParts.connectionPoint.attr({"data-id": this.id});
+
         this.skinParts.portTitle = this.el.find(".title");
+        this.skinParts.portTitle.text(this.title);
     };
 
     Port.prototype.update = function (options) {

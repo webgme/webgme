@@ -1266,8 +1266,7 @@ define(['jquery',
         }
 
         if (registeredIds.length > 0) {
-            // TODO: csinálni vmit vele
-            //this._updateConnectionsWithEndPoint(registeredIds);
+            this._updateConnectionsWithEndPoint(registeredIds);
         }
     };
 
@@ -1285,8 +1284,7 @@ define(['jquery',
         }
 
         if (unregisteredIds.length > 0) {
-            // TODO: csinálni vmit vele
-            //this._updateConnectionsWithEndPoint(unregisteredIds);
+            this._updateConnectionsWithEndPoint(unregisteredIds);
         }
     };
     /*
@@ -1541,9 +1539,6 @@ define(['jquery',
         this._logger.warning("onDoubleClick is not overridden in Controller...componentId: '" + componentId + "'");
     };
 
-    ModelEditorView.prototype.onFullRefresh = function () {
-        this._logger.warning("onFullRefresh is not overridden in Controller...");
-    };
     /*ENDOF -  PUBLIC API TO OVERRIDE*/
 
     //TODO: check this here...
