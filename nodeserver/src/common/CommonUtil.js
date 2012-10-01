@@ -119,13 +119,13 @@ define([], function () {
             branch         : "test"
         },
         combinedserver: {
-            port            : 8081,
+            port            : 80,
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "roby", /*possible collections currently: basic,SFdemo, IFV*/
+            mongocollection : "IFV", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             mongoopt        : {
                 'auto_reconnect' : true,
