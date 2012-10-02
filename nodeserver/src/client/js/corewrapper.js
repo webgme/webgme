@@ -953,12 +953,14 @@ define(['logManager',
                 }
 
                 /*depending on the oneevent attribute we send it in one array or in events...*/
-                if(user.ONEEVENT){
-                    user.UI.onOneEvent(events);
-                }
-                else{
-                    for(i=0;i<events.length;i++){
-                        user.UI.onEvent(events[i].etype,events[i].eid);
+                if(events.length>0){
+                    if(user.ONEEVENT){
+                        user.UI.onOneEvent(events);
+                    }
+                    else{
+                        for(i=0;i<events.length;i++){
+                            user.UI.onEvent(events[i].etype,events[i].eid);
+                        }
                     }
                 }
 
