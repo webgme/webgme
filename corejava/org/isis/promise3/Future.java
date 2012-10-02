@@ -6,124 +6,125 @@
 
 package org.isis.promise3;
 
-public final class Future<Type, Arg> {
-	private final static int STATE_UNCALCULATED = 0x00;
+public final class Future<Type, Arg> implements Promise<Type>, Observer<Object> {
 
-	// calculate is called
-	private final static int STATE_SET_PROMISE = 0x01;
-	private final static int STATE_SET_VALUE = 0x03;
-	private final static int STATE_SET_ERROR = 0x07;
-
-	// parent is set
-	private final static int STATE_GET_VALUE = 0x10;
-	private final static int STATE_GET_ARGUMENT = 0x20;
+	private final static int STATE_UNCALCULATED = 0; // Promise<Arg>
+	private final static int STATE_CALCULATED = 1; // Promise<Type>
+	private final static int STATE_VALUE_SET = 2; // Type
+	private final static int STATE_FAILED = 3; // Exception
+	private final static int STATE_CANCELLED = 4; // Exception
 
 	private int state;
 	private Object object;
+	private Observer<Type> parent;
 
-	public Future(Future<Arg, ?> argument) {
+	@SuppressWarnings("unchecked")
+	public Future(Promise<Arg> argument) {
 		assert (argument != null);
 
 		state = STATE_UNCALCULATED;
-		object = null;
+		object = argument;
+		parent = null;
 
-		argument.getArgument(this);
+		argument.setParent((Observer<Arg>) this);
 	}
 
+	@Override
 	@SuppressWarnings("unchecked")
-	public void getArgument(Future<?, Type> parent) {
+	public void setParent(Observer<Type> parent) {
 		assert (parent != null);
 
+		int state;
+		synchronized (this) {
+			this.parent = parent;
+			state = this.state;
+		}
+
+		if (state == STATE_VALUE_SET)
+			parent.finished((Type) object);
+		else if (state == STATE_CALCULATED && parent instanceof Future<?, ?>)
+			;
+		else if (state == STATE_FAILED)
+			parent.failed((Exception) object);
+		else
+			assert (state == STATE_UNCALCULATED);
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public void finished(Object value) {
+		if (state == STATE_UNCALCULATED) {
+			Promise<Type> result;
+
+			try {
+				result = calculate((Arg) value);
+			} catch (Exception error) {
+				failed(error);
+				return;
+			}
+
+			state = STATE_CALCULATED;
+			value = result;
+		} else {
+			Observer<Type> parent = null;
+
+			synchronized (this) {
+				assert (this.state == STATE_CALCULATED || this.state == STATE_CANCELLED);
+
+				if (this.state < STATE_VALUE_SET) {
+					this.state = STATE_VALUE_SET;
+					this.object = value;
+					parent = this.parent;
+				}
+			}
+
+			if (parent != null)
+				parent.finished((Type) value);
+		}
+	}
+
+	@Override
+	public void cancel(Exception error) {
 		int state;
 		Object object;
 
 		synchronized (this) {
 			state = this.state;
-			this.state = state | STATE_GET_ARGUMENT;
-
 			object = this.object;
-			this.object = parent;
+
+			if (state < STATE_CANCELLED) {
+				this.state = STATE_CANCELLED;
+				this.object = error;
+			}
 		}
 
-		if (state == STATE_SET_VALUE)
-			parent.setArgument((Type) object);
-		else if (state == STATE_SET_PROMISE)
-			;
-		else if (state == STATE_SET_ERROR)
-			parent.setError((Exception) object);
-		else
-			assert (state == STATE_UNCALCULATED);
+		if (state == STATE_UNCALCULATED || state == STATE_CALCULATED)
+			((Promise<?>) object).cancel(error);
 	}
 
-	@SuppressWarnings("unchecked")
-	public void getValue(Future<Type, ?> parent) {
-		assert (parent != null);
-
-		int state;
-		Object object;
-
-		synchronized (this) {
-			state = this.state;
-			this.state = state | STATE_GET_VALUE;
-
-			object = this.object;
-			this.object = parent;
-		}
-
-		if (state == STATE_SET_VALUE)
-			parent.setValue((Type) object);
-		else if (state == STATE_SET_PROMISE)
-			;
-		else if (state == STATE_SET_ERROR)
-			parent.setError((Exception) object);
-		else
-			assert (state == STATE_UNCALCULATED);
-	}
-
-	public Object calculate(Arg arg) throws Exception {
-		return null;
-	}
-
-	@SuppressWarnings("unchecked")
-	public void setArgument(Arg arg) {
-
-		try {
-			Object value = calculate(arg);
-			if (value instanceof Future<?, ?>)
-				setFuture((Future<Type, ?>) value);
-			else
-				setValue((Type) value);
-		} catch (Exception error) {
-			setError(error);
-		}
-	}
-
-	@SuppressWarnings("unchecked")
-	public void setError(Exception error) {
+	@Override
+	public void failed(Exception error) {
 		assert (error != null);
 
-		int state;
-		Object object;
+		Observer<Type> parent = null;
 
 		synchronized (this) {
-			state = this.state;
-			this.state = state | STATE_SET_ERROR;
+			assert (this.state == STATE_UNCALCULATED
+					|| this.state == STATE_CALCULATED || this.state == STATE_CANCELLED);
 
-			object = this.object;
-			this.object = error;
+			if (this.state < STATE_FAILED) {
+				this.state = STATE_FAILED;
+				this.object = error;
+
+				parent = this.parent;
+			}
 		}
 
-		if (state == STATE_GET_ARGUMENT)
-			((Future<?, Type>) object).setError(error);
-		else if (state == STATE_GET_VALUE)
-			((Future<Type, ?>) object).setError(error);
+		if (parent != null)
+			parent.failed(error);
 	}
 
-	public void setValue(Type value) {
-	}
-
-	public void setFuture(Future<Type, ?> value) {
-		assert (value != null);
-
+	Promise<Type> calculate(Arg arg) throws Exception {
+		return null;
 	}
 }

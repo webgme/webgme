@@ -6,8 +6,8 @@
 
 package org.isis.promise3;
 
-public interface Promise<Type> {
-	public void setParent(Observer<Type> parent);
+public interface Observer<Type> {
+	public void finished(Type value);
 
-	public void cancel(Exception error);
+	public void failed(Exception error);
 }

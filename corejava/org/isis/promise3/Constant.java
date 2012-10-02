@@ -7,24 +7,19 @@
 package org.isis.promise3;
 
 public class Constant<Type> implements Promise<Type> {
-	private Object value;
+	private Type value;
 
 	public Constant(Type value) {
-		assert (!(value instanceof Exception));
-		assert (!(value instanceof Promise<?>));
 		this.value = value;
 	}
 
-	public Constant(Exception error) {
-		assert (error != null);
-		this.value = error;
+	@Override
+	public void setParent(Observer<Type> parent) {
+		parent.finished(value);
 	}
 
-	public void setParent(Promise<?> parent, short index) {
-		parent.setValue(index, value);
-	}
-
-	public void setValue(short index, Object value) {
+	@Override
+	public void cancel(Exception error) {
 		throw new IllegalStateException();
 	}
 }
