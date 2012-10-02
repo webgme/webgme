@@ -15,7 +15,7 @@ define(['logManager',
 
             this.paper = opts.raphaelPaper;
 
-            this.connectionId = this.connectionComponent.getId();
+            this.connectionId = this.connectionComponent._guid;
 
             this.srcCoord = opts.srcCoord;
             this.tgtCoord = opts.tgtCoord;

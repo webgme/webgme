@@ -197,33 +197,38 @@ define(['jquery',
         var alignedPosition;
 
         if (this._modelComponents.indexOf(componentId) !== -1) {
-            /*if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
-             //manually trigger drag-end
-             this._cancelDrag(componentId);
-             }*/
+            this._logger.debug("Updating model component with parameters: " + objDescriptor);
+            //if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
+                //manually trigger drag-end
+              //  this._cancelDrag(componentId);
+            //}
 
             if (this._childComponents[componentId].el) {
                 this._childComponents[componentId].el.removeClass("connection-end-state-hover");
             }
 
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
-            this._logger.debug("Updating model component with parameters: " + objDescriptor);
+            if (this._dragOptions && this._dragOptions.mode === this._dragModes.reposition && this._selectedComponentIds.indexOf(componentId) !== -1) {
+                //if we are currently dragging this guy, don't update its position
+            } else {
+                //otherwise reposition it
+                alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
-            objDescriptor.position.x = alignedPosition.x;
-            objDescriptor.position.y = alignedPosition.y;
+                objDescriptor.position.x = alignedPosition.x;
+                objDescriptor.position.y = alignedPosition.y;
 
-            this._checkPositionOverlap(objDescriptor);
+                this._checkPositionOverlap(objDescriptor);
+
+                //set new position
+                this._childComponents[componentId].position = {"x": objDescriptor.position.x,
+                    "y": objDescriptor.position.y};
+
+                this._childComponents[componentId].el.css({ "left": objDescriptor.position.x,
+                    "top": objDescriptor.position.y });
+            }
 
             this._longUpdateQueue.push(componentId);
             this._longUpdateList.updatedModels.push(componentId);
-
-            //set new position
-            this._childComponents[componentId].position = {"x": objDescriptor.position.x,
-                "y": objDescriptor.position.y};
-
-            this._childComponents[componentId].el.css({ "left": objDescriptor.position.x,
-                "top": objDescriptor.position.y });
 
             this._childComponents[componentId].update(objDescriptor);
         }
@@ -252,56 +257,40 @@ define(['jquery',
     /*************** END OF --- MODEL CREATE / UPDATE / DELETE ***********************/
 
     ModelEditorView.prototype.deleteComponent = function (componentId) {
+        //if there is dragging and the item-to-be-deleted is part of the current selection
+        if (this._dragOptions && this._selectedComponentIds.indexOf(componentId) !== -1) {
+            this._dragOptions.revert = true;
+            this._dragOptions.revertCallback = { "fn": this.deleteComponent,
+                "arg": componentId };
+            //manually trigger drag-end
+            $('.ui-draggable-dragging').trigger('mouseup');
+        } else {
+            if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
+                //manually trigger drag-end
+                this._cancelDrag(componentId);
+            }
 
-        if (this._modelComponents.indexOf(componentId) !== -1) {
-            this._deleteModelComponent(componentId);
-        } else if (this._connectionComponents.indexOf(componentId) !== -1) {
-            this._deleteConnectionComponent(componentId);
+            //remove it from the selection (if in there)
+            if (this._selectedComponentIds.indexOf(componentId) !== -1) {
+                this._deselect(componentId, true);
+                this._refreshSelectionOutline();
+            }
+
+            if (this._modelComponents.indexOf(componentId) !== -1) {
+                this._deleteModelComponent(componentId);
+            } else if (this._connectionComponents.indexOf(componentId) !== -1) {
+                this._deleteConnectionComponent(componentId);
+            }
         }
-
-        /*var componentId = component.getId(),
-         endPointsToUpdate = [],
-         componentName = component.getName();
-
-         //if there is dragging and the item-to-be-deleted is part of the current selection
-         if (this._dragOptions && this._selectedComponentIds.indexOf(componentId) !== -1) {
-         this._dragOptions.revert = true;
-         this._dragOptions.revertCallback = { "fn": this.deleteComponent,
-         "arg": component };
-         //manually trigger drag-end
-         $('.ui-draggable-dragging').trigger('mouseup');
-         } else {
-         if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
-         //manually trigger drag-end
-         //$('.ui-draggable-dragging').trigger('mouseup');
-         this._cancelDrag(componentId);
-         }
-
-         //remove it from the selection (if in there)
-         if (this._selectedComponentIds.indexOf(componentId) !== -1) {
-         this._deselect(componentId, true);
-         this._refreshSelectionOutline();
-         }
-
-         if (this._childComponents[componentId]) {
-         if (_.isString(componentName) && componentName !== "") {
-         notificationManager.displayMessage("Object '" + componentName + "' has been deleted.");
-         }
-         this._childComponents[componentId].destroy();
-         delete this._childComponents[componentId];
-         }
-
-         //if it was a connection
-         if (this._connectionList[componentId]) {
-         endPointsToUpdate.push(this._connectionList[componentId].sourceId, this._connectionList[componentId].targetId);
-
-         delete this._connectionList[componentId];
-
-         this._connectionPointManager.unregisterConnection(componentId);
-         this._updateConnectionsWithEndPoint(endPointsToUpdate);
-         }
-         }*/
     };
+
+    ModelEditorView.prototype._cancelDrag = function (dataId) {
+        $('.connection-source[data-id="' + dataId + '"]').removeClass("connection-source");
+        $('.connection-end-state-hover').removeClass("connection-end-state-hover");
+        $('.ui-draggable-dragging').trigger('mouseup');
+    };
+
+
 
     /*************** CONNECTION CREATE / UPDATE / DELETE ***********************/
 
@@ -334,7 +323,7 @@ define(['jquery',
     };
 
     ModelEditorView.prototype.updateConnectionComponent = function (componentId, objDescriptor) {
-        if (this._connectionComponents.indexOf(componentId)) {
+        if (this._connectionComponents.indexOf(componentId) !== -1) {
             /*if (this._connectionInDraw && this._connectionInDraw.source === componentId) {
              //manually trigger drag-end
              this._cancelDrag(componentId);
@@ -342,13 +331,16 @@ define(['jquery',
 
             /*if (this._childComponents[componentId].el) {
              this._childComponents[componentId].el.removeClass("connection-end-state-hover");
-             }
+             }*/
 
-             this._childComponents[componentId].update(objDescriptor);
+            this._longUpdateQueue.push(componentId);
+            this._longUpdateList.updatedConnections.push(componentId);
+
+            this._childComponents[componentId].update(objDescriptor);
 
 
 
-             this._refreshSelectionOutline();*/
+             //this._refreshSelectionOutline();
         }
     };
 
@@ -361,6 +353,8 @@ define(['jquery',
         if (affectedIdx > -1) {
             this._longUpdateList.affectedConnections.splice(affectedIdx, 1);
         }
+
+        this._connectionPointManager.unregisterConnection(componentId);
 
         //this._longUpdateQueue.push(componentId);
         this._longUpdateList.deletedConnections.push(componentId);
@@ -423,16 +417,13 @@ define(['jquery',
     /****************** END OF - PUBLIC FUNCTIONS ***********************************/
 
     ModelEditorView.prototype._componentUpdated = function (componentId) {
-        var cIndexInQueue =  this._longUpdateQueue.indexOf(componentId),
-            i;
+        var cIndexInQueue =  this._longUpdateQueue.indexOf(componentId);
 
         if (cIndexInQueue === -1) {
             //we did not expect this component to be updated
             //update is coming from the Decorator (decorator territory update)
-            //handle
+            //this._logger.warning("unexpected update from: " + componentId);
             this._refreshScreen();
-            //TODO: look into it, why so many updates are coming
-            this._logger.warning("unexpected update from: " + componentId);
         } else {
             this._longUpdateQueue.splice(cIndexInQueue, 1);
             this._refreshScreen();
@@ -440,8 +431,7 @@ define(['jquery',
     };
 
     ModelEditorView.prototype._refreshScreen = function () {
-        var connectionsToUpdate = [],
-            i;
+        var connectionsToUpdate = [];
 
         if (this._longUpdating === true) {
             return;
@@ -502,18 +492,21 @@ define(['jquery',
         //at this point we have all the connections that needs to be updated in 'connectionsToUpdate'
         //$(this._skinParts.svgPaper.canvas).remove();
 
-        //TODO: debuginsted of warning
-        this._logger.warning("drawing connections");
+        this._logger.warning("Redrawing affected connections");
 
         this._updateConnections(connectionsToUpdate);
 
-        this._logger.warning("drawing connections - DONE");
+        this._logger.warning("Redrawing affected connections - DONE");
 
         //$(this._skinParts.svgPaper.canvas).insertBefore(this._skinParts.childrenContainer.children().first());
 
         this._longUpdateList.affectedConnections = [];
 
         this._refreshSelectionOutline();
+
+        if (this._connectionInDraw.lastPosition) {
+            this._drawConnectionTo({"x": this._connectionInDraw.lastPosition.x, "y": this._connectionInDraw.lastPosition.y});
+        }
     };
 
     ModelEditorView.prototype._getConnectionsForModel = function (componentId) {
@@ -1048,11 +1041,13 @@ define(['jquery',
     ModelEditorView.prototype.onDrawConnection = function (event) {
         var mousePos = this._getMousePos(event);
 
+        this._connectionInDraw.lastPosition = {"x": mousePos.mX, "y": mousePos.mY};
         this._drawConnectionTo({"x": mousePos.mX, "y": mousePos.mY});
     };
 
     ModelEditorView.prototype.endDrawConnection = function () {
         delete this._connectionInDraw.source;
+        delete this._connectionInDraw.lastPosition;
         this._connectionInDraw.path.attr({"path": "M0,0"}).hide();
     };
 
@@ -1710,108 +1705,75 @@ define(['jquery',
             dX = dragPos.x - this._dragOptions.startPos.x,
             dY = dragPos.y - this._dragOptions.startPos.y,
             id,
-            newPositions;
+            newPositions,
+            revert = false,
+            revertCallbackFn,
+            revertCallbackArgs,
+            dragMode = this._dragOptions.mode;
 
         if (this._dragOptions.revert) {
-            this._dragOptions.revert = true;
-            this._revertDrag(this._dragOptions.revertCallback);
-        } else {
-            //move all the selected children
-            newPositions = this._moveSelectedComponentsBy(dX, dY);
+            dX = 0;
+            dY = 0;
+            revert = true;
+            revertCallbackFn = this._dragOptions.revertCallback ? this._dragOptions.revertCallback.fn : null;
+            revertCallbackArgs = this._dragOptions.revertCallback ? this._dragOptions.revertCallback.arg : null;
+        }
 
-            for (id in newPositions) {
-                if (newPositions.hasOwnProperty(id)) {
-                    if (this._dragOptions.mode === this._dragModes.copy) {
-                        if (this._dragOptions.draggedElements[id].el) {
-                            this._dragOptions.draggedElements[id].el.remove();
-                        }
-                        delete this._dragOptions.draggedElements[id];
-                    } else {
-                        if (newPositions[id].hasOwnProperty("x") && newPositions[id].hasOwnProperty("y")) {
-                            this._childComponents[id].position = { "x": newPositions[id].x,
-                                "y": newPositions[id].y };
-                        } else {
-                            //it was a connection
-                            delete newPositions[id];
-                        }
+        //move all the selected children
+        newPositions = this._moveSelectedComponentsBy(dX, dY);
 
+        for (id in newPositions) {
+            if (newPositions.hasOwnProperty(id)) {
+                if (this._dragOptions.mode === this._dragModes.copy) {
+                    if (this._dragOptions.draggedElements[id].el) {
+                        this._dragOptions.draggedElements[id].el.remove();
                     }
+                    delete this._dragOptions.draggedElements[id];
+                } else {
+                    if (newPositions[id].hasOwnProperty("x") && newPositions[id].hasOwnProperty("y")) {
+                        this._childComponents[id].position = { "x": newPositions[id].x,
+                            "y": newPositions[id].y };
+                    } else {
+                        //it was a connection
+                        delete newPositions[id];
+                    }
+
                 }
             }
+        }
 
-            if (this._dragOptions.mode === this._dragModes.copy) {
+        //remove UI helpers
+        this._showSelectionOutline();
+
+        //delete dragOptions
+        delete this._dragOptions;
+        this._dragOptions = null;
+
+        if (revert !== true) {
+
+            if (dragMode === this._dragModes.copy) {
                 this.onDragCopy(newPositions);
             } else {
                 this.onReposition(newPositions);
             }
-
-            //delete dragOptions
-            delete this._dragOptions;
-            this._dragOptions = null;
-
-            //remove UI helpers
-            this._showSelectionOutline();
+        } else {
+            if (revertCallbackFn) {
+                revertCallbackFn.call(this, revertCallbackArgs);
+            }
         }
     };
-
-    ModelEditorView.prototype._revertDrag = function (callBackOpts) {
-        var i,
-            id,
-            childPosX,
-            childPosY,
-            affectedConnectionEndPoints = [],
-            subComponentId,
-            self = this;
-
-        //move all the selected children
-        for (i = 0; i < this._selectedComponentIds.length; i += 1) {
-            id = this._selectedComponentIds[i];
-            childPosX = this._dragOptions.draggedElements[id].originalPosition.x;
-            childPosY = this._dragOptions.draggedElements[id].originalPosition.y;
-
-            if (this._dragOptions.mode === this._dragModes.copy) {
-                this._dragOptions.draggedElements[id].el.remove();
-            } else {
-                if ($.isFunction(this._childComponents[id].setPosition)) {
-                    this._childComponents[id].setPosition(childPosX, childPosY);
-                }
-            }
-        }
-
-        if (this._dragOptions.mode === this._dragModes.reposition) {
-            for (i = 0; i < this._selectedComponentIds.length; i += 1) {
-                affectedConnectionEndPoints.push(this._selectedComponentIds[i]);
-                //TODO: _displayedComponentIDs are not handled correctly in the new decorator FIXIT!
-                for (subComponentId in this._displayedComponentIDs) {
-                    if (this._displayedComponentIDs.hasOwnProperty(subComponentId)) {
-                        if (this._displayedComponentIDs[subComponentId] === this._selectedComponentIds[i]) {
-                            affectedConnectionEndPoints.push(subComponentId);
-                        }
-                    }
-                }
-            }
-            this._updateConnectionsWithEndPoint(affectedConnectionEndPoints);
-        }
-
-        //delete dragOptions
-        for (i in this._dragOptions) {
-            if (this._dragOptions.hasOwnProperty(i)) {
-                delete this._dragOptions[i];
-            }
-        }
-        this._dragOptions = null;
-
-        this._showSelectionOutline();
-
-        if (callBackOpts && callBackOpts.fn) {
-            callBackOpts.fn.call(self, callBackOpts.arg);
-        }
-    };
-
 
     /*
      * END OF - MODELCOMPONENT REPOSITION HANDLERS
      */
+
+    ModelEditorView.prototype.saveConnectionSegmentPoints = function (connId, segmentPointsToSave) {
+        this.onSaveConnectionSegmentPoints(connId, segmentPointsToSave);
+    };
+
+    ModelEditorView.prototype.setLineType = function (connId, type) {
+        this.onSetLineType(connId, type);
+    };
 
     /* PUBLIC API TO OVERRIDE*/
     ModelEditorView.prototype.onCreateConnection = function (connDesc) {

@@ -44,7 +44,7 @@
 }
 
 .modelEditorView .children .selectionOutline {
-    /*background: rgba(219, 234, 252, 0.49);*/
+    background: rgba(255, 255, 0, 0.1);
     border: #000000 dashed 1px;
     position: absolute;
     z-index: 100000;

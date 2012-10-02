@@ -30,6 +30,8 @@ define(['logManager',
 
         this.oldPos = {};
         this.oldContolPoint = {};
+
+        this._draggedPoint = null;
     };
 
     ConnectionSegmentPoint.prototype.getBeforeControlPoint = function () {
@@ -74,13 +76,15 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.removeControls = function () {
+        var fakeMouseUp = document.createEvent('MouseEvent');
+
         this._removingControls = true;
 
-        //send mouseup to document to fake drag-end
-        //TODO: make sure to send mouseup only if the point or control points are really dragged
-        var fakeMouseUp = document.createEvent('MouseEvent');
-        fakeMouseUp.initEvent('mouseup', true, true);
-        document.dispatchEvent(fakeMouseUp);
+        //send mouseup to the dragged control
+        if (this._draggedPoint) {
+            fakeMouseUp.initEvent('mouseup', true, true);
+            this._draggedPoint.node.dispatchEvent(fakeMouseUp);
+        }
 
         //unhook drag handlers
         if (this.midPoint) {
@@ -121,59 +125,70 @@ define(['logManager',
                 "y": this.y + this.cy},
             self = this;
 
-        //additionla controls needed only for Bezier
-        if (this.lineType === "B") {
-            this.line = this.paper.path(["M", cpBefore.x, cpBefore.y, "L", cpAfter.x, cpAfter.y].join(","));
-            this.controlPointBefore = this.paper.circle(cpBefore.x, cpBefore.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
-            this.controlPointAfter = this.paper.circle(cpAfter.x, cpAfter.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
+        if (this.midPoint) {
+            //controls exist already, bring them to front (just in case)
+            this.midPoint.toFront();
+            if (this.controlPointBefore) {
+                this.controlPointBefore.toFront();
+            }
+            if (this.controlPointAfter) {
+                this.controlPointAfter.toFront();
+            }
+        } else {
+            //if controls not exist yet, create them
+            if (this.lineType === "B") {
+                this.line = this.paper.path(["M", cpBefore.x, cpBefore.y, "L", cpAfter.x, cpAfter.y].join(","));
+                this.controlPointBefore = this.paper.circle(cpBefore.x, cpBefore.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
+                this.controlPointAfter = this.paper.circle(cpAfter.x, cpAfter.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
 
 
-            this.controlPointBeforeMouseOverCallBack = function () {
-                self._mouseOver(self.controlPointBefore);
+                this.controlPointBeforeMouseOverCallBack = function () {
+                    self._mouseOver(self.controlPointBefore);
+                };
+
+                this.controlPointBeforeMouseOutCallBack = function () {
+                    self._mouseOut(self.controlPointBefore);
+                };
+
+                this.controlPointAfterMouseOverCallBack = function () {
+                    self._mouseOver(self.controlPointAfter);
+                };
+
+                this.controlPointAfterMouseOutCallBack = function () {
+                    self._mouseOut(self.controlPointAfter);
+                };
+
+                this.controlPointBefore.mouseover(this.controlPointBeforeMouseOverCallBack).mouseout(this.controlPointBeforeMouseOutCallBack);
+                this.controlPointAfter.mouseover(this.controlPointAfterMouseOverCallBack).mouseout(this.controlPointAfterMouseOutCallBack);
+
+                this.controlPointBefore.drag(this._onControlPointBeforeDragMove, this._onControlPointBeforeDragStart, this.onControlPointBeforeDragEnd, this, this, this);
+                this.controlPointAfter.drag(this._onControlPointAfterDragMove, this._onControlPointAfterDragStart, this.onControlPointAfterDragEnd, this, this, this);
+            }
+
+            //the middle point is always there
+            this.midPoint = this.paper.circle(this.x, this.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
+
+            this.midPointMouseOverCallBack = function () {
+                self._mouseOver(self.midPoint);
             };
 
-            this.controlPointBeforeMouseOutCallBack = function () {
-                self._mouseOut(self.controlPointBefore);
+            this.midPointMouseOutCallBack = function () {
+                self._mouseOut(self.midPoint);
             };
 
-            this.controlPointAfterMouseOverCallBack = function () {
-                self._mouseOver(self.controlPointAfter);
+            this.midPointDoubleClick = function (event) {
+                self.logger.debug("Deleting segment point '" + self.count + "'");
+                self.removeControls();
+                self.connectionComponent.removeSegmentPoint(self.count);
+                event.stopPropagation();
             };
 
-            this.controlPointAfterMouseOutCallBack = function () {
-                self._mouseOut(self.controlPointAfter);
-            };
+            this.midPoint.mouseover(this.midPointMouseOverCallBack).mouseout(this.midPointMouseOutCallBack);
+            this.midPoint.dblclick(this.midPointDoubleClick);
 
-            this.controlPointBefore.mouseover(this.controlPointBeforeMouseOverCallBack).mouseout(this.controlPointBeforeMouseOutCallBack);
-            this.controlPointAfter.mouseover(this.controlPointAfterMouseOverCallBack).mouseout(this.controlPointAfterMouseOutCallBack);
-
-            this.controlPointBefore.drag(this._onControlPointBeforeDragMove, this._onControlPointBeforeDragStart, this.onControlPointBeforeDragEnd, this, this, this);
-            this.controlPointAfter.drag(this._onControlPointAfterDragMove, this._onControlPointAfterDragStart, this.onControlPointAfterDragEnd, this, this, this);
+            //hook up drag handlers
+            this.midPoint.drag(this._onSegmentPointDragMove, this._onSegmentPointDragStart, this._onSegmentPointDragEnd, this, this, this);
         }
-
-        //the middle point is always there
-        this.midPoint = this.paper.circle(this.x, this.y, 4).attr({"stroke" : this.settings.defaultStrokeColor, "fill" : this.settings.defaultFillColor});
-
-        this.midPointMouseOverCallBack = function () {
-            self._mouseOver(self.midPoint);
-        };
-
-        this.midPointMouseOutCallBack = function () {
-            self._mouseOut(self.midPoint);
-        };
-
-        this.midPointDoubleClick = function (event) {
-            self.logger.debug("Deleting segment point '" + self.count + "'");
-            self.removeControls();
-            self.connectionComponent.removeSegmentPoint(self.count);
-            event.stopPropagation();
-        };
-
-        this.midPoint.mouseover(this.midPointMouseOverCallBack).mouseout(this.midPointMouseOutCallBack);
-        this.midPoint.dblclick(this.midPointDoubleClick);
-
-        //hook up drag handlers
-        this.midPoint.drag(this._onSegmentPointDragMove, this._onSegmentPointDragStart, this._onSegmentPointDragEnd, this, this, this);
     };
 
     ConnectionSegmentPoint.prototype._mouseOver = function (circle) {
@@ -222,6 +237,7 @@ define(['logManager',
 
     /* DRAGGING SEGMENT POINT */
     ConnectionSegmentPoint.prototype._onSegmentPointDragStart = function (x, y, event) {
+        this._draggedPoint = this.midPoint;
         this.validDrag = false;
         this.oldPos.x = this.x;
         this.oldPos.y = this.y;
@@ -265,6 +281,7 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype._onSegmentPointDragEnd = function (event) {
+        this._draggedPoint = null;
         if (this._removingControls !== true) {
             if (this.validDrag === true) {
                 this.connectionComponent.saveSegmentPoints();
@@ -276,6 +293,7 @@ define(['logManager',
 
     /*BEFORE CONTROL POINT EVENT HANDLERS*/
     ConnectionSegmentPoint.prototype._onControlPointBeforeDragStart = function (x, y, event) {
+        this._draggedPoint = this.controlPointBefore;
         this._saveControlPoint();
         event.stopPropagation();
     };
@@ -287,6 +305,7 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.onControlPointBeforeDragEnd = function (event) {
+        this._draggedPoint = null;
         if (this._removingControls !== true) {
             this.connectionComponent.saveSegmentPoints();
         }
@@ -296,6 +315,7 @@ define(['logManager',
 
     /*AFTER-CONTROL POINT EVENT HANDLERS*/
     ConnectionSegmentPoint.prototype._onControlPointAfterDragStart = function (x, y, event) {
+        this._draggedPoint = this.controlPointAfter;
         this._saveControlPoint();
         event.stopPropagation();
     };
@@ -307,6 +327,7 @@ define(['logManager',
     };
 
     ConnectionSegmentPoint.prototype.onControlPointAfterDragEnd = function (event) {
+        this._draggedPoint = null;
         if (this._removingControls !== true) {
             this.connectionComponent.saveSegmentPoints();
         }

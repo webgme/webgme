@@ -62,7 +62,7 @@ define(['logManager',
         this.el = this._DOMBase.clone();
         this.el.attr({"id": this._guid});
 
-        this._zIndex = 8;
+        this._zIndex = 15;
 
         this.el.css({ "position": "absolute",
             "background-color": "rgba(0, 0, 0, 0)",
@@ -70,8 +70,7 @@ define(['logManager',
             "top": 0,
             "z-index": this._zIndex,
             "width": 0,
-            "height": 0,
-            "display": "none"});
+            "height": 0});
 
         this._skinParts.path = this._paper.path("M0,0L1,0");
         //this._skinParts.path.remove();
@@ -122,7 +121,7 @@ define(['logManager',
         this._pathAttributes.arrowEnd = objDescriptor.arrowEnd || "oval";
         this._pathAttributes.color = objDescriptor.color || "#000000";
         this._pathAttributes.width = objDescriptor.width || "2";
-        this._pathAttributes.shadowWidth = objDescriptor.shadowWidth || "6";
+        this._pathAttributes.shadowWidth = objDescriptor.shadowWidth || "5";
         this._pathAttributes.shadowOpacity = objDescriptor.shadowOpacity || 0.001;
         this._pathAttributes.shadowOpacitySelected = 0.4;
         this._pathAttributes.shadowColor = objDescriptor.shadowColor || "#52A8EC";
@@ -320,13 +319,13 @@ define(['logManager',
         if (this._pathAttributes.lineType === "L") {
             this.straightLineDiv.addClass("selected");
             this.bezierDiv.bind('click', function (event) {
-                self.parentComponent.setLineType(self.getId(), "B");
+                self._parentView.setLineType(self._guid, "B");
                 event.stopPropagation();
             });
         } else {
             this.bezierDiv.addClass("selected");
             this.straightLineDiv.bind('click', function (event) {
-                self.parentComponent.setLineType(self.getId(), "L");
+                self._parentView.setLineType(self._guid, "L");
                 event.stopPropagation();
             });
         }
@@ -389,10 +388,10 @@ define(['logManager',
             "connId": this._guid,
             "endType": "target"};
 
+        this._makeEndPointDraggable(opts);
+
         this._repositionDragPoints({"source": true,
             "target": true});
-
-        this._makeEndPointDraggable(opts);
     };
 
     ModelEditorConnectionComponent.prototype._makeEndPointDraggable = function (opts) {
@@ -412,6 +411,8 @@ define(['logManager',
                 self._originalCoord = $.extend(true, {}, self["_" + opts.endType + "Coordinates"]);
                 self._mouseStartPos = {"mX": event.pageX, "mY": event.pageY };
                 opts.el.addClass("connection-source");
+                self._parentView._hideSelectionOutline();
+                self._hideContextMenu();
             },
             stop: function (event, ui) {
                 opts.el.removeClass("connection-source");
@@ -429,6 +430,7 @@ define(['logManager',
 
                 delete self._originalCoord;
                 delete self._mouseStartPos;
+                self._parentView._showSelectionOutline();
             },
             drag: function (event) {
                 var dX = event.pageX - self._mouseStartPos.mX,
@@ -451,16 +453,11 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype._repositionDragPoints = function (opts) {
-        var dragPointOpts = {"width": 8,
-                            "height": 8};
-
         if (opts.source) {
             if (this._skinParts.srcDragPoint) {
                 this._skinParts.srcDragPoint.css({
-                    "width": dragPointOpts.width,
-                    "height": dragPointOpts.height,
-                    "left": this._sourceCoordinates.x - dragPointOpts.width / 2 - 1, /* -1 because of border left*/
-                    "top": this._sourceCoordinates.y - dragPointOpts.height / 2 - 1 /*-1 because of border top*/
+                    "left": this._sourceCoordinates.x,
+                    "top": this._sourceCoordinates.y
                 });
             }
         }
@@ -468,10 +465,8 @@ define(['logManager',
         if (opts.target) {
             if (this._skinParts.tgtDragPoint) {
                 this._skinParts.tgtDragPoint.css({
-                    "width": dragPointOpts.width,
-                    "height": dragPointOpts.height,
-                    "left": this._targetCoordinates.x - dragPointOpts.width / 2 - 1, /* -1 because of border left*/
-                    "top": this._targetCoordinates.y - dragPointOpts.height / 2 - 1 /*-1 because of border top*/
+                    "left": this._targetCoordinates.x,
+                    "top": this._targetCoordinates.y
                 });
             }
         }
@@ -497,8 +492,6 @@ define(['logManager',
      * EDIT MODE
      */
     ModelEditorConnectionComponent.prototype._setEditMode = function () {
-        var i;
-
         this._hideConnectionEndEditControls();
         this._hideContextMenu();
 
@@ -509,10 +502,6 @@ define(['logManager',
         this._skinParts.pathShadow.attr({"opacity": "0"});
 
         this._redrawConnection();
-
-        for (i = 0; i < this._segmentPoints.length; i += 1) {
-            this._segmentPoints[i].addControls();
-        }
     };
 
     ModelEditorConnectionComponent.prototype._endEditMode = function () {
@@ -536,6 +525,7 @@ define(['logManager',
 
     ModelEditorConnectionComponent.prototype.destroy = function () {
         this._destroying = true;
+
         //end edit mode (if editing right now)
         this._endEditMode();
 
@@ -574,17 +564,11 @@ define(['logManager',
     };
 
     ModelEditorConnectionComponent.prototype.update = function (objDescriptor) {
-        var i;
+        this._connectionUpdated = true;
 
         this._initializeConnectionProps(objDescriptor);
 
-        this._render();
-
-        if (this._editParams.editMode === true) {
-            for (i = 0; i < this._segmentPoints.length; i += 1) {
-                this._segmentPoints[i].addControls();
-            }
-        }
+        this._parentView._componentUpdated(this._guid);
     };
 
     ModelEditorConnectionComponent.prototype._isVisible = function () {
@@ -612,7 +596,8 @@ define(['logManager',
             hasChanged = true;
         }
 
-        if (hasChanged === true) {
+        if (hasChanged === true || this._connectionUpdated === true) {
+            delete this._connectionUpdated;
             this._render();
             this._repositionDragPoints({"source": true,
                 "target": true});
@@ -679,15 +664,16 @@ define(['logManager',
         }
         this._skinParts.editSegments = [];
 
-        if (this._editParams.editMode === false) {
-            if (this._pathAttributes.lineType === "L") {
-                pathDef = connectionSegmentLine.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
-            } else {
-                pathDef = connectionSegmentBezier.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
-            }
-            this._skinParts.path.attr({ "path": pathDef});
-            this._skinParts.pathShadow.attr({ "path": pathDef});
+        if (this._pathAttributes.lineType === "L") {
+            pathDef = connectionSegmentLine.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
         } else {
+            pathDef = connectionSegmentBezier.getPathDef(this._sourceCoordinates, this._targetCoordinates, this._segmentPoints);
+        }
+        this._skinParts.path.attr({ "path": pathDef});
+        this._skinParts.pathShadow.attr({ "path": pathDef});
+
+        if (this._editParams.editMode === true) {
+
             //edit mode
             if (this._segmentPoints.length === 0) {
                 connSegmentOptions = {"srcCoord" : this._sourceCoordinates,
@@ -743,6 +729,10 @@ define(['logManager',
                 //set up all segment points with the associated segments they control
                 for (i = 0; i < this._segmentPoints.length; i += 1) {
                     this._segmentPoints[i].setConnectionSegments(this._skinParts.editSegments[i], this._skinParts.editSegments[i + 1]);
+
+                    if (this._editParams.editMode === true) {
+                        this._segmentPoints[i].addControls();
+                    }
                 }
             }
         }

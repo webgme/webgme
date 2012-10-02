@@ -227,6 +227,19 @@ define(['logManager',
         });
     };
 
+    ModelEditorModelComponent.prototype.updatingSubComponent = function (subComponentId) {
+        var draggedComponent = this.el.find('.ui-draggable-dragging');
+
+        if (draggedComponent.length > 0) {
+            if (draggedComponent.data("sourceId") === subComponentId) {
+                //the subcomponent under update is the currently dragged componenet, stop drag
+                this.el.find('.connection-source[data-id="' + subComponentId + '"]').removeClass("connection-source");
+                $('.connection-end-state-hover').removeClass("connection-end-state-hover");
+                draggedComponent.trigger('mouseup');
+            }
+        }
+    };
+
     ModelEditorModelComponent.prototype.getBoundingBox = function (absolute) {
         var bBox = {    "x": absolute === true ? $(this.el).offset().left : parseInt($(this.el).css("left"), 10),
             "y": absolute === true ? $(this.el).offset().top : parseInt($(this.el).css("top"), 10),

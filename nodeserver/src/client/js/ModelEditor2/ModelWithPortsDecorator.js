@@ -153,6 +153,7 @@ define(['logManager',
 
     ModelWithPortsDecorator.prototype._onUnload = function (objectId) {
         if (this._ports[objectId]) {
+            this._ownerComponent.updatingSubComponent(objectId);
             this._ports[objectId].destroy();
         }
     };
@@ -238,6 +239,8 @@ define(['logManager',
         //check if is has changed at all
         if ((this._ports[portId].position.x !== portPosition.x) ||
                 (this._ports[portId].position.y !== portPosition.y)) {
+
+            this._ownerComponent.updatingSubComponent(portId);
 
             //remove from current position
             this._ports[portId].el.remove();
