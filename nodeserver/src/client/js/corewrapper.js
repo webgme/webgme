@@ -86,7 +86,8 @@ define(['logManager',
             updating = false/*,
             previousNodes = {},
             previousRoot = null,
-            previousCore = null*/;
+            previousCore = null,*/
+            intransaction = false;
 
         var waitfornextregistryset = false; //TODO HACK
         /*event functions to relay information between users*/
@@ -273,6 +274,13 @@ define(['logManager',
         };
 
         /*MGA like functions*/
+        this.startTransaction = function(){
+            intransaction = true;
+        };
+        this.completeTransaction = function(){
+            intransaction = false;
+            modifyRootOnServer();
+        };
         this.setAttributes = function(path,name,value){
             if(currentNodes[path]){
                 if (_.isString(name)) {
@@ -286,8 +294,7 @@ define(['logManager',
                     }
                 }
                 modifyRootOnServer();
-            }
-            else{
+            } else {
                 logger.error("[l122] no such object: "+path);
             }
         };
@@ -312,8 +319,7 @@ define(['logManager',
                         modifyRootOnServer();
                     }
                 },100)
-            }
-            else{
+            } else {
                 logger.error("[l92] no such object: "+path);
             }
         };
@@ -325,8 +331,7 @@ define(['logManager',
                 if(err){
                     logger.error("error during multiple paste!!! "+err);
                     rollBackModification();
-                }
-                else{
+                } else {
                     modifyRootOnServer();
                 }
             });
@@ -335,8 +340,7 @@ define(['logManager',
             if(currentNodes[path]){
                 currentCore.deleteNode(currentNodes[path]);
                 modifyRootOnServer();
-            }
-            else{
+            } else {
                 logger.error("[l112] no such object: "+path);
             }
         };
@@ -368,16 +372,14 @@ define(['logManager',
                 if(baseId === "connection"){
                     currentCore.setRegistry(child,"isConnection",true);
                     currentCore.setAttribute(child,"name","defaultConn");
-                }
-                else{
+                } else {
                     currentCore.setRegistry(child,"isConnection",false);
                     currentCore.setRegistry(child,"position",{ "x": 100, "y": 100});
                     currentCore.setAttribute(child,"name","defaultObj");
                 }
                 currentCore.setAttribute(child,"isPort",true);
                 modifyRootOnServer();
-            }
-            else{
+            } else {
                 logger.error("[l128]fraudulent child creation: "+JSON.stringify(parameters));
             }
         };
@@ -524,58 +526,60 @@ define(['logManager',
             }
         };
         var modifyRootOnServer = function(skippersist){
-            if(currentCore){
-                if(!skippersist){
-                    var newkey;
-                    var persistdone = function(err){
-                        if(err){
-                            logger.error("error during persist: "+err);
-                            rollBackModification();
-                        }
-                        else{
-                            if(newkey){
-                                if(rootServer){
-                                    rootServer.emit('modifyRoot',lastValidRoot,newkey);
-                                }
-
+            if(!intransaction){
+                if(currentCore){
+                    if(!skippersist){
+                        var newkey;
+                        var persistdone = function(err){
+                            if(err){
+                                logger.error("error during persist: "+err);
+                                rollBackModification();
                             } else {
-                                logger.error("persist resulted in null key!!!");
-                                newRoot(lastValidRoot,true);
-                            }
-                        }
-                    };
-                    newkey = currentCore.persist(currentCore.getRoot(currentNodes["root"]),function(err){
-                        if(err){
-                            persistdone(err);
-                        } else {
-                            if(newkey){
-                                persistdone(null);
-                            } else {
-                                var timer = setInterval(function(){
-                                    if(newkey){
-                                        clearInterval(timer);
-                                        persistdone(null);
+                                if(newkey){
+                                    if(rootServer){
+                                        rootServer.emit('modifyRoot',lastValidRoot,newkey);
                                     }
-                                },1);
+
+                                } else {
+                                    logger.error("persist resulted in null key!!!");
+                                    newRoot(lastValidRoot,true);
+                                }
                             }
+                        };
+                        newkey = currentCore.persist(currentCore.getRoot(currentNodes["root"]),function(err){
+                            if(err){
+                                persistdone(err);
+                            } else {
+                                if(newkey){
+                                    persistdone(null);
+                                } else {
+                                    var timer = setInterval(function(){
+                                        if(newkey){
+                                            clearInterval(timer);
+                                            persistdone(null);
+                                        }
+                                    },1);
+                                }
+                            }
+                        });
+                        if(newkey){
+                            newRoot(newkey,false);
+                        } else {
+                            var timer2 = setInterval(function(){
+                                if(newkey){
+                                    clearInterval(timer2);
+                                    newRoot(newkey,false);
+                                }
+                            },1);
                         }
-                    });
-                    if(newkey){
-                        newRoot(newkey,false);
                     } else {
-                        var timer2 = setInterval(function(){
-                            if(newkey){
-                                clearInterval(timer2);
-                                newRoot(newkey,false);
-                            }
-                        },1);
+                        rootServer.emit('modifyRoot',lastValidRoot,currentRoot);
                     }
                 } else {
-                    rootServer.emit('modifyRoot',lastValidRoot,currentRoot);
+                    logger.error("There is no CORE!!!");
                 }
-            }
-            else{
-                logger.error("There is no CORE!!!");
+            } else {
+                logger.debug("in transaction");
             }
         };
         var getNodePath = function(node){
@@ -592,183 +596,6 @@ define(['logManager',
             }
             return path;
         };
-        /*var buildTerritory = function(userID,patterns,callback){
-            var start = timestamp();
-            timelog("[MEAS002][in]["+userID+"]");
-            var i;
-            var pathes = [];
-            var counter = 0;
-
-            var loaddone = function(){
-                if(--counter === 0){
-                    timelog("[MEAS002][out]["+userID+"]{"+elapsedTime(start)+"ms}");
-                    if(callback){
-                        callback(null,pathes);
-                    }
-                }
-            };
-            var loadpath = function(path,childrenaswell){
-                var pathloaded = function(err,node){
-                    if(err || node === undefined || node === null){
-                        //console.log("something wrong with the path: "+path+"  - error: "+err);
-                        if(callback){
-                            var cb = callback;
-                            callback = null;
-                            cb(err || "empty object returned");
-                        }
-                    } else {
-                        var mypath = storeNode(node);
-
-                        INSERTARR(pathes,mypath);
-                        if(childrenaswell){
-                            currentCore.loadChildren(node,function(err,children){
-                                if(!err){
-                                    for(var i=0;i<children.length;i++){
-                                        var childpath = storeNode(children[i]);
-                                        INSERTARR(pathes,childpath);
-                                    }
-                                    loaddone();
-                                } else {
-                                    if(callback){
-                                        var cb = callback;
-                                        callback = null;
-                                        cb(err);
-                                    }
-                                }
-                            });
-                        }
-                        else{
-                            loaddone();
-                        }
-                    }
-                };
-                if(currentNodes[path]){
-                    pathloaded(null,currentNodes[path]);
-                }
-                else{
-                    currentCore.loadByPath(currentNodes["root"],path,pathloaded);
-                }
-            };
-
-            counter = 0;
-            for(i in patterns){
-                if(patterns.hasOwnProperty(i)){
-                    counter++;
-                }
-            }
-            if(counter>0){
-                for(i in patterns){
-                    if(patterns.hasOwnProperty(i)){
-                        loadpath(i,patterns[i].children !== undefined);
-                    }
-                }
-            } else {
-                if(callback){
-                    callback(null,[]);
-                }
-            }
-        };*/
-        var generateTerritoryEvents = function(userID,newpathes){
-            var start = timestamp();
-            timelog("[MEAS003][in]["+userID+"]");
-            var user = users[userID];
-            var events = [];
-            /*unload*/
-            for(var i=0;i<user.PATHES.length;i++){
-                if(newpathes.indexOf(user.PATHES[i]) === -1){
-                    events.push({etype:"unload",eid:user.PATHES[i]});
-                }
-            }
-
-            /*others*/
-            for(i=0;i<newpathes.length;i++){
-                var newkey = currentCore.getSingleNodeHash(currentNodes[newpathes[i]]);
-                if(user.PATHES.indexOf(newpathes[i]) === -1){
-                    events.push({etype:"load",eid:newpathes[i]});
-                }
-                else{
-                    if(user.KEYS[newpathes[i]] !== newkey){
-                        events.push({etype:"update",eid:newpathes[i]});
-                    }
-                }
-                user.KEYS[newpathes[i]] = newkey;
-            }
-
-            /*depending on the oneevent attribute we send it in one array or in events...*/
-            if(user.ONEEVENT){
-                user.UI.onOneEvent(events);
-            }
-            else{
-                for(i=0;i<events.length;i++){
-                    user.UI.onEvent(events[i].etype,events[i].eid);
-                }
-            }
-            timelog("[MEAS003][out]["+userID+"]{"+elapsedTime(start)+"ms}");
-        };
-        /*var updateUser = function(userID,patterns,callback){
-            var start = timestamp();
-            timelog("[MEAS001][in]["+userID+"]");
-            users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
-            if(currentCore){
-                buildTerritory(userID,patterns,function(err,newpathes){
-                    if(err){
-                        if(callback){
-                            var cb = callback;
-                            callback = null;
-                            cb(err);
-                        }
-                    } else {
-                        generateTerritoryEvents(userID,newpathes);
-                        users[userID].PATHES = newpathes;
-                        timelog("[MEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
-                        if(callback){
-                            callback();
-                        }
-                    }
-                });
-            }
-            else{
-                logger.debug("we do not have root yet...");
-            }
-        };*/
-        /*var updateAllUser = function(callback){
-            var start = timestamp();
-            timelog("[MEAS000][in]");
-            var counter = 0;
-            var userupdated = function(err){
-                if(err){
-                    if(callback){
-                        var cb = callback;
-                        callback = null;
-                        cb(err);
-                    }
-                } else {
-                    if(--counter === 0){
-                        timelog("[MEAS000][out]{"+elapsedTime(start)+"ms}");
-                        if(callback){
-                            callback();
-                        }
-                    }
-                }
-            };
-
-            for(var i in users){
-                if(users.hasOwnProperty(i)){
-                    counter++;
-                }
-            }
-            if(counter>0){
-                for(i in users){
-                    if(users.hasOwnProperty(i)){
-                        updateUser(i,users[i].PATTERNS,userupdated);
-                    }
-                }
-            } else {
-                if(callback){
-                    callback();
-                }
-            }
-        };*/
         var moveNode = function(path,parentpath){
             var node = currentNodes[path];
             var parent = currentNodes[parentpath];
