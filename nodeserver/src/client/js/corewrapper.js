@@ -881,6 +881,7 @@ define(['logManager',
     };
     ClientNode = function(node,core){
         var ownpath = core.getStringPath(node);
+        var ownpathpostfix = ownpath === "" ? "" : "/";
         this.getParentId = function(){
             var parent = core.getParent(node);
             if(parent){
@@ -894,9 +895,8 @@ define(['logManager',
         };
         this.getChildrenIds = function(){
             var children = core.getChildrenRelids(node);
-            ownpath += ownpath === "" ? "" : "/";
             for(var i=0;i<children.length;i++){
-                children[i]=ownpath+children[i];
+                children[i]=ownpath+ownpathpostfix+children[i];
             }
             return children;
         };
@@ -931,7 +931,7 @@ define(['logManager',
         };
 
         var getNodePath = function(node){
-            var path = core.getStringPath(node);
+            var path = /*core.getStringPath(node)*/ownpath;
             if(path === ""){
                 path = "root";
             }
