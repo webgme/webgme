@@ -7,13 +7,17 @@ public final class Constant<Type> implements Promise<Type> {
 		this.value = value;
 	}
 
-	@Override
-	public boolean isFulfilled() {
-		return true;
+	public Type getValue() {
+		return value;
 	}
 
 	@Override
-	public Type getValue() {
-		return value;
+	public void cancel(Exception reason) {
+	}
+
+	@Override
+	public void setParent(Future<?> parent) {
+		// to force the use of the more efficient getValue
+		assert (false);
 	}
 }

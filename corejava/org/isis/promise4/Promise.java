@@ -1,5 +1,7 @@
 package org.isis.promise4;
 
 public interface Promise<Type> {
-	void cancel();
+	void cancel(Exception reason);
+
+	void setParent(Future<?> parent);
 }
