@@ -16,7 +16,7 @@ define(['jquery',
                                                         raphaeljs,
                                                         notificationManager,
                                                         ModelComponent,
-                                                        ModelEditorConnectionComponent,
+                                                        ConnectionComponent,
                                                         ConnectionPointManager) {
 
     var ModelEditorView;
@@ -307,7 +307,7 @@ define(['jquery',
         this._longUpdateList.insertedConnections.push(componentId);
         this._connectionComponents.push(componentId);
 
-        newComponent = this._childComponents[componentId] = new ModelEditorConnectionComponent(objDescriptor.id);
+        newComponent = this._childComponents[componentId] = new ConnectionComponent(objDescriptor.id);
         newComponent._initialize(objDescriptor);
 
         return newComponent;
@@ -1426,7 +1426,9 @@ define(['jquery',
             margin = 15,
             cW = this._skinParts.childrenContainer.outerWidth(),
             cH = this._skinParts.childrenContainer.outerHeight(),
-            self = this;
+            self = this,
+            selectionSpecificToolBox,
+            minBBoxWidth = 100;
 
         if (bBox.hasOwnProperty("x")) {
 
@@ -1453,6 +1455,11 @@ define(['jquery',
 
             bBox.w = bBox.x2 - bBox.x;
             bBox.h = bBox.y2 - bBox.y;
+            if (bBox.w < minBBoxWidth) {
+                bBox.x -= (minBBoxWidth - bBox.w) / 2;
+                bBox.x2 += (minBBoxWidth - bBox.w) / 2;
+                bBox.w = bBox.x2 - bBox.x;
+            }
 
             this._skinParts.selectionOutline.empty();
 
@@ -1515,6 +1522,24 @@ define(['jquery',
                     event.stopPropagation();
                     event.preventDefault();
                 });
+
+                if ($.isFunction(this._childComponents[this._selectedComponentIds[0]].getComponentSpecificToolBox)) {
+                    selectionSpecificToolBox = this._childComponents[this._selectedComponentIds[0]].getComponentSpecificToolBox();
+
+                    if (selectionSpecificToolBox && selectionSpecificToolBox !== "") {
+                        this._skinParts.specificActions = $('<div/>', {
+                            "class" : "specificActions"
+                        });
+
+                        this._skinParts.specificActions.append(selectionSpecificToolBox);
+
+                        this._skinParts.specificActions.on('mousedown mouseup',function (event) {
+                            event.stopPropagation();
+                        });
+
+                        this._skinParts.selectionOutline.append(this._skinParts.specificActions);
+                    }
+                }
             }
 
             /* END OF - ADD BUTTONS TO SELECTION OUTLINE*/
