@@ -209,15 +209,15 @@ define(['logManager',
             if (this._ports.hasOwnProperty(i)) {
                 if (i !== portId) {
                     if (this._ports[i].orientation === this._ports[portId].orientation) {
-                        if (portToAppendBefore === null) {
-                            if ((this._ports[portId].position.y < this._ports[i].position.y) ||
-                                    ((this._ports[portId].position.y === this._ports[i].position.y) && (this._ports[portId].title < this._ports[i].title))) {
+                        if ((this._ports[portId].position.y < this._ports[i].position.y) ||
+                                ((this._ports[portId].position.y === this._ports[i].position.y) && (this._ports[portId].title < this._ports[i].title))) {
+                            if (portToAppendBefore === null) {
                                 portToAppendBefore = i;
-                            }
-                        } else {
-                            if ((this._ports[i].position.y < this._ports[portToAppendBefore].position.y) ||
-                                    ((this._ports[i].position.y === this._ports[portToAppendBefore].position.y) && (this._ports[i].title < this._ports[portToAppendBefore].title))) {
-                                portToAppendBefore = i;
+                            } else {
+                                if ((this._ports[i].position.y < this._ports[portToAppendBefore].position.y) ||
+                                        ((this._ports[i].position.y === this._ports[portToAppendBefore].position.y) && (this._ports[i].title < this._ports[portToAppendBefore].title))) {
+                                    portToAppendBefore = i;
+                                }
                             }
                         }
                     }
