@@ -110,12 +110,14 @@ define(['logManager',
                 nodeData;
 
             //TODO: bulk
-            self._client.disableEventToUI(self.territoryId);
+            //self._client.disableEventToUI(self.territoryId);
+            self._client.startTransaction();
             for (i = 0; i < components.length; i += 1) {
                 nodeData = components[i];
                 self._client.setRegistry(nodeData.id, nodeRegistryNames.position, { "x": nodeData.x, "y": nodeData.y });
             }
-            self._client.enableEventToUI(self.territoryId);
+            //self._client.enableEventToUI(self.territoryId);
+            self._client.completeTransaction();
         };
 
         this._modelEditorView.onAutRename = function (components) {
@@ -123,24 +125,28 @@ define(['logManager',
                 nodeData;
 
             //TODO: bulk
-            self._client.disableEventToUI(self.territoryId);
+            //self._client.disableEventToUI(self.territoryId);
+            self._client.startTransaction();
             for (i = 0; i < components.length; i += 1) {
                 nodeData = components[i];
                 self._client.setAttributes(nodeData.id, nodeAttributeNames.name, nodeData.title);
             }
-            self._client.enableEventToUI(self.territoryId);
+            self._client.completeTransaction();
+            //self._client.enableEventToUI(self.territoryId);
         };
 
         this._modelEditorView.onCreateModels = function (models) {
             var i;
 
             //TODO: bulk
-            self._client.disableEventToUI(self.territoryId);
+            //self._client.disableEventToUI(self.territoryId);
+            self._client.startTransaction();
             for (i = 0; i < models.length; i += 1) {
                 self._client.createChild({ "parentId": self._currentNodeInfo.id,
                                            "name": models[i].name });
             }
-            self._client.enableEventToUI(self.territoryId);
+            self._client.completeTransaction();
+            //self._client.enableEventToUI(self.territoryId);
         };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
