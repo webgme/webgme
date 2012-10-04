@@ -1,94 +1,131 @@
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Miklos Maroti
+ */
+
 package org.isis.promise4;
 
 public abstract class Future<Type> implements Promise<Type> {
 	static final short STATE_EMPTY = 0; // null
-	static final short STATE_VALUE = 1; // Promise<Type>
-	static final short STATE_ERROR = 2; // Exception
-	static final short STATE_CANCEL = 3; // Exception
+	static final short STATE_FORWARDING = 1; // Future<Type>
+	static final short STATE_RESOLVED = 1; // Promise<Type>
+	static final short STATE_ARGUMENT = 2; // Future<?>
+	static final short STATE_REJECTED = 3; // Exception
 
 	private short state;
 	private Object object;
-	private Future<?> parent;
 
 	protected Future() {
 		state = STATE_EMPTY;
 	}
 
-	protected abstract <Arg> void childResolved(Future<Arg> child,
-			Promise<Arg> promise);
+	Object getObject() {
+		return object;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public final void requestForwarding(Future<Type> parent) {
+		assert (parent != null);
 
-	protected final void resolve(Promise<Type> promise) {
-		short state;
+		short oldState;
+		Object oldObject;
+
 		synchronized (this) {
-			state = this.state;
-			if (state <= STATE_VALUE) {
-				this.state = STATE_VALUE;
-				this.object = promise;
+			oldState = state;
+			oldObject = object;
+
+			if (oldState <= STATE_FORWARDING) {
+				state = STATE_FORWARDING;
+				object = parent;
 			}
 		}
 
-		if (state <= STATE_VALUE) {
-			if (parent != null)
-				parent.childResolved(this, promise);
-			else
-				promise.setParent(this);
-		}
-	}
-
-	protected final void childFailed(Exception error) {
-		assert (error != null);
-
-		futureCanceled(error);
-		reject(error);
-	}
-
-	protected final void reject(Exception error) {
-		assert (error != null);
-
-		short state;
-		synchronized (this) {
-			state = this.state;
-			if (state < STATE_VALUE) {
-				this.state = STATE_ERROR;
-				this.object = error;
-			}
-		}
-
-		if (state < STATE_VALUE && parent != null)
-			parent.childFailed(error);
-	}
-
-	protected abstract void futureCanceled(Exception reason);
-
-	@Override
-	public final void cancel(Exception reason) {
-		short state;
-		synchronized (this) {
-			state = this.state;
-			if (state < STATE_VALUE) {
-				this.state = STATE_CANCEL;
-				this.object = reason;
-			}
-		}
-
-		if (state < STATE_VALUE)
-			futureCanceled(reason);
+		if (oldState == STATE_RESOLVED)
+			parent.resolve((Promise<Type>) oldObject);
+		else if (oldState == STATE_REJECTED)
+			parent.reject((Exception) oldObject);
+		else
+			assert (oldState != STATE_ARGUMENT);
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final void setParent(Future<?> parent) {
+	public final void requestArgument(Future<?> parent) {
 		assert (parent != null);
 
-		short state;
+		short oldState;
+		Object oldObject;
+
 		synchronized (this) {
-			this.parent = parent;
-			state = this.state;
+			oldState = state;
+			oldObject = object;
+
+			if (oldState <= STATE_ARGUMENT) {
+				state = STATE_ARGUMENT;
+				object = parent;
+			}
 		}
 
-		if (state == STATE_VALUE)
-			parent.childResolved(this, (Promise<Type>) object);
-		else if (state == STATE_ERROR)
-			parent.childFailed((Exception) object);
+		if (oldState == STATE_RESOLVED)
+			parent.argumentResolved(this, (Promise<Type>) oldObject);
+		else if (oldState == STATE_REJECTED)
+			parent.reject((Exception) oldObject);
+		else
+			assert (oldState != STATE_FORWARDING);
 	}
+
+	protected abstract <Arg> void argumentResolved(Future<Arg> child,
+			Promise<Arg> promise);
+
+	@SuppressWarnings("unchecked")
+	protected final void resolve(Promise<Type> promise) {
+		assert (promise != null);
+
+		short oldState;
+		Object oldObject;
+
+		synchronized (this) {
+			oldState = state;
+			oldObject = object;
+
+			if (oldState <= STATE_RESOLVED) {
+				state = STATE_RESOLVED;
+				object = promise;
+			}
+		}
+
+		if (oldState == STATE_ARGUMENT)
+			((Future<?>) oldObject).argumentResolved(this, promise);
+		else if (oldState == STATE_FORWARDING)
+			((Future<Type>) oldObject).resolve(promise);
+		else if (oldState <= STATE_RESOLVED)
+			promise.requestForwarding(this);
+	}
+
+	@Override
+	public final void reject(Exception error) {
+		assert (error != null);
+
+		short oldState;
+		Object oldObject;
+
+		synchronized (this) {
+			oldState = state;
+			oldObject = object;
+
+			if (oldState < STATE_REJECTED) {
+				state = STATE_REJECTED;
+				object = error;
+			}
+		}
+
+		if (oldState < STATE_REJECTED)
+			rejectChildren(error);
+
+		if (oldState == STATE_ARGUMENT || oldState == STATE_FORWARDING)
+			((Future<?>) oldObject).reject(error);
+	}
+
+	protected abstract void rejectChildren(Exception error);
 }

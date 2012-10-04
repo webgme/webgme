@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Miklos Maroti
+ */
+
 package org.isis.promise4;
 
 public final class Constant<Type> implements Promise<Type> {
@@ -12,12 +18,18 @@ public final class Constant<Type> implements Promise<Type> {
 	}
 
 	@Override
-	public void cancel(Exception reason) {
+	public void reject(Exception reason) {
 	}
 
 	@Override
-	public void setParent(Future<?> parent) {
-		// to force the use of the more efficient getValue
+	public void requestArgument(Future<?> parent) {
+		// force the use of the more efficient getValue
+		assert (false);
+	}
+
+	@Override
+	public void requestForwarding(Future<Type> parent) {
+		// force the use of the more efficient getValue
 		assert (false);
 	}
 }

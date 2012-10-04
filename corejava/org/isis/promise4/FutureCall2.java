@@ -13,20 +13,17 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 
 	public FutureCall2(Promise<Arg0> arg0, Promise<Arg1> arg1) {
 		assert (arg0 != null && arg1 != null);
-		
-		
+
+		this.child0 = arg0;
+		this.child1 = arg1;
+
+		execute();
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	protected <Arg> void childResolved(Future<Arg> child, Promise<Arg> promise) {
-		if (child == child0)
-			child0 = (Promise<Arg0>) promise;
-		else {
-			assert (child == child1);
-			child1 = (Promise<Arg1>) promise;
-		}
+	public abstract Promise<Type> execute(Arg0 arg0, Arg1 arg1)
+			throws Exception;
 
+	protected final void execute() {
 		if (child0 instanceof Constant<?> && child1 instanceof Constant<?>) {
 			try {
 				Arg0 arg0 = ((Constant<Arg0>) child0).getValue();
@@ -40,11 +37,24 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 	}
 
 	@Override
-	protected void futureCanceled(Exception reason) {
-		child0.cancel(reason);
-		child1.cancel(reason);
+	@SuppressWarnings("unchecked")
+	protected final <Arg> void argumentResolved(Future<Arg> child,
+			Promise<Arg> promise) {
+		synchronized (this) {
+			if (child == child0)
+				child0 = (Promise<Arg0>) promise;
+			else {
+				assert (child == child1);
+				child1 = (Promise<Arg1>) promise;
+			}
+		}
+
+		execute();
 	}
 
-	public abstract Promise<Type> execute(Arg0 arg0, Arg1 arg1)
-			throws Exception;
+	@Override
+	protected final void rejectChildren(Exception reason) {
+		child0.reject(reason);
+		child1.reject(reason);
+	}
 }
