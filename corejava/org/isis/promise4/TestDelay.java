@@ -8,11 +8,11 @@ package org.isis.promise4;
 
 public class TestDelay {
 
-	static class Delayed extends Future<Integer> implements Runnable {
+	static class DelayedInt extends Future<Integer> implements Runnable {
 		long delay;
 		int value;
 
-		public Delayed(long delay, int value) {
+		public DelayedInt(long delay, int value) {
 			this.delay = delay;
 			this.value = value;
 
@@ -41,7 +41,7 @@ public class TestDelay {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Integer value = Executor.obtain(new Delayed(1000, 20));
+		Integer value = Executor.obtain(new DelayedInt(1000, 20));
 		System.out.println(value);
 	}
 }
