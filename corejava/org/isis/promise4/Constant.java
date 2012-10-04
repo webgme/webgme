@@ -18,18 +18,20 @@ public final class Constant<Type> implements Promise<Type> {
 	}
 
 	@Override
+	public Promise<Type> getPromise() {
+		return this;
+	}
+
+	@Override
 	public void reject(Exception reason) {
 	}
 
 	@Override
-	public void requestArgument(Future<?> parent) {
-		// force the use of the more efficient getValue
-		assert (false);
+	public void requestArgument(short index, Future<?> parent) {
+		parent.argumentResolved(index, this);
 	}
 
 	@Override
 	public void requestForwarding(Future<Type> parent) {
-		// force the use of the more efficient getValue
-		assert (false);
 	}
 }

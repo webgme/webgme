@@ -14,16 +14,25 @@ public abstract class Future<Type> implements Promise<Type> {
 	static final short STATE_REJECTED = 3; // Exception
 
 	private short state;
+	private short index;
 	private Object object;
 
 	protected Future() {
 		state = STATE_EMPTY;
 	}
 
-	Object getObject() {
-		return object;
+	@Override
+	@SuppressWarnings("unchecked")
+	public Promise<Type> getPromise() {
+		Promise<Type> promise = null;
+		synchronized (this) {
+			if (state == STATE_RESOLVED)
+				promise = (Promise<Type>) object;
+		}
+		return promise;
 	}
-	
+
+	@Override
 	@SuppressWarnings("unchecked")
 	public final void requestForwarding(Future<Type> parent) {
 		assert (parent != null);
@@ -51,7 +60,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final void requestArgument(Future<?> parent) {
+	public final void requestArgument(short index, Future<?> parent) {
 		assert (parent != null);
 
 		short oldState;
@@ -64,19 +73,20 @@ public abstract class Future<Type> implements Promise<Type> {
 			if (oldState <= STATE_ARGUMENT) {
 				state = STATE_ARGUMENT;
 				object = parent;
+				this.index = index;
 			}
 		}
 
 		if (oldState == STATE_RESOLVED)
-			parent.argumentResolved(this, (Promise<Type>) oldObject);
+			parent.argumentResolved(index, (Promise<Type>) oldObject);
 		else if (oldState == STATE_REJECTED)
 			parent.reject((Exception) oldObject);
 		else
 			assert (oldState != STATE_FORWARDING);
 	}
 
-	protected abstract <Arg> void argumentResolved(Future<Arg> child,
-			Promise<Arg> promise);
+	protected abstract <Arg> void argumentResolved(short index,
+			Promise<Arg> argument);
 
 	@SuppressWarnings("unchecked")
 	protected final void resolve(Promise<Type> promise) {
@@ -96,7 +106,7 @@ public abstract class Future<Type> implements Promise<Type> {
 		}
 
 		if (oldState == STATE_ARGUMENT)
-			((Future<?>) oldObject).argumentResolved(this, promise);
+			((Future<?>) oldObject).argumentResolved(index, promise);
 		else if (oldState == STATE_FORWARDING)
 			((Future<Type>) oldObject).resolve(promise);
 		else if (oldState <= STATE_RESOLVED)

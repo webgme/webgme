@@ -11,23 +11,23 @@ public class Executor {
 	public static <Type> Type obtain(Promise<Type> promise) throws Exception {
 		assert (promise != null);
 
-		if( promise instanceof Constant<?> )
-			return ((Constant<Type>)promise).getValue();
-		
+		if (promise instanceof Constant<?>)
+			return ((Constant<Type>) promise).getValue();
+
 		final class Waiter extends Future<Void> {
 
 			Object result = null;
-			
+
 			Waiter(Promise<Type> promise) {
-				promise.requestArgument(this);
+				promise.requestArgument((short) 0, this);
 			}
-			
+
 			@Override
-			protected synchronized <Arg> void argumentResolved(Future<Arg> child,
+			protected synchronized <Arg> void argumentResolved(short index,
 					Promise<Arg> promise) {
-				assert(promise != null);
-				
-				if( promise instanceof Constant<?> ) {
+				assert (promise != null);
+
+				if (promise instanceof Constant<?>) {
 					result = promise;
 					this.notifyAll();
 				}
@@ -35,8 +35,8 @@ public class Executor {
 
 			@Override
 			protected synchronized void rejectChildren(Exception error) {
-				assert(error != null);
-				
+				assert (error != null);
+
 				result = error;
 				this.notifyAll();
 			}
@@ -48,10 +48,10 @@ public class Executor {
 			if (waiter.result == null)
 				waiter.wait();
 		}
-		
-		if( waiter.result instanceof Constant<?> )
-			return ((Constant<Type>)waiter.result).getValue();
-		
-		throw (Exception)waiter.result;
+
+		if (waiter.result instanceof Constant<?>)
+			return ((Constant<Type>) waiter.result).getValue();
+
+		throw (Exception) waiter.result;
 	}
 }
