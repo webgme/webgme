@@ -348,8 +348,17 @@ define(['logManager',
             var i,
                 candelete = [];
             for(i=0;i<pathes.length;i++){
-                var node = self.getNode(pathes[i]);
+                /*var node = self.getNode(pathes[i]);
                 if(pathes.indexOf(node.getParentId()) === -1){
+                    candelete.push(true);
+                } else {
+                    candelete.push(false);
+                }*/
+                var parentpath = currentCore.getStringPath(currentCore.getParent(currentNodes[pathes[i]]));
+                if(parentpath === ""){
+                    parentpath = "root";
+                }
+                if(pathes.indexOf(parentpath) === -1){
                     candelete.push(true);
                 } else {
                     candelete.push(false);
