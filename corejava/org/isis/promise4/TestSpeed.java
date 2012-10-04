@@ -6,7 +6,35 @@
 
 package org.isis.promise4;
 
-public class SpeedTest {
+public class TestSpeed {
+	
+	static class Delayed extends Future<Integer> implements Runnable {
+		public Delayed() {
+			Thread thread = new Thread(this);
+			thread.start();
+		}
+
+		@Override
+		public void run() {
+			try {
+				Thread.sleep(10);
+				resolve(new Constant<Integer>(10));
+			}
+			catch(Exception error) {
+				reject(error);
+			}
+		}
+
+		@Override
+		protected <Arg> void argumentResolved(short index, Promise<Arg> argument) {
+			assert(false);
+		}
+
+		@Override
+		protected void rejectChildren(Exception error) {
+		}
+	}
+	
 	static Promise<Integer> fibonacci(int n) {
 		if (n <= 1)
 			return new Constant<Integer>(n);

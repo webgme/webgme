@@ -18,7 +18,7 @@ public final class Constant<Type> implements Promise<Type> {
 	}
 
 	@Override
-	public Promise<Type> getPromise() {
+	public Constant<Type> getConstant() {
 		return this;
 	}
 

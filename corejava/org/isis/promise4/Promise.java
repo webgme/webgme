@@ -8,7 +8,7 @@ package org.isis.promise4;
 
 public interface Promise<Type> {
 	
-	Promise<Type> getPromise();
+	Constant<Type> getConstant();
 	
 	void reject(Exception error);
 

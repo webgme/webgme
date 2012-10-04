@@ -23,13 +23,12 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public Promise<Type> getPromise() {
-		Promise<Type> promise = null;
-		synchronized (this) {
-			if (state == STATE_RESOLVED)
-				promise = (Promise<Type>) object;
-		}
-		return promise;
+	public final Constant<Type> getConstant() {
+		Object object = this.object;
+		if (object instanceof Constant<?>)
+			return (Constant<Type>) object;
+		else
+			return null;
 	}
 
 	@Override
