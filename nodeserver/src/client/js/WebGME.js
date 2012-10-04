@@ -151,6 +151,9 @@ define([   'order!jquery',
             mainView.destroy();
         }
 
+        $("#visualizerPanel").find('a[class="btn-env"]').parent().removeClass('active');
+        $("#visualizerPanel").find('a[class="btn-env"][id="' + visualizer + '"]').parent().addClass('active');
+
         mainController = null;
         mainView = null;
         if (visualizer === "ModelEditor") {
@@ -174,8 +177,7 @@ define([   'order!jquery',
     $("#visualizerPanel").find('a[class="btn-env"]').click(function (event) {
         var vis = $(this).attr("id");
 
-        $("#visualizerPanel").find('a[class="btn-env"]').parent().removeClass('active');
-        $(this).parent().addClass('active');
+
 
         setActiveVisualizer(vis);
         event.stopPropagation();
@@ -239,7 +241,7 @@ define([   'order!jquery',
     return {
         start : function () {
             doConnect();
-            setActiveVisualizer("ModelEditor");
+            setActiveVisualizer("ModelEditor2");
         }
     };
 });
