@@ -7,8 +7,8 @@
     margin-left: -6px;
 }
 
-.button-bar {
-    height:29px;
+.button-bar-20 {
+    height:22px;
     overflow:hidden;
     float:left;
     border-radius:3px;
@@ -20,17 +20,17 @@
     pointer-events: all;
 }
 
-.button-bar.disabled {
+.button-bar-20.disabled {
     border-color:#b3b3b3;
 }
 
-.button-bar-item {
+.button-bar-20-item {
     position:relative;
     border:#808080 solid 1px;
     border-left-width:0;
-    width:23px;
-    height:23px;
-    padding:2px 3px 2px;
+    width:20px;
+    height:20px;
+    padding:0px;
     float:left;
     -webkit-box-shadow:inset 0 1px 0 0 #ffffff;
     -moz-box-shadow:inset 0 1px 0 0 #ffffff;
@@ -45,7 +45,7 @@
     filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e6e6e6',GradientType=0 );
 }
 
-.button-bar-item:first-child {
+.button-bar-20-item:first-child {
     border-left-width:1px;
     -webkit-border-top-left-radius:3px;
     -moz-border-radius-topleft:3px;
@@ -55,7 +55,7 @@
     border-bottom-left-radius:3px;
 }
 
-.button-bar-item:last-child {
+.button-bar-20-item:last-child {
     -webkit-border-top-right-radius:3px;
     -moz-border-radius-topright:3px;
     border-top-right-radius:3px;
@@ -64,7 +64,7 @@
     border-bottom-right-radius:3px;
 }
 
-.button-bar-item:active {
+.button-bar-20-item:active {
     -webkit-box-shadow:inset 0 1px 0 0 #f2f2f2;
     -moz-box-shadow:inset 0 1px 0 0 #f2f2f2;
     box-shadow:inset 0 1px 0 0 #f2f2f2;
@@ -78,7 +78,7 @@
     filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#e6e6e6', endColorstr='#cccccc',GradientType=0 );
 }
 
-.button-bar-item.selected{
+.button-bar-20-item.selected{
     -webkit-box-shadow:inset 0 1px 0 0 #d9d9d9;
     -moz-box-shadow:inset 0 1px 0 0 #d9d9d9;
     box-shadow:inset 0 1px 0 0 #d9d9d9;
@@ -92,7 +92,7 @@
     filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#cccccc', endColorstr='#b3b3b3',GradientType=0 );
 }
 
-.button-bar-item.selected:active {
+.button-bar-20-item.selected:active {
     -webkit-box-shadow:inset 0 1px 0 0 #bfbfbf;
     -moz-box-shadow:inset 0 1px 0 0 #bfbfbf;
     box-shadow:inset 0 1px 0 0 #bfbfbf;
@@ -106,7 +106,7 @@
     filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#b3b3b3', endColorstr='#999999',GradientType=0 );
 }
 
-.button-bar .button-bar-item.disabled,.button-bar.disabled .button-bar-item {
+.button-bar-20 .button-bar-20-item.disabled,.button-bar-20.disabled .button-bar-20-item {
     border-color:#b3b3b3;
     -webkit-box-shadow:inset 0 1px 0 0 #ffffff;
     -moz-box-shadow:inset 0 1px 0 0 #ffffff;
@@ -121,20 +121,24 @@
     filter:progid:DXImageTransform.Microsoft.gradient( startColorstr='#f2f2f2', endColorstr='#e6e6e6',GradientType=0 );
 }
 
-.icon-13 {
-    height:26px;
-    width:26px;
-    padding:0;
+.icon-15 {
+    height:15px;
+    width:15px;
+    padding: 0;
+    margin-left: 2px;
 }
 
-.icon-13-line-shape-curved {
+.icon-15-line-shape-curved {
     background: url(../../img/curve.png) no-repeat;
+    background-size: 15px;
 }
 
-.icon-13-line-shape-straight {
+.icon-15-line-shape-straight {
     background: url(../../img/line.png) no-repeat;
+    background-size: 15px;
 }
 
-.icon-13-line-edit {
+.icon-15-line-edit {
     background: url(../../img/cogwheels.png) no-repeat;
+    background-size: 15px;
 }

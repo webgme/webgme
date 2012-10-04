@@ -8,16 +8,16 @@ define(['logManager',
                                          commonUtil,
                                          ComponentBase) {
 
-    var ModelEditorModelComponent;
+    var ModelComponent;
 
-    ModelEditorModelComponent = function (objId) {
+    ModelComponent = function (objId) {
         this._guid = objId;
 
         this._logger = logManager.create("ModelComponent_" + this._guid);
         this._logger.debug("Created");
     };
 
-    ModelEditorModelComponent.prototype._initialize = function (objDescriptor) {
+    ModelComponent.prototype._initialize = function (objDescriptor) {
         /*MODELEDITORCOMPONENT CONSTANTS*/
 
         this._zIndex = 10;
@@ -38,7 +38,7 @@ define(['logManager',
         this._initializeDecorator(objDescriptor);
     };
 
-    ModelEditorModelComponent.prototype._initializeDecorator = function (objDescriptor) {
+    ModelComponent.prototype._initializeDecorator = function (objDescriptor) {
         var decoratorName = objDescriptor.decorator,
             self = this;
 
@@ -62,9 +62,9 @@ define(['logManager',
         }
     };
 
-    ModelEditorModelComponent.prototype._DOMBase = $('<div/>').attr({ "class": "model" });
+    ModelComponent.prototype._DOMBase = $('<div/>').attr({ "class": "model" });
 
-    ModelEditorModelComponent.prototype._decoratorDownloaded = function (objDescriptor, DecoratorClass) {
+    ModelComponent.prototype._decoratorDownloaded = function (objDescriptor, DecoratorClass) {
         var self = this;
         this._decoratorInstance = new DecoratorClass(objDescriptor);
 
@@ -102,28 +102,28 @@ define(['logManager',
         //this._decoratorInstance.afterAppend();
     };
 
-    ModelEditorModelComponent.prototype._onMouseDown = function (event) {
+    ModelComponent.prototype._onMouseDown = function (event) {
         this._parentView.onComponentMouseDown(event, this._guid);
         event.stopPropagation();
         event.preventDefault();
     };
 
-    ModelEditorModelComponent.prototype._onMouseUp = function (event) {
+    ModelComponent.prototype._onMouseUp = function (event) {
         this._parentView.onComponentMouseUp(event, this._guid);
 //        event.stopPropagation();
     };
 
-    ModelEditorModelComponent.prototype._onDblClick = function (event) {
+    ModelComponent.prototype._onDblClick = function (event) {
         this._parentView.onComponentDblClick(this._guid);
         event.stopPropagation();
         event.preventDefault();
     };
 
-    ModelEditorModelComponent.prototype.decoratorUpdating = function () {
+    ModelComponent.prototype.decoratorUpdating = function () {
         this._updateConnEndPointsInView(false);
     };
 
-    ModelEditorModelComponent.prototype.decoratorUpdated = function () {
+    ModelComponent.prototype.decoratorUpdated = function () {
         this._updateConnEndPointsInView(true);
         this._registerMouseHandlers();
 
@@ -136,7 +136,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorModelComponent.prototype._updateConnEndPointsInView = function (register) {
+    ModelComponent.prototype._updateConnEndPointsInView = function (register) {
         var connEndPoints  = this.el.find(".connEndPoint"),
             connEndPointIds = [],
             list = {},
@@ -165,7 +165,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorModelComponent.prototype._registerMouseHandlers = function () {
+    ModelComponent.prototype._registerMouseHandlers = function () {
         var connStartElements = this.el.find(".startConn"),
             connFinishElements = this.el.find(".finishConn"),
             self = this;
@@ -227,7 +227,7 @@ define(['logManager',
         });
     };
 
-    ModelEditorModelComponent.prototype.updatingSubComponent = function (subComponentId) {
+    ModelComponent.prototype.updatingSubComponent = function (subComponentId) {
         var draggedComponent = this.el.find('.ui-draggable-dragging');
 
         if (draggedComponent.length > 0) {
@@ -240,7 +240,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorModelComponent.prototype.getBoundingBox = function (absolute) {
+    ModelComponent.prototype.getBoundingBox = function (absolute) {
         var bBox = {    "x": absolute === true ? $(this.el).offset().left : parseInt($(this.el).css("left"), 10),
             "y": absolute === true ? $(this.el).offset().top : parseInt($(this.el).css("top"), 10),
             "width": parseInt($(this.el).outerWidth(true), 10),
@@ -251,18 +251,7 @@ define(['logManager',
         return bBox;
     };
 
-    /*ModelEditorModelComponent.prototype.render = function () {
-        var self = this;
-
-        if (this._decoratorInstance === null) {
-            this._logger.debug("this._decoratorInstance IS null");
-        } else {
-            //this._initializeModelUI();
-            this._decoratorInstance.render();
-        }
-    };*/
-
-    ModelEditorModelComponent.prototype.destroy = function () {
+    ModelComponent.prototype.destroy = function () {
         this._destroying = true;
 
         //no good because if we do it here, cleanup will happen earlier than the usage of this information
@@ -272,22 +261,18 @@ define(['logManager',
             this._decoratorInstance.destroy();
         }
 
-        //removed in ModelEditorView
-        //this.el.remove();
-        //this.el.empty();
-
         this._logger.debug("destroyed");
     };
 
-    ModelEditorModelComponent.prototype.onSelect = function () {
+    ModelComponent.prototype.onSelect = function () {
         this.el.addClass("selected");
     };
 
-    ModelEditorModelComponent.prototype.onDeselect = function () {
+    ModelComponent.prototype.onDeselect = function () {
         this.el.removeClass("selected");
     };
 
-    ModelEditorModelComponent.prototype.update = function (objDescriptor) {
+    ModelComponent.prototype.update = function (objDescriptor) {
         this._name = objDescriptor.name || "";
 
         this._updateConnEndPointsInView(false);
@@ -295,11 +280,9 @@ define(['logManager',
         if (this._decoratorInstance) {
             this._decoratorInstance.update(objDescriptor);
         }
-
-        //this._notifyParentAboutBBoxChange();
     };
 
-    ModelEditorModelComponent.prototype.getClonedEl = function () {
+    ModelComponent.prototype.getClonedEl = function () {
         var clonedEl = this.el.clone().attr("id", this._guid + "_clone"),
             connStartElements = clonedEl.find(".startConn"),
             connFinishElements = clonedEl.find(".finishConn"),
@@ -336,5 +319,5 @@ define(['logManager',
         return clonedEl;
     };
 
-    return ModelEditorModelComponent;
+    return ModelComponent;
 });

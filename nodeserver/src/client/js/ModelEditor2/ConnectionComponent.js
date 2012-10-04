@@ -18,9 +18,9 @@ define(['logManager',
                                          connectionSegmentLine,
                                          connectionSegmentBezier) {
 
-    var ModelEditorConnectionComponent;
+    var ConnectionComponent;
 
-    ModelEditorConnectionComponent = function (objId) {
+    ConnectionComponent = function (objId) {
         this._guid = objId;
 
         this._logger = logManager.create("ConnectionComponent_" + this._guid);
@@ -28,9 +28,9 @@ define(['logManager',
 
     };
 
-    ModelEditorConnectionComponent.prototype._DOMBase = $('<div/>').attr({ "class": "connection" });
+    ConnectionComponent.prototype._DOMBase = $('<div/>').attr({ "class": "connection" });
 
-    ModelEditorConnectionComponent.prototype._initialize = function (objDescriptor) {
+    ConnectionComponent.prototype._initialize = function (objDescriptor) {
         var self = this;
 
         /*MODELEDITORCONNECTION CONSTANTS*/
@@ -78,7 +78,8 @@ define(['logManager',
             "arrow-end": this._pathAttributes.arrowEnd,*/
             "stroke": this._pathAttributes.color,
             "fill": "none",
-            "stroke-width": this._pathAttributes.width});
+            "stroke-width": this._pathAttributes.width
+        });
 
         this._skinParts.pathShadow = this._paper.path("M0,0L1,0");
         //this._skinParts.pathShadow.remove();
@@ -107,7 +108,7 @@ define(['logManager',
         this._parentView.connectionInitializationCompleted(this._guid);
     };
 
-    ModelEditorConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
+    ConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
         var i,
             segmentPointList;
 
@@ -175,7 +176,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorConnectionComponent.prototype._adjustNeighbourSegmentPointByEndCoordConnectorLength = function (nSegmentPoint, endCoord) {
+    ConnectionComponent.prototype._adjustNeighbourSegmentPointByEndCoordConnectorLength = function (nSegmentPoint, endCoord) {
         if (endCoord.hasOwnProperty("connectorLength")) {
             switch (endCoord.dir) {
             case "N":
@@ -196,24 +197,24 @@ define(['logManager',
         }
     };
 
-    ModelEditorConnectionComponent.prototype._onMouseDown = function (event) {
+    ConnectionComponent.prototype._onMouseDown = function (event) {
         event.stopPropagation();
         //event.preventDefault();
         this._parentView.onComponentMouseDown(event, this._guid);
     };
 
-    ModelEditorConnectionComponent.prototype._onMouseUp = function (event) {
+    ConnectionComponent.prototype._onMouseUp = function (event) {
         this._parentView.onComponentMouseUp(event, this._guid);
 //        event.stopPropagation();
     };
 
-    ModelEditorConnectionComponent.prototype._onDblClick = function (event) {
+    ConnectionComponent.prototype._onDblClick = function (event) {
         event.stopPropagation();
         event.preventDefault();
         this._parentView.onComponentDblClick(this._guid);
     };
 
-    /*ModelEditorConnectionComponent.prototype.onDestroy = function () {
+    /*ConnectionComponent.prototype.onDestroy = function () {
         //end edit mode (if editing right now)
         this._endEditMode();
 
@@ -229,7 +230,7 @@ define(['logManager',
         this._logger.debug("onDestroy");
     };*/
 
-    /*ModelEditorConnectionComponent.prototype.onDestroyAsync = function (callbackFn) {
+    /*ConnectionComponent.prototype.onDestroyAsync = function (callbackFn) {
         var self = this,
             pathVisElements = this._paper.set();
 
@@ -264,98 +265,31 @@ define(['logManager',
     };*/
 
 
-    ModelEditorConnectionComponent.prototype.onSelect = function (isMultiple) {
+    ConnectionComponent.prototype.onSelect = function (isMultiple) {
         this._highlightPath();
         if (isMultiple === false) {
             this._showConnectionEndEditControls();
-
-            this._showContextMenu();
         }
     };
 
-    ModelEditorConnectionComponent.prototype.onDeselect = function () {
+    ConnectionComponent.prototype.onDeselect = function () {
         this._unhighlightPath();
         this._hideConnectionEndEditControls();
-        this._hideContextMenu();
         this._endEditMode();
     };
 
-    ModelEditorConnectionComponent.prototype._highlightPath = function () {
+    ConnectionComponent.prototype._highlightPath = function () {
         this._skinParts.pathShadow.attr({"opacity": this._pathAttributes.shadowOpacitySelected});
     };
 
-    ModelEditorConnectionComponent.prototype._unhighlightPath = function () {
+    ConnectionComponent.prototype._unhighlightPath = function () {
         this._skinParts.pathShadow.attr({"opacity": this._pathAttributes.shadowOpacity});
-    };
-
-    ModelEditorConnectionComponent.prototype._showContextMenu = function () {
-        var midPoint = this._skinParts.path.getPointAtLength(this._skinParts.path.getTotalLength() / 2),
-            self = this,
-            buttonBarWidth;
-
-        this._skinParts.toolTipMenu = $('<div/>').attr("id", this._guid + "_tooltip");
-        this.el.append(this._skinParts.toolTipMenu);
-
-        this._skinParts.toolTipMenu.outerWidth(100).outerHeight(30);
-
-        this._skinParts.toolTipMenu.html("<div class='button-bar'><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-curved'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-shape-straight'></div></div><div class='button-bar-item' style='display: block; '><div class='icon-13 icon-13-line-edit'></div></div></div>");
-
-        buttonBarWidth = this._skinParts.toolTipMenu.find(".button-bar").outerWidth(true);
-
-        //show Bezier / Simple line switch
-        this._skinParts.toolTipMenu.css({"left": midPoint.x - (buttonBarWidth / 2),
-            "top": midPoint.y + 20,
-            "position": "absolute",
-            "background-color": "rgba(0, 0, 0, 0)"});
-
-        this.bezierDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-curved").parent();
-        this.straightLineDiv = this._skinParts.toolTipMenu.find(".icon-13-line-shape-straight").parent();
-        this.editDiv = this._skinParts.toolTipMenu.find(".icon-13-line-edit").parent();
-
-        this.bezierDiv.attr("title", "Bezier curve");
-        this.straightLineDiv.attr("title", "Straight line");
-        this.editDiv.attr("title", "Edit segment points");
-
-        if (this._pathAttributes.lineType === "L") {
-            this.straightLineDiv.addClass("selected");
-            this.bezierDiv.bind('click', function (event) {
-                self._parentView.setLineType(self._guid, "B");
-                event.stopPropagation();
-            });
-        } else {
-            this.bezierDiv.addClass("selected");
-            this.straightLineDiv.bind('click', function (event) {
-                self._parentView.setLineType(self._guid, "L");
-                event.stopPropagation();
-            });
-        }
-
-        this.editDiv.bind('click', function (event) {
-            self._setEditMode();
-            event.stopPropagation();
-        });
-
-        this._skinParts.toolTipMenu.bind('mousedown', function (event) {
-            event.stopPropagation();
-        });
-
-        this._skinParts.toolTipMenu.bind('mouseup', function (event) {
-            event.stopPropagation();
-        });
-    };
-
-    ModelEditorConnectionComponent.prototype._hideContextMenu = function () {
-        if (this._skinParts.toolTipMenu) {
-            this._skinParts.toolTipMenu.remove();
-            this._skinParts.toolTipMenu = null;
-            delete this._skinParts.toolTipMenu;
-        }
     };
 
     /*
      * DRAGGABLE ENDPOINTS
      */
-    ModelEditorConnectionComponent.prototype._showConnectionEndEditControls = function () {
+    ConnectionComponent.prototype._showConnectionEndEditControls = function () {
         var opts;
 
         //editor circle at 'source' end
@@ -394,7 +328,7 @@ define(['logManager',
             "target": true});
     };
 
-    ModelEditorConnectionComponent.prototype._makeEndPointDraggable = function (opts) {
+    ConnectionComponent.prototype._makeEndPointDraggable = function (opts) {
         var self = this;
 
         opts.el.css("cursor", "move");
@@ -412,7 +346,6 @@ define(['logManager',
                 self._mouseStartPos = {"mX": event.pageX, "mY": event.pageY };
                 opts.el.addClass("connection-source");
                 self._parentView._hideSelectionOutline();
-                self._hideContextMenu();
             },
             stop: function (event, ui) {
                 opts.el.removeClass("connection-source");
@@ -452,7 +385,7 @@ define(['logManager',
         });
     };
 
-    ModelEditorConnectionComponent.prototype._repositionDragPoints = function (opts) {
+    ConnectionComponent.prototype._repositionDragPoints = function (opts) {
         if (opts.source) {
             if (this._skinParts.srcDragPoint) {
                 this._skinParts.srcDragPoint.css({
@@ -472,7 +405,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorConnectionComponent.prototype._hideConnectionEndEditControls = function () {
+    ConnectionComponent.prototype._hideConnectionEndEditControls = function () {
         if (this._skinParts.srcDragPoint) {
             this._skinParts.srcDragPoint.remove();
             delete this._skinParts.srcDragPoint;
@@ -491,9 +424,8 @@ define(['logManager',
     /*
      * EDIT MODE
      */
-    ModelEditorConnectionComponent.prototype._setEditMode = function () {
+    ConnectionComponent.prototype._setEditMode = function () {
         this._hideConnectionEndEditControls();
-        this._hideContextMenu();
 
         //turn on edit mode
         this._editParams.editMode = true;
@@ -504,7 +436,7 @@ define(['logManager',
         this._redrawConnection();
     };
 
-    ModelEditorConnectionComponent.prototype._endEditMode = function () {
+    ConnectionComponent.prototype._endEditMode = function () {
         var i;
 
         if (this._editParams.editMode === true) {
@@ -523,7 +455,7 @@ define(['logManager',
      * END OF - EDIT MODE
      */
 
-    ModelEditorConnectionComponent.prototype.destroy = function () {
+    ConnectionComponent.prototype.destroy = function () {
         this._destroying = true;
 
         //end edit mode (if editing right now)
@@ -543,7 +475,7 @@ define(['logManager',
         this._logger.debug("destroyed");
     };
 
-    ModelEditorConnectionComponent.prototype.getBoundingBox = function () {
+    ConnectionComponent.prototype.getBoundingBox = function () {
         var bBox;
 
         //only when the path is visible on the screen
@@ -563,7 +495,7 @@ define(['logManager',
         return bBox;
     };
 
-    ModelEditorConnectionComponent.prototype.update = function (objDescriptor) {
+    ConnectionComponent.prototype.update = function (objDescriptor) {
         this._connectionUpdated = true;
 
         this._initializeConnectionProps(objDescriptor);
@@ -571,7 +503,7 @@ define(['logManager',
         this._parentView._componentUpdated(this._guid);
     };
 
-    ModelEditorConnectionComponent.prototype._isVisible = function () {
+    ConnectionComponent.prototype._isVisible = function () {
         //only when the path is visible on the screen
         if (this._skinParts.path) {
             if (this._skinParts.path.node.style.display !== "none") {
@@ -582,7 +514,7 @@ define(['logManager',
         return false;
     };
 
-    ModelEditorConnectionComponent.prototype.setEndpointCoordinates = function (srcCoordinates, tgtCoordinates) {
+    ConnectionComponent.prototype.setEndpointCoordinates = function (srcCoordinates, tgtCoordinates) {
         var hasChanged = false;
         this._logger.debug("setEndpointCoordinates, srcCoordinates:'" + srcCoordinates + "', tgtCoordinates:'" + tgtCoordinates + "'");
 
@@ -604,15 +536,15 @@ define(['logManager',
         }
     };
 
-    ModelEditorConnectionComponent.prototype.setSourceCoordinates = function (srcCoordinates) {
+    ConnectionComponent.prototype.setSourceCoordinates = function (srcCoordinates) {
         this.setEndpointCoordinates(srcCoordinates, this._targetCoordinates);
     };
 
-    ModelEditorConnectionComponent.prototype.setTargetCoordinates = function (tgtCoordinates) {
+    ConnectionComponent.prototype.setTargetCoordinates = function (tgtCoordinates) {
         this.setEndpointCoordinates(this._sourceCoordinates, tgtCoordinates);
     };
 
-    ModelEditorConnectionComponent.prototype._render = function () {
+    ConnectionComponent.prototype._render = function () {
         var pathDef;
 
         if (this._sourceCoordinates !== null && this._targetCoordinates !== null) {
@@ -629,11 +561,6 @@ define(['logManager',
             this._skinParts.path.show();
             this._skinParts.pathShadow.show();
             this._redrawConnection();
-
-            if (this._skinParts.toolTipMenu) {
-                this._hideContextMenu();
-                this._showContextMenu();
-            }
         } else {
             this._logger.debug("_render, NOT VALID endpoints, hide connection");
             this._endEditMode();
@@ -644,12 +571,10 @@ define(['logManager',
 
             this._skinParts.path.hide();
             this._skinParts.pathShadow.hide();
-
-            this._hideContextMenu();
         }
     };
 
-    ModelEditorConnectionComponent.prototype._redrawConnection = function () {
+    ConnectionComponent.prototype._redrawConnection = function () {
         var pathDef,
             i,
             segmentPoint,
@@ -738,7 +663,7 @@ define(['logManager',
         }
     };
 
-    ModelEditorConnectionComponent.prototype.saveSegmentPoints = function (opts) {
+    ConnectionComponent.prototype.saveSegmentPoints = function (opts) {
         var i,
             segmentPointsToSave = [],
             remove = null,
@@ -782,11 +707,11 @@ define(['logManager',
 
     };
 
-    ModelEditorConnectionComponent.prototype.removeSegmentPoint = function (count) {
+    ConnectionComponent.prototype.removeSegmentPoint = function (count) {
         this.saveSegmentPoints({"remove": count});
     };
 
-    ModelEditorConnectionComponent.prototype.addSegmentPoint = function (count, x, y, cx, cy) {
+    ConnectionComponent.prototype.addSegmentPoint = function (count, x, y, cx, cy) {
         var d = { "x": x,
                 "y": y };
 
@@ -801,10 +726,43 @@ define(['logManager',
         this.saveSegmentPoints({"add": { "count": count, desc: d }});
     };
 
-    ModelEditorConnectionComponent.prototype.getClonedEl = function () {
+    ConnectionComponent.prototype.getClonedEl = function () {
         //return this.el.clone().attr("id", this._guid + "_clone");
         return undefined;
     };
 
-    return ModelEditorConnectionComponent;
+    ConnectionComponent.prototype.getComponentSpecificToolBox = function () {
+        var html = $("<div class='button-bar-20'><div class='button-bar-20-item' style='display: block; '><div class='icon-15 icon-15-line-shape-curved'></div></div><div class='button-bar-20-item' style='display: block; '><div class='icon-15 icon-15-line-shape-straight'></div></div><div class='button-bar-20-item' style='display: block; '><div class='icon-15-line-edit icon-15'></div></div></div>"),
+            bezierDiv = html.find(".icon-15-line-shape-curved").parent(),
+            straightLineDiv = html.find(".icon-15-line-shape-straight").parent(),
+            editDiv = html.find(".icon-15-line-edit").parent(),
+            self = this;
+
+        bezierDiv.attr("title", "Bezier curve");
+        straightLineDiv.attr("title", "Straight line");
+        editDiv.attr("title", "Edit segment points");
+
+        if (this._pathAttributes.lineType === "L") {
+            straightLineDiv.addClass("selected");
+            bezierDiv.bind('click', function (event) {
+                self._parentView.setLineType(self._guid, "B");
+                event.stopPropagation();
+            });
+        } else {
+            bezierDiv.addClass("selected");
+            straightLineDiv.bind('click', function (event) {
+                self._parentView.setLineType(self._guid, "L");
+                event.stopPropagation();
+            });
+        }
+
+        editDiv.bind('click', function (event) {
+            self._setEditMode();
+            event.stopPropagation();
+        });
+
+        return html;
+    };
+
+    return ConnectionComponent;
 });
