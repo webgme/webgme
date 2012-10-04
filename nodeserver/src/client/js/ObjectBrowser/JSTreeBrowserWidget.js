@@ -7,7 +7,7 @@ define(['order!jquery',
         'logManager',
         'commonUtil',
         'order!lib/jquery/jquery.hotkeys',
-        'order!lib/jquery/jquery.jstree'], function ($, util, logManager, commonUtil) {
+        'order!lib/jquery/jquery.jstree'], function (jQuery, util, logManager, commonUtil) {
 
     //load its own CSS file (css/JSTreeBrowserWidget.css)
     util.loadCSS('css/JSTreeBrowserWidget.css');
@@ -215,6 +215,8 @@ define(['order!jquery',
                 "url": "css/jstree/style.css"
             }
         });
+
+        this.treeInstance = jQuery.jstree._reference(treeViewE);
 
         //hook up 'node opened' EventHandler
         treeViewE.bind("open_node.jstree", function (e, data) {
@@ -432,7 +434,11 @@ define(['order!jquery',
          */
         this.createNode = function (parentNode, objDescriptor) {
             var newNode,
-                newNodeData;
+                newNodeData,
+                existingChildren,
+                i,
+                insertPos = -1,
+                cChild;
 
             //check if the parentNode is null or not
             //when null, the new node belongs to the root
@@ -458,8 +464,29 @@ define(['order!jquery',
                 newNodeData.state = "closed";
             }
 
+            //figure out its place in the tree
+            existingChildren = this.treeInstance._get_children(parentNode);
+
+            for (i = 0; i < existingChildren.length; i += 1) {
+                if (newNodeData.data.title < this.treeInstance.get_text(existingChildren[i])) {
+                    /*if (insertPos !== -1) {
+                        if (this.treeInstance.get_text(existingChildren[i]) < this.treeInstance.get_text(existingChildren[insertPos])) {
+                            insertPos = i;
+                        }
+                    } else {
+                        insertPos = i;
+                    }*/
+                    insertPos = i;
+                    break;
+                }
+            }
+
+            if (insertPos === -1) {
+                insertPos = "last";
+            }
+
             //using core module
-            newNode = treeViewE.jstree("create_node", parentNode, "last", newNodeData, false);
+            newNode = treeViewE.jstree("create_node", parentNode, insertPos, newNodeData, false);
 
             if (objDescriptor.icon) {
                 $(newNode[0].children[1].children[0]).css("background-image", "url(" + objDescriptor.icon + ")");
@@ -483,12 +510,20 @@ define(['order!jquery',
             var currentIcon,
                 currentlyHasChildren,
                 currentText,
-                nodeDataChanged = false; //by default there is nothing to update
+                nodeDataChanged = false, //by default there is nothing to update
+                existingChildren,
+                i,
+                parentNode,
+                selfIndex,
+                childNode,
+                insertPos = -1;
 
             //check if valid node
             if (!node) {
                 return;
             }
+
+            parentNode = this.treeInstance._get_parent(node);
 
             //set new text value (if any)
             if (objDescriptor.text) {
@@ -497,6 +532,37 @@ define(['order!jquery',
 
                 if (currentText !== objDescriptor.text) {
                     treeViewE.jstree("set_text", node, objDescriptor.text);
+
+                    if (parentNode && parentNode !== -1) {
+                        //figure out its place in the tree
+                        existingChildren = this.treeInstance._get_children(parentNode);
+
+                        for (i = 0; i < existingChildren.length; i += 1) {
+                            childNode = this.treeInstance._get_node(existingChildren[i]);
+                            if (childNode.attr("nId") !== node.attr("nId")) {
+                                if (objDescriptor.text < this.treeInstance.get_text(existingChildren[i])) {
+                                    insertPos = i;
+                                    break;
+                                }
+                            } else {
+                                selfIndex = i;
+                            }
+                        }
+
+                        if (insertPos === -1) {
+                            insertPos = "last";
+                        } else {
+                            if (insertPos === selfIndex + 1) {
+                                //no place change needed
+                                insertPos = -1;
+                            }
+                        }
+
+                        if (insertPos !== -1) {
+                            //need to replace it
+                            this.treeInstance.move_node(node, parentNode, insertPos, false, false, false);
+                        }
+                    }
 
                     //mark that change happened
                     nodeDataChanged = true;
