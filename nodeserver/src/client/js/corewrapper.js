@@ -894,13 +894,17 @@ define(['logManager',
         this.getParentId = function(){
             var parent = core.getParent(node);
             if(parent){
-                return getNodePath(parent);
+                var parentpath = core.getStringPath(parent);
+                if(parentpath === ""){
+                    parentpath = "root";
+                }
+                return parentpath;
             } else {
                 return null;
             }
         };
         this.getId = function(){
-            return getNodePath(node);
+            return getClientNodePath(node);
         };
         this.getChildrenIds = function(){
             var children = core.getChildrenRelids(node);
@@ -939,7 +943,7 @@ define(['logManager',
             return core.getAttributeNames(node);
         };
 
-        var getNodePath = function(node){
+        var getClientNodePath = function(){
             var path = /*core.getStringPath(node)*/ownpath;
             if(path === ""){
                 path = "root";
