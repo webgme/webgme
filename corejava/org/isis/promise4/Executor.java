@@ -8,7 +8,7 @@ package org.isis.promise4;
 
 public class Executor {
 	@SuppressWarnings("unchecked")
-	public static <Type> Type obtain(Promise<Type> promise) throws Exception {
+	public static <Type> Type obtain(final Promise<Type> promise) throws Exception {
 		assert (promise != null);
 
 		if (promise instanceof Constant<?>)
@@ -18,7 +18,7 @@ public class Executor {
 
 			Object result = null;
 
-			Waiter(Promise<Type> promise) {
+			public void run() {
 				promise.requestArgument((short) 0, this);
 			}
 
@@ -26,11 +26,15 @@ public class Executor {
 			protected synchronized <Arg> void argumentResolved(short index,
 					Promise<Arg> promise) {
 				assert (promise != null);
-
+				
+				System.out.println("xxxx");
+				
 				if (promise instanceof Constant<?>) {
 					result = promise;
 					this.notifyAll();
 				}
+				else
+					promise.requestArgument((short)0, this);
 			}
 
 			@Override
@@ -42,7 +46,8 @@ public class Executor {
 			}
 		}
 
-		Waiter waiter = new Waiter(promise);
+		Waiter waiter = new Waiter();
+		waiter.run();
 
 		synchronized (waiter) {
 			if (waiter.result == null)

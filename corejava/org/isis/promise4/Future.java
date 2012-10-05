@@ -6,24 +6,38 @@
 
 package org.isis.promise4;
 
-public abstract class Future<Type> implements Promise<Type> {
+public abstract class Future<Type> implements Promise<Type>, Runnable {
 	static final short STATE_EMPTY = 0; // null
 	static final short STATE_FORWARDING = 1; // Future<Type>
-	static final short STATE_RESOLVED = 1; // Promise<Type>
-	static final short STATE_ARGUMENT = 2; // Future<?>
-	static final short STATE_REJECTED = 3; // Exception
+	static final short STATE_RESOLVED = 2; // Promise<Type>
+	static final short STATE_ARGUMENT = 3; // Future<?>
+	static final short STATE_REJECTED = 4; // Exception
 
-	private short state;
+	protected short state = STATE_EMPTY;
 	private short index;
 	private Object object;
 
+	public void debug1(String where, String extra) {
+		try {
+			Thread.sleep(2);
+		}
+		catch(Exception e) {
+		}
+/*
+		System.out.println(where + " this=" + System.identityHashCode(this)
+				+ " state=" + state + " " + extra);
+*/
+	}
+	
 	protected Future() {
-		state = STATE_EMPTY;
+		debug1("constructor", "");
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Constant<Type> getConstant() {
+		debug1("getConstant", "");
+
 		Object object = this.object;
 		if (object instanceof Constant<?>)
 			return (Constant<Type>) object;
@@ -34,6 +48,7 @@ public abstract class Future<Type> implements Promise<Type> {
 	@Override
 	@SuppressWarnings("unchecked")
 	public final void requestForwarding(Future<Type> parent) {
+		debug1("requestForwarding", "parent=" + System.identityHashCode(parent));
 		assert (parent != null);
 
 		short oldState;
@@ -55,11 +70,14 @@ public abstract class Future<Type> implements Promise<Type> {
 			parent.reject((Exception) oldObject);
 		else
 			assert (oldState != STATE_ARGUMENT);
+		
+		debug1("requestForwarding end", "oldState=" + oldState + " oldObject=" + System.identityHashCode(oldObject));
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public final void requestArgument(short index, Future<?> parent) {
+		debug1("requestArgument", "index=" + index + " parent=" + System.identityHashCode(parent));
 		assert (parent != null);
 
 		short oldState;
@@ -80,8 +98,8 @@ public abstract class Future<Type> implements Promise<Type> {
 			parent.argumentResolved(index, (Promise<Type>) oldObject);
 		else if (oldState == STATE_REJECTED)
 			parent.reject((Exception) oldObject);
-		else
-			assert (oldState != STATE_FORWARDING);
+
+		debug1("requestArgument end", "oldState=" + oldState + " oldObject=" + System.identityHashCode(oldObject));
 	}
 
 	protected abstract <Arg> void argumentResolved(short index,
@@ -89,6 +107,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@SuppressWarnings("unchecked")
 	protected final void resolve(Promise<Type> promise) {
+		debug1("resolve", "promise=" + System.identityHashCode(promise));
 		assert (promise != null);
 
 		short oldState;
@@ -110,10 +129,13 @@ public abstract class Future<Type> implements Promise<Type> {
 			((Future<Type>) oldObject).resolve(promise);
 		else if (oldState <= STATE_RESOLVED)
 			promise.requestForwarding(this);
+
+		debug1("resolve end", "oldState=" + oldState + " oldObject=" + System.identityHashCode(oldObject));
 	}
 
 	@Override
 	public final void reject(Exception error) {
+		debug1("reject", "error=" + System.identityHashCode(error));
 		assert (error != null);
 
 		short oldState;
@@ -134,6 +156,8 @@ public abstract class Future<Type> implements Promise<Type> {
 
 		if (oldState == STATE_ARGUMENT || oldState == STATE_FORWARDING)
 			((Future<?>) oldObject).reject(error);
+
+		debug1("reject end", "oldState=" + oldState + " oldObject=" + System.identityHashCode(oldObject));
 	}
 
 	protected abstract void rejectChildren(Exception error);

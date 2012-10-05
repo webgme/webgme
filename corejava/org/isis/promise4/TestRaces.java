@@ -415,8 +415,8 @@ public class TestRaces {
 	}
 
 	public static void main(String[] args) throws Exception {
-		Builder0 builder = createBuilder0(2);
-		builder.print(0);
+		Builder0 builder = createBuilder0(6);
+//		builder.print(0);
 		System.out.println(builder.getTrueValue());
 		System.out.println(Executor.obtain(builder.create()));
 	}

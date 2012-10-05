@@ -8,44 +8,20 @@ package org.isis.promise4;
 
 public class TestSpeed {
 	
-	static class Delayed extends Future<Integer> implements Runnable {
-		public Delayed() {
-			Thread thread = new Thread(this);
-			thread.start();
-		}
-
-		@Override
-		public void run() {
-			try {
-				Thread.sleep(10);
-				resolve(new Constant<Integer>(10));
-			}
-			catch(Exception error) {
-				reject(error);
-			}
-		}
-
-		@Override
-		protected <Arg> void argumentResolved(short index, Promise<Arg> argument) {
-			assert(false);
-		}
-
-		@Override
-		protected void rejectChildren(Exception error) {
-		}
-	}
-	
 	static Promise<Integer> fibonacci(int n) {
 		if (n <= 1)
 			return new Constant<Integer>(n);
-		else
-			return new FutureCall2<Integer, Integer, Integer>(fibonacci(n - 1),
+		else {
+			Future<Integer> future = new FutureCall2<Integer, Integer, Integer>(fibonacci(n - 1),
 					fibonacci(n - 2)) {
 				@Override
 				public Promise<Integer> execute(Integer arg1, Integer arg2) {
 					return new Constant<Integer>(arg1 + arg2);
 				}
 			};
+			future.run();
+			return future;
+		}
 	}
 
 	static Integer fibonacci2(int n) {
@@ -71,7 +47,7 @@ public class TestSpeed {
 
 	public static void main(String[] args) throws Exception {
 		for (int i = 0; i < 10; ++i) {
-			int depth = 37;
+			int depth = 30;
 			Integer value;
 			
 			long start = System.currentTimeMillis();
