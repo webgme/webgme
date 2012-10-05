@@ -9,8 +9,8 @@ package org.isis.promise4;
 public abstract class Future<Type> implements Promise<Type>, Runnable {
 	static final short STATE_EMPTY = 0; // null
 	static final short STATE_FORWARDING = 1; // Future<Type>
-	static final short STATE_RESOLVED = 2; // Promise<Type>
-	static final short STATE_ARGUMENT = 3; // Future<?>
+	static final short STATE_RESOLVED = 3; // Promise<Type>
+	static final short STATE_ARGUMENT = 2; // Future<?>
 	static final short STATE_REJECTED = 4; // Exception
 
 	protected short state = STATE_EMPTY;
@@ -19,7 +19,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 
 	public void debug1(String where, String extra) {
 		try {
-			Thread.sleep(2);
+			Thread.sleep(1);
 		}
 		catch(Exception e) {
 		}

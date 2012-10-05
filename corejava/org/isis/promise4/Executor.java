@@ -27,8 +27,6 @@ public class Executor {
 					Promise<Arg> promise) {
 				assert (promise != null);
 				
-				System.out.println("xxxx");
-				
 				if (promise instanceof Constant<?>) {
 					result = promise;
 					this.notifyAll();

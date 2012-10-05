@@ -9,14 +9,15 @@ package org.isis.promise4;
 public class TestRaces {
 
 	static void printLine(int indent, String value) {
-		while( --indent >= 0 )
+		while (--indent >= 0)
 			System.out.print("    ");
 
 		System.out.println(value);
 	}
-	
+
 	static abstract class TestFunc extends Func2<Integer, Integer, Integer> {
 		public abstract void print(int indent);
+
 		public abstract int getTrueValue(int arg1, int arg2);
 	};
 
@@ -24,8 +25,8 @@ public class TestRaces {
 		Builder2 builder;
 
 		SumFunc(Builder2 builder) {
-			assert(builder != null);
-			
+			assert (builder != null);
+
 			this.builder = builder;
 		}
 
@@ -34,7 +35,7 @@ public class TestRaces {
 
 			return builder.create(arg0, arg1);
 		}
-		
+
 		public void print(int indent) {
 			builder.print(indent);
 		}
@@ -51,9 +52,10 @@ public class TestRaces {
 	interface Builder {
 		void print(int indent);
 	}
-	
+
 	interface Builder0 extends Builder {
 		Promise<Integer> create() throws Exception;
+
 		int getTrueValue();
 	};
 
@@ -61,9 +63,9 @@ public class TestRaces {
 		private int value;
 
 		public ConstLeaf() {
-			value = (int)(Math.random() * 10);
+			value = (int) (Math.random() * 10);
 		}
-		
+
 		public Promise<Integer> create() {
 			return new Constant<Integer>(value);
 		}
@@ -97,6 +99,9 @@ public class TestRaces {
 				resolve(new Constant<Integer>(value));
 			} catch (Exception error) {
 				reject(error);
+			} catch (Error error) {
+				error.printStackTrace();
+				System.exit(-1);
 			}
 		}
 
@@ -115,10 +120,10 @@ public class TestRaces {
 		private long delay;
 
 		public ThreadLeaf() {
-			value = (int)(Math.random() * 10);
-			delay = (int)(Math.random() * 50);
+			value = (int) (Math.random() * 10);
+			delay = (int) (Math.random() * 10);
 		}
-		
+
 		public Promise<Integer> create() {
 			return new DelayedInt(delay, value);
 		}
@@ -146,11 +151,11 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide00,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
@@ -169,8 +174,7 @@ public class TestRaces {
 				return new ConstLeaf();
 			else
 				return new ThreadLeaf();
-		}
-		else {
+		} else {
 			--depth;
 
 			if (r < 0.1)
@@ -189,6 +193,7 @@ public class TestRaces {
 
 	interface Builder1 extends Builder {
 		Promise<Integer> create(Integer a) throws Exception;
+
 		int getTrueValue(int arg);
 	};
 
@@ -218,16 +223,17 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide01,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
 		public int getTrueValue(int a) {
-			return func.getTrueValue(left.getTrueValue(), right.getTrueValue(a));
+			return func
+					.getTrueValue(left.getTrueValue(), right.getTrueValue(a));
 		}
 	}
 
@@ -243,16 +249,17 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide10,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
 		public int getTrueValue(int a) {
-			return func.getTrueValue(left.getTrueValue(a), right.getTrueValue());
+			return func
+					.getTrueValue(left.getTrueValue(a), right.getTrueValue());
 		}
 	}
 
@@ -285,6 +292,7 @@ public class TestRaces {
 
 	interface Builder2 extends Builder {
 		Promise<Integer> create(Integer a, Integer b) throws Exception;
+
 		int getTrueValue(int a, int b);
 	};
 
@@ -316,16 +324,17 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide02,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
 		public int getTrueValue(int a, int b) {
-			return func.getTrueValue(left.getTrueValue(), right.getTrueValue(a, b));
+			return func.getTrueValue(left.getTrueValue(),
+					right.getTrueValue(a, b));
 		}
 	}
 
@@ -342,16 +351,17 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide11,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
 		public int getTrueValue(int a, int b) {
-			return func.getTrueValue(left.getTrueValue(a), right.getTrueValue(b));
+			return func.getTrueValue(left.getTrueValue(a),
+					right.getTrueValue(b));
 		}
 	}
 
@@ -368,16 +378,17 @@ public class TestRaces {
 		public void print(int indent) {
 			printLine(indent, "name: divide20,");
 			printLine(indent, "left: {");
-			left.print(indent+1);
+			left.print(indent + 1);
 			printLine(indent, "}, right: {");
-			right.print(indent+1);
+			right.print(indent + 1);
 			printLine(indent, "}, func: {");
-			func.print(indent+1);
+			func.print(indent + 1);
 			printLine(indent, "}");
 		}
 
 		public int getTrueValue(int a, int b) {
-			return func.getTrueValue(left.getTrueValue(a, b), right.getTrueValue());
+			return func.getTrueValue(left.getTrueValue(a, b),
+					right.getTrueValue());
 		}
 	}
 
@@ -414,10 +425,54 @@ public class TestRaces {
 		}
 	}
 
+	static void singleTest(int depth) throws Exception {
+		final Builder0 builder = createBuilder0(depth);
+		int value = builder.getTrueValue();
+
+		class TestThread extends Thread {
+			Integer value = null;
+			Exception error = null;
+
+			public void run() {
+				try {
+					Promise<Integer> promise = builder.create();
+					this.value = Executor.obtain(promise);
+				} catch (Exception error) {
+					this.error = error;
+				} catch (Error error) {
+					error.printStackTrace();
+					System.exit(-1);
+				}
+			}
+		}
+		;
+
+		TestThread test = new TestThread();
+
+		test.start();
+		test.join(10000);
+
+		if (test.error != null)
+			throw (test.error);
+
+		if (test.value == null)
+			throw (new Exception("timeout"));
+
+		if (value != test.value.intValue())
+			throw (new Exception("incorrect value"));
+	}
+
 	public static void main(String[] args) throws Exception {
-		Builder0 builder = createBuilder0(6);
-//		builder.print(0);
-		System.out.println(builder.getTrueValue());
-		System.out.println(Executor.obtain(builder.create()));
+		System.out.print("start");
+
+		for (int i = 0; i < Integer.MAX_VALUE; ++i) {
+			if (i % 50 == 0)
+				System.out.print("\n" + i + "\t");
+
+			singleTest(5);
+			System.out.print(".");
+		}
+
+		System.out.print("\nend\n");
 	}
 }
