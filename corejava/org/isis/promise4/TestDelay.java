@@ -27,6 +27,9 @@ public class TestDelay {
 				resolve(new Constant<Integer>(value));
 			} catch (Exception error) {
 				reject(error);
+			} catch (Error error) {
+				error.printStackTrace();
+				System.exit(-1);
 			}
 		}
 

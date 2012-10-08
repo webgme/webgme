@@ -455,8 +455,10 @@ public class TestRaces {
 		if (test.error != null)
 			throw (test.error);
 
-		if (test.value == null)
+		if (test.value == null) {
+			test.interrupt();
 			throw (new Exception("timeout"));
+		}
 
 		if (value != test.value.intValue())
 			throw (new Exception("incorrect value"));

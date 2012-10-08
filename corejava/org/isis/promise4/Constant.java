@@ -28,10 +28,12 @@ public final class Constant<Type> implements Promise<Type> {
 
 	@Override
 	public void requestArgument(short index, Future<?> parent) {
-		parent.argumentResolved(index, this);
+		assert(false);
+//		parent.argumentResolved(index, this);
 	}
 
 	@Override
 	public void requestForwarding(Future<Type> parent) {
+		// assert(false);
 	}
 }
