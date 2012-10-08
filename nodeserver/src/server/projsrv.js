@@ -1,6 +1,6 @@
 define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
     "use strict";
-    var MongoServer = function(options){
+    var ProjectServer = function(options){
         ASSERT((options.io && options.namespace) || options.port);
         ASSERT(options.mongo);
         var _socket = null;
@@ -14,10 +14,10 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
 
         if(options.io){
             _socket = options.io.of(options.namespace);
-            _selfid = "[DSRV-"+options.namespace+"]";
+            _selfid = "[PSRV-"+options.namespace+"]";
         } else {
             _socket = IO.listen(options.port);
-            _selfid = "[DSRV-"+options.port+"]";
+            _selfid = "[PSRV-"+options.port+"]";
         }
 
         var _log = options.log || function(txt){ console.log(txt);};
@@ -28,6 +28,10 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         };
 
         var compareRoots = function(oldroot,newroot){
+            if((oldroot === null || oldroot === undefined) && newroot ){
+                return true;
+            }
+
             if(oldroot.root.length !== newroot.root.length-1){
                 return false;
             }
@@ -63,7 +67,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                     } else {
                         if(node && node[KEY].indexOf(BID) === 0){
                             /*this load means a branch change so we put the user into the right notification list*/
-                            _clients[socket.id][branch] === node[KEY];
+                            _clients[socket.id].branch === node[KEY];
                             broadcastRoot(node);
                             callback(null,node);
                         }
@@ -71,7 +75,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 });
             });
             socket.on('save',function(node,callback){
-                if(node[KEY].indexof(BID) === 0){
+                if(node[KEY].indexOf(BID) === 0){
                     /*active commit save - we have to check extra stuffa*/
                     _mongo.load(node[KEY],function(err,oldroot){
                         if(err){
@@ -116,6 +120,6 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
 
         });
     };
-    return MongoServer;
+    return ProjectServer;
 });
 

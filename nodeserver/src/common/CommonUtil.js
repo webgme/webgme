@@ -125,8 +125,8 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "IFV", /*possible collections currently: basic,SFdemo, IFV*/
-            mongodatabase   : "demo",
+            mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
+            mongodatabase   : "branched",
             mongoopt        : {
                 'auto_reconnect' : true,
                 'poolSize'       : 1
@@ -145,7 +145,11 @@ define([], function () {
                 'heartbeat interval' : 60,
                 'log level'          : 1
             },
-
+            projsrv         : "/project",
+            projects        : [
+                "egyik",
+                "masik"
+            ]
         }
 
     };

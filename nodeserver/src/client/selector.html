@@ -1,0 +1,175 @@
+<html>
+<head>
+    <script src="lib/require/require.js"></script>
+    <title>Introducing brnahces to WebGME</title>
+    <script>
+        DEBUG = true;
+        _webGME_jquery_ver = '1.8.0';
+        _webGME_jqueryui_ver = '1.8.22.mousefixed';
+        require.config({
+            baseUrl: "/",
+            paths: {
+                "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
+                "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
+                "bootstrap": 'lib/bootstrap/bootstrap.amd',
+                "underscore": './../../common/underscore',
+                "commonUtil": './../../common/CommonUtil',
+                "logManager": './../../common/LogManager',
+                "eventDispatcher": './../../common/EventDispatcher',
+                "notificationManager": 'js/NotificationManager',
+                "clientUtil": 'js/util',
+                "bezierHelper" : 'js/BezierHelper',
+                "raphaeljs": 'lib/raphael/raphael.amd',
+                "eve": 'lib/raphael/eve',
+                "order": 'lib/require/order',
+                "text":	'lib/require/text',
+                "css": 'lib/require/css',
+                "domReady":	'lib/require/domReady',
+                "ModelEditorHTML": "js/ModelEditor/HTML",
+                "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
+                "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
+                "ModelEditorHTMLCSS": "css/ModelEditor",
+                "GraphVizCSS": "css/GraphViz",
+                "GraphViz": "js/GraphViz"
+            }
+        });
+        require(['jquery','order!underscore','js/corewrapper','domReady','commonUtil','core/core2','js/socmongo'],function(jQuery,underscore,CW,domReady,CU,CORE,ST){
+            var options = CU.combinedserver;
+            var proxy = null;
+            var project = null;
+            var storage = null;
+            var core = null;
+            fillList = function(values){
+                var list = document.getElementById("projselect");
+                while (list.length>0){
+                    list.remove(list.lenght-1);
+                }
+                for(var i=0;i<values.length;i++){
+                    var option = document.createElement('option');
+                    option.innerHTML = values[i];
+                    option.value = values[i];
+                    list.add(option,null);
+                }
+                var lbutton = document.getElementById("openbutton");
+                lbutton.disabled = false;
+            };
+            loadAvailableProjects = function(){
+                proxy.emit('availableProjects',function(err,projects){
+                    if(err){
+                        console.log(err);
+                    } else {
+                        if(! projects || projects.length === 0){
+                            console.log("there is no available project!!");
+                        } else {
+                            /*filling up the list and enabling the open button*/
+                            fillList(projects);
+                        }
+                    }
+                });
+            };
+
+            printline = function(id,line){
+                document.getElementById(id).value += line+"\n";
+            };
+
+            openProject = function(){
+                var plist = document.getElementById("projselect");
+                var project = plist[plist.selectedIndex].value;
+                proxy.emit('getProject',project,function(err,projns){
+                    if(err){
+                        console.log(err);
+                    } else {
+                        storage = new ST({server:location.host+projns,socketiopar:options.socketiopar});
+                        storage.open(function(err){
+                            if(err){
+                                console.log(err);
+                            } else {
+                                core = new CORE(storage);
+                                storage.load("*master",function(err,master){
+                                    if(err){
+                                        console.log(err);
+                                    } else {
+                                        if(!master){
+                                            var button = document.getElementById("emptybutton");
+                                            button.disabled = false;
+                                        } else {
+                                            var button = document.getElementById("newbutton");
+                                            button.disabled = false;
+                                        }
+                                    }
+
+                                });
+                            }
+                        });
+                    }
+                });
+            };
+
+            createProject = function(){
+                var createBranchObj = function(key){
+                    var branchobj = {
+                        _id     : "*master",
+                        root    : key,
+                        parents : [],
+                        updates : [],
+                        start   : null,
+                        end     : null,
+                        message : "generated master branch ...",
+                        type    : "branch"
+                    };
+                    storage.save(branchobj,function(err){
+                        if(err){
+                            console.log(err);
+                        } else {
+                            console.log("empty project have been created and master branch added");
+                        }
+                    });
+                };
+                if(core){
+                    var root = core.createNode();
+                    core.setRegistry(root,"isConnection",false);
+                    core.setRegistry(root,"position",{ "x": 100, "y": 100});
+                    core.setAttribute(root,"name","root");
+                    var rootkey = core.persist(root,function(err){
+                        if(err){
+                            console.log(err);
+                        } else {
+                            if(rootkey){
+                                createBranchObj(rootkey);
+                            } else {
+                                setTimeout(function(){
+                                    createBranchObj(rootkey);
+                                },1000);
+                            }
+                        }
+                    });
+
+                } else {
+                    console.log("there is no CORE!!!!");
+                }
+            };
+            domReady(function(){
+
+                proxy = io.connect(location.host + options.projsrv,options.socketiopar);
+                proxy.on('connect',function(){
+                   loadAvailableProjects();
+                });
+            });
+
+        });
+    </script>
+</head>
+<body>
+--- Project selection part --- </br>
+Select which project you would like to use:
+<select id="projselect">
+    <option value="loading" >...loading...</option>
+</select>
+and then press the
+<input id="openbutton" type="button" value="open" disabled onclick="openProject()">
+to open it! </br>
+--- Branch selection part --- </br>
+<input id="emptybutton" type="button" value="create" disabled onclick="createProject()"> an empty project with "master" branch </br>
+<input id="newbutton" type="button" value="create" disabled onclick="createBranch()"> a new branch to the latest master commit </br>
+</body>
+</html>
