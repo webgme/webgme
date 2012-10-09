@@ -10,18 +10,111 @@ package org.isis.promise4;
 // TODO: futures should be resolved only once, even when collecting
 
 public abstract class Future<Type> implements Promise<Type>, Runnable {
-	static final short STATE_EMPTY = 0; // null
-	static final short STATE_COLLECT = 1; // Promise<Type>
-	static final short STATE_FORWARD = 2; // Future<Type>
-	static final short STATE_ARGUMENT = 3; // Future<?>
-	static final short STATE_RESOLVED = 4; // Promise<Type>
-	static final short STATE_REJECTED = 5; // Exception
+	static final short STATE_EMPTY = 0x00; // null
+	static final short STATE_FORWARD = 0x02; // Future<Type>
+	static final short STATE_COLLECT = 0x05; // Promise<Type>
+	static final short STATE_ARGUMENT = 0x06; // Future<?>
+	static final short STATE_RESOLVED = 0x07; // Promise<Type>
+	static final short STATE_REJECTED = 0x0f; // Exception
 
 	protected short state = STATE_EMPTY;
 	private short index;
 	private Object object;
 
-	public void debug1(String where) {
+	@SuppressWarnings("unchecked")
+	protected final void resolve(Promise<Type> promise) {
+		debug("resolve start");
+		assert (promise != null);
+
+		short oldState;
+		Object oldObject;
+
+		synchronized (this) {
+			debug("resolve sync");
+
+			oldState = state;
+			oldObject = object;
+
+			state = (short) (state | STATE_COLLECT);
+			if (oldState < STATE_RESOLVED)
+				object = promise;
+		}
+
+		if (oldState == STATE_ARGUMENT)
+			((Future<?>) oldObject).argumentResolved(index, promise);
+		else if (oldState == STATE_FORWARD)
+			((Future<Type>) oldObject).resolve(promise);
+		else if (oldState == STATE_EMPTY || oldState == STATE_COLLECT) {
+			if( promise instanceof Future<?> )
+				((Future<Type>)promise).requestForwarding(this);
+		} else
+			assert (oldState == STATE_RESOLVED);
+
+		debug("resolve end");
+	}
+
+	@Override
+	@SuppressWarnings("unchecked")
+	public final void requestArgument(short index, Future<?> parent) {
+		debug("requestArgument start");
+		assert (parent != null);
+
+		short oldState;
+		Object oldObject;
+
+		synchronized (this) {
+			debug("requestArgument sync");
+
+			oldState = state;
+			oldObject = object;
+
+			state = (short) (oldState | STATE_ARGUMENT);
+			if (oldState <= STATE_FORWARD) {
+				object = parent;
+				this.index = index;
+			}
+		}
+
+		if (oldState == STATE_COLLECT || oldState == STATE_RESOLVED)
+			parent.argumentResolved(index, (Promise<Type>) oldObject);
+		else if (oldState == STATE_REJECTED)
+			parent.reject((Exception) oldObject);
+		else
+			assert (oldState == STATE_EMPTY || oldState == STATE_FORWARD);
+
+		debug("requestArgument end");
+	}
+
+	@SuppressWarnings("unchecked")
+	public final void requestForwarding(Future<Type> parent) {
+		debug("requestForwarding start");
+		assert (parent != null);
+
+		short oldState;
+		Object oldObject;
+
+		synchronized (this) {
+			debug("requestForwarding sync");
+
+			oldState = state;
+			oldObject = object;
+
+			state = (short) (oldState | STATE_FORWARD);
+			if (oldState <= STATE_FORWARD)
+				object = parent;
+		}
+
+		if (oldState == STATE_COLLECT)
+			parent.resolve((Promise<Type>) oldObject);
+		else if (oldState == STATE_REJECTED)
+			parent.reject((Exception) oldObject);
+		else
+			assert (oldState == STATE_EMPTY || oldState == STATE_FORWARD || oldState == STATE_RESOLVED);
+
+		debug("requestForwarding end");
+	}
+
+	public void debug(String where) {
 		try {
 			Thread.sleep(1);
 		} catch (Exception e) {
@@ -32,13 +125,13 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 	}
 
 	protected Future() {
-		debug1("constructor");
+		debug("constructor");
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public final Constant<Type> getConstant() {
-		debug1("getConstant");
+		debug("getConstant");
 
 		Object object = this.object;
 		if (object instanceof Constant<?>)
@@ -47,120 +140,19 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 			return null;
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
-	public final void requestForwarding(Future<Type> parent) {
-		debug1("requestForwarding start");
-		assert (parent != null);
-
-		short oldState;
-		Object oldObject;
-
-		synchronized (this) {
-			debug1("requestForwarding sync");
-
-			oldState = state;
-			oldObject = object;
-
-			if (oldState == STATE_EMPTY || oldState == STATE_FORWARD) {
-				state = STATE_FORWARD;
-				object = parent;
-			} else if (oldState == STATE_COLLECT)
-				state = STATE_RESOLVED;
-		}
-
-		if (oldState == STATE_COLLECT)
-			parent.resolve((Promise<Type>) oldObject);
-		else if (oldState == STATE_REJECTED)
-			parent.reject((Exception) oldObject);
-		else
-			assert (oldState == STATE_EMPTY || oldState == STATE_FORWARD || oldState == STATE_RESOLVED);
-
-		debug1("requestForwarding end");
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public final void requestArgument(short index, Future<?> parent) {
-		debug1("requestArgument start");
-		assert (parent != null);
-
-		short oldState;
-		Object oldObject;
-
-		synchronized (this) {
-			debug1("requestArgument sync");
-
-			oldState = state;
-			oldObject = object;
-
-			if (oldState == STATE_EMPTY || oldState == STATE_ARGUMENT
-					|| oldState == STATE_FORWARD) {
-				state = STATE_ARGUMENT;
-				object = parent;
-				this.index = index;
-			} else if (oldState == STATE_COLLECT)
-				state = STATE_RESOLVED;
-		}
-
-		if (oldState == STATE_COLLECT || oldState == STATE_RESOLVED)
-			parent.argumentResolved(index, (Promise<Type>) oldObject);
-		else if (oldState == STATE_REJECTED)
-			parent.reject((Exception) oldObject);
-		else
-			assert (oldState == STATE_EMPTY || oldState == STATE_ARGUMENT || oldState == STATE_FORWARD);
-
-		debug1("requestArgument end");
-	}
-
 	protected abstract <Arg> void argumentResolved(short index,
 			Promise<Arg> argument);
 
-	@SuppressWarnings("unchecked")
-	protected final void resolve(Promise<Type> promise) {
-		debug1("resolve start");
-		assert (promise != null);
-
-		short oldState;
-		Object oldObject;
-
-		synchronized (this) {
-			debug1("resolve sync");
-
-			oldState = state;
-			oldObject = object;
-
-			if (oldState == STATE_EMPTY || oldState == STATE_COLLECT) {
-				state = STATE_COLLECT;
-				object = promise;
-			} else if (oldState == STATE_FORWARD || oldState == STATE_ARGUMENT) {
-				state = STATE_RESOLVED;
-				object = promise;
-			}
-		}
-
-		if (oldState == STATE_ARGUMENT)
-			((Future<?>) oldObject).argumentResolved(index, promise);
-		else if (oldState == STATE_FORWARD)
-			((Future<Type>) oldObject).resolve(promise);
-		else if (oldState == STATE_EMPTY || oldState == STATE_COLLECT)
-			promise.requestForwarding(this);
-		else
-			assert (oldState == STATE_RESOLVED);
-
-		debug1("resolve end");
-	}
-
 	@Override
 	public final void reject(Exception error) {
-		debug1("reject start");
+		debug("reject start");
 		assert (error != null);
 
 		short oldState;
 		Object oldObject;
 
 		synchronized (this) {
-			debug1("reject sync");
+			debug("reject sync");
 
 			oldState = state;
 			oldObject = object;
@@ -177,7 +169,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 		if (oldState == STATE_ARGUMENT || oldState == STATE_FORWARD)
 			((Future<?>) oldObject).reject(error);
 
-		debug1("reject end");
+		debug("reject end");
 	}
 
 	protected abstract void rejectChildren(Exception error);

@@ -9,24 +9,24 @@ package org.isis.promise4;
 public abstract class Func2<Type, Arg0, Arg1> {
 	public abstract Promise<Type> call(Arg0 arg0, Arg1 arg1) throws Exception;
 
-	public final Promise<Type> call(Promise<Arg0> promise0, Promise<Arg1> promise1)
-			throws Exception {
+	public final Promise<Type> call(Promise<Arg0> promise0,
+			Promise<Arg1> promise1) throws Exception {
 
 		Constant<Arg0> arg0 = promise0.getConstant();
-		if (arg0 != null) {
-			Constant<Arg1> arg1 = promise1.getConstant();
-			if (arg1 != null)
-				return call(arg0.getValue(), arg1.getValue());
-		}
+		Constant<Arg1> arg1 = promise1.getConstant();
+
+		if (arg0 != null && arg1 != null)
+			return call(arg0.getValue(), arg1.getValue());
 
 		final Func2<Type, Arg0, Arg1> that = this;
-		Future<Type> future = new FutureCall2<Type, Arg0, Arg1>(promise0, promise1) {
+		Future<Type> future = new FutureCall2<Type, Arg0, Arg1>(promise0,
+				promise1) {
 			@Override
 			public Promise<Type> execute(Arg0 arg0, Arg1 arg1) throws Exception {
 				return that.call(arg0, arg1);
 			}
 		};
-		
+
 		future.run();
 		return future;
 	}
@@ -45,7 +45,7 @@ public abstract class Func2<Type, Arg0, Arg1> {
 				return that.call(arg0, arg1);
 			}
 		};
-		
+
 		future.run();
 		return future;
 	}
@@ -64,7 +64,7 @@ public abstract class Func2<Type, Arg0, Arg1> {
 				return that.call(arg0, arg1);
 			}
 		};
-		
+
 		future.run();
 		return future;
 	}
