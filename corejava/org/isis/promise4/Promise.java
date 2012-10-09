@@ -8,11 +8,9 @@ package org.isis.promise4;
 
 public interface Promise<Type> {
 	
-	Constant<Type> getConstant();
+	Constant<Type> getConstant() throws Exception;
 	
 	void reject(Exception error);
-
-	void requestForwarding(Future<Type> parent);
 
 	void requestArgument(short index, Future<?> parent);
 }

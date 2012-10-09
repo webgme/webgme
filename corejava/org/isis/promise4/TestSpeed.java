@@ -6,7 +6,7 @@
 
 package org.isis.promise4;
 
-public class TestSpeed {
+class TestSpeed {
 	
 	static Promise<Integer> fibonacci(int n) {
 		if (n <= 1)

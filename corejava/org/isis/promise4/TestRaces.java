@@ -6,7 +6,7 @@
 
 package org.isis.promise4;
 
-public class TestRaces {
+class TestRaces {
 
 	static void printLine(int indent, String value) {
 		while (--indent >= 0)
@@ -30,16 +30,19 @@ public class TestRaces {
 			this.builder = builder;
 		}
 
+		@Override
 		public Promise<Integer> call(Integer arg0, Integer arg1)
 				throws Exception {
 
 			return builder.create(arg0, arg1);
 		}
 
+		@Override
 		public void print(int indent) {
 			builder.print(indent);
 		}
 
+		@Override
 		public int getTrueValue(int arg1, int arg2) {
 			return builder.getTrueValue(arg1, arg2);
 		}
@@ -66,15 +69,18 @@ public class TestRaces {
 			value = (int) (Math.random() * 10);
 		}
 
+		@Override
 		public Promise<Integer> create() {
 			return new Constant<Integer>(value);
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: const");
 			printLine(indent, "value: " + value);
 		}
 
+		@Override
 		public int getTrueValue() {
 			return value;
 		}
@@ -124,16 +130,19 @@ public class TestRaces {
 			delay = (int) (Math.random() * 10);
 		}
 
+		@Override
 		public Promise<Integer> create() {
 			return new DelayedInt(delay, value);
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: thread");
 			printLine(indent, "value: " + value);
 			printLine(indent, "delay: " + delay);
 		}
 
+		@Override
 		public int getTrueValue() {
 			return value;
 		}
@@ -144,10 +153,12 @@ public class TestRaces {
 		Builder0 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create() throws Exception {
 			return func.call(left.create(), right.create());
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide00,");
 			printLine(indent, "left: {");
@@ -159,6 +170,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue() {
 			return func.getTrueValue(left.getTrueValue(), right.getTrueValue());
 		}
@@ -198,14 +210,17 @@ public class TestRaces {
 	};
 
 	static class Identity implements Builder1 {
+		@Override
 		public Promise<Integer> create(Integer arg) {
 			return new Constant<Integer>(arg);
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: id");
 		}
 
+		@Override
 		public int getTrueValue(int arg) {
 			return arg;
 		}
@@ -216,10 +231,12 @@ public class TestRaces {
 		Builder1 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create(Integer arg) throws Exception {
 			return func.call(left.create(), right.create(arg));
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide01,");
 			printLine(indent, "left: {");
@@ -231,6 +248,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue(int a) {
 			return func
 					.getTrueValue(left.getTrueValue(), right.getTrueValue(a));
@@ -242,10 +260,12 @@ public class TestRaces {
 		Builder0 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create(Integer arg) throws Exception {
 			return func.call(left.create(arg), right.create());
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide10,");
 			printLine(indent, "left: {");
@@ -257,6 +277,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue(int a) {
 			return func
 					.getTrueValue(left.getTrueValue(a), right.getTrueValue());
@@ -297,15 +318,18 @@ public class TestRaces {
 	};
 
 	static class BinarySum implements Builder2 {
+		@Override
 		public Promise<Integer> create(Integer arg0, Integer arg1)
 				throws Exception {
 			return new Constant<Integer>(arg0 + arg1);
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: sum");
 		}
 
+		@Override
 		public int getTrueValue(int a, int b) {
 			return a + b;
 		}
@@ -316,11 +340,13 @@ public class TestRaces {
 		Builder2 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create(Integer arg0, Integer arg1)
 				throws Exception {
 			return func.call(left.create(), right.create(arg0, arg1));
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide02,");
 			printLine(indent, "left: {");
@@ -332,6 +358,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue(int a, int b) {
 			return func.getTrueValue(left.getTrueValue(),
 					right.getTrueValue(a, b));
@@ -343,11 +370,13 @@ public class TestRaces {
 		Builder1 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create(Integer arg0, Integer arg1)
 				throws Exception {
 			return func.call(left.create(arg0), right.create(arg1));
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide11,");
 			printLine(indent, "left: {");
@@ -359,6 +388,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue(int a, int b) {
 			return func.getTrueValue(left.getTrueValue(a),
 					right.getTrueValue(b));
@@ -370,11 +400,13 @@ public class TestRaces {
 		Builder0 right;
 		TestFunc func;
 
+		@Override
 		public Promise<Integer> create(Integer arg0, Integer arg1)
 				throws Exception {
 			return func.call(left.create(arg0, arg1), right.create());
 		}
 
+		@Override
 		public void print(int indent) {
 			printLine(indent, "name: divide20,");
 			printLine(indent, "left: {");
@@ -386,6 +418,7 @@ public class TestRaces {
 			printLine(indent, "}");
 		}
 
+		@Override
 		public int getTrueValue(int a, int b) {
 			return func.getTrueValue(left.getTrueValue(a, b),
 					right.getTrueValue());
@@ -433,6 +466,7 @@ public class TestRaces {
 			Integer value = null;
 			Exception error = null;
 
+			@Override
 			public void run() {
 				try {
 					Promise<Integer> promise = builder.create();

@@ -21,17 +21,8 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 		promise1 = arg1;
 	}
 
-	public void debug2(String where, String extra) {
-//		System.out.println(where + " this=" + System.identityHashCode(this)
-//				+ " state=" + state
-//				+ " arg0=" + System.identityHashCode(promise0)
-//				+ " arg1=" + System.identityHashCode(promise1)
-//				+ " " + extra);
-	}
-	
+	@Override
 	public void run() {
-		debug2("run", "");
-		
 		if (promise0 instanceof Constant<?>) {
 			if (promise1 instanceof Constant<?>)
 				execute();
@@ -50,8 +41,6 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 			throws Exception;
 
 	protected void execute() {
-		debug2("exc", "");
-		
 		try {
 			Arg0 arg0 = ((Constant<Arg0>) promise0).getValue();
 			Arg1 arg1 = ((Constant<Arg1>) promise1).getValue();
@@ -67,8 +56,6 @@ public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 	protected final <Arg> void argumentResolved(short index,
 			Promise<Arg> promise) {
 		assert (index >= INDEX0 && index <= INDEX1 && promise != null);
-
-		debug2("arg", "index=" + index + " promise=" + System.identityHashCode(promise));
 
 		synchronized (this) {
 			if (index == INDEX0) {

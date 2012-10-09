@@ -6,7 +6,7 @@
 
 package org.isis.promise4;
 
-public class TestDelay {
+class TestDelay {
 
 	static class DelayedInt extends Future<Integer> implements Runnable {
 		long delay;

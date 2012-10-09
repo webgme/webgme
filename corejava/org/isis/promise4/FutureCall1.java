@@ -16,6 +16,7 @@ public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 		this.promise0 = arg0;
 	}
 
+	@Override
 	public void run() {
 		execute();
 	}
