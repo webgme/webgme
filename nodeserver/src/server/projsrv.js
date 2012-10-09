@@ -28,7 +28,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         };
 
         var compareRoots = function(oldroot,newroot){
-            if((oldroot === null || oldroot === undefined) && newroot ){
+            /*if((oldroot === null || oldroot === undefined) && newroot ){
                 return true;
             }
 
@@ -40,14 +40,14 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 if(oldroot.root[i] !== newroot.root[i]){
                     return false;
                 }
-            }
+            }*/
 
             return true;
         };
         var broadcastRoot = function(root){
             for(var i in _clients){
                 if(root[KEY] === _clients[i].branch){
-                    _clients[i].socket.emit('rootUpdated',root);
+                    _clients[i].socket.emit('updated',root);
                 }
             }
         };
@@ -116,6 +116,9 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             });
             socket.on('fsync',function(callback){
                 _mongo.fsync(callback);
+            });
+            socket.on('find',function(criteria,callback){
+                _mongo.find(criteria,callback);
             });
 
         });

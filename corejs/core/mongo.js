@@ -168,6 +168,12 @@ UTIL) {
 			}
 		};
 
+        var find = function(criteria,callback){
+            ASSERT(criteria && typeof criteria === "object");
+            ASSERT(collection);
+            collection.find(criteria).toArray(callback);
+        };
+
 		return {
 			open: open,
 			opened: opened,
@@ -179,7 +185,8 @@ UTIL) {
 			dumpAll: dumpAll,
 			removeAll: removeAll,
 			searchId: searchId,
-			fsync: fsync
+			fsync: fsync,
+            find: find
 		};
 	};
 

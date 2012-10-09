@@ -119,6 +119,25 @@ define(['commonUtil'], function (CU) {
 
         };
 
+        var getUpdated = function(myfunction){
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"getUpdated()";
+            log(text);
+            storage.getUpdated(myfunction);
+        };
+
+        var find = function(criteria,callback){
+            var start = TIMESTAMP();
+            var guid = "["+GUID()+"]";
+            var text = guid+"find("+JSON.stringify(criteria)+")";
+            log(text);
+            storage.find(criteria,function(err,nodes){
+                log(text+ETIMESTRING(start));
+                callback(err,nodes);
+            });
+        };
+
         return {
             open          : open,
             opened        : storage.opened,
@@ -131,7 +150,9 @@ define(['commonUtil'], function (CU) {
             removeAll     : removeAll,
             searchId      : searchId,
             whenAvailable : whenAvailable,
-            fsync         : fsync
+            fsync         : fsync,
+            getUpdated    : getUpdated,
+            find          : find
         }
     };
 

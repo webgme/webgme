@@ -9,6 +9,7 @@ define(['logManager',
     'js/logstorage',
     'js/logcore',
     'notificationManager',
+    'js/comitter',
     'socket.io/socket.io.js'],
     function( LogManager,
               EventDispatcher,
@@ -20,7 +21,8 @@ define(['logManager',
               LogSrv,
               LogST,
               LCORE,
-              notificationManager){
+              notificationManager,
+              COM ){
         var logger,
             Client,
             CommandQueue,
@@ -87,8 +89,10 @@ define(['logManager',
              previousNodes = {},
              previousRoot = null,
              previousCore = null,*/
-            intransaction = false;
+            intransaction = false,
+            comitter = COM(storage);
 
+            comitter.setRootUpdatedFunction(newRootArrived);
             var waitfornextregistryset = false; //TODO HACK
             /*event functions to relay information between users*/
             $.extend(this, new EventDispatcher());
@@ -116,78 +120,10 @@ define(['logManager',
                 if(count === 0){
                     /*in case of the first user we have to connect...*/
                     storage.open(function(){
-                        var firstopening = true;
-                        if(rootServer === null){
-                            rootServer = io.connect(location.host + options.rootsrv,options.socketiopar);
-                        }
-                        rootServer.on('newRoot',function(newroot){
-                            if(newroot === lastValidRoot){
-                                if(rootRetry){
-                                    rootRetry = false;
-                                    newRoot(newroot,true);
-                                } else {
-                                    if( newroot !== currentRoot && !dataLostSync){
-                                        rootRetry = true;
-                                        modifyRootOnServer(true);
-                                    }
-                                }
-                            } else {
-                                newRoot(newroot,true);
-                            }
+                        /*we select the master branch for a start now :)*/
+                        comitter.selectBranch("master",function(err,hash){
+                            newRootArrived(hash);
                         });
-                        rootServer.on('connect',function(){
-                            if(firstopening){
-                                notificationManager.displayMessage("Your project is opened!");
-                                firstopening = false;
-                            }
-                            //console.log('CONNECT - ROOTSRV');
-                            if(rootServerOut){
-                                rootServerOut = false;
-                                if(rootSrvOutNoteId){
-                                    notificationManager.removeStickyMessage(rootSrvOutNoteId);
-                                    rootSrvOutNoteId = null;
-                                }
-                                if( lastValidRoot !== currentRoot && !dataLostSync){
-                                    modifyRootOnServer(true);
-                                }
-                            }
-                        });
-                        rootServer.on('connect_failed',function(){
-                            rootServerOut = true;
-                            //console.log('CONNECT_FAILED - ROOTSRV');
-                            if(!rootSrvOutNoteId){
-                                rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
-                            }
-                        });
-                        rootServer.on('disconnect',function(){
-                            rootServerOut = true;
-                            //console.log('DISCONNECT - ROOTSRV');
-                            if(!rootSrvOutNoteId){
-                                rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
-                            }
-                        });
-                        rootServer.on('reconnect_failed', function(){
-                            rootServerOut = true;
-                            //console.log('RECONNECT_FAILED - ROOTSRV');
-                            if(!rootSrvOutNoteId){
-                                rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
-                            }
-                        });
-                        rootServer.on('reconnect', function(){
-                            rootServerOut = true;
-                            //console.log('RECONNECT - ROOTSRV');
-                            if(!rootSrvOutNoteId){
-                                rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
-                            }
-                        });
-                        rootServer.on('reconnecting', function(){
-                            rootServerOut = true;
-                            //console.log('RECONNECTING - ROOTSRV');
-                            if(!rootSrvOutNoteId){
-                                rootSrvOutNoteId = notificationManager.addStickyMessage("Connection to RootServer is down!!!");
-                            }
-                        });
-
                     });
                 }
                 return guid;
@@ -262,6 +198,23 @@ define(['logManager',
             };
             this.undo = function(){
                 rootServer.emit('undoRoot');
+            };
+
+
+            /*branch selectiong functions*/
+            this.selectBranch = function(branchname){
+                comitter.selectBranch(branchname,function(err,roothash){
+                    if(!err && roothash){
+                        newRootArrived(roothash);
+                    }
+                });
+            };
+            this.commit = function(callback){
+                comitter.comit(function(err){
+                    if(callback){
+                        callback(err)
+                    }
+                });
             };
 
             /*getting a node*/
@@ -491,6 +444,30 @@ define(['logManager',
             };
 
             /*helping funcitons*/
+            var newRootArrived = function(roothash){
+                var tempcore = new LCORE(new CORE(storage),logsrv);
+                tempcore.loadRoot(roothash,function(err,node){
+                    if(!err && node){
+                        currentRoot = newroot;
+                        currentNodes = {};
+                        currentCore = tempcore;
+                        storeNode(node);
+                        nuUpdateAll(function(err){
+                            if(err){
+                                //TODO now what???
+                                nuUpdateAll(function(err){
+                                    if(err){
+                                        console.log("updating the whole user bunch failed for the second time as well...");
+                                    }
+                                });
+                            }
+                        });
+                    } else {
+                        console.log("not ready database, wait for new root");
+                    }
+                });
+            };
+
             var rollBackModification = function(){
                 currentNodes = {};
                 //currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);

@@ -7,6 +7,7 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
         var isopen = false;
         var availableCB = null;
         var dataSrvOutNoteId = null;
+        var updatedCB = null;
 
         var open = function (callback) {
             var tempsocket = io.connect(options.server, options.socketiopar);
@@ -39,6 +40,12 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
                     });
                 }
             });
+            tempsocket.on('updated',function(node){
+                if(updatedCB){
+                    updatedCB(node);
+                }
+            });
+
             tempsocket.on('connect_failed',function(){
                 isopen = false;
                 //console.log('CONNECT_FAILED - SOCMONGO');
@@ -195,6 +202,23 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
             }
         };
 
+        var getUpdated = function(myfunction){
+            updatedCB = myfunction;
+        };
+
+        var find = function(criteria,callback){
+            if(socket){
+                if(isopen){
+                    socket.emit('find',criteria,callback);
+                } else {
+                    callback("[find]the network storage is not opened!!!");
+                }
+            }
+            else{
+                callback("[find]there is no valid connection to the server!!!");
+            }
+        };
+
         return {
             open          : open,
             opened        : opened,
@@ -209,7 +233,9 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
             loadRoot      : loadRoot,
             saveRoot      : saveRoot,
             whenAvailable : whenAvailable,
-            fsync         : fsync
+            fsync         : fsync,
+            getUpdated    : getUpdated,
+            find          : find
         };
     };
 
