@@ -62,7 +62,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 			oldState = state;
 			oldObject = object;
 
-			if (oldState == STATE_EMPTY) {
+			if (oldState == STATE_EMPTY || oldState == STATE_FORWARD) {
 				state = STATE_FORWARD;
 				object = parent;
 			} else if (oldState == STATE_COLLECT)
@@ -74,7 +74,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 		else if (oldState == STATE_REJECTED)
 			parent.reject((Exception) oldObject);
 		else
-			assert (oldState == STATE_EMPTY);
+			assert (oldState == STATE_EMPTY || oldState == STATE_FORWARD || oldState == STATE_RESOLVED);
 
 		debug1("requestForwarding end");
 	}
@@ -94,7 +94,8 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 			oldState = state;
 			oldObject = object;
 
-			if (oldState == STATE_EMPTY) {
+			if (oldState == STATE_EMPTY || oldState == STATE_ARGUMENT
+					|| oldState == STATE_FORWARD) {
 				state = STATE_ARGUMENT;
 				object = parent;
 				this.index = index;
@@ -107,7 +108,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 		else if (oldState == STATE_REJECTED)
 			parent.reject((Exception) oldObject);
 		else
-			assert (oldState == STATE_EMPTY);
+			assert (oldState == STATE_EMPTY || oldState == STATE_ARGUMENT || oldState == STATE_FORWARD);
 
 		debug1("requestArgument end");
 	}
@@ -145,7 +146,7 @@ public abstract class Future<Type> implements Promise<Type>, Runnable {
 		else if (oldState == STATE_EMPTY || oldState == STATE_COLLECT)
 			promise.requestForwarding(this);
 		else
-			assert (oldState == STATE_RESOLVED && promise == oldObject);
+			assert (oldState == STATE_RESOLVED);
 
 		debug1("resolve end");
 	}
