@@ -1,0 +1,99 @@
+.model.modelDefault {
+    min-height: 40px;
+    min-width: 65px;
+    float: left;
+    border: 2px solid #000000;
+    background-color: #DEDEDE;
+    text-align: center;
+    padding-bottom: 3px;
+}
+
+.model.modelDefault div.modelTitle {
+    white-space: nowrap;
+    padding: 11px 5px 0px 5px;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.model.modelDefault.selected {
+    border: 2px solid #52A8EC;
+    background-color: #DBEAFC;
+}
+
+.model.modelDefault.connection-end-state-hover {
+    border-color: #F7B400;
+    background-color: #F7B478;
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 120, 0, 0.6);
+}
+
+/*Connection points*/
+.model.modelDefault .connEndPoint.top,
+.model.modelDefault .connEndPoint.bottom {
+    height: 0;
+    background-color: #ff0000;
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    display: inline-block;
+}
+
+.model.modelDefault .connEndPoint.bottom {
+    bottom: -1px;
+}
+
+.model.modelDefault .connEndPoint.top {
+    top: -1px;
+}
+
+.model.modelDefault .connEndPoint.left,
+.model.modelDefault .connEndPoint.right {
+    width: 0;
+    background-color: #ff0000;
+    position: absolute;
+    top: 15px;
+    bottom: 15px;
+    display: inline-block;
+}
+
+.model.modelDefault .connEndPoint.left {
+    left: -1px;
+}
+
+.model.modelDefault .connEndPoint.right {
+    right: -1px;
+}
+
+.model.modelDefault .myConnRect {
+    background-color: #FEFEFE;
+    height: 12px;
+    width: 12px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid #0000FF;
+    display: none;
+    margin-left: -6px;
+    left: 50%;
+}
+
+.model.modelDefault .myConnRect.bottom {
+    bottom: -6px;
+}
+
+.model.modelDefault .myConnRect.top {
+    top: -6px;
+}
+
+.model.modelDefault:hover .myConnRect {
+    display: block;
+}
+
+.model.modelDefault .myConnRect:hover {
+    border-color: rgba(82, 168, 236, 0.8);
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+}

@@ -159,12 +159,13 @@ define(['logManager',
             bottomConnectionPoint = this._bottomConnectionPoint.offset(),
             startPos = { "x": bottomConnectionPoint.left + 0.5 - paperOffset.left,
                         "y": bottomConnectionPoint.top - paperOffset.top},
-            childTopConnectionPoint,
+            childTopConnectionPoints = [],
             childrenSumWidth = 0,
             childNum = 0,
             gap,
             pathDef,
-            path;
+            path,
+            len;
 
         //remove existing lines first
         this._removeContainmentLines();
@@ -188,24 +189,27 @@ define(['logManager',
 
         for (i in this._children) {
             if (this._children.hasOwnProperty(i)) {
-                childTopConnectionPoint = this._children[i]._topConnectionPoint.offset();
-
-                pathDef = ["M", startPos.x, startPos.y, "L", childTopConnectionPoint.left - paperOffset.left, childTopConnectionPoint.top - paperOffset.top];
-
-                pathDef = Raphael.path2curve(pathDef.join(","));
-
-                pathDef[1][2] += 70;
-                pathDef[1][4] -= 70;
-
-                path = this._svgPaper.path(pathDef.join(",")).attr({
-                    "stroke": "",
-                    "fill": ""
-                });
-
-                $(path.node).attr("class", "containment");
-                $(path.node).removeAttr("stroke");
-                $(path.node).removeAttr("fill");
+                childTopConnectionPoints.push(this._children[i]._topConnectionPoint.offset());
             }
+        }
+
+        i = childTopConnectionPoints.length;
+        while (--i >= 0) {
+            pathDef = ["M", startPos.x, startPos.y, "L", childTopConnectionPoints[i].left - paperOffset.left, childTopConnectionPoints[i].top - paperOffset.top];
+
+            pathDef = Raphael.path2curve(pathDef.join(","));
+
+            pathDef[1][2] += 70;
+            pathDef[1][4] -= 70;
+
+            path = this._svgPaper.path(pathDef.join(","));/*.attr({
+             "stroke": "",
+             "fill": ""
+             });*/
+
+            $(path.node).attr("class", "containment");
+            //$(path.node).removeAttr("stroke");
+            //$(path.node).removeAttr("fill");
         }
 
         if (this.parentObject) {
@@ -230,7 +234,7 @@ define(['logManager',
 
                 if (child._el) {
                     this._childrenContainer.append(child._el);
-                    this._drawContainmentLines();
+                    //this._drawContainmentLines();
                     child.afterAppend();
                 }
             }
@@ -243,7 +247,7 @@ define(['logManager',
                 if (this._children[child._id]) {
                     this._children[child._id].destroy();
                     delete this._children[child._id];
-                    this._drawContainmentLines();
+                    //this._drawContainmentLines();
                 }
             }
         }

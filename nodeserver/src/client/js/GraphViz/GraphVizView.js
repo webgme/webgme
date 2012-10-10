@@ -119,7 +119,7 @@ define(['logManager',
             }
         }
 
-        this._redrawPointers();
+        //this._redrawPointers();
 
         return newObject;
     };
@@ -232,6 +232,8 @@ define(['logManager',
             pathOutline,
             j,
             conretePointer;
+
+        return;
 
         this._svgPaper.clear();
         this._pointerFilterContainer.html("");

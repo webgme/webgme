@@ -2,11 +2,11 @@
 
 define(['logManager',
     'clientUtil',
-    'commonUtil'/*,
-    './SimpleModelDecorator.js'*/], function (logManager,
+    'commonUtil',
+    './DefaultDecorator.js'], function (logManager,
                                          util,
                                          commonUtil,
-                                         ComponentBase) {
+                                         DefaultDecorator) {
 
     var ModelComponent;
 
@@ -44,7 +44,7 @@ define(['logManager',
 
         if (_.isString(decoratorName)) {
             //TODO: delete
-            //decoratorName = "SimpleModelDecorator";
+            //decoratorName = "ModelWithAttributesDecorator";
             decoratorName = "ModelWithPortsDecorator";
             //TODO: enddelete
             decoratorName = './js/ModelEditor2/' + decoratorName + '.js';
@@ -54,7 +54,11 @@ define(['logManager',
                 function (DecoratorClass) {
                     self._logger.debug("require(['" + decoratorName + "'] - phase3");
                     self._decoratorDownloaded(objDescriptor, DecoratorClass);
-                    //TODO: hanlde the case when the decorator not found on the SERVER
+                },
+                function (err) {
+                    self._logger.error("Failed to load decorator because of '" + err.requireType + "' with module" + err.requireModules[0] + "'. Fallback to DefaultDecorator...");
+                    //for any error use the default decorator, does not know anything, just displays a box and writes title
+                    self._decoratorDownloaded(objDescriptor, DefaultDecorator);
                 });
             this._logger.debug("require(['" + decoratorName + "'] - phase2");
         } else {

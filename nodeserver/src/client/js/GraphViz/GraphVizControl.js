@@ -19,7 +19,7 @@ define(['logManager',
         this._logger = logManager.create("GraphVizControl");
         this._logger.debug("Created");
 
-        this._territoryId = this._client.addUI(this);
+        //this._territoryId = this._client.addUI(this);
         this._selfPatterns = {};
 
         this._componentStates = { "loading": 0,
@@ -74,12 +74,7 @@ define(['logManager',
         this._components = {};
 
         if (this._currentNodeInfo.id) {
-            for (i in this._selfPatterns) {
-                if (this._selfPatterns.hasOwnProperty(i)) {
-                    delete this._selfPatterns[i];
-                }
-            }
-            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            this._client.removeUI(this._territoryId);
         }
 
         this._currentNodeInfo = { "id": null, "children" : [] };
@@ -96,6 +91,8 @@ define(['logManager',
         }
 
         this._selfPatterns[nodeId] = { "children": 1 };
+
+        this._territoryId = this._client.addUI(this, true);
         this._client.updateTerritory(this._territoryId, this._selfPatterns);
 
         this._logger.debug("SELECTEDOBJECT_CHANGED handled for '" + nodeId + "'");
@@ -124,6 +121,8 @@ define(['logManager',
                 this._createObject(currentChildId);
             }
         }
+
+        this._components[objectId].componentInstance._drawContainmentLines();
 
         this._selfPatterns[objectId] = { "children": 1 };
         this._client.updateTerritory(this._territoryId, this._selfPatterns);
@@ -181,6 +180,21 @@ define(['logManager',
             //this._onUnload(eid);
             break;
         }
+    };
+
+    GraphVizControl.prototype.onOneEvent = function (events) {
+        var i;
+
+        this._logger.debug("onOneEvent '" + events.length + "' items");
+
+        if (events && events.length > 0) {
+            i = events.length;
+            while (--i >= 0) {
+                this.onEvent(events[i].etype, events[i].eid);
+            }
+        }
+
+        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
     GraphVizControl.prototype._onLoad = function (objectId) {
