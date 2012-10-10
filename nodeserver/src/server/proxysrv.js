@@ -39,7 +39,7 @@ define([ "core/assert","common/CommonUtil","server/projsrv","socket.io"], functi
                         callback(null,_projects[project].info);
                     } else {
                         var projguid = "/"+CU.guid();
-                        var project = new PROJ({
+                        var proj = new PROJ({
                             io        : options.io,
                             namespace : projguid,
                             options   : options.options,
@@ -51,7 +51,7 @@ define([ "core/assert","common/CommonUtil","server/projsrv","socket.io"], functi
                                 options    : options.mongo.options
                             }
                         });
-                        _projects[project] = {info: projguid, project:project};
+                        _projects[project] = {info: projguid, project:proj};
                         callback(null,_projects[project].info);
                     }
                 }

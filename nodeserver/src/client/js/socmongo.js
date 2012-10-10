@@ -219,6 +219,22 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
             }
         };
 
+        var subscribe = function(branchname,updatedfunction){
+            if(socket){
+                if(isopen){
+                    socket.emit('subscribe',branchname,updatedfunction);
+                }
+            }
+        };
+
+        var unsubscribe = function(branchname){
+            if(socket){
+                if(isopen){
+                    socket.emit('unsubscribe',branchname);
+                }
+            }
+        };
+
         return {
             open          : open,
             opened        : opened,
@@ -235,7 +251,9 @@ define([ "core/assert",'notificationManager', "/socket.io/socket.io.js" ], funct
             whenAvailable : whenAvailable,
             fsync         : fsync,
             getUpdated    : getUpdated,
-            find          : find
+            find          : find,
+            subscribe     : subscribe,
+            unsubscribe   : unsubscribe
         };
     };
 

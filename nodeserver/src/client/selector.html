@@ -135,6 +135,22 @@
                         console.log(err);
                     } else {
                         storage = new ST({server:location.host+projns,socketiopar:options.socketiopar});
+
+                        /*core = new CORE(storage);
+                        mywrapper = new CWRAPPER({
+                            timelog: options.timelog,
+                            mongosrv: projns,
+                            socketiopar: options.socketiopar,
+                            faulttolerant: options.faulttolerant,
+                            cache: options.cache,
+                            logging: options.logging,
+                            logsrv: options.logsrv
+                        });
+                         treebrowser = new TreeBrowserControl(mywrapper, new JSTreeBrowserWidget("tbJSTree"));
+                         refreshBranchList();
+                         */
+
+
                         storage.open(function(err){
                             if(err){
                                 console.log(err);
@@ -149,11 +165,11 @@
                                     logging: options.logging,
                                     logsrv: options.logsrv
                                 });
-
                                 treebrowser = new TreeBrowserControl(mywrapper, new JSTreeBrowserWidget("tbJSTree"));
                                 refreshBranchList();
                             }
                         });
+
                     }
                 });
             };

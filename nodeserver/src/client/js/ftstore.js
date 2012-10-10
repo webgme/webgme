@@ -141,19 +141,21 @@ define([ "core/assert" ], function (ASSERT) {
             });
         };
         return {
-            open      : open,
-            opened    : storage.opened,
-            close     : storage.close,
-            KEYNAME   : KEYNAME,
-            load      : load,
-            save      : save,
-            remove    : remove,
-            dumpAll   : storage.dumpAll,
-            removeAll : removeAll,
-            searchId  : storage.searchId,
-            fsync     : fsync,
-            getUpdated: storage.getUpdated,
-            find      : storage.find
+            open         : open,
+            opened       : storage.opened,
+            close        : storage.close,
+            KEYNAME      : KEYNAME,
+            load         : load,
+            save         : save,
+            remove       : remove,
+            dumpAll      : storage.dumpAll,
+            removeAll    : removeAll,
+            searchId     : storage.searchId,
+            fsync        : fsync,
+            getUpdated   : storage.getUpdated,
+            find         : storage.find,
+            subscribe    : storage.subscribe,
+            unsubscriber : storage.unsubscribe
         }
     };
 

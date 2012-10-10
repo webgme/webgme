@@ -13,19 +13,32 @@ define(['commonUtil',"core/lib/sha1"],
         var Comitter = function(storage){
             var BID = "*";
             var actualbranchinfo = null;
-            var selectBranch = function(branchname,callback){
-                storage.load(BID+branchname,function(err,branch){
+            var currentbranchname = null;
+
+            var getBranches = function(callback){
+                storage.find({type:"branch"},function(err,nodes){
                     if(err){
                         callback(err);
                     } else {
-                        if(branch && branch.root.length>0){
-                            actualbranchinfo = branch;
-                            callback(null,actualbranchinfo.root[actualbranchinfo.root.length-1]);
+                        if(nodes && nodes.length>0){
+                            var branches = [];
+                            for(var i=0;i<nodes.length;i++){
+                                branches.push(nodes[i].name);
+                            }
+                            callback(null,branches);
                         } else {
-                            callback("no branch found");
+                            callback("no branches were found");
                         }
                     }
                 });
+            };
+
+            var selectBranch = function(branchname,updfunc){
+                if(currentbranchname && branchname !== currentbranchname){
+                    storage.unsubscribe(currentbranchname);
+                    storage.subscribe(branchname,updfunc);
+                    currentbranchname = branchname;
+                }
             };
 
             var updateRoot = function(rootkey,callback){
@@ -86,10 +99,11 @@ define(['commonUtil',"core/lib/sha1"],
             };
 
             return {
-                selectBranch            : selectBranch,
-                updateRoot              : updateRoot,
-                commit                  : commit,
-                setRootUpdatedFunction : setRootUpdatedFunction
+                selectBranch           : selectBranch,
+                updateRoot             : updateRoot,
+                commit                 : commit,
+                setRootUpdatedFunction : setRootUpdatedFunction,
+                getBranches            : getBranches
             }
         };
 

@@ -121,9 +121,7 @@ define(['logManager',
                     /*in case of the first user we have to connect...*/
                     storage.open(function(){
                         /*we select the master branch for a start now :)*/
-                        comitter.selectBranch("master",function(err,hash){
-                            newRootArrived(hash);
-                        });
+                        comitter.selectBranch("master",newRootArrived);
                     });
                 }
                 return guid;
@@ -160,20 +158,24 @@ define(['logManager',
                 if(_.isEqual(patterns,users[userID].PATTERNS)){
 
                 }else{
-                    /*updateUser*/nuUpdateSingleUser(userID,patterns,function(err){
-                        if(err){
-                            //TODO now what the f**k
-                            updateUser(userID,patterns,function(err){
-                                if(err){
-                                    console.log("second try for update failed as well...");
-                                } else {
-                                    logger.debug("user territory updated, but only for second try: "+userID);
-                                }
-                            });
-                        } else {
-                            logger.debug("user territory updated:"+userID);
-                        }
-                    });
+                    if(currentCore){
+                        /*updateUser*/nuUpdateSingleUser(userID,patterns,function(err){
+                            if(err){
+                                //TODO now what the f**k
+                                updateUser(userID,patterns,function(err){
+                                    if(err){
+                                        console.log("second try for update failed as well...");
+                                    } else {
+                                        logger.debug("user territory updated, but only for second try: "+userID);
+                                    }
+                                });
+                            } else {
+                                logger.debug("user territory updated:"+userID);
+                            }
+                        });
+                    } else {
+                        users[userID].PATTERNS = JSON.parse(JSON.stringify(patterns));
+                    }
                 }
             };
             this.fullRefresh = function(){
@@ -448,7 +450,7 @@ define(['logManager',
                 var tempcore = new LCORE(new CORE(storage),logsrv);
                 tempcore.loadRoot(roothash,function(err,node){
                     if(!err && node){
-                        currentRoot = newroot;
+                        currentRoot = roothash;
                         currentNodes = {};
                         currentCore = tempcore;
                         storeNode(node);

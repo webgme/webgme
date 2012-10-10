@@ -125,7 +125,7 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "basic", /*possible collections currently: basic,SFdemo, IFV*/
+            mongocollection : "egyik", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "branched",
             mongoopt        : {
                 'auto_reconnect' : true,
@@ -138,7 +138,8 @@ define([], function () {
             timelog         : false,
             socketiopar     : {
                 'reconnection delay' : 10,
-                'max reconnection attempts' : 50
+                'max reconnection attempts' : 50,
+                'force new connection' : true
             },
             srvsocketpar    : {
                 'heartbeat timeout'  : 240,

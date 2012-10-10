@@ -27,6 +27,11 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             _log(prefix+txt);
         };
 
+        var getBranchNameFromId = function(myid){
+            var regexp = new RegExp("^"+BID);
+            return myid.replace(regexp,'');
+        };
+
         var compareRoots = function(oldroot,newroot){
             /*if((oldroot === null || oldroot === undefined) && newroot ){
                 return true;
@@ -61,18 +66,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.open(callback);
             });
             socket.on('load',function(key,callback){
-                _mongo.load(key,function(err,node){
-                    if(err){
-                        callback(err,node);
-                    } else {
-                        if(node && node[KEY].indexOf(BID) === 0){
-                            /*this load means a branch change so we put the user into the right notification list*/
-                            _clients[socket.id].branch === node[KEY];
-                            broadcastRoot(node);
-                            callback(null,node);
-                        }
-                    }
-                });
+                _mongo.load(key,callback);
             });
             socket.on('save',function(node,callback){
                 if(node[KEY].indexOf(BID) === 0){
@@ -87,7 +81,11 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                                         callback(err);
                                     } else {
                                         /*we have to broadcast the updated root to everyone*/
-
+                                        for(var i in _clients){
+                                            if(_clients[i]["subscriptions"][getBranchNameFromId(node[KEY])]){
+                                                _clients[i]["subscriptions"][getBranchNameFromId(node[KEY])](node);
+                                            }
+                                        }
                                     }
                                 });
                             } else {
@@ -121,6 +119,27 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.find(criteria,callback);
             });
 
+            socket.on('subscribe',function(branchname,updatefunction){
+                if(_clients[socket.id]){
+                    _clients[socket.id]["subscriptions"][branchname] = updatefunction;
+                } else {
+                    _clients[socket.id] = {socket:socket,subscriptions:{}};
+                    _clients[socket.id]["subscriptions"][branchname] = updatefunction;
+                }
+                _mongo.load(BID+branchname,function(err,node){
+                                        
+                });
+            });
+
+            socket.on('unsubscribe',function(branchname){
+                if(_clients[socket.id]){
+                    delete _clients[socket.id]["subscriptions"][branchname];
+                }
+            });
+
+            socket.on('disconnect',function(){
+                delete _clients[socket.id];
+            });
         });
     };
     return ProjectServer;

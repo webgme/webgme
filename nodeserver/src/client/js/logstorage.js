@@ -120,7 +120,6 @@ define(['commonUtil'], function (CU) {
         };
 
         var getUpdated = function(myfunction){
-            var start = TIMESTAMP();
             var guid = "["+GUID()+"]";
             var text = guid+"getUpdated()";
             log(text);
@@ -128,7 +127,6 @@ define(['commonUtil'], function (CU) {
         };
 
         var find = function(criteria,callback){
-            var start = TIMESTAMP();
             var guid = "["+GUID()+"]";
             var text = guid+"find("+JSON.stringify(criteria)+")";
             log(text);
@@ -136,6 +134,20 @@ define(['commonUtil'], function (CU) {
                 log(text+ETIMESTRING(start));
                 callback(err,nodes);
             });
+        };
+
+        var subscribe = function(branchname,updatefunction){
+            var guid = "["+GUID()+"]";
+            var text = guid+"subscribe("+branchname+")";
+            log(text);
+            storage.subscribe(branchname,updatefunction);
+        };
+
+        var unsubscribe = function(branchname){
+            var guid = "["+GUID()+"]";
+            var text = guid+"unsubscribe("+branchname+")";
+            log(text);
+            storage.subscribe(branchname,updatefunction);
         };
 
         return {
@@ -152,7 +164,9 @@ define(['commonUtil'], function (CU) {
             whenAvailable : whenAvailable,
             fsync         : fsync,
             getUpdated    : getUpdated,
-            find          : find
+            find          : find,
+            subscribe     : subscribe,
+            unsubscribe   : unsubscribe
         }
     };
 
