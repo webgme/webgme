@@ -9,7 +9,7 @@ package org.isis.promise;
 public final class Constant<Type> implements Promise<Type> {
 	private Type value;
 
-	Constant(Type value) {
+	public Constant(Type value) {
 		this.value = value;
 	}
 

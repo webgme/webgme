@@ -4,7 +4,9 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.promise;
+package org.isis.promise.test;
+
+import org.isis.promise.*;
 
 class TestSpeed {
 	
