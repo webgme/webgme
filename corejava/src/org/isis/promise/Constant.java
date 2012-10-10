@@ -4,19 +4,22 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.promise4;
+package org.isis.promise;
 
-final class PromiseException<Type> implements Promise<Type> {
-	private Exception value;
+public final class Constant<Type> implements Promise<Type> {
+	private Type value;
 
-	PromiseException(Exception value) {
-		assert(value != null);
+	public Constant(Type value) {
 		this.value = value;
 	}
 
+	public Type getValue() {
+		return value;
+	}
+
 	@Override
-	public Constant<Type> getConstant() throws Exception {
-		throw value;
+	public Constant<Type> getConstant() {
+		return this;
 	}
 
 	@Override

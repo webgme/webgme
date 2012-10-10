@@ -4,9 +4,9 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.promise4;
+package org.isis.promise;
 
-public abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
+abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> {
 
 	private static final short INDEX0 = 0;
 	private static final short INDEX1 = 1;
