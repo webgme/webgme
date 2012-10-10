@@ -8,21 +8,50 @@ package org.isis.promise;
 
 public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 
-	private final Observer<Arg0> arg0;
+	private static final short INDEX0 = 0;
+	private Promise<Arg0> promise0;
 
 	public FutureCall1(Promise<Arg0> arg0) {
-		super(2);
-
-		this.arg0 = new Observer<Arg0>(this, arg0);
+		assert (arg0 != null);
+		this.promise0 = arg0;
 	}
 
-	protected final Promise<Type> execute() throws Exception {
-		return execute(arg0.getValue());
+	@Override
+	public void run() {
+		execute();
 	}
 
-	public final void cancelPromise() {
-		arg0.cancel();
+	public abstract Promise<Type> execute(Arg0 arg0) throws Exception;
+
+	protected final void execute() {
+		if (promise0 instanceof Constant<?>) {
+			try {
+				Arg0 arg0 = ((Constant<Arg0>) promise0).getValue();
+				Promise<Type> value = execute(arg0);
+				resolve(value);
+			} catch (Exception error) {
+				reject(error);
+			}
+		} else
+			promise0.requestArgument(INDEX0, this);
 	}
 
-	public abstract Promise<Type> execute(Arg0 arg1) throws Exception;
+	@Override
+	@SuppressWarnings("unchecked")
+	protected final <Arg> void argumentResolved(short index,
+			Promise<Arg> promise) {
+		assert (index == INDEX0 && promise != null);
+
+		synchronized (this) {
+			assert (promise0 != promise && !(promise0 instanceof Constant<?>));
+			promise0 = (Promise<Arg0>) promise;
+		}
+
+		execute();
+	}
+
+	@Override
+	protected final void rejectChildren(Exception reason) {
+		promise0.reject(reason);
+	}
 }

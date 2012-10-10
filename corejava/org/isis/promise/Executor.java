@@ -6,56 +6,56 @@
 
 package org.isis.promise;
 
-import java.util.concurrent.*;
-
 public class Executor {
-
-	public static <Type> Type obtain(Promise<Type> promise) throws Exception {
+	@SuppressWarnings("unchecked")
+	public static <Type> Type obtain(final Promise<Type> promise) throws Exception {
 		assert (promise != null);
 
+		if (promise instanceof Constant<?>)
+			return ((Constant<Type>) promise).getValue();
+
 		final class Waiter extends Future<Void> {
-			Waiter() {
-				super(1);
+
+			Object result = null;
+
+			@Override
+			public void run() {
+				promise.requestArgument((short) 0, this);
 			}
 
-			boolean finished = false;
-
-			public synchronized Promise<Void> execute() {
-				finished = true;
-				this.notify();
-				return null;
+			@Override
+			protected synchronized <Arg> void argumentResolved(short index,
+					Promise<Arg> promise) {
+				assert (promise != null);
+				
+				if (promise instanceof Constant<?>) {
+					result = promise;
+					this.notifyAll();
+				}
+				else
+					promise.requestArgument((short)0, this);
 			}
 
-			public void cancelPromise() {
+			@Override
+			protected synchronized void rejectChildren(Exception error) {
+				assert (error != null);
+
+				result = error;
+				this.notifyAll();
 			}
 		}
 
 		Waiter waiter = new Waiter();
-		Observer<Type> observer = new Observer<Type>(waiter, promise);
+		waiter.run();
 
 		synchronized (waiter) {
-			if (!waiter.finished)
+			if (waiter.result == null)
 				waiter.wait();
 		}
 
-		return observer.getValue();
-	}
+		if (waiter.result instanceof Constant<?>)
+			return ((Constant<Type>) waiter.result).getValue();
 
-	private static ExecutorService service = new ThreadPoolExecutor(0,
-			Integer.MAX_VALUE, 1, TimeUnit.SECONDS,
-			new SynchronousQueue<Runnable>()) {
-		protected void beforeExecute(Thread thread, Runnable command) {
-			System.out.println("before " + System.identityHashCode(command)
-					+ " " + thread.getId());
-		}
-
-		protected void afterExecute(Runnable command, Throwable exception) {
-			System.out.println("after  " + System.identityHashCode(command)
-					+ (exception != null ? exception.toString() : ""));
-		}
-	};
-
-	public static void execute(Runnable command) {
-		service.execute(command);
+		throw (Exception) waiter.result;
 	}
 }

@@ -7,11 +7,10 @@
 package org.isis.promise;
 
 public interface Promise<Type> {
-	void setParent(Observer<Type> parent);
+	
+	Constant<Type> getConstant() throws Exception;
+	
+	void reject(Exception error);
 
-	Type getValue() throws Exception;
-
-	void finished();
-
-	void cancelPromise();
+	void requestArgument(short index, Future<?> parent);
 }

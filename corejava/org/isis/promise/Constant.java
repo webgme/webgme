@@ -7,33 +7,27 @@
 package org.isis.promise;
 
 public final class Constant<Type> implements Promise<Type> {
-	private Object value;
+	private Type value;
 
-	public Constant(Type value) {
+	Constant(Type value) {
 		this.value = value;
 	}
 
-	public Constant(Exception value) {
-		assert (value instanceof Exception);
-		this.value = value;
+	public Type getValue() {
+		return value;
 	}
 
-	@SuppressWarnings("unchecked")
-	public Type getValue() throws Exception {
-		if (value instanceof Exception)
-			throw (Exception) value;
-		else
-			return (Type) value;
+	@Override
+	public Constant<Type> getConstant() {
+		return this;
 	}
 
-	public void setParent(Observer<Type> parent) {
-		parent.finished();
+	@Override
+	public void reject(Exception reason) {
 	}
 
-	public void finished() {
-		throw new IllegalStateException();
-	}
-
-	public void cancelPromise() {
+	@Override
+	public void requestArgument(short index, Future<?> parent) {
+		assert(false);
 	}
 }

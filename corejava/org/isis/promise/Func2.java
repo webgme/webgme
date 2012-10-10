@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-package org.isis.promise4;
+package org.isis.promise;
 
 public abstract class Func2<Type, Arg0, Arg1> {
 	public abstract Promise<Type> call(Arg0 arg0, Arg1 arg1) throws Exception;
