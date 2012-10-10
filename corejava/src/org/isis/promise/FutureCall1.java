@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
+abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 
 	private static final short INDEX0 = 0;
 	private Promise<Arg0> promise0;
@@ -17,13 +17,7 @@ public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 	}
 
 	@Override
-	public void run() {
-		execute();
-	}
-
-	public abstract Promise<Type> execute(Arg0 arg0) throws Exception;
-
-	protected final void execute() {
+	public final void run() {
 		if (promise0 instanceof Constant<?>) {
 			try {
 				Arg0 arg0 = ((Constant<Arg0>) promise0).getValue();
@@ -36,6 +30,8 @@ public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 			promise0.requestArgument(INDEX0, this);
 	}
 
+	public abstract Promise<Type> execute(Arg0 arg0) throws Exception;
+
 	@Override
 	@SuppressWarnings("unchecked")
 	protected final <Arg> void argumentResolved(short index,
@@ -47,7 +43,7 @@ public abstract class FutureCall1<Type, Arg0> extends Future<Type> {
 			promise0 = (Promise<Arg0>) promise;
 		}
 
-		execute();
+		run();
 	}
 
 	@Override
