@@ -6,9 +6,7 @@
 
 package org.isis.promise.test;
 
-import java.util.concurrent.*;
 import org.isis.promise.*;
-import org.isis.promise.Executors;
 
 class TestSpeed {
 
@@ -32,11 +30,6 @@ class TestSpeed {
 		else
 			return SUM.call(fibonacci2(n - 1), fibonacci2(n - 2));
 	}
-/*
-	static Executor executor = new ThreadPoolExecutor(0, 50, 1,
-			TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-*/
-	static Executor executor = Executors.THREAD_EXECUTOR;
 
 	static Func1<Integer, Integer> FIBONACCI3 = new Func1<Integer, Integer>() {
 		@Override
@@ -51,13 +44,23 @@ class TestSpeed {
 				sub0 = FIBONACCI3.call(arg0 - 1);
 				sub1 = FIBONACCI3.call(arg0 - 2);
 			} else {
-				sub0 = FIBONACCI3.submit(executor, arg0 - 1);
-				sub1 = FIBONACCI3.submit(executor, arg0 - 2);
+				sub0 = FIBONACCI3.submit(Executors.NEW_THREAD_EXECUTOR,
+						arg0 - 1);
+				sub1 = FIBONACCI3.submit(Executors.NEW_THREAD_EXECUTOR,
+						arg0 - 2);
 			}
 
 			return SUM.call(sub0, sub1);
 		}
 	};
+
+	static Promise<Integer> fibonacci4(int n) throws Exception {
+		if (n <= 1)
+			return new Constant<Integer>(n);
+		else
+			return SUM.submit(Executors.DIRECT_EXECUTOR, fibonacci2(n - 1),
+					fibonacci2(n - 2));
+	}
 
 	public static void main(String[] args) throws Exception {
 		for (int i = 0; i < 10; ++i) {
@@ -77,7 +80,12 @@ class TestSpeed {
 
 			start = System.currentTimeMillis();
 			value = Executors.obtain(FIBONACCI3.call(depth));
-			System.out.println("\t3: " + value + " time="
+			System.out.print("\t3: " + value + " time="
+					+ (System.currentTimeMillis() - start));
+
+			start = System.currentTimeMillis();
+			value = Executors.obtain(fibonacci4(depth));
+			System.out.println("\t4: " + value + " time="
 					+ (System.currentTimeMillis() - start));
 		}
 	}

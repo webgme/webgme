@@ -48,7 +48,7 @@ abstract class Future<Type> implements Promise<Type>, Runnable {
 			if( promise instanceof Future<?> )
 				((Future<Type>)promise).requestForwarding(this);
 		} else
-			assert (oldState == STATE_RESOLVED);
+			assert (oldState == STATE_RESOLVED || oldState == STATE_REJECTED);
 
 		debug("resolve end");
 	}

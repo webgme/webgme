@@ -7,9 +7,11 @@
 package org.isis.webgme.storage;
 
 import org.isis.promise.*;
-
-import java.util.concurrent.*;
 import com.mongodb.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 public class MongoDb implements Storage {
 
@@ -20,10 +22,6 @@ public class MongoDb implements Storage {
 		public String collection = "storage";
 	};
 
-	private ExecutorService service = new ThreadPoolExecutor(0,
-			10, 1, TimeUnit.SECONDS,
-			new LinkedBlockingQueue<Runnable>());
-
 	private Options options;
 	private DBCollection collection;
 
@@ -32,12 +30,23 @@ public class MongoDb implements Storage {
 		this.options = options;
 	}
 
+	// Executor executor = Executors.DIRECT_EXECUTOR;
+	// Executor executor = Executors.NEW_THREAD_EXECUTOR;
+	Executor executor = new ThreadPoolExecutor(100, 100,
+			1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+
 	Func0<Void> openTask = new Func0<Void>() {
 		@Override
 		public Promise<Void> call() throws Exception {
 			Mongo mongo = null;
 			try {
-				mongo = new Mongo(new ServerAddress(options.host, options.port));
+				MongoOptions mongoOptions = new MongoOptions();
+				mongoOptions.connectionsPerHost = 5;
+				mongoOptions.threadsAllowedToBlockForConnectionMultiplier = 1000;
+
+				mongo = new Mongo(
+						new ServerAddress(options.host, options.port),
+						mongoOptions);
 				DBCollection coll = mongo.getDB(options.database)
 						.getCollection(options.collection);
 
@@ -64,7 +73,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> open() {
 		assert (collection == null);
-		return openTask.submit(service);
+		return openTask.submit(executor);
 	}
 
 	@Override
@@ -95,7 +104,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> close() {
 		assert (collection != null);
-		return closeTask.submit(service);
+		return closeTask.submit(executor);
 	}
 
 	static final Constant<DBObject> NULL = new Constant<DBObject>(null);
@@ -111,7 +120,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<DBObject> load(String key) {
 		assert (key != null && collection != null);
-		return loadTask.submit(service, key);
+		return loadTask.submit(executor, key);
 	}
 
 	Func1<Void, DBObject> saveTask = new Func1<Void, DBObject>() {
@@ -125,7 +134,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> save(DBObject object) {
 		assert (object != null && collection != null);
-		return saveTask.submit(service, object);
+		return saveTask.submit(executor, object);
 	}
 
 	@Override
