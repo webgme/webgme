@@ -469,6 +469,24 @@ define(['logManager',
                     }
                 });
             };
+            var modifyRootOnServer = function(){
+                var newhash = currentCore.persist(currentNodes["root"],function(err){
+                    if(err){
+                        console.log(err);
+                    } else {
+                        if(!newhash){
+                            newhash = currentCore.getKey(currentNodes["root"]);
+                        }
+                        comitter.updateRoot(newhash,function(err){
+                            if(err){
+                                console.log(err);
+                            }
+                        });
+                    }
+
+                });
+            };
+
 
             var rollBackModification = function(){
                 currentNodes = {};
@@ -513,7 +531,7 @@ define(['logManager',
                     });
                 }
             };
-            var modifyRootOnServer = function(skippersist){
+            /*var modifyRootOnServer = function(skippersist){
                 if(!intransaction){
                     if(currentCore){
                         if(!skippersist){
@@ -569,7 +587,7 @@ define(['logManager',
                 } else {
                     logger.debug("in transaction");
                 }
-            };
+            };*/
             var getNodePath = function(node){
                 var path = currentCore.getStringPath(node);
                 if(path === ""){

@@ -28,8 +28,8 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         };
 
         var getBranchNameFromId = function(myid){
-            var regexp = new RegExp("^"+BID);
-            return myid.replace(regexp,'');
+            //var regexp = new RegExp("^"+"\*");
+            return myid.replace(/^\*/,'');
         };
 
         var compareRoots = function(oldroot,newroot){
@@ -59,7 +59,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
 
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
-            _clients[socket.id] = {socket:socket,branch:null};
+            _clients[socket.id] = {socket:socket,subscriptions:{}};
 
             /*mongo functions*/
             socket.on('open',function(callback){
@@ -70,6 +70,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             });
             socket.on('save',function(node,callback){
                 if(node[KEY].indexOf(BID) === 0){
+                    console.log("branchupdate!!!")
                     /*active commit save - we have to check extra stuffa*/
                     _mongo.load(node[KEY],function(err,oldroot){
                         if(err){
@@ -81,9 +82,15 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                                         callback(err);
                                     } else {
                                         /*we have to broadcast the updated root to everyone*/
+                                        var branchname = getBranchNameFromId(node[KEY]);
+                                        console.log("kecso "+branchname);
                                         for(var i in _clients){
-                                            if(_clients[i]["subscriptions"][getBranchNameFromId(node[KEY])]){
-                                                _clients[i]["subscriptions"][getBranchNameFromId(node[KEY])](node);
+                                            console.log("kecso be");
+                                            if(_clients[i]["subscriptions"][branchname]){
+                                                console.log("kecso vegre");
+                                                console.log(JSON.stringify(_clients[i]["subscriptions"][branchname]));
+                                                _clients[i]["subscriptions"][branchname](node);
+                                                _clients[i].socket.emit('updated',node);
                                             }
                                         }
                                     }
@@ -120,14 +127,12 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             });
 
             socket.on('subscribe',function(branchname,updatefunction){
-                if(_clients[socket.id]){
-                    _clients[socket.id]["subscriptions"][branchname] = updatefunction;
-                } else {
-                    _clients[socket.id] = {socket:socket,subscriptions:{}};
-                    _clients[socket.id]["subscriptions"][branchname] = updatefunction;
-                }
+                console.log("KKK "+JSON.stringify(updatefunction));
+                _clients[socket.id]["subscriptions"][branchname] = updatefunction;
                 _mongo.load(BID+branchname,function(err,node){
-                                        
+                    if(!err && node){
+                        updatefunction(node);
+                    }
                 });
             });
 

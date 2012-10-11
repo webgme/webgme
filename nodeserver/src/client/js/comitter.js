@@ -36,9 +36,18 @@ define(['commonUtil',"core/lib/sha1"],
             var selectBranch = function(branchname,updfunc){
                 if(currentbranchname && branchname !== currentbranchname){
                     storage.unsubscribe(currentbranchname);
-                    storage.subscribe(branchname,updfunc);
-                    currentbranchname = branchname;
                 }
+                storage.subscribe(branchname,function(node){
+                    console.log("root update from server");
+                    actualbranchinfo = node;
+                    updfunc(node.root[node.root.length-1]);
+                });
+                currentbranchname = branchname;
+                storage.getUpdated(function(node){
+                    console.log("na itt jon root update from server");
+                    actualbranchinfo = node;
+                    updfunc(node.root[node.root.length-1]);
+                });
             };
 
             var updateRoot = function(rootkey,callback){
