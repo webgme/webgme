@@ -24,4 +24,8 @@ abstract class FutureCall0<Type> extends Future<Type> {
 			Promise<Arg> promise) {
 		throw new IllegalStateException();
 	}
+
+	@Override
+	protected void rejectChildren(Exception reason) {
+	}
 }

@@ -114,11 +114,13 @@ abstract class Future<Type> implements Promise<Type>, Runnable {
 		debug("requestForwarding end");
 	}
 
-	public void debug(String where) {
+	public final void debug(String where) {
+		/*
 		try {
 			Thread.sleep(1);
 		} catch (Exception e) {
 		}
+		 */
 
 		// System.out.println(where + " this=" + System.identityHashCode(this)
 		// + " state=" + state);

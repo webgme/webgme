@@ -7,6 +7,7 @@
 package org.isis.webgme.storage;
 
 import org.isis.promise.*;
+
 import java.util.concurrent.*;
 import com.mongodb.*;
 
@@ -20,8 +21,8 @@ public class MongoDb implements Storage {
 	};
 
 	private ExecutorService service = new ThreadPoolExecutor(0,
-			Integer.MAX_VALUE, 1, TimeUnit.SECONDS,
-			new SynchronousQueue<Runnable>());
+			10, 1, TimeUnit.SECONDS,
+			new LinkedBlockingQueue<Runnable>());
 
 	private Options options;
 	private DBCollection collection;
@@ -40,6 +41,9 @@ public class MongoDb implements Storage {
 				DBCollection coll = mongo.getDB(options.database)
 						.getCollection(options.collection);
 
+				CommandResult result = coll.getDB().getPreviousError();
+				result.throwOnError();
+
 				synchronized (MongoDb.this) {
 					if (collection != null)
 						throw new Exception("already open");
@@ -53,7 +57,7 @@ public class MongoDb implements Storage {
 				throw exception;
 			}
 
-			return new Constant<Void>(null);
+			return Constant.VOID;
 		}
 	};
 
@@ -84,7 +88,7 @@ public class MongoDb implements Storage {
 			Mongo mongo = coll.getDB().getMongo();
 			mongo.close();
 
-			return new Constant<Void>(null);
+			return Constant.VOID;
 		}
 	};
 
@@ -94,16 +98,34 @@ public class MongoDb implements Storage {
 		return closeTask.submit(service);
 	}
 
-	@Override
-	public Promise<Object> load(String key) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	static final Constant<DBObject> NULL = new Constant<DBObject>(null);
+
+	Func1<DBObject, String> loadTask = new Func1<DBObject, String>() {
+		@Override
+		public Promise<DBObject> call(String key) throws Exception {
+			DBObject result = collection.findOne(key);
+			return result == null ? NULL : new Constant<DBObject>(result);
+		}
+	};
 
 	@Override
-	public Promise<Void> save(Object object) {
-		// TODO Auto-generated method stub
-		return null;
+	public Promise<DBObject> load(String key) {
+		assert (key != null && collection != null);
+		return loadTask.submit(service, key);
+	}
+
+	Func1<Void, DBObject> saveTask = new Func1<Void, DBObject>() {
+		@Override
+		public Promise<Void> call(DBObject object) throws Exception {
+			collection.save(object);
+			return Constant.VOID;
+		}
+	};
+
+	@Override
+	public Promise<Void> save(DBObject object) {
+		assert (object != null && collection != null);
+		return saveTask.submit(service, object);
 	}
 
 	@Override

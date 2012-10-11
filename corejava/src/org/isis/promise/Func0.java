@@ -6,27 +6,23 @@
 
 package org.isis.promise;
 
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 public abstract class Func0<Type> {
 	public abstract Promise<Type> call() throws Exception;
 
-	public final Promise<Type> submit(final ExecutorService service) {
-		assert (service != null);
+	public final Promise<Type> submit(final Executor executor) {
+		assert (executor != null);
 
 		Future<Type> future = new FutureCall0<Type>() {
 			@Override
 			public Promise<Type> execute() throws Exception {
 				return Func0.this.call();
 			}
-
-			@Override
-			protected void rejectChildren(Exception error) {
-			}
 		};
 
 		// TODO: make this cancelable
-		service.submit(future);
+		executor.execute(future);
 		return future;
 	}
 }

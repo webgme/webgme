@@ -88,53 +88,36 @@ class TestRaces {
 		}
 	}
 
-	static class DelayedInt extends Future<Integer> implements Runnable {
+	static class DelayedInt extends Func0<Integer> {
 		long delay;
 		int value;
 
 		public DelayedInt(long delay, int value) {
 			this.delay = delay;
 			this.value = value;
-
-			Thread thread = new Thread(this);
-			thread.start();
 		}
 
 		@Override
-		public void run() {
-			try {
-				Thread.sleep(delay);
-				resolve(new Constant<Integer>(value));
-			} catch (Exception error) {
-				reject(error);
-			} catch (Error error) {
-				error.printStackTrace();
-				System.exit(-1);
-			}
-		}
-
-		@Override
-		protected <Arg> void argumentResolved(short index, Promise<Arg> argument) {
-			assert (false);
-		}
-
-		@Override
-		protected void rejectChildren(Exception error) {
+		public Promise<Integer> call() throws Exception {
+			Thread.sleep(delay);
+			return new Constant<Integer>(value);
 		}
 	}
 
 	static class ThreadLeaf implements Builder0 {
 		private int value;
 		private long delay;
+		private Func0<Integer> func;
 
 		public ThreadLeaf() {
 			value = (int) (Math.random() * 10);
 			delay = (int) (Math.random() * 10);
+			func = new DelayedInt(delay, value);
 		}
 
 		@Override
 		public Promise<Integer> create() {
-			return new DelayedInt(delay, value);
+			return func.submit(Executors.THREAD_EXECUTOR);
 		}
 
 		@Override
@@ -472,7 +455,7 @@ class TestRaces {
 			public void run() {
 				try {
 					Promise<Integer> promise = builder.create();
-					this.value = Executor.obtain(promise);
+					this.value = Executors.obtain(promise);
 				} catch (Exception error) {
 					this.error = error;
 				} catch (Error error) {
