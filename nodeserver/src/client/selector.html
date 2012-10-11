@@ -109,7 +109,9 @@
                         }
                         fillList("branchlist",branchnames);
                         if(branchnames.length>0){
-                            var button = document.getElementById("selectbutton");
+                            var button = document.getElementById("commitbutton");
+                            button.disabled = false;
+                            button = document.getElementById("selectbutton");
                             button.disabled = false;
                         }
                         if(branchnames.indexOf("*master") === -1){
@@ -241,12 +243,8 @@
             };
 
             commit = function(){
-                comitter.commit(function(err){
-                    if(err){
-                        console.log(err);
-                    } else {
-                        console.log("successfully commited to the branch");
-                    }
+                mywrapper.commit(function(err){
+                    console.log("commited "+err);
                 });
             };
 

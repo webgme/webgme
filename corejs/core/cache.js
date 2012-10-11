@@ -194,7 +194,9 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 			removeAll: removeAll,
 			searchId: storage.searchId,
 			fsync: storage.fsync,
-            getUpdated: storage.getUpdated
+            getUpdated: storage.getUpdated,
+            subscribe: storage.subscribe,
+            unsubscribe: storage.unsubscribe
 		};
 	};
 
