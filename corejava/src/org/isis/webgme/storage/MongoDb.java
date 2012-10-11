@@ -8,10 +8,8 @@ package org.isis.webgme.storage;
 
 import org.isis.promise.*;
 import com.mongodb.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import org.isis.promise.Executors;
 
 public class MongoDb implements Storage {
 
@@ -30,10 +28,7 @@ public class MongoDb implements Storage {
 		this.options = options;
 	}
 
-	// Executor executor = Executors.DIRECT_EXECUTOR;
-	// Executor executor = Executors.NEW_THREAD_EXECUTOR;
-	Executor executor = new ThreadPoolExecutor(100, 100,
-			1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+	ExecutorService executor; 
 
 	Func0<Void> openTask = new Func0<Void>() {
 		@Override
@@ -59,6 +54,10 @@ public class MongoDb implements Storage {
 
 					collection = coll;
 				}
+				
+				executor = new ThreadPoolExecutor(100, 100,
+						1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+				
 			} catch (Exception exception) {
 				if (mongo != null)
 					mongo.close();
@@ -73,7 +72,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> open() {
 		assert (collection == null);
-		return openTask.submit(executor);
+		return openTask.submit(Executors.NEW_THREAD_EXECUTOR);
 	}
 
 	@Override
@@ -85,15 +84,21 @@ public class MongoDb implements Storage {
 		@Override
 		public Promise<Void> call() throws Exception {
 			DBCollection coll;
+			ExecutorService exec;
 
 			synchronized (MongoDb.this) {
 				coll = collection;
+				exec = executor;
 				if (coll == null)
 					throw new Exception("already closed");
-				else
+				else {
 					collection = null;
+					executor = null;
+				}
 			}
 
+			exec.shutdown();
+			
 			Mongo mongo = coll.getDB().getMongo();
 			mongo.close();
 
@@ -104,7 +109,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> close() {
 		assert (collection != null);
-		return closeTask.submit(executor);
+		return closeTask.submit(Executors.NEW_THREAD_EXECUTOR);
 	}
 
 	static final Constant<DBObject> NULL = new Constant<DBObject>(null);
@@ -119,7 +124,7 @@ public class MongoDb implements Storage {
 
 	@Override
 	public Promise<DBObject> load(String key) {
-		assert (key != null && collection != null);
+		assert (key != null && collection != null && executor != null);
 		return loadTask.submit(executor, key);
 	}
 
@@ -133,7 +138,7 @@ public class MongoDb implements Storage {
 
 	@Override
 	public Promise<Void> save(DBObject object) {
-		assert (object != null && collection != null);
+		assert (object != null && collection != null && executor != null);
 		return saveTask.submit(executor, object);
 	}
 
