@@ -7,12 +7,9 @@
 package org.isis.promise.test;
 
 import org.isis.promise.*;
-import java.util.concurrent.*;
 
 class TestDelay {
 
-	static ExecutorService service = Executors.newSingleThreadExecutor();
-	
 	static class DelayedInt extends Func0<Integer> {
 		long delay;
 		int value;
@@ -31,7 +28,7 @@ class TestDelay {
 
 	public static void main(String[] args) throws Exception {
 		DelayedInt func = new DelayedInt(1000, 20);
-		Integer value = org.isis.promise.Executor.obtain(func.submit(service));
+		Integer value = Executors.obtain(func.submit(Executors.THREAD_EXECUTOR));
 		System.out.println(value);
 	}
 }

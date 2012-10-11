@@ -6,13 +6,31 @@
 
 package org.isis.promise;
 
-public class Executor {
+import java.util.concurrent.Executor;
+
+public class Executors {
+	public static Executor DIRECT_EXECUTOR = new Executor() {
+		@Override
+		public void execute(Runnable runnable) {
+			runnable.run();
+		}
+	};
+
+	public static Executor THREAD_EXECUTOR = new Executor() {
+		@Override
+		public void execute(Runnable runnable) {
+			Thread thread = new Thread(runnable);
+			thread.start();
+		}
+	};
+	
 	@SuppressWarnings("unchecked")
 	public static <Type> Type obtain(final Promise<Type> promise) throws Exception {
 		assert (promise != null);
 
-		if (promise instanceof Constant<?>)
-			return ((Constant<Type>) promise).getValue();
+		Constant<Type> c = promise.getConstant(); 
+		if( c != null )
+			return c.getValue();
 
 		final class Waiter extends Future<Void> {
 

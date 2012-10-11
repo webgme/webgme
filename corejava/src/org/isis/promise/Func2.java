@@ -6,6 +6,8 @@
 
 package org.isis.promise;
 
+import java.util.concurrent.Executor;
+
 public abstract class Func2<Type, Arg0, Arg1> {
 	public abstract Promise<Type> call(Arg0 arg0, Arg1 arg1) throws Exception;
 
@@ -68,4 +70,21 @@ public abstract class Func2<Type, Arg0, Arg1> {
 		future.run();
 		return future;
 	}
+
+	public final Promise<Type> submit(final Executor executor, Promise<Arg0> promise0,
+			Promise<Arg1> promise1) throws Exception {
+
+		final Func2<Type, Arg0, Arg1> that = this;
+		Future<Type> future = new FutureCall2<Type, Arg0, Arg1>(promise0,
+				promise1) {
+			@Override
+			public Promise<Type> execute(Arg0 arg0, Arg1 arg1) throws Exception {
+				return that.call(arg0, arg1);
+			}
+		};
+
+		executor.execute(future);
+		return future;
+	}
+
 }
