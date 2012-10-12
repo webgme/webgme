@@ -21,8 +21,8 @@ public abstract class Func2<Type, Arg0, Arg1> {
 			return call(arg0.getValue(), arg1.getValue());
 
 		final Func2<Type, Arg0, Arg1> that = this;
-		FutureCall2<Type, Arg0, Arg1> future = new FutureCall2<Type, Arg0, Arg1>(promise0,
-				promise1) {
+		FutureCall2<Type, Arg0, Arg1> future = new FutureCall2<Type, Arg0, Arg1>(
+				promise0, promise1) {
 			@Override
 			public Promise<Type> execute(Arg0 arg0, Arg1 arg1) throws Exception {
 				return that.call(arg0, arg1);
@@ -71,12 +71,12 @@ public abstract class Func2<Type, Arg0, Arg1> {
 		return future;
 	}
 
-	public final Promise<Type> submit(final Executor executor, Promise<Arg0> promise0,
-			Promise<Arg1> promise1) throws Exception {
+	public final Promise<Type> submit(final Executor executor,
+			Promise<Arg0> promise0, Promise<Arg1> promise1) throws Exception {
 
 		final Func2<Type, Arg0, Arg1> that = this;
-		FutureCall2<Type, Arg0, Arg1> future = new FutureCall2<Type, Arg0, Arg1>(promise0,
-				promise1) {
+		FutureCall2<Type, Arg0, Arg1> future = new FutureCall2<Type, Arg0, Arg1>(
+				promise0, promise1) {
 			@Override
 			public Promise<Type> execute(Arg0 arg0, Arg1 arg1) throws Exception {
 				return that.call(arg0, arg1);

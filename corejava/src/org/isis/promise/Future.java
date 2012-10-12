@@ -45,8 +45,8 @@ public abstract class Future<Type> implements Promise<Type> {
 		else if (oldState == STATE_FORWARD)
 			((Future<Type>) oldObject).resolve(promise);
 		else if (oldState == STATE_EMPTY || oldState == STATE_COLLECT) {
-			if( promise instanceof Future<?> )
-				((Future<Type>)promise).requestForwarding(this);
+			if (promise instanceof Future<?>)
+				((Future<Type>) promise).requestForwarding(this);
 		} else
 			assert (oldState == STATE_RESOLVED || oldState == STATE_REJECTED);
 
@@ -116,10 +116,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	public final void debug(String where) {
 		/*
-		try {
-			Thread.sleep(1);
-		} catch (Exception e) {
-		}
+		 * try { Thread.sleep(1); } catch (Exception e) { }
 		 */
 
 		// System.out.println(where + " this=" + System.identityHashCode(this)

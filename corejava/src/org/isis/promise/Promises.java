@@ -7,5 +7,5 @@
 package org.isis.promise;
 
 public class Promises {
-	
+
 }

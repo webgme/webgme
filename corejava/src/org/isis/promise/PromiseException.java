@@ -10,7 +10,7 @@ final class PromiseException<Type> implements Promise<Type> {
 	private Exception value;
 
 	PromiseException(Exception value) {
-		assert(value != null);
+		assert (value != null);
 		this.value = value;
 	}
 
@@ -25,6 +25,6 @@ final class PromiseException<Type> implements Promise<Type> {
 
 	@Override
 	public void requestArgument(short index, Future<?> parent) {
-		assert(false);
+		assert (false);
 	}
 }

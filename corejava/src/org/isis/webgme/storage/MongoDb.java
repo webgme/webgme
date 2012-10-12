@@ -8,6 +8,7 @@ package org.isis.webgme.storage;
 
 import org.isis.promise.*;
 import com.mongodb.*;
+
 import java.util.concurrent.*;
 import org.isis.promise.Executors;
 
@@ -127,10 +128,20 @@ public class MongoDb implements Storage {
 		return loadTask.submit(executor, key);
 	}
 
-	Func1<Void, DBObject> saveTask = new Func1<Void, DBObject>() {
+	Func1<Void, Object> saveTask = new Func1<Void, Object>() {
 		@Override
-		public Promise<Void> call(DBObject object) throws Exception {
-			collection.save(object);
+		public Promise<Void> call(Object object) throws Exception {
+
+			DBObject document;
+			if (object instanceof org.isis.webgme.test.TestMongo.Test) {
+				org.isis.webgme.test.TestMongo.Test obj = (org.isis.webgme.test.TestMongo.Test) object;
+				document = new BasicDBObject();
+				document.put("_id", obj.id);
+				document.put("value", obj.value);
+			} else
+				throw new IllegalArgumentException("unknown object type");
+
+			collection.save(document);
 			return Constant.VOID;
 		}
 	};
@@ -138,7 +149,7 @@ public class MongoDb implements Storage {
 	@Override
 	public Promise<Void> save(Object object) {
 		assert (object != null && collection != null && executor != null);
-		return saveTask.submit(executor, (DBObject) object);
+		return saveTask.submit(executor, object);
 	}
 
 	@Override

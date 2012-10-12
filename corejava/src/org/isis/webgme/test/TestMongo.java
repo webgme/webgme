@@ -16,10 +16,10 @@ public class TestMongo {
 		@Override
 		public Promise<Void> call(Object arg0, Integer arg1) throws Exception {
 			Integer val = 0;
-			
-			if( arg0 instanceof DBObject )
-				val = (Integer) ((DBObject)arg0).get("value");
-			
+
+			if (arg0 instanceof DBObject)
+				val = (Integer) ((DBObject) arg0).get("value");
+
 			if (val.intValue() != arg1.intValue())
 				throw new Exception("does not match");
 
@@ -27,11 +27,21 @@ public class TestMongo {
 		}
 	};
 
+	public static final class Test {
+		public String id;
+		public int value;
+
+		public Test(String id, int value) {
+			this.id = id;
+			this.value = value;
+		}
+	};
+
 	public static void main(String[] args) throws Exception {
 
 		final int COUNT = 30000;
 		long time;
-		
+
 		time = System.currentTimeMillis();
 		MongoDb.Options options = new MongoDb.Options();
 		options.host = "129.59.105.195";
@@ -45,10 +55,8 @@ public class TestMongo {
 		time = System.currentTimeMillis();
 		FutureArray<Void> results = new FutureArray<Void>(Void.class);
 		for (int i = 0; i < COUNT; ++i) {
-			DBObject obj1 = new BasicDBObject();
-			obj1.put("_id", "*obj" + i);
-			obj1.put("value", i);
-			results.add(mongo.save(obj1));
+			Test test = new Test("*obj" + i, i);
+			results.add(mongo.save(test));
 		}
 		Executors.obtain(results.seal());
 		time = System.currentTimeMillis() - time;

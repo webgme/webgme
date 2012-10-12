@@ -28,7 +28,8 @@ class TestDelay {
 
 	public static void main(String[] args) throws Exception {
 		DelayedInt func = new DelayedInt(1000, 20);
-		Integer value = Executors.obtain(func.submit(Executors.NEW_THREAD_EXECUTOR));
+		Integer value = Executors.obtain(func
+				.submit(Executors.NEW_THREAD_EXECUTOR));
 		System.out.println(value);
 	}
 }

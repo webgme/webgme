@@ -48,7 +48,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 
 		if (missing.decrementAndGet() == 0)
 			done();
-		
+
 		return this;
 	}
 
