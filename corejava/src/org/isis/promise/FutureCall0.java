@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-abstract class FutureCall0<Type> extends Future<Type> {
+abstract class FutureCall0<Type> extends Future<Type> implements Runnable {
 	@Override
 	public final void run() {
 		try {

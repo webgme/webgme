@@ -8,18 +8,18 @@ package org.isis.webgme.test;
 
 import org.isis.promise.*;
 import org.isis.webgme.storage.*;
-import com.mongodb.*;
+import com.allanbank.mongodb.bson.Document;
+import com.allanbank.mongodb.bson.builder.BuilderFactory;
+import com.allanbank.mongodb.bson.element.IntegerElement;
 
-public class TestMongo {
+public class TestMongoAsync {
 
 	static final Func2<Void, Object, Integer> TEST = new Func2<Void, Object, Integer>() {
 		@Override
 		public Promise<Void> call(Object arg0, Integer arg1) throws Exception {
-			Integer val = 0;
-			
-			if( arg0 instanceof DBObject )
-				val = (Integer) ((DBObject)arg0).get("value");
-			
+			Integer val = ((Document) arg0).get(IntegerElement.class, "value")
+					.getIntValue();
+
 			if (val.intValue() != arg1.intValue())
 				throw new Exception("does not match");
 
@@ -31,12 +31,12 @@ public class TestMongo {
 
 		final int COUNT = 30000;
 		long time;
-		
+
 		time = System.currentTimeMillis();
-		MongoDb.Options options = new MongoDb.Options();
+		MongoDbAsync.Options options = new MongoDbAsync.Options();
 		options.host = "129.59.105.195";
 		options.collection = "garbage";
-		MongoDb mongo = new MongoDb(options);
+		MongoDbAsync mongo = new MongoDbAsync(options);
 
 		Executors.obtain(mongo.open());
 		time = System.currentTimeMillis() - time;
@@ -45,10 +45,9 @@ public class TestMongo {
 		time = System.currentTimeMillis();
 		FutureArray<Void> results = new FutureArray<Void>(Void.class);
 		for (int i = 0; i < COUNT; ++i) {
-			DBObject obj1 = new BasicDBObject();
-			obj1.put("_id", "*obj" + i);
-			obj1.put("value", i);
-			results.add(mongo.save(obj1));
+			Document document = BuilderFactory.start().add("_id", "*obj" + i)
+					.add("value", i).build();
+			results.add(mongo.save(document));
 		}
 		Executors.obtain(results.seal());
 		time = System.currentTimeMillis() - time;

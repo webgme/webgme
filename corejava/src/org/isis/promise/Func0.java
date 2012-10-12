@@ -14,7 +14,7 @@ public abstract class Func0<Type> {
 	public final Promise<Type> submit(final Executor executor) {
 		assert (executor != null);
 
-		Future<Type> future = new FutureCall0<Type>() {
+		FutureCall0<Type> future = new FutureCall0<Type>() {
 			@Override
 			public Promise<Type> execute() throws Exception {
 				return Func0.this.call();

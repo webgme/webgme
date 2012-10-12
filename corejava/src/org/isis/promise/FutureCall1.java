@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-abstract class FutureCall1<Type, Arg0> extends Future<Type> {
+abstract class FutureCall1<Type, Arg0> extends Future<Type> implements Runnable {
 
 	private static final short INDEX0 = 0;
 	private Promise<Arg0> promise0;

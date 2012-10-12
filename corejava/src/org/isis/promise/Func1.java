@@ -18,7 +18,7 @@ public abstract class Func1<Type, Arg0> {
 			return call(arg0.getValue());
 
 		final Func1<Type, Arg0> that = this;
-		Future<Type> future = new FutureCall1<Type, Arg0>(promise0) {
+		FutureCall1<Type, Arg0> future = new FutureCall1<Type, Arg0>(promise0) {
 			@Override
 			public Promise<Type> execute(Arg0 arg0) throws Exception {
 				return that.call(arg0);
@@ -32,7 +32,7 @@ public abstract class Func1<Type, Arg0> {
 	public final Promise<Type> submit(final Executor executor, final Arg0 arg0) {
 		assert (executor != null);
 
-		Future<Type> future = new FutureCall0<Type>() {
+		FutureCall0<Type> future = new FutureCall0<Type>() {
 			@Override
 			public Promise<Type> execute() throws Exception {
 				return Func1.this.call(arg0);

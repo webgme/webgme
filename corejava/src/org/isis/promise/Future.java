@@ -9,7 +9,7 @@ package org.isis.promise;
 // TODO: remove the special handling of exceptions
 // TODO: futures should be resolved only once, even when collecting
 
-abstract class Future<Type> implements Promise<Type>, Runnable {
+public abstract class Future<Type> implements Promise<Type> {
 	static final short STATE_EMPTY = 0x00; // null
 	static final short STATE_FORWARD = 0x02; // Future<Type>
 	static final short STATE_COLLECT = 0x05; // Promise<Type>

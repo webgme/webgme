@@ -28,7 +28,7 @@ public class MongoDb implements Storage {
 		this.options = options;
 	}
 
-	ExecutorService executor; 
+	ExecutorService executor;
 
 	Func0<Void> openTask = new Func0<Void>() {
 		@Override
@@ -54,10 +54,10 @@ public class MongoDb implements Storage {
 
 					collection = coll;
 				}
-				
-				executor = new ThreadPoolExecutor(100, 100,
-						1, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-				
+
+				executor = new ThreadPoolExecutor(100, 100, 1,
+						TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
+
 			} catch (Exception exception) {
 				if (mongo != null)
 					mongo.close();
@@ -98,7 +98,7 @@ public class MongoDb implements Storage {
 			}
 
 			exec.shutdown();
-			
+
 			Mongo mongo = coll.getDB().getMongo();
 			mongo.close();
 
@@ -112,18 +112,17 @@ public class MongoDb implements Storage {
 		return closeTask.submit(Executors.NEW_THREAD_EXECUTOR);
 	}
 
-	static final Constant<DBObject> NULL = new Constant<DBObject>(null);
-
-	Func1<DBObject, String> loadTask = new Func1<DBObject, String>() {
+	Func1<Object, String> loadTask = new Func1<Object, String>() {
 		@Override
-		public Promise<DBObject> call(String key) throws Exception {
+		public Promise<Object> call(String key) throws Exception {
 			DBObject result = collection.findOne(key);
-			return result == null ? NULL : new Constant<DBObject>(result);
+			return result == null ? Constant.NULL
+					: new Constant<Object>(result);
 		}
 	};
 
 	@Override
-	public Promise<DBObject> load(String key) {
+	public Promise<Object> load(String key) {
 		assert (key != null && collection != null && executor != null);
 		return loadTask.submit(executor, key);
 	}
@@ -137,9 +136,9 @@ public class MongoDb implements Storage {
 	};
 
 	@Override
-	public Promise<Void> save(DBObject object) {
+	public Promise<Void> save(Object object) {
 		assert (object != null && collection != null && executor != null);
-		return saveTask.submit(executor, object);
+		return saveTask.submit(executor, (DBObject) object);
 	}
 
 	@Override
