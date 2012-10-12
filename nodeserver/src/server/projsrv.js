@@ -70,8 +70,6 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             });
             socket.on('save',function(node,callback){
                 if(node[KEY].indexOf(BID) === 0){
-                    console.log("branchupdate!!!")
-                    /*active commit save - we have to check extra stuffa*/
                     _mongo.load(node[KEY],function(err,oldroot){
                         if(err){
                             callback(err);

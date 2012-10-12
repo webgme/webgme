@@ -72,7 +72,7 @@ define(['logManager',
                 cache = options.cache ? new CACHE(realstorage) : realstorage,
                 logsrv = options.logging ? new LogSrv(location.host+options.logsrv) : null,
                 //storage = options.logging ? new LogST(cache,logsrv) : cache,
-                storage = new LogST(cache,logsrv),
+                storage = /*new LogST(cache,logsrv)*/_storage,
                 selectedObjectId = null,
                 users = {},
                 currentNodes = {},
@@ -446,29 +446,34 @@ define(['logManager',
 
             /*helping funcitons*/
             var newRootArrived = function(roothash){
-                var tempcore = new LCORE(new CORE(storage),logsrv);
-                tempcore.loadRoot(roothash,function(err,node){
-                    if(!err && node){
-                        currentRoot = roothash;
-                        currentNodes = {};
-                        currentCore = tempcore;
-                        storeNode(node);
-                        nuUpdateAll(function(err){
-                            if(err){
-                                //TODO now what???
-                                nuUpdateAll(function(err){
-                                    if(err){
-                                        console.log("updating the whole user bunch failed for the second time as well...");
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        console.log("not ready database, wait for new root");
-                    }
-                });
+                if(currentRoot !== roothash){
+                    var oldroot = currentRoot;
+                    currentRoot = roothash;
+                    var tempcore = new LCORE(new CORE(storage),logsrv);
+                    tempcore.loadRoot(roothash,function(err,node){
+                        if(!err && node){
+                            currentNodes = {};
+                            currentCore = tempcore;
+                            storeNode(node);
+                            nuUpdateAll(function(err){
+                                if(err){
+                                    //TODO now what???
+                                    nuUpdateAll(function(err){
+                                        if(err){
+                                            console.log("updating the whole user bunch failed for the second time as well...");
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            currentRoot = oldroot;
+                            console.log("not ready database, wait for new root");
+                        }
+                    });
+                }
             };
             var modifyRootOnServer = function(){
+                var oldroot = currentRoot;
                 var newhash = currentCore.persist(currentNodes["root"],function(err){
                     if(err){
                         console.log(err);
@@ -478,9 +483,11 @@ define(['logManager',
                         }
                         comitter.updateRoot(newhash,function(err){
                             if(err){
+                                newRootArrived(oldroot);
                                 console.log(err);
                             }
                         });
+                        newRootArrived(newhash);
                     }
 
                 });
