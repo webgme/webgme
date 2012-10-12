@@ -117,7 +117,7 @@ class TestRaces {
 
 		@Override
 		public Promise<Integer> create() {
-			return func.submit(Executors.THREAD_EXECUTOR);
+			return func.submit(Executors.NEW_THREAD_EXECUTOR);
 		}
 
 		@Override

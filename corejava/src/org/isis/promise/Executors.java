@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-import java.util.concurrent.Executor;
+import java.util.concurrent.*;
 
 public class Executors {
 	public static Executor DIRECT_EXECUTOR = new Executor() {
@@ -16,20 +16,21 @@ public class Executors {
 		}
 	};
 
-	public static Executor THREAD_EXECUTOR = new Executor() {
+	public static Executor NEW_THREAD_EXECUTOR = new Executor() {
 		@Override
 		public void execute(Runnable runnable) {
 			Thread thread = new Thread(runnable);
 			thread.start();
 		}
 	};
-	
+
 	@SuppressWarnings("unchecked")
-	public static <Type> Type obtain(final Promise<Type> promise) throws Exception {
+	public static <Type> Type obtain(final Promise<Type> promise)
+			throws Exception {
 		assert (promise != null);
 
-		Constant<Type> c = promise.getConstant(); 
-		if( c != null )
+		Constant<Type> c = promise.getConstant();
+		if (c != null)
 			return c.getValue();
 
 		final class Waiter extends Future<Void> {
@@ -45,13 +46,12 @@ public class Executors {
 			protected synchronized <Arg> void argumentResolved(short index,
 					Promise<Arg> promise) {
 				assert (promise != null);
-				
+
 				if (promise instanceof Constant<?>) {
 					result = promise;
 					this.notifyAll();
-				}
-				else
-					promise.requestArgument((short)0, this);
+				} else
+					promise.requestArgument((short) 0, this);
 			}
 
 			@Override
@@ -74,6 +74,6 @@ public class Executors {
 		if (waiter.result instanceof Constant<?>)
 			return ((Constant<Type>) waiter.result).getValue();
 
-		throw (Exception) waiter.result;
+		throw new Exception((Exception) waiter.result);
 	}
 }
