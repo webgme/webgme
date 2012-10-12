@@ -7,10 +7,9 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         var _mongo = MONGO(options.mongo);
         var _self = this;
         var _selfid = null;
-        var ROOTID = "***root***";
         var KEY = "_id";
         var BID = "*";
-        var _clients = {};
+        var _polls = {};
 
         if(options.io){
             _socket = options.io.of(options.namespace);
@@ -50,16 +49,17 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             return true;
         };
         var broadcastRoot = function(root){
-            for(var i in _clients){
-                if(root[KEY] === _clients[i].branch){
-                    _clients[i].socket.emit('updated',root);
+            var callbacks = _polls[getBranchNameFromId(root[KEY])];
+            if(callbacks){
+                for(var i=0;i<callbacks.length;i++){
+                    callbacks[i](root);
                 }
+                delete _polls[getBranchNameFromId(root[KEY])];
             }
         };
 
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
-            _clients[socket.id] = {socket:socket,subscriptions:{}};
 
             /*mongo functions*/
             socket.on('open',function(callback){
@@ -78,22 +78,10 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                         } else {
                             if(compareRoots(oldroot,node)){
                                 _mongo.save(node,function(err){
-                                    if(err){
-                                        callback(err);
-                                    } else {
-                                        /*we have to broadcast the updated root to everyone*/
-                                        var branchname = getBranchNameFromId(node[KEY]);
-                                        console.log("kecso "+branchname);
-                                        for(var i in _clients){
-                                            console.log("kecso be");
-                                            if(_clients[i]["subscriptions"][branchname]){
-                                                console.log("kecso vegre");
-                                                console.log(JSON.stringify(_clients[i]["subscriptions"][branchname]));
-                                                _clients[i]["subscriptions"][branchname](node);
-                                                _clients[i].socket.emit('updated',node);
-                                            }
-                                        }
+                                    if(!err){
+                                        broadcastRoot(node);
                                     }
+                                    callback(err);
                                 });
                             } else {
                                 callback("invalid root cannot be saved!!!");
@@ -126,25 +114,14 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.find(criteria,callback);
             });
 
-            socket.on('subscribe',function(branchname,updatefunction){
-                console.log("KKK "+JSON.stringify(updatefunction));
-                _clients[socket.id]["subscriptions"][branchname] = updatefunction;
-                _mongo.load(BID+branchname,function(err,node){
-                    if(!err && node){
-                        updatefunction(node);
-                    }
-                });
-            });
-
-            socket.on('unsubscribe',function(branchname){
-                if(_clients[socket.id]){
-                    delete _clients[socket.id]["subscriptions"][branchname];
+            socket.on('requestPoll',function(branchname,callback){
+                if(_polls[branchname]){
+                    _polls[branchname].push(callback);
+                } else {
+                    _polls[branchname] = [callback];
                 }
             });
 
-            socket.on('disconnect',function(){
-                delete _clients[socket.id];
-            });
         });
     };
     return ProjectServer;

@@ -92,7 +92,6 @@ define(['logManager',
             intransaction = false,
             comitter = COM(storage);
 
-            comitter.setRootUpdatedFunction(newRootArrived);
             var waitfornextregistryset = false; //TODO HACK
             /*event functions to relay information between users*/
             $.extend(this, new EventDispatcher());
