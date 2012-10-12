@@ -942,6 +942,9 @@ define(['logManager',
         this.getAttributeNames = function(){
             return core.getAttributeNames(node);
         };
+        this.getRegistryNames = function(){
+            return core.getRegistryNames(node);
+        };
 
         var getClientNodePath = function(){
             var path = /*core.getStringPath(node)*/ownpath;
