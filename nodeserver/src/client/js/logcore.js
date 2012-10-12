@@ -162,6 +162,11 @@ define(['commonUtil'], function (CU) {
             return core.setAttribute(node,name,value);
         };
 
+        var getRegistryNames = function (node) {
+            log("getRegistryNames("+node["data"]["_id"]+")");
+            return core.getRegistryNames(node);
+        };
+
         var getRegistry = function (node, name) {
             log("getRegistry("+node["data"]["_id"]+","+name+")");
             return core.getRegistry(node,name);
@@ -268,6 +273,7 @@ define(['commonUtil'], function (CU) {
             getRegistry: getRegistry,
             setRegistry: setRegistry,
             delRegistry: delRegistry,
+            getRegistryNames: getRegistryNames,
 
             // relations
             getPointerNames: getPointerNames,
