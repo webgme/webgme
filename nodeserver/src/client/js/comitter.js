@@ -14,6 +14,7 @@ define(['commonUtil',"core/lib/sha1"],
             var BID = "*";
             var actualbranchinfo = null;
             var currentbranchname = null;
+            var currentupdfunc = null;
 
             var getBranches = function(callback){
                 storage.find({type:"branch"},function(err,nodes){
@@ -33,20 +34,23 @@ define(['commonUtil',"core/lib/sha1"],
                 });
             };
 
-            var selectBranch = function(branchname,updfunc){
-                if(currentbranchname && branchname !== currentbranchname){
-                    storage.unsubscribe(currentbranchname);
+            var poll = function(node){
+                if(currentupdfunc){
+                    storage.requestPoll(currentbranchname,poll);
+                    actualbranchinfo = node;
+                    currentupdfunc(node.root[node.root.length-1]);
                 }
-                storage.subscribe(branchname,function(node){
-                    console.log("root update from server");
-                    actualbranchinfo = node;
-                    updfunc(node.root[node.root.length-1]);
-                });
+            };
+
+            var selectBranch = function(branchname,updfunc){
                 currentbranchname = branchname;
-                storage.getUpdated(function(node){
-                    console.log("na itt jon root update from server");
-                    actualbranchinfo = node;
-                    updfunc(node.root[node.root.length-1]);
+                currentupdfunc = updfunc;
+                storage.requestPoll(branchname,poll);
+                storage.load(BID+branchname,function(err,node){
+                    if(!err && node){
+                        actualbranchinfo = node;
+                        updfunc(node.root[node.root.length-1]);
+                    }
                 });
             };
 
@@ -101,17 +105,10 @@ define(['commonUtil',"core/lib/sha1"],
                 });
             };
 
-            var setRootUpdatedFunction = function(rootUpdated){
-                if(storage){
-                    storage.getUpdated(rootUpdated);
-                }
-            };
-
             return {
                 selectBranch           : selectBranch,
                 updateRoot             : updateRoot,
                 commit                 : commit,
-                setRootUpdatedFunction : setRootUpdatedFunction,
                 getBranches            : getBranches
             }
         };

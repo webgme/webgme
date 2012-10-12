@@ -152,10 +152,8 @@ define([ "core/assert" ], function (ASSERT) {
             removeAll    : removeAll,
             searchId     : storage.searchId,
             fsync        : fsync,
-            getUpdated   : storage.getUpdated,
             find         : storage.find,
-            subscribe    : storage.subscribe,
-            unsubscriber : storage.unsubscribe
+            requestPoll  : storage.requestPoll
         }
     };
 

@@ -136,18 +136,15 @@ define(['commonUtil'], function (CU) {
             });
         };
 
-        var subscribe = function(branchname,updatefunction){
+        var requestPoll = function(branchname,updatefunction){
+            var start = TIMESTAMP();
             var guid = "["+GUID()+"]";
-            var text = guid+"subscribe("+branchname+")";
+            var text = guid+"requestPoll("+branchname+")";
             log(text);
-            storage.subscribe(branchname,updatefunction);
-        };
-
-        var unsubscribe = function(branchname){
-            var guid = "["+GUID()+"]";
-            var text = guid+"unsubscribe("+branchname+")";
-            log(text);
-            storage.subscribe(branchname,updatefunction);
+            storage.requestPoll(branchname,function(node){
+                log(text+ETIMESTRING(start));
+                updatefunction(node);
+            });
         };
 
         return {
@@ -163,10 +160,8 @@ define(['commonUtil'], function (CU) {
             searchId      : searchId,
             whenAvailable : whenAvailable,
             fsync         : fsync,
-            getUpdated    : getUpdated,
             find          : find,
-            subscribe     : subscribe,
-            unsubscribe   : unsubscribe
+            requestPoll   : requestPoll
         }
     };
 
