@@ -90,7 +90,7 @@ define(['logManager',
              previousRoot = null,
              previousCore = null,*/
             intransaction = false,
-            comitter = COM(storage);
+            comitter = null;
 
             var waitfornextregistryset = false; //TODO HACK
             /*event functions to relay information between users*/
@@ -118,10 +118,17 @@ define(['logManager',
 
                 if(count === 0){
                     /*in case of the first user we have to connect...*/
-                    storage.open(function(){
-                        /*we select the master branch for a start now :)*/
-                        comitter.selectBranch("master",newRootArrived);
-                    });
+                    var proxy = io.connect(location.host + options.projsrv,options.socketiopar);
+                        proxy.on('connect',function(){
+                            proxy.emit('getProject',options.mongocollection,function(err,projns){
+                                storage = new SM({server:location.host+projns,socketiopar:options.socketiopar});
+                                comitter = new COM(storage);
+                                storage.open(function(err){
+                                    /*we select the master branch for a start now :)*/
+                                    comitter.selectBranch("master",newRootArrived);
+                                });
+                            });
+                        });
                 }
                 return guid;
             };
@@ -185,7 +192,7 @@ define(['logManager',
                         for(var j=0;j<users[i].PATHES.length;j++){
                             events.push({etype:'update',eid:users[i].PATHES[j]});
                         }
-                        onOneEvent(events);
+                        users[i].UI.onOneEvent(events);
                     } else {
                         for(var j=0;j<users[i].PATHES.length;j++){
                             if(currentNodes[users[i].PATHES[j]]){
@@ -198,7 +205,7 @@ define(['logManager',
                 }
             };
             this.undo = function(){
-                rootServer.emit('undoRoot');
+                console.log("not implemented with branches");
             };
 
 
@@ -492,8 +499,6 @@ define(['logManager',
 
                 });
             };
-
-
             var rollBackModification = function(){
                 currentNodes = {};
                 //currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
@@ -508,92 +513,7 @@ define(['logManager',
                     });
                 });
             };
-            var newRoot = function(newroot,fromserver){
-                if(fromserver){
-                    lastValidRoot = newroot;
-                }
-                if(newroot !== currentRoot){
-                    //var tempcore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
-                    var tempcore = new LCORE(new CORE(storage),logsrv);
-                    tempcore.loadRoot(newroot,function(err,node){
-                        if(!err && node){
-                            currentRoot = newroot;
-                            currentNodes = {};
-                            currentCore = tempcore;
-                            storeNode(node);
-                            nuUpdateAll(function(err){
-                                if(err){
-                                    //TODO now what???
-                                    nuUpdateAll(function(err){
-                                        if(err){
-                                            console.log("updating the whole user bunch failed for the second time as well...");
-                                        }
-                                    });
-                                }
-                            });
-                        } else {
-                            console.log("not ready database, wait for new root");
-                        }
-                    });
-                }
-            };
-            /*var modifyRootOnServer = function(skippersist){
-                if(!intransaction){
-                    if(currentCore){
-                        if(!skippersist){
-                            var newkey;
-                            var persistdone = function(err){
-                                if(err){
-                                    logger.error("error during persist: "+err);
-                                    rollBackModification();
-                                } else {
-                                    if(newkey){
-                                        if(rootServer){
-                                            rootServer.emit('modifyRoot',lastValidRoot,newkey);
-                                        }
 
-                                    } else {
-                                        logger.error("persist resulted in null key!!!");
-                                        newRoot(lastValidRoot,true);
-                                    }
-                                }
-                            };
-                            newkey = currentCore.persist(currentCore.getRoot(currentNodes["root"]),function(err){
-                                if(err){
-                                    persistdone(err);
-                                } else {
-                                    if(newkey){
-                                        persistdone(null);
-                                    } else {
-                                        var timer = setInterval(function(){
-                                            if(newkey){
-                                                clearInterval(timer);
-                                                persistdone(null);
-                                            }
-                                        },1);
-                                    }
-                                }
-                            });
-                            if(newkey){
-                                newRoot(newkey,false);
-                            } else {
-                                var timer2 = setInterval(function(){
-                                    if(newkey){
-                                        clearInterval(timer2);
-                                        newRoot(newkey,false);
-                                    }
-                                },1);
-                            }
-                        } else {
-                            rootServer.emit('modifyRoot',lastValidRoot,currentRoot);
-                        }
-                    } else {
-                        logger.error("There is no CORE!!!");
-                    }
-                } else {
-                    logger.debug("in transaction");
-                }
-            };*/
             var getNodePath = function(node){
                 var path = currentCore.getStringPath(node);
                 if(path === ""){
@@ -621,6 +541,7 @@ define(['logManager',
                     logger.error("missing object for move!!!");
                 }
             };
+
             var nuCopy = function(pathes,parentpath,callback){
                 var retarr = {},
                     parent = currentNodes[parentpath];
@@ -697,7 +618,6 @@ define(['logManager',
                     callback("invalid parent",null);
                 }
             };
-
             var nuLoading = function(callback){
                 var patterns = [];
                 var nupathes = {};
