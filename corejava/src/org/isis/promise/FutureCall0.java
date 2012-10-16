@@ -20,7 +20,7 @@ abstract class FutureCall0<Type> extends Future<Type> implements Runnable {
 	public abstract Promise<Type> execute() throws Exception;
 
 	@Override
-	protected final <Arg> void argumentResolved(short index,
+	protected final <Arg> void argumentResolved(int index,
 			Promise<Arg> promise) {
 		throw new IllegalStateException();
 	}

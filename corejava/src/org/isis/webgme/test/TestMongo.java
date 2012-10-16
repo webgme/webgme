@@ -39,12 +39,13 @@ public class TestMongo {
 
 	public static void main(String[] args) throws Exception {
 
-		final int COUNT = 30000;
+		final int COUNT = 100000;
 		long time;
 
 		time = System.currentTimeMillis();
 		MongoDb.Options options = new MongoDb.Options();
-		options.host = "129.59.105.195";
+//		options.host = "129.59.105.195";
+		options.host = "localhost";
 		options.collection = "garbage";
 		MongoDb mongo = new MongoDb(options);
 

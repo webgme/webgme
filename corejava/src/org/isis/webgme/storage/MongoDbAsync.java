@@ -119,7 +119,7 @@ public class MongoDbAsync implements Storage {
 	static class FutureDocument extends org.isis.promise.Future<Object>
 			implements Callback<Document> {
 		@Override
-		protected <Arg> void argumentResolved(short index, Promise<Arg> argument) {
+		protected <Arg> void argumentResolved(int index, Promise<Arg> argument) {
 		}
 
 		@Override

@@ -42,7 +42,7 @@ public class Executors {
 			}
 
 			@Override
-			protected synchronized <Arg> void argumentResolved(short index,
+			protected synchronized <Arg> void argumentResolved(int index,
 					Promise<Arg> promise) {
 				assert (promise != null);
 

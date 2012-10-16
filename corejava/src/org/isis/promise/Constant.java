@@ -32,7 +32,7 @@ public final class Constant<Type> implements Promise<Type> {
 	}
 
 	@Override
-	public void requestArgument(short index, Future<?> parent) {
+	public void requestArgument(int index, Future<?> parent) {
 		assert (false);
 	}
 }

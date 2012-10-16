@@ -18,7 +18,7 @@ public abstract class Future<Type> implements Promise<Type> {
 	static final short STATE_REJECTED = 0x0f; // Exception
 
 	protected short state = STATE_EMPTY;
-	private short index;
+	private int index;
 	private Object object;
 
 	@SuppressWarnings("unchecked")
@@ -55,7 +55,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final void requestArgument(short index, Future<?> parent) {
+	public final void requestArgument(int index, Future<?> parent) {
 		debug("requestArgument start");
 		assert (parent != null);
 
@@ -139,7 +139,7 @@ public abstract class Future<Type> implements Promise<Type> {
 			return null;
 	}
 
-	protected abstract <Arg> void argumentResolved(short index,
+	protected abstract <Arg> void argumentResolved(int index,
 			Promise<Arg> argument);
 
 	@Override
