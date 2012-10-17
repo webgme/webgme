@@ -86,4 +86,20 @@ public abstract class Func2<Type, Arg0, Arg1> {
 		executor.execute(future);
 		return future;
 	}
+
+	public final Promise<Type> submit(final Executor executor, final Arg0 arg0,
+			final Arg1 arg1) {
+
+		final Func2<Type, Arg0, Arg1> that = this;
+		FutureCall0<Type> future = new FutureCall0<Type>() {
+			@Override
+			public Promise<Type> execute() throws Exception {
+				return that.call(arg0, arg1);
+			}
+		};
+
+		// TODO: make this cancelable
+		executor.execute(future);
+		return future;
+	}
 }

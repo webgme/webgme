@@ -33,8 +33,7 @@ abstract class FutureCall1<Type, Arg0> extends Future<Type> implements Runnable 
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected final <Arg> void argumentResolved(int index,
-			Promise<Arg> promise) {
+	protected final <Arg> void argumentResolved(int index, Promise<Arg> promise) {
 		assert (index == 0 && promise != null);
 
 		synchronized (this) {

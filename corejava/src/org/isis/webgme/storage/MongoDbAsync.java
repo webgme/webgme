@@ -7,12 +7,9 @@
 package org.isis.webgme.storage;
 
 import org.isis.promise.*;
-
 import com.allanbank.mongodb.*;
 import com.allanbank.mongodb.bson.*;
 import com.allanbank.mongodb.builder.*;
-import java.util.concurrent.*;
-import org.isis.promise.Executors;
 
 public class MongoDbAsync implements Storage {
 
@@ -31,8 +28,6 @@ public class MongoDbAsync implements Storage {
 		assert (options != null);
 		this.options = options;
 	}
-
-	Executor executor;
 
 	Func0<Void> openTask = new Func0<Void>() {
 		@Override
@@ -55,12 +50,6 @@ public class MongoDbAsync implements Storage {
 					mongo = myMongo;
 					collection = myCollection;
 				}
-
-				// executor = new ThreadPoolExecutor(100, 100, 1,
-				// TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-				executor = Executors.DIRECT_EXECUTOR;
-				// executor = Executors.NEW_THREAD_EXECUTOR;
-
 			} catch (Exception exception) {
 				if (myMongo != null)
 					myMongo.close();
@@ -87,25 +76,18 @@ public class MongoDbAsync implements Storage {
 		@Override
 		public Promise<Void> call() throws Exception {
 			Mongo myMongo;
-			Executor myExecutor;
 
 			synchronized (MongoDbAsync.this) {
 				myMongo = mongo;
-				myExecutor = executor;
 				if (myMongo == null)
 					throw new Exception("already closed");
 				else {
 					mongo = null;
 					collection = null;
-					executor = null;
 				}
 			}
 
-			if (myExecutor instanceof ExecutorService)
-				((ExecutorService) myExecutor).shutdown();
-
 			myMongo.close();
-
 			return Constant.VOID;
 		}
 	};
@@ -118,6 +100,13 @@ public class MongoDbAsync implements Storage {
 
 	static class FutureDocument extends org.isis.promise.Future<Object>
 			implements Callback<Document> {
+		Encoder<Object> encoder;
+
+		FutureDocument(Encoder<Object> encoder) {
+			assert (encoder != null);
+			this.encoder = encoder;
+		}
+
 		@Override
 		protected <Arg> void argumentResolved(int index, Promise<Arg> argument) {
 		}
@@ -128,7 +117,12 @@ public class MongoDbAsync implements Storage {
 
 		@Override
 		public void callback(Document arg0) {
-			resolve(new Constant<Object>(arg0));
+			try {
+				Object obj = encoder.decodeMongo2(arg0);
+				resolve(new Constant<Object>(obj));
+			} catch (Exception exception) {
+				reject(exception);
+			}
 		}
 
 		@Override
@@ -137,46 +131,34 @@ public class MongoDbAsync implements Storage {
 		}
 	};
 
-	Func1<Object, String> loadTask = new Func1<Object, String>() {
-		@Override
-		public Promise<Object> call(String key) throws Exception {
-			java.util.concurrent.Future<Document> future = collection
-					.findOneAsync(QueryBuilder.where("_id").equals(key));
-
-			Document result = future.get();
-			return new Constant<Object>(result);
-		}
-	};
-
-	// @Override
-	public Promise<Object> load2(String key) {
-		assert (key != null && collection != null && executor != null);
-		return loadTask.submit(executor, key);
-	}
-
 	@Override
-	public Promise<Object> load(String key) {
-		assert (key != null && collection != null && executor != null);
+	@SuppressWarnings("unchecked")
+	public <Type> Promise<Type> load(Encoder<Type> encoder, String key) {
+		assert (key != null && encoder != null && collection != null);
 
-		FutureDocument callback = new FutureDocument();
+		FutureDocument callback = new FutureDocument((Encoder<Object>) encoder);
 		collection
 				.findOneAsync(callback, QueryBuilder.where("_id").equals(key));
-		return callback;
+		return (Promise<Type>) callback;
 	}
 
-	Func1<Void, Object> saveTask = new Func1<Void, Object>() {
+	Func2<Void, Encoder<Object>, Object> saveTask = new Func2<Void, Encoder<Object>, Object>() {
 		@Override
-		public Promise<Void> call(Object object) throws Exception {
-			Document document = (Document) object;
+		public Promise<Void> call(Encoder<Object> encoder, Object object)
+				throws Exception {
+
+			Document document = encoder.encodeMongo2(object);
 			collection.save(document);
 			return Constant.VOID;
 		}
 	};
 
 	@Override
-	public Promise<Void> save(Object object) {
-		assert (object != null && collection != null && executor != null);
-		return saveTask.submit(executor, object);
+	@SuppressWarnings("unchecked")
+	public <Type> Promise<Void> save(Encoder<Type> encoder, Type object) {
+		assert (object != null && encoder != null && collection != null);
+		return saveTask.submit(Executors.THREAD_POOL_EXECUTOR,
+				(Encoder<Object>) encoder, object);
 	}
 
 	@Override

@@ -67,8 +67,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected final <Arg> void argumentResolved(int index,
-			Promise<Arg> promise) {
+	protected final <Arg> void argumentResolved(int index, Promise<Arg> promise) {
 		assert (missing != null);
 
 		list.set(index, (Promise<Type>) promise);
@@ -88,6 +87,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 	protected final void rejectChildren(Exception reason) {
 		assert (missing != null);
 
-		throw new UnsupportedOperationException();
+		System.err.println("not yet supported");
+		// throw new UnsupportedOperationException();
 	}
 }

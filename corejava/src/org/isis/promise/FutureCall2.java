@@ -51,8 +51,7 @@ abstract class FutureCall2<Type, Arg0, Arg1> extends Future<Type> implements
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected final <Arg> void argumentResolved(int index,
-			Promise<Arg> promise) {
+	protected final <Arg> void argumentResolved(int index, Promise<Arg> promise) {
 		assert (index >= 0 && index <= 1 && promise != null);
 
 		synchronized (this) {
