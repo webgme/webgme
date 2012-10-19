@@ -8,7 +8,6 @@ package org.isis.promise;
 
 abstract class FutureCall1<Type, Arg0> extends Future<Type> implements Runnable {
 
-	private static final short INDEX0 = 0;
 	private Promise<Arg0> promise0;
 
 	public FutureCall1(Promise<Arg0> arg0) {
@@ -27,16 +26,15 @@ abstract class FutureCall1<Type, Arg0> extends Future<Type> implements Runnable 
 				reject(error);
 			}
 		} else
-			promise0.requestArgument(INDEX0, this);
+			promise0.requestArgument(0, this);
 	}
 
 	public abstract Promise<Type> execute(Arg0 arg0) throws Exception;
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected final <Arg> void argumentResolved(short index,
-			Promise<Arg> promise) {
-		assert (index == INDEX0 && promise != null);
+	protected final <Arg> void argumentResolved(int index, Promise<Arg> promise) {
+		assert (index == 0 && promise != null);
 
 		synchronized (this) {
 			assert (promise0 != promise && !(promise0 instanceof Constant<?>));

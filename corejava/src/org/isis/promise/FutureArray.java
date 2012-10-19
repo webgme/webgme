@@ -33,7 +33,6 @@ public final class FutureArray<Type> extends Future<Type[]> {
 
 		missing = new AtomicInteger(1);
 		int size = list.size();
-		assert (size < Short.MAX_VALUE);
 
 		for (int i = 0; i < size; ++i) {
 			Promise<Type> promise = list.get(i);
@@ -42,7 +41,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 				list.set(i, constant);
 			else {
 				missing.incrementAndGet();
-				promise.requestArgument((short) i, this);
+				promise.requestArgument(i, this);
 			}
 		}
 
@@ -68,8 +67,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	protected final <Arg> void argumentResolved(short index,
-			Promise<Arg> promise) {
+	protected final <Arg> void argumentResolved(int index, Promise<Arg> promise) {
 		assert (missing != null);
 
 		list.set(index, (Promise<Type>) promise);
@@ -89,6 +87,7 @@ public final class FutureArray<Type> extends Future<Type[]> {
 	protected final void rejectChildren(Exception reason) {
 		assert (missing != null);
 
-		throw new UnsupportedOperationException();
+		System.err.println("not yet supported");
+		// throw new UnsupportedOperationException();
 	}
 }

@@ -14,9 +14,10 @@ requirejs.config({
 requirejs([ "core/assert", "mongodb" ], function (ASSERT, MONGODB) {
 	"use strict";
 
-	var COUNT = 50000;
+	var COUNT = 100000;
+	var HOST = "localhost";	// "129.59.105.195"
 
-	var database = new MONGODB.Db("test", new MONGODB.Server("129.59.105.195", 27017));
+	var database = new MONGODB.Db("test", new MONGODB.Server(HOST, 27017));
 	database.open(function (err) {
 		ASSERT(!err);
 

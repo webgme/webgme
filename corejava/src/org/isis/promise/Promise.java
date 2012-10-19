@@ -12,5 +12,5 @@ public interface Promise<Type> {
 
 	void reject(Exception error);
 
-	void requestArgument(short index, Future<?> parent);
+	void requestArgument(int index, Future<?> parent);
 }

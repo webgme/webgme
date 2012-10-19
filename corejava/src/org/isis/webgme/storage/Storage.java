@@ -15,9 +15,9 @@ public interface Storage {
 
 	public Promise<Void> close();
 
-	public Promise<Object> load(String key);
+	public <Type> Promise<Type> load(Encoder<Type> encoder, String key);
 
-	public Promise<Void> save(Object object);
+	public <Type> Promise<Void> save(Encoder<Type> encoder, Type object);
 
 	public Promise<Void> remove(String key);
 }

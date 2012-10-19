@@ -9,9 +9,6 @@ package org.isis.webgme.storage;
 import org.isis.promise.*;
 import com.mongodb.*;
 
-import java.util.concurrent.*;
-import org.isis.promise.Executors;
-
 public class MongoDb implements Storage {
 
 	public static class Options {
@@ -28,8 +25,6 @@ public class MongoDb implements Storage {
 		assert (options != null);
 		this.options = options;
 	}
-
-	ExecutorService executor;
 
 	Func0<Void> openTask = new Func0<Void>() {
 		@Override
@@ -55,10 +50,6 @@ public class MongoDb implements Storage {
 
 					collection = coll;
 				}
-
-				executor = new ThreadPoolExecutor(100, 100, 1,
-						TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
-
 			} catch (Exception exception) {
 				if (mongo != null)
 					mongo.close();
@@ -85,20 +76,14 @@ public class MongoDb implements Storage {
 		@Override
 		public Promise<Void> call() throws Exception {
 			DBCollection coll;
-			ExecutorService exec;
 
 			synchronized (MongoDb.this) {
 				coll = collection;
-				exec = executor;
 				if (coll == null)
 					throw new Exception("already closed");
-				else {
+				else
 					collection = null;
-					executor = null;
-				}
 			}
-
-			exec.shutdown();
 
 			Mongo mongo = coll.getDB().getMongo();
 			mongo.close();
@@ -113,43 +98,44 @@ public class MongoDb implements Storage {
 		return closeTask.submit(Executors.NEW_THREAD_EXECUTOR);
 	}
 
-	Func1<Object, String> loadTask = new Func1<Object, String>() {
+	Func2<Object, Encoder<Object>, String> loadTask = new Func2<Object, Encoder<Object>, String>() {
 		@Override
-		public Promise<Object> call(String key) throws Exception {
+		public Promise<Object> call(Encoder<Object> encoder, String key)
+				throws Exception {
 			DBObject result = collection.findOne(key);
-			return result == null ? Constant.NULL
-					: new Constant<Object>(result);
+
+			if (result == null)
+				return Constant.NULL;
+
+			return new Constant<Object>(encoder.decodeMongo1(result));
 		}
 	};
 
 	@Override
-	public Promise<Object> load(String key) {
-		assert (key != null && collection != null && executor != null);
-		return loadTask.submit(executor, key);
+	@SuppressWarnings("unchecked")
+	public <Type> Promise<Type> load(Encoder<Type> encoder, String key) {
+		assert (key != null && encoder != null && collection != null);
+		return (Promise<Type>) loadTask.submit(Executors.THREAD_POOL_EXECUTOR,
+				(Encoder<Object>) encoder, key);
 	}
 
-	Func1<Void, Object> saveTask = new Func1<Void, Object>() {
+	Func2<Void, Encoder<Object>, Object> saveTask = new Func2<Void, Encoder<Object>, Object>() {
 		@Override
-		public Promise<Void> call(Object object) throws Exception {
+		public Promise<Void> call(Encoder<Object> encoder, Object object)
+				throws Exception {
 
-			DBObject document;
-			if (object instanceof org.isis.webgme.test.TestMongo.Test) {
-				org.isis.webgme.test.TestMongo.Test obj = (org.isis.webgme.test.TestMongo.Test) object;
-				document = new BasicDBObject();
-				document.put("_id", obj.id);
-				document.put("value", obj.value);
-			} else
-				throw new IllegalArgumentException("unknown object type");
-
+			DBObject document = encoder.encodeMongo1(object);
 			collection.save(document);
 			return Constant.VOID;
 		}
 	};
 
 	@Override
-	public Promise<Void> save(Object object) {
-		assert (object != null && collection != null && executor != null);
-		return saveTask.submit(executor, object);
+	@SuppressWarnings("unchecked")
+	public <Type> Promise<Void> save(Encoder<Type> encoder, Type object) {
+		assert (object != null && encoder != null && collection != null);
+		return saveTask.submit(Executors.THREAD_POOL_EXECUTOR,
+				(Encoder<Object>) encoder, object);
 	}
 
 	@Override
