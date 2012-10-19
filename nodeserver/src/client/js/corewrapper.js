@@ -283,20 +283,25 @@ define(['logManager',
         };
         var _setAttr = function(node,name,value){
             var namearray = name.split(".");
+            var attributename = null;
+            var attribute = null;
             if(namearray.length<2){
-                currentCore.setAttribute(node,name,value);
+                attributename = name;
+                attribute = value;
             } else {
-                var attribute = currentCore.getAttribute(node,namearray[0]);
+                attributename = namearray.shift();
+                attribute = currentCore.getAttribute(node,attributename);
                 var pointer = attribute;
-                for(var i=1;i<namearray.length;i++){
-                    if(pointer[namearray[i]] === undefined){
-                        pointer[namearray[i]] = {};
+                while(namearray.length>1){
+                    var attr = namearray.shift();
+                    if(pointer[attr] === undefined){
+                        pointer[attr] = {};
                     }
-                    pointer = pointer[namearray[i]];
+                    pointer = pointer[attr];
                 }
-                pointer = value;
-                currentCore.setAttribute(node,namearray[0],attribute);
+                pointer[namearray.shift()] = value;
             }
+            currentCore.setAttribute(node,attributename,attribute);
         };
         this.setAttributes = function(path,name,value){
             if(currentNodes[path]){
@@ -317,20 +322,25 @@ define(['logManager',
         };
         var _setReg = function(node,name,value){
             var namearray = name.split(".");
+            var attributename = null;
+            var attribute = null;
             if(namearray.length<2){
-                currentCore.setRegistry(node,name,value);
+                attributename = name;
+                attribute = value;
             } else {
-                var attribute = currentCore.getRegistry(node,namearray[0]);
+                attributename = namearray.shift();
+                attribute = currentCore.getRegistry(node,attributename);
                 var pointer = attribute;
-                for(var i=1;i<namearray.length;i++){
-                    if(pointer[namearray[i]] === undefined){
-                        pointer[namearray[i]] = {};
+                while(namearray.length>1){
+                    var attr = namearray.shift();
+                    if(pointer[attr] === undefined){
+                        pointer[attr] = {};
                     }
-                    pointer = pointer[namearray[i]];
+                    pointer = pointer[attr];
                 }
-                pointer = value;
-                currentCore.setRegistry(node,namearray[0],attribute);
+                pointer[namearray.shift()] = value;
             }
+            currentCore.setRegistry(node,attributename,attribute);
         };
         this.setRegistry = function(path,name,value){
             if(currentNodes[path]){
