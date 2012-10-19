@@ -155,6 +155,16 @@ define(['order!jquery'], function () {
         },
 
         /*
+         * Inject a CSS dinamically into the document
+         */
+        injectCSS: function (css) {
+            var injected = document.createElement('style');
+            injected.type = 'text/css';
+            injected.innerHTML = css;
+            document.getElementsByTagName('head')[0].appendChild(injected);
+        },
+
+        /*
          * HTML encodes a string
          */
         htmlEncode: function (value) {
@@ -166,6 +176,67 @@ define(['order!jquery'], function () {
          */
         htmlDecode: function (value) {
             return $('<div/>').html(value).text();
+        },
+
+        flattenObject: function (obj) {
+            var result = {},
+                discover;
+
+            discover = function (o, prefix) {
+                var i;
+
+                for (i in o) {
+                    if (o.hasOwnProperty(i)) {
+                        if (_.isObject(o[i])) {
+                            discover(o[i], prefix === "" ? i + "." : prefix + i + ".");
+                        } else {
+                            result[prefix + i] = o[i];
+                        }
+                    }
+                }
+            };
+
+            discover(obj, "");
+
+            return result;
+        },
+
+        extend: function (target) {
+
+            this.each(Array.prototype.slice.call(arguments, 1), function (obj) {
+                var key;
+
+                for (key in obj) {
+                    if (!_.isUndefined(obj[key])) {
+                        target[key] = obj[key];
+                    }
+                }
+            }, this);
+
+            return target;
+
+        },
+
+        each: function (obj, itr, scope) {
+
+            if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
+
+                obj.forEach(itr, scope);
+
+            } else if (obj.length === obj.length + 0) { // Is number but not NaN
+
+                for (var key = 0, l = obj.length; key < l; key++)
+                    if (key in obj && itr.call(scope, obj[key], key) === this.BREAK)
+                        return;
+
+            } else {
+
+                for (var key in obj)
+                    if (itr.call(scope, obj[key], key) === this.BREAK)
+                        return;
+
+            }
+
         }
     };
 });

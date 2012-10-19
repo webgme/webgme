@@ -1,6 +1,7 @@
 @import url("bootstrap.css");
 @import url("qtip/jquery.qtip.css");
 @import url("../design/css/jquery.gritter.css");
+@import url("jqueryui/jquery-ui-1.9.0.custom.css");
 /* OWN STYLES */
 html,body {
     margin: 0;

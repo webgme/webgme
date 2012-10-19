@@ -9,6 +9,7 @@ define(['jquery',
     './ModelComponent.js',
     './ConnectionComponent.js',
     './ConnectionPointManager.js',
+    'PropertyEditor/PropertyListView',
     'css!ModelEditor2CSS/ModelEditorView'], function (jquery,
                                                          logManager,
                                                         util,
@@ -17,7 +18,8 @@ define(['jquery',
                                                         notificationManager,
                                                         ModelComponent,
                                                         ConnectionComponent,
-                                                        ConnectionPointManager) {
+                                                        ConnectionPointManager,
+                                                        PropertyListView) {
 
     var ModelEditorView;
 
@@ -673,6 +675,15 @@ define(['jquery',
             event.stopPropagation();
             event.preventDefault();
             self.onGotoParent();
+        });
+
+        this._skinParts.btnProperties = $('<div class="btn-group inline"><a class="btn btnProperties" href="#" title="Properties"><i class="icon-list-alt"></i></a></div>', {});
+        this._skinParts.modelEditorTop.append(this._skinParts.btnProperties);
+
+        this._skinParts.btnProperties.on("click", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._showProperties();
         });
 
         //CHILDREN container
@@ -1547,6 +1558,7 @@ define(['jquery',
             this._hideSelectionOutline();
         }
 
+        this._refreshProperties();
     };
 
     ModelEditorView.prototype._hideSelectionOutline = function () {
@@ -1788,6 +1800,58 @@ define(['jquery',
         }
     };
 
+    ModelEditorView.prototype._showProperties = function () {
+        var propanel = $("#modeleditorview_properties_panel"),
+            propListView,
+            propList,
+            self = this;
+
+        if (this.propListView === null || this.propListView === undefined) {
+            propList = this._getCommonPropertiesForSelection();
+            if (propList && !_.isEmpty(propList)) {
+                if (propanel.length === 0) {
+                    propanel = $("<div/>", {id : "modeleditorview_properties_panel"});
+                    this._el.append(propanel);
+                } else {
+                    propanel.empty();
+                }
+
+                propanel.dialog({"title": "Properties",
+                    "dialogClass": "PropertyEditorGUI",
+                    "close": function (event, ui) {
+                        propanel.empty();
+                        self.propListView = null;
+                    } });
+
+                this.propListView = new PropertyListView(propanel);
+
+                this.propListView.onFinishChange(function (args) {
+                    self._onPropertyChanged(args);
+                });
+
+                this.propListView.setPropertyList(propList);
+            }
+        }
+    };
+
+    ModelEditorView.prototype._refreshProperties = function () {
+        var propList;
+
+        if (this.propListView) {
+            propList = this._getCommonPropertiesForSelection();
+
+            this.propListView.setPropertyList(propList);
+        }
+    };
+
+    ModelEditorView.prototype._getCommonPropertiesForSelection = function () {
+        return this.onGetCommonPropertiesForSelection(this._selectedComponentIds);
+    };
+
+    ModelEditorView.prototype._onPropertyChanged = function (args) {
+        this.onPropertyChanged(this._selectedComponentIds, args);
+    };
+
     /*
      * END OF - MODELCOMPONENT REPOSITION HANDLERS
      */
@@ -1848,6 +1912,14 @@ define(['jquery',
 
     ModelEditorView.prototype.onFullRefresh = function () {
         this._logger.warning("onFullRefresh is not overridden in Controller...");
+    };
+
+    ModelEditorView.prototype.onGetCommonPropertiesForSelection = function (nodeIds) {
+        this._logger.warning("onGetCommonPropertiesForSelection is not overridden in Controller...");
+    };
+
+    ModelEditorView.prototype.onPropertyChanged = function (selectedComponentIds, args) {
+        this._logger.warning("onPropertyChanged is not overridden in Controller...");
     };
     /************* END OF --- PUBLIC API TO OVERRIDE --------------------*/
 

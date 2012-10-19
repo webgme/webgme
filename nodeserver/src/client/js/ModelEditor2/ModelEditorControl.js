@@ -148,6 +148,141 @@ define(['logManager',
             self._client.completeTransaction();
             //self._client.enableEventToUI(self.territoryId);
         };
+
+        this._modelEditorView.onGetCommonPropertiesForSelection = function (nodeIdList) {
+            var propList = {},
+                selectionLength = nodeIdList.length,
+                cNode,
+                i,
+                flattenedAttrs,
+                flattenedRegs,
+                commonAttrs = {},
+                commonRegs = {},
+                noCommonValueColor = "#787878",
+                _getNodePropertyValues, //fn
+                _filterCommon, //fn
+                _addItemsToResultList; //fn
+
+            _getNodePropertyValues = function (node, propNameFn, propValueFn) {
+                var result =  {},
+                    attrNames = node[propNameFn](),
+                    len = attrNames.length;
+
+                while (--len >= 0) {
+                    result[attrNames[len]] = node[propValueFn](attrNames[len]);
+                }
+
+                return util.flattenObject(result);
+            };
+
+            _filterCommon = function (resultList, otherList, initPhase) {
+                var it;
+
+                if (initPhase === true) {
+                    for (it in otherList) {
+                        if (otherList.hasOwnProperty(it)) {
+                            resultList[it] = { "value": otherList[it],
+                                "valueType": typeof otherList[it],
+                                "isCommon": true };
+                        }
+                    }
+                } else {
+                    for (it in resultList) {
+                        if (resultList.hasOwnProperty(it)) {
+                            if (otherList.hasOwnProperty(it)) {
+                                if (resultList[it].isCommon) {
+                                    resultList[it].isCommon = resultList[it].value === otherList[it];
+                                }
+                            } else {
+                                delete resultList[it];
+                            }
+                        }
+                    }
+                }
+            };
+
+            if (selectionLength > 0) {
+                //get all attributes
+                //get all registry elements
+                i = selectionLength;
+                while (--i >= 0) {
+                    cNode = self._client.getNode(nodeIdList[i]);
+
+                    flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
+
+                    _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
+
+                    flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
+
+                    _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+                }
+
+                _addItemsToResultList = function (srcList, prefix, dstList) {
+                    var i,
+                        extKey,
+                        keyParts;
+
+                    if (prefix !== "") {
+                        prefix += ".";
+                    }
+
+                    for (i in srcList) {
+                        if (srcList.hasOwnProperty(i)) {
+                            extKey = prefix + i;
+                            keyParts = i.split(".");
+                            dstList[extKey] = { "name": keyParts[keyParts.length - 1],
+                                "value": srcList[i].value,
+                                "valueType": srcList[i].valueType};
+
+                            if (i === "position.x" || i === "position.y") {
+                                dstList[extKey].minValue = 0;
+                                dstList[extKey].stepValue = 10;
+                            }
+
+                            if (srcList[i].isCommon === false) {
+                                dstList[extKey].value = "";
+                                dstList[extKey].options = {"textColor": noCommonValueColor};
+                            }
+
+                            if (extKey.indexOf(".x") > -1) {
+                                //let's say its inherited, make it italic
+                                dstList[extKey].options = dstList[extKey].options || {};
+                                dstList[extKey].options.textItalic = true;
+                                dstList[extKey].options.textBold = true;
+                            }
+                        }
+                    }
+                };
+
+                _addItemsToResultList(commonAttrs, "Attributes", propList);
+                _addItemsToResultList(commonRegs, "Registry", propList);
+            }
+
+            return propList;
+        };
+
+        this._modelEditorView.onPropertyChanged = function (selectedComponentIds, args) {
+            var i = selectedComponentIds.length,
+                nodeData,
+                keyArr,
+                setterFn;
+
+            //TODO: bulk
+            self._client.startTransaction();
+            while (--i >= 0) {
+                keyArr = args.id.split(".");
+                if (keyArr[0] === "Attributes") {
+                    setterFn = "setAttributes";
+                } else {
+                    setterFn = "setRegistry";
+                }
+
+                keyArr.splice(0, 1);
+                keyArr = keyArr.join(".");
+                self._client[setterFn](selectedComponentIds[i], keyArr, args.newValue);
+            }
+            self._client.completeTransaction();
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         this._initialize();
