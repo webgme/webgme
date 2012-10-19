@@ -281,15 +281,37 @@ define(['logManager',
             intransaction = false;
             modifyRootOnServer();
         };
+        var _setAttr = function(node,name,value){
+            var namearray = name.split(".");
+            var attributename = null;
+            var attribute = null;
+            if(namearray.length<2){
+                attributename = name;
+                attribute = value;
+            } else {
+                attributename = namearray.shift();
+                attribute = currentCore.getAttribute(node,attributename);
+                var pointer = attribute;
+                while(namearray.length>1){
+                    var attr = namearray.shift();
+                    if(pointer[attr] === undefined){
+                        pointer[attr] = {};
+                    }
+                    pointer = pointer[attr];
+                }
+                pointer[namearray.shift()] = value;
+            }
+            currentCore.setAttribute(node,attributename,attribute);
+        };
         this.setAttributes = function(path,name,value){
             if(currentNodes[path]){
                 if (_.isString(name)) {
-                    currentCore.setAttribute(currentNodes[path],name,value);
+                    _setAttr(currentNodes[path],name,value);
                 } else if (_.isObject(name)) {
                     //if names is object, then names is considered as name-value pairs
                     for (var i in name) {
                         if (name.hasOwnProperty(i)) {
-                            currentCore.setAttribute(currentNodes[path],i,name[i]);
+                            _setAttr(currentNodes[path],i,name[i]);
                         }
                     }
                 }
@@ -298,15 +320,37 @@ define(['logManager',
                 logger.error("[l122] no such object: "+path);
             }
         };
+        var _setReg = function(node,name,value){
+            var namearray = name.split(".");
+            var attributename = null;
+            var attribute = null;
+            if(namearray.length<2){
+                attributename = name;
+                attribute = value;
+            } else {
+                attributename = namearray.shift();
+                attribute = currentCore.getRegistry(node,attributename);
+                var pointer = attribute;
+                while(namearray.length>1){
+                    var attr = namearray.shift();
+                    if(pointer[attr] === undefined){
+                        pointer[attr] = {};
+                    }
+                    pointer = pointer[attr];
+                }
+                pointer[namearray.shift()] = value;
+            }
+            currentCore.setRegistry(node,attributename,attribute);
+        };
         this.setRegistry = function(path,name,value){
             if(currentNodes[path]){
                 if (_.isString(name)) {
-                    currentCore.setRegistry(currentNodes[path],name,value);
+                    _setReg(currentNodes[path],name,value);
                 } else if (_.isObject(name)) {
                     //if names is object, then names is considered as name-value pairs
                     for (var i in name) {
                         if (name.hasOwnProperty(i)) {
-                            currentCore.setRegistry(currentNodes[path],i,name[i]);
+                            _setReg(currentNodes[path],i,name[i]);
                         }
                     }
                 }
@@ -925,10 +969,36 @@ define(['logManager',
             return null;
         };
         this.getAttribute = function(name){
-            return core.getAttribute(node,name);
+            var namearray = name.split('.');
+            if(namearray.length<2){
+                return core.getAttribute(node,name);
+            } else {
+                var mainobject = core.getAttribute(node,namearray[0]);
+                for(var i=1;i<namearray.length;i++){
+                    try{
+                        mainobject = mainobject[namearray[i]];
+                    } catch(e) {
+                        return null;
+                    }
+                }
+                return mainobject;
+            }
         };
         this.getRegistry = function(name){
-            return core.getRegistry(node,name);
+            var namearray = name.split('.');
+            if(namearray.length<2){
+                return core.getRegistry(node,name);
+            } else {
+                var mainobject = core.getRegistry(node,namearray[0]);
+                for(var i=1;i<namearray.length;i++){
+                    try{
+                        mainobject = mainobject[namearray[i]];
+                    } catch(e) {
+                        return null;
+                    }
+                }
+                return mainobject;
+            }
         };
         this.getPointer = function(name){
             return {to:core.getPointerPath(node,name),from:[]};
@@ -947,7 +1017,7 @@ define(['logManager',
         };
 
         var getClientNodePath = function(){
-            var path = /*core.getStringPath(node)*/ownpath;
+            var path = ownpath;
             if(path === ""){
                 path = "root";
             }
