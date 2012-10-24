@@ -62,12 +62,13 @@ define(['logManager',
         this._modelEditorView.onReposition = function (repositionDesc) {
             var id;
 
+            self._client.startTransaction();
             for (id in repositionDesc) {
                 if (repositionDesc.hasOwnProperty(id)) {
-                    //TODO: bulk somehow
                     self._client.setRegistry(id, nodeRegistryNames.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
                 }
             }
+            self._client.completeTransaction();
         };
 
         this._modelEditorView.onCopy = function (selectedIds) {
@@ -109,14 +110,11 @@ define(['logManager',
             var i,
                 nodeData;
 
-            //TODO: bulk
-            //self._client.disableEventToUI(self.territoryId);
             self._client.startTransaction();
             for (i = 0; i < components.length; i += 1) {
                 nodeData = components[i];
                 self._client.setRegistry(nodeData.id, nodeRegistryNames.position, { "x": nodeData.x, "y": nodeData.y });
             }
-            //self._client.enableEventToUI(self.territoryId);
             self._client.completeTransaction();
         };
 
@@ -124,29 +122,23 @@ define(['logManager',
             var i,
                 nodeData;
 
-            //TODO: bulk
-            //self._client.disableEventToUI(self.territoryId);
             self._client.startTransaction();
             for (i = 0; i < components.length; i += 1) {
                 nodeData = components[i];
                 self._client.setAttributes(nodeData.id, nodeAttributeNames.name, nodeData.title);
             }
             self._client.completeTransaction();
-            //self._client.enableEventToUI(self.territoryId);
         };
 
         this._modelEditorView.onCreateModels = function (models) {
             var i;
 
-            //TODO: bulk
-            //self._client.disableEventToUI(self.territoryId);
             self._client.startTransaction();
             for (i = 0; i < models.length; i += 1) {
                 self._client.createChild({ "parentId": self._currentNodeInfo.id,
                                            "name": models[i].name });
             }
             self._client.completeTransaction();
-            //self._client.enableEventToUI(self.territoryId);
         };
 
         this._modelEditorView.onGetCommonPropertiesForSelection = function (nodeIdList) {
@@ -263,11 +255,9 @@ define(['logManager',
 
         this._modelEditorView.onPropertyChanged = function (selectedComponentIds, args) {
             var i = selectedComponentIds.length,
-                nodeData,
                 keyArr,
                 setterFn;
 
-            //TODO: bulk
             self._client.startTransaction();
             while (--i >= 0) {
                 keyArr = args.id.split(".");
@@ -284,16 +274,6 @@ define(['logManager',
             self._client.completeTransaction();
         };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
-
-        this._initialize();
-    };
-
-    ModelEditorControl.prototype._initialize = function () {
-        var self = this;
-
-        /*this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            self._selectedObjectChanged(nodeId);
-        });*/
     };
 
     ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
