@@ -6,6 +6,7 @@
 
 package org.isis.webgme.test;
 
+import java.util.*;
 import org.isis.promise.*;
 import org.isis.webgme.storage.*;
 import com.allanbank.mongodb.bson.Document;
@@ -87,22 +88,22 @@ public class TestMongo {
 		System.out.println("opened " + time);
 
 		time = System.currentTimeMillis();
-		FutureArray<Void> results = new FutureArray<Void>(Void.class);
+		List<Promise<Void>> results = new ArrayList<Promise<Void>>();
 		for (int i = 0; i < COUNT; ++i) {
 			Test test = new Test("*obj" + i, i);
 			results.add(storage.save(Test.ENCODER, test));
 		}
-		Executors.obtain(results.seal());
+		Executors.obtain(Promise.collect(results));
 		time = System.currentTimeMillis() - time;
 		System.out.println("saved " + time);
 
 		time = System.currentTimeMillis();
-		results = new FutureArray<Void>(Void.class);
+		results = new ArrayList<Promise<Void>>();
 		for (int i = 0; i < COUNT; ++i) {
 			Promise<Test> obj = storage.load(Test.ENCODER, "*obj" + i);
 			results.add(TEST.call(obj, i));
 		}
-		Executors.obtain(results.seal());
+		Executors.obtain(Promise.collect(results));
 		time = System.currentTimeMillis() - time;
 		System.out.println("loaded " + time);
 

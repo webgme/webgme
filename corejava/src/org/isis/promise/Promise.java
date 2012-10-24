@@ -6,11 +6,18 @@
 
 package org.isis.promise;
 
-public interface Promise<Type> {
+import java.util.*;
 
-	Constant<Type> getConstant() throws Exception;
+public abstract class Promise<Type> {
 
-	void reject(Exception error);
+	protected abstract Constant<Type> getConstant() throws Exception;
 
-	void requestArgument(int index, Future<?> parent);
+	protected abstract void reject(Exception error);
+
+	protected abstract void requestArgument(int index, Future<?> parent);
+
+	public static <Type> Future<List<Type>> collect(
+			Collection<Promise<Type>> collection) throws Exception {
+		return new FutureArray<Type>(collection);
+	}
 }

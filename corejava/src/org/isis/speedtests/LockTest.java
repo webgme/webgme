@@ -35,10 +35,10 @@ public final class LockTest {
 
 	public static void main(String[] args) {
 
-		for(int i = 0; i < counters.length; ++i) {
+		for (int i = 0; i < counters.length; ++i) {
 			counters[i] = new Counter();
 		}
-		
+
 		for (int i = 0; i < best_times.length; ++i)
 			best_times[i] = Long.MAX_VALUE;
 
@@ -47,32 +47,32 @@ public final class LockTest {
 			measure(0, new Thread[] { new Thread() {
 				public void run() {
 					for (int i = 0; i < ITERATIONS; ++i)
-						for(int j = 0; j < counters.length; ++j)
+						for (int j = 0; j < counters.length; ++j)
 							++counters[j].value;
 				}
 			} });
-			
+
 			measure(1, new Thread[] { new Thread() {
 				public void run() {
 					for (int i = 0; i < ITERATIONS; ++i) {
-						for(int j = 0; j < counters.length; ++j)
-							synchronized(counters[j]) {
+						for (int j = 0; j < counters.length; ++j)
+							synchronized (counters[j]) {
 								++counters[j].value;
 							}
 					}
 				}
 			} });
-			
+
 			measure(2, new Thread[] { new Thread() {
 				public void run() {
 					for (int i = 0; i < ITERATIONS; ++i) {
-						for(int j = 0; j < counters.length; ++j)
-							if( counters[j] == counters[0] || counters[j] == counters[1]) {
-								synchronized(counters[j]) {
+						for (int j = 0; j < counters.length; ++j)
+							if (counters[j] == counters[0]
+									|| counters[j] == counters[1]) {
+								synchronized (counters[j]) {
 									++counters[j].value;
 								}
-							}
-							else
+							} else
 								++counters[j].value;
 					}
 				}

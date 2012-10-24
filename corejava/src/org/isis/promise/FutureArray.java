@@ -6,63 +6,49 @@
 
 package org.isis.promise;
 
-import java.lang.reflect.Array;
 import java.util.*;
 import java.util.concurrent.atomic.*;
 
-public final class FutureArray<Type> extends Future<Type[]> {
+final class FutureArray<Type> extends Future<List<Type>> {
 
 	AtomicInteger missing;
 	ArrayList<Promise<Type>> list;
-	Class<Type> type;
 
-	public FutureArray(Class<Type> type) {
-		assert (type != null);
-
-		this.type = type;
-		list = new ArrayList<Promise<Type>>();
-	}
-
-	public void add(Promise<Type> promise) throws Exception {
-		assert (missing == null && promise != null);
-		list.add(promise);
-	}
-
-	public Promise<Type[]> seal() throws Exception {
-		assert (missing == null);
-
+	public FutureArray(Collection<Promise<Type>> collection) throws Exception {
 		missing = new AtomicInteger(1);
-		int size = list.size();
+		list = new ArrayList<Promise<Type>>(collection.size());
 
-		for (int i = 0; i < size; ++i) {
-			Promise<Type> promise = list.get(i);
+		Iterator<Promise<Type>> iter = collection.iterator();
+		while (iter.hasNext()) {
+			Promise<Type> promise = iter.next();
+
 			Constant<Type> constant = promise.getConstant();
 			if (constant != null)
-				list.set(i, constant);
+				list.add(constant);
 			else {
 				missing.incrementAndGet();
-				promise.requestArgument(i, this);
+				list.add(promise);
+				promise.requestArgument(list.size() - 1, this);
 			}
 		}
 
 		if (missing.decrementAndGet() == 0)
 			done();
-
-		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	protected void done() throws Exception {
 
-		int size = list.size();
+		ArrayList<Type> result = new ArrayList<Type>(list.size());
+		Iterator<Promise<Type>> iter = list.iterator();
 
-		Type[] result = (Type[]) Array.newInstance(type, size);
-		for (int i = 0; i < size; ++i) {
-			Constant<Type> constant = list.get(i).getConstant();
-			result[i] = constant.getValue();
+		while (iter.hasNext()) {
+			Promise<Type> promise = iter.next();
+			Constant<Type> constant = promise.getConstant();
+			result.add(constant.getValue());
 		}
 
-		resolve(new Constant<Type[]>(result));
+		list = null;
+		resolve(new Constant<List<Type>>(result));
 	}
 
 	@Override

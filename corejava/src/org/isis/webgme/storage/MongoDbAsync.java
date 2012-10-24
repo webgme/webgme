@@ -108,14 +108,6 @@ public class MongoDbAsync implements Storage {
 		}
 
 		@Override
-		protected <Arg> void argumentResolved(int index, Promise<Arg> argument) {
-		}
-
-		@Override
-		protected void rejectChildren(Exception error) {
-		}
-
-		@Override
 		public void callback(Document arg0) {
 			try {
 				Object obj = encoder.decodeMongo2(arg0);

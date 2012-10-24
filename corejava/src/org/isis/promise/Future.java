@@ -9,7 +9,7 @@ package org.isis.promise;
 // TODO: remove the special handling of exceptions
 // TODO: futures should be resolved only once, even when collecting
 
-public abstract class Future<Type> implements Promise<Type> {
+public abstract class Future<Type> extends Promise<Type> {
 	static final short STATE_EMPTY = 0x00; // null
 	static final short STATE_FORWARD = 0x02; // Future<Type>
 	static final short STATE_COLLECT = 0x05; // Promise<Type>
@@ -55,7 +55,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final void requestArgument(int index, Future<?> parent) {
+	protected final void requestArgument(int index, Future<?> parent) {
 		debug("requestArgument start");
 		assert (parent != null);
 
@@ -86,7 +86,7 @@ public abstract class Future<Type> implements Promise<Type> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public final void requestForwarding(Future<Type> parent) {
+	protected final void requestForwarding(Future<Type> parent) {
 		debug("requestForwarding start");
 		assert (parent != null);
 
@@ -114,7 +114,7 @@ public abstract class Future<Type> implements Promise<Type> {
 		debug("requestForwarding end");
 	}
 
-	public final void debug(String where) {
+	protected final void debug(String where) {
 		/*
 		 * try { Thread.sleep(1); } catch (Exception e) { }
 		 */
@@ -129,7 +129,7 @@ public abstract class Future<Type> implements Promise<Type> {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Constant<Type> getConstant() {
+	protected final Constant<Type> getConstant() {
 		debug("getConstant");
 
 		Object object = this.object;
@@ -139,11 +139,11 @@ public abstract class Future<Type> implements Promise<Type> {
 			return null;
 	}
 
-	protected abstract <Arg> void argumentResolved(int index,
-			Promise<Arg> argument);
+	<Arg> void argumentResolved(int index, Promise<Arg> argument) {
+	}
 
 	@Override
-	public final void reject(Exception error) {
+	protected final void reject(Exception error) {
 		debug("reject start");
 		assert (error != null);
 
@@ -171,5 +171,6 @@ public abstract class Future<Type> implements Promise<Type> {
 		debug("reject end");
 	}
 
-	protected abstract void rejectChildren(Exception error);
+	void rejectChildren(Exception error) {
+	}
 }

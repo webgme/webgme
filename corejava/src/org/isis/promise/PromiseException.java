@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-final class PromiseException<Type> implements Promise<Type> {
+final class PromiseException<Type> extends Promise<Type> {
 	private Exception value;
 
 	PromiseException(Exception value) {

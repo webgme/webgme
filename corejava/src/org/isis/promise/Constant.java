@@ -6,7 +6,7 @@
 
 package org.isis.promise;
 
-public final class Constant<Type> implements Promise<Type> {
+public final class Constant<Type> extends Promise<Type> {
 
 	public static final Constant<Void> VOID = new Constant<Void>(null);
 	public static final Constant<Integer> ZERO = new Constant<Integer>(0);

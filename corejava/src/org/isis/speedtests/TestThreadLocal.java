@@ -65,12 +65,13 @@ public class TestThreadLocal {
 	}
 
 	public static void main(String[] args) throws Exception {
-		for(int i = 0; i < 20; ++i) {
+		for (int i = 0; i < 20; ++i) {
 			long t1 = measure(new Thread1());
 			int r1 = result;
 			long t2 = measure(new Thread2());
 			int r2 = result;
-			System.out.println("" + t1 + " (" + r1 + ")\t" + t2 + " (" + r2 + ")");
+			System.out.println("" + t1 + " (" + r1 + ")\t" + t2 + " (" + r2
+					+ ")");
 		}
 	}
 }
