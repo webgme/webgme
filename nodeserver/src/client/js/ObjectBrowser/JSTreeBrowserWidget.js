@@ -7,10 +7,8 @@ define(['order!jquery',
         'logManager',
         'commonUtil',
         'order!lib/jquery/jquery.hotkeys',
-        'order!lib/jquery/jquery.jstree'], function (jQuery, util, logManager, commonUtil) {
-
-    //load its own CSS file (css/JSTreeBrowserWidget.css)
-    util.loadCSS('css/JSTreeBrowserWidget.css');
+        'order!lib/jquery/jquery.jstree',
+        'css!/css/JSTreeBrowserWidget'], function (jQuery, util, logManager, commonUtil) {
 
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
@@ -250,18 +248,12 @@ define(['order!jquery',
             //get the node which is about to open
             var renamedNode = data.rslt.obj,
                 oldName = data.rslt.old_name,
-                newName = data.rslt.new_name,
-                changeAllowed = true;
+                newName = data.rslt.new_name;
 
             if (oldName !== newName) {
                 if ($.isFunction(self.onNodeTitleChanged)) {
-                    changeAllowed = self.onNodeTitleChanged.call(self, renamedNode.attr("nId"), oldName, newName);
+                    self.onNodeTitleChanged.call(self, renamedNode.attr("nId"), oldName, newName);
                 }
-
-                /*if (changeAllowed !== true) {
-                    self.updateNode(renamedNode, { "text": oldName });
-                    logger.debug("JSTreeBrowserWidget.onNodeTitleChanged returned false, title change not allowed");
-                }*/
             }
 
             //set focus back to the renamed node
@@ -437,8 +429,7 @@ define(['order!jquery',
                 newNodeData,
                 existingChildren,
                 i,
-                insertPos = -1,
-                cChild;
+                insertPos = -1;
 
             //check if the parentNode is null or not
             //when null, the new node belongs to the root

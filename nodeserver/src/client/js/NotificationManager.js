@@ -9,9 +9,9 @@
  * -------- NOTIFICATIONMANAGER -------
  */
 
-define(['jquery',
-        'lib/jquery/jquery.jgrowl.min',
-        'lib/jquery/jquery.gritter.min',
+define(['order!jquery',
+        'order!lib/jquery/jquery.jgrowl.min',
+        'order!lib/jquery/jquery.gritter.min',
         'clientUtil'], function (jquery, myjgrowl, mygritter, util) {
 
     var activeNotifications = {};

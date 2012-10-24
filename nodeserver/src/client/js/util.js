@@ -3,7 +3,8 @@
  * Utility helper functions for the client side
  */
 
-define(['order!jquery'], function () {
+define(['order!jquery',
+        'order!underscore'], function () {
 
     /*
      * Disabling selection on element
@@ -155,7 +156,7 @@ define(['order!jquery'], function () {
         },
 
         /*
-         * Inject a CSS dinamically into the document
+         * Inject a CSS dynamically into the document
          */
         injectCSS: function (css) {
             var injected = document.createElement('style');
@@ -207,8 +208,10 @@ define(['order!jquery'], function () {
                 var key;
 
                 for (key in obj) {
-                    if (!_.isUndefined(obj[key])) {
-                        target[key] = obj[key];
+                    if (obj.hasOwnProperty(key)) {
+                        if (!_.isUndefined(obj[key])) {
+                            target[key] = obj[key];
+                        }
                     }
                 }
             }, this);
@@ -218,6 +221,7 @@ define(['order!jquery'], function () {
         },
 
         each: function (obj, itr, scope) {
+            var key, l;
 
             if (Array.prototype.forEach && obj.forEach === Array.prototype.forEach) {
 
@@ -225,16 +229,19 @@ define(['order!jquery'], function () {
 
             } else if (obj.length === obj.length + 0) { // Is number but not NaN
 
-                for (var key = 0, l = obj.length; key < l; key++)
-                    if (key in obj && itr.call(scope, obj[key], key) === this.BREAK)
+                for (key = 0, l = obj.length; key < l; key++) {
+                    if (key in obj && itr.call(scope, obj[key], key) === this.BREAK) {
                         return;
-
+                    }
+                }
             } else {
-
-                for (var key in obj)
-                    if (itr.call(scope, obj[key], key) === this.BREAK)
-                        return;
-
+                for (key in obj) {
+                    if (obj.hasOwnProperty(key)) {
+                        if (itr.call(scope, obj[key], key) === this.BREAK) {
+                            return;
+                        }
+                    }
+                }
             }
 
         }

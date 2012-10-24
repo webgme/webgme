@@ -494,11 +494,11 @@ define(['jquery',
         //at this point we have all the connections that needs to be updated in 'connectionsToUpdate'
         //$(this._skinParts.svgPaper.canvas).remove();
 
-        this._logger.warning("Redrawing affected connections");
+        this._logger.debug("Redrawing affected connections");
 
         this._updateConnections(connectionsToUpdate);
 
-        this._logger.warning("Redrawing affected connections - DONE");
+        this._logger.debug("Redrawing affected connections - DONE");
 
         //$(this._skinParts.svgPaper.canvas).insertBefore(this._skinParts.childrenContainer.children().first());
 
@@ -1544,7 +1544,7 @@ define(['jquery',
 
                         this._skinParts.specificActions.append(selectionSpecificToolBox);
 
-                        this._skinParts.specificActions.on('mousedown mouseup',function (event) {
+                        this._skinParts.specificActions.on('mousedown mouseup', function (event) {
                             event.stopPropagation();
                         });
 
@@ -1802,7 +1802,6 @@ define(['jquery',
 
     ModelEditorView.prototype._showProperties = function () {
         var propanel = $("#modeleditorview_properties_panel"),
-            propListView,
             propList,
             self = this;
 
@@ -1908,10 +1907,6 @@ define(['jquery',
 
     ModelEditorView.prototype.onDoubleClick = function (componentId) {
         this._logger.warning("onDoubleClick is not overridden in Controller...componentId: '" + componentId + "'");
-    };
-
-    ModelEditorView.prototype.onFullRefresh = function () {
-        this._logger.warning("onFullRefresh is not overridden in Controller...");
     };
 
     ModelEditorView.prototype.onGetCommonPropertiesForSelection = function (nodeIds) {

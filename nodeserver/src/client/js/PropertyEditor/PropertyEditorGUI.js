@@ -4,13 +4,10 @@ define(['jquery',
     'logManager',
     'clientUtil',
     'PropertyEditor/WidgetManager',
-    'text!PropertyEditorCSS/PropertyEditorGUI.css'], function (jquery,
+    'css!PropertyEditorCSS/PropertyEditorGUI.css'], function (jquery,
                                                                logManager,
                                                                util,
-                                                               WidgetManager,
-                                                               styleSheet) {
-
-    util.injectCSS(styleSheet);
+                                                               WidgetManager) {
 
     /** Outer-most className for GUI's */
     var CSS_NAMESPACE = 'dg',
@@ -121,10 +118,9 @@ define(['jquery',
     };
 
     PropertyEditorGUI.prototype._getAccumulatedName = function () {
-        var parentName = this._parent ? this._parent._getAccumulatedName() : undefined,
-            cName = parentName ? parentName + "." + this._name : this._name;
+        var parentName = this._parent ? this._parent._getAccumulatedName() : undefined;
 
-        return cName;
+        return parentName ? parentName + "." + this._name : this._name;
     };
 
     /*************** END OF - PRIVATE API *************************/

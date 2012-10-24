@@ -23,7 +23,7 @@ require.config({
         "eve": 'lib/raphael/eve',
         "order": 'lib/require/order',
         "text":	'lib/require/text',
-        "css": 'lib/require/css',
+        "css": 'lib/require/rcss',
         "domReady":	'lib/require/domReady',
         "ModelEditorHTML": "js/ModelEditor/HTML",
         "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
