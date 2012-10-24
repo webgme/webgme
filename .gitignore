@@ -6,3 +6,5 @@
 
 /nodeserver/node_modules
 /node_modules
+
+*/.sass-cache
