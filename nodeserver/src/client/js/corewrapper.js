@@ -427,8 +427,14 @@ define(['logManager',
                     currentCore.setAttribute(child,"name","defaultConn");
                 } else {
                     currentCore.setRegistry(child,"isConnection",false);
-                    currentCore.setRegistry(child,"position",{ "x": 100, "y": 100});
-                    currentCore.setAttribute(child,"name","defaultObj");
+
+                    currentCore.setAttribute(child,"name", parameters.name || "defaultObj");
+
+                    if (parameters.position) {
+                        currentCore.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
+                    } else {
+                        currentCore.setRegistry(child,"position", { "x": 100, "y": 100});
+                    }
                 }
                 currentCore.setAttribute(child,"isPort",true);
                 modifyRootOnServer();
