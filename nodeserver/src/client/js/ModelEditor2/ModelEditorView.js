@@ -730,6 +730,14 @@ define(['jquery',
         });
         this._skinParts.childrenContainer.append(this._skinParts.selectionOutline);
         this._skinParts.selectionOutline.hide();
+
+        //hook up drop event handler on children container
+        this._skinParts.childrenContainer.droppable({
+            accept: ".part",
+            drop: function (event, ui) {
+                self._onBackgroundDrop(ui);
+            }
+        });
     };
 
     ModelEditorView.prototype._alignPositionToGrid = function (pX, pY) {
@@ -1851,6 +1859,23 @@ define(['jquery',
         this.onPropertyChanged(this._selectedComponentIds, args);
     };
 
+    /*********  HANDLE COMPONENT DROP ON BACKGROUND ***********/
+
+    ModelEditorView.prototype._onBackgroundDrop = function (ui) {
+        var id = ui.helper.attr("id"),
+            name = ui.helper.attr("data-name"),
+            kind = ui.helper.attr("data-kind"),
+            posX = ui.offset.left - this._childrenContainerOffset.left,
+            posY = ui.offset.top - this._childrenContainerOffset.top,
+            newNodeDesc = { "id": id,
+                            "position": { "x": posX,
+                                          "y": posY } };
+
+        this.onCreateNode(newNodeDesc);
+    };
+
+    /********* END OF - HANDLE COMPONENT DROP ON BACKGROUND ***********/
+
     /*
      * END OF - MODELCOMPONENT REPOSITION HANDLERS
      */
@@ -1915,6 +1940,10 @@ define(['jquery',
 
     ModelEditorView.prototype.onPropertyChanged = function (selectedComponentIds, args) {
         this._logger.warning("onPropertyChanged is not overridden in Controller...");
+    };
+
+    ModelEditorView.prototype.onCreateNode = function (newNodeDescriptor) {
+        this._logger.warning("onCreateNode is not overridden in Controller...");
     };
     /************* END OF --- PUBLIC API TO OVERRIDE --------------------*/
 

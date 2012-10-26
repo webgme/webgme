@@ -273,6 +273,17 @@ define(['logManager',
             }
             self._client.completeTransaction();
         };
+
+        this._modelEditorView.onCreateNode = function (newNodeDescriptor) {
+            var intellyPasteOpts = { "parentId": self._currentNodeInfo.id },
+                id = newNodeDescriptor.id;
+
+            intellyPasteOpts[id] = { "attributes": {}, registry: {} };
+            intellyPasteOpts[id].registry[nodeRegistryNames.position] = { "x": newNodeDescriptor.position.x,
+                                                                           "y": newNodeDescriptor.position.y };
+
+            self._client.intellyPaste(intellyPasteOpts);
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
     };
 

@@ -21,7 +21,9 @@ define([   'order!jquery',
     'js/ModelEditor2/ModelEditorControl',
     'js/ModelEditor2/ModelEditorView',
     'js/SimpleGraph/SVGGraphCommitCtrl',
-    'js/SimpleGraph/SVGGraphView'], function (jquery,
+    'js/SimpleGraph/SVGGraphView',
+    'js/PartBrowser/PartBrowserView',
+    'js/PartBrowser/PartBrowserControl'], function (jquery,
                                                             jqueryui,
                                                             underscore,
                                                             qtip,
@@ -41,7 +43,9 @@ define([   'order!jquery',
                                                             ModelEditorControl2,
                                                             ModelEditorView2,
                                                             CommitCtrl,
-                                                            CommitView) {
+                                                            CommitView,
+                                                            PartBrowserView,
+                                                            PartBrowserControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -83,7 +87,9 @@ define([   'order!jquery',
         mainView,
         currentNodeId = null,
         commitView,
-        commitCtrl;
+        commitCtrl,
+        partBrowserController,
+        partBrowserView;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -221,13 +227,16 @@ define([   'order!jquery',
                 log : options.logging
             });
 
-            proxy.getClient(null,function(err,cl){
-                if(!err && cl){
+            proxy.getClient(null, function (err, cl) {
+                if (!err && cl) {
                     client = cl;
                     client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
                         currentNodeId = nodeId;
                         if (mainController) {
                             mainController.selectedObjectChanged(currentNodeId);
+                        }
+                        if (partBrowserController) {
+                            partBrowserController.selectedObjectChanged(currentNodeId);
                         }
                     });
 
@@ -244,7 +253,10 @@ define([   'order!jquery',
 
                     /*commit browser init*/
                     commitView = new CommitView(document.getElementById('commitbrowser'));
-                    commitCtrl = new CommitCtrl(client,commitView);
+                    commitCtrl = new CommitCtrl(client, commitView);
+
+                    partBrowserView = new PartBrowserView("pPartBrowser");
+                    partBrowserController = new PartBrowserControl(client, partBrowserView);
 
                     callback(null);
                 } else {

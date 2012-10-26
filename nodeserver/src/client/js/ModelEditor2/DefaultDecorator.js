@@ -9,11 +9,12 @@ define(['logManager',
 
     var DefaultDecorator;
 
-    DefaultDecorator = function (objectDescriptor) {
+    DefaultDecorator = function (objectDescriptor, parentWidget) {
         this._project = objectDescriptor.client;
         this._id = objectDescriptor.id;
         this._name = objectDescriptor.name;
         this._ownerComponent = objectDescriptor.ownerComponent;
+        this._parentWidget = parentWidget;
 
         this._skinParts = {};
 
@@ -105,6 +106,10 @@ define(['logManager',
     //release the territory, release everything needs to be released and return
     DefaultDecorator.prototype.destroy = function () {
         this._logger.debug("Destroyed");
+    };
+
+    DefaultDecorator.prototype.renderPartBrowserItem = function () {
+        return $('<div class="modelDefault"><div class="modelTitle">' + this._name + '</div></div>');
     };
 
 

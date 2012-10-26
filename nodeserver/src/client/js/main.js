@@ -1,6 +1,6 @@
 "use strict";
 
-var DEBUG = false;
+var DEBUG = true;
 var _webGME_jquery_ver = '1.8.2';
 var _webGME_jqueryui_ver = '1.8.23';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
 
@@ -37,7 +37,9 @@ require.config({
         "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
         "ModelEditor2CSS": "css/ModelEditor2",
         "PropertyEditorCSS": "css/PropertyEditor",
-        "PropertyEditor": "js/PropertyEditor"
+        "PropertyEditor": "js/PropertyEditor",
+        "PartBrowserCSS": "css/PartBrowser",
+        "PartBrowser": "js/PartBrowser"
     }
 });
 

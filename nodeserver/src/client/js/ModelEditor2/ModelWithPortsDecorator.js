@@ -4,7 +4,7 @@ define(['logManager',
     'clientUtil',
     'nodeAttributeNames',
     'nodeRegistryNames',
-    './Port.js',
+    'ModelEditor2/Port',
     'text!ModelEditor2/ModelWithPortsTmpl.html',
     'css!ModelEditor2CSS/ModelWithPortsDecorator'], function (logManager,
                                                                  util,
@@ -15,13 +15,12 @@ define(['logManager',
 
     var ModelWithPortsDecorator;
 
-    ModelWithPortsDecorator = function (objectDescriptor) {
+    ModelWithPortsDecorator = function (objectDescriptor, parentWidget) {
         this._project = objectDescriptor.client;
         this._id = objectDescriptor.id;
         this._name = objectDescriptor.name;
         this._ownerComponent = objectDescriptor.ownerComponent;
-
-        this._territoryId = this._project.addUI(this, true);
+        this._parentWidget = parentWidget;
 
         this._selfPatterns = {};
         this._skinParts = {};
@@ -34,6 +33,8 @@ define(['logManager',
 
     ModelWithPortsDecorator.prototype.beforeAppend = function () {
         this._initializeUI();
+
+        this._territoryId = this._project.addUI(this, true);
 
         //specify territory
         this._selfPatterns[this._id] = { "children": 1};
@@ -308,6 +309,10 @@ define(['logManager',
         delete this._ports;
 
         this._logger.debug("Destroyed");
+    };
+
+    ModelWithPortsDecorator.prototype.renderPartBrowserItem = function () {
+        return $('<div class="modelWithPorts"><div class="modelTitle">' + this._name + '</div></div>');
     };
 
 

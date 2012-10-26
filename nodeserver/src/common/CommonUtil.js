@@ -156,7 +156,8 @@ define([], function () {
                 "masik",
                 "SFdemo",
                 "basic",
-                "kecso"
+                "kecso",
+                "roby"
             ]
         }
 
