@@ -194,6 +194,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 			removeAll: removeAll,
 			searchId: storage.searchId,
 			fsync: storage.fsync,
+            find: storage.find, //TODO: it should work more like load, but for now it is okay as it is
             requestPoll: storage.requestPoll
 		};
 	};
