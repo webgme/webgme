@@ -280,7 +280,7 @@ define(['logManager',
 
             intellyPasteOpts[id] = { "attributes": {}, registry: {} };
             intellyPasteOpts[id].registry[nodeRegistryNames.position] = { "x": newNodeDescriptor.position.x,
-                                                                           "y": newNodeDescriptor.position.y };
+                                                                          "y": newNodeDescriptor.position.y };
 
             self._client.intellyPaste(intellyPasteOpts);
         };
