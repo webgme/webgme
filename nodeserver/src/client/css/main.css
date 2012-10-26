@@ -209,3 +209,10 @@ div.ObjectBrowser {
     height: 600px;
     overflow : auto;
 }
+
+/************************/
+
+#commitbrowser {
+    height: 200px;
+    overflow-x: auto;
+}
