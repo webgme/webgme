@@ -4,7 +4,8 @@ define([
     'js/Client/ClientCommitStorage',
     'js/Client/ClientLog',
     'js/Client/ClientLogCore',
-    'js/Client/ClientNode'
+    'js/Client/ClientNode',
+    'js/Client/ClientMeta'
 ],
     function(
         EventDispatcher,
@@ -12,7 +13,8 @@ define([
         ClientCommitStorage,
         ClientLog,
         ClientCore,
-        ClientNode
+        ClientNode,
+        ClientMeta
         ){
 
         var GUID = commonUtil.guid,
@@ -46,6 +48,7 @@ define([
                 currentCore = null,
                 currentPathes = {},
                 clipboard = [],
+                meta = null,
                 intransaction = false;
 
             if(logger){
@@ -177,7 +180,7 @@ define([
 
             self.getNode = function(path){
                 if(currentCore && currentNodes[path]){
-                    return new ClientNode(currentNodes[path],currentCore);
+                    return new ClientNode(currentNodes[path],currentCore,meta);
                 }else{
                     return null;
                 }
@@ -737,6 +740,10 @@ define([
                     callback();
                 });
             };
+
+            //INIT stuff
+            meta = new ClientMeta(self);
+
 /* doesn't work with jquery and extend :S
             return {
                 //eventdispatcher

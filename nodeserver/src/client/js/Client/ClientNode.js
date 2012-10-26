@@ -1,8 +1,9 @@
 define([],
     function( ){
         'use strict';
-        var ClientNode = function(node,core){
-            var ownpath = core.getStringPath(node),
+        var ClientNode = function(node,core,meta){
+            var self = this,
+                ownpath = core.getStringPath(node),
                 ownpathpostfix = ownpath === "" ? "" : "/";
 
             var getParentId = function(){
@@ -64,6 +65,11 @@ define([],
                 return path;
             };
 
+            //META
+            var getValidChildrenTypes = function(){
+                return meta.getValidChildrenTypes(self);
+            };
+
             return {
                 getParentId : getParentId,
                 getId       : getId,
@@ -75,7 +81,9 @@ define([],
                 getPointer : getPointer,
                 getPointerNames : getPointerNames,
                 getAttributeNames : getAttributeNames,
-                getRegistryNames : getRegistryNames
+                getRegistryNames : getRegistryNames,
+                //META functions
+                getValidChildrenTypes : getValidChildrenTypes
             }
         };
         return ClientNode;
