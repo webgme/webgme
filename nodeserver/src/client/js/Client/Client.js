@@ -1,114 +1,77 @@
-define(['logManager',
+define([
     'eventDispatcher',
     'commonUtil',
-    'js/socmongo',
-    'core/cache',
-    'core/core2',
-    'js/ftstore',
-    'js/logger',
-    'js/logstorage',
-    'js/logcore',
-    'notificationManager',
-    'js/comitter',
-    'socket.io/socket.io.js'],
-    function( LogManager,
-              EventDispatcher,
-              commonUtil,
-              SM,
-              CACHE,
-              CORE,
-              FTOLST,
-              LogSrv,
-              LogST,
-              LCORE,
-              notificationManager,
-              COM ){
-        var logger,
-            Client,
-            CommandQueue,
-            LocalCommander,
-            Storage,
-            ClientNode,
-            ClientNode2,
-            Territory;
+    'js/Client/ClientCommitStorage',
+    'js/Client/ClientLog',
+    'js/Client/ClientLogCore',
+    'js/Client/ClientNode'
+],
+    function(
+        EventDispatcher,
+        commonUtil,
+        ClientCommitStorage,
+        ClientLog,
+        ClientCore,
+        ClientNode
+        ){
 
-        logger = LogManager.create("Client");
-        GUID = commonUtil.guid;
-        INSERTARR = commonUtil.insertIntoArray;
-
-        var timestamp = function(){
-            return ""+ (new Date()).getTime();
-        };
-        var elapsedTime = function(start){
-            return ""+ ((new Date()).getTime()-start);
-        };
-        Client = function(options){
-            /*Fault Tolerant Data server syncronization functions*/
-            var dataOutSyncNoteId = null;
-            var rootSrvOutNoteId = null;
-            this.dataInSync = function(){
-                if(dataOutSyncNoteId){
-                    notificationManager.removeStickyMessage(dataOutSyncNoteId);
-                    dataOutSyncNoteId = null;
-                }
-                dataLostSync = false;
-                if(!rootServerOut && currentCore){
-                    rootRetry = false;
-                    modifyRootOnServer();
-                }
-            };
-            this.dataOutSync = function(){
-                if(dataOutSyncNoteId === null){
-                    dataOutSyncNoteId = notificationManager.addStickyMessage("Data is out of sync!!!");
-                }
-                dataLostSync = true;
+        var GUID = commonUtil.guid,
+            INSERTARR = commonUtil.insertIntoArray,
+            TSSTRING = function(){
+                return "["+commonUtil.timestamp()+"]";
+            },
+            TIMESTAMP = commonUtil.timestamp,
+            ETIMESTRING = function(start){
+                return "{"+ (TIMESTAMP()-start) + "ms}";
             };
 
-
+        var Client = function(options){
             var self = this,
-                timelog = options.timelog ? function(info){console.log("["+timestamp()+"]"+info);} : function(info){},
-                _storage = new SM({server:location.host+options.mongosrv,socketiopar:options.socketiopar}),
-                realstorage = options.faulttolerant ? new FTOLST(self,_storage,"temporaryinfo") : _storage,
-                cache = options.cache ? new CACHE(realstorage) : realstorage,
-                logsrv = options.logging ? new LogSrv(location.host+options.logsrv) : null,
-                //storage = options.logging ? new LogST(cache,logsrv) : cache,
-                storage = /*new LogST(cache,logsrv)*/_storage,
+                log = function(){},
+                logger = (options.log && options.logsrv) === true ? new ClientLog(location.host+options.logsrv) : null,
+                storage = new ClientCommitStorage({
+                    server: options.projsrv,
+                    options : options.socketiopar,
+                    //watcher : self
+                    projectinfo : options.projectname,
+                    faulttolerant : options.faulttolerant,
+                    cache : options.cache,
+                    logger : logger,
+                    log : options.log
+                }),
                 selectedObjectId = null,
                 users = {},
                 currentNodes = {},
                 currentRoot = null,
                 currentCore = null,
-                currentNupathes = {},
+                currentPathes = {},
                 clipboard = [],
-                rootServer = null,
-                rootServerOut = false,
-                dataLostSync = false,
-                lastValidRoot = null,
-                rootRetry = false,
-                updating = false/*,
-             previousNodes = {},
-             previousRoot = null,
-             previousCore = null,*/
-            intransaction = false,
-            comitter = null;
+                intransaction = false;
 
-            var waitfornextregistryset = false; //TODO HACK
+            if(logger){
+                log = function(msg){
+                    logger.log(TSSTRING()+"[Client]"+msg);
+                };
+            } else {
+                log = function(msg){
+                    console.log(TSSTRING()+"[Client]"+msg);
+                };
+            }
+
             /*event functions to relay information between users*/
-            $.extend(this, new EventDispatcher());
-            this.events = {
+            $.extend(self, new EventDispatcher());
+            self.events = {
                 "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
             };
-            this.setSelectedObjectId = function ( objectId ) {
+            self.setSelectedObjectId = function ( objectId ) {
                 if ( objectId !== selectedObjectId ) {
                     selectedObjectId = objectId;
-
                     self.dispatchEvent( self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
                 }
             };
 
-
             /*User Interface handling*/
-            this.addUI = function(ui,oneevent){
+            self.addUI = function(ui,oneevent){
                 var guid = GUID();
                 var count = 0;
                 for(var i in users){
@@ -117,30 +80,13 @@ define(['logManager',
                 users[guid]  = {UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false,SENDEVENTS:true};
 
                 if(count === 0){
-                    /*in case of the first user we have to connect...*/
-                    var proxy = io.connect(location.host + options.projsrv,options.socketiopar);
-                        proxy.on('connect',function(){
-                            proxy.emit('getProject',options.mongocollection,function(err,projns){
-                                storage = new SM({server:location.host+projns,socketiopar:options.socketiopar});
-                                comitter = new COM(storage);
-
-                                /*propagated functions*/
-                                self.requestPoll = comitter.requestPoll;
-                                self.getBranches = comitter.getBranches;
-                                self.getCommits = comitter.getCommits;
-                                self.loadCommit = comitter.loadCommit;
-                                self.load = storage.load;
-
-                                storage.open(function(err){
-                                    /*we select the master branch for a start now :)*/
-                                    comitter.selectBranch("master",newRootArrived);
-                                });
-                            });
-                        });
+                    storage.open(function(err){
+                        storage.selectBranch("master",newRootArrived);
+                    });
                 }
                 return guid;
             };
-            this.removeUI = function(guid){
+            self.removeUI = function(guid){
                 delete users[guid];
                 var count = 0;
                 for(var i in users){
@@ -155,36 +101,34 @@ define(['logManager',
 
                 }
             };
-            this.disableEventToUI = function(guid){
+            self.disableEventToUI = function(guid){
                 if(users[guid]){
                     users[guid].SENDEVENTS = false;
                 }
             };
-            this.enableEventToUI = function(guid){
+            self.enableEventToUI = function(guid){
                 if(users[guid]){
                     if(!users[guid].SENDEVENTS){
                         users[guid].SENDEVENTS = true;
-                        nuUpdateUser(users[guid],users[guid].PATTERNS,currentNupathes);
+                        UpdateUser(users[guid],users[guid].PATTERNS,currentNupathes);
                     }
                 }
             };
-            this.updateTerritory = function(userID,patterns){
+            self.updateTerritory = function(userID,patterns){
                 if(_.isEqual(patterns,users[userID].PATTERNS)){
 
                 }else{
                     if(currentCore){
-                        /*updateUser*/nuUpdateSingleUser(userID,patterns,function(err){
+                        /*updateUser*/UpdateSingleUser(userID,patterns,function(err){
                             if(err){
                                 //TODO now what the f**k
                                 updateUser(userID,patterns,function(err){
                                     if(err){
                                         console.log("second try for update failed as well...");
                                     } else {
-                                        logger.debug("user territory updated, but only for second try: "+userID);
                                     }
                                 });
                             } else {
-                                logger.debug("user territory updated:"+userID);
                             }
                         });
                     } else {
@@ -192,7 +136,7 @@ define(['logManager',
                     }
                 }
             };
-            this.fullRefresh = function(){
+            self.fullRefresh = function(){
                 /*this call generates events to all ui with the current territory*/
                 for(var i in users){
                     if(users[i].ONEEVENT){
@@ -212,46 +156,43 @@ define(['logManager',
                     }
                 }
             };
-            this.undo = function(){
-                console.log("not implemented with branches  - now functioning as commit :)");
-                self.commit(function(err){
-                    console.log("commit done +err+"+err);
-                });
+            self.undo = function(){
             };
 
-
-            /*branch selectiong functions*/
-            this.selectBranch = function(branchname){
-                comitter.selectBranch(branchname,function(roothash){
+            /*propagated functions*/
+            self.undo = storage.commit;
+            self.commit = storage.commit;
+            self.requestPoll = storage.requestPoll;
+            self.getBranches = storage.getBranches;
+            self.getCommits = storage.getCommits;
+            self.loadCommit = storage.loadCommit;
+            self.load = storage.load;
+            self.open = storage.open;
+            self.opened = storage.opened;
+            self.selectBranch = function(branchname){
+                storage.selectBranch(branchname,function(roothash){
                     newRootArrived(roothash);
                 });
             };
-            this.commit = function(callback){
-                comitter.commit(function(err){
-                    if(callback){
-                        callback(err)
-                    }
-                });
-            };
 
-            /*getting a node*/
-            this.getNode = function(path){
-                if(currentNodes[path]){
+            self.getNode = function(path){
+                if(currentCore && currentNodes[path]){
                     return new ClientNode(currentNodes[path],currentCore);
                 }else{
                     return null;
                 }
             };
 
+
             /*MGA like functions*/
-            this.startTransaction = function(){
+            self.startTransaction = function(){
                 intransaction = true;
             };
-            this.completeTransaction = function(){
+            self.completeTransaction = function(){
                 intransaction = false;
                 modifyRootOnServer();
             };
-            this.setAttributes = function(path,name,value){
+            self.setAttributes = function(path,name,value){
                 if(currentNodes[path]){
                     if (_.isString(name)) {
                         currentCore.setAttribute(currentNodes[path],name,value);
@@ -265,10 +206,9 @@ define(['logManager',
                     }
                     modifyRootOnServer();
                 } else {
-                    logger.error("[l122] no such object: "+path);
                 }
             };
-            this.setRegistry = function(path,name,value){
+            self.setRegistry = function(path,name,value){
                 if(currentNodes[path]){
                     if (_.isString(name)) {
                         currentCore.setRegistry(currentNodes[path],name,value);
@@ -280,41 +220,30 @@ define(['logManager',
                             }
                         }
                     }
-                    if(!waitfornextregistryset){
-                        waitfornextregistryset = true;
-                    }
-                    setTimeout(function(){
-                        if(waitfornextregistryset){
-                            waitfornextregistryset = false;
-                            modifyRootOnServer();
-                        }
-                    },100)
+                    modifyRootOnServer();
                 } else {
-                    logger.error("[l92] no such object: "+path);
                 }
             };
-            this.copyNodes = function(ids){
+            self.copyNodes = function(ids){
                 clipboard = ids;
             };
-            this.pasteNodes = function(parentpath){
-                nuCopy(clipboard,parentpath,function(err,copyarr){
+            self.pasteNodes = function(parentpath){
+                Copy(clipboard,parentpath,function(err,copyarr){
                     if(err){
-                        logger.error("error during multiple paste!!! "+err);
                         rollBackModification();
                     } else {
                         modifyRootOnServer();
                     }
                 });
             };
-            this.deleteNode = function(path){
+            self.deleteNode = function(path){
                 if(currentNodes[path]){
                     currentCore.deleteNode(currentNodes[path]);
                     modifyRootOnServer();
                 } else {
-                    logger.error("[l112] no such object: "+path);
                 }
             };
-            this.delMoreNodes = function(pathes){
+            self.delMoreNodes = function(pathes){
                 var i,
                     candelete = [];
                 for(i=0;i<pathes.length;i++){
@@ -341,7 +270,7 @@ define(['logManager',
                 }
                 modifyRootOnServer();
             };
-            this.createChild = function(parameters){
+            self.createChild = function(parameters){
                 var baseId,
                     child;
 
@@ -359,31 +288,28 @@ define(['logManager',
                     currentCore.setAttribute(child,"isPort",true);
                     modifyRootOnServer();
                 } else {
-                    logger.error("[l128]fraudulent child creation: "+JSON.stringify(parameters));
                 }
             };
-            this.createSubType = function(parent,base){
+            self.createSubType = function(parent,base){
                 /*TODO: currently there is no inheritance so no use of this function*/
             };
-            this.makePointer = function(id,name,to){
+            self.makePointer = function(id,name,to){
                 if(currentNodes[id] && currentNodes[to]){
                     currentCore.setPointer(currentNodes[id],name,currentNodes[to]);
                     modifyRootOnServer();
                 }
                 else{
-                    logger.error("[l144] wrong pointer creation");
                 }
             };
-            this.delPointer = function(path,name){
+            self.delPointer = function(path,name){
                 if(currentNodes[path]){
                     currentCore.deletePointer(currentNodes[path],name);
                     modifyRootOnServer();
                 }
                 else{
-                    logger.error("[l144] no such object: "+path);
                 }
             };
-            this.makeConnection = function(parameters){
+            self.makeConnection = function(parameters){
                 var commands=[],
                     baseId,
                     connection;
@@ -399,14 +325,12 @@ define(['logManager',
                         modifyRootOnServer();
                     }
                     else{
-                        logger.error("not all object available for the connection: "+JSON.stringify(parameters));
                     }
                 }
                 else{
-                    logger.error("fraudulent connection creation: "+JSON.stringify(parameters));
                 }
             };
-            this.intellyPaste = function(parameters){
+            self.intellyPaste = function(parameters){
                 var pathestocopy = [],
                     simplepaste = true;
                 if(parameters.parentId && currentNodes[parameters.parentId]){
@@ -421,7 +345,6 @@ define(['logManager',
                         pathestocopy = clipboard || [];
                     }
                     if(pathestocopy.length < 1){
-                        logger.error("there is nothing to copy!!!");
                     } else if(pathestocopy.length === 1){
                         var newnode = currentCore.copyNode(currentNodes[pathestocopy[0]],currentNodes[parameters.parentId]);
                         storeNode(newnode);
@@ -435,9 +358,8 @@ define(['logManager',
                         }
                         modifyRootOnServer();
                     } else {
-                        nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
+                        Copy(pathestocopy,parameters.parentId,function(err,copyarr){
                             if(err){
-                                logger.error("error happened during paste!!! "+err);
                                 rollBackModification();
                             }
                             else{
@@ -456,28 +378,27 @@ define(['logManager',
                         });
                     }
                 } else{
-                    logger.error("new parent not found!!! "+JSON.stringify(parameters));
                 }
             };
-
-
-
 
             /*helping funcitons*/
             var newRootArrived = function(roothash){
                 if(currentRoot !== roothash){
                     var oldroot = currentRoot;
                     currentRoot = roothash;
-                    var tempcore = new LCORE(new CORE(storage),logsrv);
+                    var tempcore = new ClientCore({
+                        storage : storage,
+                        logger : logger
+                    });
                     tempcore.loadRoot(roothash,function(err,node){
                         if(!err && node){
                             currentNodes = {};
                             currentCore = tempcore;
                             storeNode(node);
-                            nuUpdateAll(function(err){
+                            UpdateAll(function(err){
                                 if(err){
                                     //TODO now what???
-                                    nuUpdateAll(function(err){
+                                    UpdateAll(function(err){
                                         if(err){
                                             console.log("updating the whole user bunch failed for the second time as well...");
                                         }
@@ -492,33 +413,34 @@ define(['logManager',
                 }
             };
             var modifyRootOnServer = function(){
-                var oldroot = currentRoot;
-                var newhash = currentCore.persist(currentNodes["root"],function(err){
-                    if(err){
-                        console.log(err);
-                    } else {
-                        if(!newhash){
-                            newhash = currentCore.getKey(currentNodes["root"]);
-                        }
-                        comitter.updateRoot(newhash,function(err){
-                            if(err){
-                                newRootArrived(oldroot);
-                                console.log(err);
+                if(!intransaction){
+                    var oldroot = currentRoot;
+                    var newhash = currentCore.persist(currentNodes["root"],function(err){
+                        if(err){
+                            console.log(err);
+                        } else {
+                            if(!newhash){
+                                newhash = currentCore.getKey(currentNodes["root"]);
                             }
-                        });
-                        newRootArrived(newhash);
-                    }
+                            storage.updateRoot(newhash,function(err){
+                                if(err){
+                                    newRootArrived(oldroot);
+                                    console.log(err);
+                                }
+                            });
+                            newRootArrived(newhash);
+                        }
 
-                });
+                    });
+                }
             };
             var rollBackModification = function(){
                 currentNodes = {};
-                //currentCore = options.logging ? new LCORE(new CORE(storage),logsrv) : new CORE(storage);
                 currentCore = new LCORE(new CORE(storage),logsrv);
                 currentRoot = lastValidRoot;
                 currentCore.loadRoot(currentRoot,function(err,node){
                     storeNode(node);
-                    nuUpdateAll(function(err){
+                    UpdateAll(function(err){
                         if(err){
                             console.log("now something really f*cked up...");
                         }
@@ -550,11 +472,10 @@ define(['logManager',
                     return currentNodes[newpath];
                 }
                 else{
-                    logger.error("missing object for move!!!");
                 }
             };
 
-            var nuCopy = function(pathes,parentpath,callback){
+            var Copy = function(pathes,parentpath,callback){
                 var retarr = {},
                     parent = currentNodes[parentpath];
 
@@ -571,7 +492,6 @@ define(['logManager',
                     var tempto = currentCore.copyNode(tempfrom,parent);
                     currentCore.loadChildren(tempfrom,function(err,children){
                         if(err){
-                            logger.error("original nodes unreachable: "+err);
                             callback(err,null);
                         } else {
                             for(i=0;i<children.length;i++){
@@ -590,14 +510,12 @@ define(['logManager',
                                         delete currentNodes[index];
                                     }
                                 }else{
-                                    logger.error("copy lost original children");
                                     callback("wrong copy",null);
                                     return;
                                 }
                             }
                             currentCore.loadChildren(tempto,function(err,children){
                                 if(err){
-                                    logger.error("cannot load copied children: "+err);
                                     callback(err,null);
                                 } else {
                                     for(i=0;i<children.length;i++){
@@ -613,7 +531,6 @@ define(['logManager',
                                             var node = currentCore.moveNode(children[i],parent);
                                             retarr[index].topath = storeNode(node);
                                         }else{
-                                            logger.error("copy resulted in wrong children");
                                             callback("wrong copy",null);
                                             return;
                                         }
@@ -626,11 +543,10 @@ define(['logManager',
                         }
                     });
                 } else {
-                    logger.error("invalid parent in multiCopy");
                     callback("invalid parent",null);
                 }
             };
-            var nuLoading = function(callback){
+            var Loading = function(callback){
                 var patterns = [];
                 var nupathes = {};
 
@@ -686,7 +602,7 @@ define(['logManager',
                     loadPattern(patterns[i],patternLoaded);
                 }
             };
-            var nuUpdateUser = function(user,patterns,nupathes){
+            var UpdateUser = function(user,patterns,nupathes){
                 var newpathes = [];
                 var events = [];
                 user.PATTERNS = JSON.parse(JSON.stringify(patterns));
@@ -738,7 +654,7 @@ define(['logManager',
                     user.PATHES = newpathes;
                 }
             };
-            var nuUpdateTerritory = function(user,patterns,nupathes,callback){
+            var UpdateTerritory = function(user,patterns,nupathes,callback){
                 if(user.PATTERNS !== patterns){
                     var counter = 0;
                     var limit = 0;
@@ -801,92 +717,67 @@ define(['logManager',
                     callback(nupathes);
                 }
             };
-            var nuUpdateAll = function(callback){
-                var start = timestamp();
-                timelog("[NMEAS000][in]");
-                nuLoading(function(nupathes){
+            var UpdateAll = function(callback){
+                Loading(function(nupathes){
                     currentNupathes = nupathes;
                     for(var i in users){
-                        nuUpdateUser(users[i],users[i].PATTERNS,nupathes);
+                        UpdateUser(users[i],users[i].PATTERNS,nupathes);
                     }
-                    timelog("[NMEAS000][out]{"+elapsedTime(start)+"ms}");
                     callback();
                 });
             };
-            var nuUpdateSingleUser = function(userID,patterns,callback){
-                var start = timestamp();
-                timelog("[NMEAS001][in]["+userID+"]");
-                nuUpdateTerritory(users[userID],patterns,currentNupathes,function(nupathes){
-                    nuUpdateUser(users[userID],patterns,nupathes);
-                    timelog("[NMEAS001][out]["+userID+"]{"+elapsedTime(start)+"ms}");
+            var UpdateSingleUser = function(userID,patterns,callback){
+                UpdateTerritory(users[userID],patterns,currentNupathes,function(nupathes){
+                    UpdateUser(users[userID],patterns,nupathes);
                     callback();
                 });
             };
+/* doesn't work with jquery and extend :S
+            return {
+                //eventdispatcher
+                addEventListener    : self.addEventListener,
+                _getEvent           : self._getEvent,
+                _eventList          : self._eventList,
+                events              : events,
+                setSelectedObjectId : setSelectedObjectId,
+                //UI handling
+                addUI            : addUI,
+                removeUI         : removeUI,
+                disableEventToUI : disableEventToUI,
+                enableEventToUI  : enableEventToUI,
+                updateTerritory  : updateTerritory,
+                fullRefresh      : fullRefresh,
+                //commit and propagated functions
+                undo         : storage.commit,
+                commit       : storage.commit,
+                requestPoll  : storage.requestPoll,
+                getBranches  : storage.getBranches,
+                getCommits   : storage.getCommits,
+                loadCommit   : storage.loadCommit,
+                load         : storage.load,
+                //branches
+                selectBranch : selectBranch,
+                //nodes to UI
+                getNode : getNode,
+                //MGAlike
+                startTransaction    : startTransaction,
+                completeTransaction : completeTransaction,
+                setAttributes       : setAttributes,
+                setRegistry         : setRegistry,
+                copyNodes           : copyNodes,
+                pasteNodes          : pasteNodes,
+                deleteNode          : deleteNode,
+                delMoreNodes        : delMoreNodes,
+                createChild         : createChild,
+                createSubType       : createSubType,
+                makePointer         : makePointer,
+                delPointer          : delPointer,
+                makeConnection      : makeConnection,
+                intellyPaste        : intellyPaste
+            }
+*/
         };
-        ClientNode = function(node,core){
-            var ownpath = core.getStringPath(node);
-            var ownpathpostfix = ownpath === "" ? "" : "/";
-            this.getParentId = function(){
-                var parent = core.getParent(node);
-                if(parent){
-                    var parentpath = core.getStringPath(parent);
-                    if(parentpath === ""){
-                        parentpath = "root";
-                    }
-                    return parentpath;
-                } else {
-                    return null;
-                }
-            };
-            this.getId = function(){
-                return getClientNodePath(node);
-            };
-            this.getChildrenIds = function(){
-                var children = core.getChildrenRelids(node);
-                for(var i=0;i<children.length;i++){
-                    children[i]=ownpath+ownpathpostfix+children[i];
-                }
-                return children;
-            };
-            this.getBaseId = function(){
-                /*return null;*/
-                if(core.getRegistry(node,"isConnection") === true){
-                    return "connection";
-                } else {
-                    return "object";
-                }
-            };
-            this.getInheritorIds = function(){
-                return null;
-            };
-            this.getAttribute = function(name){
-                return core.getAttribute(node,name);
-            };
-            this.getRegistry = function(name){
-                return core.getRegistry(node,name);
-            };
-            this.getPointer = function(name){
-                return {to:core.getPointerPath(node,name),from:[]};
-            };
-            this.getPointerNames = function(){
-                return core.getPointerNames(node);
-            };
-            this.getConnectionList = function(){
-                return [];
-            };
-            this.getAttributeNames = function(){
-                return core.getAttributeNames(node);
-            };
 
-            var getClientNodePath = function(){
-                var path = /*core.getStringPath(node)*/ownpath;
-                if(path === ""){
-                    path = "root";
-                }
-                return path;
-            };
-
-        };
         return Client;
     });
 

@@ -1,9 +1,11 @@
 define(['socket.io/socket.io.js'],function(){
-    var Logger = function(server){
+    'use strict';
+    var ClientLog = function(server){
         var connection = null,
             connected = false,
             connecting = false,
             buffer = [];
+
         var log = function(msg){
             buffer.push(msg);
             sync();
@@ -15,8 +17,7 @@ define(['socket.io/socket.io.js'],function(){
                     sync();
                 }
             } else {
-                if(connecting){
-                } else {
+                if(!connecting){
                     connection = io.connect(server);
                     connecting = true;
                     connection.on('connect',function(){
@@ -26,12 +27,15 @@ define(['socket.io/socket.io.js'],function(){
                     });
                     connection.on('connect_failed',function(){
                         connected = false;
+                        connecting = false;
                     });
                     connection.on('disconnect',function(){
                         connected = false;
+                        connecting = false;
                     });
                     connection.on('reconnect_failed', function(){
                         connected = false;
+                        connecting = false;
                     });
                     connection.on('reconnect', function(){
                         connected = false;
@@ -47,5 +51,6 @@ define(['socket.io/socket.io.js'],function(){
         }
     };
 
-    return Logger;
+    return ClientLog;
 });
+

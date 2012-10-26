@@ -10,7 +10,7 @@ define([   'order!jquery',
     'commonUtil',
     'clientUtil',
     'order!js/cli3nt',
-    'order!js/corewrapper',
+    'order!js/Client/ClientProxy',
     'order!js/ObjectBrowser/TreeBrowserControl',
     'order!js/ObjectBrowser/JSTreeBrowserWidget',
     /*'order!js/ObjectBrowser/DynaTreeBrowserWidget',*/
@@ -19,7 +19,9 @@ define([   'order!jquery',
     'js/GraphViz/GraphVizControl',
     'js/GraphViz/GraphVizView',
     'js/ModelEditor2/ModelEditorControl',
-    'js/ModelEditor2/ModelEditorView'], function (jquery,
+    'js/ModelEditor2/ModelEditorView',
+    'js/SimpleGraph/SVGGraphCommitCtrl',
+    'js/SimpleGraph/SVGGraphView'], function (jquery,
                                                             jqueryui,
                                                             underscore,
                                                             qtip,
@@ -37,7 +39,9 @@ define([   'order!jquery',
                                                             GraphVizControl,
                                                             GraphVizView,
                                                             ModelEditorControl2,
-                                                            ModelEditorView2) {
+                                                            ModelEditorView2,
+                                                            CommitCtrl,
+                                                            CommitView) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -63,6 +67,7 @@ define([   'order!jquery',
     }
 
     var client,
+        proxy = null,
         /*tDynaTree,*/
         tJSTree,
         modelEditorSVG,
@@ -76,7 +81,9 @@ define([   'order!jquery',
         modelEditorView,
         mainController,
         mainView,
-        currentNodeId = null;
+        currentNodeId = null,
+        commitView,
+        commitCtrl;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -199,49 +206,62 @@ define([   'order!jquery',
         }
     });
 
-    doConnect = function () {
+    doConnect = function (callback) {
 
-        //figure out the server to connect to
-        /*var serverLocation;
 
-        //by default serverlocation is the same server the page loaded from
-        if (commonUtil.standalone.ProjectIP === "self") {
-            serverLocation = 'http://' + window.location.hostname + ':' + commonUtil.standalone.ProjectPort;
-        } else {
-            serverLocation = 'http://' + commonUtil.standalone.ProjectIP + ':' + commonUtil.standalone.ProjectPort;
+        var options = commonUtil.combinedserver;
+        if(proxy === null){
+            proxy = new Core({
+                proxy: location.host+options.projsrv,
+                options : options.socketiopar,
+                projectinfo : "*PI*"+options.mongocollection,
+                defaultproject : options.mongocollection,
+                faulttolerant : options.faulttolerant,
+                cache : options.cache,
+                log : options.logging
+            });
+
+            proxy.getClient(null,function(err,cl){
+                if(!err && cl){
+                    client = cl;
+                    client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
+                        currentNodeId = nodeId;
+                        if (mainController) {
+                            mainController.selectedObjectChanged(currentNodeId);
+                        }
+                    });
+
+                    //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
+                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
+
+                    //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+                    //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+                    //modelEditorView = new ModelEditorView("modelEditorHtml");
+                    //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
+                    //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
+
+                    //hide GraphViz first and hook up radio button
+
+                    /*commit browser init*/
+                    commitView = new CommitView(document.getElementById('commitbrowser'));
+                    commitCtrl = new CommitCtrl(client,commitView);
+
+                    callback(null);
+                } else {
+                    console.log('cannot get project!!!');
+                    callback('no project!!!');
+                }
+            });
         }
-
-        if (commonUtil.hashbasedconfig.inuse) {
-            client = new Core(commonUtil.combinedserver);
-        } else {
-            client = new Client(serverLocation);
-        }*/
-        client = new Core(commonUtil.combinedserver);
-
-        client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-            currentNodeId = nodeId;
-            if (mainController) {
-                mainController.selectedObjectChanged(currentNodeId);
-            }
-        });
-
-        //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
-        tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
-
-        //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-        //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-        //modelEditorView = new ModelEditorView("modelEditorHtml");
-        //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
-        //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
-
-        //hide GraphViz first and hook up radio button
-
     };
 
     return {
         start : function () {
-            doConnect();
-            setActiveVisualizer("ModelEditor2");
+            doConnect(function(err){
+                if(!err){
+                    setActiveVisualizer("ModelEditor2");
+                }
+            });
         }
     };
 });

@@ -158,7 +158,7 @@
                                 console.log(err);
                             } else {
                                 core = new CORE(storage);
-                                mywrapper = new CWRAPPER({
+                                /*mywrapper = new CWRAPPER({
                                     timelog: options.timelog,
                                     mongosrv: projns,
                                     socketiopar: options.socketiopar,
@@ -167,7 +167,7 @@
                                     logging: options.logging,
                                     logsrv: options.logsrv
                                 });
-                                treebrowser = new TreeBrowserControl(mywrapper, new JSTreeBrowserWidget("tbJSTree"));
+                                treebrowser = new TreeBrowserControl(mywrapper, new JSTreeBrowserWidget("tbJSTree"));*/
                                 refreshBranchList();
                             }
                         });
@@ -180,7 +180,8 @@
                 var createBranchObj = function(key){
                     var branchobj = {
                         _id     : "*master",
-                        root    : [key],
+                        root    : key,
+                        oldroot : key,
                         parents : [],
                         updates : [],
                         start   : null,

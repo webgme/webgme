@@ -86,6 +86,9 @@ define([], function () {
             }
             return three;
         },
+        isSameArray: function(arr1,arr2){
+            return $(arr1).not(arr2).length == 0 && $(arr2).not(arr1).length == 0
+        },
         standalone: {
             ServerIP: "self",
             ServerPort: 8081,
@@ -125,8 +128,8 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "egyik", /*possible collections currently: basic,SFdemo, IFV*/
-            mongodatabase   : "branched",
+            mongocollection : "kecso", /*possible collections currently: basic,SFdemo, IFV*/
+            mongodatabase   : "demo",
             mongoopt        : {
                 'auto_reconnect' : true,
                 'poolSize'       : 1
@@ -144,12 +147,16 @@ define([], function () {
             srvsocketpar    : {
                 'heartbeat timeout'  : 240,
                 'heartbeat interval' : 60,
+                'heartbeats'         : true,
                 'log level'          : 1
             },
             projsrv         : "/project",
             projects        : [
                 "egyik",
-                "masik"
+                "masik",
+                "SFdemo",
+                "basic",
+                "kecso"
             ]
         }
 

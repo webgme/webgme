@@ -32,21 +32,11 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         };
 
         var compareRoots = function(oldroot,newroot){
-            /*if((oldroot === null || oldroot === undefined) && newroot ){
+            if(oldroot === null || oldroot.root === newroot.oldroot){
                 return true;
             }
-
-            if(oldroot.root.length !== newroot.root.length-1){
-                return false;
-            }
-
-            for(var i=0; i<oldroot.root.length;i++){
-                if(oldroot.root[i] !== newroot.root[i]){
-                    return false;
-                }
-            }*/
-
-            return true;
+            console.log("root matching error old:"+JSON.stringify(oldroot)+" new:"+JSON.stringify(newroot));
+            return false;
         };
         var broadcastRoot = function(root){
             var callbacks = _polls[getBranchNameFromId(root[KEY])];
@@ -69,25 +59,47 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.load(key,callback);
             });
             socket.on('save',function(node,callback){
+                console.log('save '+node[KEY]);
+                var okay = false;
+
+                var saving = function(){
+                    _mongo.save(node,function(err){
+                        if(!err){
+                            if(_polls[node[KEY]]){
+                                console.log('we have polls');
+                                var object = _polls[node[KEY]];
+                                for(var i=0;i<object.length;i++){
+                                    console.log('calling poll');
+                                    if(!!(object[i] && object[i].constructor && object[i].call && object[i].apply)){
+                                        console.log('poll is a function');
+                                        object[i](node);
+                                    }
+                                }
+                                delete _polls[node[KEY]];
+                            }
+                            console.log('save callback '+node[KEY]);
+                            callback();
+                        } else {
+                            callback(err);
+                        }
+                    });
+                };
+
+                //start of the function
                 if(node[KEY].indexOf(BID) === 0){
                     _mongo.load(node[KEY],function(err,oldroot){
                         if(err){
                             callback(err);
                         } else {
                             if(compareRoots(oldroot,node)){
-                                _mongo.save(node,function(err){
-                                    if(!err){
-                                        broadcastRoot(node);
-                                    }
-                                    callback(err);
-                                });
+                                saving();
                             } else {
                                 callback("invalid root cannot be saved!!!");
                             }
                         }
                     });
                 } else {
-                    _mongo.save(node,callback);
+                    saving();
                 }
             });
             socket.on('remove',function(key,callback){
@@ -112,11 +124,13 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.find(criteria,callback);
             });
 
-            socket.on('requestPoll',function(branchname,callback){
-                if(_polls[branchname]){
-                    _polls[branchname].push(callback);
+            socket.on('requestPoll',function(key,callback){
+                console.log('requesting poll '+key);
+
+                if(_polls[key]){
+                    _polls[key].push(callback);
                 } else {
-                    _polls[branchname] = [callback];
+                    _polls[key] = [callback];
                 }
             });
 
