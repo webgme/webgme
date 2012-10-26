@@ -212,6 +212,14 @@ define([   'order!jquery',
         }
     });
 
+    $("#projectHistoryPanel").find('a.btnCommit').on("click", function (event) {
+        event.stopPropagation();
+        event.preventDefault();
+        if (client) {
+            client.commit();
+        }
+    });
+
     doConnect = function (callback) {
 
 
