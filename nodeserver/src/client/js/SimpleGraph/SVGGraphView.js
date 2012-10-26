@@ -33,16 +33,42 @@ define(['commonUtil'],
                 nodeselectable : true,
                 mineventdelay : 10,
                 width : '100%',
-                height : '100%',
+                height : '0px',
                 //event functions
                 nodeselected : null,
                 nodedblclicked : null,
                 nodeupdated : null
             };
-            var TSTAMP = CU.timestamp;
-            var _nodes = {};
-            var _edges = {};
-            var _paper = Raphael(containerElement,_options.width,_options.height);
+            var TSTAMP = CU.timestamp,
+                _nodes = {},
+                _edges = {},
+                _paper = Raphael(containerElement,_options.width,_options.height);
+
+
+            var _resizePaper = function(){
+                var maxy = 0,
+                    namey = "y",
+                    additionalsize = 0;
+
+                for(var i in _nodes){
+                    switch (_nodes[i].data("shape")){
+                        case "square":
+                            namey = "y";
+                            additionalsize = 2*_options.nodesize;
+                            break;
+                        default: //circle
+                            namey = "cy";
+                            additionalsize = _options.nodesize;
+                            break;
+                    }
+
+                    if(maxy<_nodes[i].attr(namey)+additionalsize){
+                        maxy = _nodes[i].attr(namey)+additionalsize;
+                    }
+                }
+
+                _paper.setSize(_options.width,maxy+_options.nodesize);
+            };
 
             var _selectNode = function(guid){
                 _nodes[guid].attr('fill',_options.nodeselectcolor);
@@ -167,14 +193,17 @@ define(['commonUtil'],
                 return node.guid;
             };
             var addNode = function(node){
+                var retval = null;
                 node.guid = node.guid || GUID();
                 node.type = node.type || "basic";
                 switch(node.type){
                     case "named":
                         break;
                     default:
-                        return addBasicNode(node);
+                        retval = addBasicNode(node);
                 }
+                _resizePaper();
+                return retval;
             };
 
             var addEdge = function(src,dst,guid){
@@ -216,6 +245,7 @@ define(['commonUtil'],
                         }
                     }
                 }
+                _resizePaper();
             };
 
             var updateEdge = function(){
@@ -246,6 +276,7 @@ define(['commonUtil'],
                 }
                 _nodes[guid].remove();
                 delete _nodes[guid];
+                _resizePaper();
             };
 
             var deleteEdge = function(guid){
@@ -257,6 +288,7 @@ define(['commonUtil'],
                 for(i in _nodes){
                     deleteNode(i);
                 }
+                _resizePaper();
             };
 
             var changeOptions = function(optionname,value){

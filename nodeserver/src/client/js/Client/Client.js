@@ -30,7 +30,7 @@ define([
         var Client = function(options){
             var self = this,
                 log = function(){},
-                logger = (options.log && options.logsrv) === true ? new ClientLog(location.host+options.logsrv) : null,
+                logger = (options.log && options.logsrv !== undefined && options.logsrv !== null) === true ? new ClientLog(options.logsrv) : null,
                 storage = new ClientCommitStorage({
                     server: options.projsrv,
                     options : options.socketiopar,

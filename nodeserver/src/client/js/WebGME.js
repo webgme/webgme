@@ -232,7 +232,8 @@ define([   'order!jquery',
                 defaultproject : options.mongocollection,
                 faulttolerant : options.faulttolerant,
                 cache : options.cache,
-                log : options.logging
+                log : options.logging,
+                logsrv : location.host+options.logsrv
             });
 
             proxy.getClient(null, function (err, cl) {

@@ -146,6 +146,7 @@ define([
             };
 
             var find = function(criteria,callback){
+                var start = TIMESTAMP();
                 var guid = "["+GUID()+"]";
                 var text = guid+"find("+JSON.stringify(criteria)+")";
                 log(text);
