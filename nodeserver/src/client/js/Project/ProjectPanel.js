@@ -50,9 +50,7 @@ define(['logManager',
             commitSaveButton = this._commitMsgDialog.find("#btnSave"),
             txtMessage = this._commitMsgDialog.find("#txtMessage");
 
-        this._commitMsgDialog.modal({
-            keyboard: false
-        });
+        this._commitMsgDialog.modal();
 
         txtMessage.on('keyup', function (event) {
             if (txtMessage.val() === "") {
@@ -66,7 +64,7 @@ define(['logManager',
             var msg = self._commitMsgDialog.find("#txtMessage").val();
 
             if (msg !== "") {
-                self._commitMsgDialog.find("#txtMessage").text("");
+                txtMessage.val("");
                 self._commitMsgDialog.modal('hide');
                 commitSaveButton.unbind('click');
                 txtMessage.off('keyup');
@@ -75,6 +73,8 @@ define(['logManager',
                 self.onCommit(msg);
             }
         });
+
+        txtMessage.focus();
     };
 
     /*********************** PUBLIC API *********************/
