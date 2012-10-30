@@ -23,7 +23,9 @@ define([   'order!jquery',
     'js/SimpleGraph/SVGGraphCommitCtrl',
     'js/SimpleGraph/SVGGraphView',
     'js/PartBrowser/PartBrowserView',
-    'js/PartBrowser/PartBrowserControl'], function (jquery,
+    'js/PartBrowser/PartBrowserControl',
+    'js/Project/ProjectPanel',
+    'js/Project/ProjectControl'], function (jquery,
                                                             jqueryui,
                                                             underscore,
                                                             qtip,
@@ -45,7 +47,9 @@ define([   'order!jquery',
                                                             CommitCtrl,
                                                             CommitView,
                                                             PartBrowserView,
-                                                            PartBrowserControl) {
+                                                            PartBrowserControl,
+                                                            ProjectPanel,
+                                                            ProjectControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -89,7 +93,9 @@ define([   'order!jquery',
         commitView,
         commitCtrl,
         partBrowserController,
-        partBrowserView;
+        partBrowserView,
+        projectPanel,
+        projectController;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -196,30 +202,6 @@ define([   'order!jquery',
         event.stopPropagation();
     });
 
-    $("#projectHistoryPanel").find('a.btnFullRefresh').on("click", function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        if (client) {
-            client.fullRefresh();
-        }
-    });
-
-    $("#projectHistoryPanel").find('a.btnUndo').on("click", function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        if (client) {
-            client.undo();
-        }
-    });
-
-    $("#projectHistoryPanel").find('a.btnCommit').on("click", function (event) {
-        event.stopPropagation();
-        event.preventDefault();
-        if (client) {
-            client.commit();
-        }
-    });
-
     doConnect = function (callback) {
 
 
@@ -266,6 +248,9 @@ define([   'order!jquery',
 
                     partBrowserView = new PartBrowserView("pPartBrowser");
                     partBrowserController = new PartBrowserControl(client, partBrowserView);
+
+                    projectPanel = new ProjectPanel("projectHistoryPanel");
+                    projectController = new ProjectControl(client, projectPanel);
 
                     callback(null);
                 } else {
