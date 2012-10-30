@@ -9,7 +9,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                 storage = new cStorage(options);
 
             var getBranches = function(callback){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 storage.find({type:"branch"},function(err,nodes){
                     if(err){
                         callback(err);
@@ -43,7 +43,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
             };
 
             var selectBranch = function(branchname,updfunc){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 currentbranchname = branchname;
                 if(updfunc){
                     currentupdfunc = updfunc;
@@ -115,7 +115,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                 }
             };
 
-            var commit = function(callback){
+            var commit = function(commitobjextension,callback){
                 callback = callback || function(err){};
                 ASSERT(storage.opened);
                 var mycommit = JSON.parse(JSON.stringify(actualbranchinfo));
@@ -124,8 +124,12 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                 mycommit.type = 'commit';
                 mycommit.end = commonUtil.timestamp();
                 delete mycommit.oldroot;
+                //checking the incoming extensions from user
+                mycommit.message = commitobjextension.message || mycommit.message;
+
                 var key = '#' + SHA1(JSON.stringify(mycommit));
                 mycommit['_id'] = key;
+
                 storage.save(mycommit,function(err){
                     if(err){
                         callback(err);
