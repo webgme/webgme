@@ -89,7 +89,22 @@ define(['commonUtil'],
 
                 callback();
             };
-            
+            var _refresh = function(){
+                _client.getBranches(function(err,branches){
+                    if(!err ){
+                        for(var i=0;i<branches.length;i++){
+                            if(_objects[branches[i]] === null || _objects[branches[i]] === undefined){
+                                _init(function(){});
+                            }
+                        }
+                    }
+                });
+            };
+
+            var _firstinitend = function(){
+                setInterval(_refresh,30000);
+            };
+
             var _init = function(callback){
                 _objects = {};
                 _root = null;
@@ -142,13 +157,13 @@ define(['commonUtil'],
             
             /*init*/
             if(_client.opened()){
-                _init(function(){});
+                _init(_firstinitend);
             } else {
                 _client.open(function(err){
                     if(err){
                         //TODO na itt mi van
                     } else {
-                        _init(function(){});
+                        _init(_firstinitend);
                     }
                 });
             }
