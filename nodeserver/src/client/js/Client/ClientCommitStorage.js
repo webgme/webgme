@@ -34,7 +34,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                 }
             };
             var poll = function(node){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 if(currentupdfunc){
                     storage.requestPoll(BID+currentbranchname,poll);
                     actualbranchinfo = node;
@@ -42,7 +42,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                 }
             };
 
-            var selectBranch = function(branchname,updfunc){
+            var selectBranch = function(branchname,updfunc,simplecallback){
                 ASSERT(storage.opened());
                 currentbranchname = branchname;
                 if(updfunc){
@@ -53,11 +53,20 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                     if(!err && node){
                         actualbranchinfo = node;
                         _updatefunc(node.root);
+                        if(simplecallback){
+                            simplecallback(null);
+                        }
                     } else {
                         if(node){
                             console.log("something wrong with branch +"+err);
+                            if(simplecallback){
+                                simplecallback(err);
+                            }
                         } else {
                             console.log("no given branch...");
+                            if(simplecallback){
+                                simplecallback(err);
+                            }
                             //TODO temporary hacking to creat master branch from the old version of database
                             storage.load("***root***",function(err,roots){
                                 if(err || roots === null || roots === undefined || roots.value.length <1){
@@ -95,7 +104,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
             };
 
             var updateRoot = function(rootkey,callback){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 if(actualbranchinfo){
                     var myroot = JSON.parse(JSON.stringify(actualbranchinfo));
                     myroot.oldroot = myroot.root;
@@ -103,8 +112,29 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                     storage.save(myroot,function(err){
                         if(err){
                             //TODO popup for new branch
-
-                            callback(err);
+                            switch(err){
+                                case "invalid root cannot be saved!!!":
+                                    var newbranchid = commonUtil.guid()
+                                    myroot["_id"] = BID+newbranchid;
+                                    myroot.name = newbranchid;
+                                    storage.save(myroot,function(err){
+                                        if(err){
+                                            callback(err);
+                                        } else {
+                                            selectBranch(newbranchid,null,function(err){
+                                                if(err){
+                                                    console.log("cannot create the new branch...");
+                                                } else {
+                                                    callback(null);
+                                                }
+                                            });
+                                        }
+                                    });
+                                    break;
+                                default:
+                                    callback(err);
+                                    break;
+                            }
                         } else {
                             actualbranchinfo = myroot;
                             callback(null);
@@ -117,7 +147,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
 
             var commit = function(commitobjextension,callback){
                 callback = callback || function(err){};
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 var mycommit = JSON.parse(JSON.stringify(actualbranchinfo));
                 var branchname = mycommit['_id'];
                 mycommit['_id'] = false;
@@ -159,7 +189,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
             };
 
             var getCommits = function(callback){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 storage.find({type:"commit"},function(err,nodes){
                     if(err){
                         callback(err);
@@ -178,7 +208,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
             };
 
             var loadCommit = function(commitkey){
-                ASSERT(storage.opened);
+                ASSERT(storage.opened());
                 storage.load(commitkey,function(err,commit){
                     if(err){
                         /*TODO - na itt mi van*/
