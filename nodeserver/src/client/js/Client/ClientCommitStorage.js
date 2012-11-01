@@ -109,6 +109,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                     var myroot = JSON.parse(JSON.stringify(actualbranchinfo));
                     myroot.oldroot = myroot.root;
                     myroot.root = rootkey;
+                    myroot.end = commonUtil.timestamp();
                     storage.save(myroot,function(err){
                         if(err){
                             //TODO popup for new branch
