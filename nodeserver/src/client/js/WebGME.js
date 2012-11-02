@@ -243,8 +243,8 @@ define([   'order!jquery',
                     //hide GraphViz first and hook up radio button
 
                     /*commit browser init*/
-                    commitView = new CommitView(document.getElementById('commitbrowser'));
-                    commitCtrl = new CommitCtrl(client, commitView);
+                    /*commitView = new CommitView(document.getElementById('commitbrowser'));
+                    commitCtrl = new CommitCtrl(client, commitView);*/
 
                     partBrowserView = new PartBrowserView("pPartBrowser");
                     partBrowserController = new PartBrowserControl(client, partBrowserView);

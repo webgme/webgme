@@ -212,10 +212,10 @@ div.ObjectBrowser {
 
 /************************/
 
-#commitbrowser {
+/*#commitbrowser {
     height: 200px;
     overflow-x: auto;
-}
+}*/
 
 /************** OVEERIDE BOOTSTRAP *******************/
 .popover {
