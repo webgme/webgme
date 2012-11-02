@@ -1,0 +1,38 @@
+#repoDiag {
+    position: relative;
+}
+
+/*DISABLE OUTER BORDER WHEN FOCUSED*/
+#repoDiag:focus
+{
+    outline: none;
+}
+
+#repoDiag .item {
+    width: 30px;
+    height: 22px;
+    color: #ffffff;
+    background-color: #000000;
+    vertical-align: middle;
+    text-align: center;
+    font-family: Helvetica, Arial;
+
+    pointer-events:all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    position: absolute;
+
+    cursor: pointer;
+
+    box-sizing: border-box;
+}
+
+#repoDiag .item.at-end {
+    border: 2px solid #52A8EC;
+    margin-left: -2px;
+}
+
+#repoDiag .item.actual {
+    background-color: #FF7800;
+}

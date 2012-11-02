@@ -3,10 +3,14 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
-    'text!./ProjectPanelTmpl.html'], function (logManager,
+    'text!./ProjectPanelTmpl.html',
+    'Repository/RepositoryLogControl',
+    'Repository/RepositoryLogView'], function (logManager,
                                                util,
                                                commonUtil,
-                                               projectPanelTmpl) {
+                                               projectPanelTmpl,
+                                               RepositoryLogControl,
+                                               RepositoryLogView) {
 
     var ProjectPanel;
 
@@ -32,6 +36,8 @@ define(['logManager',
 
         this._commitMsgDialog = this._el.find(".commitMsgDialog");
 
+        this._repoHistoryDialog = this._el.find(".repoHistoryDialog");
+
         this._el.find('a.btnFullRefresh').on("click", function (event) {
             event.stopPropagation();
             event.preventDefault();
@@ -42,6 +48,12 @@ define(['logManager',
             event.stopPropagation();
             event.preventDefault();
             self._btnCommitClick();
+        });
+
+        this._el.find('a.btnRepoHistory').on("click", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._btnRepoHistoryClick();
         });
     };
 
@@ -77,6 +89,16 @@ define(['logManager',
         txtMessage.focus();
     };
 
+    ProjectPanel.prototype._btnRepoHistoryClick = function () {
+        var repoHistoryLogView = new RepositoryLogView(this._repoHistoryDialog.find('.modal-body')),
+            client = this.onGetClient(),
+            repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
+
+        this._repoHistoryDialog.modal();
+
+        repoHistoryController.generateHistory();
+    };
+
     /*********************** PUBLIC API *********************/
 
     ProjectPanel.prototype.onFullRefresh = function () {
@@ -85,6 +107,10 @@ define(['logManager',
 
     ProjectPanel.prototype.onCommit = function (msg) {
         this._logger.warning("onCommit is not overridden in Controller...");
+    };
+
+    ProjectPanel.prototype.onGetClient = function () {
+        this._logger.warning("onGetClient is not overridden in Controller...");
     };
 
     return ProjectPanel;
