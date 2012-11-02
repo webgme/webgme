@@ -1,8 +1,6 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil'], function (logManager,
-                                    util) {
+define(['logManager'], function (logManager) {
 
     var ProjectControl;
 
@@ -21,6 +19,10 @@ define(['logManager',
 
         this._projectPanelView.onCommit = function (msg) {
             self._client.commit({"message": msg});
+        };
+
+        this._projectPanelView.onGetClient = function () {
+            return self._client;
         };
     };
 
