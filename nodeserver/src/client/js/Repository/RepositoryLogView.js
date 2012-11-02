@@ -154,6 +154,8 @@ define(['logManager',
             }
             popoverMsg = "<ul>" + popoverMsg + "</ul>";
 
+            popoverMsg += "<br><p class='muted'>Double-click to switch to this commit.</p>";
+
             guiObj.popover({"title": obj.id + "@" + obj.name,
                 "content": popoverMsg,
                 "trigger": "hover" });
