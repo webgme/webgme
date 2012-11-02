@@ -185,6 +185,13 @@ define([
                     return null;
                 }
             };
+            self.getRootKey = function(){
+                if(currentCore){
+                    return currentCore.getKey(currentNodes["root"]);
+                } else {
+                    return null;
+                }
+            };
 
 
             /*MGA like functions*/
