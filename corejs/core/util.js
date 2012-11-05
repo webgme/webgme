@@ -84,16 +84,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		return o;
 	};
 
-	var copyOptions = function (defaults, options) {
-		options = options || {};
-		for( var key in defaults ) {
-			if( options[key] === undefined ) {
-				options[key] = defaults[key];
-			}
-		}
-		return options;
-	};
-
 	/**
 	 * Starting from node it recursively calls the loadChildren(node, callback2)
 	 * method where callback2(err, children) returns an error or an array of
@@ -413,7 +403,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		stringComparator: stringComparator,
 		numberComparator: numberComparator,
 		deepCopy: deepCopy,
-		copyOptions: copyOptions,
 		depthFirstSearch: depthFirstSearch,
 		AsyncJoin: AsyncJoin,
 		AsyncArray: AsyncArray,

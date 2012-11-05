@@ -9,9 +9,9 @@ define(function () {
 
 	return {
 		mongodb: {
-//			host: "localhost",
-//			host: "129.59.104.16",		// kecso
-			host: "129.59.105.195",		// cloud
+			// host: "localhost",
+			// host: "129.59.104.16", // kecso
+			host: "129.59.105.195", // cloud
 			port: 27017,
 			database: "test",
 			collection: "storage"
@@ -19,20 +19,32 @@ define(function () {
 
 		parser: {
 			persistingLimit: 1000,
-			reportingTime: 2000 
+			reportingTime: 2000
 		},
 
 		reader: {
 			concurrentReads: 20,
 			reportingTime: 2000
 		},
-		
+
 		callbacks: {
 			maxDepth: 200
 		},
-		
+
 		cache: {
 			maxSize: 10000
+		},
+
+		corepath: {},
+
+		copyOptions: function (defaults, options) {
+			options = options || {};
+			for( var key in defaults ) {
+				if( options[key] === undefined ) {
+					options[key] = defaults[key];
+				}
+			}
+			return options;
 		}
 	};
 });

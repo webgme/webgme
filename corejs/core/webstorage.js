@@ -1,4 +1,4 @@
-define([ "assert", "config.js", "util.js" ], function (ASSERT, CONFIG, UTIL) {
+define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	var MStorage = function (collectionname) {
@@ -73,7 +73,6 @@ define([ "assert", "config.js", "util.js" ], function (ASSERT, CONFIG, UTIL) {
 	};
 
 	var LStorage = function (collectionname, type) {
-
 		var storage = type === "session" ? sessionStorage : localStorage;
 		var load = function (key, callback) {
 			setTimeout(function () {
@@ -161,7 +160,7 @@ define([ "assert", "config.js", "util.js" ], function (ASSERT, CONFIG, UTIL) {
 
 		var _storage = null;
 
-		options = UTIL.copyOptions(CONFIG.mongodb, options);
+		options = CONFIG.copyOptions(CONFIG.mongodb, options);
 
 		var open = function (callback) {
 			setTimeout(function () {

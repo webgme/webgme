@@ -4,14 +4,13 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "mongodb", "core/config", "core/util" ], function (ASSERT, MONGODB, CONFIG,
-UTIL) {
+define([ "core/assert", "mongodb", "core/config" ], function (ASSERT, MONGODB, CONFIG) {
 	"use strict";
 
 	var Mongo = function (options) {
 		var database = null, collection = null;
 
-		options = UTIL.copyOptions(CONFIG.mongodb, options);
+		options = CONFIG.copyOptions(CONFIG.mongodb, options);
 
 		var open = function (callback) {
 			database = new MONGODB.Db(options.database, new MONGODB.Server(options.host,
@@ -168,11 +167,11 @@ UTIL) {
 			}
 		};
 
-        var find = function(criteria,callback){
-            ASSERT(criteria && typeof criteria === "object");
-            ASSERT(collection);
-            collection.find(criteria).toArray(callback);
-        };
+		var find = function (criteria, callback) {
+			ASSERT(criteria && typeof criteria === "object");
+			ASSERT(collection);
+			collection.find(criteria).toArray(callback);
+		};
 
 		return {
 			open: open,
@@ -186,7 +185,7 @@ UTIL) {
 			removeAll: removeAll,
 			searchId: searchId,
 			fsync: fsync,
-            find: find
+			find: find
 		};
 	};
 

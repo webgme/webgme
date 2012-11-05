@@ -10,7 +10,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 	var Cache = function (storage, options) {
 		ASSERT(storage !== null);
 
-		options = UTIL.copyOptions(CONFIG.cache, options);
+		options = CONFIG.copyOptions(CONFIG.cache, options);
 		
 		var KEYNAME = storage.KEYNAME;
 		var missing = {};
