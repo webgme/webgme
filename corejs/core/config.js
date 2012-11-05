@@ -35,7 +35,10 @@ define(function () {
 			maxSize: 10000
 		},
 
-		corepath: {},
+		corepath: {
+			agingLimit: 5000,
+			maxAge: 2
+		},
 
 		copyOptions: function (defaults, options) {
 			options = options || {};

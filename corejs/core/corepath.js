@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
+define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	// ----------------- PersistentTree -----------------
@@ -21,47 +21,28 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 				}
 			};
 
-			verify("non-object", typeof node === "object");
+			verify("object", typeof node === "object");
 
-			verify("relid", (node.relid === undefined && node.parent === null)
+			verify("relid", (node.relid === null && node.parent === null)
 			|| (isValidRelid(node.relid) && typeof node.parent === "object"));
 
-			verify("children 1", Array.isArray(node.children));
+			verify("age", node.parent === null || node.age >= node.parent.age);
 
-			verify("children 2", node.parent === null || Array.isArray(node.parent.children));
+			verify("children", node.children === null || typeof node.children === "object");
 
-			verify("contained", node.parent === null
+			verify("lists", node.parent === null || node.children === null
+			|| node.parent.children !== null);
+
+			verify("contained", node.parent === null || node.parent.children === null
 			|| node.parent.children[node.relid] === undefined
-			|| node.parent.children[node.relid] === node);
+			|| node.parent.children[node.relid].relid === node.relid);
 		}
 		catch(error) {
-			console.log("WRONG NODE: " + error, node);
+			console.log("WRONG NODE: >" + error + "< error", node);
 			return false;
 		}
 
 		return true;
-	};
-
-	var getPath = function (node, base) {
-		ASSERT(isValidNode(node));
-		ASSERT(base === undefined || isValidNode(base));
-
-		var path = "";
-		while( node.parent && node !== base ) {
-			if( path === "" ) {
-				path = node.relid;
-			}
-			else {
-				path = node.relid + "/" + path;
-			}
-			node = node.parent;
-		}
-		return path;
-	};
-
-	var joinPaths = function (first, second) {
-		ASSERT(typeof first === "string" && typeof second === "string");
-		return second ? (first ? first + "/" + second : second) : first;
 	};
 
 	var getParent = function (node) {
@@ -87,185 +68,221 @@ define([ "core/assert", "core/util" ], function (ASSERT, UTIL) {
 		return level;
 	};
 
-	var isAncestorOf = function (first, second) {
+	var getRoot = function (node) {
+		ASSERT(isValidNode(node));
+
+		while( node.parent ) {
+			node = node.parent;
+		}
+
+		return node;
+	};
+
+	var getAncestor = function (first, second) {
 		ASSERT(isValidNode(first) && isValidNode(second));
+		ASSERT(getRoot(first) === getRoot(second));
 
 		var a = [];
-		while( (first = first.parent) !== undefined ) {
+		do {
 			a.push(first);
-		}
+			first = first.parent;
+		} while( first );
 
 		var b = [];
-		while( (second = second.parent) !== undefined ) {
+		do {
 			b.push(second);
+			second = second.parent;
+		} while( second );
+
+		// you must be in the same tree
+		ASSERT(a[a.length - 1] === b[b.length - 1]);
+
+		var i = a.length - 1;
+		var j = b.length - 1;
+		while( i !== 0 && a[i - 1] === b[--j] ) {
+			--i;
 		}
 
-		if( a.length > b.length ) {
-			return false;
-		}
-
-		for( var i = 0; i < a.length; ++i ) {
-			if( a[i].relid !== b[i].relid ) {
-				return false;
-			}
-		}
-
-		return true;
+		return a[i];
 	};
 
-	var createRoot = function () {
-		return {
-			parent: null,
-			relid: undefined,
-			age: 0,
-			children: []
-		};
-	};
-
-	var getChild = function (node, relid) {
-		ASSERT(isValidNode(node) && isValidRelid(relid));
-
-		var child = node.children[relid];
-		if( child === undefined ) {
-			child = {
-				parent: node,
-				relid: relid,
-				age: 0,
-				children: []
-			};
-			node.children[relid] = child;
-		}
-
-		return child;
-	};
-
-	var getByPath = function (node, path) {
-		ASSERT(isValidNode(node) && typeof path === "string");
-
-		path = path ? path.split("/") : [];
-
-		for( var i = 0; i < path.length; ++i ) {
-			node = getChild(node, path[i]);
-		}
-
-		return node;
-	};
-
-	var getByInterval = function (node, end, base) {
-		ASSERT(isValidNode(node) && isValidNode(end));
+	var getPath = function (node, base) {
+		ASSERT(isValidNode(node));
 		ASSERT(base === undefined || isValidNode(base));
 
-		var path = [];
-		while( end.parent && end !== base ) {
-			path.push(end.relid);
-			end = end.parent;
+		var path = "";
+		while( node.parent && node !== base ) {
+			if( path === "" ) {
+				path = node.relid;
+			}
+			else {
+				path = node.relid + "/" + path;
+			}
+			node = node.parent;
 		}
-
-		var i = path.length;
-		while( --i >= 0 ) {
-			node = getChild(node, path[i]);
-		}
-
-		return node;
+		return path;
 	};
 
-	var CorePath = function (storage) {
-		ASSERT(storage);
+	var joinPaths = function (first, second) {
+		ASSERT(typeof first === "string" && typeof second === "string");
+		return second ? (first ? first + "/" + second : second) : first;
+	};
 
-		var delParent = function (node) {
-			ASSERT(isValidNode(node));
-			ASSERT(isValidNode(node.parent));
+	var CorePath = function (options) {
+		options = CONFIG.copyOptions(CONFIG.corepath, options);
 
-			mutate(node.parent);
-			delete node.parent.data[node.relid];
+		var maxAge = options.maxAge;
+		var agingLimit = options.agingLimit;
+		var agingCount = 0;
+		var roots = [];
 
-			node.parent = null;
-			node.relid = undefined;
+		var detachChildren = function (node) {
+			ASSERT(node.children !== null);
+
+			var children = node.children;
+			node.children = null;
+			node.age = maxAge;
+
+			for( var relid in children ) {
+				detachChildren(children[relid]);
+			}
 		};
 
-		var setParent = function (node, parent, relid) {
-			ASSERT(isValidNode(node) && isValidRelid(relid));
-			ASSERT(node.parent === null && !node.relid);
-			ASSERT(parent.data[relid] === undefined);
+		var ageNode = function (node) {
+			ASSERT(node.age >= 0 && node.age < maxAge);
 
-			mutate(parent);
-			parent.data[relid] = node.data[KEYNAME] || node.data;
-
-			node.parent = parent;
-			node.relid = relid;
+			if( ++node.age >= maxAge ) {
+				ASSERT(node.parent.children[node.relid] === node);
+				delete node.parent.children[node.relid];
+				detachChildren(node);
+			}
 		};
 
-		var getRoot = function (node) {
+		var ageRoots = function () {
+			if( ++agingCount >= agingLimit ) {
+				agingCount = 0;
+
+				for( var i = 0; i < roots.length; ++i ) {
+					ASSERT(roots[i].age === 0);
+
+					var children = roots[i].children;
+					for( var relid in children ) {
+						ageNode(children[relid]);
+					}
+				}
+			}
+		};
+
+		var actualize = function (node) {
 			ASSERT(isValidNode(node));
 
-			while( node.parent ) {
+			if( node.children === null ) {
+				node.children = {};
+
+				var parent = actualize(node.parent);
+				var child = parent.children[node.relid];
+
+				if( child === undefined ) {
+					parent.children[node.relid] = node;
+					node.age = 0;
+					return node;
+				}
+
+				child.age = 0;
+				return child;
+			}
+
+			while( node.age !== 0 ) {
+				ASSERT(node.children !== null);
+
+				node.age = 0;
 				node = node.parent;
 			}
 
 			return node;
 		};
 
-		var getCommonAncestor = function (first, second) {
-			ASSERT(isValidNode(first) && isValidNode(second));
+		var createRoot = function () {
+			ageRoots();
 
-			var a = [];
-			do {
-				a.push(first);
-				first = first.parent;
-			} while( first );
+			var root = {
+				parent: null,
+				relid: null,
+				age: 0,
+				children: {}
+			};
 
-			var b = [];
-			do {
-				b.push(second);
-				second = second.parent;
-			} while( second );
-
-			var i = a.length - 1;
-			var j = b.length - 1;
-			while( i >= 1 && j >= 1 && a[i - 1].relid === b[j - 1].relid ) {
-				--i;
-				--j;
-			}
-
-			return [ a[i], b[j] ];
+			roots.push(root);
+			return root;
 		};
 
-		var getCommonPathPrefixData = function (first, second) {
-			ASSERT(typeof first === "string" && typeof second === "string");
+		var getChild = function (node, relid) {
+			ASSERT(isValidNode(node) && isValidRelid(relid));
 
-			first = first ? first.split("/") : [];
-			second = second ? second.split("/") : [];
+			node = actualize(node);
 
-			var common = [];
-			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
-				common.push(first[i]);
+			var child = node.children[relid];
+			if( child === undefined ) {
+				ageRoots();
+
+				child = {
+					parent: node,
+					relid: relid,
+					age: 0,
+					children: {}
+				};
+
+				node.children[relid] = child;
 			}
 
-			return {
-				common: common.join("/"),
-				first: first.slice(i).join("/"),
-				firstLength: first.length - i,
-				second: second.slice(i).join("/"),
-				secondLength: second.length - i
-			};
+			return child;
+		};
+
+		var getDescendant = function (node, head, base) {
+			ASSERT(isValidNode(node) && isValidNode(head));
+			ASSERT(base === undefined || isValidNode(base));
+
+			var path = [];
+			while( head.parent && head !== base ) {
+				path.push(head.relid);
+				head = head.parent;
+			}
+
+			var i = path.length;
+			while( --i >= 0 ) {
+				node = getChild(node, path[i]);
+			}
+
+			return node;
+		};
+
+		var getDescendantByPath = function (node, path) {
+			ASSERT(isValidNode(node) && typeof path === "string");
+
+			path = path ? path.split("/") : [];
+
+			for( var i = 0; i < path.length; ++i ) {
+				node = getChild(node, path[i]);
+			}
+
+			return node;
 		};
 
 		return {
+			isValidRelid: isValidRelid,
 			isValidNode: isValidNode,
+			getParent: getParent,
+			getRelid: getRelid,
+			getRoot: getRoot,
+			getLevel: getLevel,
 			createRoot: createRoot,
 			getChild: getChild,
-			loadByPath: loadByPath,
-			getParent: getParent,
-			setParent: setParent,
-			delParent: delParent,
-			getLevel: getLevel,
+			getAncestor: getAncestor,
+			getDescendant: getDescendant,
+			actualize: actualize,
 			getPath: getPath,
 			joinPaths: joinPaths,
-			getCommonPathPrefixData: getCommonPathPrefixData,
-			getRoot: getRoot,
-			getRelid: getRelid,
-			getCommonAncestor: getCommonAncestor,
-			isAncestorOf: isAncestorOf
+			getDescendantByPath: getDescendantByPath
 		};
 	};
 
