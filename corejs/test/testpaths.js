@@ -20,6 +20,7 @@ requirejs([ "core/assert", "core/corepath" ], function (ASSERT, PATH) {
 	var a = paths.getChild(root, "a");
 	var b = paths.getChild(root, "b");
 	var c = paths.getChild(root, "c");
+	var d = paths.getChild(root, "d");
 	a = paths.actualize(a);
 	console.log(root);
 });

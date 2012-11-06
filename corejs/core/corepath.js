@@ -219,11 +219,10 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		var getChild = function (node, relid) {
 			ASSERT(isValidNode(node) && isValidRelid(relid));
 
-			node = actualize(node);
-
 			var child = node.children[relid];
 			if( child === undefined ) {
 				ageRoots();
+				node = actualize(node);
 
 				child = {
 					parent: node,
@@ -233,6 +232,9 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 				};
 
 				node.children[relid] = child;
+			}
+			else {
+				child = actualize(child);
 			}
 
 			return child;
