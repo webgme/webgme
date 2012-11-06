@@ -224,13 +224,12 @@ define(['logManager',
         this._skinParts.svgPaper = Raphael(this._skinParts.htmlContainer.attr("id"));
         this._skinParts.svgPaper.canvas.style.pointerEvents = "visiblePainted";
         this._skinParts.svgPaper.setSize("100%", "100px");
+
+        this._renderCache = {};
     };
 
     RepositoryLogView.prototype._createItem = function (params) {
         var i,
-            pObj,
-            objBBox,
-            parentBBox,
             itemObj =  $('<div/>', {
                 "class" : "item",
                 "id": params.id.replace("#", "").replace("*", ""),
@@ -255,7 +254,7 @@ define(['logManager',
 
         this._skinParts.htmlContainer.append(itemObj);
 
-        objBBox = {"x": params.x,
+        this._renderCache[params.id] = {"x": params.x,
             "y": params.y,
             "w": itemObj.outerWidth(),
             "h": itemObj.outerHeight() };
@@ -263,14 +262,7 @@ define(['logManager',
         //draw lines to parents
         if (params.parents && params.parents.length > 0) {
             for (i = 0; i < params.parents.length; i += 1) {
-                pObj = this._skinParts.htmlContainer.find("#" + params.parents[i].replace("#", "").replace("*", ""));
-
-                parentBBox = {"x": parseInt(pObj.css("left"), 10),
-                    "y": parseInt(pObj.css("top"), 10),
-                    "w": pObj.outerWidth(),
-                    "h": pObj.outerHeight() };
-
-                this._drawLine(parentBBox, objBBox);
+                this._drawLine(this._renderCache[params.parents[i]], this._renderCache[params.id]);
             }
         }
 
@@ -292,9 +284,10 @@ define(['logManager',
         } else {
             //multiple segment line
             if (x2 < x) {
+                //from right to left (merge)
                 pathDef = ["M", x, y, "L", x, y2 + cornerSize, "L", x - cornerSize, y2, "L", x2, y2 ];
             } else {
-                //from left to right
+                //from left to right (new branch)
                 pathDef = ["M", x, y, "L", x2 - cornerSize, y, "L", x2, y - cornerSize, "L", x2, y2 ];
             }
         }
