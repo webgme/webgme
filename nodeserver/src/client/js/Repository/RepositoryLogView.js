@@ -33,7 +33,7 @@ define(['logManager',
             commitRenderData = {},
             branchOffsets = {},
             x = 0,
-            y = 0,
+            y = this._yDelta * (len - 1),
             obj,
             objParent,
             cLane,
@@ -54,7 +54,7 @@ define(['logManager',
                 //very first item
                 branchOffsets[obj.name] = 0;
                 branchCount = 1;
-                commitRenderData[obj.id] = { "x": 0, "y": 0 };
+                commitRenderData[obj.id] = { "x": x, "y": y };
             } else {
                 //let's see how many parents this obj has
                 if (obj.parents.length > 1) {
@@ -118,7 +118,7 @@ define(['logManager',
                 }
             }
 
-            y += this._yDelta;
+            y -= this._yDelta;
         }
 
         len = this._orderedCommitIds.length;
@@ -172,7 +172,7 @@ define(['logManager',
                                    "name": $(event.target).attr("data-n")});
         });
 
-        this._skinParts.svgPaper.setSize("100%", y + 30);
+        this._skinParts.svgPaper.setSize("100%", this._yDelta * len + 30);
     };
 
     RepositoryLogView.prototype.onCommitDblClick = function (params) {
@@ -224,16 +224,15 @@ define(['logManager',
         this._skinParts.svgPaper = Raphael(this._skinParts.htmlContainer.attr("id"));
         this._skinParts.svgPaper.canvas.style.pointerEvents = "visiblePainted";
         this._skinParts.svgPaper.setSize("100%", "100px");
+
+        this._renderCache = {};
     };
 
     RepositoryLogView.prototype._createItem = function (params) {
         var i,
-            pObj,
-            objBBox,
-            parentBBox,
             itemObj =  $('<div/>', {
                 "class" : "item",
-                "id": params.id.replace("#", ""),
+                "id": params.id.replace("#", "").replace("*", ""),
                 "data-id": params.id,
                 "data-n": params.name
             });
@@ -255,7 +254,7 @@ define(['logManager',
 
         this._skinParts.htmlContainer.append(itemObj);
 
-        objBBox = {"x": params.x,
+        this._renderCache[params.id] = {"x": params.x,
             "y": params.y,
             "w": itemObj.outerWidth(),
             "h": itemObj.outerHeight() };
@@ -263,14 +262,7 @@ define(['logManager',
         //draw lines to parents
         if (params.parents && params.parents.length > 0) {
             for (i = 0; i < params.parents.length; i += 1) {
-                pObj = this._skinParts.htmlContainer.find("#" + params.parents[i].replace("#", ""));
-
-                parentBBox = {"x": parseInt(pObj.css("left"), 10),
-                    "y": parseInt(pObj.css("top"), 10),
-                    "w": pObj.outerWidth(),
-                    "h": pObj.outerHeight() };
-
-                this._drawLine(parentBBox, objBBox);
+                this._drawLine(this._renderCache[params.parents[i]], this._renderCache[params.id]);
             }
         }
 
@@ -291,7 +283,13 @@ define(['logManager',
             pathDef = ["M", x, y, "L", x2, y2 ];
         } else {
             //multiple segment line
-            pathDef = ["M", x, y, "L", x2 - cornerSize, y, "L", x2, y + cornerSize, "L", x2, y2 ];
+            if (x2 < x) {
+                //from right to left (merge)
+                pathDef = ["M", x, y, "L", x, y2 + cornerSize, "L", x - cornerSize, y2, "L", x2, y2 ];
+            } else {
+                //from left to right (new branch)
+                pathDef = ["M", x, y, "L", x2 - cornerSize, y, "L", x2, y - cornerSize, "L", x2, y2 ];
+            }
         }
 
         this._skinParts.svgPaper.path(pathDef.join(","));

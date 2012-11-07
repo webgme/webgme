@@ -86,7 +86,6 @@ define(['logManager'], function (logManager) {
 
     RepositoryLogControl.prototype._updateHistory = function (params) {
         var i,
-            j,
             k,
             currentRootKey = this._client.getRootKey();
 
