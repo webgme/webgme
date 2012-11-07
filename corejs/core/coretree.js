@@ -4,7 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, UTIL) {
+define([ "core/assert", "core/lib/sha1", "core/util", "core/corepath" ], function (ASSERT, SHA1,
+UTIL, CorePath) {
 	"use strict";
 
 	// ----------------- PersistentTree -----------------
@@ -15,36 +16,16 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 		return typeof key === "string" && key.length === 41 && keyregexp.test(key);
 	};
 
-	var isValidRelid = function (relid) {
-		return typeof relid === "string";
-	};
+	var MISSING = {};
 
-	var joinStringPaths = function (first, second) {
-		ASSERT(typeof first === "string" && typeof second === "string");
-
-		return second ? (first ? first + "/" + second : second) : first;
-	};
-
-	var getRawPath = function (node) {
-		var path = "";
-		while( node && node.relid !== undefined ) {
-			if( path === "" ) {
-				path = node.relid;
-			}
-			else {
-				path = node.relid + "/" + path;
-			}
-			node = node.parent;
-		}
-		return path;
-	};
-
-	var CoreTree = function (storage) {
+	var CoreTree = function (storage, options) {
 		ASSERT(storage);
 
-		var KEYNAME = storage.KEYNAME;
-
 		var isValidNode = function (node) {
+			if( !corepath.isValid(node) ) {
+				return false;
+			}
+
 			try {
 				var verify = function (text, cond) {
 					if( !cond ) {
@@ -52,22 +33,16 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 					}
 				};
 
-				verify("non-object node", typeof node === "object");
-				verify("node structure", node && node.data && typeof node.data === "object");
+				verify("data", typeof node.data === "object" && node.data !== null);
 
-				verify("parent structure", node.parent === null
-				|| (node.parent.data && typeof node.parent.data === "object"));
-
-				verify("mutable flag", node.data._mutable === undefined
+				verify("mutability 1", node.data._mutable === undefined
 				|| node.data._mutable === true);
 
-				verify("parent mutability", node.parent === null
-				|| node.data._mutable === undefined || node.parent.data._mutable === true);
-
-				verify("node relid", node.relid === undefined || isValidRelid(node.relid));
+				verify("mutability 2", node.parent === null || node.data._mutable === undefined
+				|| node.parent.data._mutable === true);
 
 				var key = node.data[KEYNAME];
-				verify("node hashkey", key === undefined || key === false || isValidKey(key));
+				verify("hashkey", typeof key === "string" && (key === "" || isValidKey(key)));
 
 				verify("data match 1", node.parent === null || !key
 				|| node.parent.data[node.relid] === key);
@@ -78,43 +53,72 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 				verify("mutable key", !node.data._mutable || typeof key !== "string");
 			}
 			catch(error) {
-				console.log("WRONG NODE: " + error + " error at path '" + getRawPath(node) + "'");
-				console.log(node);
-
+				console.log("WRONG NODE: " + error + "error", node);
 				return false;
 			}
 
 			return true;
 		};
 
-		var getKey = function (node) {
+		var isHashed = function (node) {
 			ASSERT(isValidNode(node));
+
+			return typeof node.data === "object" && node.data !== null
+			&& typeof node.data[KEYNAME] === "string";
+		};
+
+		var getHash = function (node) {
+			ASSERT(isValidNode(node));
+
 			return node.data[KEYNAME];
 		};
 
-		var addKey = function (node) {
+		var addHash = function (node) {
 			ASSERT(isValidNode(node) && isMutable(node));
 
 			return node.data[KEYNAME] = false;
 		};
 
-		var delKey = function (node) {
-			ASSERT(isValidNode(node) && isMutable(node));
+		// data === MISSING : non-existent but valid branch
+		// data === undefined : something is wrong with the path
+		var attacher = function (node) {
+			ASSERT(isValidNode(node) && isValidNode(node.parent));
 
-			delete node.data[KEYNAME];
+			if( node.parent.data !== null && typeof node.parent.data === "object" ) {
+				var data = node.parent.data[node.relid];
+
+				if( typeof data === "string" && data.length === 41 && typeof node.data === "object"
+				&& node.data !== null && node.data[KEYNAME] === data ) {
+					// do nothing
+				}
+				else if( typeof data === "undefined" ) {
+					node.data = MISSING;
+				}
+				else {
+					node.data = data;
+				}
+			}
+			else {
+				node.data = undefined;
+			}
 		};
 
+		var detacher = function () {
+		};
+
+		var corepath = new CorePath(attacher, detacher, options);
+		var KEYNAME = storage.KEYNAME;
+
+		var isValidRelid = corepath.isValidRelid;
+
 		var createRoot = function () {
-			var data = {
+			var root = corepath.createRoot();
+
+			root.data = {
 				_mutable: true
 			};
-			data[KEYNAME] = false;
 
-			return {
-				data: data,
-				parent: null,
-				relid: undefined
-			};
+			return root;
 		};
 
 		var getChildrenRelids = function (node) {
@@ -130,6 +134,54 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 			return array;
 		};
 
+		var getChild = function (node, relid) {
+			ASSERT(isValidNode(node) && isValidRelid(relid));
+
+			var child = corepath.getChild(node, relid);
+
+			var data = node.data[relid];
+			ASSERT(typeof data === "undefined" || typeof data === "object");
+
+			if( typeof data === "undefined" ) {
+				child.data = null;
+			}
+			else {
+				child.data = data;
+			}
+
+			return child;
+		};
+
+		var mutate = function (node) {
+			ASSERT(isValidNode(node));
+
+			node = corepath.attach(node);
+
+			var data = node.data;
+			if( !data._mutable ) {
+				var copy = {
+					_mutable: true
+				};
+
+				for( var key in data ) {
+					copy[key] = data[key];
+				}
+
+				if( data[KEYNAME] !== undefined ) {
+					copy[KEYNAME] = false;
+				}
+
+				ASSERT(copy._mutable === true);
+
+				node.data = copy;
+
+				if( node.parent ) {
+					mutate(node.parent);
+					node.parent.data[node.relid] = copy;
+				}
+			}
+		};
+
 		var createChild = function (node, relid) {
 			ASSERT(isValidNode(node) && isValidRelid(relid));
 
@@ -142,22 +194,6 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 
 			return {
 				data: data,
-				parent: node,
-				relid: relid
-			};
-		};
-
-		var getChild = function (node, relid) {
-			ASSERT(isValidNode(node) && isValidRelid(relid));
-
-			var child = node.data[relid];
-			if( !child ) {
-				return null;
-			}
-
-			ASSERT(typeof child === "object");
-			return {
-				data: child,
 				parent: node,
 				relid: relid
 			};
@@ -220,11 +256,7 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 
 		var loadByPath = function (node, path, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
-			ASSERT(Array.isArray(path) || typeof path === "string");
-
-			if( typeof path === "string" ) {
-				path = parseStringPath(path);
-			}
+			ASSERT(typeof path === "string");
 
 			var loadNext = function (err, node) {
 				if( err ) {
@@ -270,173 +302,9 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 			node.relid = relid;
 		};
 
-		var getArrayPath = function (node, base) {
-			ASSERT(isValidNode(node));
-			ASSERT(base === undefined || isValidNode(base));
-
-			var path = [];
-			while( node.parent && node !== base ) {
-				path.push(node.relid);
-				node = node.parent;
-			}
-
-			return path;
-		};
-
-		var getLevel = function (node, base) {
-			ASSERT(isValidNode(node));
-			ASSERT(base === undefined || isValidNode(base));
-
-			var level = 0;
-			while( node.parent && node !== base ) {
-				++level;
-				node = node.parent;
-			}
-
-			return level;
-		};
-
-		var getStringPath = function (node, base) {
-			ASSERT(isValidNode(node));
-			ASSERT(base === undefined || isValidNode(base));
-
-			var path = "";
-			while( node.parent && node !== base ) {
-				if( path === "" ) {
-					path = node.relid;
-				}
-				else {
-					path = node.relid + "/" + path;
-				}
-				node = node.parent;
-			}
-
-			return path;
-		};
-
-		var parseStringPath = function (path) {
-			ASSERT(typeof path === "string");
-
-			return path ? path.split("/").reverse() : [];
-		};
-
-		var getRelid = function (node) {
-			ASSERT(isValidNode(node));
-			return node.relid;
-		};
-
-		var getRoot = function (node) {
-			ASSERT(isValidNode(node));
-
-			while( node.parent ) {
-				node = node.parent;
-			}
-
-			return node;
-		};
-
-		var getCommonAncestor = function (first, second) {
-			ASSERT(isValidNode(first) && isValidNode(second));
-
-			var a = [];
-			do {
-				a.push(first);
-				first = first.parent;
-			} while( first );
-
-			var b = [];
-			do {
-				b.push(second);
-				second = second.parent;
-			} while( second );
-
-			var i = a.length - 1;
-			var j = b.length - 1;
-			while( i >= 1 && j >= 1 && a[i - 1].relid === b[j - 1].relid ) {
-				--i;
-				--j;
-			}
-
-			return [ a[i], b[j] ];
-		};
-
-		var getCommonPathPrefixData = function (first, second) {
-			ASSERT(typeof first === "string" && typeof second === "string");
-
-			first = first ? first.split("/") : [];
-			second = second ? second.split("/") : [];
-
-			var common = [];
-			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
-				common.push(first[i]);
-			}
-
-			return {
-				common: common.join("/"),
-				first: first.slice(i).join("/"),
-				firstLength: first.length - i,
-				second: second.slice(i).join("/"),
-				secondLength: second.length - i
-			};
-		};
-
-		var isAncestorOf = function (first, second) {
-			ASSERT(isValidNode(first) && isValidNode(second));
-
-			var a = [];
-			while( (first = first.parent) !== undefined ) {
-				a.push(first);
-			}
-
-			var b = [];
-			while( (second = second.parent) !== undefined ) {
-				b.push(second);
-			}
-
-			if( a.length > b.length ) {
-				return false;
-			}
-
-			for( var i = 0; i < a.length; ++i ) {
-				if( a[i].relid !== b[i].relid ) {
-					return false;
-				}
-			}
-
-			return true;
-		};
-
 		var isMutable = function (node) {
 			ASSERT(isValidNode(node));
 			return node.data._mutable;
-		};
-
-		var mutate = function (node) {
-			ASSERT(isValidNode(node));
-
-			var data = node.data;
-			if( !data._mutable ) {
-				var copy = {
-					_mutable: true
-				};
-
-				for( var key in data ) {
-					copy[key] = data[key];
-				}
-
-				if( data[KEYNAME] !== undefined ) {
-					copy[KEYNAME] = false;
-				}
-
-				ASSERT(copy._mutable === true);
-
-				node.data = copy;
-
-				if( node.parent ) {
-					mutate(node.parent);
-					node.parent.data[node.relid] = copy;
-				}
-			}
 		};
 
 		var copyData = function (data) {
@@ -524,11 +392,10 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 
 		// TODO: rewrite it using UTIL.AsyncJoin
 		var persist = function (node, callback) {
-			ASSERT(isValidNode(node));
-			ASSERT(getKey(node) !== undefined);
+			ASSERT(isValidNode(node) && isHashed(node));
 
 			var saver = new Saver(callback);
-			var key = isMutable(node) ? saver.save(node.data) : getKey(node);
+			var key = isMutable(node) ? saver.save(node.data) : getHash(node);
 			saver.done(null);
 
 			if( node.parent ) {
@@ -662,9 +529,9 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 		return {
 			isValidKey: isValidKey,
 			isValidNode: isValidNode,
-			getKey: getKey,
-			addKey: addKey,
-			delKey: delKey,
+			isHashed: isHashed,
+			getHash: getHash,
+			addHash: addHash,
 			createRoot: createRoot,
 			loadRoot: loadRoot,
 			createChild: createChild,
@@ -676,16 +543,12 @@ define([ "core/assert", "core/lib/sha1", "core/util" ], function (ASSERT, SHA1, 
 			getParent: getParent,
 			setParent: setParent,
 			delParent: delParent,
-			getArrayPath: getArrayPath,
-			getLevel: getLevel,
-			getStringPath: getStringPath,
-			joinStringPaths: joinStringPaths,
-			parseStringPath: parseStringPath,
-			getCommonPathPrefixData: getCommonPathPrefixData,
-			getRoot: getRoot,
-			getRelid: getRelid,
-			getCommonAncestor: getCommonAncestor,
-			isAncestorOf: isAncestorOf,
+			getPath: corepath.getPath,
+			getLevel: corepath.getLevel,
+			getAncestor: corepath.getAncestor,
+			getRoot: corepath.getRoot,
+			getRelid: corepath.getRelid,
+			isAncestor: corepath.isAncestorOf,
 			isMutable: isMutable,
 			mutate: mutate,
 			persist: persist,

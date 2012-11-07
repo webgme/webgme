@@ -7,128 +7,9 @@
 define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
-	// ----------------- PersistentTree -----------------
+	// ----------------- CorePath -----------------
 
-	var isValidRelid = function (relid) {
-		return typeof relid === "string" /* && relid !== "" */;
-	};
-
-	var isValidNode = function (node) {
-		try {
-			var verify = function (text, cond) {
-				if( !cond ) {
-					throw text;
-				}
-			};
-
-			verify("object", typeof node === "object");
-
-			verify("relid", (node.relid === null && node.parent === null)
-			|| (isValidRelid(node.relid) && typeof node.parent === "object"));
-
-			verify("age", node.parent === null || node.age >= node.parent.age);
-
-			verify("children", node.children === null || typeof node.children === "object");
-
-			verify("lists", node.parent === null || node.children === null
-			|| node.parent.children !== null);
-
-			verify("contained", node.parent === null || node.parent.children === null
-			|| node.parent.children[node.relid] === undefined
-			|| node.parent.children[node.relid].relid === node.relid);
-		}
-		catch(error) {
-			console.log("WRONG NODE: >" + error + "< error", node);
-			return false;
-		}
-
-		return true;
-	};
-
-	var getParent = function (node) {
-		ASSERT(isValidNode(node));
-		return node.parent;
-	};
-
-	var getRelid = function (node) {
-		ASSERT(isValidNode(node));
-		return node.relid;
-	};
-
-	var getLevel = function (node, base) {
-		ASSERT(isValidNode(node));
-		ASSERT(base === undefined || isValidNode(base));
-
-		var level = 0;
-		while( node.parent && node !== base ) {
-			++level;
-			node = node.parent;
-		}
-
-		return level;
-	};
-
-	var getRoot = function (node) {
-		ASSERT(isValidNode(node));
-
-		while( node.parent ) {
-			node = node.parent;
-		}
-
-		return node;
-	};
-
-	var getAncestor = function (first, second) {
-		ASSERT(isValidNode(first) && isValidNode(second));
-		ASSERT(getRoot(first) === getRoot(second));
-
-		var a = [];
-		do {
-			a.push(first);
-			first = first.parent;
-		} while( first );
-
-		var b = [];
-		do {
-			b.push(second);
-			second = second.parent;
-		} while( second );
-
-		// you must be in the same tree
-		ASSERT(a[a.length - 1] === b[b.length - 1]);
-
-		var i = a.length - 1;
-		var j = b.length - 1;
-		while( i !== 0 && a[i - 1] === b[--j] ) {
-			--i;
-		}
-
-		return a[i];
-	};
-
-	var getPath = function (node, base) {
-		ASSERT(isValidNode(node));
-		ASSERT(base === undefined || isValidNode(base));
-
-		var path = "";
-		while( node.parent && node !== base ) {
-			if( path === "" ) {
-				path = node.relid;
-			}
-			else {
-				path = node.relid + "/" + path;
-			}
-			node = node.parent;
-		}
-		return path;
-	};
-
-	var joinPaths = function (first, second) {
-		ASSERT(typeof first === "string" && typeof second === "string");
-		return second ? (first ? first + "/" + second : second) : first;
-	};
-
-	var CorePath = function (options) {
+	var CorePath = function (attacher, detacher, options) {
 		options = CONFIG.copyOptions(CONFIG.corepath, options);
 
 		var maxAge = options.maxAge;
@@ -136,15 +17,177 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		var agingCount = 0;
 		var roots = [];
 
-		var detachChildren = function (node) {
-			ASSERT(node.children !== null);
+		var isValidNode = function (node) {
+			try {
+				var verify = function (text, cond) {
+					if( !cond ) {
+						throw text;
+					}
+				};
 
+				verify("node", typeof node === "object" && node !== null);
+
+				verify("parent", typeof node.parent === "object");
+
+				verify("age", typeof node.age === "number" && node.age >= 0 && node.age <= maxAge);
+
+				verify("relid", (typeof node.relid === "string" && node.parent !== null)
+				|| (node.relid === null && node.parent === null && node.age === 0));
+
+				verify("children", typeof node.children === "object");
+
+				verify("aging", node.parent === null || node.age >= node.parent.age);
+
+				verify("detached", (node.children === null && node.age === maxAge)
+				|| (node.children !== null && node.age < maxAge));
+
+				verify("containment", node.parent === null || node.parent.children === null
+				|| typeof node.parent.children[node.relid] === "undefined"
+				|| node.parent.children[node.relid].relid === node.relid);
+			}
+			catch(error) {
+				console.log("WRONG NODE: " + error + " error", node);
+				return false;
+			}
+
+			return true;
+		};
+
+		var getParent = function (node) {
+			ASSERT(isValidNode(node));
+			return node.parent;
+		};
+
+		var getRelid = function (node) {
+			ASSERT(isValidNode(node));
+			return node.relid;
+		};
+
+		var getLevel = function (node, base) {
+			ASSERT(isValidNode(node));
+			ASSERT(base === undefined || isValidNode(base));
+
+			var level = 0;
+			while( node.parent && node !== base ) {
+				++level;
+				node = node.parent;
+			}
+
+			return level;
+		};
+
+		var getRoot = function (node) {
+			ASSERT(isValidNode(node));
+
+			while( node.parent ) {
+				node = node.parent;
+			}
+
+			return node;
+		};
+
+		var getAncestor = function (first, second) {
+			ASSERT(isValidNode(first) && isValidNode(second));
+			ASSERT(getRoot(first) === getRoot(second));
+
+			var a = [];
+			do {
+				a.push(first);
+				first = first.parent;
+			} while( first );
+
+			var b = [];
+			do {
+				b.push(second);
+				second = second.parent;
+			} while( second );
+
+			// you must be in the same tree
+			ASSERT(a[a.length - 1] === b[b.length - 1]);
+
+			var i = a.length - 1;
+			var j = b.length - 1;
+			while( i !== 0 && a[i - 1] === b[--j] ) {
+				--i;
+			}
+
+			return a[i];
+		};
+
+		var getPath = function (node, base) {
+			ASSERT(isValidNode(node));
+			ASSERT(base === undefined || isValidNode(base));
+
+			var path = "";
+			while( node.parent && node !== base ) {
+				if( path === "" ) {
+					path = node.relid;
+				}
+				else {
+					path = node.relid + "/" + path;
+				}
+				node = node.parent;
+			}
+			return path;
+		};
+
+		var joinPaths = function (first, second) {
+			ASSERT(typeof first === "string" && typeof second === "string");
+			return second ? (first ? first + "/" + second : second) : first;
+		};
+
+		var isAttached = function (node) {
+			ASSERT(isValidNode(node));
+
+			return node.children !== null;
+		};
+
+		var attach = function (node) {
+			ASSERT(isValidNode(node));
+
+			var parent;
+
+			if( node.children !== null ) {
+				parent = node;
+
+				while( parent.age !== 0 ) {
+					parent.age = 0;
+					parent = parent.parent;
+				}
+
+				return node;
+			}
+
+			ASSERT(node.parent !== null);
+			parent = attach(node.parent);
+
+			var child = parent.children[node.relid];
+			if( typeof child === "undefined" ) {
+				parent.children[node.relid] = node;
+
+				node.parent = parent;
+				node.children = {};
+				node.age = 0;
+				attacher(node);
+
+				return node;
+			}
+			else {
+				child.age = 0;
+				return child;
+			}
+		};
+
+		// does not remove itself from parent
+		var detach = function (node) {
 			var children = node.children;
+
+			detacher(node);
 			node.children = null;
 			node.age = maxAge;
 
 			for( var relid in children ) {
-				detachChildren(children[relid]);
+				detach(children[relid]);
 			}
 		};
 
@@ -154,7 +197,14 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			if( ++node.age >= maxAge ) {
 				ASSERT(node.parent.children[node.relid] === node);
 				delete node.parent.children[node.relid];
-				detachChildren(node);
+
+				detach(node);
+			}
+			else {
+				var children = node.children;
+				for( var relid in children ) {
+					ageNode(children[relid]);
+				}
 			}
 		};
 
@@ -173,35 +223,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			}
 		};
 
-		var actualize = function (node) {
-			ASSERT(isValidNode(node));
-
-			if( node.children === null ) {
-				node.children = {};
-
-				var parent = actualize(node.parent);
-				var child = parent.children[node.relid];
-
-				if( child === undefined ) {
-					parent.children[node.relid] = node;
-					node.age = 0;
-					return node;
-				}
-
-				child.age = 0;
-				return child;
-			}
-
-			while( node.age !== 0 ) {
-				ASSERT(node.children !== null);
-
-				node.age = 0;
-				node = node.parent;
-			}
-
-			return node;
-		};
-
 		var createRoot = function () {
 			ageRoots();
 
@@ -217,12 +238,12 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 
 		var getChild = function (node, relid) {
-			ASSERT(isValidNode(node) && isValidRelid(relid));
+			ASSERT(isValidNode(node) && typeof relid === "string");
 
 			var child = node.children[relid];
-			if( child === undefined ) {
+			if( typeof child === "undefined" ) {
 				ageRoots();
-				node = actualize(node);
+				node = attach(node);
 
 				child = {
 					parent: node,
@@ -234,7 +255,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 				node.children[relid] = child;
 			}
 			else {
-				child = actualize(child);
+				child = attach(child);
 			}
 
 			return child;
@@ -271,7 +292,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 
 		return {
-			isValidRelid: isValidRelid,
 			isValidNode: isValidNode,
 			getParent: getParent,
 			getRelid: getRelid,
@@ -281,7 +301,8 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			getChild: getChild,
 			getAncestor: getAncestor,
 			getDescendant: getDescendant,
-			actualize: actualize,
+			isAttached: isAttached,
+			attach: attach,
 			getPath: getPath,
 			joinPaths: joinPaths,
 			getDescendantByPath: getDescendantByPath
