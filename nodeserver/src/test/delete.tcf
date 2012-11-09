@@ -1,5 +1,5 @@
 {"clients":["c001"]}
-{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]}
+{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"children":-1}}}]}
 {"clientId":"c001","servercommands":[{"cid":"0002","type":"delete","id":"o5"}]}
 {"clientId":"c001","servercommands":[{"cid":"0002","type":"delete","id":"o4"}]}
 {"clientId":"c001","servercommands":[{"cid":"0002","type":"delete","id":"root"}]}

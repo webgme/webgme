@@ -1,174 +1,286 @@
-"use strict";
+/*
+ format of the testcase setup:
+ setup:{clients:['id',]}
+
+ format of the latest lines in the testcase file:
+ {clientId:'id',servercommands:[],internalcommand:{},repeat:number of repeats}
+
+ available internal commands:
+ printVariables : pirnts out the stored variables and their values
+ printObject: prints the object ids which should be stored on the client machine
+ printContainment : prints the containment hierarchy among the downloaded object starting with the root
+ find: searches for a pattern among the downloaded object id's and store it to the given variable
+
+ internal command format:
+ {type: 'command name', pattern:'search criteria', variable:'variable name'}
+ */
 var io = require('socket.io-client');
-var socket = io.connect('http://localhost:8081');
 var fs=require('fs');
-var lines = fs.readFileSync("newt3stcmd.wcf","utf8");
-lines = lines.split('\n');
-var objects = {};
-var variables = {};
-var messagecallback;
+var storage = {};
+var host = "http://localhost:8081";
+var log = function(text){
+    console.log("[info]"+text);
+};
+var Test = function(lines){
 
-socket.on('connect',function(msg){
-    socket.emit('connectToBranch',"t3st");
-});
+};
+var Client = function(host,storage){
+    Log(host);
+    var options = {
+        transports: ['websocket'],
+        'force new connection': true
+    },
+        socket = io.connect(host,options),
+        state = "init",
+        idString,
+        printLog,
+        msgCallBack = null;
 
-socket.on('connectToBranchAck',function(msg){
-    console.log("connectToBranchAck");
-    if(lines.length === 0){
-        console.log("no real input!!!");
-    }
-    else{
-        processLine(lines[0]);
-    }
-});
-
-socket.on('clientMessageAck',function(msg){
-    console.log("clientMessageAck");
-});
-socket.on('serverMessage',function(msg){
-    var i;
-    console.log("serverMessage: "+JSON.stringify(msg));
-    socket.emit('serverMessageAck');
-    for(i=0;i<msg.length;i++){
-        if(msg[i].type === "load" || msg[i].type === "create" || msg[i].type === "update"){
-            objects[msg[i].id] = msg[i].object;
-        }
-        else if(msg[i].type === "unload"){
-            delete objects[msg[i].id];
-        }
-        else if(msg[i].type === "delete"){
-            objects[msg[i].id] = null;
-        }
-    }
-    messagecallback(msg);
-});
-
-var printContainment = function(){
-    var printObjectContainmentLine = function(objectId){
+    this.runServerCommand = function(servermsg,callback){
         var i,
-            line="";
-        line+="["+objects[objectId]._id+"]->[";
-        for(i=0;i<objects[objectId].relations.childrenIds.length;i++){
-            line+=objects[objectId].relations.childrenIds[i]+",";
-        }
-        if(i>0){
-            line = line.slice(0,line.lastIndexOf(","));
-        }
-        line+="]";
-        console.log(line);
-    };
-    var rPrintConatinment = function(id){
-        var i;
-        if(objects[id]){
-            printObjectContainmentLine(id);
-            for(i=0;i<objects[id].relations.childrenIds.length;i++){
-                rPrintConatinment(objects[id].relations.childrenIds[i]);
-            }
-        }
-    };
+            commandids,
+            commandstatus,
+            handleResponse;
 
-    /*main*/
-    console.log("Object containment information:");
-    rPrintConatinment("root");
-
-};
-var printObjects = function(){
-    var i,
-        line="Objects: ";
-    for(i in objects){
-        line+=i+",";
-    }
-    i = line.lastIndexOf(",");
-    if(i !== -1){
-        line = line.slice(0,i);
-    }
-    console.log(line);
-};
-var printVariables = function(){
-    console.log("VARIABLES: "+JSON.stringify(variables));
-}
-var toNextLine = function(){
-    lines.shift();
-    if(lines.length === 0){
-        setTimeout(function(){
-            process.exit();
-        },1);
-    }
-    else{
-        if(lines[0] && lines[0] !== ""){
-            processLine(lines[0]);
-        }
-        else{
-            toNextLine();
-        }
-    }
-};
-var processLine = function(line){
-    var i,
-        commands = JSON.parse(line),
-        commandids = [];
-    if(commands instanceof Array){
-        /*we should send them as a command and wait for the result to come ;)*/
-        for(i=0;i<commands.length;i++){
-            commandids.push(commands[i].cid);
-            if(variables[commands[i].parentId]){
-                commands[i].parentId = variables[commands[i].parentId];
-            }
-            if(variables[commands[i].baseId]){
-                commands[i].baseId = variables[commands[i].baseId];
-            }
-            if(variables[commands[i].id]){
-                commands[i].id = variables[commands[i].id];
-            }
-        }
-        messagecallback = function(msg){
+        handleResponse = function(msg){
             var i,
-                index;
+                alldone;
             for(i=0;i<msg.length;i++){
                 if(msg[i].type === "command"){
-                    index = commandids.indexOf(msg[i].cid);
-                    if(index !== -1){
-                        commandids.splice(index,1);
+                    commandids[msg[i].cid] = true;
+                    if(commandstatus && msg[i].success === false){
+                        commandstatus = false;
                     }
                 }
             }
-            if(commandids.length === 0){
-                toNextLine();
+            alldone = true;
+            for(i in commandids){
+                if(!commandids[i]){
+                    alldone=false;
+                    break;
+                }
+            }
+            if(alldone){
+                msgCallBack = null;
+                state = "ready";
+                callback(commandstatus);
             }
         };
-        socket.emit('clientMessage',{commands:commands});
-    }
-    else{
-        /*tester commands*/
-        if(commands.type === "wait"){
-            setTimeout(function(){
-                toNextLine();
-            },5000);
+        /*main*/
+        msgCallBack = handleResponse;
+        socket.emit('clientMessage',servermsg);
+    };
+    this.isReady = function(){
+        return state === "ready";
+    };
+    /*private functions*/
+    idString = function(){
+        var date = new Date();
+        return "["+socket.socket.sessionid+" | "+date.getTime()+"]";
+    };
+    printLog = function(text){
+        Log(idString()+" "+text);
+    };
+    /*socket functions*/
+    socket.on('connect',function(msg){
+        Log("connected");
+        state = "ready";
+    });
+    socket.on('clientMessageAck',function(msg){
+        printLog("clientMessageAck");
+    });
+    socket.on('serverMessage',function(msg){
+        var i,
+            commandsuccess;
+        printLog("serverMessage: "+JSON.stringify(msg));
+        socket.emit('serverMessageAck');
+        commandsuccess = true;
+        for(i=0;i<msg.length;i++){
+            if(msg[i].type === "load" || msg[i].type === "create" || msg[i].type === "update"){
+                storage[msg[i].id] = msg[i].object;
+            }
+            else if(msg[i].type === "unload"){
+                delete storage[msg[i].id];
+            }
+            else if(msg[i].type === "delete"){
+                storage[msg[i].id] = null;
+            }
+
         }
-        else if(commands.type === "printObjects"){
-            printObjects();
-            toNextLine();
+        if(msgCallBack){
+            msgCallBack(msg);
         }
-        else if(commands.type === "printContainment"){
-            printContainment();
-            toNextLine();
+    });
+
+    /*main*/
+};
+var Test = function(host,tc){
+    var i,
+        config,
+        clients,
+        clientstates,
+        linepointer,
+        objects,
+        variables,
+        processLine,
+        lineProcessed,
+        doInternalCommand,
+        printVariables,
+        printObjects,
+        printContainment,
+        setVariable,
+        testFailed;
+
+    lineProcessed = function(){
+        linepointer++;
+        if(linepointer<tc.length){
+            processLine();
         }
-        else if(commands.type === "find"){
-            if(commands.variable && commands.pattern){
-                for(i in objects){
-                    if(i.search(commands.pattern) !== -1){
-                        variables[commands.variable] = i;
-                        break;
-                    }
+        else{
+            process.exit(0);
+        }
+    };
+    testFailed = function(){
+        Log("the test failed");
+        process.exit(0);
+    };
+    processLine = function(){
+        var line,
+            serverCommandDone,
+            executeServerCommands;
+
+        serverCommandDone = function(result){
+            if(!result){
+                testFailed();
+            }
+            if(line.repeats === 0){
+                lineProcessed();
+            }
+            else{
+                line.repeats -=1;
+                executeServerCommands();
+            }
+        };
+        executeServerCommands = function(){
+            var i,
+                myline = JSON.parse(JSON.stringify(line));
+            if(line.repeats > 1){
+                for(i=0;i<myline.servercommands.length;i++){
+                    myline.servercommands[i].cid += "_"+myline.repeats;
                 }
             }
-            toNextLine();
+            clients[myline.clientId].runServerCommand(myline.servercommands,serverCommandDone);
+        };
+        /*main*/
+        line = JSON.parse(tc[linepointer]);
+        if(line.internalcommand){
+            doInternalCommand(line.internalcommand);
         }
-        else if(commands.type === "printVariables"){
-            printVariables();
-            toNextLine();
+        else{
+            line.repeats = line.repeats || 0;
+            if(line.servercommands){
+                executeServerCommands();
+            }
         }
+    };
+    doInternalCommand = function(command){
+        switch(command.type){
+            case "printVariables":
+                printVariables();
+                break;
+            case "printContainment":
+                printContainment();
+                break;
+            case "printObjects":
+                printObjects();
+                break;
+            case "find":
+                setVariable(command.pattern,command.variable);
+                break;
+        }
+        lineProcessed();
+    };
+    printContainment = function(){
+        var printObjectContainmentLine,
+            rPrintConatinment;
+        printObjectContainmentLine = function(objectId){
+            var i,
+                line="";
+            line+="["+objects[objectId]._id+"]->[";
+            for(i=0;i<objects[objectId].relations.childrenIds.length;i++){
+                line+=objects[objectId].relations.childrenIds[i]+",";
+            }
+            if(i>0){
+                line = line.slice(0,line.lastIndexOf(","));
+            }
+            line+="]";
+            Log(line);
+        };
+        rPrintConatinment = function(id){
+            var i;
+            if(objects[id]){
+                printObjectContainmentLine(id);
+                for(i=0;i<objects[id].relations.childrenIds.length;i++){
+                    rPrintConatinment(objects[id].relations.childrenIds[i]);
+                }
+            }
+        };
+
+        /*main*/
+        Log("Object containment information:");
+        rPrintConatinment("root");
+    };
+    printObjects = function(){
+        var i,
+            line="Objects: ";
+        for(i in objects){
+            line+=i+",";
+        }
+        i = line.lastIndexOf(",");
+        if(i !== -1){
+            line = line.slice(0,i);
+        }
+        Log(line);
+    };
+    printVariables = function(){
+        Log("VARIABLES: "+JSON.stringify(variables));
+    };
+    setVariable = function(pattern,name){
+        var i;
+        for(i in objects){
+            if(i.search(pattern) !== -1){
+                variables[name] = i;
+            }
+        }
+    };
+    /*main*/
+    if(tc.length<2){
+        process.exit(0);
     }
+    config = JSON.parse(tc[0]);
+    linepointer = 1;
+    objects={};
+    clients = {};
+    clientstates = {};
+    for(i=0;i<config.clients.length;i++){
+        clients[config.clients[i]] = new Client(host,objects);
+        clientstates[config.clients[i]] = "empty";
+    }
+
+    setTimeout(function(){
+        processLine();
+    },1000);
 };
 
-/*MAIN*/
+
+/*main*/
+var i,
+    arguments = process.argv.splice(" "),
+    clients = {},
+    objects = {};
+if(arguments.length !== 4){
+    console.log("nem igy kell!!! -> node t3st.js host tc");
+    process.exit(0);
+}
+logfile = arguments[4];
+var test = new Test(arguments[2],fs.readFileSync(arguments[3],"utf8").split("\n"));

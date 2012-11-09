@@ -19,15 +19,21 @@ var fs=require('fs');
 var logfile;
 var Log = function(text){
     //return;
-    var file ="";
-    try{
-        file = fs.readFileSync(logfile,"utf8");
+    if(true){
+        console.log(text);
     }
-    catch(e){}
-    file+=text+"\n";
-    fs.writeFileSync(logfile,file,"utf8");
+    else{
+        var file ="";
+        try{
+            file = fs.readFileSync(logfile,"utf8");
+        }
+        catch(e){}
+        file+=text+"\n";
+        fs.writeFileSync(logfile,file,"utf8");
+    }
 };
 var Client = function(host,storage){
+    Log(host);
     var options = {
             transports: ['websocket'],
             'force new connection': true
@@ -155,7 +161,7 @@ var Test = function(host,tc){
     testFailed = function(){
         Log("the test failed");
         process.exit(0);
-    }
+    };
     processLine = function(){
         var line,
             serverCommandDone,

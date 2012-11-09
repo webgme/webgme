@@ -128,13 +128,13 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "kecso", /*possible collections currently: basic,SFdemo, IFV*/
+            mongocollection : "masik", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "demo",
             mongoopt        : {
                 'auto_reconnect' : true,
                 'poolSize'       : 1
             },
-            logging         : false,
+            logging         : true,
             logfile         : "comblog.log",
             cache           : true,
             faulttolerant   : true,

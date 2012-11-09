@@ -1,5 +1,5 @@
 {"clients":["c001"]}
-{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"childrenIds":-1}}}]}
+{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"children":-1}}}]}
 {"clientId":"c001","servercommands":[{"cid":"0002","type":"point","id":"o5","name":"keresztapa","to":"o10"}]}
 {"internalcommand":{"type":"printObjects"}}
 {"clientId":"c001","servercommands":[{"cid":"0003","type":"point","id":"o6","name":"keresztapa","to":"o10"}]}
