@@ -36,8 +36,8 @@ define(function () {
 		},
 
 		corepath: {
-			agingLimit: 5000,
-			maxAge: 2
+			agingLimit: 3000,
+			maxAge: 3
 		},
 
 		copyOptions: function (defaults, options) {

@@ -73,7 +73,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	};
 
 	var LStorage = function (collectionname, type) {
-		var storage = type === "session" ? sessionStorage : localStorage;
+		var storage = type === "session" ? window.sessionStorage : window.localStorage;
 		var load = function (key, callback) {
 			setTimeout(function () {
 				var data = JSON.parse(storage.getItem(collectionname + key));
