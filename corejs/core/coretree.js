@@ -33,16 +33,17 @@ UTIL, CorePath) {
 					}
 				};
 
-				verify("data", typeof node.data === "object" && node.data !== null);
+				verify("data", typeof node.data === "object");
 
-				verify("mutability 1", node.data._mutable === undefined
-				|| node.data._mutable === true);
+				verify("mutability 1", node.data === null
+				|| typeof node.data._mutable === "undefined" || node.data._mutable === true);
 
 				verify("mutability 2", node.parent === null || node.data._mutable === undefined
 				|| node.parent.data._mutable === true);
 
 				var key = node.data[KEYNAME];
-				verify("hashkey", typeof key === "string" && (key === "" || isValidKey(key)));
+				verify("hashkey", key === null
+				|| (typeof key === "string" && (key === "" || isValidKey(key))));
 
 				verify("data match 1", node.parent === null || !key
 				|| node.parent.data[node.relid] === key);
@@ -63,8 +64,7 @@ UTIL, CorePath) {
 		var isHashed = function (node) {
 			ASSERT(isValidNode(node));
 
-			return typeof node.data === "object" && node.data !== null
-			&& typeof node.data[KEYNAME] === "string";
+			return node.data !== null && typeof node.data[KEYNAME] === "string";
 		};
 
 		var getHash = function (node) {
@@ -76,30 +76,33 @@ UTIL, CorePath) {
 		var addHash = function (node) {
 			ASSERT(isValidNode(node) && isMutable(node));
 
-			return node.data[KEYNAME] = false;
+			return node.data[KEYNAME] = "";
 		};
 
 		// data === MISSING : non-existent but valid branch
-		// data === undefined : something is wrong with the path
+		// data === null : something is wrong with the path
 		var attacher = function (node) {
 			ASSERT(isValidNode(node) && isValidNode(node.parent));
 
-			if( node.parent.data !== null && typeof node.parent.data === "object" ) {
+			if( node.parent.data !== null ) {
 				var data = node.parent.data[node.relid];
 
-				if( typeof data === "string" && data.length === 41 && typeof node.data === "object"
-				&& node.data !== null && node.data[KEYNAME] === data ) {
+				if( typeof data === "object" ) {
+					node.data = data;
+				}
+				else if( typeof data === "string" && node.data !== null
+				&& node.data[KEYNAME] === data ) {
 					// do nothing
 				}
 				else if( typeof data === "undefined" ) {
 					node.data = MISSING;
 				}
 				else {
-					node.data = data;
+					node.data = null;
 				}
 			}
 			else {
-				node.data = undefined;
+				node.data = null;
 			}
 		};
 
@@ -121,9 +124,12 @@ UTIL, CorePath) {
 			return root;
 		};
 
+		var getChild = corepath.getChild;
+
 		var getChildrenRelids = function (node) {
 			ASSERT(isValidNode(node));
 
+			node = corepath.attach(node);
 			var array = Object.keys(node.data);
 
 			var index = array.indexOf("_mutable");
@@ -134,31 +140,15 @@ UTIL, CorePath) {
 			return array;
 		};
 
-		var getChild = function (node, relid) {
-			ASSERT(isValidNode(node) && isValidRelid(relid));
-
-			var child = corepath.getChild(node, relid);
-
-			var data = node.data[relid];
-			ASSERT(typeof data === "undefined" || typeof data === "object");
-
-			if( typeof data === "undefined" ) {
-				child.data = null;
-			}
-			else {
-				child.data = data;
-			}
-
-			return child;
-		};
-
 		var mutate = function (node) {
 			ASSERT(isValidNode(node));
 
 			node = corepath.attach(node);
 
 			var data = node.data;
-			if( !data._mutable ) {
+			ASSERT(data !== null);
+
+			if( typeof data._mutable === "undefined" ) {
 				var copy = {
 					_mutable: true
 				};
@@ -167,8 +157,8 @@ UTIL, CorePath) {
 					copy[key] = data[key];
 				}
 
-				if( data[KEYNAME] !== undefined ) {
-					copy[KEYNAME] = false;
+				if( typeof data[KEYNAME] === "string" ) {
+					copy[KEYNAME] = "";
 				}
 
 				ASSERT(copy._mutable === true);
