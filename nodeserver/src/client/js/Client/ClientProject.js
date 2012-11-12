@@ -26,7 +26,7 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
             clipboard = [];
             status = null;
             users = {};
-            master.changeStatus(id,status);
+            //master.changeStatus(id,status);
         };
         var goOffline = function(){
             //this function can be called internally if we lose online status due to some conflict
@@ -112,7 +112,11 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
         //UI handling
         //these functions will go through the project proxy or master client
         var addUI = function(UI){
-                users[UI.id] = UI;
+            users[UI.id] = UI;
+            users[UI.id].PATTERNS = {};
+            users[UI.id].PATHES = {};
+            users[UI.id].KEYS = {};
+            users[UI.id].SENDEVENTS = true;
         };
         var removeUI = function(uid){
             delete users[uid];

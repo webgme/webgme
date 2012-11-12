@@ -1,14 +1,23 @@
 define([
+    'eventDispatcher',
     'js/Client/ClientLocalStorage',
     'js/Client/ClientStorage',
     'js/Client/ClientProject',
+    'js/Client/ClientCommitInfo',
+    'commonUtil',
     'socket.io/socket.io.js'
 ],
     function(
+        EventDispatcher,
         ClientLocalStorage,
         ClientStorage,
-        ClientProject){
+        ClientProject,
+        ClientCommitInfo,
+        commonUtil){
    'use strict';
+    var GUID = commonUtil.guid;
+    var COPY = commonUtil.copy;
+    var KEY = "_id";
     var ClientMaster = function(parameters){
         var self=this,
             activeProject = null,
@@ -16,11 +25,10 @@ define([
             actors = {},
             users = {},
             storages = {},
+            commitInfos = {},
             savedInfoStorage = new ClientLocalStorage(),
-            projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {projetcs:{}},
+            projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {},
             proxy = null;
-
-
 
 
         /*event functions to relay information between users*/
@@ -43,25 +51,6 @@ define([
             tempproxy.on('connect',function(){
                 proxy = tempproxy;
                 getServerProjectList(function(serverlist){
-                    for(var i=0;i<serverlist.length;i++){
-                        if(!projectsinfo.projects[serverlist[i]]){
-                            projectsinfo.projects[serverlist[i]] = {
-                                parameters: null,
-                                selectedId: null,
-                                branches: {
-                                    master:{
-                                        state:'online',
-                                        commit:null
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    //we have now all the projects, so we should connect to them...
-                    var count = 0;
-                    for(i in projectsinfo.projects){
-                        count++;
-                    }
                     var projopened = function(err){
                         if(err){
                             console.log('project cannot be opened...');
@@ -71,7 +60,30 @@ define([
                         }
                         if(--count === 0){
                             //we connected to all projects so we are mostly done
+                            //select one randomly
+                            //TODO this is very rude, should change it...
+                            for(i in projectsinfo){
+                                self.selectProject(i);
+                                break;
+                            }
                         }
+                    };
+                    for(var i=0;i<serverlist.length;i++){
+                        if(!projectsinfo[serverlist[i]]){
+                            projectsinfo[serverlist[i]] = {
+                                parameters: null,
+                                currentactor: null,
+                                actors:[]
+                            }
+                        }
+                    }
+                    //we have now all the projects, so we should connect to them...
+                    var count = 0;
+                    for(i in projectsinfo){
+                        count++;
+                    }
+                    for(i in projectsinfo){
+                        openProject(i,projopened);
                     }
                 });
             });
@@ -91,13 +103,13 @@ define([
         };
         var getLocalProjectList = function(){
             var list = [];
-            for(var i in projectsinfo.projects){
+            for(var i in projectsinfo){
                 list.push(i);
             }
             return list;
         };
         var openProject = function(project,callback){
-            if(projectsinfo.projects[project]){
+            if(projectsinfo[project]){
                 var connecting = function(innercallback){
                     var tempstorage = new ClientStorage({
                         server: info.parameters.projsrv,
@@ -113,11 +125,12 @@ define([
                             innercallback(err);
                         } else {
                             storages[project] = tempstorage;
+                            commitInfos[project] = new ClientCommitInfo({storage:storages[project],refreshrate:1000});
                             innercallback(null);
                         }
                     });
                 };
-                var info = projectsinfo.projects[project];
+                var info = projectsinfo[project];
                 if(info.parameters){
                     connecting(function(err){
                         if(err){
@@ -155,6 +168,27 @@ define([
                 callback("no such project!!!");
             }
         };
+        var saveProjectsInfo = function(){
+            var info = COPY(projectsinfo);
+
+            for(var i in info){
+                for(var j=0;j<info[i].actors;j++){
+                    info[i].actors[j].id = null;
+                }
+            }
+            savedInfoStorage.save('#'+parameters.userstamp+'#saved#',info);
+        };
+        var activateActor = function(actor){
+            actor.dismantle();
+            for(var i in users){
+                actor.addUI(users[i]);
+            }
+            for(i in users){
+                users[i].reLaunch();
+            }
+            actor.buildUp();
+        };
+
 
         //functions helping branch selection and project selection
         self.getAvailableProjects = function(){
@@ -165,13 +199,135 @@ define([
                 if(activeProject){
                     //we have to switch project, which means we will not have activeActor for sure...
                     activeActor.dismantle();
-                    activeActor = null;
-                    //TODO select the default actor of the project and relaunch the UI
-                } else {
-                    activeProject = projectname;
+
                 }
+
+                activeProject = projectname;
+                //selecting the default actor
+                var myinfo = projectsinfo[activeProject];
+                var startcommit = null;
+                if(myinfo.currentactor){
+                    startcommit = myinfo.actors[myinfo.currentactor];
+                }
+                if(startcommit){
+                    self.selectCommit(startcommit);
+                } else {
+                    //TODO we have many options, now we will choose one which must work - select the latest commit
+                    var commits = commitInfos[activeProject].getAllCommits();
+                    var newest = null;
+                    for(var i=0;i<commits.length;i++){
+                        if(newest){
+                            if(newest.end<commits[i].end){
+                                newest = commits[i];
+                            }
+                        } else {
+                            newest = commits[i];
+                        }
+                    }
+                    if(newest){
+                        self.selectCommit(newest[KEY]);
+                    } else {
+                        console.log("the project doesn't have a commit!!!" );
+                    }
+                }
+
             } else {
                 return "no valid project";
+            }
+        };
+        self.selectCommit = function(commit){
+            if(activeProject){
+                var clist = commitInfos[activeProject].getCommitList();
+                if(clist.indexOf(commit)>0){
+                    var mycommit = commitInfos[activeProject].getCommitObj(commit);
+                    var needactor = true;
+                    var actorindex = null;
+                    var myinfo = projectsinfo[activeProject];
+                    for(var i=0; i<myinfo.actors.length; i++){
+                        if(myinfo.actors[i].commit === commit){
+                            if(myinfo.actors[i].guid){
+                                actorindex = i;
+                                needactor = false;
+                            } else {
+                                actorindex = i;
+                            }
+                            break;
+                        }
+                    }
+
+                    if(needactor){
+                        var tempguid = GUID();
+                        var tempactor = new ClientProject({
+                            storage: storages[activeProject],
+                            master: self,
+                            id: tempguid,
+                            userstamp: 'todo',
+                            commit: commit,
+                            branch: mycommit.name
+                        });
+                        actors[tempguid] = tempactor;
+                        if(actorindex){
+                            myinfo.actors[actorindex] = {
+                                id:tempguid,
+                                commit:commit,
+                                branch:mycommit.branch
+                            };
+                        } else {
+                            myinfo.actors.push({
+                                id:tempguid,
+                                commit:commit,
+                                branch:mycommit.branch
+                            });
+                            actorindex = myinfo.actors.length-1;
+                        }
+                    }
+
+                    //now we should change the active actor
+                    myinfo.currentactor = actorindex;
+                    if(activeActor){
+                        activeActor.dismantle();
+                    }
+                    activeActor = actors[myinfo.actors[actorindex]];
+                    activateActor(activeActor);
+                }
+            }
+        };
+
+        //functions handling UI components
+        self.addUI = function(ui,oneevent,guid){
+            guid = guid || GUID();
+            users[guid]  = {id:guid,UI:ui,PATTERNS:{},PATHES:[],KEYS:{},ONEEVENT:oneevent ? true : false,SENDEVENTS:true};
+            if(activeActor){
+                activeActor.addUI(users[guid]);
+            }
+            return guid;
+        };
+        self.removeUI = function(guid){
+            delete users[guid];
+        };
+        self.disableEventToUI = function(guid){
+            if(activeActor){
+                activeActor.disableEventToUI(guid);
+            }
+        };
+        self.enableEventToUI = function(guid){
+            if(activateActor){
+                activeActor.enableEventToUI(guid);
+            }
+        };
+        self.updateTerritory = function(userID,patterns){
+            if(activeActor){
+                activeActor.updateTerritory(userID,patterns);
+            }
+        };
+        self.fullRefresh = function(){
+            if(activeActor){
+                activeActor.fullRefresh();
+            }
+        };
+        self.undo = function(){
+            if(activateActor){
+                activeActor.undo();
             }
         };
 
@@ -247,6 +403,8 @@ define([
             }
         };
 
+        //start
+        init();
     };
     return ClientMaster;
 });
