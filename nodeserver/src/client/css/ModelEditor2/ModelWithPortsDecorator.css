@@ -73,6 +73,7 @@
     text-align: right;
     right: -7px;
     position: relative;
+    float: right !important;
 }
 
 .ports.center {
