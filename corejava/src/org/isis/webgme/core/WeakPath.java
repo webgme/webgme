@@ -39,4 +39,28 @@ public class WeakPath extends CorePath<WeakNode> {
 
 		return child;
 	}
+
+	@Override
+	public boolean isAttached(WeakNode node) {
+		return true;
+	}
+
+	@Override
+	public List<WeakNode> getChildren(WeakNode node) {
+		ArrayList<WeakNode> ret = new ArrayList<WeakNode>();
+
+		ArrayList<WeakReference<WeakNode>> children = node.children;
+		int i = children.size();
+		while (--i >= 0) {
+			WeakReference<WeakNode> ref = children.get(i);
+			WeakNode child = ref.get();
+			if (child == null) {
+				// fill the whole
+				children.set(i, children.remove(children.size() - 1));
+			} else
+				ret.add(child);
+		}
+
+		return ret;
+	}
 }

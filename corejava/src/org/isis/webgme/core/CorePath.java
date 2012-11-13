@@ -1,6 +1,6 @@
 package org.isis.webgme.core;
 
-import java.util.ArrayList;
+import java.util.*;
 
 public abstract class CorePath<NODE> {
 	public abstract NODE getParent(NODE node);
@@ -10,6 +10,61 @@ public abstract class CorePath<NODE> {
 	public abstract NODE createRoot();
 
 	public abstract NODE getChild(NODE node, String relid);
+
+	public abstract boolean isAttached(NODE node);
+
+	public abstract List<NODE> getChildren(NODE node);
+
+	private void printIndent(int indent, StringBuilder builder) {
+		while (--indent >= 0)
+			builder.append("    ");
+	}
+
+	private void printTree(NODE node, int indent, StringBuilder builder) {
+		printIndent(indent, builder);
+		if (getRelid(node) != null) {
+			builder.append("\"");
+			builder.append(getRelid(node));
+			builder.append("\": ");
+		}
+		builder.append("{\n");
+
+		if (node instanceof AgedNode) {
+			AgedNode anode = (AgedNode) node;
+
+			printIndent(indent, builder);
+			builder.append("  age: ");
+			builder.append(anode.age);
+			builder.append("\n");
+		}
+
+		List<NODE> children = getChildren(node);
+		if (children.size() > 0) {
+			printIndent(indent, builder);
+			builder.append("  children: {\n");
+
+			for (int i = 0; i < children.size(); ++i) {
+				if (i != 0)
+					builder.append(",\n");
+
+				NODE child = children.get(i);
+				printTree(child, indent + 1, builder);
+			}
+			builder.append("\n");
+		}
+
+		printIndent(indent, builder);
+		builder.append("  }\n");
+
+		printIndent(indent, builder);
+		builder.append("}");
+	}
+
+	public void printTree(NODE node) {
+		StringBuilder builder = new StringBuilder();
+		printTree(node, 0, builder);
+		System.out.println(builder.toString());
+	}
 
 	public int getLevel(NODE node) {
 		int level = 0;
