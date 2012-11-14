@@ -196,6 +196,9 @@ define([
 
 
         //functions helping branch selection and project selection
+        self.getActiveProject = function(){
+            return activeProject;
+        };
         self.getAvailableProjects = function(){
             return getLocalProjectList();
         };
