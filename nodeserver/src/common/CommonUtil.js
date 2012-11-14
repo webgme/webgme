@@ -128,8 +128,8 @@ define([], function () {
             logsrv          : "/log",
             mongoip         : "129.59.105.195",
             mongoport       : 27017/*888*/,
-            mongocollection : "masik", /*possible collections currently: basic,SFdemo, IFV*/
-            mongodatabase   : "demo",
+            mongocollection : "egyik", /*possible collections currently: basic,SFdemo, IFV*/
+            mongodatabase   : "multi",
             mongoopt        : {
                 'auto_reconnect' : true,
                 'poolSize'       : 1
@@ -152,12 +152,7 @@ define([], function () {
             },
             projsrv         : "/project",
             projects        : [
-                "egyik",
-                "masik",
-                "SFdemo",
-                "basic",
-                "kecso",
-                "roby"
+                "egyik"
             ]
         }
 

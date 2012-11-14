@@ -163,7 +163,10 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
             searchId     : storage.searchId,
             fsync        : fsync,
             find         : storage.find,
-            requestPoll  : storage.requestPoll
+            requestPoll  : storage.requestPoll,
+            createBranch : storage.createBranch,
+            deleteBranch : storage.deleteBranch,
+            updateBranch : storage.updateBranch
         }
     };
 

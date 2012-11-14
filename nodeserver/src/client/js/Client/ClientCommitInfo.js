@@ -23,7 +23,8 @@ define([],function(){
             return returnlist;
         };
 
-        var refreshCommits = function(){
+        var refreshCommits = function(callback){
+            callback = callback || function(){};
             storage.find({type:'commit'},function(err,findobjects){
                 if(err){
                     console.log("cannot update commit list due to: "+err);
@@ -33,14 +34,27 @@ define([],function(){
                         commits[findobjects[i][KEY]] = findobjects[i];
                     }
                 }
+                callback(err);
             });
+        };
+
+        var getAllCommitsNow = function(callback){
+            callback = callback || function(){};
+            refreshCommits(function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    callback(null,getAllCommits());
+                }
+            })
         };
 
 
         return {
             getCommitList : getCommitList,
             getCommitObj : getCommitObj,
-            getAllCommits : getAllCommits
+            getAllCommits : getAllCommits,
+            getAllCommitsNow : getAllCommitsNow
         }
     };
     return ClientCommitInfo;

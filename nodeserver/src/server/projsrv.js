@@ -1,4 +1,4 @@
-define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
+define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSERT,MONGO,SHA1,IO) {
     "use strict";
     var ProjectServer = function(options){
         ASSERT((options.io && options.namespace) || options.port);
@@ -10,6 +10,7 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
         var KEY = "_id";
         var BID = "*";
         var _polls = {};
+        var _commits = {};
 
         if(options.io){
             _socket = options.io.of(options.namespace);
@@ -48,18 +49,51 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
             }
         };
 
+        var isTruePredecessor = function(commit,predecessorcommit){
+            if(_commits[commit]){
+                if(_commits[commit].parents.indexOf(predecessorcommit) !== -1){
+                    return true;
+                } else {
+                    var retval = false;
+                    for(var i=0;i<_commits[commit].parents.length;i++){
+                        retval = retval || isTruePredecessor(_commits[commit].parents[i],predecessorcommit);
+                    }
+                    return retval;
+                }
+            } else {
+                return false;
+            }
+        };
+
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
 
             /*mongo functions*/
-            socket.on('open',function(callback){
+            /*socket.on('open',function(callback){
                 _mongo.open(callback);
+            });*/
+            socket.on('open',function(callback){
+                _mongo.open(function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        _commits = {};
+                        _mongo.find({type:'commit'},function(err,commits){
+                            if(!err){
+                                for(var i=0;i<commits.length;i++){
+                                    _commits[commits[i][KEY]] = commits[i];
+                                }
+                            }
+                            callback();
+                        });
+                    }
+                });
             });
             socket.on('load',function(key,callback){
                 _mongo.load(key,callback);
             });
-            socket.on('save',function(node,callback){
-                console.log('save '+node[KEY]);
+            /*socket.on('save',function(node,callback){
+
                 var okay = false;
 
                 var saving = function(){
@@ -101,6 +135,32 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 } else {
                     saving();
                 }
+            });*/
+            socket.on('save',function(node,callback){
+                console.log('save '+node[KEY]);
+                //check if the object is hash-based
+                var rechash = node[KEY];
+                node[KEY] = false;
+                var comphash = SHA1(node);
+                if(true/*comphash === rechash*/){
+                    node[KEY] = rechash;
+                    _mongo.save(node,function(err){
+                        if(!err){
+                            if(node.type && node.type === 'commit'){
+                                console.log('save commit '+node[KEY]);
+                                _commits[node[KEY]] = node;
+                            }
+                            console.log("saves "+node[KEY]);
+                            callback();
+                        } else {
+                            console.log("save "+node[KEY]+" "+err);
+                            callback(err);
+                        }
+                    });
+                } else {
+                    console.log("save "+node[KEY]+" invalid hash");
+                    callback('invalid hash value');
+                }
             });
             socket.on('remove',function(key,callback){
                 _mongo.remove(key,callback);
@@ -124,9 +184,9 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 _mongo.find(criteria,callback);
             });
 
+            //only branches accepts polls
             socket.on('requestPoll',function(key,callback){
-                console.log('requesting poll '+key);
-
+                console.log('polling '+key+' for '+socket.id);
                 if(_polls[key]){
                     _polls[key].push(callback);
                 } else {
@@ -134,6 +194,48 @@ define([ "core/assert","core/mongo","socket.io"], function (ASSERT,MONGO,IO) {
                 }
             });
 
+            socket.on('createBranch',function(name,callback){
+                //TODO this should be a bit more sophisticated
+                _mongo.save({'_id':"*#*"+name,name:name,type:'branch',commit:null},callback);
+            });
+            socket.on('deleteBranch',function(name,callback){
+                _mongo.remove("*#*"+name,callback);
+            });
+            socket.on('updateBranch',function(name,commit,callback){
+                //TODO if the server will not be exclusive - then we would have a lot of problems at this point
+                if(_commits[commit]){
+                    //we have to check whether the current commit value of the branch object is a predecessor of this commit
+                    _mongo.load("*#*"+name,function(err,branch){
+                        if(!err && branch){
+                            if(isTruePredecessor(commit,branch.commit)){
+                                //now we can update the branch
+                                branch.commit = commit;
+                                _mongo.save(branch,function(err){
+                                    if(!err){
+                                        if(_polls[name]){
+                                            console.log('we have polls');
+                                            var object = _polls[name];
+                                            for(var i=0;i<object.length;i++){
+                                                if(!!(object[i] && object[i].constructor && object[i].call && object[i].apply)){
+                                                    object[i](branch);
+                                                }
+                                            }
+                                            delete _polls[name];
+                                        }
+                                    }
+                                    callback(err);
+                                });
+                            } else {
+                                callback('not fastforward from earlier commit');
+                            }
+                        } else {
+                            callback('not valid branch to update');
+                        }
+                    });
+                } else {
+                    callback('commit is not valid');
+                }
+            });
         });
     };
     return ProjectServer;

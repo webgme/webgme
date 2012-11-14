@@ -390,6 +390,42 @@ define(['logManager',
                 break;
             }
         };
+        this.reLaunch = function(){
+            console.log('we got your message, thanks...');
+            stateLoading = 0;
+            stateLoaded = 1;
+            selfPatterns = {};
+            nodes = {};
+
+            var loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
+                "name": "Initializing tree...",
+                "hasChildren" : false,
+                "class" :  "gme-loading" });
+
+            //store the node's info in the local hashmap
+            nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
+                "children" : [],
+                "state" : stateLoading };
+
+            //add the root to the query
+            selfPatterns = { "root": { "children": 1} };
+            client.updateTerritory(selfId, selfPatterns);
+
+            var loadingRootTreeNode = treeBrowser.createNode(null, {
+                "id": rootNodeId,
+                "name": "Initializing tree...",
+                "hasChildren" : false,
+                "class" :  "gme-loading" });
+
+            //store the node's info in the local hashmap
+            nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
+                "children" : [],
+                "state" : stateLoading };
+
+            //add the root to the query
+            selfPatterns = { "root": { "children": 1} };
+            client.updateTerritory(selfId, selfPatterns);
+        };
     };
 
     return TreeBrowserControl;

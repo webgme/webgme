@@ -190,6 +190,44 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             }
         };
 
+        //branch methods
+        var createBranch = function(name,callback){
+            if(socket){
+                if(isopen){
+                    socket.emit('createBranch',name,callback);
+                } else {
+                    callback("[createBranch]the network storage is not opened!!!");
+                }
+            }
+            else{
+                callback("[createBranch]there is no valid connection to the server!!!");
+            }
+        };
+        var deleteBranch = function(name,callback){
+            if(socket){
+                if(isopen){
+                    socket.emit('deleteBranch',name,callback);
+                } else {
+                    callback("[deleteBranch]the network storage is not opened!!!");
+                }
+            }
+            else{
+                callback("[deleteBranch]there is no valid connection to the server!!!");
+            }
+        };
+        var updateBranch = function(name,commit,callback){
+            if(socket){
+                if(isopen){
+                    socket.emit('updateBranch',name,commit,callback);
+                } else {
+                    callback("[updateBranch]the network storage is not opened!!!");
+                }
+            }
+            else{
+                callback("[updateBranch]there is no valid connection to the server!!!");
+            }
+        };
+
         return {
             open          : open,
             opened        : opened,
@@ -204,7 +242,10 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             whenAvailable : whenAvailable,
             fsync         : fsync,
             find          : find,
-            requestPoll   : requestPoll
+            requestPoll   : requestPoll,
+            createBranch  : createBranch,
+            deleteBranch  : deleteBranch,
+            updateBranch  : updateBranch
         };
     };
 
