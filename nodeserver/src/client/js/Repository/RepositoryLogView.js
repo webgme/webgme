@@ -19,7 +19,7 @@ define(['logManager',
 
         this._yDelta = 35;
         this._xDelta = 50;
-        this._xBranchShiftValue = 50;
+        this._xBranchDelta = 50;
     };
 
     RepositoryLogView.prototype.addCommit = function (obj) {
@@ -32,18 +32,22 @@ define(['logManager',
             len = this._orderedCommitIds.length,
             commitRenderData = {},
             branchOffsets = {},
+            inBranchLanes = {},
             x = 0,
             y = this._yDelta * (len - 1),
+            maxX = 0,
             obj,
             objParent,
-            cLane,
-            cLaneOffset,
+            cBranch,
+            cBranchOffset,
             li,
             logMsg,
             branchCount = 0,
+            inBranchLaneCount = 0,
             guiObj,
             popoverMsg,
-            self = this;
+            self = this,
+            padding = 30;
 
         this._initializeUI();
 
@@ -53,6 +57,7 @@ define(['logManager',
             if (i === 0) {
                 //very first item
                 branchOffsets[obj.name] = 0;
+                inBranchLanes[obj.name] = 0;
                 branchCount = 1;
                 commitRenderData[obj.id] = { "x": x, "y": y };
             } else {
@@ -61,12 +66,12 @@ define(['logManager',
                     //multiple parents
                     //find the one that has the lowest shift value
                     objParent = this._commits[obj.parents[0]];
-                    cLaneOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
+                    cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
                     len = obj.parents.length;
                     for (li = 1; li < len; li += 1) {
-                        if (branchOffsets[this._commits[obj.parents[li]].name] + commitRenderData[this._commits[obj.parents[li]].id].x < cLaneOffset) {
+                        if (branchOffsets[this._commits[obj.parents[li]].name] + commitRenderData[this._commits[obj.parents[li]].id].x < cBranchOffset) {
                             objParent = this._commits[obj.parents[li]];
-                            cLaneOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
+                            cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
                         }
                     }
 
@@ -83,11 +88,17 @@ define(['logManager',
                     //might be under a different "name"
                     //test for shift #2
                     if (objParent.name !== obj.name) {
-                        branchOffsets[obj.name] = branchCount * this._xBranchShiftValue;
+                        branchOffsets[obj.name] = branchCount * this._xBranchDelta + (inBranchLaneCount - 1) * this._xDelta;
                         commitRenderData[obj.id] = { "x": 0, "y": y };
                         branchCount += 1;
+                        inBranchLanes[obj.name] = 0;
+
+                        logMsg = "(" + i + ")  NEW BRANCH FOR: " + obj.id;
+                        logMsg += "\n\tname: " + obj.name;
+                        logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
+                        this._logger.debug(logMsg);
                     } else {
-                        //under the same "name", but still might need to be shifted
+                        //under the same "name", but still might need to be shifted in that branch
                         //test for shift #1
                         if (objParent.id === this._orderedCommitIds[i - 1]) {
                             //all good, stays in the same lane
@@ -99,19 +110,29 @@ define(['logManager',
                                 //all good, stays in the same lane as parent
                                 commitRenderData[obj.id] = { "x": commitRenderData[objParent.id].x, "y": y };
                             } else {
-                                //shift inside the parent's lane
-                                commitRenderData[obj.id] = { "x": commitRenderData[objParent.id].x + this._xDelta, "y": y };
+                                //shift inside the parent's branch
+                                //create new lane
+                                commitRenderData[obj.id] = { "x": commitRenderData[objParent.id].x + inBranchLanes[obj.name] * this._xDelta, "y": y };
 
-                                //rebase all other lanes by 1
-                                cLane = obj.name;
-                                cLaneOffset = branchOffsets[obj.name];
+                                //rebase all other branches by one lane
+                                cBranch = obj.name;
+                                cBranchOffset = branchOffsets[obj.name];
                                 for (li in branchOffsets) {
                                     if (branchOffsets.hasOwnProperty(li)) {
-                                        if (li !== cLane && cLaneOffset <= branchOffsets[li]) {
+                                        if (li !== cBranch && cBranchOffset <= branchOffsets[li]) {
                                             branchOffsets[li] += this._xDelta;
                                         }
                                     }
                                 }
+
+                                inBranchLaneCount += 1;
+                                inBranchLanes[obj.name] += 1;
+
+                                logMsg = "(" + i + ")  LANE SHIFT IN BRANCH FOR: " + obj.id;
+                                logMsg += "\n\tname: " + obj.name;
+                                logMsg += "\n\tobjParent.id: " + objParent.id;
+                                logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
+                                this._logger.debug(logMsg);
                             }
                         }
                     }
@@ -159,6 +180,8 @@ define(['logManager',
             guiObj.popover({"title": obj.id + "@" + obj.name,
                 "content": popoverMsg,
                 "trigger": "hover" });
+
+            maxX = x > maxX ? x : maxX;
         }
 
         this._skinParts.htmlContainer.on("dblclick", function (event) {
@@ -172,7 +195,7 @@ define(['logManager',
                                    "name": $(event.target).attr("data-n")});
         });
 
-        this._skinParts.svgPaper.setSize("100%", this._yDelta * len + 30);
+        this._resizeDialog(maxX + padding, this._yDelta * len + padding);
     };
 
     RepositoryLogView.prototype.onCommitDblClick = function (params) {
@@ -293,6 +316,33 @@ define(['logManager',
         }
 
         this._skinParts.svgPaper.path(pathDef.join(","));
+    };
+
+    RepositoryLogView.prototype._resizeDialog = function (contentWidth, contentHeight) {
+        var wPadding = 30,
+            wH = $(window).height() - 2 * wPadding,
+            wW = $(window).width() - 2 * wPadding,
+            repoDialog = $(".repoHistoryDialog"),
+            dH = repoDialog.height(),
+            dW = repoDialog.width(),
+            dHeaderH = 70,
+            dFooterH = 70,
+            dBody = repoDialog.find(".modal-body");
+
+
+        this._skinParts.svgPaper.setSize(contentWidth, contentHeight);
+
+        contentWidth += 2 * wPadding;
+
+        wW = contentWidth < wW ? contentWidth : wW;
+        wH = contentHeight + dHeaderH + dFooterH < wH ? contentHeight : wH;
+
+        dBody.css({"max-height": wH - dHeaderH - dFooterH });
+
+        repoDialog.css({"width": wW,
+            /*"height": wH,*/
+            "margin-left": wW / 2 * (-1),
+            "margin-top": wH / 2 * (-1)});
     };
 
     return RepositoryLogView;

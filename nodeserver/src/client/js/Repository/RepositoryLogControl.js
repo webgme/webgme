@@ -58,7 +58,7 @@ define(['logManager'], function (logManager) {
 
         objectLoaded = function (err, node) {
             if (!err && node) {
-                result[node['_id']] = node;
+                result[node._id] = node;
             }
 
             dCounter += 1;
