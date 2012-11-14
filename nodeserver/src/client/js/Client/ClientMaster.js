@@ -329,6 +329,16 @@ define([
                 return [];
             }
         };
+        self.getActualCommit = function(){
+            if(activeProject && activeActor){
+                return activeActor.getCurrentCommit();
+            }
+        };
+        self.getRootKey = function(){
+            if(activeProject && activeActor){
+                return activeActor.getRootKey();
+            }
+        };
 
         //functions handling UI components
         self.addUI = function(ui,oneevent,guid){

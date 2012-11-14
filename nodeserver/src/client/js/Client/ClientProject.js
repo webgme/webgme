@@ -205,6 +205,9 @@ define([
                 return null;
             }
         };
+        var getCurrentCommit = function(){
+            return mycommit[KEY];
+        };
 
         /*MGA like functions*/
         var startTransaction = function(){
@@ -787,10 +790,11 @@ define([
             updateTerritory  : updateTerritory,
             fullRefresh      : fullRefresh,
             //commit
-            commit       : storage.commit,
+            commit       : commit,
             //nodes to UI
-            getNode    : getNode,
-            getRootKey : getRootKey,
+            getNode          : getNode,
+            getRootKey       : getRootKey,
+            getCurrentCommit : getCurrentCommit,
             //MGAlike
             startTransaction    : startTransaction,
             completeTransaction : completeTransaction,
