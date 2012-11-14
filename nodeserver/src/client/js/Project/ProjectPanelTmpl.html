@@ -1,8 +1,9 @@
-<div class="btn-group">
+<div class="btn-group centered">
     <a class="btn btnFullRefresh" href="#" title="Full refresh"><i class="icon-refresh"></i></a>
     <!--<a class="btn btnUndo" href="#" title="Undo"><i class="icon-circle-arrow-left"></i></a>-->
     <a class="btn btnCommit" href="#" title="Commit"><i class="icon-share-alt"></i></a>
     <a class="btn btnRepoHistory" href="#" title="Repo History"><i class="icon-road"></i></a>
+    <a class="btn btnProjects" href="#" title="Projects"><i class="icon-tags"></i></a>
 </div>
 <div class="commitMsgDialog modal hide fade" style="display: none; ">
     <div class="modal-header">
@@ -26,5 +27,17 @@
     </div>
     <div class="modal-footer">
         <a href="#" class="btn" data-dismiss="modal">Close</a>
+    </div>
+</div>
+<div class="projectsDialog modal hide fade" style="display: none; ">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3>Projects</h3>
+    </div>
+    <div class="modal-body">
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+        <a href="#" class="btn btn-primary disabled" id="btnOpenProject">Open</a>
     </div>
 </div>
