@@ -738,6 +738,8 @@ define(['jquery',
                 self._onBackgroundDrop(ui);
             }
         });
+
+        this._childrenContainerOffset = this._skinParts.childrenContainer.offset();
     };
 
     ModelEditorView.prototype._alignPositionToGrid = function (pX, pY) {
@@ -784,11 +786,11 @@ define(['jquery',
 
     ModelEditorView.prototype._updateConnections = function (connectionsToUpdate) {
         var i,
-            selfOffset = this._skinParts.childrenContainer.offset(),
+            selfOffset = this._childrenContainerOffset, //this._skinParts.childrenContainer.offset(),
             allConnEndpoints = [],
             objectConnectionPoints = {};
 
-        this._childrenContainerOffset = selfOffset;
+        //this._childrenContainerOffset = selfOffset;
 
         //get all the connection endpoints and update those location info
         for (i = 0; i < connectionsToUpdate.length; i += 1) {
@@ -1044,7 +1046,7 @@ define(['jquery',
 
     /********************** CONNECTION DRAWING (CREATING CONNECTION) ********************************/
     ModelEditorView.prototype._getMousePos = function (e) {
-        var childrenContainerOffset = this._childrenContainerOffset,
+        var childrenContainerOffset = this._childrenContainerOffset || { "left": 0, "top": 0 },
             pX = e.pageX - childrenContainerOffset.left,
             pY = e.pageY - childrenContainerOffset.top;
         return { "mX": pX > 0 ? pX : 0,
