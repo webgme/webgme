@@ -68,6 +68,7 @@ define([
                                 break;
                             }*/
                             self.selectProject('egyik');
+                            setInterval(saveProjectsInfo,10000);
                         }
                     };
                     for(var i=0;i<serverlist.length;i++){
