@@ -43,6 +43,9 @@ define([
                 self.dispatchEvent( self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
             }
         };
+        self.clearSelectedObjectId = function () {
+            self.setSelectedObjectId(null);
+        };
 
         //init - currently it means, we try to establish storage connection to all our saved projects
         //and create actor for all started branches...
@@ -187,6 +190,7 @@ define([
                 actor.addUI(users[i]);
             }
             actor.buildUp(function(){
+                self.clearSelectedObjectId();
                 for(i in users){
                     if(users[i].UI.reLaunch){
                         users[i].UI.reLaunch();
