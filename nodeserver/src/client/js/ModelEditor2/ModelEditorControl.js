@@ -303,18 +303,20 @@ define(['logManager',
             this._client.removeUI(this._territoryId);
         }
 
-        this._currentNodeInfo.id = nodeId;
-        this._currentNodeInfo.parentId = desc.parentId;
+        if (nodeId) {
+            this._currentNodeInfo.id = nodeId;
+            this._currentNodeInfo.parentId = desc.parentId;
 
-        //put new node's info into territory rules
-        this._selfPatterns = {};
-        this._selfPatterns[nodeId] = { "children": 1 };
+            //put new node's info into territory rules
+            this._selfPatterns = {};
+            this._selfPatterns[nodeId] = { "children": 1 };
 
-        this._modelEditorView.updateCanvas(desc);
+            this._modelEditorView.updateCanvas(desc);
 
-        this._territoryId = this._client.addUI(this, true);
-        //update the territory
-        this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            this._territoryId = this._client.addUI(this, true);
+            //update the territory
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        }
     };
 
     ModelEditorControl.prototype._getObjectDescriptor = function (nodeId) {

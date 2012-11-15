@@ -34,11 +34,11 @@ define(['logManager'], function (logManager) {
         }
 
         //add some fake
-        for (i = 0; i < 5; i += 1) {
+        /*for (i = 0; i < 5; i += 1) {
             this._view.addItem({"id": i.toString(),
                 "name":  "Fake #" + i,
                 "actual": false });
-        }
+        }*/
 
         this._view.render();
     };
