@@ -1,6 +1,6 @@
 package org.isis.webgme.test;
 
-import org.isis.webgme.core.*;
+import org.isis.webgme.core3.*;
 
 public class TestPath {
 	public static void main(String[] args) {

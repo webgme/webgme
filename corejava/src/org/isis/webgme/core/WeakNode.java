@@ -4,12 +4,14 @@ import java.lang.ref.*;
 import java.util.*;
 
 public class WeakNode {
-	public final WeakNode parent;
-	public final String relid;
-	public final ArrayList<WeakReference<WeakNode>> children = new ArrayList<WeakReference<WeakNode>>();
+	final WeakNode parent;
+	final String relid;
 
 	WeakNode(WeakNode parent, String relid) {
 		this.parent = parent;
 		this.relid = relid;
 	}
+
+	final ArrayList<WeakReference<WeakNode>> children = new ArrayList<WeakReference<WeakNode>>();
+	Object data;
 }

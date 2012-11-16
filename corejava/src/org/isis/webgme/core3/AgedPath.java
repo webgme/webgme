@@ -1,4 +1,4 @@
-package org.isis.webgme.core;
+package org.isis.webgme.core3;
 
 import java.util.*;
 

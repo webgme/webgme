@@ -1,160 +1,68 @@
 package org.isis.webgme.core;
 
-import java.util.*;
+public interface CorePath<Node> {
+	/**
+	 * Returns the parent of the given node. The parent of the root is
+	 * <code>null</code>. The parent (and therefore the root) cannot change for
+	 * any node (since moving a node to a separate location is not possible
+	 * because of lost child references).
+	 */
+	public Node getParent(Node node);
 
-public abstract class CorePath<NODE> {
-	public abstract NODE getParent(NODE node);
+	/**
+	 * Returns the relative identifier (unique within the parent) of the given
+	 * node. The relative id of the root is <code>null</code>. This value can
+	 * never change for a give node.
+	 */
+	public String getRelid(Node node);
 
-	public abstract String getRelid(NODE node);
+	/**
+	 * Returns the level of the given node, which can never change. The level of
+	 * the root is zero.
+	 */
+	public int getLevel(Node node);
 
-	public abstract NODE createRoot();
+	/**
+	 * Returns the root of the tree to which this node belongs. This value can
+	 * never change.
+	 */
+	public Node getRoot(Node node);
 
-	public abstract NODE getChild(NODE node, String relid);
+	/**
+	 * Returns the path of the given node within its tree. You should not use
+	 * paths in general (they are slow to generate and parse).
+	 */
+	public String getPath(Node node);
 
-	public abstract boolean isAttached(NODE node);
+	/**
+	 * Returns the common ancestor of the two nodes. Both nodes must be in the
+	 * same tree.
+	 */
+	public Node getAncestor(Node first, Node second);
 
-	public abstract List<NODE> getChildren(NODE node);
+	/**
+	 * Checks if <code>ancestor</code> is an ancestor of <code>node</code>. The
+	 * two nodes must be in the same tree. Every node is considered to be an
+	 * ancestor of itself.
+	 */
+	public boolean isAncestor(Node node, Node ancestor);
 
-	private void printIndent(int indent, StringBuilder builder) {
-		while (--indent >= 0)
-			builder.append("    ");
-	}
+	/**
+	 * Creates a new root node. This object can handle multiple roots.
+	 */
+	public Node createRoot();
 
-	private void printTree(NODE node, int indent, StringBuilder builder) {
-		printIndent(indent, builder);
-		if (getRelid(node) != null) {
-			builder.append("\"");
-			builder.append(getRelid(node));
-			builder.append("\": ");
-		}
-		builder.append("{\n");
+	/**
+	 * Returns a new child object for the given path. It is possible to create
+	 * child nodes for any relid, they might not be attached to real data.
+	 */
+	public Node getChild(Node node, String relid);
 
-		if (node instanceof AgedNode) {
-			AgedNode anode = (AgedNode) node;
-
-			printIndent(indent, builder);
-			builder.append("  age: ");
-			builder.append(anode.age);
-			builder.append("\n");
-		}
-
-		List<NODE> children = getChildren(node);
-		if (children.size() > 0) {
-			printIndent(indent, builder);
-			builder.append("  children: {\n");
-
-			for (int i = 0; i < children.size(); ++i) {
-				if (i != 0)
-					builder.append(",\n");
-
-				NODE child = children.get(i);
-				printTree(child, indent + 1, builder);
-			}
-			builder.append("\n");
-		}
-
-		printIndent(indent, builder);
-		builder.append("  }\n");
-
-		printIndent(indent, builder);
-		builder.append("}");
-	}
-
-	public void printTree(NODE node) {
-		StringBuilder builder = new StringBuilder();
-		printTree(node, 0, builder);
-		System.out.println(builder.toString());
-	}
-
-	public int getLevel(NODE node) {
-		int level = 0;
-		while ((node = getParent(node)) != null)
-			level += 1;
-
-		return level;
-	}
-
-	public NODE getRoot(NODE node) {
-		NODE parent;
-		while ((parent = getParent(node)) != null)
-			node = parent;
-
-		return node;
-	}
-
-	public String getPath(NODE node) {
-		ArrayList<String> path = new ArrayList<String>();
-
-		String relid = getRelid(node);
-		while (relid != null) {
-			path.add(relid);
-			node = getParent(node);
-			relid = getRelid(node);
-		}
-
-		StringBuilder builder = new StringBuilder();
-
-		int i = path.size();
-		while (--i >= 0) {
-			builder.append('/');
-			builder.append(path.get(i));
-		}
-
-		return builder.toString();
-	}
-
-	public NODE getAncestor(NODE first, NODE second) {
-		ArrayList<NODE> a = new ArrayList<NODE>();
-		do {
-			a.add(first);
-			first = getParent(first);
-		} while (first != null);
-		int i = a.size() - 1;
-
-		ArrayList<NODE> b = new ArrayList<NODE>();
-		do {
-			b.add(second);
-			second = getParent(second);
-		} while (second != null);
-		int j = b.size() - 1;
-
-		// must have the same root
-		assert (a.get(i) == b.get(j));
-
-		while (i != 0 && j != 0 && a.get(i - 1) == b.get(j - 1)) {
-			i -= 1;
-			j -= 1;
-		}
-
-		return a.get(i);
-	}
-
-	public boolean isAncestor(NODE node, NODE ancestor) {
-		assert (node != null && ancestor != null);
-
-		do {
-			if (node == ancestor)
-				return true;
-
-			node = getParent(node);
-		} while (node != null);
-
-		return false;
-	}
-
-	public NODE getDescendant(NODE node, NODE head, NODE base) {
-		assert (isAncestor(base, head));
-
-		ArrayList<String> path = new ArrayList<String>();
-		while (head != base) {
-			path.add(getRelid(head));
-			head = getParent(head);
-		}
-
-		int i = path.size();
-		while (--i >= 0)
-			node = getChild(node, path.get(i));
-
-		return node;
-	}
+	/**
+	 * Iteratively obtains the child (descendants) of the given node, with the
+	 * relids that lead from the <code>base</code> node to the
+	 * <code>head</node>. If <code>base</code> is the same as <code>head</code>,
+	 * then original node is returned.
+	 */
+	public Node getDescendant(Node node, Node head, Node base);
 }

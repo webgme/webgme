@@ -1,26 +1,112 @@
 package org.isis.webgme.core;
 
+import java.lang.ref.WeakReference;
 import java.util.*;
-import java.lang.ref.*;
 
-public class WeakPath extends CorePath<WeakNode> {
+public class WeakPath /* implements CorePath<WeakNode> */ {
 
-	@Override
 	public WeakNode getParent(WeakNode node) {
 		return node.parent;
 	}
 
-	@Override
 	public String getRelid(WeakNode node) {
 		return node.relid;
 	}
 
-	@Override
+	public int getLevel(WeakNode node) {
+		int level = 0;
+		while ((node = node.parent) != null)
+			level += 1;
+
+		return level;
+	}
+
+	public WeakNode getRoot(WeakNode node) {
+		WeakNode parent;
+		while ((parent = node.parent) != null)
+			node = parent;
+
+		return node;
+	}
+
+	public String getPath(WeakNode node) {
+		ArrayList<String> path = new ArrayList<String>();
+
+		do {
+			path.add(node.relid);
+			node = node.parent;
+		} while (node.relid != null);
+
+		StringBuilder builder = new StringBuilder();
+
+		int i = path.size();
+		while (--i >= 0) {
+			builder.append('/');
+			builder.append(path.get(i));
+		}
+
+		return builder.toString();
+	}
+
+	public WeakNode getAncestor(WeakNode first, WeakNode second) {
+		ArrayList<WeakNode> a = new ArrayList<WeakNode>();
+		do {
+			a.add(first);
+			first = first.parent;
+		} while (first != null);
+		int i = a.size() - 1;
+
+		ArrayList<WeakNode> b = new ArrayList<WeakNode>();
+		do {
+			b.add(second);
+			second = second.parent;
+		} while (second != null);
+		int j = b.size() - 1;
+
+		// must have the same root
+		assert (a.get(i) == b.get(j));
+
+		while (i != 0 && j != 0 && a.get(i - 1) == b.get(j - 1)) {
+			i -= 1;
+			j -= 1;
+		}
+
+		return a.get(i);
+	}
+
+	public boolean isAncestor(WeakNode node, WeakNode ancestor) {
+		assert (node != null && ancestor != null);
+
+		do {
+			if (node == ancestor)
+				return true;
+
+			node = node.parent;
+		} while (node != null);
+
+		return false;
+	}
+
+	public WeakNode getDescendant(WeakNode node, WeakNode head, WeakNode base) {
+		assert (isAncestor(base, head));
+
+		ArrayList<String> path = new ArrayList<String>();
+		while (head != base) {
+			path.add(node.relid);
+			head = head.parent;
+		}
+
+		int i = path.size();
+		while (--i >= 0)
+			node = getChild(node, path.get(i));
+
+		return node;
+	}
+
 	public WeakNode createRoot() {
 		return new WeakNode(null, null);
 	}
 
-	@Override
 	public WeakNode getChild(WeakNode node, String relid) {
 		ArrayList<WeakReference<WeakNode>> children = node.children;
 		int i = children.size();
@@ -40,12 +126,6 @@ public class WeakPath extends CorePath<WeakNode> {
 		return child;
 	}
 
-	@Override
-	public boolean isAttached(WeakNode node) {
-		return true;
-	}
-
-	@Override
 	public List<WeakNode> getChildren(WeakNode node) {
 		ArrayList<WeakNode> ret = new ArrayList<WeakNode>();
 
