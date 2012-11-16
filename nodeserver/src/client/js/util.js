@@ -3,8 +3,7 @@
  * Utility helper functions for the client side
  */
 
-define(['order!jquery',
-        'order!underscore'], function () {
+define([], function () {
 
     /*
      * Disabling selection on element

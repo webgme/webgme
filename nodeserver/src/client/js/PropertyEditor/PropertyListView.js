@@ -1,11 +1,9 @@
 "use strict";
 
-define(['jquery',
-    'logManager',
+define(['logManager',
     'clientUtil',
     'PropertyEditor/PropertyEditorGUI',
-    'css!PropertyEditorCSS/PropertyListView'], function (jquery,
-                                                      logManager,
+    'css!PropertyEditorCSS/PropertyListView'], function (logManager,
                                                       util,
                                                       PropertyEditorGUI) {
 

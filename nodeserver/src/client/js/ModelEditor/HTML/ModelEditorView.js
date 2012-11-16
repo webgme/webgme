@@ -1,7 +1,6 @@
 "use strict";
 
-define(['jquery',
-    'logManager',
+define(['logManager',
     'clientUtil',
     'commonUtil',
     'raphaeljs',
@@ -10,8 +9,7 @@ define(['jquery',
     './ModelEditorModelComponent.js',
     './ModelEditorConnectionComponent.js',
     './ConnectionPointManager.js',
-    'css!ModelEditorHTMLCSS/ModelEditorView'], function (jquery,
-                                                         logManager,
+    'css!ModelEditorHTMLCSS/ModelEditorView'], function (logManager,
                                                         util,
                                                         commonUtil,
                                                         raphaeljs,

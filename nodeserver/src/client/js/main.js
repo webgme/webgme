@@ -8,23 +8,32 @@ var _webGME_jqueryui_ver = '1.8.23';  //jquery.ui.mouse has been fixed by Robert
 require.config({
     baseUrl: "/",
     paths: {
+        //RequireJS plugins
+        "text":	'lib/require/text',
+        "css": 'lib/require/rcss',
+        "domReady":	'lib/require/domReady',
+
+        //jQuery and stuff
         "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
         "datGUI": 'lib/datGUI/dat.gui.min',
+
+        //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": './../../common/underscore',
+
+        //RaphaelJS family
+        "eve": 'lib/raphael/eve',
+        "raphaeljs": 'lib/raphael/raphael.amd',
+
+        //WebGME custom modules
         "commonUtil": './../../common/CommonUtil',
         "logManager": './../../common/LogManager',
         "eventDispatcher": './../../common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "bezierHelper" : 'js/BezierHelper',
-        "raphaeljs": 'lib/raphael/raphael.amd',
-        "eve": 'lib/raphael/eve',
-        "order": 'lib/require/order',
-        "text":	'lib/require/text',
-        "css": 'lib/require/rcss',
-        "domReady":	'lib/require/domReady',
+
         "ModelEditorHTML": "js/ModelEditor/HTML",
         "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
         "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
@@ -42,15 +51,24 @@ require.config({
         "PartBrowser": "js/PartBrowser",
         "Repository": "js/Repository",
         "RepositoryCSS": "css/Repository"
+    },
+    shim: {
+        'jquery-ui': ['jquery'],
+        'bootstrap': ['jquery'],
+        'clientUtil': ['jquery']
     }
 });
 
 require(
     [
         'domReady',
-        'js/WebGME2'
+        'jquery',
+        'jquery-ui',
+        'bootstrap',
+        'underscore',
+        'js/WebGME'
     ],
-    function (domReady, webGME) {
+    function (domReady, jQuery, jQueryUi, bootstrap, underscore, webGME) {
         domReady(function () {
             webGME.start();
         });

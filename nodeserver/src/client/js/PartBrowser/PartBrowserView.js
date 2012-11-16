@@ -3,14 +3,10 @@
 var __decoratorDir = 'ModelEditor2',
     __decoratorPath = './js/' + __decoratorDir + '/';
 
-define(['jquery',
-    'underscore',
-    'logManager',
+define(['logManager',
     'clientUtil',
     './../' + __decoratorDir + '/DefaultDecorator.js',
-    'css!PartBrowserCSS/PartBrowserView.css'], function (jquery,
-                                                         underscore,
-                                                         logManager,
+    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager,
                                                          util,
                                                          DefaultDecorator) {
 
