@@ -30,6 +30,7 @@ define(['logManager',
     RepositoryLogView.prototype.render = function () {
         var i,
             len = this._orderedCommitIds.length,
+            parentsLen,
             commitRenderData = {},
             branchOffsets = {},
             inBranchLanes = {},
@@ -69,8 +70,8 @@ define(['logManager',
                     //find the one that has the lowest shift value
                     objParent = this._commits[obj.parents[0]];
                     cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
-                    len = obj.parents.length;
-                    for (li = 1; li < len; li += 1) {
+                    parentsLen = obj.parents.length;
+                    for (li = 1; li < parentsLen; li += 1) {
                         if (branchOffsets[this._commits[obj.parents[li]].name] + commitRenderData[this._commits[obj.parents[li]].id].x < cBranchOffset) {
                             objParent = this._commits[obj.parents[li]];
                             cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
@@ -90,7 +91,7 @@ define(['logManager',
                     //might be under a different "name"
                     //test for shift #2
                     if (objParent.name !== obj.name) {
-                        branchOffsets[obj.name] = branchCount * this._xBranchDelta + (inBranchLaneCount - 1) * this._xDelta;
+                        branchOffsets[obj.name] = branchCount * this._xBranchDelta + (inBranchLaneCount /*- 1*/) * this._xDelta;
                         commitRenderData[obj.id] = { "x": 0, "y": y };
                         branchCount += 1;
                         inBranchLanes[obj.name] = 0;
@@ -318,6 +319,7 @@ define(['logManager',
 
     RepositoryLogView.prototype._resizeDialog = function (contentWidth, contentHeight) {
         var wPadding = 30,
+            hPadding = 15,
             wH = $(window).height() - 2 * wPadding,
             wW = $(window).width() - 2 * wPadding,
             repoDialog = $(".repoHistoryDialog"),
@@ -335,14 +337,14 @@ define(['logManager',
 
         wW = contentWidth < wW ? contentWidth : wW;
         wW = wW < minWidth ? minWidth : wW;
-        wH = contentHeight + dHeaderH + dFooterH < wH ? contentHeight : wH;
+        wH = contentHeight + dHeaderH + dFooterH + 2 * hPadding < wH ? contentHeight : wH - dHeaderH - dFooterH - 2 * hPadding;
 
-        dBody.css({"max-height": wH - dHeaderH - dFooterH });
+        dBody.css({"max-height": wH /*- dHeaderH - dFooterH*/ });
 
         repoDialog.css({"width": wW,
             /*"height": wH,*/
             "margin-left": wW / 2 * (-1),
-            "margin-top": wH / 2 * (-1)});
+            "margin-top": repoDialog.height() / 2 * (-1)});
     };
 
     return RepositoryLogView;
