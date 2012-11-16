@@ -12,31 +12,34 @@ define(['logManager',
             selfId,
             selfPatterns = {},
             nodes = {}, //local container for accounting the currently opened node list, its a hashmap with a key of nodeId and a value of { DynaTreeDOMNode, childrenIds[], state }
-            refresh;
+            refresh,
+            initialize,
+            self = this;
 
         //get logger instance for this component
         logger = logManager.create("TreeBrowserControl");
 
-        selfId = client.addUI(this);
+        initialize = function () {
+            var loadingRootTreeNode;
 
-        //add "root" with its children to territory
-        setTimeout(function () {
+            selfId = client.addUI(self);
 
+            //add "root" with its children to territory
             //create a new loading node for it in the tree
-            var loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
-                                                                        "name": "Initializing tree...",
-                                                                        "hasChildren" : false,
-                                                                        "class" :  "gme-loading" });
+            loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
+                "name": "Initializing tree...",
+                "hasChildren" : false,
+                "class" :  "gme-loading" });
 
             //store the node's info in the local hashmap
             nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
-                                        "children" : [],
-                                        "state" : stateLoading };
+                "children" : [],
+                "state" : stateLoading };
 
             //add the root to the query
             selfPatterns = { "root": { "children": 1} };
             client.updateTerritory(selfId, selfPatterns);
-        }, 1);
+        };
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
         treeBrowser.onNodeOpen = function (nodeId) {
@@ -174,7 +177,7 @@ define(['logManager',
 
         //called from the TreeBrowserWidget when a create function is called from context menu
         treeBrowser.onNodeCreate = function (nodeId) {
-            client.createChild({parentId:nodeId});
+            client.createChild({parentId: nodeId});
         };
 
         refresh = function (eventType, objectId) {
@@ -390,6 +393,21 @@ define(['logManager',
                 break;
             }
         };
+
+        this.reLaunch = function () {
+            logger.debug('reLaunch from client...');
+            selfPatterns = {};
+            nodes = {};
+
+            //forget the old territory
+            client.removeUI(selfId);
+
+            treeBrowser.clear();
+
+            initialize();
+        };
+
+        setTimeout(initialize, 250);
     };
 
     return TreeBrowserControl;

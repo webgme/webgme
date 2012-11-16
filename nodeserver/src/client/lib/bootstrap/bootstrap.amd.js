@@ -5,10 +5,9 @@ var bootstrapFile = DEBUG ? 'bootstrap' : 'bootstrap.min';
 define(
     // 'boostrap',
     [
-        'jquery',
         'lib/bootstrap/' + bootstrapFile
     ],
-    function (jquery, bootstrap) {
+    function (bootstrap) {
         return bootstrap;
     }
 );

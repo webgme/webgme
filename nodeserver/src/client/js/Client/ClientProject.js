@@ -1,19 +1,28 @@
-define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
+define([
+    'js/Client/ClientLogCore',
+    'core/lib/sha1',
+    'common/commonUtil',
+    'js/Client/ClientNode',
+    'js/Client/ClientMeta'],
+    function(ClientCore,SHA1,commonUtil,ClientNode,ClientMeta){
     'use strict';
     var KEY = "_id";
+    var INSERTARR = commonUtil.insertIntoArray;
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var storage = parameters.storage, //the storage of the project
             master = parameters.master, //the client master
             id = parameters.id,
             userstamp = parameters.user,
-            commit = parameters.commit,
+            mycommit = parameters.commit,
             branch = parameters.branch,
             currentRoot = null,
             users = {},
             currentCore = null,
             currentNodes = {},
             currentPathes = {},
+            currentNupathes = {},
             clipboard = [],
+            meta = new ClientMeta(master),
             status = null,
             intransaction = false;
 
@@ -36,10 +45,11 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
         var goOnline = function(){
             //TODO what we should do here???
         };
-        var buildUp = function(){
+        var buildUp = function(callback){
+            callback = callback || function(){};
             //the initializing function, here we assume that the storage connection is up and running
             //we probably have already set the UI's and the terrytories
-            var root = commit.root;
+            var root = mycommit.root;
             var core = new ClientCore({
                 storage: storage,
                 logger: null
@@ -52,9 +62,9 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
                     UpdateAll(function(){
                         storage.load(branchId(),function(err,branchobj){
                             if(!err && branchobj){
-                                if(branchobj.commit === commit[KEY]){
+                                if(branchobj.commit === mycommit[KEY]){
                                     status = 'online';
-                                    storage.requestPoll(branchId(),poll);
+                                    storage.requestPoll(branch,poll);
                                 } else {
                                     status = 'offline';
                                 }
@@ -62,8 +72,11 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
                                 status = 'offline';
                             }
                             master.changeStatus(id,status);
+                            callback();
                         });
                     });
+                } else {
+                    callback();
                 }
             });
         };
@@ -73,7 +86,7 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
             var commitobj = {
                 _id     : null,
                 root    : currentRoot,
-                parents : [commit[KEY]],
+                parents : [mycommit[KEY]],
                 updates : [userstamp],
                 time    : commonUtil.timestamp(),
                 message : " - automated commit object - ",
@@ -94,13 +107,13 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
         var poll = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
-                storage.requestPoll(branchId());
-                if(node.commit !== commit[KEY]){
+                storage.requestPoll(branch,poll);
+                if(node.commit !== mycommit[KEY]){
                     //we can refresh ourselves as this must be fastforwad from our change
                     storage.load(node.commit,function(err,commitobj){
                         if(!err && commitobj){
-                            commit = commitobj;
-                            newRootArrived(commit.root);
+                            mycommit = commitobj;
+                            newRootArrived(mycommit.root);
                         }
                     });
 
@@ -114,7 +127,7 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
         var addUI = function(UI){
             users[UI.id] = UI;
             users[UI.id].PATTERNS = {};
-            users[UI.id].PATHES = {};
+            users[UI.id].PATHES = [];
             users[UI.id].KEYS = {};
             users[UI.id].SENDEVENTS = true;
         };
@@ -191,6 +204,9 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
             } else {
                 return null;
             }
+        };
+        var getCurrentCommit = function(){
+            return mycommit[KEY];
         };
 
         /*MGA like functions*/
@@ -403,7 +419,7 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
                 currentRoot = roothash;
                 var tempcore = new ClientCore({
                     storage : storage,
-                    logger : logger
+                    logger : null
                 });
                 tempcore.loadRoot(roothash,function(err,node){
                     if(!err && node){
@@ -433,10 +449,10 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
                             //now we make a commit
                             commit(function(err,commitobj){
                                 if(!err){
-                                    commit = commitobj;
+                                    mycommit = commitobj;
                                     //try to update branch if we are currently online
                                     if(status === 'online'){
-                                        storage.updateBranch(branchId(),commit[KEY],function(err){
+                                        storage.updateBranch(branch,mycommit[KEY],function(err){
                                             if(err){
                                                 //problem, so we go offline
                                                 status = 'offline';
@@ -621,8 +637,12 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
                     INSERTARR(patterns,j);
                 }
             }
-            for(i=0;i<patterns.length;i++){
-                loadPattern(patterns[i],patternLoaded);
+            if(patterns.length === 0){
+                callback(nupathes);
+            } else {
+                for(i=0;i<patterns.length;i++){
+                    loadPattern(patterns[i],patternLoaded);
+                }
             }
         };
         var UpdateUser = function(user,patterns,nupathes){
@@ -770,10 +790,11 @@ define(['js/Client/ClientLogCore','core/lib/sha1'], function(ClientCore,SHA1){
             updateTerritory  : updateTerritory,
             fullRefresh      : fullRefresh,
             //commit
-            commit       : storage.commit,
+            commit       : commit,
             //nodes to UI
-            getNode    : getNode,
-            getRootKey : getRootKey,
+            getNode          : getNode,
+            getRootKey       : getRootKey,
+            getCurrentCommit : getCurrentCommit,
             //MGAlike
             startTransaction    : startTransaction,
             completeTransaction : completeTransaction,

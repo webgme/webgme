@@ -2,13 +2,12 @@
 /*
  * WIDGET TreeBrowserWidget based on JSTree
  */
-define(['order!jquery',
-        'order!clientUtil',
+define(['clientUtil',
         'logManager',
         'commonUtil',
-        'order!lib/jquery/jquery.hotkeys',
-        'order!lib/jquery/jquery.jstree',
-        'css!/css/JSTreeBrowserWidget'], function (jQuery, util, logManager, commonUtil) {
+        'lib/jquery/jquery.hotkeys',
+        'lib/jquery/jquery.jstree',
+        'css!/css/JSTreeBrowserWidget'], function (util, logManager, commonUtil) {
 
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
@@ -679,6 +678,10 @@ define(['order!jquery',
             }
 
             return treeViewE.jstree("is_open", node);
+        };
+
+        this.clear = function () {
+            this.treeInstance.delete_node(this.treeInstance._get_node(-1));
         };
     };
 

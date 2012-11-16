@@ -5,12 +5,16 @@ define(['logManager',
     'commonUtil',
     'text!./ProjectPanelTmpl.html',
     'Repository/RepositoryLogControl',
-    'Repository/RepositoryLogView'], function (logManager,
+    'Repository/RepositoryLogView',
+    './ProjectsView',
+    './ProjectsControl'], function (logManager,
                                                util,
                                                commonUtil,
                                                projectPanelTmpl,
                                                RepositoryLogControl,
-                                               RepositoryLogView) {
+                                               RepositoryLogView,
+                                               ProjectsView,
+                                               ProjectsControl) {
 
     var ProjectPanel;
 
@@ -38,6 +42,8 @@ define(['logManager',
 
         this._repoHistoryDialog = this._el.find(".repoHistoryDialog");
 
+        this._projectsDialog = this._el.find(".projectsDialog");
+
         this._el.find('a.btnFullRefresh').on("click", function (event) {
             event.stopPropagation();
             event.preventDefault();
@@ -54,6 +60,12 @@ define(['logManager',
             event.stopPropagation();
             event.preventDefault();
             self._btnRepoHistoryClick();
+        });
+
+        this._el.find('a.btnProjects').on("click", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._btnProjectsClick();
         });
     };
 
@@ -97,6 +109,16 @@ define(['logManager',
         this._repoHistoryDialog.modal();
 
         repoHistoryController.generateHistory();
+    };
+
+    ProjectPanel.prototype._btnProjectsClick = function () {
+        var projectsView = new ProjectsView(this._projectsDialog.find('.modal-body')),
+            client = this.onGetClient(),
+            projectsController = new ProjectsControl(client, projectsView);
+
+        this._projectsDialog.modal();
+
+        projectsController.displayProjects();
     };
 
     /*********************** PUBLIC API *********************/

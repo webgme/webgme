@@ -20,6 +20,7 @@ define([
     var KEY = "_id";
     var ClientMaster = function(parameters){
         var self=this,
+            selectedObjectId = null,
             activeProject = null,
             activeActor = null,
             actors = {},
@@ -42,6 +43,9 @@ define([
                 self.dispatchEvent( self.events.SELECTEDOBJECT_CHANGED, selectedObjectId );
             }
         };
+        self.clearSelectedObjectId = function () {
+            self.setSelectedObjectId(null);
+        };
 
         //init - currently it means, we try to establish storage connection to all our saved projects
         //and create actor for all started branches...
@@ -62,10 +66,12 @@ define([
                             //we connected to all projects so we are mostly done
                             //select one randomly
                             //TODO this is very rude, should change it...
-                            for(i in projectsinfo){
+                            /*for(i in projectsinfo){
                                 self.selectProject(i);
                                 break;
-                            }
+                            }*/
+                            self.selectProject('egyik');
+                            setInterval(saveProjectsInfo,10000);
                         }
                     };
                     for(var i=0;i<serverlist.length;i++){
@@ -183,14 +189,21 @@ define([
             for(var i in users){
                 actor.addUI(users[i]);
             }
-            for(i in users){
-                users[i].reLaunch();
-            }
-            actor.buildUp();
+            actor.buildUp(function(){
+                self.clearSelectedObjectId();
+                for(i in users){
+                    if(users[i].UI.reLaunch){
+                        users[i].UI.reLaunch();
+                    }
+                }
+            });
         };
 
 
         //functions helping branch selection and project selection
+        self.getActiveProject = function(){
+            return activeProject;
+        };
         self.getAvailableProjects = function(){
             return getLocalProjectList();
         };
@@ -198,7 +211,9 @@ define([
             if(getLocalProjectList().indexOf(projectname) !== -1){
                 if(activeProject){
                     //we have to switch project, which means we will not have activeActor for sure...
-                    activeActor.dismantle();
+                    if(activeActor){
+                        activeActor.dismantle();
+                    }
 
                 }
 
@@ -207,28 +222,41 @@ define([
                 var myinfo = projectsinfo[activeProject];
                 var startcommit = null;
                 if(myinfo.currentactor){
-                    startcommit = myinfo.actors[myinfo.currentactor];
+                    startcommit = myinfo.actors[myinfo.currentactor].commit;
                 }
                 if(startcommit){
                     self.selectCommit(startcommit);
                 } else {
                     //TODO we have many options, now we will choose one which must work - select the latest commit
-                    var commits = commitInfos[activeProject].getAllCommits();
-                    var newest = null;
-                    for(var i=0;i<commits.length;i++){
-                        if(newest){
-                            if(newest.end<commits[i].end){
-                                newest = commits[i];
+                    commitInfos[activeProject].getAllCommitsNow(function(err,commits){
+                        if(!err && commits && commits.length>0){
+                            storages[activeProject].load('*#*master',function(err,branch){
+                                if(err || branch === null || branch === undefined){
+                                    //no master branch load the first commit
+                                    console.log(err+" so we load the first commit");
+                                    self.selectCommit(commits[0]);
+                                } else {
+                                    console.log("loading master's latest commit:"+branch.commit);
+                                    self.selectCommit(branch.commit);
+                                }
+                            });
+                            /*var newest = null;
+                            for(var i=0;i<commits.length;i++){
+                                if(newest){
+                                    if(newest.end<commits[i].end){
+                                        newest = commits[i];
+                                    }
+                                } else {
+                                    newest = commits[i];
+                                }
                             }
-                        } else {
-                            newest = commits[i];
+                            if(newest){
+                                self.selectCommit(newest[KEY]);
+                            } else {
+                                console.log("the project doesn't have a commit!!!" );
+                            }*/
                         }
-                    }
-                    if(newest){
-                        self.selectCommit(newest[KEY]);
-                    } else {
-                        console.log("the project doesn't have a commit!!!" );
-                    }
+                    });
                 }
 
             } else {
@@ -238,7 +266,7 @@ define([
         self.selectCommit = function(commit){
             if(activeProject){
                 var clist = commitInfos[activeProject].getCommitList();
-                if(clist.indexOf(commit)>0){
+                if(clist.indexOf(commit) !== -1){
                     var mycommit = commitInfos[activeProject].getCommitObj(commit);
                     var needactor = true;
                     var actorindex = null;
@@ -262,7 +290,7 @@ define([
                             master: self,
                             id: tempguid,
                             userstamp: 'todo',
-                            commit: commit,
+                            commit: mycommit,
                             branch: mycommit.name
                         });
                         actors[tempguid] = tempactor;
@@ -287,9 +315,33 @@ define([
                     if(activeActor){
                         activeActor.dismantle();
                     }
-                    activeActor = actors[myinfo.actors[actorindex]];
+                    activeActor = actors[myinfo.actors[actorindex].id];
                     activateActor(activeActor);
                 }
+            }
+        };
+        self.getCommitIds = function(){
+            if(activeProject){
+                return commitInfos[activeProject].getCommitList();
+            } else {
+                return [];
+            }
+        };
+        self.getCommits = function(){
+            if(activeProject){
+                return commitInfos[activeProject].getAllCommits();
+            } else {
+                return [];
+            }
+        };
+        self.getActualCommit = function(){
+            if(activeProject && activeActor){
+                return activeActor.getCurrentCommit();
+            }
+        };
+        self.getRootKey = function(){
+            if(activeProject && activeActor){
+                return activeActor.getRootKey();
             }
         };
 
@@ -331,7 +383,20 @@ define([
             }
         };
 
+        //notifications and requests from the actor
+        self.changeStatus = function(actorid,status){
+            //TODO we should handle this correctly
+            console.log(actorid+" is in "+status+" state");
+        };
         //MGAlike - forwarding to the active actor
+        self.getNode = function(path){
+            if(activeActor){
+                return activeActor.getNode(path);
+            } else {
+                return null;
+            }
+        };
+
         self.startTransaction = function(){
             if(activeActor){
                 activeActor.startTransaction();

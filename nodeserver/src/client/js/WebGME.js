@@ -1,19 +1,13 @@
 "use strict";
 
 // let require load all the toplevel needed script and call us on domReady
-define([   'order!jquery',
-    'order!jquery-ui',
-    'order!underscore',
-    'order!lib/jquery/jquery.qtip',
-    'order!bootstrap',
-    'logManager',
+define([  'logManager',
     'commonUtil',
     'clientUtil',
-    'order!js/cli3nt',
-    'order!js/Client/ClientProxy',
-    'order!js/ObjectBrowser/TreeBrowserControl',
-    'order!js/ObjectBrowser/JSTreeBrowserWidget',
-    /*'order!js/ObjectBrowser/DynaTreeBrowserWidget',*/
+    'js/cli3nt',
+    'js/Client/ClientMaster',
+    'js/ObjectBrowser/TreeBrowserControl',
+    'js/ObjectBrowser/JSTreeBrowserWidget',
     'js/ModelEditor/HTML/ModelEditorControl',
     'js/ModelEditor/HTML/ModelEditorView',
     'js/GraphViz/GraphVizControl',
@@ -25,31 +19,25 @@ define([   'order!jquery',
     'js/PartBrowser/PartBrowserView',
     'js/PartBrowser/PartBrowserControl',
     'js/Project/ProjectPanel',
-    'js/Project/ProjectControl'], function (jquery,
-                                                            jqueryui,
-                                                            underscore,
-                                                            qtip,
-                                                            bootstrap,
-                                                            logManager,
-                                                            commonUtil,
-                                                            util,
-                                                            Client,
-                                                            Core,
-                                                            TreeBrowserControl,
-                                                            JSTreeBrowserWidget,
-                                                            /*DynaTreeBrowserWidget,*/
-                                                            ModelEditorControl,
-                                                            ModelEditorView,
-                                                            GraphVizControl,
-                                                            GraphVizView,
-                                                            ModelEditorControl2,
-                                                            ModelEditorView2,
-                                                            CommitCtrl,
-                                                            CommitView,
-                                                            PartBrowserView,
-                                                            PartBrowserControl,
-                                                            ProjectPanel,
-                                                            ProjectControl) {
+    'js/Project/ProjectControl'], function (logManager,
+                                            commonUtil,
+                                            util,
+                                            Client,
+                                            Core,
+                                            TreeBrowserControl,
+                                            JSTreeBrowserWidget,
+                                            ModelEditorControl,
+                                            ModelEditorView,
+                                            GraphVizControl,
+                                            GraphVizView,
+                                            ModelEditorControl2,
+                                            ModelEditorView2,
+                                            CommitCtrl,
+                                            CommitView,
+                                            PartBrowserView,
+                                            PartBrowserControl,
+                                            ProjectPanel,
+                                            ProjectControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -76,7 +64,7 @@ define([   'order!jquery',
 
     var client,
         proxy = null,
-        /*tDynaTree,*/
+    /*tDynaTree,*/
         tJSTree,
         modelEditorSVG,
         modelEditorHTML,
@@ -115,17 +103,17 @@ define([   'order!jquery',
 
             //by default lay out in vertical split
             /*eW = Math.floor($("#middlePane").width() / 2);
-            eH = Math.floor($("#middlePane").height());*/
+             eH = Math.floor($("#middlePane").height());*/
 
             /*if (eW < 560) {
-                //inner children has to be laid out under each other (horizontal split)
-                eW = Math.floor($("#middlePane").width());
-                eH = Math.floor($("#middlePane").height() / 2);
-                horizontalSplit = true;
-            }*/
+             //inner children has to be laid out under each other (horizontal split)
+             eW = Math.floor($("#middlePane").width());
+             eH = Math.floor($("#middlePane").height() / 2);
+             horizontalSplit = true;
+             }*/
 
             /*$("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
+             $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
 
             /******************/
             eW = Math.floor($("#middlePane").width());
@@ -138,10 +126,10 @@ define([   'order!jquery',
 
             //set container position correctly
             /*if (horizontalSplit === true) {
-                $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
-            } else {
-                $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
-            }*/
+             $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
+             } else {
+             $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
+             }*/
 
             //$("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
 
@@ -177,13 +165,13 @@ define([   'order!jquery',
         mainView = null;
         if (visualizer === "ModelEditor") {
             mainView = new ModelEditorView("modelEditorHtml");
-            mainController = new ModelEditorControl(client, mainView);
+            mainController = new ModelEditorControl(proxy, mainView);
         } else if (visualizer === "ModelEditor2") {
             mainView = new ModelEditorView2("modelEditorHtml");
-            mainController = new ModelEditorControl2(client, mainView);
+            mainController = new ModelEditorControl2(proxy, mainView);
         } else if (visualizer === "GraphViz") {
             mainView = new GraphVizView("modelEditorHtml");
-            mainController = new GraphVizControl(client, mainView);
+            mainController = new GraphVizControl(proxy, mainView);
         }
 
         if (currentNodeId) {
@@ -206,65 +194,56 @@ define([   'order!jquery',
 
 
         var options = commonUtil.combinedserver;
-        if(proxy === null){
+        if (proxy === null) {
             proxy = new Core({
-                proxy: location.host+options.projsrv,
+                proxy: location.host + options.projsrv,
                 options : options.socketiopar,
-                projectinfo : "*PI*"+options.mongocollection,
+                projectinfo : "*PI*" + options.mongocollection,
                 defaultproject : options.mongocollection,
                 faulttolerant : options.faulttolerant,
                 cache : options.cache,
                 log : options.logging,
-                logsrv : location.host+options.logsrv
+                logsrv : location.host + options.logsrv
             });
-
-            proxy.getClient(null, function (err, cl) {
-                if (!err && cl) {
-                    client = cl;
-                    client.addEventListener(client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-                        currentNodeId = nodeId;
-                        if (mainController) {
-                            mainController.selectedObjectChanged(currentNodeId);
-                        }
-                        if (partBrowserController) {
-                            partBrowserController.selectedObjectChanged(currentNodeId);
-                        }
-                    });
-
-                    //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
-                    tJSTree = new TreeBrowserControl(client, new JSTreeBrowserWidget("tbJSTree"));
-
-                    //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-                    //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-                    //modelEditorView = new ModelEditorView("modelEditorHtml");
-                    //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
-                    //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
-
-                    //hide GraphViz first and hook up radio button
-
-                    /*commit browser init*/
-                    /*commitView = new CommitView(document.getElementById('commitbrowser'));
-                    commitCtrl = new CommitCtrl(client, commitView);*/
-
-                    partBrowserView = new PartBrowserView("pPartBrowser");
-                    partBrowserController = new PartBrowserControl(client, partBrowserView);
-
-                    projectPanel = new ProjectPanel("projectHistoryPanel");
-                    projectController = new ProjectControl(client, projectPanel);
-
-                    callback(null);
-                } else {
-                    console.log('cannot get project!!!');
-                    callback('no project!!!');
+            proxy.addEventListener(proxy.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
+                currentNodeId = nodeId;
+                if (mainController) {
+                    mainController.selectedObjectChanged(currentNodeId);
+                }
+                if (partBrowserController) {
+                    partBrowserController.selectedObjectChanged(currentNodeId);
                 }
             });
+
+            //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
+            tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
+
+            //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
+            //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
+            //modelEditorView = new ModelEditorView("modelEditorHtml");
+            //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
+            //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
+
+            //hide GraphViz first and hook up radio button
+
+            /*commit browser init*/
+            /*commitView = new CommitView(document.getElementById('commitbrowser'));
+             commitCtrl = new CommitCtrl(client, commitView);*/
+
+            partBrowserView = new PartBrowserView("pPartBrowser");
+            partBrowserController = new PartBrowserControl(proxy, partBrowserView);
+
+            projectPanel = new ProjectPanel("projectHistoryPanel");
+            projectController = new ProjectControl(proxy, projectPanel);
+
+            callback(null);
         }
     };
 
     return {
         start : function () {
-            doConnect(function(err){
-                if(!err){
+            doConnect(function (err) {
+                if (!err) {
                     setActiveVisualizer("ModelEditor2");
                 }
             });

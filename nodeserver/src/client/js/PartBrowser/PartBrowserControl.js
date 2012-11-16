@@ -22,7 +22,8 @@ define(['logManager',
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
         var desc = this._getObjectDescriptor(nodeId),
-            childrenTypes = this._client.getNode(nodeId).getValidChildrenTypes(),
+            node = this._client.getNode(nodeId),
+            childrenTypes = node ? node.getValidChildrenTypes() : [],
             num = childrenTypes.length;
 
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");

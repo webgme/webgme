@@ -167,6 +167,39 @@ define([
                 });
             };
 
+            var createBranch = function(name,callback){
+                var start = TIMESTAMP();
+                var guid = "["+GUID()+"]";
+                var text = guid+"createBranch("+JSON.stringify(name)+")";
+                log(text);
+                storage.createBranch(name,function(err,nodes){
+                    log(text+ETIMESTRING(start));
+                    callback(err,nodes);
+                });
+            };
+
+            var deleteBranch = function(name,callback){
+                var start = TIMESTAMP();
+                var guid = "["+GUID()+"]";
+                var text = guid+"deleteBranch("+JSON.stringify(name)+")";
+                log(text);
+                storage.deleteBranch(name,function(err,nodes){
+                    log(text+ETIMESTRING(start));
+                    callback(err,nodes);
+                });
+            };
+
+            var updateBranch = function(name,callback){
+                var start = TIMESTAMP();
+                var guid = "["+GUID()+"]";
+                var text = guid+"updateBranch("+JSON.stringify(name)+")";
+                log(text);
+                storage.updateBranch(name,function(err,nodes){
+                    log(text+ETIMESTRING(start));
+                    callback(err,nodes);
+                });
+            };
+
             if(options.log){
                 return {
                     open          : open,
@@ -182,7 +215,10 @@ define([
                     whenAvailable : whenAvailable,
                     fsync         : fsync,
                     find          : find,
-                    requestPoll   : requestPoll
+                    requestPoll   : requestPoll,
+                    createBranch  : createBranch,
+                    deleteBranch  : deleteBranch,
+                    updateBranch  : updateBranch
                 }
             } else {
                 /*just simple interface towards lower layer storage*/
@@ -200,7 +236,10 @@ define([
                     whenAvailable : storage.whenAvailable,
                     fsync         : storage.fsync,
                     find          : storage.find,
-                    requestPoll   : storage.requestPoll
+                    requestPoll   : storage.requestPoll,
+                    createBranch : storage.createBranch,
+                    deleteBranch : storage.deleteBranch,
+                    updateBranch : storage.updateBranch
                 }
             }
         };
