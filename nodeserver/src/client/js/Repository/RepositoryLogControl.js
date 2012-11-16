@@ -20,12 +20,12 @@ define(['logManager'], function (logManager) {
     };
 
     RepositoryLogControl.prototype.generateHistory = function () {
-        this._updateHistory();
+        this._updateHistory(false);
     };
 
-    RepositoryLogControl.prototype._updateHistory = function () {
+    RepositoryLogControl.prototype._updateHistory = function (useFake) {
         var currentCommitId = this._client.getActualCommit(),
-            commits = this._client.getCommits(),
+            commits = useFake ? this._getFakeCommits() : this._client.getCommits(),
             i = commits.length,
             com;
 
@@ -42,6 +42,50 @@ define(['logManager'], function (logManager) {
         }
 
         this._view.render();
+    };
+
+    RepositoryLogControl.prototype._getFakeCommits = function () {
+        var result = [],
+            num = 16,
+            c = num,
+            commit,
+            branches = ["master", "b1", "b2"];
+
+        while (c--) {
+            commit = {};
+            commit._id = num - c - 1 + "";
+            //branch name
+            commit.name = branches[0];
+            commit.message = "Message " + commit._id;
+            commit.timestamp = new Date();
+            commit.parents = [];
+
+            //regular parents in line
+            if (commit._id > 0) {
+                commit.parents.push(commit._id - 1);
+            }
+
+            result.push(commit);
+        }
+
+        //create
+        result[3].parents = ["1"];
+        result[5].parents = ["2", "4"];
+
+        result[8].parents = ["1"];
+
+
+        result[9].parents = ["6"];
+
+
+        result[10].parents = ["8"];
+        result[11].parents = ["9", "7"];
+
+        result[12].parents = ["10", "11"];
+
+
+
+        return result;
     };
 
     return RepositoryLogControl;
