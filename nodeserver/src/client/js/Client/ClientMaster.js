@@ -342,9 +342,19 @@ define([
                 return activeActor.getCurrentCommit();
             }
         };
+        self.getActualBranch = function(){
+            if(activeProject && activeActor){
+                return activeActor.getCurrentBranch();
+            }
+        };
         self.getRootKey = function(){
             if(activeProject && activeActor){
                 return activeActor.getRootKey();
+            }
+        };
+        self.commit = function(message,branch){
+            if(branch && branch !== self.getActualBranch()){
+
             }
         };
 

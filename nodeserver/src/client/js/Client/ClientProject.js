@@ -208,6 +208,9 @@ define([
         var getCurrentCommit = function(){
             return mycommit[KEY];
         };
+        var getCurrentBranch = function(){
+            return mycommit['name'];
+        };
 
         /*MGA like functions*/
         var startTransaction = function(){
@@ -795,6 +798,7 @@ define([
             getNode          : getNode,
             getRootKey       : getRootKey,
             getCurrentCommit : getCurrentCommit,
+            getCurrentBranch : getCurrentBranch,
             //MGAlike
             startTransaction    : startTransaction,
             completeTransaction : completeTransaction,
