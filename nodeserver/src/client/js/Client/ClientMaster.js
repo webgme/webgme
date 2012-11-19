@@ -72,7 +72,7 @@ define([
                             } else {
                                 self.selectProject(firstproject);
                             }
-                            setInterval(saveProjectsInfo,10000);
+                            setInterval(saveProjectsInfo,1000);
                         }
                     };
                     for(var i=0;i<serverlist.length;i++){
@@ -185,10 +185,14 @@ define([
         };
         var saveProjectsInfo = function(){
             var info = COPY(projectsinfo);
+            delete info.activeProject;
 
             for(var i in info){
                 for(var j=0;j<info[i].actors.length;j++){
-                    info[i].actors[j].id = null;
+                    if(info[i].actors[j].id){
+                        info[i].actors[j].commit = actors[info[i].actors[j].id].getCurrentCommit();
+                        info[i].actors[j].id = null;
+                    }
                 }
                 info[i].parameters = null;
             }

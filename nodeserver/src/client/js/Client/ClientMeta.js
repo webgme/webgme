@@ -71,6 +71,12 @@ define([
                 return _myobjects;
             };
 
+            self.reLaunch = function(){
+                _metafolderid = null;
+                _myobjects = [];
+                updateTerritory();
+            };
+
 
             var _init = function(){
                 _myguid = client.addUI(self,true);
