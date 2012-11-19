@@ -178,9 +178,10 @@ define([
             var info = COPY(projectsinfo);
 
             for(var i in info){
-                for(var j=0;j<info[i].actors;j++){
+                for(var j=0;j<info[i].actors.length;j++){
                     info[i].actors[j].id = null;
                 }
+                info[i].parameters = null;
             }
             savedInfoStorage.save('#'+parameters.userstamp+'#saved#',info);
         };
