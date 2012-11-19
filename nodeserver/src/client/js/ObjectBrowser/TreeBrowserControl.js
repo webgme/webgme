@@ -396,13 +396,14 @@ define(['logManager',
 
         this.reLaunch = function () {
             logger.debug('reLaunch from client...');
-            selfPatterns = {};
-            nodes = {};
 
             //forget the old territory
             client.removeUI(selfId);
 
-            treeBrowser.clear();
+            treeBrowser.deleteNode(nodes[rootNodeId].treeNode);
+
+            selfPatterns = {};
+            nodes = {};
 
             initialize();
         };

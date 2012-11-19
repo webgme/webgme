@@ -679,10 +679,6 @@ define(['clientUtil',
 
             return treeViewE.jstree("is_open", node);
         };
-
-        this.clear = function () {
-            this.treeInstance.delete_node(this.treeInstance._get_node(-1));
-        };
     };
 
     return JSTreeBrowserWidget;
