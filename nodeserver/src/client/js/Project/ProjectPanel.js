@@ -78,7 +78,10 @@ define(['logManager',
             client = this.onGetClient(),
             currentBranchName = client.getActualBranch(),
             btnCurrent = btnGroupBranch.find(".btnCurrent"),
-            btnNew = btnGroupBranch.find(".btnNew");
+            btnNew = btnGroupBranch.find(".btnNew"),
+            controlGroupBranch = this._commitMsgDialog.find(".control-group-branch"),
+            controlGroupMessage = this._commitMsgDialog.find(".control-group-message"),
+            validateControl;
 
         btnNew.removeClass("active");
         btnCurrent.addClass("active");
@@ -106,6 +109,19 @@ define(['logManager',
                 commitSaveButton.removeClass("disabled");
             }
         });
+
+        validateControl = function (ctrl, ctrlGroup) {
+            ctrl.on('blur', function (event) {
+                if (ctrl.val() === "") {
+                    ctrlGroup.addClass("error");
+                } else {
+                    ctrlGroup.removeClass("error");
+                }
+            });
+        };
+
+        validateControl(txtMessage, controlGroupMessage);
+        validateControl(txtBranchName, controlGroupBranch);
 
         commitSaveButton.bind('click', function (event) {
             var msg = self._commitMsgDialog.find("#txtMessage").val(),
