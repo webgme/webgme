@@ -226,7 +226,9 @@ define([
                     startcommit = myinfo.actors[myinfo.currentactor].commit;
                 }
                 if(startcommit){
-                    self.selectCommit(startcommit);
+                    commitInfos[activeProject].getAllCommitsNow(function(err,commits){
+                        self.selectCommit(startcommit);
+                    });
                 } else {
                     //TODO we have many options, now we will choose one which must work - select the latest commit
                     commitInfos[activeProject].getAllCommitsNow(function(err,commits){
@@ -241,21 +243,6 @@ define([
                                     self.selectCommit(branch.commit);
                                 }
                             });
-                            /*var newest = null;
-                            for(var i=0;i<commits.length;i++){
-                                if(newest){
-                                    if(newest.end<commits[i].end){
-                                        newest = commits[i];
-                                    }
-                                } else {
-                                    newest = commits[i];
-                                }
-                            }
-                            if(newest){
-                                self.selectCommit(newest[KEY]);
-                            } else {
-                                console.log("the project doesn't have a commit!!!" );
-                            }*/
                         }
                     });
                 }
