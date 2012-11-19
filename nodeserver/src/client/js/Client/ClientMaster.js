@@ -52,6 +52,7 @@ define([
         //if there is none, then we simply collects the projects from the server and waits for a selection from user interface...
         var init = function(){
             var tempproxy = io.connect(parameters.proxy,parameters.options);
+            var firstproject = null;
             tempproxy.on('connect',function(){
                 proxy = tempproxy;
                 getServerProjectList(function(serverlist){
@@ -66,11 +67,11 @@ define([
                             //we connected to all projects so we are mostly done
                             //select one randomly
                             //TODO this is very rude, should change it...
-                            /*for(i in projectsinfo){
-                                self.selectProject(i);
-                                break;
-                            }*/
-                            self.selectProject('egyik');
+                            if(projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]){
+                                self.selectProject(projectsinfo.activeProject);
+                            } else {
+                                self.selectProject(firstproject);
+                            }
                             setInterval(saveProjectsInfo,10000);
                         }
                     };
@@ -86,7 +87,13 @@ define([
                     //we have now all the projects, so we should connect to them...
                     var count = 0;
                     for(i in projectsinfo){
+                        if(firstproject === null){
+                            firstproject = i;
+                        }
                         count++;
+                    }
+                    if(count === 0){
+                        console.log("there is no project on this server!!!");
                     }
                     for(i in projectsinfo){
                         openProject(i,projopened);
@@ -110,7 +117,9 @@ define([
         var getLocalProjectList = function(){
             var list = [];
             for(var i in projectsinfo){
-                list.push(i);
+                if(i !== 'activeProject'){
+                    list.push(i);
+                }
             }
             return list;
         };
@@ -183,6 +192,7 @@ define([
                 }
                 info[i].parameters = null;
             }
+            info.activeProject = activeProject;
             savedInfoStorage.save('#'+parameters.userstamp+'#saved#',info);
         };
         var activateActor = function(actor){
@@ -219,6 +229,7 @@ define([
                 }
 
                 activeProject = projectname;
+                $('#maintitlespan').html(activeProject);
                 //selecting the default actor
                 var myinfo = projectsinfo[activeProject];
                 var startcommit = null;
