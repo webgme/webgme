@@ -59,8 +59,8 @@ define(['logManager',
 
             if (i === 0) {
                 //very first item
-                branchOffsets[obj.name] = 0;
-                inBranchLanes[obj.name] = 1;
+                branchOffsets[obj.branch] = 0;
+                inBranchLanes[obj.branch] = 1;
                 branchCount = 1;
                 commitRenderData[obj.id] = { "x": x, "y": y };
             } else {
@@ -69,12 +69,12 @@ define(['logManager',
                     //multiple parents
                     //find the one that has the lowest shift value
                     objParent = this._commits[obj.parents[0]];
-                    cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
+                    cBranchOffset = branchOffsets[objParent.branch] + commitRenderData[objParent.id].x;
                     parentsLen = obj.parents.length;
                     for (li = 1; li < parentsLen; li += 1) {
-                        if (branchOffsets[this._commits[obj.parents[li]].name] + commitRenderData[this._commits[obj.parents[li]].id].x < cBranchOffset) {
+                        if (branchOffsets[this._commits[obj.parents[li]].branch] + commitRenderData[this._commits[obj.parents[li]].id].x < cBranchOffset) {
                             objParent = this._commits[obj.parents[li]];
-                            cBranchOffset = branchOffsets[objParent.name] + commitRenderData[objParent.id].x;
+                            cBranchOffset = branchOffsets[objParent.branch] + commitRenderData[objParent.id].x;
                         }
                     }
 
@@ -83,25 +83,25 @@ define(['logManager',
                     //only one parent
                     //we need to see if this obj needs to be shifted from the parent or stays in the same lane
                     //shift #1: its parent is not directly in front of it in the list
-                    //shift #2: its "name" is different than it's parent's "name"
+                    //shift #2: its "branch" is different than it's parent's "branch"
 
                     //check the guy's parent to see if we need to shift is somehow
                     objParent = this._commits[obj.parents[0]];
 
-                    //might be under a different "name"
+                    //might be under a different "branch"
                     //test for shift #2
-                    if (objParent.name !== obj.name) {
-                        branchOffsets[obj.name] = branchCount * this._xBranchDelta + (inBranchLaneCount /*- 1*/) * this._xDelta;
+                    if (objParent.branch !== obj.branch) {
+                        branchOffsets[obj.branch] = branchCount * this._xBranchDelta + (inBranchLaneCount /*- 1*/) * this._xDelta;
                         commitRenderData[obj.id] = { "x": 0, "y": y };
                         branchCount += 1;
-                        inBranchLanes[obj.name] = 0;
+                        inBranchLanes[obj.branch] = 0;
 
                         logMsg = "(" + i + ")  NEW BRANCH FOR: " + obj.id;
-                        logMsg += "\n\tname: " + obj.name;
+                        logMsg += "\n\tBranch: " + obj.branch;
                         logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
                         this._logger.debug(logMsg);
                     } else {
-                        //under the same "name", but still might need to be shifted in that branch
+                        //under the same "branch", but still might need to be shifted in that branch
                         //test for shift #1
                         //if (objParent.id === this._orderedCommitIds[i - 1]) {
                         endItemParentObjectIdx = endItems.indexOf(objParent.id);
@@ -111,11 +111,11 @@ define(['logManager',
                             endItems.splice(endItemParentObjectIdx, 1);
                         } else {
                             //parent's lane is already taken and parent is not the direct previous item
-                            commitRenderData[obj.id] = { "x": branchOffsets[obj.name] + inBranchLanes[obj.name] * this._xDelta, "y": y };
+                            commitRenderData[obj.id] = { "x": branchOffsets[obj.branch] + inBranchLanes[obj.branch] * this._xDelta, "y": y };
 
                             //rebase all other branches by one lane
-                            cBranch = obj.name;
-                            cBranchOffset = branchOffsets[obj.name];
+                            cBranch = obj.branch;
+                            cBranchOffset = branchOffsets[obj.branch];
                             for (li in branchOffsets) {
                                 if (branchOffsets.hasOwnProperty(li)) {
                                     if (li !== cBranch && cBranchOffset <= branchOffsets[li]) {
@@ -125,10 +125,10 @@ define(['logManager',
                             }
 
                             inBranchLaneCount += 1;
-                            inBranchLanes[obj.name] += 1;
+                            inBranchLanes[obj.branch] += 1;
 
                             logMsg = "(" + i + ")  LANE SHIFT IN BRANCH FOR: " + obj.id;
-                            logMsg += "\n\tname: " + obj.name;
+                            logMsg += "\n\tBranch: " + obj.branch;
                             logMsg += "\n\tobjParent.id: " + objParent.id;
                             logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
                             this._logger.debug(logMsg);
@@ -145,7 +145,7 @@ define(['logManager',
         for (i = 0; i < len; i += 1) {
             obj = this._commits[this._orderedCommitIds[i]];
 
-            x =  commitRenderData[obj.id].x + branchOffsets[obj.name];
+            x =  commitRenderData[obj.id].x + branchOffsets[obj.branch];
             y = commitRenderData[obj.id].y;
 
             guiObj = this._createItem({"x": x,
@@ -154,12 +154,12 @@ define(['logManager',
                               "id": obj.id,
                               "parents": obj.parents,
                               "actual": obj.actual,
-                              "name": obj.name,
+                              "branch": obj.branch,
                               "isEnd": obj.isEnd});
 
             logMsg = "(" + i + ")  " + obj.id;
             logMsg += "\n\ttimestamp: " + obj.timestamp;
-            logMsg += "\n\tname: " + obj.name;
+            logMsg += "\n\tBranch: " + obj.branch;
             if (obj.message) {
                 logMsg += "\n\t" + obj.message;
             }
@@ -168,7 +168,7 @@ define(['logManager',
 
             //hook up popover
             popoverMsg = "<li>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
-            popoverMsg += "<li>Name: " + obj.name + "</li>";
+            popoverMsg += "<li>Name: " + obj.branch + "</li>";
             if (obj.message) {
                 popoverMsg += "<li>Message: " + obj.message + "</li>";
             }
@@ -176,7 +176,7 @@ define(['logManager',
 
             popoverMsg += "<br><p class='muted'>Double-click to switch to this commit.</p>";
 
-            guiObj.popover({"title": obj.id + "@" + obj.name,
+            guiObj.popover({"title": obj.id + "@" + obj.branch,
                 "content": popoverMsg,
                 "trigger": "hover" });
 
@@ -191,7 +191,7 @@ define(['logManager',
             $(event.target).addClass("actual");
 
             self.onCommitDblClick({"id": $(event.target).attr("data-id"),
-                                   "name": $(event.target).attr("data-n")});
+                                   "branch": $(event.target).attr("data-n")});
         });
 
         this._resizeDialog(maxX + padding, this._yDelta * len + padding);
@@ -256,7 +256,7 @@ define(['logManager',
                 "class" : "item",
                 "id": params.id.replace("#", "").replace("*", ""),
                 "data-id": params.id,
-                "data-n": params.name
+                "data-b": params.branch
             });
 
         itemObj.css({"left": params.x,

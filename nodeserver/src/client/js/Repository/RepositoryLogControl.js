@@ -33,7 +33,7 @@ define(['logManager'], function (logManager) {
             com = commits[i];
 
             this._view.addCommit({"id": com._id,
-                                  "name": com.name,
+                                  "branch": com.name,
                                   "message": com.message,
                                   "parents": com.parents,
                                   "timestamp": com.time || com.end, //TODO: end is obsolete, time should be used

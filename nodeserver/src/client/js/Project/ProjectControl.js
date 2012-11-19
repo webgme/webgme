@@ -17,8 +17,9 @@ define(['logManager'], function (logManager) {
             self._client.fullRefresh();
         };
 
-        this._projectPanelView.onCommit = function (msg) {
-            self._client.commit({"message": msg});
+        this._projectPanelView.onCommit = function (params) {
+            self._client.commit({"message": params.msg,
+                                 "branch": params.branch});
         };
 
         this._projectPanelView.onGetClient = function () {

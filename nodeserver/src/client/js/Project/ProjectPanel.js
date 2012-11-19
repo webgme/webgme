@@ -72,9 +72,32 @@ define(['logManager',
     ProjectPanel.prototype._btnCommitClick = function () {
         var self = this,
             commitSaveButton = this._commitMsgDialog.find("#btnSave"),
-            txtMessage = this._commitMsgDialog.find("#txtMessage");
+            txtMessage = this._commitMsgDialog.find("#txtMessage"),
+            txtBranchName = this._commitMsgDialog.find("#txtBranchName"),
+            btnGroupBranch = this._commitMsgDialog.find("#btnGroupBranch"),
+            client = this.onGetClient(),
+            currentBranchName = client.getActualBranch(),
+            btnCurrent = btnGroupBranch.find(".btnCurrent"),
+            btnNew = btnGroupBranch.find(".btnNew");
+
+        btnNew.removeClass("active");
+        btnCurrent.addClass("active");
+        txtBranchName.val(currentBranchName).attr('disabled', 'disabled');
 
         this._commitMsgDialog.modal();
+
+        btnGroupBranch.on('click', function (event) {
+            var selected = $(event.target).attr("data-b");
+
+            if (selected === "current") {
+                txtBranchName.val(currentBranchName);
+                txtBranchName.attr('disabled', 'disabled');
+            } else {
+                txtBranchName.val("");
+                txtBranchName.removeAttr('disabled');
+                txtBranchName.focus();
+            }
+        });
 
         txtMessage.on('keyup', function (event) {
             if (txtMessage.val() === "") {
@@ -85,16 +108,24 @@ define(['logManager',
         });
 
         commitSaveButton.bind('click', function (event) {
-            var msg = self._commitMsgDialog.find("#txtMessage").val();
+            var msg = self._commitMsgDialog.find("#txtMessage").val(),
+                selectedBranch = btnGroupBranch.find(".active").attr("data-b");
 
-            if (msg !== "") {
+            if (selectedBranch === "current") {
+                selectedBranch = currentBranchName;
+            } else {
+                selectedBranch = txtBranchName.val();
+            }
+
+            if (msg !== "" && selectedBranch !== "") {
                 txtMessage.val("");
                 self._commitMsgDialog.modal('hide');
                 commitSaveButton.unbind('click');
                 txtMessage.off('keyup');
                 event.stopPropagation();
                 event.preventDefault();
-                self.onCommit(msg);
+                self.onCommit({"message": msg,
+                    "branch": selectedBranch});
             }
         });
 
@@ -127,8 +158,8 @@ define(['logManager',
         this._logger.warning("onFullRefresh is not overridden in Controller...");
     };
 
-    ProjectPanel.prototype.onCommit = function (msg) {
-        this._logger.warning("onCommit is not overridden in Controller...");
+    ProjectPanel.prototype.onCommit = function (params) {
+        this._logger.warning("onCommit is not overridden in Controller...: " + JSON.stringify(params));
     };
 
     ProjectPanel.prototype.onGetClient = function () {
