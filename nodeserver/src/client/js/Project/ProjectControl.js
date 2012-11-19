@@ -18,7 +18,7 @@ define(['logManager'], function (logManager) {
         };
 
         this._projectPanelView.onCommit = function (params) {
-            self._client.commit({"message": params.msg,
+            self._client.commit({"message": params.message,
                                  "branch": params.branch});
         };
 
