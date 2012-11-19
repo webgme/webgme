@@ -170,7 +170,7 @@ define([
             var createBranch = function(name,callback){
                 var start = TIMESTAMP();
                 var guid = "["+GUID()+"]";
-                var text = guid+"createBranch("+JSON.stringify(name)+")";
+                var text = guid+"createBranch("+name+")";
                 log(text);
                 storage.createBranch(name,function(err,nodes){
                     log(text+ETIMESTRING(start));
@@ -181,7 +181,7 @@ define([
             var deleteBranch = function(name,callback){
                 var start = TIMESTAMP();
                 var guid = "["+GUID()+"]";
-                var text = guid+"deleteBranch("+JSON.stringify(name)+")";
+                var text = guid+"deleteBranch("+name+")";
                 log(text);
                 storage.deleteBranch(name,function(err,nodes){
                     log(text+ETIMESTRING(start));
@@ -192,7 +192,7 @@ define([
             var updateBranch = function(name,callback){
                 var start = TIMESTAMP();
                 var guid = "["+GUID()+"]";
-                var text = guid+"updateBranch("+JSON.stringify(name)+")";
+                var text = guid+"updateBranch("+name+")";
                 log(text);
                 storage.updateBranch(name,function(err,nodes){
                     log(text+ETIMESTRING(start));

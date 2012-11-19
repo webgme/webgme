@@ -352,9 +352,20 @@ define([
                 return activeActor.getRootKey();
             }
         };
-        self.commit = function(message,branch){
-            if(branch && branch !== self.getActualBranch()){
-
+        self.commit = function(parameters){
+            if(activeProject && activeActor){
+                if(parameters.branch && parameters.branch !== self.getActualBranch()){
+                    //TODO we should check somewhere if the new branchname doesn't exsist
+                    storages[activeProject].createBranch(parameters.branch,function(err){
+                        if(err){
+                            console.log("cannot create new branch due to "+err);
+                        } else {
+                            activeActor.changeBranch(parameters.message,parameters.branch);
+                        }
+                    });
+                } else {
+                    activeActor.commit(parameters.message);
+                }
             }
         };
 

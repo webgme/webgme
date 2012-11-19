@@ -80,7 +80,8 @@ define([
                 }
             });
         };
-        var commit = function(callback){
+        var commit = function(msg,callback){
+            msg = msg || " - automated commit object - ";
             callback = callback || function(){};
 
             var commitobj = {
@@ -89,7 +90,7 @@ define([
                 parents : [mycommit[KEY]],
                 updates : [userstamp],
                 time    : commonUtil.timestamp(),
-                message : " - automated commit object - ",
+                message : msg,
                 name    : branch,
                 type    : "commit"
             };
@@ -413,6 +414,12 @@ define([
             } else{
             }
         };
+        var changeBranch = function(commitmsg,newbranchname){
+            if(newbranchname){
+                branch = newbranchname;
+            }
+            modifyRootOnServer(commitmsg);
+        };
 
         /*helping funcitons*/
         var newRootArrived = function(roothash,callback){
@@ -435,9 +442,11 @@ define([
                         console.log("not ready database, wait for new root");
                     }
                 });
+            } else {
+                callback();
             }
         };
-        var modifyRootOnServer = function(){
+        var modifyRootOnServer = function(commitmsg){
             if(!intransaction){
                 var oldroot = currentRoot;
                 var newhash = currentCore.persist(currentNodes["root"],function(err){
@@ -450,7 +459,7 @@ define([
                         }
                         newRootArrived(newhash,function(){
                             //now we make a commit
-                            commit(function(err,commitobj){
+                            commit(commitmsg,function(err,commitobj){
                                 if(!err){
                                     mycommit = commitobj;
                                     //try to update branch if we are currently online
@@ -785,6 +794,8 @@ define([
             goOnline  : goOnline,
             buildUp   : buildUp,
             dismantle : dismantle,
+            changeBranch : changeBranch,
+            commit : changeBranch,
             //UI handling
             addUI            : addUI,
             removeUI         : removeUI,
@@ -793,7 +804,7 @@ define([
             updateTerritory  : updateTerritory,
             fullRefresh      : fullRefresh,
             //commit
-            commit       : commit,
+            //commit       : commit,
             //nodes to UI
             getNode          : getNode,
             getRootKey       : getRootKey,
