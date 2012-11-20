@@ -1,0 +1,89 @@
+/************** OVEERIDE BOOTSTRAP *******************/
+.popover {
+    z-index: 1100;
+    width: auto;
+}
+.btn-group {
+    display: inline-block; /*introduced in 2.2.1*/
+}
+
+/******************* MICRO BUTTON DEFINITION *******************/
+
+.btn-micro {
+    padding: 2px 6px;
+    font-size: 11px;
+    line-height: 9px; /* 17px;*/
+}
+
+button.btn.btn-micro,
+input[type="submit"].btn.btn-micro {
+    *padding-top: 1px;
+    *padding-bottom: 1px;
+}
+
+.btn-group > .btn-micro {
+    font-size: 11px;
+}
+
+.btn-group > .btn-micro + .dropdown-toggle {
+    *padding-top: 2px;
+    padding-right: 5px;
+    *padding-bottom: 2px;
+    padding-left: 5px;
+}
+
+.btn-micro .caret {
+    margin-top: 3px; /*6px;*/
+}
+
+.btn-micro .label,
+.btn-micro .badge {
+    top: 0;
+}
+
+/******************* GRAY BUTTON DEFINITION *******************/
+.btn-gray.active
+{
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.btn-gray {
+    color: #ffffff;
+    text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+    background-color: #919191;
+    *background-color: #818181;
+    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#9b9b9b), to(#818181));
+    background-image: -webkit-linear-gradient(top, #9b9b9b, #818181);
+    background-image: -o-linear-gradient(top, #9b9b9b, #818181);
+    background-image: linear-gradient(to bottom, #9b9b9b, #818181);
+    background-image: -moz-linear-gradient(top, #9b9b9b, #818181);
+    background-repeat: repeat-x;
+    border-color: #818181 #818181 #595959;
+    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+    filter: progid:dximagetransform.microsoft.gradient(startColorstr='#ff9b9b9b', endColorstr='#ff818181', GradientType=0);
+    filter: progid:dximagetransform.microsoft.gradient(enabled=false);
+}
+
+.btn-gray:hover,
+.btn-gray:active,
+.btn-gray.active,
+.btn-gray.disabled,
+.btn-gray[disabled] {
+    color: #ffffff;
+    background-color: #818181;
+    *background-color: #747474;
+}
+
+.btn-gray:active,
+.btn-gray.active {
+    background-color: #666666 \9;
+}
+
+.btn-group.open .btn-gray.dropdown-toggle {
+    background-color: #818181;
+}
+
+.btn-gray .caret {
+    border-top-color: #ffffff;
+    border-bottom-color: #ffffff;
+}
