@@ -2,7 +2,7 @@ define([],function(){
     var KEY = "_id";
     var BID = "*#*";
     var ClientCommitInfo = function(parameters){
-        var refreshId = setInterval(refreshCommits,parameters.refreshrate),
+        var refreshId = null,
             storage = parameters.storage,
             commits = {};
 
@@ -103,6 +103,8 @@ define([],function(){
                 }
             });
         };
+
+        refreshId = setInterval(refreshCommits,parameters.refreshrate);
 
 
         return {

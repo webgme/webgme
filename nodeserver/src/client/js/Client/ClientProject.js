@@ -44,9 +44,17 @@ define([
         };
         var goOnline = function(callback){
             callback = callback || function(){};
-            status = 'online';
-            storage.requestPoll(branch,poll);
-            modifyRootOnServer("- going online -",callback);
+            if(status !== 'online'){
+                status = 'online';
+                storage.requestPoll(branch,poll);
+                modifyRootOnServer("- going online -",callback);
+            } else {
+                callback();
+            }
+        };
+        var networkError = function(){
+            status = 'nonetwork';
+            master.changeStatus(id,status);
         };
         var buildUp = function(callback){
             callback = callback || function(){};
@@ -800,6 +808,7 @@ define([
             //functios to master
             goOffline : goOffline,
             goOnline  : goOnline,
+            networkError : networkError,
             buildUp   : buildUp,
             dismantle : dismantle,
             changeBranch : changeBranch,

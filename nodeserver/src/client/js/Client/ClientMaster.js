@@ -53,6 +53,20 @@ define([
             self.dispatchEvent( self.events.NETWORKSTATUS_CHANGED, status );
             console.log(actorid+" is in "+status+" state");
         };
+        self.dataInSync = function(projectid){
+            for(var i=0;i<projectsinfo[projectid].actors.length;i++){
+                if( projectsinfo[projectid].actors[i].id){
+                    actors[projectsinfo[projectid].actors[i].id].goOnline();
+                }
+            }
+        };
+        self.dataOutSync = function(projectid){
+            for(var i=0;i<projectsinfo[projectid].actors.length;i++){
+                if( projectsinfo[projectid].actors[i].id){
+                    actors[projectsinfo[projectid].actors[i].id].networkError();
+                }
+            }
+        };
 
         //init - currently it means, we try to establish storage connection to all our saved projects
         //and create actor for all started branches...
@@ -140,7 +154,8 @@ define([
                         faulttolerant : true,
                         cache : true,
                         logger : null,
-                        log : false
+                        log : false,
+                        watcher : self
                     });
                     tempstorage.open(function(err){
                         if(err){
