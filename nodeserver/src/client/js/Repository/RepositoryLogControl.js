@@ -12,7 +12,7 @@ define(['logManager'], function (logManager) {
 
         //override view event handlers
         this._view.onCommitDblClick = function (params) {
-            self._client.loadCommit(params.id);
+            self._client.selectCommit(params.id);
         };
 
         this._logger = logManager.create("RepositoryLogControl");
