@@ -9,9 +9,17 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
             PENDING = "pending",
             OBJECTS = localStorage,
             inSync = options.watcher ? options.watcher.dataInSync : function(){},
-            outSync = options.watcher ? options.watcher.dataOutSync : function(){};
+            outSync = options.watcher ? options.watcher.dataOutSync : function(){},
+            syncronized = true;
 
 
+        var goOutOfSync = function(){
+            if(syncronized){
+                syncronized = false;
+                storage.whenAvailable(sync);
+                outSync(options.projectinfo);
+            }
+        };
         var open = function(callback) {
             storage.open(function(err) {
                 if(!err) {
@@ -47,9 +55,8 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
                     case undefined:
                         break;
                     default:
-                        console.log("real save failed "+node[KEYNAME]);
-                        storage.whenAvailable(sync);
-                        outSync();
+                        console.log("real save failed "+node[KEYNAME]+" : "+err);
+                        goOutOfSync();
 
                         var data = OBJECTS.getItem(PENDING+node[KEYNAME]);
                         if( data ) {
@@ -87,7 +94,8 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
             var count = 0;
             var objectSyncronized = function(){
                 if(--count === 0){
-                    inSync();
+                    syncronized = true;
+                    inSync(options.projectinfo);
                 }
             };
             var tryToSave = function(obj) {
@@ -112,8 +120,7 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
                         }
                     }
                     else {
-                        storage.whenAvailable(sync);
-                        outSync();
+                        goOutOfSync();
                     }
                 });
             };
@@ -132,7 +139,8 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
             }
 
             if(count === 0){
-                inSync();
+                syncronized = true;
+                inSync(options.projectinfo);
             }
         };
 
