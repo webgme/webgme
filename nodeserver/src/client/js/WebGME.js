@@ -19,7 +19,9 @@ define([  'logManager',
     'js/PartBrowser/PartBrowserView',
     'js/PartBrowser/PartBrowserControl',
     'js/Project/ProjectPanel',
-    'js/Project/ProjectControl'], function (logManager,
+    'js/Project/ProjectControl',
+    'js/NetworkStatus/NetworkStatusControl',
+    'js/NetworkStatus/NetworkStatusView'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -37,7 +39,9 @@ define([  'logManager',
                                             PartBrowserView,
                                             PartBrowserControl,
                                             ProjectPanel,
-                                            ProjectControl) {
+                                            ProjectControl,
+                                            NetworkStatusControl,
+                                            NetworkStatusView) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -83,7 +87,9 @@ define([  'logManager',
         partBrowserController,
         partBrowserView,
         projectPanel,
-        projectController;
+        projectController,
+        networkStatusView,
+        networkStatusControl;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -235,6 +241,9 @@ define([  'logManager',
 
             projectPanel = new ProjectPanel("projectHistoryPanel");
             projectController = new ProjectControl(proxy, projectPanel);
+
+            networkStatusView = new NetworkStatusView("panNetworkStatus");
+            networkStatusControl = new NetworkStatusControl(proxy, networkStatusView);
 
             callback(null);
         }
