@@ -35,7 +35,8 @@ define([
         /*event functions to relay information between users*/
         $.extend(self, new EventDispatcher());
         self.events = {
-            "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED"
+            "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED",
+            "NETWORKSTATUS_CHANGED"  : "NETWORKSTATUS_CHANGED"
         };
         self.setSelectedObjectId = function ( objectId ) {
             if ( objectId !== selectedObjectId ) {
@@ -45,6 +46,12 @@ define([
         };
         self.clearSelectedObjectId = function () {
             self.setSelectedObjectId(null);
+        };
+        //notifications and requests from the actor
+        self.changeStatus = function(actorid,status){
+            //TODO we should handle this correctly
+            self.dispatchEvent( self.events.NETWORKSTATUS_CHANGED, status );
+            console.log(actorid+" is in "+status+" state");
         };
 
         //init - currently it means, we try to establish storage connection to all our saved projects
@@ -369,6 +376,21 @@ define([
             }
         };
 
+        self.goOffline = function(){
+            if(activeProject && activeActor){
+                activeActor.goOffline();
+            }
+        };
+        self.goOnline = function(){
+            if(activeProject && activeActor){
+                activeActor.goOnline(function(err){
+                    if(err){
+                        console.log("cannot go online "+err);
+                    }
+                });
+            }
+        };
+
         //functions handling UI components
         self.addUI = function(ui,oneevent,guid){
             guid = guid || GUID();
@@ -380,6 +402,10 @@ define([
         };
         self.removeUI = function(guid){
             delete users[guid];
+            if(activeActor){
+                activeActor.removeUI(guid);
+            }
+
         };
         self.disableEventToUI = function(guid){
             if(activeActor){
@@ -407,11 +433,6 @@ define([
             }
         };
 
-        //notifications and requests from the actor
-        self.changeStatus = function(actorid,status){
-            //TODO we should handle this correctly
-            console.log(actorid+" is in "+status+" state");
-        };
         //MGAlike - forwarding to the active actor
         self.getNode = function(path){
             if(activeActor){

@@ -42,8 +42,11 @@ define([
             status = "offline";
             master.changeStatus(id,status);
         };
-        var goOnline = function(){
-            //TODO what we should do here???
+        var goOnline = function(callback){
+            callback = callback || function(){};
+            status = 'online';
+            storage.requestPoll(branch,poll);
+            modifyRootOnServer("- going online -",callback);
         };
         var buildUp = function(callback){
             callback = callback || function(){};
@@ -446,7 +449,8 @@ define([
                 callback();
             }
         };
-        var modifyRootOnServer = function(commitmsg){
+        var modifyRootOnServer = function(commitmsg, callback){
+            callback = callback || function(){};
             if(!intransaction){
                 var oldroot = currentRoot;
                 var newhash = currentCore.persist(currentNodes["root"],function(err){
@@ -472,17 +476,21 @@ define([
                                                 status = 'online';
                                             }
                                             master.changeStatus(id,status);
+                                            callback(err);
                                         });
                                     }
                                 } else {
                                     //something wrong happened during commit, so go offline
                                     status = 'offline';
                                     master.changeStatus(id,status);
+                                    callback(err);
                                 }
                             });
                         });
                     }
                 });
+            } else {
+                callback('cannot change root during transaction!!!');
             }
         };
         var rollBackModification = function(){
