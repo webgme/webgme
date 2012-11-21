@@ -38,6 +38,7 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
                         err = null;
                         node = data.object;
                     }
+                    goOutOfSync();
                 }
                 callback(err,node);
             });
