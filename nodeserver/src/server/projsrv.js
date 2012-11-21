@@ -51,7 +51,7 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
 
         var isTruePredecessor = function(commit,predecessorcommit){
             if(_commits[commit]){
-                if(_commits[commit].parents.indexOf(predecessorcommit) !== -1){
+                if( predecessorcommit === null || _commits[commit].parents.indexOf(predecessorcommit) !== -1){
                     return true;
                 } else {
                     var retval = false;

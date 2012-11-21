@@ -54,9 +54,11 @@ define([
             console.log(actorid+" is in "+status+" state");
         };
         self.dataInSync = function(projectid){
-            for(var i=0;i<projectsinfo[projectid].actors.length;i++){
-                if( projectsinfo[projectid].actors[i].id){
-                    actors[projectsinfo[projectid].actors[i].id].goOnline();
+            if(projectsinfo[projectid]){
+                for(var i=0;i<projectsinfo[projectid].actors.length;i++){
+                    if( projectsinfo[projectid].actors[i].id){
+                        actors[projectsinfo[projectid].actors[i].id].goOnline();
+                    }
                 }
             }
         };
@@ -286,6 +288,83 @@ define([
 
             } else {
                 return "no valid project";
+            }
+        };
+        self.createProject = function(projectname){
+            var connecting = function(namespace,innercallback){
+                var tempstorage = new ClientStorage({
+                    server: location.host + namespace,
+                    options : parameters.socketiopar,
+                    projectinfo : projectname,
+                    faulttolerant : true,
+                    cache : true,
+                    logger : null,
+                    log : false,
+                    watcher : self
+                });
+                tempstorage.open(function(err){
+                    if(err){
+                        innercallback(err);
+                    } else {
+                        storages[projectname] = tempstorage;
+                        commitInfos[projectname] = new ClientCommitInfo({storage:storages[projectname],refreshrate:1000});
+                        innercallback(null);
+                    }
+                });
+            };
+            if(getLocalProjectList().indexOf(projectname) === -1){
+                if(proxy){
+                    proxy.emit('createProject',projectname,function(err){
+                        if(!err){
+                            proxy.emit('getProject',projectname,function(err,projns){
+                                if(err || projns === null || projns === undefined){
+                                    console.log('the new project dataconnection cannot be opened!!! '+err);
+                                } else {
+                                    connecting(projns,function(err){
+                                        if(err){
+                                            console.log('cannot connect to the new project database!!! '+err);
+                                        } else {
+                                            var guid = GUID();
+                                            var actor = new ClientProject({
+                                                storage: storages[projectname],
+                                                master: self,
+                                                id: guid,
+                                                userstamp: 'todo',
+                                                commit: null,
+                                                branch: "master"
+                                            });
+                                            actor.createEmpty(function(err){
+                                                if(err){
+                                                    console.log('the empty project cannot be created!!! '+err);
+                                                } else {
+                                                    //now we should save the actor into the projectsinfo array
+                                                    actors[guid] = actor;
+                                                    projectsinfo[projectname] = {
+                                                        parameters: null,
+                                                        currentactor: 0,
+                                                        actors:[{
+                                                            id:guid,
+                                                            commit:actor.getCurrentCommit(),
+                                                            branch:"master"
+                                                        }]
+                                                    };
+                                                    //self.selectProject(projectname);
+                                                    //now we just simply make the project available, but not select it
+                                                }
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            console.log('the new collection cannot be created for the project : '+err);
+                        }
+                    });
+                } else {
+                    console.log('no valid proxy connection!!!');
+                }
+            } else {
+                console.log("you must use individual name!!!");
             }
         };
         self.selectCommit = function(commit){

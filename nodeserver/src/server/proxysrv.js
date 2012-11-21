@@ -1,4 +1,4 @@
-define([ "core/assert","common/CommonUtil","server/projsrv","socket.io"], function (ASSERT,CU,PROJ,IO) {
+define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io"], function (ASSERT,CU,PROJ,MONGODB,IO) {
     "use strict";
     var ProxyServer = function(options){
         ASSERT((options.io && options.namespace) || options.port);
@@ -15,6 +15,31 @@ define([ "core/assert","common/CommonUtil","server/projsrv","socket.io"], functi
             _log(prefix+txt);
         };
 
+        var getAvailableProjects = function(callback){
+            var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port));
+            db.open(function(err){
+                if(err){
+                    callback(err,[]);
+                } else {
+                    db.collectionNames(function (err,collections) {
+                        if(err){
+                            callback(err,[]);
+                            db.close();
+                        } else {
+                            var names = [];
+                            for(var i=0;i<collections.length;i++){
+                                var collectionname = collections[i].name.substring(collections[i].name.indexOf(".") + 1);
+                                if(collectionname.indexOf('system') === -1 && collectionname.indexOf('.') === -1){
+                                    names.push(collectionname);
+                                }
+                            }
+                            callback(null,names);
+                            db.close();
+                        }
+                    });
+                }
+            });
+        };
 
         if(options.io){
             _socket = options.io.of(options.namespace);
@@ -28,33 +53,52 @@ define([ "core/assert","common/CommonUtil","server/projsrv","socket.io"], functi
             log("connection arrived",socket.id);
 
             socket.on('availableProjects',function(callback){
-                callback(null,options.projects);
+                getAvailableProjects(callback);
+            });
+            socket.on('createProject',function(projectname,callback){
+                var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port));
+                db.open(function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        db.createCollection(projectname,function(err,collection){
+                            callback(err);
+                            db.close();
+                        });
+                    }
+                });
             });
 
             socket.on('getProject',function(project,callback){
-                if(options.projects.indexOf(project) === -1){
-                    callback("unknown project");
-                } else {
-                    if(_projects[project]){
-                        callback(null,_projects[project].info);
+                getAvailableProjects(function(err,projects){
+                    if(err){
+                        callback(err);
                     } else {
-                        var projguid = "/"+CU.guid();
-                        var proj = new PROJ({
-                            io        : options.io,
-                            namespace : projguid,
-                            options   : options.options,
-                            mongo     : {
-                                database   : options.mongo.database,
-                                host       : options.mongo.host,
-                                port       : options.mongo.port,
-                                collection : project,
-                                options    : options.mongo.options
+                        if(projects.indexOf(project) === -1){
+                            callback("unknown project");
+                        } else {
+                            if(_projects[project]){
+                                callback(null,_projects[project].info);
+                            } else {
+                                var projguid = "/"+CU.guid();
+                                var proj = new PROJ({
+                                    io        : options.io,
+                                    namespace : projguid,
+                                    options   : options.options,
+                                    mongo     : {
+                                        database   : options.mongo.database,
+                                        host       : options.mongo.host,
+                                        port       : options.mongo.port,
+                                        collection : project,
+                                        options    : options.mongo.options
+                                    }
+                                });
+                                _projects[project] = {info: projguid, project:proj};
+                                callback(null,_projects[project].info);
                             }
-                        });
-                        _projects[project] = {info: projguid, project:proj};
-                        callback(null,_projects[project].info);
+                        }
                     }
-                }
+                });
             });
         });
     };
