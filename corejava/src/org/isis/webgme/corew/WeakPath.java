@@ -102,12 +102,17 @@ public class WeakPath {
 		return node;
 	}
 
+	protected WeakNode createNode(WeakNode parent, String relid) {
+		return new WeakNode(parent, relid);
+	}
+
 	public WeakNode createRoot() {
-		return new WeakNode(null, null);
+		return createNode(null, null);
 	}
 
 	public WeakNode getChild(WeakNode node, String relid) {
 		ArrayList<WeakReference<WeakNode>> children = node.children;
+
 		int i = children.size();
 		while (--i >= 0) {
 			WeakReference<WeakNode> ref = children.get(i);
@@ -119,7 +124,7 @@ public class WeakPath {
 				return child;
 		}
 
-		WeakNode child = new WeakNode(node, relid);
+		WeakNode child = createNode(node, relid);
 		children.add(new WeakReference<WeakNode>(child));
 
 		return child;

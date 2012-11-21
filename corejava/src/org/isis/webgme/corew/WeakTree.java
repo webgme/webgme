@@ -14,13 +14,69 @@ public class WeakTree extends WeakPath {
 		return node.data instanceof Map;
 	}
 
+	@SuppressWarnings("unchecked")
+	private Map<String, Object> mutate(WeakNode node) {
+		Map<String, Object> map = null;
+
+		if (node.data instanceof Map)
+			map = (Map<String, Object>) node.data;
+		else if (node.data instanceof JsonObject) {
+			map = ((JsonObject) node.data).mutate();
+
+			if (node.parent != null) {
+				Map<String, Object> parent = mutate(node.parent);
+				assert (parent.get(node.relid) == node.data || map.get(
+						JsonObject.ID_NAME).equals(parent.get(node.relid)));
+
+				parent.put(node.relid, map);
+			}
+
+			if (map.get(JsonObject.ID_NAME) != null)
+				map.put(JsonObject.ID_NAME, "");
+		}
+
+		return map;
+	}
+
 	public Object getData(WeakNode node) {
-		assert (!isMutable(node));
+		if (node.data instanceof Map)
+			throw new IllegalStateException();
+
 		return node.data;
 	}
 
+	private static Object getJsonProperty(Object object, String name) {
+		if (object instanceof JsonObject) {
+			JsonObject json = (JsonObject) object;
+			object = json.getProperty(name);
+		} else if (object instanceof Map) {
+			@SuppressWarnings("unchecked")
+			Map<String, Object> map = (Map<String, Object>) object;
+			object = map.get(name);
+		} else
+			return null;
+
+		return object != null ? object : EMPTY;
+	}
+
+	public void resetData(WeakNode node, Object data) {
+		assert (data == null || data instanceof String
+				|| data instanceof Integer || data instanceof JsonObject);
+
+		node.data = data;
+
+		Iterator<WeakNode> iter = getChildren(node).iterator();
+		while (iter.hasNext()) {
+			WeakNode child = iter.next();
+			resetData(child, getJsonProperty(data, child.relid));
+		}
+	}
+
 	public void setData(WeakNode node, Object data) {
-		assert (data instanceof String || data instanceof Integer || data instanceof JsonObject);
+		if (!(data instanceof String || data instanceof Integer || data instanceof JsonObject))
+			throw new IllegalArgumentException();
+
+		resetData(node, data);
 
 		if (node.parent != null) {
 			Map<String, Object> map = mutate(node.parent);
@@ -35,81 +91,45 @@ public class WeakTree extends WeakPath {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
-	private Object getJsonValue(Object object, String key) {
-		if (object instanceof Map)
-			return ((Map<String, Object>) object).get(key);
-		else if (object instanceof JsonObject)
-			return ((JsonObject) object).getProperty(key);
+	public String getHash(WeakNode node) {
+		return (String) getJsonProperty(node.data, JsonObject.ID_NAME);
+	}
+
+	public void setHash(WeakNode node, String hash) {
+		Map<String, Object> map = mutate(node);
+		assert (map != null);
+
+		if (hash != null)
+			map.put(JsonObject.ID_NAME, hash);
 		else
-			return null;
+			map.remove(JsonObject.ID_NAME);
+	}
+
+	public Object getProperty(WeakNode node, String name) {
+		WeakNode child = getChild(node, name);
+		return getData(child);
+	}
+
+	public void setProperty(WeakNode node, String name, Object value) {
+		WeakNode child = getChild(node, name);
+		setData(child, value);
+	}
+
+	@Override
+	protected WeakNode createNode(WeakNode parent, String relid) {
+		WeakNode node = super.createNode(parent, relid);
+
+		if (parent != null)
+			node.data = getJsonProperty(parent.data, relid);
+
+		return node;
 	}
 
 	@Override
 	public WeakNode getChild(WeakNode node, String relid) {
-		WeakNode child = super.getChild(node, relid);
-		if( child.data == WeakNode.UNINITIALIZED_DATA ) {
-			child.data = 
-			if( node.data instanceof JsonObject ) {
-				Object data = ((JsonObject) node.data).getProperty(relid);
-				child.data = data != null ? data : EMPTY;
-			}
-			else if( node.data instanceof Map ) 
-		}
+		if (relid.equals(JsonObject.ID_NAME))
+			throw new IllegalArgumentException();
 
-	
-		if (node.data == null)
-			assert (child.data == null);
-		else if (child.data == null) {
-			Object data = null;
-			if (node.data instanceof JsonObject)
-				data = ((JsonObject) node.data).getProperty(relid);
-			else if(node.data instanceof Map)
-			
-			if (data child.data == null)
-				child.data = EMPTY;
-			}
-		}
-
-		return child;
-	}
-
-	@SuppressWarnings("unchecked")
-	private void setJsonValue(Object object, String key, Object value) {
-		if (object instanceof Map)
-			((Map<String, Object>) object).put(key, value);
-	}
-
-	@Override
-	public Map<String, Object> mutate(WeakNode node) {
-		if (node.data instanceof JsonObject) {
-			Map<String, Object> map = ((JsonObject) node.data).mutate();
-
-			if (node.parent != null) {
-				mutate(node.parent);
-
-				Object data = getJsonValue(node.parent.data, node.relid);
-				assert (data == node.data || (data instanceof String && data
-						.equals(map.get(JsonObject.ID_NAME))));
-
-				setJsonValue(node.parent.data, node.relid, node.data);
-			}
-
-			if (map.get(JsonObject.ID_NAME) != null)
-				map.put(JsonObject.ID_NAME, "");
-
-			node.data = map;
-		}
-
-		assert (node.data instanceof Map);
-	}
-
-	public String getHash(WeakNode node) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public void setHash(WeakNode node, String hash) {
-		// TODO Auto-generated method stub
+		return super.getChild(node, relid);
 	}
 }

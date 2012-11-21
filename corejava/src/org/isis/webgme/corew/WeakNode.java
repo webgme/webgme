@@ -4,11 +4,9 @@ import java.lang.ref.*;
 import java.util.*;
 
 public class WeakNode {
-	final static Object UNINITIALIZED_DATA = new Object();
-
 	final WeakNode parent;
 	final String relid;
-	Object data = UNINITIALIZED_DATA;
+	Object data;
 
 	WeakNode(WeakNode parent, String relid) {
 		this.parent = parent;
