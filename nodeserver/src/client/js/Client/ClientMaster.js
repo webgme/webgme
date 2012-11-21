@@ -290,7 +290,8 @@ define([
                 return "no valid project";
             }
         };
-        self.createProject = function(projectname){
+        self.createProject = function(projectname,callback){
+            callback = callback || function(){};
             var connecting = function(namespace,innercallback){
                 var tempstorage = new ClientStorage({
                     server: location.host + namespace,
@@ -318,11 +319,11 @@ define([
                         if(!err){
                             proxy.emit('getProject',projectname,function(err,projns){
                                 if(err || projns === null || projns === undefined){
-                                    console.log('the new project dataconnection cannot be opened!!! '+err);
+                                    callback('the new project dataconnection cannot be opened!!! '+err);
                                 } else {
                                     connecting(projns,function(err){
                                         if(err){
-                                            console.log('cannot connect to the new project database!!! '+err);
+                                            callback('cannot connect to the new project database!!! '+err);
                                         } else {
                                             var guid = GUID();
                                             var actor = new ClientProject({
@@ -335,7 +336,7 @@ define([
                                             });
                                             actor.createEmpty(function(err){
                                                 if(err){
-                                                    console.log('the empty project cannot be created!!! '+err);
+                                                    callback('the empty project cannot be created!!! '+err);
                                                 } else {
                                                     //now we should save the actor into the projectsinfo array
                                                     actors[guid] = actor;
@@ -350,6 +351,7 @@ define([
                                                     };
                                                     //self.selectProject(projectname);
                                                     //now we just simply make the project available, but not select it
+                                                    callback(null);
                                                 }
                                             });
                                         }
@@ -357,14 +359,14 @@ define([
                                 }
                             });
                         } else {
-                            console.log('the new collection cannot be created for the project : '+err);
+                            callback('the new collection cannot be created for the project : '+err);
                         }
                     });
                 } else {
-                    console.log('no valid proxy connection!!!');
+                    callback('no valid proxy connection!!!');
                 }
             } else {
-                console.log("you must use individual name!!!");
+                callback("you must use individual name!!!");
             }
         };
         self.selectCommit = function(commit){
