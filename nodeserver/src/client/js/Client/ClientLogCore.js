@@ -130,7 +130,11 @@ define(['commonUtil','core/core2','core/assert'], function (CU,CORE,ASSERT) {
 
         // modify
         var createNode = function (parent, relid) {
-            log("createNode("+parent["_id"]+","+relid+")");
+            if(parent){
+                log("createNode("+parent["_id"]+","+relid+")");
+            } else {
+                log("createNode(null,"+relid+")");
+            }
             return core.createNode(parent,relid);
         };
         var deleteNode = function (node) {

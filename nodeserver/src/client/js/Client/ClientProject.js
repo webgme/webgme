@@ -56,6 +56,69 @@ define([
             status = 'nonetwork';
             master.changeStatus(id,status);
         };
+        var createEmpty = function(callback){
+            var core = new ClientCore({
+                storage: storage,
+                logger: null
+            });
+            var root = core.createNode();
+            core.setRegistry(root,"isConnection",false);
+            core.setRegistry(root,"position",{ "x": 0, "y": 0});
+            core.setAttribute(root,"name","root");
+
+            //now we also creates the META folder with one object and the MODEL folder which aims to be the starting point for the projects
+            var meta = core.createNode(root);
+            core.setRegistry(meta,"isConnection",false);
+            core.setRegistry(meta,"position",{ "x": 0, "y": 0});
+            core.setAttribute(meta,"name","META");
+            var metachild = core.createNode(meta);
+            core.setRegistry(metachild,"isConnection",false);
+            core.setRegistry(metachild,"position",{ "x": 0, "y": 0});
+            core.setAttribute(metachild,"name","object");
+            var model = core.createNode(root);
+            core.setRegistry(model,"isConnection",false);
+            core.setRegistry(model,"position",{ "x": 0, "y": 0});
+            core.setAttribute(model,"name","MODEL");
+            //now we should save this and create the first commit so afterwards we will be able to connect to this project...
+            var key = core.persist(root,function(err){
+                if(err){
+                    callback(err);
+                } else {
+                    if(!key){
+                        key = core.getKey(root);
+                    }
+
+                    var initialcommit = {
+                        _id     : null,
+                        root    : key,
+                        parents : [],
+                        updates : [userstamp],
+                        time    : commonUtil.timestamp(),
+                        message : " - initial commit created automatically - ",
+                        name    : branch,
+                        type    : "commit"
+                    };
+                    initialcommit[KEY] = '#' + SHA1(JSON.stringify(initialcommit));
+
+                    storage.save(initialcommit,function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            //we should create the branch object so we can update it :)
+                            mycommit = initialcommit;
+                            storage.createBranch(branch,function(err){
+                                if(err){
+                                    callback(err);
+                                } else {
+                                    //now we should be able to update the branch object
+                                    storage.updateBranch(branch,mycommit[KEY],callback);
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        };
         var buildUp = function(callback){
             callback = callback || function(){};
             //the initializing function, here we assume that the storage connection is up and running
@@ -806,13 +869,14 @@ define([
 
         return {
             //functios to master
-            goOffline : goOffline,
-            goOnline  : goOnline,
+            goOffline    : goOffline,
+            goOnline     : goOnline,
             networkError : networkError,
-            buildUp   : buildUp,
-            dismantle : dismantle,
+            createEmpty  : createEmpty,
+            buildUp      : buildUp,
+            dismantle    : dismantle,
             changeBranch : changeBranch,
-            commit : changeBranch,
+            commit       : changeBranch,
             //UI handling
             addUI            : addUI,
             removeUI         : removeUI,
@@ -820,8 +884,6 @@ define([
             enableEventToUI  : enableEventToUI,
             updateTerritory  : updateTerritory,
             fullRefresh      : fullRefresh,
-            //commit
-            //commit       : commit,
             //nodes to UI
             getNode          : getNode,
             getRootKey       : getRootKey,
