@@ -17,6 +17,13 @@ define(['logManager'], function (logManager) {
             }
         };
 
+        this._view.onCreateNewProjectClick = function (projectName) {
+            self._logger.debug("onCreateNewProjectClick: " + projectName);
+            self._client.createProject(projectName, function () {
+                self.displayProjects();
+            });
+        };
+
         this._logger = logManager.create("ProjectsControl");
         this._logger.debug("Created");
     };
@@ -26,6 +33,8 @@ define(['logManager'], function (logManager) {
             len = availableProjects.length,
             i = len,
             activeProjectId = this._client.getActiveProject();
+
+        this._view.clearItems();
 
         while (i--) {
             this._view.addItem({"id": availableProjects[len - i - 1],
