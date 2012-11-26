@@ -28,7 +28,7 @@ define([
             storages = {},
             commitInfos = {},
             savedInfoStorage = new ClientLocalStorage(),
-            projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {},
+            projectsinfo = /*savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || */{},
             proxy = null;
 
 
@@ -90,6 +90,7 @@ define([
                             //we connected to all projects so we are mostly done
                             //select one randomly
                             //TODO this is very rude, should change it...
+                            //TODO soon the default selection will be the no selection ;)
                             if(projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]){
                                 self.selectProject(projectsinfo.activeProject);
                             } else {
@@ -450,6 +451,28 @@ define([
                 return activeActor.getCurrentBranch();
             }
         };
+        self.getBranches = function(){
+            if(activeProject){
+                var serverbranches = commitInfos[activeProject].getBranches();
+                var returnlist = {};
+                for(var i=0;i<serverbranches.length;i++){
+                    returnlist[serverbranches[i].name] = {
+                        name : serverbranches[i].name,
+                        remotecommit : serverbranches[i].commit,
+                        localcommit : null
+                    }
+                }
+                for(i in actors){
+                    returnlist[actor[i].getCurrentBranch()].localcommit = actor[i].getCurrentCommit();
+                }
+                var returnarray = [];
+                for(i in returnlist){
+                    returnarray.push(returnlist[i]);
+                }
+            } else {
+                return [];
+            }
+        };
         self.getRootKey = function(){
             if(activeProject && activeActor){
                 return activeActor.getRootKey();
@@ -484,6 +507,13 @@ define([
                         console.log("cannot go online "+err);
                     }
                 });
+            }
+        };
+        self.isReadOnly = function(){
+            if(activeActor){
+                return activeActor.isReadOnly();
+            } else {
+                return true;
             }
         };
 
@@ -607,6 +637,12 @@ define([
             if(activeActor){
                 activeActor.intellyPaste(parameters);
             }
+        };
+
+        //MGAlike - set functions
+        self.addMember = function(path,memberpath){
+        };
+        self.removeMember = function(path,memberpath){
         };
 
         //start

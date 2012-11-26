@@ -24,6 +24,7 @@ define([
             clipboard = [],
             meta = new ClientMeta(master),
             status = null,
+            readonly = parameters.readonly || false,
             intransaction = false;
 
         //functions that client master will call
@@ -173,6 +174,12 @@ define([
             storage.save(commitobj,function(err){
                 callback(err,commitobj);
             });
+        };
+        var isReadOnly = function(){
+            return readonly;
+        };
+        var getState = function(){
+            return status;
         };
 
         //root management functions
@@ -877,6 +884,8 @@ define([
             dismantle    : dismantle,
             changeBranch : changeBranch,
             commit       : changeBranch,
+            isReadOnly   : isReadOnly,
+            getState     : getState,
             //UI handling
             addUI            : addUI,
             removeUI         : removeUI,
