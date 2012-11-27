@@ -28,11 +28,30 @@
     box-sizing: border-box;
 }
 
-#repoDiag .item.at-end {
-    border: 2px solid #52A8EC;
-    margin-left: -2px;
-}
-
 #repoDiag .item.actual {
     background-color: #FF7800;
+}
+
+.tooltip.local-head,
+.tooltip.remote-head {
+    opacity: 1.0;
+    margin-left: 0px;
+    display: inline-block;
+    position: relative;
+}
+
+.remote-head .tooltip-arrow {
+    border-right-color: #FF0000 !important;
+}
+
+.remote-head .tooltip-inner {
+    background-color: #FF0000;
+}
+
+.local-head .tooltip-arrow {
+    border-right-color: #52A8EC !important;
+}
+
+.local-head .tooltip-inner {
+    background-color: #52A8EC;
 }
