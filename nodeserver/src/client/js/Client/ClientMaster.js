@@ -23,7 +23,6 @@ define([
             selectedObjectId = null,
             activeProject = null,
             activeActor = null,
-            actors = {},
             users = {},
             storages = {},
             commitInfos = {},
@@ -414,7 +413,7 @@ define([
                                                         branches:{
                                                             master:{
                                                                 actor:actor,
-                                                                commit:actor.getCurrentCommit(),
+                                                                commit:actor.getCurrentCommit()
                                                             }
                                                         }
                                                     };
@@ -558,8 +557,16 @@ define([
                         localcommit : null
                     }
                 }
-                for(i in actors){
-                    returnlist[actors[i].getCurrentBranch()].localcommit = actors[i].getCurrentCommit();
+                for(i in projectsinfo[activeProject].branches){
+                    if(returnlist[i]){
+                        returnlist[i].localcommit = projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit;
+                    } else {
+                        returnlist[i] = {
+                            name: i,
+                            remotecommit: null,
+                            localcommit : projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
+                        }
+                    }
                 }
                 var returnarray = [];
                 for(i in returnlist){
