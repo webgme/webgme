@@ -199,7 +199,8 @@ define(['logManager',
             if (headMarkerEl) {
                 headMarkerEl.css({"top": y - 7,
                     "left": x + 35,
-                    "position": "absolute"});
+                    "position": "absolute",
+                    "white-space": "nowrap"});
 
                 this._skinParts.htmlContainer.append(headMarkerEl);
             }
