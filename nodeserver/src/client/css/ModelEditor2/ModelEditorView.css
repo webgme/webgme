@@ -95,3 +95,15 @@
     pointer-events: all;
     cursor: pointer;
 }
+
+.modelEditorView .children .selectionOutline .dumpSelectionBtn {
+    bottom: -8px;
+    left: 13px;
+    width: 15px;
+    height: 13px;
+    /*background: url(../../img/adv.png) no-repeat;*/
+}
+
+.modelEditorView .children .selectionOutline .dumpSelectionBtn > i {
+    margin-top: -2px;
+}

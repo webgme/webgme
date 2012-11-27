@@ -1561,6 +1561,21 @@ define(['logManager',
                 }
             }
 
+            //TODO:DEVELOPMENT ONLY
+            //dump selection info
+            //icon-eye-open
+            this._skinParts.dumpSelectionInfo = $('<div/>', {
+                "class" : "dumpSelectionBtn selectionBtn"
+            });
+            this._skinParts.dumpSelectionInfo.html('<i class="icon-eye-open"></i>');
+            this._skinParts.selectionOutline.append(this._skinParts.dumpSelectionInfo);
+
+            this._skinParts.dumpSelectionInfo.on("mousedown", function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+                self.onDumpNodeInfo(self._selectedComponentIds);
+            });
+
             /* END OF - ADD BUTTONS TO SELECTION OUTLINE*/
         } else {
             this._hideSelectionOutline();
@@ -1945,6 +1960,12 @@ define(['logManager',
     ModelEditorView.prototype.onCreateNode = function (newNodeDescriptor) {
         this._logger.warning("onCreateNode is not overridden in Controller...");
     };
+
+    ModelEditorView.prototype.onDumpNodeInfo = function (idList) {
+        this._logger.warning("onDumpNodeInfo is not overridden in Controller...");
+    };
+
+
     /************* END OF --- PUBLIC API TO OVERRIDE --------------------*/
 
     //TODO: check this here...
