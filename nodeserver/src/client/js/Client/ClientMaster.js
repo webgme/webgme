@@ -29,7 +29,8 @@ define([
             commitInfos = {},
             savedInfoStorage = new ClientLocalStorage(),
             projectsinfo = /*savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || */{},
-            proxy = null;
+            proxy = null,
+            viewer = null;
 
 
         /*event functions to relay information between users*/
@@ -54,18 +55,32 @@ define([
             console.log(actorid+" is in "+status+" state");
         };
         self.dataInSync = function(projectid){
-            if(projectsinfo[projectid]){
+            /*if(projectsinfo[projectid]){
                 for(var i=0;i<projectsinfo[projectid].actors.length;i++){
                     if( projectsinfo[projectid].actors[i].id){
                         actors[projectsinfo[projectid].actors[i].id].goOnline();
                     }
                 }
+            }*/
+            if(projectsinfo[projectid]){
+                for(var i in projectsinfo[projectid].branches){
+                    if(projectsinfo[projectid].branches[i].actor){
+                        projectsinfo[projectid].branches[i].actor.goOnline();
+                    }
+                }
             }
         };
         self.dataOutSync = function(projectid){
-            for(var i=0;i<projectsinfo[projectid].actors.length;i++){
+            /*for(var i=0;i<projectsinfo[projectid].actors.length;i++){
                 if( projectsinfo[projectid].actors[i].id){
                     actors[projectsinfo[projectid].actors[i].id].networkError();
+                }
+            }*/
+            if(projectsinfo[projectid]){
+                for(var i in projectsinfo[projectid].branches){
+                    if(projectsinfo[projectid].branches[i].actor){
+                        projectsinfo[projectid].branches[i].actor.networkError();
+                    }
                 }
             }
         };
@@ -99,12 +114,13 @@ define([
                             setInterval(saveProjectsInfo,1000);
                         }
                     };
+
                     for(var i=0;i<serverlist.length;i++){
                         if(!projectsinfo[serverlist[i]]){
                             projectsinfo[serverlist[i]] = {
                                 parameters: null,
-                                currentactor: null,
-                                actors:[]
+                                currentbranch: null,
+                                branches: {}
                             }
                         }
                     }
@@ -213,23 +229,24 @@ define([
             delete info.activeProject;
 
             for(var i in info){
-                for(var j=0;j<info[i].actors.length;j++){
-                    if(info[i].actors[j].id){
-                        info[i].actors[j].commit = actors[info[i].actors[j].id].getCurrentCommit();
-                        info[i].actors[j].id = null;
-                    }
+                for(var j in info.branches){
+                    info[i].branches[j].actor = null;
                 }
                 info[i].parameters = null;
             }
             info.activeProject = activeProject;
             savedInfoStorage.save('#'+parameters.userstamp+'#saved#',info);
         };
-        var activateActor = function(actor){
+        var activateActor = function(actor,commit){
+            if(actor !== viewer){
+                $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch);
+            }
+            activeActor = actor;
             actor.dismantle();
             for(var i in users){
                 actor.addUI(users[i]);
             }
-            actor.buildUp(function(){
+            actor.buildUp(commit,function(){
                 self.clearSelectedObjectId();
                 for(i in users){
                     if(users[i].UI.reLaunch){
@@ -258,41 +275,85 @@ define([
                 }
 
                 activeProject = projectname;
-                $('#maintitlespan').html(activeProject);
-                //selecting the default actor
-                var myinfo = projectsinfo[activeProject];
-                var startcommit = null;
-                if(myinfo.currentactor){
-                    startcommit = myinfo.actors[myinfo.currentactor].commit;
-                }
-                if(startcommit){
-                    commitInfos[activeProject].getAllCommitsNow(function(err,commits){
-                        commitInfos[activeProject].getBranchesNow(function(err,branches){
-                            self.selectCommit(startcommit);
-                        });
-                    });
-                } else {
-                    //TODO we have many options, now we will choose one which must work - select the latest commit
-                    commitInfos[activeProject].getAllCommitsNow(function(err,commits){
-                        if(!err && commits && commits.length>0){
-                            commitInfos[activeProject].getBranchesNow(function(err,branches){
-                                if(!err && branches && branches.length>0){
-                                    //we search for master branch, otherwise we load the first in line
-                                    var masterindex = 0;
-                                    for(var i=0;i<branches.length;i++){
-                                        if(branches[i].name === 'master'){
-                                            masterindex = i;
-                                        }
+                var myinfo = projectsinfo[projectname];
+                commitInfos[projectname].getBranchesNow(function(err,branches){
+                    if(!err && branches && branches.length>0){
+                        for(var i=0;i<branches.length;i++){
+                            if(myinfo.branches[branches[i].name] === null || myinfo.branches[branches[i].name] === undefined ){
+                                myinfo.branches[branches[i].name] = {
+                                    actor:null,
+                                    commit:branches[i].commit
+                                }
+                            }
+                        }
+                        //at this point all branch info is filled so we can go for the master/first available or the last used one
+                        if(myinfo.currentbranch){
+                            if(myinfo.branches[myinfo.currentbranch]){
+                                if(!myinfo.branches[myinfo.currentbranch].actor){
+                                    myinfo.branches[myinfo.currentbranch].actor = new ClientProject({
+                                        storage: storages[activeProject],
+                                        master: self,
+                                        id: null,
+                                        userstamp: 'todo',
+                                        commit: myinfo.branches[myinfo.currentbranch].commit,
+                                        branch: myinfo.currenbtranch,
+                                        readonly: false
+                                    });
+                                }
+                            } else {
+                                //now what the f**k???
+                                console.log('something really fucked up');
+                            }
+                        } else {
+                            if(myinfo.branches['master']){
+                                if(!myinfo.branches['master'].actor){
+                                    myinfo.currentbranch = 'master';
+                                    myinfo.branches['master'].actor = new ClientProject({
+                                        storage: storages[activeProject],
+                                        master: self,
+                                        id: null,
+                                        userstamp: 'todo',
+                                        commit: myinfo.branches['master'].commit,
+                                        branch: 'master',
+                                        readonly: false
+                                    });
+                                }
+                            } else {
+                                for(var i in myinfo.branches){
+                                    myinfo.currentbranch = i;
+                                    if(!myinfo.branches[i].actor){
+                                        myinfo.branches[i].actor = new ClientProject({
+                                            storage: storages[activeProject],
+                                            master: self,
+                                            id: null,
+                                            userstamp: 'todo',
+                                            commit: myinfo.branches[i].commit,
+                                            branch: i,
+                                            readonly: false
+                                        });
                                     }
-                                    self.selectCommit(branches[masterindex].commit);
+                                    break;
+                                }
+                            }
+                        }
+                        //at this point we should selected/created our actor - so we simply activate it
+                        try{
+                            commitInfos[activeProject].getAllCommitsNow(function(err,commits){
+                                if(!err && commits && commits.length>0){
+                                    activateActor(myinfo.branches[myinfo.currentbranch].actor,myinfo.branches[myinfo.currentbranch].commit);
+                                    console.log('activated');
                                 } else {
-                                    self.selectCommit(commits[0]);
+                                    throw(err);
                                 }
                             });
+                        } catch(e){
+                            console.log(e);
                         }
-                    });
-                }
-
+                    } else {
+                        //no branch for the given project, baaad
+                        console.log('cannot found any branch for the given project!!!');
+                    }
+                });
             } else {
                 return "no valid project";
             }
@@ -336,25 +397,26 @@ define([
                                             var actor = new ClientProject({
                                                 storage: storages[projectname],
                                                 master: self,
-                                                id: guid,
+                                                id: null,
                                                 userstamp: 'todo',
                                                 commit: null,
-                                                branch: "master"
+                                                branch: "master",
+                                                readonly: false
                                             });
                                             actor.createEmpty(function(err){
                                                 if(err){
                                                     callback('the empty project cannot be created!!! '+err);
                                                 } else {
                                                     //now we should save the actor into the projectsinfo array
-                                                    actors[guid] = actor;
                                                     projectsinfo[projectname] = {
                                                         parameters: null,
-                                                        currentactor: 0,
-                                                        actors:[{
-                                                            id:guid,
-                                                            commit:actor.getCurrentCommit(),
-                                                            branch:"master"
-                                                        }]
+                                                        currentbranch: 'master',
+                                                        branches:{
+                                                            master:{
+                                                                actor:actor,
+                                                                commit:actor.getCurrentCommit(),
+                                                            }
+                                                        }
                                                     };
                                                     //self.selectProject(projectname);
                                                     //now we just simply make the project available, but not select it
@@ -378,60 +440,81 @@ define([
         };
         self.selectCommit = function(commit){
             if(activeProject){
-                var clist = commitInfos[activeProject].getCommitList();
-                if(clist.indexOf(commit) !== -1){
-                    var mycommit = commitInfos[activeProject].getCommitObj(commit);
-                    var needactor = true;
-                    var actorindex = null;
-                    var myinfo = projectsinfo[activeProject];
-                    for(var i=0; i<myinfo.actors.length; i++){
-                        if(myinfo.actors[i].commit === commit){
-                            if(myinfo.actors[i].guid){
-                                actorindex = i;
-                                needactor = false;
-                            } else {
-                                actorindex = i;
+                var mycommit = commitInfos[activeProject].getCommitObj(commit);
+                if(mycommit){
+                    //now we check if this commit is final for the given branch so we can go on with it
+                    commitInfos[activeProject].getBranchesNow(function(err,branches){
+                        if(!err && branches && branches.length>0){
+                            for(var i=0;i<branches.length;i++){
+                                if(branches[i].name === mycommit.name){
+                                    //we have that kind of branch
+                                    if(projectsinfo[activeProject].branches[mycommit.name]){
+                                        if(projectsinfo[activeProject].branches[mycommit.name].actor){
+                                            if(commit === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()){
+                                                projectsinfo[activeProject].currentbranch = mycommit.name;
+                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                            } else {
+                                                createViewer(mycommit);
+                                            }
+                                        } else {
+                                           if(branches[i].commit === commit){
+                                               projectsinfo[activeProject].branches[mycommit.name].actor = new ClientProject({
+                                                   storage: storages[activeProject],
+                                                   master: self,
+                                                   id: null,
+                                                   userstamp: 'todo',
+                                                   commit: mycommit,
+                                                   branch: mycommit.name,
+                                                   readonly: false
+                                               });
+                                               projectsinfo[activeProject].currentbranch = mycommit.name;
+                                               activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                           } else {
+                                               createViewer(mycommit);
+                                           }
+                                        }
+                                    } else {
+                                        if(branches[i].commit === commit){
+                                            projectsinfo[activeProject].branches[mycommit.name] = {
+                                                actor: new ClientProject({
+                                                    storage: storages[activeProject],
+                                                    master: self,
+                                                    id: null,
+                                                    userstamp: 'todo',
+                                                    commit: mycommit,
+                                                    branch: mycommit.name,
+                                                    readonly: false
+                                                }),
+                                                commit: commit
+                                            };
+                                            projectsinfo[activeProject].currentbranch = mycommit.name;
+                                            activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                        } else {
+                                            createViewer(mycommit);
+                                        }
+                                    }
+                                }
                             }
-                            break;
-                        }
-                    }
-
-                    if(needactor){
-                        var tempguid = GUID();
-                        var tempactor = new ClientProject({
-                            storage: storages[activeProject],
-                            master: self,
-                            id: tempguid,
-                            userstamp: 'todo',
-                            commit: mycommit,
-                            branch: mycommit.name
-                        });
-                        actors[tempguid] = tempactor;
-                        if(actorindex){
-                            myinfo.actors[actorindex] = {
-                                id:tempguid,
-                                commit:commit,
-                                branch:mycommit.branch
-                            };
                         } else {
-                            myinfo.actors.push({
-                                id:tempguid,
-                                commit:commit,
-                                branch:mycommit.branch
-                            });
-                            actorindex = myinfo.actors.length-1;
+                            //now we should do the readonly way...
+                            createViewer(mycommit);
                         }
-                    }
-
-                    //now we should change the active actor
-                    myinfo.currentactor = actorindex;
-                    if(activeActor){
-                        activeActor.dismantle();
-                    }
-                    activeActor = actors[myinfo.actors[actorindex].id];
-                    activateActor(activeActor);
+                    });
                 }
             }
+        };
+        var createViewer = function(commitobj){
+            $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch+'[READONLY]');
+            viewer = new ClientProject({
+                storage: storages[activeProject],
+                master: self,
+                id: null,
+                userstamp: 'todo',
+                commit: commitobj,
+                branch: commitobj.name,
+                readonly: true
+            });
+            activateActor(viewer);
         };
         self.getCommitIds = function(){
             if(activeProject){
@@ -445,6 +528,13 @@ define([
                 return commitInfos[activeProject].getAllCommits();
             } else {
                 return [];
+            }
+        };
+        self.getCommitObj = function(commitid){
+            if(activeProject){
+                return commitInfos[activeProject].getCommitObj(commitid);
+            } else {
+                return null;
             }
         };
         self.getActualCommit = function(){
