@@ -267,20 +267,26 @@ define([
                 }
                 if(startcommit){
                     commitInfos[activeProject].getAllCommitsNow(function(err,commits){
-                        self.selectCommit(startcommit);
+                        commitInfos[activeProject].getBranchesNow(function(err,branches){
+                            self.selectCommit(startcommit);
+                        });
                     });
                 } else {
                     //TODO we have many options, now we will choose one which must work - select the latest commit
                     commitInfos[activeProject].getAllCommitsNow(function(err,commits){
                         if(!err && commits && commits.length>0){
-                            storages[activeProject].load('*#*master',function(err,branch){
-                                if(err || branch === null || branch === undefined){
-                                    //no master branch load the first commit
-                                    console.log(err+" so we load the first commit");
-                                    self.selectCommit(commits[0]);
+                            commitInfos[activeProject].getBranchesNow(function(err,branches){
+                                if(!err && branches && branches.length>0){
+                                    //we search for master branch, otherwise we load the first in line
+                                    var masterindex = 0;
+                                    for(var i=0;i<branches.length;i++){
+                                        if(branches[i].name === 'master'){
+                                            masterindex = i;
+                                        }
+                                    }
+                                    self.selectCommit(branches[masterindex].commit);
                                 } else {
-                                    console.log("loading master's latest commit:"+branch.commit);
-                                    self.selectCommit(branch.commit);
+                                    self.selectCommit(commits[0]);
                                 }
                             });
                         }
@@ -463,7 +469,7 @@ define([
                     }
                 }
                 for(i in actors){
-                    returnlist[actor[i].getCurrentBranch()].localcommit = actor[i].getCurrentCommit();
+                    returnlist[actors[i].getCurrentBranch()].localcommit = actors[i].getCurrentCommit();
                 }
                 var returnarray = [];
                 for(i in returnlist){
