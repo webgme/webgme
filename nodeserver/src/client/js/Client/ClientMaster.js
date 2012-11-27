@@ -475,6 +475,7 @@ define([
                 for(i in returnlist){
                     returnarray.push(returnlist[i]);
                 }
+                return returnarray;
             } else {
                 return [];
             }
