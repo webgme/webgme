@@ -284,6 +284,19 @@ define(['logManager',
 
             self._client.intellyPaste(intellyPasteOpts);
         };
+
+        this._modelEditorView.onDumpNodeInfo = function (selectedIds) {
+            var len = selectedIds.length,
+                node;
+
+            while (len--) {
+                node = self._client.getNode(selectedIds[len]);
+
+                if (node) {
+                    node.printData();
+                }
+            }
+        };
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
     };
 
