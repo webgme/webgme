@@ -70,6 +70,11 @@ define([],
                 return meta.getValidChildrenTypes(self);
             };
 
+            var printData = function(){
+                //TODO it goes to console now...
+                console.log("nodeprint###\n"+JSON.stringify(node)+"\nendnodeprint###\n");
+            };
+
             return {
                 getParentId : getParentId,
                 getId       : getId,
@@ -82,6 +87,8 @@ define([],
                 getPointerNames : getPointerNames,
                 getAttributeNames : getAttributeNames,
                 getRegistryNames : getRegistryNames,
+                //helping functions
+                printData : printData,
                 //META functions
                 getValidChildrenTypes : getValidChildrenTypes
             }

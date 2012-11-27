@@ -21,6 +21,11 @@ define(['logManager'], function (logManager) {
         this._insertIntoOrderedListByKey(obj.id, "name", this._orderedItemIds, this._items);
     };
 
+    ProjectsView.prototype.clearItems = function () {
+        this._items = {};
+        this._orderedItemIds = [];
+    };
+
     ProjectsView.prototype.onBtnProjectOpenClick = function (params) {
         this._logger.warning("onBtnProjectOpenClick is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
@@ -84,7 +89,16 @@ define(['logManager'], function (logManager) {
             "class" : "nav nav-pills nav-stacked"
         });
 
+        this._buttonsPanel = this._el.parent().find("#buttonsPanel");
+        this._createProjectPanel = this._el.parent().find("#createProjectPanel");
+
         this._btnOpenProject = this._el.parent().find("#btnOpenProject");
+        this._btnCreateNewProject = this._el.parent().find("#btnCreateNewProject");
+
+        this._btnNewProjectCancel = this._el.parent().find("#btnNewProjectCancel");
+        this._btnNewProjectCreate = this._el.parent().find("#btnNewProjectCreate");
+
+        this._txtNewProjectName = this._el.parent().find("#txtNewProjectName");
 
         this._el.append(this._ul);
 
@@ -112,6 +126,65 @@ define(['logManager'], function (logManager) {
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._btnCreateNewProject.on('click', function (event) {
+            var i;
+
+            self._namesAlreadyInUse = [];
+
+            for (i in self._items) {
+                if (self._items.hasOwnProperty(i)) {
+                    self._namesAlreadyInUse.push(self._items[i].name.toLowerCase());
+                }
+            }
+
+            self._txtNewProjectName.val("");
+
+            self._buttonsPanel.hide();
+            self._createProjectPanel.show();
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._btnNewProjectCancel.on('click', function (event) {
+            self._buttonsPanel.show();
+            self._createProjectPanel.hide();
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        //TODO: proper deregisration of event handlers are needed
+        this._btnNewProjectCreate.off('click');
+        this._btnNewProjectCreate.on('click', function (event) {
+            var val = self._txtNewProjectName.val().toLowerCase();
+
+            if (val !== "" && self._namesAlreadyInUse.indexOf(val) === -1) {
+                self.onCreateNewProjectClick(val);
+                self._buttonsPanel.show();
+                self._createProjectPanel.hide();
+            }
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._txtNewProjectName.on('keyup', function (event) {
+            var val = self._txtNewProjectName.val().toLowerCase();
+
+            if (val === "" || self._namesAlreadyInUse.indexOf(val) !== -1) {
+                self._createProjectPanel.addClass("error");
+                self._btnNewProjectCreate.addClass("disabled");
+            } else {
+                self._createProjectPanel.removeClass("error");
+                self._btnNewProjectCreate.removeClass("disabled");
+            }
+        });
+    };
+
+    ProjectsView.prototype.onCreateNewProjectClick = function (projectName) {
+        this._logger.warning("onCreateNewProjectClick is not overridden in Controller...params: '" + projectName + "'");
     };
 
     return ProjectsView;

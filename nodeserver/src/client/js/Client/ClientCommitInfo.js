@@ -4,7 +4,8 @@ define([],function(){
     var ClientCommitInfo = function(parameters){
         var refreshId = null,
             storage = parameters.storage,
-            commits = {};
+            commits = {},
+            branches = {};
 
         var getCommitList = function(){
             var returnlist = [];
@@ -23,6 +24,14 @@ define([],function(){
             }
             return returnlist;
         };
+        var getBranches = function(){
+            var returnlist = [];
+            for(var i in branches){
+                returnlist.push(branches[i]);
+            }
+            return returnlist;
+
+        };
 
         var refreshCommits = function(callback){
             callback = callback || function(){};
@@ -38,6 +47,20 @@ define([],function(){
                 callback(err);
             });
         };
+        var refreshBranches = function(callback){
+            callback = callback || function(){};
+            storage.find({type:'branch'},function(err,findobjects){
+                if(err){
+                    console.log("cannot update branch list due to: "+err);
+                } else {
+                    branches={};
+                    for(var i=0;i<findobjects.length;i++){
+                        branches[findobjects[i][KEY]] = findobjects[i];
+                    }
+                }
+                callback(err);
+            });
+        };
 
         var getAllCommitsNow = function(callback){
             callback = callback || function(){};
@@ -46,6 +69,17 @@ define([],function(){
                     callback(err,getAllCommits());
                 } else {
                     callback(null,getAllCommits());
+                }
+            });
+        };
+
+        var getBranchesNow = function(callback){
+            callback = callback || function(){};
+            refreshBranches(function(err){
+                if(err){
+                    callback(err,getBranches());
+                } else {
+                    callback(null,getBranches());
                 }
             })
         };
@@ -112,7 +146,9 @@ define([],function(){
             getCommitObj : getCommitObj,
             getAllCommits : getAllCommits,
             getAllCommitsNow : getAllCommitsNow,
-            getCommitDifference : getCommitDifference
+            getCommitDifference : getCommitDifference,
+            getBranches : getBranches,
+            getBranchesNow : getBranchesNow
         }
     };
     return ClientCommitInfo;
