@@ -522,11 +522,19 @@ define([
                 return [];
             }
         };
-        self.getCommits = function(){
+        self.getCommitsAsync = function(callback){
             if(activeProject){
-                return commitInfos[activeProject].getAllCommits();
+                commitInfos[activeProject].getAllCommitsNow(function(err,commits){
+                    if(!err && commits && commits.length>0){
+                        callback(null,commits);
+                    } else {
+                        err = err || 'there is no commit';
+                        callback(err);
+                    }
+                });
+
             } else {
-                return [];
+                callback('there is no active project!!!');
             }
         };
         self.getCommitObj = function(commitid){
@@ -546,35 +554,41 @@ define([
                 return activeActor.getCurrentBranch();
             }
         };
-        self.getBranches = function(){
+        self.getBranchesAsync = function(callback){
             if(activeProject){
-                var serverbranches = commitInfos[activeProject].getBranches();
-                var returnlist = {};
-                for(var i=0;i<serverbranches.length;i++){
-                    returnlist[serverbranches[i].name] = {
-                        name : serverbranches[i].name,
-                        remotecommit : serverbranches[i].commit,
-                        localcommit : null
-                    }
-                }
-                for(i in projectsinfo[activeProject].branches){
-                    if(returnlist[i]){
-                        returnlist[i].localcommit = projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit;
-                    } else {
-                        returnlist[i] = {
-                            name: i,
-                            remotecommit: null,
-                            localcommit : projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
+                commitInfos[activeProject].getBranchesNow(function(err,serverbranches){
+                    if(!err && serverbranches && serverbranches.length>0){
+                        var returnlist = {};
+                        for(var i=0;i<serverbranches.length;i++){
+                            returnlist[serverbranches[i].name] = {
+                                name : serverbranches[i].name,
+                                remotecommit : serverbranches[i].commit,
+                                localcommit : null
+                            }
                         }
+                        for(i in projectsinfo[activeProject].branches){
+                            if(returnlist[i]){
+                                returnlist[i].localcommit = projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit;
+                            } else {
+                                returnlist[i] = {
+                                    name: i,
+                                    remotecommit: null,
+                                    localcommit : projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
+                                }
+                            }
+                        }
+                        var returnarray = [];
+                        for(i in returnlist){
+                            returnarray.push(returnlist[i]);
+                        }
+                        callback(null,returnarray);
+                    } else {
+                        err = err || 'there is no branch';
+                        callback(err);
                     }
-                }
-                var returnarray = [];
-                for(i in returnlist){
-                    returnarray.push(returnlist[i]);
-                }
-                return returnarray;
+                });
             } else {
-                return [];
+                callback('there is no active project!!!');
             }
         };
         self.getRootKey = function(){
@@ -598,7 +612,7 @@ define([
                 }
             }
         };
-        self.deleteBranch = function(branchname){
+        self.deleteBranchAsync = function(branchname,callback){
             if(activeProject){
                 if(projectsinfo[activeProject].branches[branchname]){
                     //first we kill the actor if there is any on that branch
@@ -617,7 +631,10 @@ define([
                     if(err){
                         console.log('branch deletion failed... -'+err);
                     }
+                    callback(err);
                 });
+            } else {
+                callback('there is no active branch');
             }
         };
         self.remoteDeleteBranch = function(projectname,branchname){
