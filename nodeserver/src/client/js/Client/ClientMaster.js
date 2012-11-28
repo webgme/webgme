@@ -180,7 +180,7 @@ define([
                             innercallback(err);
                         } else {
                             storages[project] = tempstorage;
-                            commitInfos[project] = new ClientCommitInfo({storage:storages[project],refreshrate:1000});
+                            commitInfos[project] = new ClientCommitInfo({storage:storages[project],project:project,master:self,refreshrate:1000});
                             innercallback(null);
                         }
                     });
@@ -375,7 +375,7 @@ define([
                         innercallback(err);
                     } else {
                         storages[projectname] = tempstorage;
-                        commitInfos[projectname] = new ClientCommitInfo({storage:storages[projectname],refreshrate:1000});
+                        commitInfos[projectname] = new ClientCommitInfo({storage:storages[projectname],project:projectname,master:self,refreshrate:1000});
                         innercallback(null);
                     }
                 });
@@ -595,6 +595,43 @@ define([
                     });
                 } else {
                     activeActor.commit(parameters.message);
+                }
+            }
+        };
+        self.deleteBranch = function(branchname){
+            if(activeProject){
+                if(projectsinfo[activeProject].branches[branchname]){
+                    //first we kill the actor if there is any on that branch
+                    if(projectsinfo[activeProject].branches[branchname].actor){
+                        projectsinfo[activeProject].branches[branchname].actor.dismantle();
+                        projectsinfo[activeProject].branches[branchname].actor = null;
+                    }
+
+                    delete projectsinfo[activeProject].branches[branchname];
+                    if(projectsinfo[activeProject].currentbranch === branchname){
+                        projectsinfo[activeProject].currentbranch = null;
+                    }
+                }
+                //whether we have info about the branch or not, we should try to delete it from the server
+                storages[activeProject].deleteBranch(branchname,function(err){
+                    if(err){
+                        console.log('branch deletion failed... -'+err);
+                    }
+                });
+            }
+        };
+        self.remoteDeleteBranch = function(projectname,branchname){
+            //this function is called when it turned out that some other user deleted some branch
+            if(projectsinfo[projectname]){
+                if(projectsinfo[projectname].branches[branchname]){
+                    if(projectsinfo[projectname].branches[branchname].actor){
+                        projectsinfo[projectname].branches[branchname].actor.dismantle();
+                        projectsinfo[projectname].branches[branchname].actor = null;
+                    }
+                    delete projectsinfo[projectname].branches[branchname]
+                    if(projectsinfo[projectname].currentbranch === branchname){
+                        projectsinfo[projectname].currentbranch = null;
+                    }
                 }
             }
         };
