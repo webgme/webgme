@@ -157,8 +157,6 @@ define(['logManager',
 
         modalBody.html('<div class="progress-big"></div>');
 
-        this._repoHistoryDialog.modal();
-
         this._repoHistoryDialog.on('shown', function () {
                 repoHistoryLogView = new RepositoryLogView(modalBody);
                 repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
@@ -175,6 +173,8 @@ define(['logManager',
                                             "margin-top": ""});
             modalBody.empty();
         });
+
+        this._repoHistoryDialog.modal();
     };
 
     ProjectPanel.prototype._btnProjectsClick = function () {
