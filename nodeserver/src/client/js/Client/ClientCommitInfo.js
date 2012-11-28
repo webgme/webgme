@@ -2,7 +2,8 @@ define([],function(){
     var KEY = "_id";
     var BID = "*#*";
     var ClientCommitInfo = function(parameters){
-        var refreshId = null,
+        var refreshCommitId = null,
+            refreshBranchId = null,
             storage = parameters.storage,
             commits = {},
             branches = {};
@@ -138,7 +139,8 @@ define([],function(){
             });
         };
 
-        refreshId = setInterval(refreshCommits,parameters.refreshrate);
+        refreshCommitId = setInterval(refreshCommits,parameters.refreshrate);
+        refreshBranchId = setInterval(refreshBranches,parameters.refreshrate);
         //TODO not the nicest to initialize the values this way, but should work for now
         getBranchesNow();
         getAllCommitsNow();
