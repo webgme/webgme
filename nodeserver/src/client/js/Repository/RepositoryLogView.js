@@ -65,8 +65,6 @@ define(['logManager',
             endItemParentObjectIdx,
             headMarkerEl;
 
-        this._initializeUI();
-
         for (i = 0; i < len; i += 1) {
             obj = this._commits[this._orderedCommitIds[i]];
 
@@ -124,7 +122,7 @@ define(['logManager',
                             endItems.splice(endItemParentObjectIdx, 1);
                         } else {
                             //parent's lane is already taken and parent is not the direct previous item
-                            commitRenderData[obj.id] = { "x": branchOffsets[obj.branch] + inBranchLanes[obj.branch] * this._xDelta, "y": y };
+                            commitRenderData[obj.id] = { "x": (inBranchLanes[obj.branch] + 1) * this._xDelta, "y": y };
 
                             //rebase all other branches by one lane
                             cBranch = obj.branch;
@@ -153,6 +151,8 @@ define(['logManager',
             y -= this._yDelta;
             endItems.push(obj.id);
         }
+
+        this._initializeUI();
 
         len = this._orderedCommitIds.length;
         for (i = 0; i < len; i += 1) {
