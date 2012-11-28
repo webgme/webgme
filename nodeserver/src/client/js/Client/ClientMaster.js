@@ -36,7 +36,8 @@ define([
         $.extend(self, new EventDispatcher());
         self.events = {
             "SELECTEDOBJECT_CHANGED" : "SELECTEDOBJECT_CHANGED",
-            "NETWORKSTATUS_CHANGED"  : "NETWORKSTATUS_CHANGED"
+            "NETWORKSTATUS_CHANGED"  : "NETWORKSTATUS_CHANGED",
+            "ACTOR_CHANGED"          : "ACTOR_CHANGED"
         };
         self.setSelectedObjectId = function ( objectId ) {
             if ( objectId !== selectedObjectId ) {
@@ -54,13 +55,6 @@ define([
             console.log(actorid+" is in "+status+" state");
         };
         self.dataInSync = function(projectid){
-            /*if(projectsinfo[projectid]){
-                for(var i=0;i<projectsinfo[projectid].actors.length;i++){
-                    if( projectsinfo[projectid].actors[i].id){
-                        actors[projectsinfo[projectid].actors[i].id].goOnline();
-                    }
-                }
-            }*/
             if(projectsinfo[projectid]){
                 for(var i in projectsinfo[projectid].branches){
                     if(projectsinfo[projectid].branches[i].actor){
@@ -70,11 +64,6 @@ define([
             }
         };
         self.dataOutSync = function(projectid){
-            /*for(var i=0;i<projectsinfo[projectid].actors.length;i++){
-                if( projectsinfo[projectid].actors[i].id){
-                    actors[projectsinfo[projectid].actors[i].id].networkError();
-                }
-            }*/
             if(projectsinfo[projectid]){
                 for(var i in projectsinfo[projectid].branches){
                     if(projectsinfo[projectid].branches[i].actor){
@@ -236,23 +225,30 @@ define([
             info.activeProject = activeProject;
             savedInfoStorage.save('#'+parameters.userstamp+'#saved#',info);
         };
-        var activateActor = function(actor,commit){
+        var activateActor = function(actor,commit,callback){
+            callback = callback || function(){};
             if(actor !== viewer){
                 $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch);
             }
-            activeActor = actor;
-            actor.dismantle();
-            for(var i in users){
-                actor.addUI(users[i]);
-            }
-            actor.buildUp(commit,function(){
-                self.clearSelectedObjectId();
-                for(i in users){
-                    if(users[i].UI.reLaunch){
-                        users[i].UI.reLaunch();
-                    }
+            if(activeActor !== actor){
+                activeActor = actor;
+                actor.dismantle();
+                for(var i in users){
+                    actor.addUI(users[i]);
                 }
-            });
+                actor.buildUp(commit,function(){
+                    self.clearSelectedObjectId();
+                    for(i in users){
+                        if(users[i].UI.reLaunch){
+                            users[i].UI.reLaunch();
+                        }
+                    }
+                    self.dispatchEvent( self.events.ACTOR_CHANGED, null );
+                    callback();
+                });
+            } else {
+                callback();
+            }
         };
 
 
@@ -440,6 +436,7 @@ define([
         self.selectCommit = function(commit){
             if(activeProject){
                 var mycommit = commitInfos[activeProject].getCommitObj(commit);
+                var deadbranch = true;
                 if(mycommit){
                     //now we check if this commit is final for the given branch so we can go on with it
                     commitInfos[activeProject].getBranchesNow(function(err,branches){
@@ -447,6 +444,7 @@ define([
                             for(var i=0;i<branches.length;i++){
                                 if(branches[i].name === mycommit.name){
                                     //we have that kind of branch
+                                    deadbranch = false;
                                     if(projectsinfo[activeProject].branches[mycommit.name]){
                                         if(projectsinfo[activeProject].branches[mycommit.name].actor){
                                             if(commit === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()){
@@ -456,7 +454,8 @@ define([
                                                 createViewer(mycommit);
                                             }
                                         } else {
-                                           if(branches[i].commit === commit){
+                                            //TODO shouldn't have to be null
+                                           if(branches[i].commit === commit || branches[i].commit === null){
                                                projectsinfo[activeProject].branches[mycommit.name].actor = new ClientProject({
                                                    storage: storages[activeProject],
                                                    master: self,
@@ -493,6 +492,9 @@ define([
                                         }
                                     }
                                 }
+                            }
+                            if(deadbranch){
+                                createViewer(mycommit);
                             }
                         } else {
                             //now we should do the readonly way...
@@ -597,18 +599,39 @@ define([
             }
         };
         self.commit = function(parameters){
-            if(activeProject && activeActor){
+            if(activeProject){
                 if(parameters.branch && parameters.branch !== self.getActualBranch()){
-                    //TODO we should check somewhere if the new branchname doesn't exsist
-                    storages[activeProject].createBranch(parameters.branch,function(err){
-                        if(err){
-                            console.log("cannot create new branch due to "+err);
-                        } else {
-                            activeActor.changeBranch(parameters.message,parameters.branch);
-                        }
-                    });
+                    if(!projectsinfo[activeProject].branches[parameters.branch]){
+                        storages[activeProject].createBranch(parameters.branch,function(err){
+                            if(err){
+                                console.log("cannot create new branch due to "+err);
+                            } else {
+                                var commitkey = parameters.commit ? parameters.commit : activeActor.getCurrentCommit();
+                                var commit = commitInfos[activeProject].getCommitObj(commitkey);
+                                projectsinfo[activeProject].branches[parameters.branch] = {
+                                    actor: new ClientProject({
+                                        storage: storages[activeProject],
+                                        master: self,
+                                        id: null,
+                                        userstamp: 'todo',
+                                        commit: commit,
+                                        branch: parameters.branch,
+                                        readonly: false
+                                    }),
+                                    commit:commitkey
+                                };
+                                activateActor(projectsinfo[activeProject].branches[parameters.branch].actor,null,function(){
+                                    activeActor.commit('initial commit');
+                                });
+                            }
+                        });
+                    } else {
+                        console.log('the branch already exists');
+                    }
                 } else {
-                    activeActor.commit(parameters.message);
+                    if(activeActor){
+                        activeActor.commit(parameters.message);
+                    }
                 }
             }
         };
@@ -799,8 +822,14 @@ define([
 
         //MGAlike - set functions
         self.addMember = function(path,memberpath){
+            if(activeActor){
+                activateActor.addMember(path,memberpath);
+            }
         };
         self.removeMember = function(path,memberpath){
+            if(activeActor){
+                activeActor.removeMember(path,memberpath);
+            }
         };
 
         //start

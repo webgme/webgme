@@ -8,6 +8,7 @@ define([
     'use strict';
     var KEY = "_id";
     var INSERTARR = commonUtil.insertIntoArray;
+    var SETRELID = '2222222222';
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var storage = parameters.storage, //the storage of the project
             master = parameters.master, //the client master
@@ -143,7 +144,7 @@ define([
                     UpdateAll(function(){
                         storage.load(branchId(),function(err,branchobj){
                             if(!err && branchobj){
-                                if(branchobj.commit === mycommit[KEY]){
+                                if(branchobj.commit === mycommit[KEY] || branchobj.commit === null){
                                     status = 'online';
                                     storage.requestPoll(branch,poll);
                                 } else {
@@ -501,11 +502,77 @@ define([
             } else{
             }
         };
-        var changeBranch = function(commitmsg,newbranchname){
-            if(newbranchname){
-                branch = newbranchname;
-            }
+        var simpleCommit = function(commitmsg){
             modifyRootOnServer(commitmsg);
+        };
+
+        //set functions and their helping methods
+        var getMemberPath = function(path,memberpath){
+            if(currentNodes[path] && currentNodes[memberpath]){
+                var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                if(currentNodes[setpath]){
+                    var members = currentCore.getChildrenRelids(currentNodes[setpath]);
+                    for(var i=0;i<members.length;i++){
+                        var mpath = setpath + '/' + members[i];
+                        if(currentNodes[mpath]){
+                            if(currentCore.getPointerPath(currentNodes[mpath],'member') === memberpath){
+                                return mpath;
+                            };
+                        }
+                    }
+                    return null;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        };
+        var addMember = function(path,memberpath){
+            var addmember = function(setpath){
+                var newmemberchild = currentCore.createNode(currentNodes[setpath]);
+                storeNode(newmemberchild);
+                currentCore.setPointer(newmemberchild,"member",currentNodes[memberpath]);
+                modifyRootOnServer('addMember');
+            };
+            if(currentNodes[path] && currentNodes[memberpath]){
+                var node = currentNodes[path];
+                var children = currentCore.getChildrenRelids(node);
+                var setindex = children.indexOf(SETRELID);
+                if(setindex === -1){
+                    var newset = currentCore.createNode(currentNodes[path],SETRELID);
+                    storeNode(newset);
+                    var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                    addmember(setpath);
+                } else {
+                    var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                    if(currentNodes[setpath]){
+                        if(getMemberPath(path,memberpath) === null){
+                            addmember(setpath);
+                        } else {
+                            console.log('the member was already in the set');
+                        }
+                    } else {
+                        console.log('the set is not fully loaded');
+                    }
+                }
+            } else {
+                console.log("the set or the member is unknown");
+            }
+        };
+        var removeMember = function(path,memberpath){
+            if(currentNodes[path] && currentNodes[memberpath]){
+                var mpath = getMemberPath(path,memberpath);
+                if(mpath){
+                    currentCore.deleteNode(currentNodes[mpath]);
+                    //TODO if the last member was deleted it would be good to delete the set children as well, but currently it doesn't seems to be necessary
+                    modifyRootOnServer();
+                } else {
+                    console.log('there is no such member in the set or set at all');
+                }
+            } else {
+                console.log('the set or the member is unknown');
+            }
         };
 
         /*helping funcitons*/
@@ -892,8 +959,7 @@ define([
             createEmpty  : createEmpty,
             buildUp      : buildUp,
             dismantle    : dismantle,
-            changeBranch : changeBranch,
-            commit       : changeBranch,
+            commit       : simpleCommit,
             isReadOnly   : isReadOnly,
             getState     : getState,
             //UI handling
