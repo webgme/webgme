@@ -9,8 +9,6 @@ define(['logManager',
     RepositoryLogView = function (container) {
         this._el = container;
 
-        this._initializeUI();
-
         this._commits = {};
         this._orderedCommitIds = [];
 
@@ -30,7 +28,15 @@ define(['logManager',
     RepositoryLogView.prototype.clear = function () {
         this._commits = {};
         this._orderedCommitIds = [];
-        this._initializeUI();
+        this._el.empty();
+
+        this._el.parent().css({"width": "",
+            "margin-left": "",
+            "margin-top": ""});
+    };
+
+    RepositoryLogView.prototype.displayProgress = function () {
+        this._el.html($('<div class="progress-big"></div>'));
     };
 
     RepositoryLogView.prototype.render = function () {
@@ -291,8 +297,6 @@ define(['logManager',
         this._skinParts.svgPaper.setSize("100%", "100px");
 
         this._renderCache = {};
-
-        this._deleteBranchConfirmationDialog = this._el.parent().find("> .deleteBranchConfirmationDialog");
     };
 
     RepositoryLogView.prototype._createItem = function (params) {
@@ -372,8 +376,6 @@ define(['logManager',
             wH = $(window).height() - 2 * wPadding,
             wW = $(window).width() - 2 * wPadding,
             repoDialog = $(".repoHistoryDialog"),
-            dH = repoDialog.height(),
-            dW = repoDialog.width(),
             dHeaderH = 70,
             dFooterH = 70,
             dBody = repoDialog.find(".modal-body"),
@@ -391,7 +393,6 @@ define(['logManager',
         dBody.css({"max-height": wH /*- dHeaderH - dFooterH*/ });
 
         repoDialog.css({"width": wW,
-            /*"height": wH,*/
             "margin-left": wW / 2 * (-1),
             "margin-top": repoDialog.height() / 2 * (-1)});
     };

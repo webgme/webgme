@@ -149,13 +149,29 @@ define(['logManager',
     };
 
     ProjectPanel.prototype._btnRepoHistoryClick = function () {
-        var repoHistoryLogView = new RepositoryLogView(this._repoHistoryDialog.find('> .modal-body')),
+        var repoHistoryLogView,
             client = this.onGetClient(),
-            repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
+            repoHistoryController,
+            modalBody = this._repoHistoryDialog.find('> .modal-body'),
+            self = this;
+
+        modalBody.html('<div class="progress-big"></div>');
 
         this._repoHistoryDialog.modal();
 
-        repoHistoryController.generateHistory();
+        this._repoHistoryDialog.on('shown', function () {
+                repoHistoryLogView = new RepositoryLogView(modalBody);
+                repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
+                repoHistoryController.generateHistory();
+        });
+
+        this._repoHistoryDialog.on('hidden', function () {
+            self._repoHistoryDialog.css({"display": "",
+                                            "width": "",
+                                            "margin-left": "",
+                                            "margin-top": ""});
+            modalBody.empty();
+        });
     };
 
     ProjectPanel.prototype._btnProjectsClick = function () {

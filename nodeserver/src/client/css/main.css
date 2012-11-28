@@ -207,6 +207,13 @@ body {
     text-align: center !important;
 }
 
+div.progress-big {
+    background-image: url("../img/progressbig.gif");
+    background-repeat:no-repeat;
+    background-position:center center;
+    height: 50px;
+}
+
 /************************/
 
 div.ObjectBrowser {
