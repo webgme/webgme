@@ -48,6 +48,11 @@
     background-color: #FF0000;
 }
 
+.remote-head .tooltip-inner > [class*="icon-white"]:hover {
+    cursor: pointer;
+    background-image: url("../../img/glyphicons-halflings.png");
+}
+
 .local-head .tooltip-arrow {
     border-right-color: #52A8EC !important;
 }

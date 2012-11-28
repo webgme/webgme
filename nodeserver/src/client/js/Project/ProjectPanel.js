@@ -149,7 +149,7 @@ define(['logManager',
     };
 
     ProjectPanel.prototype._btnRepoHistoryClick = function () {
-        var repoHistoryLogView = new RepositoryLogView(this._repoHistoryDialog.find('.modal-body')),
+        var repoHistoryLogView = new RepositoryLogView(this._repoHistoryDialog.find('> .modal-body')),
             client = this.onGetClient(),
             repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
 

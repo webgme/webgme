@@ -15,6 +15,11 @@ define(['logManager'], function (logManager) {
             self._client.selectCommit(params.id);
         };
 
+        this._view.onDeleteBranchClick = function (branch) {
+            self._client.deleteBranch(branch);
+            self._updateHistory();
+        };
+
         this._logger = logManager.create("RepositoryLogControl");
         this._logger.debug("Created");
     };
@@ -36,6 +41,8 @@ define(['logManager'], function (logManager) {
                                              "localHead":  branchArray[i].localcommit,
                                              "remoteHead":  branchArray[i].remotecommit};
         }
+
+        this._view.clear();
 
         i = commits.length;
         while (i--) {

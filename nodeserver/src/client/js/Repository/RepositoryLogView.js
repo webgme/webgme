@@ -27,6 +27,12 @@ define(['logManager',
         this._insertIntoOrderedListByKey(obj.id, "timestamp", this._orderedCommitIds, this._commits);
     };
 
+    RepositoryLogView.prototype.clear = function () {
+        this._commits = {};
+        this._orderedCommitIds = [];
+        this._initializeUI();
+    };
+
     RepositoryLogView.prototype.render = function () {
         var i,
             len = this._orderedCommitIds.length,
@@ -185,18 +191,21 @@ define(['logManager',
 
             maxX = x > maxX ? x : maxX;
 
-            headMarkerEl = null;
-            if (obj.isRemoteHead) {
+            if (obj.isRemoteHead || obj.isLocalHead) {
                 headMarkerEl = $("<div></div>");
-                headMarkerEl.html($('<div class="tooltip right nowrap remote-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">' + obj.branch + '</div></div>'));
-            }
 
-            if (obj.isLocalHead) {
-                headMarkerEl = headMarkerEl || $("<div></div>");
-                headMarkerEl.append($('<div class="tooltip right nowrap local-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">local @ ' + obj.branch + '</div></div>'));
-            }
+                if (obj.isRemoteHead) {
+                    headMarkerEl.append($('<div class="tooltip right nowrap remote-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">' + obj.branch + '</div></div>'));
 
-            if (headMarkerEl) {
+                    if (obj.branch.toLowerCase() !== "master") {
+                        headMarkerEl.find(".tooltip-inner").append(' <i data-branch="' + obj.branch + '" class="icon-remove icon-white" title="Delete branch"></i>');
+                    }
+                }
+
+                if (obj.isLocalHead) {
+                    headMarkerEl.append($('<div class="tooltip right nowrap local-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">local @ ' + obj.branch + '</div></div>'));
+                }
+
                 headMarkerEl.css({"top": y - 7,
                     "left": x + 35,
                     "position": "absolute",
@@ -217,11 +226,22 @@ define(['logManager',
                                    "branch": $(event.target).attr("data-n")});
         });
 
+        this._skinParts.htmlContainer.on("click", ".icon-remove", function (event) {
+            var btn = $(this),
+                branch = btn.data("branch");
+
+            self.onDeleteBranchClick(branch);
+        });
+
         this._resizeDialog(maxX + padding, this._yDelta * len + padding);
     };
 
     RepositoryLogView.prototype.onCommitDblClick = function (params) {
         this._logger.warning("onCommitDblClick is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+    };
+
+    RepositoryLogView.prototype.onDeleteBranchClick = function (branch) {
+        this._logger.warning("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
     };
 
     /******************* PRIVATE API *****************************/
@@ -271,6 +291,8 @@ define(['logManager',
         this._skinParts.svgPaper.setSize("100%", "100px");
 
         this._renderCache = {};
+
+        this._deleteBranchConfirmationDialog = this._el.parent().find("> .deleteBranchConfirmationDialog");
     };
 
     RepositoryLogView.prototype._createItem = function (params) {
