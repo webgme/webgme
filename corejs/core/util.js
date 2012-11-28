@@ -251,6 +251,53 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 	};
 
+	var AsyncJoin2 = function () {
+		var missing = 1;
+		var err = null;
+		var cb = null;
+
+		var fire = function (error) {
+			ASSERT(error === null || error instanceof Error);
+
+			if( missing !== 0 ) {
+				if( error !== null ) {
+					missing = 0;
+				}
+				else if( --missing !== 0 ) {
+					return;
+				}
+
+				if( cb !== null ) {
+					cb(error);
+				}
+				else {
+					err = error;
+				}
+			}
+		};
+
+		return {
+			add: function () {
+				if( missing > 0 ) {
+					++missing;
+				}
+
+				return fire;
+			},
+
+			wait: function (callback) {
+				ASSERT(typeof callback === "function" && callback.length === 1);
+
+				if( --missing === 0 ) {
+					callback(err);
+				}
+				else {
+					cb = callback;
+				}
+			}
+		};
+	};
+
 	var AsyncArray = function (callback) {
 		ASSERT(typeof callback === "function" && callback.length === 2);
 
@@ -394,6 +441,12 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 				setTimeout(callback, 0, arg1, arg2);
 			}
 		}
+	};
+
+	var createConstant = function (value) {
+		return function (callback) {
+			callback(value);
+		};
 	};
 
 	return {

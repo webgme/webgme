@@ -138,6 +138,7 @@ function (ASSERT, SHA1, UTIL) {
 
 					var temp = __getChildNode(parent.children, node.relid);
 					if( temp !== null ) {
+						// make old node closer to the correct one
 						node.data = temp.data;
 						return temp;
 					}
@@ -291,7 +292,7 @@ function (ASSERT, SHA1, UTIL) {
 		// ------- data manipulation
 
 		var __isMutableData = function (data) {
-			return typeof data === "object" && data !== null && !data._mutable;
+			return typeof data === "object" && data !== null && data._mutable === true;
 		};
 
 		var isMutable = function (node) {
@@ -330,7 +331,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(copy._mutable === true);
 
 			if( node.parent !== null ) {
-				// ugly check
+				// ugly check, but it is correct
 				ASSERT(__getChildData(node.parent.data, node.relid) === node.data
 				|| (isValidHash(node.parent.data[node.relid]) && node.parent.data[node.relid] === __getChildData(
 				node.data, HASH_ID)));
@@ -349,23 +350,36 @@ function (ASSERT, SHA1, UTIL) {
 			return node.data;
 		};
 
+		var __reloadChildrenData = function (node) {
+			for( var i = 0; i < node.children.length; ++i ) {
+				var child = node.children[i];
+
+				var data = __getChildData(node.data, child.relid);
+				if( !isValidHash(data) || data !== __getChildData(child.data, HASH_ID) ) {
+					child.data = data;
+					__reloadChildrenData(child);
+				}
+			}
+		};
+
 		var setData = function (node, data) {
-			ASSERT(!__isMutableData(data));
+			ASSERT(!__isMutableData(data) && data !== null);
 
 			node = normalize(node);
 			if( node.parent !== null ) {
-				if( ! mutate(node.parent) ) {
+				if( !mutate(node.parent) ) {
 					throw new Error("incorrect path");
 				}
 
-				// TODO: invalidate child data 
 				node.parent.data[node.relid] = data;
 			}
 
+			node.data = data;
+			__reloadChildrenData(node);
 		};
 
 		var getProperty = function (node, name) {
-			ASSERT(typeof name === "string");
+			ASSERT(typeof name === "string" && name !== HASH_ID);
 
 			node = normalize(node);
 			var data = __getChildData(node.data, name);
@@ -375,7 +389,47 @@ function (ASSERT, SHA1, UTIL) {
 		};
 
 		var setProperty = function (node, name, data) {
-			// TODO: implement it
+			ASSERT(typeof name === "string" && name !== HASH_ID);
+			ASSERT(!__isMutableData(data) && data !== null);
+
+			node = normalize(node);
+			if( !mutate(node) ) {
+				throw new Error("incorrect path");
+			}
+
+			node.data[name] = data;
+
+			var child = __getChildNode(node.children, name);
+			if( child !== null ) {
+				child.data = data;
+				__reloadChildrenData(child);
+			}
+		};
+
+		var isHashed = function (node) {
+			node = normalize(node);
+			var data = __getChildData(node.data, HASH_ID);
+
+			ASSERT(typeof data === "string" || typeof data === "undefined");
+			return typeof data === "string";
+		};
+
+		var setHashed = function (node, hashed) {
+			ASSERT(typeof hashed === "boolean");
+
+			node = normalize(node);
+			if( !mutate(node) ) {
+				throw new Error("incorrect path");
+			}
+
+			if( hashed ) {
+				node.data[HASH_ID] = "";
+			}
+			else {
+				delete node.data[HASH_ID];
+			}
+
+			ASSERT(typeof node.children[HASH_ID] === "undefined");
 		};
 
 		return {
@@ -399,6 +453,8 @@ function (ASSERT, SHA1, UTIL) {
 			setData: setData,
 			getProperty: getProperty,
 			setProperty: setProperty,
+			isHashed: isHashed,
+			setHashed: setHashed,
 
 			nothing: null
 		};
