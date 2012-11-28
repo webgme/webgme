@@ -120,10 +120,16 @@ define([
                 }
             });
         };
-        var buildUp = function(callback){
+        var buildUp = function(commitid,callback){
             callback = callback || function(){};
             //the initializing function, here we assume that the storage connection is up and running
             //we probably have already set the UI's and the terrytories
+            if(commitid){
+                var tcommit = master.getCommitObj(commitid);
+                if(tcommit){
+                    mycommit = tcommit;
+                }
+            }
             var root = mycommit.root;
             var core = new ClientCore({
                 storage: storage,
@@ -529,46 +535,50 @@ define([
         };
         var modifyRootOnServer = function(commitmsg, callback){
             callback = callback || function(){};
-            if(!intransaction){
-                var oldroot = currentRoot;
-                var newhash = currentCore.persist(currentNodes["root"],function(err){
-                    if(err){
-                        //TODO what is happening with our status???
-                        console.log(err);
-                    } else {
-                        if(!newhash){
-                            newhash = currentCore.getKey(currentNodes["root"]);
-                        }
-                        newRootArrived(newhash,function(){
-                            //now we make a commit
-                            commit(commitmsg,function(err,commitobj){
-                                if(!err){
-                                    mycommit = commitobj;
-                                    //try to update branch if we are currently online
-                                    if(status === 'online'){
-                                        storage.updateBranch(branch,mycommit[KEY],function(err){
-                                            if(err){
-                                                //problem, so we go offline
-                                                status = 'offline';
-                                            } else {
-                                                status = 'online';
-                                            }
-                                            master.changeStatus(id,status);
-                                            callback(err);
-                                        });
-                                    }
-                                } else {
-                                    //something wrong happened during commit, so go offline
-                                    status = 'offline';
-                                    master.changeStatus(id,status);
-                                    callback(err);
-                                }
-                            });
-                        });
-                    }
-                });
+            if(readonly){
+                callback('this is just a viewer!!!');
             } else {
-                callback('cannot change root during transaction!!!');
+                if(!intransaction){
+                    var oldroot = currentRoot;
+                    var newhash = currentCore.persist(currentNodes["root"],function(err){
+                        if(err){
+                            //TODO what is happening with our status???
+                            console.log(err);
+                        } else {
+                            if(!newhash){
+                                newhash = currentCore.getKey(currentNodes["root"]);
+                            }
+                            newRootArrived(newhash,function(){
+                                //now we make a commit
+                                commit(commitmsg,function(err,commitobj){
+                                    if(!err){
+                                        mycommit = commitobj;
+                                        //try to update branch if we are currently online
+                                        if(status === 'online'){
+                                            storage.updateBranch(branch,mycommit[KEY],function(err){
+                                                if(err){
+                                                    //problem, so we go offline
+                                                    status = 'offline';
+                                                } else {
+                                                    status = 'online';
+                                                }
+                                                master.changeStatus(id,status);
+                                                callback(err);
+                                            });
+                                        }
+                                    } else {
+                                        //something wrong happened during commit, so go offline
+                                        status = 'offline';
+                                        master.changeStatus(id,status);
+                                        callback(err);
+                                    }
+                                });
+                            });
+                        }
+                    });
+                } else {
+                    callback('cannot change root during transaction!!!');
+                }
             }
         };
         var rollBackModification = function(){

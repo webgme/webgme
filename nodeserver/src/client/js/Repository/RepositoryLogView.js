@@ -50,7 +50,8 @@ define(['logManager',
             popoverMsg,
             self = this,
             padding = 30,
-            endItemParentObjectIdx;
+            endItemParentObjectIdx,
+            headMarkerEl;
 
         this._initializeUI();
 
@@ -155,7 +156,8 @@ define(['logManager',
                               "parents": obj.parents,
                               "actual": obj.actual,
                               "branch": obj.branch,
-                              "isEnd": obj.isEnd});
+                              "isLocalHead": obj.isLocalHead,
+                              "isRemoteHead": obj.isRemoteHead});
 
             logMsg = "(" + i + ")  " + obj.id;
             logMsg += "\n\ttimestamp: " + obj.timestamp;
@@ -182,6 +184,26 @@ define(['logManager',
                 "trigger": "hover" });
 
             maxX = x > maxX ? x : maxX;
+
+            headMarkerEl = null;
+            if (obj.isRemoteHead) {
+                headMarkerEl = $("<div></div>");
+                headMarkerEl.html($('<div class="tooltip right nowrap remote-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">' + obj.branch + '</div></div>'));
+            }
+
+            if (obj.isLocalHead) {
+                headMarkerEl = headMarkerEl || $("<div></div>");
+                headMarkerEl.append($('<div class="tooltip right nowrap local-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">local @ ' + obj.branch + '</div></div>'));
+            }
+
+            if (headMarkerEl) {
+                headMarkerEl.css({"top": y - 7,
+                    "left": x + 35,
+                    "position": "absolute",
+                    "white-space": "nowrap"});
+
+                this._skinParts.htmlContainer.append(headMarkerEl);
+            }
         }
 
         this._skinParts.htmlContainer.on("dblclick", function (event) {
@@ -271,8 +293,12 @@ define(['logManager',
             itemObj.addClass("actual");
         }
 
-        if (params.isEnd) {
-            itemObj.addClass("at-end");
+        if (params.isLocalHead) {
+            itemObj.addClass("local-head");
+        }
+
+        if (params.isRemoteHead) {
+            itemObj.addClass("remote-head");
         }
 
         this._skinParts.htmlContainer.append(itemObj);

@@ -139,6 +139,9 @@ define([],function(){
         };
 
         refreshId = setInterval(refreshCommits,parameters.refreshrate);
+        //TODO not the nicest to initialize the values this way, but should work for now
+        getBranchesNow();
+        getAllCommitsNow();
 
 
         return {

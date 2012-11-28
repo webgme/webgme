@@ -26,9 +26,18 @@ define(['logManager'], function (logManager) {
     RepositoryLogControl.prototype._updateHistory = function (useFake) {
         var currentCommitId = this._client.getActualCommit(),
             commits = useFake ? this._getFakeCommits() : this._client.getCommits(),
-            i = commits.length,
+            branches = {},
+            branchArray = this._client.getBranches(),
+            i = branchArray.length,
             com;
 
+        while (i--) {
+            branches[branchArray[i].name] = {"name": branchArray[i].name,
+                                             "localHead":  branchArray[i].localcommit,
+                                             "remoteHead":  branchArray[i].remotecommit};
+        }
+
+        i = commits.length;
         while (i--) {
             com = commits[i];
 
@@ -37,8 +46,9 @@ define(['logManager'], function (logManager) {
                                   "message": com.message,
                                   "parents": com.parents,
                                   "timestamp": com.time || com.end, //TODO: end is obsolete, time should be used
-                                  "isEnd": false,
-                                  "actual": com._id === currentCommitId });
+                                  "actual": com._id === currentCommitId,
+                                  "isLocalHead": branches[com.name] ? branches[com.name].localHead === com._id : false,
+                                  "isRemoteHead": branches[com.name] ? branches[com.name].remoteHead === com._id : false});
         }
 
         this._view.render();
