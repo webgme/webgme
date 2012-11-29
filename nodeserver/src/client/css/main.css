@@ -156,13 +156,13 @@ body {
     overflow: auto;
 }
 
-.pull-left {
+/*.pull-left {
     float: left;
 }
 
 .pull-right {
     float: right;
-}
+}*/
 
 .sidePaneWidget {
     padding: 3px;
