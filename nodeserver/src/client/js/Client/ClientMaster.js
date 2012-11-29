@@ -598,13 +598,14 @@ define([
                 return activeActor.getRootKey();
             }
         };
-        self.commit = function(parameters){
+        self.commitAsync = function(parameters,callback){
+            callback = callback || function(){};
             if(activeProject){
                 if(parameters.branch && parameters.branch !== self.getActualBranch()){
                     if(!projectsinfo[activeProject].branches[parameters.branch]){
                         storages[activeProject].createBranch(parameters.branch,function(err){
                             if(err){
-                                console.log("cannot create new branch due to "+err);
+                                callback(err);
                             } else {
                                 var commitkey = parameters.commit ? parameters.commit : activeActor.getCurrentCommit();
                                 var commit = commitInfos[activeProject].getCommitObj(commitkey);
@@ -621,16 +622,16 @@ define([
                                     commit:commitkey
                                 };
                                 activateActor(projectsinfo[activeProject].branches[parameters.branch].actor,null,function(){
-                                    activeActor.commit('initial commit');
+                                    activeActor.commit('initial commit',callback);
                                 });
                             }
                         });
                     } else {
-                        console.log('the branch already exists');
+                        callback('the branch already exists');
                     }
                 } else {
                     if(activeActor){
-                        activeActor.commit(parameters.message);
+                        activeActor.commit(parameters.message,callback);
                     }
                 }
             }

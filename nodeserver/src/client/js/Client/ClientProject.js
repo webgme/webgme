@@ -509,8 +509,8 @@ define([
             } else{
             }
         };
-        var simpleCommit = function(commitmsg){
-            modifyRootOnServer(commitmsg);
+        var simpleCommit = function(commitmsg,callback){
+            modifyRootOnServer(commitmsg,callback);
         };
 
         //set functions and their helping methods
