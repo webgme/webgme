@@ -32,31 +32,31 @@
     background-color: #FF7800;
 }
 
-.tooltip.local-head,
-.tooltip.remote-head {
+.tooltiplabel.local-head,
+.tooltiplabel.remote-head {
     opacity: 1.0;
     margin-left: 0px;
     display: inline-block;
     position: relative;
 }
 
-.remote-head .tooltip-arrow {
+.remote-head .tooltiplabel-arrow {
     border-right-color: #FF0000 !important;
 }
 
-.remote-head .tooltip-inner {
+.remote-head .tooltiplabel-inner {
     background-color: #FF0000;
 }
 
-.remote-head .tooltip-inner > [class*="icon-white"]:hover {
+.remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
     cursor: pointer;
     background-image: url("../../img/glyphicons-halflings.png");
 }
 
-.local-head .tooltip-arrow {
+.local-head .tooltiplabel-arrow {
     border-right-color: #52A8EC !important;
 }
 
-.local-head .tooltip-inner {
+.local-head .tooltiplabel-inner {
     background-color: #52A8EC;
 }

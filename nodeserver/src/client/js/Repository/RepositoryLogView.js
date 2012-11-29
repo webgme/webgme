@@ -59,11 +59,12 @@ define(['logManager',
             branchCount = 0,
             inBranchLaneCount = 0,
             guiObj,
-            popoverMsg,
             self = this,
             padding = 30,
             endItemParentObjectIdx,
             headMarkerEl;
+
+        this._branchNames = [];
 
         for (i = 0; i < len; i += 1) {
             obj = this._commits[this._orderedCommitIds[i]];
@@ -180,36 +181,23 @@ define(['logManager',
             logMsg += "\n\tx:" + x + " , y: " + y;
             this._logger.debug(logMsg);
 
-            //hook up popover
-            popoverMsg = "<li>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
-            popoverMsg += "<li>Name: " + obj.branch + "</li>";
-            if (obj.message) {
-                popoverMsg += "<li>Message: " + obj.message + "</li>";
-            }
-            popoverMsg = "<ul>" + popoverMsg + "</ul>";
-
-            popoverMsg += "<br><p class='muted'>Double-click to switch to this commit.</p>";
-
-            guiObj.popover({"title": obj.id + "@" + obj.branch,
-                "html": true,
-                "content": popoverMsg,
-                "trigger": "hover" });
-
             maxX = x > maxX ? x : maxX;
 
             if (obj.isRemoteHead || obj.isLocalHead) {
                 headMarkerEl = $("<div></div>");
 
                 if (obj.isRemoteHead) {
-                    headMarkerEl.append($('<div class="tooltip right nowrap remote-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">' + obj.branch + '</div></div>'));
+                    this._branchNames.push(obj.branch);
+
+                    headMarkerEl.append($('<div class="tooltiplabel right nowrap remote-head"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">' + obj.branch + '</div></div>'));
 
                     if (obj.branch.toLowerCase() !== "master") {
-                        headMarkerEl.find(".tooltip-inner").append(' <i data-branch="' + obj.branch + '" class="icon-remove icon-white" title="Delete branch"></i>');
+                        headMarkerEl.find(".tooltiplabel-inner").append(' <i data-branch="' + obj.branch + '" class="icon-remove icon-white" title="Delete branch"></i>');
                     }
                 }
 
                 if (obj.isLocalHead) {
-                    headMarkerEl.append($('<div class="tooltip right nowrap local-head"><div class="tooltip-arrow"></div><div class="tooltip-inner">local @ ' + obj.branch + '</div></div>'));
+                    headMarkerEl.append($('<div class="tooltiplabel right nowrap local-head"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">local @ ' + obj.branch + '</div></div>'));
                 }
 
                 headMarkerEl.css({"top": y - 7,
@@ -221,26 +209,21 @@ define(['logManager',
             }
         }
 
-        this._skinParts.htmlContainer.on("dblclick", function (event) {
-            event.stopPropagation();
-            event.preventDefault();
-
-            self._skinParts.htmlContainer.find(".item.actual").removeClass("actual");
-            $(event.target).addClass("actual");
-
-            self.onCommitDblClick({"id": $(event.target).attr("data-id"),
-                                   "branch": $(event.target).attr("data-n")});
-        });
-
-        this._skinParts.htmlContainer.on("click", ".icon-remove", function (event) {
+        this._skinParts.htmlContainer.on("click", ".icon-remove", function () {
             var btn = $(this),
                 branch = btn.data("branch");
 
             self.onDeleteBranchClick(branch);
         });
 
+        this._skinParts.htmlContainer.on("click", ".item", function () {
+            self._onCommitClick($(this));
+        });
+
         this._resizeDialog(maxX + padding, this._yDelta * len + padding);
     };
+
+    /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
     RepositoryLogView.prototype.onCommitDblClick = function (params) {
         this._logger.warning("onCommitDblClick is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
@@ -249,6 +232,12 @@ define(['logManager',
     RepositoryLogView.prototype.onDeleteBranchClick = function (branch) {
         this._logger.warning("onDeleteBranchClick is not overridden in Controller...branch: '" + branch + "'");
     };
+
+    RepositoryLogView.prototype.onCreateBranchFromCommit = function (params) {
+        this._logger.warning("onCreateBranchFromCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+    };
+
+
 
     /******************* PRIVATE API *****************************/
 
@@ -279,6 +268,8 @@ define(['logManager',
     };
 
     RepositoryLogView.prototype._initializeUI = function () {
+        var self = this;
+
         this._el.empty();
 
         //generate HTML container
@@ -297,6 +288,57 @@ define(['logManager',
         this._skinParts.svgPaper.setSize("100%", "100px");
 
         this._renderCache = {};
+
+        this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
+            var btn = $(this),
+                commitId = btn.data("commitid");
+
+            self._onLoadCommit(commitId);
+        });
+
+        this._el.on("click.btnCreateBranch", ".btnCreateBranch", function () {
+            var btn = $(this),
+                commitId = btn.data("commitid"),
+                textInput = $("#appendedInputButton"),
+                textVal = textInput.val().toLowerCase();
+
+            if (textVal !== "" && self._branchNames.indexOf(textVal) === -1 ) {
+                self.onCreateBranchFromCommit({"commitId": commitId,
+                                                "name": textVal});
+            }
+        });
+
+        this._el.on("keyup", "#appendedInputButton", function () {
+            var textInput = $(this),
+                textVal = textInput.val().toLowerCase(),
+                parentControlGroup = textInput.parent();
+
+            if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
+                parentControlGroup.addClass("error");
+            } else {
+                parentControlGroup.removeClass("error");
+            }
+        });
+
+        this._el.on("click.btnCloseCommitDetails", ".btnCloseCommitDetails", function () {
+            self.destroyCommitPopover();
+        });
+    };
+
+    RepositoryLogView.prototype.destroyCommitPopover = function () {
+        if (this._lastCommitPopOver) {
+            this._lastCommitPopOver.popover("destroy");
+            this._lastCommitPopOver = null;
+        }
+    };
+
+    RepositoryLogView.prototype._onLoadCommit = function (commitId) {
+        this.onCommitDblClick({"id": commitId});
+
+        this._skinParts.htmlContainer.find(".item.actual").removeClass("actual");
+        this._lastCommitPopOver.addClass("actual");
+
+        this.destroyCommitPopover();
     };
 
     RepositoryLogView.prototype._createItem = function (params) {
@@ -395,6 +437,41 @@ define(['logManager',
         repoDialog.css({"width": wW,
             "margin-left": wW / 2 * (-1),
             "margin-top": repoDialog.height() / 2 * (-1)});
+    };
+
+    RepositoryLogView.prototype._onCommitClick = function (commitEl) {
+        var commitId = commitEl.data("id"),
+            popoverMsg,
+            obj = this._commits[commitId];
+
+        if (this._lastCommitPopOver) {
+            this._lastCommitPopOver.popover("destroy");
+        }
+
+        //hook up popover
+        popoverMsg = "<li>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
+        popoverMsg += "<li>Name: " + obj.branch + "</li>";
+        if (obj.message) {
+            popoverMsg += "<li>Message: " + obj.message + "</li>";
+        }
+        popoverMsg = "<ul>" + popoverMsg + "</ul>";
+
+        if (!commitEl.hasClass("actual")) {
+            popoverMsg += "<br><button class='btn btn-primary btn-mini btnLoadCommit' data-commitId='" + commitId + "'>To switch to this commit click here</button><br>";
+        }
+
+        popoverMsg += '<br><p class="muted">To create a new branch from here, specify a name and click "create":</p><div class="input-append control-group"><input class="span4" id="appendedInputButton" type="text"><button class="btn btn-info btnCreateBranch" type="button" data-commitId="' + commitId + '">Create</button></div>';
+
+        popoverMsg += "<br><button class='btn btn-mini pull-right btnCloseCommitDetails'>Close</button><br>";
+
+        this._lastCommitPopOver = commitEl;
+
+        this._lastCommitPopOver.popover({"title": obj.id + "@" + obj.branch,
+            "html": true,
+            "content": popoverMsg,
+            "trigger": "manual" });
+
+        this._lastCommitPopOver.popover("show");
     };
 
     return RepositoryLogView;

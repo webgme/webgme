@@ -166,12 +166,17 @@ define(['logManager',
         this._repoHistoryDialog.on('hidden', function () {
             self._repoHistoryDialog.off('shown');
             self._repoHistoryDialog.off('hidden');
+            self._repoHistoryDialog.off('hide');
 
             self._repoHistoryDialog.css({"display": "",
-                                            "width": "",
-                                            "margin-left": "",
-                                            "margin-top": ""});
+                "width": "",
+                "margin-left": "",
+                "margin-top": ""});
             modalBody.empty();
+        });
+
+        this._repoHistoryDialog.on('hide', function () {
+            repoHistoryLogView.destroyCommitPopover();
         });
 
         this._repoHistoryDialog.modal();

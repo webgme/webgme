@@ -27,6 +27,19 @@ define(['logManager'], function (logManager) {
             });
         };
 
+        this._view.onCreateBranchFromCommit = function (params) {
+            self._view.clear();
+            self._view.displayProgress();
+            self._client.commitAsync({"commit": params.commitId,
+                                        "branch": params.name }, function (err) {
+                                                                    if (err) {
+                                                                        self._logger.error(err);
+                                                                    } else {
+                                                                        self._updateHistory();
+                                                                    }
+                                                                });
+        };
+
         this._logger = logManager.create("RepositoryLogControl");
         this._logger.debug("Created");
     };
