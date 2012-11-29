@@ -10,7 +10,8 @@ define([
     var INSERTARR = commonUtil.insertIntoArray;
     var SETRELID = '2222222222';
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
-        var storage = parameters.storage, //the storage of the project
+        var self = this,
+            storage = parameters.storage, //the storage of the project
             master = parameters.master, //the client master
             id = parameters.id,
             userstamp = parameters.user,
@@ -282,7 +283,13 @@ define([
 
         var getNode = function(path){
             if(currentCore && currentNodes[path]){
-                return new ClientNode(currentNodes[path],currentCore,meta);
+                return new ClientNode({
+                    node:currentNodes[path],
+                    core:currentCore,
+                    meta:meta,
+                    actor:{
+                        getMemberIds:getMemberIds
+                    }});
             }else{
                 return null;
             }
@@ -574,6 +581,24 @@ define([
                 console.log('the set or the member is unknown');
             }
         };
+        var getMemberIds = function(path){
+            var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+            if(currentNodes[setpath]){
+                var memberids = [];
+                var children = currentCore.getChildrenRelids(currentNodes[setpath]);
+                for(var i=0;i<children.length;i++){
+                    var childid = setpath+'/'+children[i];
+                    if(currentNodes[childid]){
+                        memberids.push(currentCore.getPointerPath(currentNodes[childid],'member'));
+                    } else {
+                        return null;
+                    }
+                }
+                return memberids;
+            } else {
+                return null;
+            }
+        };
 
         /*helping funcitons*/
         var newRootArrived = function(roothash,callback){
@@ -776,6 +801,28 @@ define([
                     nupathes[id] = currentCore.getSingleNodeHash(node);
                 }
             };
+            var loadSet = function(setnode,internalcallback){
+                var counter = 0;
+                var pointerloaded = function(err,pointernode){
+                    if(!err && pointernode){
+                        storeNode(pointernode);
+                    }
+                    if(--counter === 0){
+                        internalcallback();
+                    }
+                };
+                currentCore.loadChildren(setnode,function(err,children){
+                    if(!err && children && children.length>0){
+                        counter = children.length;
+                        for(var i=0;i<children.length;i++){
+                            var id = storeNode(children[i]);
+                            currentCore.loadPointer(children[i],'member',pointerloaded);
+                        }
+                    } else {
+                        internalcallback();
+                    }
+                });
+            };
             var loadPattern = function(basepath,internalcallback){
                 if(!currentNodes[basepath]){
                     currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
@@ -783,11 +830,23 @@ define([
                             addToNupathes(node);
                             currentCore.loadChildren(node,function(err,children){
                                 if(!err && children){
+                                    var hasset = false;
                                     for(var i=0;i<children.length;i++){
-                                        addToNupathes(children[i]);
+                                        var id = storeNode(children[i]);
+                                        if(id.indexOf(SETRELID) !== -1){
+                                            //could be a set so load it
+                                            hasset = true;
+                                            loadSet(children[i],internalcallback);
+                                        } else {
+                                            addToNupathes(children[i]);
+                                        }
                                     }
+                                    if(!hasset){
+                                        internalcallback();
+                                    }
+                                } else {
+                                    internalcallback();
                                 }
-                                internalcallback();
                             });
                         } else {
                             internalcallback();
@@ -797,11 +856,23 @@ define([
                     addToNupathes(currentNodes[basepath]);
                     currentCore.loadChildren(currentNodes[basepath],function(err,children){
                         if(!err && children){
+                            var hasset = false;
                             for(var i=0;i<children.length;i++){
-                                addToNupathes(children[i]);
+                                var id = storeNode(children[i]);
+                                if(id.indexOf(SETRELID) !== -1){
+                                    //could be a set so load it
+                                    hasset = true;
+                                    loadSet(children[i],internalcallback);
+                                } else {
+                                    addToNupathes(children[i]);
+                                }
                             }
+                            if(!hasset){
+                                internalcallback();
+                            }
+                        } else {
+                            internalcallback();
                         }
-                        internalcallback();
                     });
                 }
             };
@@ -831,7 +902,9 @@ define([
                         var children  = currentCore.getChildrenRelids(currentNodes[i]);
                         var ownpath = i === "root" ? "" : i+"/";
                         for(var j=0;j<children.length;j++){
-                            INSERTARR(newpathes,ownpath+children[j]);
+                            if(children[j].indexOf(SETRELID) === -1){
+                                INSERTARR(newpathes,ownpath+children[j]);
+                            }
                         }
                     }
                 }
@@ -887,6 +960,28 @@ define([
                         nupathes[id] = currentCore.getSingleNodeHash(node);
                     }
                 };
+                var loadSet = function(setnode,internalcallback){
+                    var counter = 0;
+                    var pointerloaded = function(err,pointernode){
+                        if(!err && pointernode){
+                            storeNode(pointernode);
+                        }
+                        if(--counter === 0){
+                            internalcallback();
+                        }
+                    };
+                    currentCore.loadChildren(setnode,function(err,children){
+                        if(!err && children && children.length>0){
+                            counter = children.length;
+                            for(var i=0;i<children.length;i++){
+                                var id = storeNode(children[i]);
+                                currentCore.loadPointer(children[i],'member',pointerloaded);
+                            }
+                        } else {
+                            internalcallback();
+                        }
+                    });
+                };
                 var loadPattern = function(basepath,internalcallback){
                     if(!currentNodes[basepath]){
                         if(currentCore){
@@ -895,11 +990,23 @@ define([
                                     addToNupathes(node);
                                     currentCore.loadChildren(node,function(err,children){
                                         if(!err && children){
+                                            var hasset = false;
                                             for(var i=0;i<children.length;i++){
-                                                addToNupathes(children[i]);
+                                                var id = storeNode(children[i]);
+                                                if(id.indexOf(SETRELID) !== -1){
+                                                    //could be a set so load it
+                                                    hasset = true;
+                                                    loadSet(children[i],internalcallback);
+                                                } else {
+                                                    addToNupathes(children[i]);
+                                                }
                                             }
+                                            if(!hasset){
+                                                internalcallback();
+                                            }
+                                        } else {
+                                            internalcallback();
                                         }
-                                        internalcallback();
                                     });
                                 } else {
                                     internalcallback();
@@ -912,11 +1019,23 @@ define([
                         addToNupathes(currentNodes[basepath]);
                         currentCore.loadChildren(currentNodes[basepath],function(err,children){
                             if(!err && children){
+                                var hasset = false;
                                 for(var i=0;i<children.length;i++){
-                                    addToNupathes(children[i]);
+                                    var id = storeNode(children[i]);
+                                    if(id.indexOf(SETRELID) !== -1){
+                                        //could be a set so load it
+                                        hasset = true;
+                                        loadSet(children[i],internalcallback);
+                                    } else {
+                                        addToNupathes(children[i]);
+                                    }
                                 }
+                                if(!hasset){
+                                    internalcallback();
+                                }
+                            } else {
+                                internalcallback();
                             }
-                            internalcallback();
                         });
                     }
                 };
@@ -988,7 +1107,10 @@ define([
             makePointer         : makePointer,
             delPointer          : delPointer,
             makeConnection      : makeConnection,
-            intellyPaste        : intellyPaste
+            intellyPaste        : intellyPaste,
+            //MGAlike - set
+            addMember    : addMember,
+            removeMember : removeMember
         }
     };
 

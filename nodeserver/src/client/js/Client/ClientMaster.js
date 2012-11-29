@@ -823,7 +823,7 @@ define([
         //MGAlike - set functions
         self.addMember = function(path,memberpath){
             if(activeActor){
-                activateActor.addMember(path,memberpath);
+                activeActor.addMember(path,memberpath);
             }
         };
         self.removeMember = function(path,memberpath){
@@ -832,6 +832,21 @@ define([
             }
         };
 
+        //test
+        self.testMethod = function(number){
+            switch(number){
+                case 1:
+                    self.addMember("root",selectedObjectId);
+                    break;
+                case 2:
+                    self.removeMember("root",selectedObjectId);
+                    break;
+                case 3:
+                    var node = self.getNode("root");
+                    node.printData();
+                    break;
+            }
+        };
         //start
         init();
     };

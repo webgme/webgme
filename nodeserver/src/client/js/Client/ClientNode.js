@@ -1,8 +1,13 @@
 define([],
     function( ){
         'use strict';
-        var ClientNode = function(node,core,meta){
+        var SETRELID = '2222222222';
+        var ClientNode = function(parameters){
             var self = this,
+                node = parameters.node,
+                core = parameters.core,
+                meta = parameters.meta,
+                actor = parameters.actor,
                 ownpath = core.getStringPath(node),
                 ownpathpostfix = ownpath === "" ? "" : "/";
 
@@ -22,11 +27,14 @@ define([],
                 return getClientNodePath(node);
             };
             var getChildrenIds = function(){
-                var children = core.getChildrenRelids(node);
-                for(var i=0;i<children.length;i++){
-                    children[i]=ownpath+ownpathpostfix+children[i];
+                var childrenin = core.getChildrenRelids(node);
+                var childrenout = [];
+                for(var i=0;i<childrenin.length;i++){
+                    if(childrenin[i].indexOf(SETRELID) === -1){
+                        childrenout.push(ownpath+ownpathpostfix+childrenin[i]);
+                    }
                 }
-                return children;
+                return childrenout;
             };
             var getBaseId = function(){
                 if(core.getRegistry(node,"isConnection") === true){
@@ -65,6 +73,10 @@ define([],
                 return path;
             };
 
+            //SET
+            var getMemberIds = function(){
+                return actor.getMemberIds(getClientNodePath());
+            };
             //META
             var getValidChildrenTypes = function(){
                 return meta.getValidChildrenTypes(self);
@@ -72,7 +84,8 @@ define([],
 
             var printData = function(){
                 //TODO it goes to console now...
-                console.log("nodeprint###\n"+JSON.stringify(node)+"\nendnodeprint###\n");
+                console.log("###nodeprint###\n"+JSON.stringify(node)+"\n###endnodeprint###\n");
+                console.log("###setprint###\n"+getMemberIds()+"\n###endsetprint###\n");
             };
 
             return {
