@@ -15,9 +15,9 @@ define(['logManager',
         this._logger = logManager.create("RepositoryLogView");
         this._logger.debug("Created");
 
-        this._yDelta = 35;
-        this._xDelta = 40;
-        this._xBranchDelta = 100;
+        this._yDelta = 25;
+        this._xDelta = 20;
+        this._xBranchDelta = 20;
     };
 
     RepositoryLogView.prototype.addCommit = function (obj) {
@@ -74,6 +74,7 @@ define(['logManager',
                 branchOffsets[obj.branch] = 0;
                 inBranchLanes[obj.branch] = 1;
                 branchCount = 1;
+                inBranchLaneCount = 1;
                 commitRenderData[obj.id] = { "x": x, "y": y };
             } else {
                 //let's see how many parents this obj has
@@ -103,7 +104,7 @@ define(['logManager',
                     //might be under a different "branch"
                     //test for shift #2
                     if (objParent.branch !== obj.branch) {
-                        branchOffsets[obj.branch] = branchCount * this._xBranchDelta + (inBranchLaneCount /*- 1*/) * this._xDelta;
+                        branchOffsets[obj.branch] = branchCount * this._xBranchDelta + inBranchLaneCount * this._xDelta;
                         commitRenderData[obj.id] = { "x": 0, "y": y };
                         branchCount += 1;
                         inBranchLanes[obj.branch] = 0;
@@ -162,6 +163,8 @@ define(['logManager',
             x =  commitRenderData[obj.id].x + branchOffsets[obj.branch];
             y = commitRenderData[obj.id].y;
 
+            obj.counter = i;
+
             guiObj = this._createItem({"x": x,
                               "y": y,
                               "text": i,
@@ -200,8 +203,8 @@ define(['logManager',
                     headMarkerEl.append($('<div class="tooltiplabel right nowrap local-head"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">local @ ' + obj.branch + '</div></div>'));
                 }
 
-                headMarkerEl.css({"top": y - 7,
-                    "left": x + 35,
+                headMarkerEl.css({"top": y - 11,
+                    "left": x + 10,
                     "position": "absolute",
                     "white-space": "nowrap"});
 
@@ -353,9 +356,9 @@ define(['logManager',
         itemObj.css({"left": params.x,
             "top": params.y});
 
-        if (params.text !== null && params.text !== "") {
+        /*if (params.text !== null && params.text !== "") {
             itemObj.html(params.text);
-        }
+        }*/
 
         if (params.actual) {
             itemObj.addClass("actual");
@@ -390,21 +393,29 @@ define(['logManager',
         var pathDef,
             x = srcDesc.x + srcDesc.w / 2,
             y = srcDesc.y + srcDesc.h / 2,
-            x2 =  dstDesc.x + dstDesc.w / 2,
+            x2 = dstDesc.x + dstDesc.w / 2,
             y2 = dstDesc.y + dstDesc.h / 2,
             dX = x2 - x,
             cornerSize = 5;
 
         if (dX === 0) {
             //vertical line
+            y = srcDesc.y - 1;
+            y2 = dstDesc.y + dstDesc.h + 3;
             pathDef = ["M", x, y, "L", x2, y2 ];
         } else {
             //multiple segment line
             if (x2 < x) {
                 //from right to left (merge)
+                x2 = dstDesc.x + dstDesc.w + 2;
+                y = srcDesc.y - 1;
+                y2 += 1;
                 pathDef = ["M", x, y, "L", x, y2 + cornerSize, "L", x - cornerSize, y2, "L", x2, y2 ];
             } else {
                 //from left to right (new branch)
+                x = srcDesc.x + srcDesc.w + 2;
+                y2 = dstDesc.y + dstDesc.h + 3;
+                y += 1;
                 pathDef = ["M", x, y, "L", x2 - cornerSize, y, "L", x2, y - cornerSize, "L", x2, y2 ];
             }
         }
@@ -449,7 +460,7 @@ define(['logManager',
         }
 
         //hook up popover
-        popoverMsg = "<li>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
+        popoverMsg = "<li class='nowrap'>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
         popoverMsg += "<li>Name: " + obj.branch + "</li>";
         if (obj.message) {
             popoverMsg += "<li>Message: " + obj.message + "</li>";
@@ -466,7 +477,7 @@ define(['logManager',
 
         this._lastCommitPopOver = commitEl;
 
-        this._lastCommitPopOver.popover({"title": obj.id + "@" + obj.branch,
+        this._lastCommitPopOver.popover({"title": obj.id + "@" + obj.branch + " / " + obj.counter,
             "html": true,
             "content": popoverMsg,
             "trigger": "manual" });

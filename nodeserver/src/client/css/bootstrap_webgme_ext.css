@@ -38,7 +38,8 @@
 
 .tooltiplabel-inner {
     max-width: 200px;
-    padding: 3px 8px;
+    /*padding: 3px 8px;*/
+    padding: 0px 5px;
     color: #ffffff;
     text-align: center;
     text-decoration: none;
