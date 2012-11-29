@@ -41,11 +41,11 @@
 }
 
 .remote-head .tooltiplabel-arrow {
-    border-right-color: #FF0000 !important;
+    border-right-color: #b94a48 !important;
 }
 
 .remote-head .tooltiplabel-inner {
-    background-color: #FF0000;
+    background-color: #b94a48;
 }
 
 .remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
@@ -54,9 +54,9 @@
 }
 
 .local-head .tooltiplabel-arrow {
-    border-right-color: #52A8EC !important;
+    border-right-color: #3a87ad !important;
 }
 
 .local-head .tooltiplabel-inner {
-    background-color: #52A8EC;
+    background-color: #3a87ad;
 }
