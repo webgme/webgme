@@ -176,7 +176,7 @@ define(['logManager',
         });
 
         this._repoHistoryDialog.on('hide', function () {
-            repoHistoryLogView.destroyCommitPopover();
+            repoHistoryLogView.clear();
         });
 
         this._repoHistoryDialog.modal();

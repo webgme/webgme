@@ -9,8 +9,8 @@
 }
 
 #repoDiag .item {
-    width: 8px;
-    height: 8px;
+    width: 8px;     /* make sure to update ITEM_WIDTH in RepositoryLogView.js */
+    height: 8px;    /* make sure to update ITEM_HEIGHT in RepositoryLogView.js */
     color: #ffffff;
     background-color: #000000;
     vertical-align: middle;
