@@ -1,8 +1,12 @@
 "use strict";
 
 define(['logManager',
+        'text!./CommitDetails.html',
+        'text!./CommitHeadLabel.html',
         'raphaeljs',
-        'css!RepositoryCSS/RepositoryLogView'], function (logManager) {
+        'css!RepositoryCSS/RepositoryLogView'], function (logManager,
+                                                          commitDetailsTemplate,
+                                                          commitHeadLabelTemplate) {
 
     var RepositoryLogView,
         X_DELTA = 20,
@@ -359,24 +363,22 @@ define(['logManager',
         }
 
         if (params.isRemoteHead || params.isLocalHead) {
-            headMarkerEl = $("<div></div>");
+            headMarkerEl = $(_.template(commitHeadLabelTemplate, {"branch": params.branch}));
 
             if (params.isRemoteHead) {
-                headMarkerEl.append($('<div class="tooltiplabel right remote-head"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">' + params.branch + '</div></div>'));
-
-                if (params.branch.toLowerCase() !== "master") {
-                    headMarkerEl.find(".tooltiplabel-inner").append(' <i data-branch="' + params.branch + '" class="icon-remove icon-white" title="Delete branch"></i>');
+                if (params.branch.toLowerCase() === "master") {
+                    headMarkerEl.find(".tooltiplabel-inner > i").remove();
                 }
+            } else {
+                headMarkerEl.find(".remote-head").remove();
             }
 
-            if (params.isLocalHead) {
-                headMarkerEl.append($('<div class="tooltiplabel right local-head"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">local @ ' + params.branch + '</div></div>'));
+            if (params.isLocalHead === false) {
+                headMarkerEl.find(".local-head").remove();
             }
 
             headMarkerEl.css({"top": params.y + HEADMARKER_Y_SHIFT,
-                "left": params.x + HEADMARKER_X_SHIFT,
-                "position": "absolute",
-                "white-space": "nowrap"});
+                "left": params.x + HEADMARKER_X_SHIFT});
 
             this._skinParts.htmlContainer.append(headMarkerEl);
         }
@@ -448,25 +450,16 @@ define(['logManager',
             this._lastCommitPopOver.popover("destroy");
         }
 
-        //hook up popover
-        popoverMsg = "<li class='nowrap'>TimeStamp: " + new Date(parseInt(obj.timestamp, 10)) + "</li>";
-        popoverMsg += "<li>Name: " + obj.branch + "</li>";
-        if (obj.message) {
-            popoverMsg += "<li>Message: " + obj.message + "</li>";
-        }
-        popoverMsg = "<ul>" + popoverMsg + "</ul>";
+        popoverMsg = _.template(commitDetailsTemplate,
+            {"timestamp": new Date(parseInt(obj.timestamp, 10)),
+                "branch": obj.branch,
+                "message": obj.message || "N/A",
+                "commitid": commitId});
 
-        if (!commitEl.hasClass("actual")) {
-            popoverMsg += "<br><button class='btn btn-primary btn-mini btnLoadCommit' data-commitId='" + commitId + "'>To switch to this commit click here</button><br>";
-        }
-
-        popoverMsg += '<br><p class="muted">To create a new branch from here, specify a name and click "create":</p><div class="input-append control-group"><input class="span4" id="appendedInputButton" type="text"><button class="btn btn-info btnCreateBranch" type="button" data-commitId="' + commitId + '">Create</button></div>';
-
-        popoverMsg += "<br><button class='btn btn-mini pull-right btnCloseCommitDetails'>Close</button><br>";
 
         this._lastCommitPopOver = commitEl;
 
-        this._lastCommitPopOver.popover({"title": obj.id + "@" + obj.branch + " / " + obj.counter,
+        this._lastCommitPopOver.popover({"title": obj.id + " [" + obj.counter + "]",
             "html": true,
             "content": popoverMsg,
             "trigger": "manual" });

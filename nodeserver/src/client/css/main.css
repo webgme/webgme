@@ -22,6 +22,22 @@ html,body {
     user-select:none;
 }
 
+.unselectable {
+    -khtml-user-select:none;
+    -moz-user-select:-moz-none;
+    -webkit-user-select:none;
+    -o-user-select:none;
+    user-select:none;
+}
+
+.selectable {
+    -khtml-user-select: all;
+    -moz-user-select:-moz-all;
+    -webkit-user-select:all;
+    -o-user-select:all;
+    user-select:all;
+}
+
 input[type=text],
 input[type=password],
 input, /*stupid jsTree does not specify type for input (renaming node)*/

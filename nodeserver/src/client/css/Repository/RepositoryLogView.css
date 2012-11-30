@@ -73,3 +73,8 @@
 .local-head .tooltiplabel-inner {
     background-color: #3a87ad;
 }
+
+.commitHeadWrapper {
+    position: absolute;
+    white-space: nowrap;
+}
