@@ -433,9 +433,10 @@ define([
                 callback("you must use individual name!!!");
             }
         };
-        self.selectCommit = function(commit){
+        self.selectCommitAsync = function(commitid,callback){
+            callback = callback || function(){};
             if(activeProject){
-                var mycommit = commitInfos[activeProject].getCommitObj(commit);
+                var mycommit = commitInfos[activeProject].getCommitObj(commitid);
                 var deadbranch = true;
                 if(mycommit){
                     //now we check if this commit is final for the given branch so we can go on with it
@@ -447,15 +448,15 @@ define([
                                     deadbranch = false;
                                     if(projectsinfo[activeProject].branches[mycommit.name]){
                                         if(projectsinfo[activeProject].branches[mycommit.name].actor){
-                                            if(commit === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()){
+                                            if(commitid === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()){
                                                 projectsinfo[activeProject].currentbranch = mycommit.name;
                                                 activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
                                             } else {
-                                                createViewer(mycommit);
+                                                createViewer(mycommit,callback);
                                             }
                                         } else {
                                             //TODO shouldn't have to be null
-                                           if(branches[i].commit === commit || branches[i].commit === null){
+                                           if(branches[i].commit === commitid || branches[i].commit === null){
                                                projectsinfo[activeProject].branches[mycommit.name].actor = new ClientProject({
                                                    storage: storages[activeProject],
                                                    master: self,
@@ -466,13 +467,13 @@ define([
                                                    readonly: false
                                                });
                                                projectsinfo[activeProject].currentbranch = mycommit.name;
-                                               activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                               activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
                                            } else {
-                                               createViewer(mycommit);
+                                               createViewer(mycommit,callback);
                                            }
                                         }
                                     } else {
-                                        if(branches[i].commit === commit){
+                                        if(branches[i].commit === commitid){
                                             projectsinfo[activeProject].branches[mycommit.name] = {
                                                 actor: new ClientProject({
                                                     storage: storages[activeProject],
@@ -483,28 +484,30 @@ define([
                                                     branch: mycommit.name,
                                                     readonly: false
                                                 }),
-                                                commit: commit
+                                                commit: commitid
                                             };
                                             projectsinfo[activeProject].currentbranch = mycommit.name;
                                             activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
                                         } else {
-                                            createViewer(mycommit);
+                                            createViewer(mycommit,callback);
                                         }
                                     }
                                 }
                             }
                             if(deadbranch){
-                                createViewer(mycommit);
+                                createViewer(mycommit,callback);
                             }
                         } else {
                             //now we should do the readonly way...
-                            createViewer(mycommit);
+                            createViewer(mycommit,callback);
                         }
                     });
                 }
+            } else {
+                callback('no active project');
             }
         };
-        var createViewer = function(commitobj){
+        var createViewer = function(commitobj,callback){
             $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch+'[READONLY]');
             viewer = new ClientProject({
                 storage: storages[activeProject],
@@ -515,7 +518,7 @@ define([
                 branch: commitobj.name,
                 readonly: true
             });
-            activateActor(viewer);
+            activateActor(viewer,null,callback);
         };
         self.getCommitIds = function(){
             if(activeProject){
