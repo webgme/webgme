@@ -1,0 +1,17 @@
+<ul>
+    <li class="nowrap"><b><%= commitid %></b></li>
+    <li class="nowrap"><b>Timestamp:</b> <%= timestamp %></li>
+    <li><b>Branch:</b> <%= branch %></li>
+    <li><b>Message:</b> <%= message %></li>
+</ul>
+<br>
+<button class="btn btn-primary btn-mini btnLoadCommit" data-commitid="<%= commitid %>">To switch to this commit click here</button>
+<br><br>
+<p class="muted">To create a new branch based on this, specify a name and click "Create":</p>
+<div class="input-append control-group">
+    <input class="span4" id="appendedInputButton" type="text">
+    <button class="btn btn-info btnCreateBranch" type="button" data-commitid="<%= commitid %>">Create</button>
+</div>
+<br>
+<button class="btn btn-mini pull-right btnCloseCommitDetails">Close</button>
+<br>

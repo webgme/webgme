@@ -11,8 +11,41 @@ define(['logManager'], function (logManager) {
         this._view = myView;
 
         //override view event handlers
-        this._view.onCommitDblClick = function (params) {
-            self._client.selectCommit(params.id);
+        this._view.onLoadCommit = function (params) {
+            self._view.clear();
+            self._view.displayProgress();
+            self._client.selectCommitAsync(params.id, function (err) {
+                if (err) {
+                    self._logger.error(err);
+                } else {
+                    self._updateHistory();
+                }
+            });
+        };
+
+        this._view.onDeleteBranchClick = function (branch) {
+            self._view.clear();
+            self._view.displayProgress();
+            self._client.deleteBranchAsync(branch, function (err) {
+                if (err) {
+                    self._logger.error(err);
+                } else {
+                    self._updateHistory();
+                }
+            });
+        };
+
+        this._view.onCreateBranchFromCommit = function (params) {
+            self._view.clear();
+            self._view.displayProgress();
+            self._client.commitAsync({"commit": params.commitId,
+                                        "branch": params.name }, function (err) {
+                                                                    if (err) {
+                                                                        self._logger.error(err);
+                                                                    } else {
+                                                                        self._updateHistory();
+                                                                    }
+                                                                });
         };
 
         this._logger = logManager.create("RepositoryLogControl");
@@ -25,36 +58,67 @@ define(['logManager'], function (logManager) {
 
     RepositoryLogControl.prototype._updateHistory = function (useFake) {
         var currentCommitId = this._client.getActualCommit(),
-            commits = useFake ? this._getFakeCommits() : this._client.getCommits(),
+            commits = null,
+            commitGetter = useFake ? this._getFakeCommitsAsync : this._client.getCommitsAsync,
             branches = {},
-            branchArray = this._client.getBranches(),
-            i = branchArray.length,
-            com;
+            com,
+            commitsLoaded,
+            branchesLoaded,
+            self = this;
 
-        while (i--) {
-            branches[branchArray[i].name] = {"name": branchArray[i].name,
-                                             "localHead":  branchArray[i].localcommit,
-                                             "remoteHead":  branchArray[i].remotecommit};
-        }
+        commitsLoaded = function (err, data) {
+            self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data ? data.length : "null");
 
-        i = commits.length;
-        while (i--) {
-            com = commits[i];
+            if (err) {
+                self._logger.error(err);
+            } else {
+                commits = data.concat([]);
 
-            this._view.addCommit({"id": com._id,
-                                  "branch": com.name,
-                                  "message": com.message,
-                                  "parents": com.parents,
-                                  "timestamp": com.time || com.end, //TODO: end is obsolete, time should be used
-                                  "actual": com._id === currentCommitId,
-                                  "isLocalHead": branches[com.name] ? branches[com.name].localHead === com._id : false,
-                                  "isRemoteHead": branches[com.name] ? branches[com.name].remoteHead === com._id : false});
-        }
+                self._client.getBranchesAsync(branchesLoaded);
+            }
+        };
 
-        this._view.render();
+        branchesLoaded = function (err, data) {
+            var i;
+
+            self._logger.debug("branchesLoaded, err: '" + err + "', data: " + data ? data.length : "null");
+
+            if (err) {
+                self._logger.error(err);
+            } else {
+                i = data.length;
+
+                while (i--) {
+                    branches[data[i].name] = {"name": data[i].name,
+                        "localHead":  data[i].localcommit,
+                        "remoteHead":  data[i].remotecommit};
+                }
+
+                i = commits.length;
+                while (i--) {
+                    com = commits[i];
+
+                    self._view.addCommit({"id": com._id,
+                        "branch": com.name,
+                        "message": com.message,
+                        "parents": com.parents,
+                        "timestamp": com.time,
+                        "actual": com._id === currentCommitId,
+                        "isLocalHead": branches[com.name] ? branches[com.name].localHead === com._id : false,
+                        "isRemoteHead": branches[com.name] ? branches[com.name].remoteHead === com._id : false});
+                }
+
+                self._view.render();
+            }
+        };
+
+        this._view.clear();
+        this._view.displayProgress();
+
+        commitGetter(commitsLoaded);
     };
 
-    RepositoryLogControl.prototype._getFakeCommits = function () {
+    RepositoryLogControl.prototype._getFakeCommitsAsync = function (callback) {
         var result = [],
             num = 16,
             c = num,
@@ -93,9 +157,9 @@ define(['logManager'], function (logManager) {
 
         result[12].parents = ["10", "11"];
 
-
-
-        return result;
+        if (callback) {
+            callback(null, result);
+        }
     };
 
     return RepositoryLogControl;

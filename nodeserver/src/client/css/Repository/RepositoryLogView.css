@@ -9,8 +9,8 @@
 }
 
 #repoDiag .item {
-    width: 30px;
-    height: 22px;
+    width: 8px;     /* make sure to update ITEM_WIDTH in RepositoryLogView.js */
+    height: 8px;    /* make sure to update ITEM_HEIGHT in RepositoryLogView.js */
     color: #ffffff;
     background-color: #000000;
     vertical-align: middle;
@@ -26,32 +26,55 @@
     cursor: pointer;
 
     box-sizing: border-box;
+    border-radius: 5px;
+}
+
+#repoDiag .item.merge {
+    border-radius: 0 !important;
+}
+
+#repoDiag .item:hover {
+    width: 12px;
+    height: 12px;
+    margin-left: -2px;
+    margin-top: -2px;
+    border-radius: 7px;
 }
 
 #repoDiag .item.actual {
     background-color: #FF7800;
 }
 
-.tooltip.local-head,
-.tooltip.remote-head {
+.tooltiplabel.local-head,
+.tooltiplabel.remote-head {
     opacity: 1.0;
     margin-left: 0px;
     display: inline-block;
     position: relative;
 }
 
-.remote-head .tooltip-arrow {
-    border-right-color: #FF0000 !important;
+.remote-head .tooltiplabel-arrow {
+    border-right-color: #b94a48 !important;
 }
 
-.remote-head .tooltip-inner {
-    background-color: #FF0000;
+.remote-head .tooltiplabel-inner {
+    background-color: #b94a48;
 }
 
-.local-head .tooltip-arrow {
-    border-right-color: #52A8EC !important;
+.remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
+    cursor: pointer;
+    background-image: url("../../img/glyphicons-halflings.png");
 }
 
-.local-head .tooltip-inner {
-    background-color: #52A8EC;
+.local-head .tooltiplabel-arrow {
+    border-right-color: #3a87ad !important;
+}
+
+.local-head .tooltiplabel-inner {
+    background-color: #3a87ad;
+}
+
+.commitHeadWrapper {
+    position: absolute;
+    white-space: nowrap;
 }

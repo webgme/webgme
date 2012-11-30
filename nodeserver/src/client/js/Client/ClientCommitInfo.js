@@ -1,9 +1,13 @@
-define([],function(){
+define(['commonUtil'],function(commonUtil){
     var KEY = "_id";
     var BID = "*#*";
+    var COPY = commonUtil.copy;
     var ClientCommitInfo = function(parameters){
-        var refreshId = null,
+        var refreshCommitId = null,
+            refreshBranchId = null,
             storage = parameters.storage,
+            master = parameters.master,
+            project = parameters.project,
             commits = {},
             branches = {};
 
@@ -43,6 +47,7 @@ define([],function(){
                     for(var i=0;i<findobjects.length;i++){
                         commits[findobjects[i][KEY]] = findobjects[i];
                     }
+
                 }
                 callback(err);
             });
@@ -53,9 +58,15 @@ define([],function(){
                 if(err){
                     console.log("cannot update branch list due to: "+err);
                 } else {
+                    var oldbranches = COPY(branches);
                     branches={};
                     for(var i=0;i<findobjects.length;i++){
                         branches[findobjects[i][KEY]] = findobjects[i];
+                    }
+                    for(i in oldbranches){
+                        if(!branches[i]){
+                            master.remoteDeleteBranch(project,oldbranches[i].name);
+                        }
                     }
                 }
                 callback(err);
@@ -138,7 +149,8 @@ define([],function(){
             });
         };
 
-        refreshId = setInterval(refreshCommits,parameters.refreshrate);
+        refreshCommitId = setInterval(refreshCommits,parameters.refreshrate);
+        refreshBranchId = setInterval(refreshBranches,parameters.refreshrate);
         //TODO not the nicest to initialize the values this way, but should work for now
         getBranchesNow();
         getAllCommitsNow();
