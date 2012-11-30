@@ -61,7 +61,7 @@ PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata, CONFIG) {
 				};
 				opt.port = opt.port && parseInt(opt.port, 10);
 
-				opt = UTIL.copyOptions(CONFIG.mongodb, opt);
+				opt = CONFIG.copyOptions(CONFIG.mongodb, opt);
 				console.log("Opening database at " + opt.host + " (" + opt.database + "/"
 				+ opt.collection + ")");
 
