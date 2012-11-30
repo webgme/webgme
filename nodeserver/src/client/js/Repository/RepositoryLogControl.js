@@ -11,8 +11,16 @@ define(['logManager'], function (logManager) {
         this._view = myView;
 
         //override view event handlers
-        this._view.onCommitDblClick = function (params) {
-            self._client.selectCommit(params.id);
+        this._view.onLoadCommit = function (params) {
+            self._view.clear();
+            self._view.displayProgress();
+            self._client.selectCommitAsync(params.id, function (err) {
+                if (err) {
+                    self._logger.error(err);
+                } else {
+                    self._updateHistory();
+                }
+            });
         };
 
         this._view.onDeleteBranchClick = function (branch) {
