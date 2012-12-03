@@ -700,7 +700,8 @@ define([
         };
         var storeNode = function(node){
             var path = getNodePath(node);
-            if(!currentNodes[path]){
+            //if(!currentNodes[path]){
+            if(path){
                 currentNodes[path] = node;
             }
             return path;
