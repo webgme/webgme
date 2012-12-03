@@ -21,7 +21,8 @@ define([  'logManager',
     'js/Project/ProjectPanel',
     'js/Project/ProjectControl',
     'js/NetworkStatus/NetworkStatusControl',
-    'js/NetworkStatus/NetworkStatusView'], function (logManager,
+    'js/NetworkStatus/NetworkStatusView',
+    'js/Project/ProjectTitleView'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -41,7 +42,8 @@ define([  'logManager',
                                             ProjectPanel,
                                             ProjectControl,
                                             NetworkStatusControl,
-                                            NetworkStatusView) {
+                                            NetworkStatusView,
+                                            ProjectTitleView) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -89,7 +91,8 @@ define([  'logManager',
         projectPanel,
         projectController,
         networkStatusView,
-        networkStatusControl;
+        networkStatusControl,
+        projectTitleView;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -220,6 +223,11 @@ define([  'logManager',
                     partBrowserController.selectedObjectChanged(currentNodeId);
                 }
             });
+            proxy.addEventListener(proxy.events.ACTOR_CHANGED, function () {
+                if (projectTitleView) {
+                    projectTitleView.refresh(proxy);
+                }
+            });
 
             //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
             tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
@@ -244,6 +252,8 @@ define([  'logManager',
 
             networkStatusView = new NetworkStatusView("panNetworkStatus");
             networkStatusControl = new NetworkStatusControl(proxy, networkStatusView);
+
+            projectTitleView = new ProjectTitleView("projectInfoContainer");
 
             //TESTING part
             if(DEBUG === true){

@@ -227,9 +227,6 @@ define([
         };
         var activateActor = function(actor,commit,callback){
             callback = callback || function(){};
-            if(actor !== viewer){
-                $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch);
-            }
             if(activeActor !== actor){
                 activeActor = actor;
                 actor.dismantle();
@@ -508,7 +505,6 @@ define([
             }
         };
         var createViewer = function(commitobj,callback){
-            $('#maintitlespan').html(activeProject+'@'+projectsinfo[activeProject].currentbranch+'[READONLY]');
             viewer = new ClientProject({
                 storage: storages[activeProject],
                 master: self,
