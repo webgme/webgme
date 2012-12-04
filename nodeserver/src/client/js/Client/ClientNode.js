@@ -84,8 +84,9 @@ define([],
 
             var printData = function(){
                 //TODO it goes to console now...
-                console.log("###nodeprint###\n"+JSON.stringify(node)+"\n###endnodeprint###\n");
-                console.log("###setprint###\n"+getMemberIds()+"\n###endsetprint###\n");
+                console.log("###node###"+ownpath);
+                console.dir({node:node,set:getMemberIds()});
+
             };
 
             return {
