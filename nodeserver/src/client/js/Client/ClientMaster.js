@@ -447,7 +447,7 @@ define([
                                         if(projectsinfo[activeProject].branches[mycommit.name].actor){
                                             if(commitid === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()){
                                                 projectsinfo[activeProject].currentbranch = mycommit.name;
-                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
                                             } else {
                                                 createViewer(mycommit,callback);
                                             }
@@ -484,7 +484,7 @@ define([
                                                 commit: commitid
                                             };
                                             projectsinfo[activeProject].currentbranch = mycommit.name;
-                                            activateActor(projectsinfo[activeProject].branches[mycommit.name].actor);
+                                            activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
                                         } else {
                                             createViewer(mycommit,callback);
                                         }
@@ -720,7 +720,7 @@ define([
             }
         };
         self.enableEventToUI = function(guid){
-            if(activateActor){
+            if(activeActor){
                 activeActor.enableEventToUI(guid);
             }
         };
@@ -735,7 +735,7 @@ define([
             }
         };
         self.undo = function(){
-            if(activateActor){
+            if(activeActor){
                 activeActor.undo();
             }
         };
