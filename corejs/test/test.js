@@ -11,13 +11,19 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/coretree", "core/mongo" ], function (ASSERT, CoreTree, Mongo) {
+requirejs([ "core/assert", "core/future" ], function (ASSERT, FUTURE) {
 	"use strict";
 
-	var func = function(a) {
-		arguments[0] = "hihi";
-		console.log(arguments, arguments[0], a);
-	};
+	var print = FUTURE.func(function (a) {
+		console.log(a);
+	});
+
+	var add = FUTURE.func(function(a, b) {
+		return a + b;
+	});
 	
-	func(1);
+	var a = FUTURE.wait(1000, 1);
+	var b = FUTURE.wait(2000, 2);
+	
+	print(a);
 });
