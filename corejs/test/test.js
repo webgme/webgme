@@ -14,16 +14,17 @@ requirejs.config({
 requirejs([ "core/assert", "core/future" ], function (ASSERT, FUTURE) {
 	"use strict";
 
-	var print = FUTURE.func(function (a) {
+	var a = FUTURE.delay(1000, 1);
+	var b = FUTURE.delay(2000, 2);
+
+	var f = FUTURE.wrap(function(a, b) {
+		console.log(a, b);
+	});
+
+	var g = FUTURE.wrap(function(a) {
 		console.log(a);
 	});
 
-	var add = FUTURE.func(function(a, b) {
-		return a + b;
-	});
-	
-	var a = FUTURE.wait(1000, 1);
-	var b = FUTURE.wait(2000, 2);
-	
-	print(a);
+	g(b);
+	f(a, b);
 });
