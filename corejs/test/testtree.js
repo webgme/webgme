@@ -11,27 +11,38 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/coretree", "core/mongo" ], function (ASSERT, CoreTree, Mongo) {
+requirejs([ "core/assert", "core/coretree", "core/mongo", "core/future" ], function (ASSERT, CoreTree, Mongo, FUTURE) {
 	"use strict";
 
 	var mongo = new Mongo();
-	var coretree = new CoreTree(mongo);
+	mongo.open(function(err) {
+		
+		var coretree = new CoreTree(mongo);
 
-	var r1 = coretree.createRoot();
-	var a1 = coretree.getChild(r1, "a");
-	var b1 = coretree.getChild(r1, "b");
-	var c1 = coretree.getChild(r1, "c");
+		var r1 = coretree.createRoot();
+		var a1 = coretree.getChild(r1, "a");
+		var b1 = coretree.getChild(r1, "b");
+		var c1 = coretree.getChild(r1, "c");
 
-	coretree.setData(r1, 1);
-	coretree.setData(r1, {
-		a: 1,
-		b: 2
+		coretree.setData(r1, 1);
+		coretree.setData(r1, {
+			a: 1,
+			b: 2
+		});
+		coretree.setProperty(r1, "d", {});
+		coretree.setHashed(c1, false);
+		var d1 = coretree.getChild(r1, "d");
+		coretree.setHashed(d1, false);
+		
+//		console.log(r1);
+
+		coretree.normalize(a1);
+		coretree.persist(r1);
+
+		console.log(r1);
+
+		coretree.mutate(d1);
+		
+		mongo.close();
 	});
-	coretree.setProperty(r1, "d", 4);
-	coretree.setHashed(c1, true);
-
-	coretree.normalize(a1);
-
-	console.log(r1);
-	console.log(r1.data.c === c1.data);
 });

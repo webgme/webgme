@@ -4,9 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define(
-[ "core/assert", "core/lib/sha1", "core/util" ],
-function (ASSERT, SHA1, UTIL) {
+define([ "core/assert", "core/lib/sha1", "core/util", "core/future" ], function (ASSERT, SHA1,
+UTIL, FUTURE) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -23,6 +22,7 @@ function (ASSERT, SHA1, UTIL) {
 		var MAX_TICKS = 1;
 		var HASH_ID = "_id";
 		var EMPTY_DATA = {};
+		var EMPTY_HASH = "#6e149a76c99235e06092bfff8f2dca9862e938c6";
 
 		// ------- static methods
 
@@ -70,8 +70,8 @@ function (ASSERT, SHA1, UTIL) {
 			node.children = null;
 			node.age = MAX_AGE;
 
-			for( var relid in children ) {
-				__detachChildren(children[relid]);
+			for( var i = 0; i < children.length; ++i ) {
+				__detachChildren(children[i]);
 			}
 		};
 
@@ -249,7 +249,7 @@ function (ASSERT, SHA1, UTIL) {
 				relid: relid,
 				age: 0,
 				children: [],
-				data: __getChildData(node, relid)
+				data: __getChildData(node.data, relid)
 			};
 
 			node.children.push(child);
@@ -300,6 +300,19 @@ function (ASSERT, SHA1, UTIL) {
 			return __isMutableData(node.data);
 		};
 
+		var __isEmptyData = function (data) {
+			for( var keys in data ) {
+				return false;
+			}
+			return true;
+		};
+
+		var __areEquivalent = function (data1, data2) {
+			return data1 === data2
+			|| (typeof data1 === "string" && data1 === __getChildData(data2, HASH_ID))
+			|| (__isEmptyData(data1) && __isEmptyData(data2));
+		};
+
 		var mutate = function (node) {
 			node = normalize(node);
 			var data = node.data;
@@ -331,11 +344,7 @@ function (ASSERT, SHA1, UTIL) {
 			ASSERT(copy._mutable === true);
 
 			if( node.parent !== null ) {
-				// ugly check, but it is correct
-				ASSERT(__getChildData(node.parent.data, node.relid) === node.data
-				|| (isValidHash(node.parent.data[node.relid]) && node.parent.data[node.relid] === __getChildData(
-				node.data, HASH_ID)));
-
+				ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
 				node.parent.data[node.relid] = copy;
 			}
 
@@ -406,12 +415,22 @@ function (ASSERT, SHA1, UTIL) {
 			}
 		};
 
+		// ------- persistence
+
+		var getHash = function (node) {
+			node = normalize(node);
+			var hash = __getChildData(node.data, HASH_ID);
+
+			ASSERT(typeof hash === "string" || typeof hash === "undefined");
+			return hash;
+		};
+
 		var isHashed = function (node) {
 			node = normalize(node);
-			var data = __getChildData(node.data, HASH_ID);
+			var hash = __getChildData(node.data, HASH_ID);
 
-			ASSERT(typeof data === "string" || typeof data === "undefined");
-			return typeof data === "string";
+			ASSERT(typeof hash === "string" || typeof hash === "undefined");
+			return typeof hash === "string";
 		};
 
 		var setHashed = function (node, hashed) {
@@ -430,6 +449,60 @@ function (ASSERT, SHA1, UTIL) {
 			}
 
 			ASSERT(typeof node.children[HASH_ID] === "undefined");
+		};
+
+		var __storageSave = FUTURE.adapt(storage.save);
+
+		var __saveData = function (data, promises) {
+			ASSERT(__isMutableData(data));
+
+			var relid, hash, child, nonempty = false;
+			delete data._mutable;
+
+			for( relid in data ) {
+				child = data[relid];
+				if( __isMutableData(child) ) {
+					if( __saveData(child, promises) ) {
+						nonempty = true;
+						if( typeof child[HASH_ID] === "string" ) {
+							data[relid] = child[HASH_ID];
+						}
+					}
+					else {
+						delete data[relid];
+					}
+				}
+				else {
+					nonempty = true;
+				}
+			}
+
+			if( nonempty ) {
+				hash = data[HASH_ID];
+				ASSERT(hash === "" || typeof key === "undefined");
+
+				if( hash === "" ) {
+					hash = "#" + SHA1(JSON.stringify(data));
+					data[HASH_ID] = hash;
+
+					promises.push(__storageSave(data));
+				}
+			}
+
+			return nonempty;
+		};
+
+		var persist = function (node) {
+			node = normalize(node);
+
+			if( !__isMutableData(node.data) ) {
+				return false;
+			}
+
+			var promises = [];
+			__saveData(node.data, promises);
+
+			return FUTURE.array(promises);
 		};
 
 		return {
@@ -453,8 +526,11 @@ function (ASSERT, SHA1, UTIL) {
 			setData: setData,
 			getProperty: getProperty,
 			setProperty: setProperty,
+
 			isHashed: isHashed,
 			setHashed: setHashed,
+			getHash: getHash,
+			persist: persist,
 
 			nothing: null
 		};

@@ -4,11 +4,11 @@
  * Author: Miklos Maroti
  */
 
-define(function() {
+define(function () {
 	"use strict";
 
-	var ASSERT = function(cond) {
-		if (!cond) {
+	var ASSERT = function (cond) {
+		if( !cond ) {
 			var error = new Error("future assertion failed");
 			console.log(error.stack);
 			throw error;
@@ -19,83 +19,86 @@ define(function() {
 
 	var UNRESOLVED = {};
 
-	var Future = function() {
+	var Future = function () {
 		this.value = UNRESOLVED;
 		this.listener = null;
 		this.param = null;
 	};
 
-	var setValue = function(future, value) {
+	var setValue = function (future, value) {
 		ASSERT(future instanceof Future && future.value === UNRESOLVED);
 
-		if (value instanceof Future) {
+		if( value instanceof Future ) {
 			setListener(value, setValue, future);
-		} else {
+		}
+		else {
 			future.value = value;
 
-			if (future.listener !== null) {
+			if( future.listener !== null ) {
 				future.listener(future.param, value);
 			}
 		}
 	};
 
-	var setListener = function(future, listener, param) {
-		ASSERT(future instanceof Future && future.listener === null
-				&& future.value === UNRESOLVED);
+	var setListener = function (future, listener, param) {
+		ASSERT(future instanceof Future && future.listener === null && future.value === UNRESOLVED);
 		ASSERT(typeof listener === "function" && listener.length === 2);
 
 		future.listener = listener;
 		future.param = param;
 
-		if (future.value !== UNRESOLVED) {
+		if( future.value !== UNRESOLVED ) {
 			listener(param, future);
 		}
 	};
 
-	var isUnresolved = function(value) {
+	var isUnresolved = function (value) {
 		return (value instanceof Future) && value.value === UNRESOLVED;
 	};
 
-	var getValue = function(value) {
-		if (value instanceof Future) {
+	var getValue = function (value) {
+		if( value instanceof Future ) {
 			value = value.value;
-			if (value instanceof Error) {
+			if( value instanceof Error ) {
 				throw value;
-			} else {
+			}
+			else {
 				return value;
 			}
-		} else {
+		}
+		else {
 			return value;
 		}
 	};
 
 	// ------- adapt
 
-	var adapt = function(func) {
+	var adapt = function (func) {
 		ASSERT(typeof func === "function" && func.length >= 1);
 
-		if (func.length === 1) {
-			return function() {
+		if( func.length === 1 ) {
+			return function () {
 				var future = new Future();
-				func.call(this, function(error, value) {
-					if (error !== null) {
-						value = error instanceof Error ? error : new Error(
-								error);
-					} else {
+				func.call(this, function (error, value) {
+					if( error !== null ) {
+						value = error instanceof Error ? error : new Error(error);
+					}
+					else {
 						ASSERT(!(value instanceof Error));
 					}
 					setValue(future, value);
 				});
 				return getValue(future);
 			};
-		} else if (func.length === 2) {
-			return function(arg0) {
+		}
+		else if( func.length === 2 ) {
+			return function (arg0) {
 				var future = new Future();
-				func.call(this, arg0, function(error, value) {
-					if (error !== null) {
-						value = error instanceof Error ? error : new Error(
-								error);
-					} else {
+				func.call(this, arg0, function (error, value) {
+					if( error ) {
+						value = error instanceof Error ? error : new Error(error);
+					}
+					else {
 						ASSERT(!(value instanceof Error));
 					}
 					setValue(future, value);
@@ -105,17 +108,17 @@ define(function() {
 		}
 	};
 
-	var delay = function(delay, value) {
+	var delay = function (delay, value) {
 		var future = new Future();
-		setTimeout(function() {
+		setTimeout(function () {
 			setValue(future, value);
 		}, delay);
 		return future;
 	};
 
-	// ------- call -------
+	// ------- wrap -------
 
-	var Func = function(func, that, args, index) {
+	var Func = function (func, that, args, index) {
 		this.value = UNRESOLVED;
 		this.listener = null;
 		this.param = null;
@@ -130,63 +133,68 @@ define(function() {
 
 	Func.prototype = Future.prototype;
 
-	var setArgument = function(future, value) {
+	var setArgument = function (future, value) {
 		try {
 			var args = future.args;
 			args[future.index] = value;
 
-			while (++future.index < args.length) {
+			while( ++future.index < args.length ) {
 				value = getValue(args[future.index]);
-				if (value === UNRESOLVED) {
+				if( value === UNRESOLVED ) {
 					setListener(args[future.index], setArgument, future);
 					return;
-				} else {
+				}
+				else {
 					args[future.index] = value;
 				}
 			}
 
-			value = future.func.apply(future.that, future.args);
-		} catch (error) {
+			value = future.func.apply(future.that, args);
+		}
+		catch(error) {
 			value = error instanceof Error ? error : new Error(error);
 		}
 
 		setValue(future, value);
 	};
 
-	var wrap = function(func) {
+	var wrap = function (func) {
 		ASSERT(typeof func === "function");
 
-		switch (func.length) {
+		switch( func.length ) {
 		case 0:
 			return func;
 
 		case 1:
-			return function(arg0) {
+			return function (arg0) {
 				ASSERT(arguments.length === 1);
-				if (isUnresolved(arg0)) {
+				if( isUnresolved(arg0) ) {
 					return new Func(func, this, arguments, 0);
-				} else {
+				}
+				else {
 					return func.call(this, getValue(arg0));
 				}
 			};
 
 		case 2:
-			return function(arg0, arg1) {
+			return function (arg0, arg1) {
 				ASSERT(arguments.length === 2);
-				if (isUnresolved(arg0)) {
+				if( isUnresolved(arg0) ) {
 					return new Func(func, this, arguments, 0);
-				} else if (isUnresolved(arg1)) {
+				}
+				else if( isUnresolved(arg1) ) {
 					return new Func(func, this, arguments, 1);
-				} else {
+				}
+				else {
 					return func.call(this, arg0, arg1);
 				}
 			};
 
 		default:
-			return function() {
+			return function () {
 				ASSERT(arguments.length === func.length);
-				for ( var i = 0; i < arguments.length; ++i) {
-					if (isUnresolved(arguments[i])) {
+				for( var i = 0; i < arguments.length; ++i ) {
+					if( isUnresolved(arguments[i]) ) {
 						return new Func(func, this, arguments, i);
 					}
 				}
@@ -195,11 +203,64 @@ define(function() {
 		}
 	};
 
+	// ------- array -------
+
+	var Arr = function (array, index) {
+		this.value = UNRESOLVED;
+		this.listener = null;
+		this.param = null;
+
+		this.array = array;
+		this.index = index;
+
+		setListener(array[index], setMember, this);
+	};
+
+	Arr.prototype = Future.prototype;
+
+	var setMember = function (future, value) {
+		try {
+			var array = future.array;
+			array[future.index] = value;
+
+			while( ++future.index < array.length ) {
+				value = getValue(array[future.index]);
+				if( value === UNRESOLVED ) {
+					setListener(array[future.index], setMember, future);
+					return;
+				}
+				else {
+					array[future.index] = value;
+				}
+			}
+
+			value = array;
+		}
+		catch(error) {
+			value = error instanceof Error ? error : new Error(error);
+		}
+
+		setValue(future, value);
+	};
+
+	var array = function (array) {
+		ASSERT(array instanceof Array);
+
+		for( var i = 0; i < array.length; ++i ) {
+			if( isUnresolved(array[i]) ) {
+				return new Arr(array, i);
+			}
+		}
+
+		return array;
+	};
+
 	// -------
 
 	return {
-		adapt : adapt,
-		delay : delay,
-		wrap : wrap
+		adapt: adapt,
+		delay: delay,
+		wrap: wrap,
+		array: array
 	};
 });
