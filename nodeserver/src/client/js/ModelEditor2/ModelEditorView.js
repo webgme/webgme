@@ -1565,7 +1565,7 @@ define(['logManager',
             //dump selection info
             //icon-eye-open
             this._skinParts.dumpSelectionInfo = $('<div/>', {
-                "class" : "dumpSelectionBtn selectionBtn"
+                "class" : "selectionBtn dumpSelectionBtn"
             });
             this._skinParts.dumpSelectionInfo.html('<i class="icon-eye-open"></i>');
             this._skinParts.selectionOutline.append(this._skinParts.dumpSelectionInfo);
