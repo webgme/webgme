@@ -428,7 +428,8 @@ define(['clientUtil',
                 newNodeData,
                 existingChildren,
                 i,
-                insertPos = -1;
+                insertPos = -1,
+                makeNodeDraggable;
 
             //check if the parentNode is null or not
             //when null, the new node belongs to the root
@@ -485,6 +486,37 @@ define(['clientUtil',
 
             //log
             logger.debug("New node created: " + objDescriptor.id);
+
+            //hook up draggable
+            makeNodeDraggable = function (node) {
+                var nodeEl = node;
+
+                nodeEl.draggable({
+                    zIndex: 100000,
+                    helper: function (event) {
+                        var helperEl = nodeEl.clone();
+
+                        //trim down unnecessary DOM elements from it
+                        helperEl.children().first().remove();
+                        helperEl.find("ul").remove();
+                        helperEl.find(".jstree-hovered").removeClass("jstree-hovered");
+
+                        //add extra GME related drag info
+                        helperEl[0].GMEDragData = { "type": "simple-drag",
+                                             "id": node.attr("nId")};
+
+                        return helperEl;
+                    },
+                    start: function (event, ui) {
+                    },
+                    stop: function (event, ui) {
+                    },
+                    drag: function (event, ui) {
+                    }
+                });
+            };
+
+            makeNodeDraggable(newNode);
 
             //a bit of visual effect
             animateNode(newNode);
