@@ -101,6 +101,7 @@ define(['logManager',
         if (this._selectedSetId !== setDescriptor.id) {
             this._btnCurrent.html(setDescriptor.name + this._btnTemplate);
             this._selectedSetId = setDescriptor.id;
+            this._selectedSetName = setDescriptor.name;
             this._refreshItemList();
         }
     };
@@ -121,6 +122,8 @@ define(['logManager',
         this._divItems.empty();
         this._divItems.show();
 
+        this._btnCurrent.html(this._selectedSetName + ' (' + len + ')' + this._btnTemplate);
+
         if (len === 0) {
             this._divItems.html('Drag items here to add to the set...');
             this._divItems.addClass('empty');
@@ -137,7 +140,7 @@ define(['logManager',
 
     SetEditorView.prototype._addItemToList = function (objDescriptor) {
         if (objDescriptor) {
-            this._ulItems.append($('<li data-id="' +objDescriptor.id + '">' + objDescriptor.name + '<button type="button" class="close">×</button><br/><span class="muted">' + objDescriptor.id + '</span></li>'));
+            this._ulItems.append($('<li data-id="' +objDescriptor.id + '"><b>' + objDescriptor.name + '</b><button type="button" class="close">×</button><br/><span class="muted">' + objDescriptor.id + '</span></li>'));
         }
     };
 
