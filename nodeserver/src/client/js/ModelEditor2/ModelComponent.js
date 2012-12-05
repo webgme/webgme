@@ -101,6 +101,17 @@ define(['logManager',
 
         this._decoratorInstance.beforeAppend();
 
+        /*this.el.droppable({
+            greedy: true,
+            over: function( event, ui ) {
+                self._parentView.onModelDropOver(self._guid, event, ui);
+            },
+            drop: function (event, ui) {
+                self._logger.warning("drop on model");
+                event.stopPropagation();
+            }
+        });*/
+
         //this._parentView.modelInitializationCompleted(this._guid);
 
         //this._decoratorInstance.afterAppend();
@@ -189,7 +200,12 @@ define(['logManager',
         });
         connStartElements.draggable({
             helper: function () {
-                return $("<div class='draw-connection-drag-helper'></div>").data("sourceId", $(this).attr("data-id"));
+                var h = $("<div class='draw-connection-drag-helper'></div>").data("sourceId", $(this).attr("data-id"));
+
+                    h[0].GMEDragData = { "type": "create-connection",
+                        "source-id": $(this).attr("data-id")};
+
+                return h;
             },
             scroll: true,
             cursor: 'pointer',
