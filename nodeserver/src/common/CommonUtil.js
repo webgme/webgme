@@ -156,7 +156,7 @@ define([], function () {
             if(ind === -1){
                 return id;
             } else {
-                return id.substr(ind);
+                return id.substr(ind+1);
             }
         },
         validSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination', 'General'],

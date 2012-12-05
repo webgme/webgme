@@ -561,7 +561,7 @@ define([
                 } else {
                     var setpath = path === "root" ? setid : path+'/'+setid;
                     if(currentNodes[setpath]){
-                        if(getMemberPath(path,memberpath) === null){
+                        if(getMemberPath(path,memberpath,setid) === null){
                             addmember(setpath);
                         } else {
                             console.log('the member was already in the set');
