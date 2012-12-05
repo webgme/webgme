@@ -36,9 +36,14 @@ define(['logManager',
         var actualProject = client.getActiveProject(),
             actualBranch = client.getActualBranch(),
             readOnly = client.isReadOnly(),
-            titleText = actualProject + " @ " + actualBranch;
+            titleText = actualProject + " @ " + actualBranch,
+            documentTitle = titleText + (readOnly ? " [READ-ONLY]": "");
 
+        //change header title
         this._projectTitle.text(titleText);
+
+        //change document title (browser tab)
+        document.title = '-= ' + documentTitle + ' =- WebGME';
 
         if (readOnly) {
             this._el.addClass("read-only");
