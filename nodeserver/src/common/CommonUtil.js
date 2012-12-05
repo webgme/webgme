@@ -159,6 +159,7 @@ define([], function () {
                 return id.substr(ind);
             }
         },
+        validSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination', 'General'],
         hashbasedconfig: {
             inuse          : true,
             serverlocation : "http://localhost",

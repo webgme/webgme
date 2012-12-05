@@ -1,0 +1,40 @@
+div.setEditor .items {
+    margin: 3px;
+    border: 1px solid rgba(0, 0, 0, 0);;
+    padding: 10px 5px;
+}
+
+div.setEditor .items.empty {
+    border: 1px solid #3a87ad;
+    text-align: center;
+    color: #3a87ad;
+}
+
+div.setEditor .items.highlight {
+    border: 1px solid #3a87ad;
+    border-color: rgba(82, 168, 236, 0.8);
+    outline: 0;
+    outline: thin dotted \9;
+    /* IE6-9 */
+
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+}
+
+div.setEditor .items ul li {
+    padding: 2px;
+}
+
+div.setEditor .items ul li > button.close {
+    display: none;
+}
+
+div.setEditor .items ul li:hover {
+    background-color: rgba(82, 168, 236, 0.2);
+}
+
+div.setEditor .items ul li:hover > button.close {
+    display: inline;
+}
+

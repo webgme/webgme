@@ -24,7 +24,7 @@ define(['logManager',
         var desc = this._getObjectDescriptor(nodeId),
             node = this._client.getNode(nodeId),
             childrenTypes = node ? node.getValidChildrenTypes() : [],
-            num = childrenTypes.length;
+            num = childrenTypes ? childrenTypes.length : 0;
 
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
