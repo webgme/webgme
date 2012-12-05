@@ -11,6 +11,7 @@ define([
     var ISSET = commonUtil.issetrelid;
     var MINSETID = commonUtil.minsetid;
     var RELFROMID = commonUtil.relidfromid;
+    var RELFROMSET = commonUtil.setidtorelid;
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var self = this,
             storage = parameters.storage, //the storage of the project
@@ -541,7 +542,7 @@ define([
             }
         };
         var addMember = function(path,memberpath,setid){
-            setid = setid || MINSETID;
+            setid = RELFROMSET(setid);
             var addmember = function(setpath){
                 var newmemberchild = currentCore.createNode(currentNodes[setpath]);
                 storeNode(newmemberchild);
@@ -574,7 +575,7 @@ define([
             }
         };
         var removeMember = function(path,memberpath,setid){
-            setid = setid || MINSETID;
+            setid = RELFROMSET(setid);
             if(currentNodes[path] && currentNodes[memberpath]){
                 var mpath = getMemberPath(path,memberpath,setid);
                 if(mpath){
