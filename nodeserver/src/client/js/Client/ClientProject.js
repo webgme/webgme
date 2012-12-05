@@ -26,7 +26,7 @@ define([
             currentPathes = {},
             currentNupathes = {},
             clipboard = [],
-            meta = new ClientMeta(master),
+            //meta = new ClientMeta(master),
             status = null,
             readonly = parameters.readonly || false,
             intransaction = false;
@@ -292,7 +292,6 @@ define([
                 return new ClientNode({
                     node:currentNodes[path],
                     core:currentCore,
-                    meta:meta,
                     actor:{
                         getMemberIds:getMemberIds
                     }});

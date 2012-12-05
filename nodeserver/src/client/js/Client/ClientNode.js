@@ -8,7 +8,6 @@ define(['commonUtil'],
             var self = this,
                 node = parameters.node,
                 core = parameters.core,
-                meta = parameters.meta,
                 actor = parameters.actor,
                 ownpath = core.getStringPath(node),
                 ownpathpostfix = ownpath === "" ? "" : "/";
@@ -95,7 +94,7 @@ define(['commonUtil'],
             };
             //META
             var getValidChildrenTypes = function(){
-                return meta.getValidChildrenTypes(self);
+                return getMemberIds('ValidChildren');
             };
 
             var printData = function(){
@@ -127,7 +126,8 @@ define(['commonUtil'],
                 //helping functions
                 printData : printData,
                 //META functions
-                getValidChildrenTypes : getValidChildrenTypes
+                getValidChildrenTypes : getValidChildrenTypes,
+                getMemberIds          : getMemberIds
             }
         };
         return ClientNode;
