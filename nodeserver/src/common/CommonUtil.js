@@ -8,6 +8,7 @@ if (typeof define !== 'function') {
 
 define([], function () {
 
+    var minimalSetId = "2200000000";
     //return utility functions
     return {
         /*
@@ -110,6 +111,53 @@ define([], function () {
         },
         timestamp : function(){
             return "" + (new Date()).getTime();
+        },
+        minsetid : minimalSetId,
+        setidtorelid : function(setid){
+            switch(setid){
+                case "ValidChildren":
+                    return "2200000001";
+                    break;
+                case "ValidSource":
+                    return "2200000002";
+                    break;
+                case "ValidDestination":
+                    return "2200000003";
+                    break;
+                default:
+                    return "2200000000";
+                    break;
+            }
+        },
+        relidtosetid : function(relid){
+            switch(relid){
+                case "2200000001":
+                    return "ValidChildren";
+                    break;
+                case "2200000002":
+                    return "ValidSource";
+                    break;
+                case "2200000003":
+                    return "ValidDestination";
+                    break;
+                case "2200000000":
+                    return "General";
+                    break;
+            }
+        },
+        issetrelid : function(relid){
+            if(parseInt(relid)>= parseInt(minimalSetId)){
+                return true;
+            }
+            return false;
+        },
+        relidfromid : function(id){
+            var ind = id.lastIndexOf('/');
+            if(ind === -1){
+                return id;
+            } else {
+                return id.substr(ind);
+            }
         },
         hashbasedconfig: {
             inuse          : true,

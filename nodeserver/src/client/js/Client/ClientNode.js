@@ -1,7 +1,9 @@
-define([],
-    function( ){
+define(['commonUtil'],
+    function( commonUtil){
         'use strict';
-        var SETRELID = '2222222222';
+        var SETTOREL = commonUtil.setidtorelid;
+        var RELTOSET = commonUtil.relidtosetid;
+        var ISSET = commonUtil.issetrelid;
         var ClientNode = function(parameters){
             var self = this,
                 node = parameters.node,
@@ -30,7 +32,7 @@ define([],
                 var childrenin = core.getChildrenRelids(node);
                 var childrenout = [];
                 for(var i=0;i<childrenin.length;i++){
-                    if(childrenin[i].indexOf(SETRELID) === -1){
+                    if(!ISSET(childrenin[i])){
                         childrenout.push(ownpath+ownpathpostfix+childrenin[i]);
                     }
                 }
@@ -74,8 +76,22 @@ define([],
             };
 
             //SET
-            var getMemberIds = function(){
-                return actor.getMemberIds(getClientNodePath());
+            var getMemberIds = function(setid){
+                setid = SETTOREL(setid);
+                return actor.getMemberIds(getClientNodePath(),setid);
+            };
+            var getSetIds = function(){
+                var childrenin = core.getChildrenRelids(node);
+                var childrenout = [];
+                for(var i=0;i<childrenin.length;i++){
+                    if(ISSET(childrenin[i])){
+                        var setid = RELTOSET(childrenin[i]);
+                        if(setid){
+                            childrenout.push(setid);
+                        }
+                    }
+                }
+                return childrenout;
             };
             //META
             var getValidChildrenTypes = function(){
@@ -85,7 +101,14 @@ define([],
             var printData = function(){
                 //TODO it goes to console now...
                 console.log("###node###"+ownpath);
-                console.dir({node:node,set:getMemberIds()});
+                var mynode = {};
+                mynode.node = node;
+                var mysets = getSetIds();
+                mynode.sets = {};
+                for(var i=0;i<mysets.length;i++){
+                    mynode.sets[mysets[i]] = getMemberIds(mysets[i]);
+                }
+                console.dir(mynode);
 
             };
 

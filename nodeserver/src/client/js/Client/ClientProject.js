@@ -8,7 +8,9 @@ define([
     'use strict';
     var KEY = "_id";
     var INSERTARR = commonUtil.insertIntoArray;
-    var SETRELID = '2222222222';
+    var ISSET = commonUtil.issetrelid;
+    var MINSETID = commonUtil.minsetid;
+    var RELFROMID = commonUtil.relidfromid;
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var self = this,
             storage = parameters.storage, //the storage of the project
@@ -518,9 +520,9 @@ define([
         };
 
         //set functions and their helping methods
-        var getMemberPath = function(path,memberpath){
+        var getMemberPath = function(path,memberpath,setid){
             if(currentNodes[path] && currentNodes[memberpath]){
-                var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                var setpath = path === "root" ? setid : path+'/'+setid;
                 if(currentNodes[setpath]){
                     var members = currentCore.getChildrenRelids(currentNodes[setpath]);
                     for(var i=0;i<members.length;i++){
@@ -539,7 +541,8 @@ define([
                 return null;
             }
         };
-        var addMember = function(path,memberpath){
+        var addMember = function(path,memberpath,setid){
+            setid = setid || MINSETID;
             var addmember = function(setpath){
                 var newmemberchild = currentCore.createNode(currentNodes[setpath]);
                 storeNode(newmemberchild);
@@ -549,14 +552,14 @@ define([
             if(currentNodes[path] && currentNodes[memberpath]){
                 var node = currentNodes[path];
                 var children = currentCore.getChildrenRelids(node);
-                var setindex = children.indexOf(SETRELID);
+                var setindex = children.indexOf(setid);
                 if(setindex === -1){
-                    var newset = currentCore.createNode(currentNodes[path],SETRELID);
+                    var newset = currentCore.createNode(currentNodes[path],setid);
                     storeNode(newset);
-                    var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                    var setpath = path === "root" ? setid : path+'/'+setid;
                     addmember(setpath);
                 } else {
-                    var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+                    var setpath = path === "root" ? setid : path+'/'+setid;
                     if(currentNodes[setpath]){
                         if(getMemberPath(path,memberpath) === null){
                             addmember(setpath);
@@ -571,9 +574,10 @@ define([
                 console.log("the set or the member is unknown");
             }
         };
-        var removeMember = function(path,memberpath){
+        var removeMember = function(path,memberpath,setid){
+            setid = setid || MINSETID;
             if(currentNodes[path] && currentNodes[memberpath]){
-                var mpath = getMemberPath(path,memberpath);
+                var mpath = getMemberPath(path,memberpath,setid);
                 if(mpath){
                     currentCore.deleteNode(currentNodes[mpath]);
                     //TODO if the last member was deleted it would be good to delete the set children as well, but currently it doesn't seems to be necessary
@@ -585,8 +589,9 @@ define([
                 console.log('the set or the member is unknown');
             }
         };
-        var getMemberIds = function(path){
-            var setpath = path === "root" ? SETRELID : path+'/'+SETRELID;
+        var getMemberIds = function(path,setid){
+            setid = setid || MINSETID;
+            var setpath = path === "root" ? setid : path+'/'+setid;
             if(currentNodes[setpath]){
                 var memberids = [];
                 var children = currentCore.getChildrenRelids(currentNodes[setpath]);
@@ -830,23 +835,32 @@ define([
                 });
             };
             var loadPattern = function(basepath,internalcallback){
+                var setcounter = 0;
+                var setloaded = function(){
+                    if(--setcounter === 0){
+                        internalcallback();
+                    }
+                };
                 if(!currentNodes[basepath]){
                     currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
                         if(!err && node){
                             addToNupathes(node);
                             currentCore.loadChildren(node,function(err,children){
                                 if(!err && children){
-                                    var hasset = false;
+                                    var sets=[];
                                     for(var i=0;i<children.length;i++){
                                         var id = addToNupathes(children[i]);
-                                        if(id.indexOf(SETRELID) !== -1){
-                                            //could be a set so load it
-                                            hasset = true;
-                                            loadSet(children[i],internalcallback);
+                                        if(ISSET(RELFROMID(id))){
+                                            setcounter++;
+                                            sets.push(i);
                                         }
                                     }
-                                    if(!hasset){
+                                    if(setcounter === 0){
                                         internalcallback();
+                                    } else {
+                                        for(i=0;i<sets.length;i++){
+                                            loadSet(children[sets[i]],setloaded);
+                                        }
                                     }
                                 } else {
                                     internalcallback();
@@ -860,17 +874,20 @@ define([
                     addToNupathes(currentNodes[basepath]);
                     currentCore.loadChildren(currentNodes[basepath],function(err,children){
                         if(!err && children){
-                            var hasset = false;
+                            var sets=[];
                             for(var i=0;i<children.length;i++){
                                 var id = addToNupathes(children[i]);
-                                if(id.indexOf(SETRELID) !== -1){
-                                    //could be a set so load it
-                                    hasset = true;
-                                    loadSet(children[i],internalcallback);
+                                if(ISSET(RELFROMID(id))){
+                                    setcounter++;
+                                    sets.push(i);
                                 }
                             }
-                            if(!hasset){
+                            if(setcounter === 0){
                                 internalcallback();
+                            } else {
+                                for(i=0;i<sets.length;i++){
+                                    loadSet(children[sets[i]],setloaded);
+                                }
                             }
                         } else {
                             internalcallback();
@@ -931,20 +948,21 @@ define([
                 }
 
                 //now we should hide the set related events, but generate an event to the set itself if something changes in it
+                //TODO event structure should be correctly nehanced with the sets...
                 var indexestoremove = [];
                 var eventstoadd = {};
                 var eventpathes = {};
                 for(i=0;i<events.length;i++){
-                    var setindex = events[i].eid.indexOf(SETRELID);
                     eventpathes[events[i].eid] = true;
-                    if(setindex !== -1){
+                    if(ISSET(RELFROMID(events[i].eid))){
                         indexestoremove.push(i);
-                        var setid = "root";
-                        if(setindex > 0){
-                            setid = events[i].eid.substring(0,setindex);
+                        var setownerid = "root";
+                        var pathindex = events[i].eid.lastIndexOf('/');
+                        if(pathindex>0){
+                            setownerid = events[i].eid.substring(0,pathindex);
                         }
-                        if(!eventstoadd[setid]){
-                            eventstoadd[setid] = {etype:"update",eid:setid};
+                        if(!eventstoadd[setownerid]){
+                            eventstoadd[setownerid] = {etype:"update",eid:setownerid};
                         }
                     }
                 }
@@ -1011,51 +1029,59 @@ define([
                     });
                 };
                 var loadPattern = function(basepath,internalcallback){
-                    if(!currentNodes[basepath]){
-                        if(currentCore){
-                            currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
-                                if(!err && node){
-                                    addToNupathes(node);
-                                    currentCore.loadChildren(node,function(err,children){
-                                        if(!err && children){
-                                            var hasset = false;
-                                            for(var i=0;i<children.length;i++){
-                                                var id = addToNupathes(children[i]);
-                                                if(id.indexOf(SETRELID) !== -1){
-                                                    //could be a set so load it
-                                                    hasset = true;
-                                                    loadSet(children[i],internalcallback);
-                                                }
-                                            }
-                                            if(!hasset){
-                                                internalcallback();
-                                            }
-                                        } else {
-                                            internalcallback();
-                                        }
-                                    });
-                                } else {
-                                    internalcallback();
-                                }
-                            });
-                        } else {
+                    var setcounter = 0;
+                    var setloaded = function(){
+                        if(--setcounter === 0){
                             internalcallback();
                         }
+                    };
+                    if(!currentNodes[basepath]){
+                        currentCore.loadByPath(currentNodes["root"],basepath,function(err,node){
+                            if(!err && node){
+                                addToNupathes(node);
+                                currentCore.loadChildren(node,function(err,children){
+                                    if(!err && children){
+                                        var sets=[];
+                                        for(var i=0;i<children.length;i++){
+                                            var id = addToNupathes(children[i]);
+                                            if(ISSET(RELFROMID(id))){
+                                                setcounter++;
+                                                sets.push(i);
+                                            }
+                                        }
+                                        if(setcounter === 0){
+                                            internalcallback();
+                                        } else {
+                                            for(i=0;i<sets.length;i++){
+                                                loadSet(children[sets[i]],setloaded);
+                                            }
+                                        }
+                                    } else {
+                                        internalcallback();
+                                    }
+                                });
+                            } else {
+                                internalcallback();
+                            }
+                        });
                     } else {
                         addToNupathes(currentNodes[basepath]);
                         currentCore.loadChildren(currentNodes[basepath],function(err,children){
                             if(!err && children){
-                                var hasset = false;
+                                var sets=[];
                                 for(var i=0;i<children.length;i++){
                                     var id = addToNupathes(children[i]);
-                                    if(id.indexOf(SETRELID) !== -1){
-                                        //could be a set so load it
-                                        hasset = true;
-                                        loadSet(children[i],internalcallback);
+                                    if(ISSET(RELFROMID(id))){
+                                        setcounter++;
+                                        sets.push(i);
                                     }
                                 }
-                                if(!hasset){
+                                if(setcounter === 0){
                                     internalcallback();
+                                } else {
+                                    for(i=0;i<sets.length;i++){
+                                        loadSet(children[sets[i]],setloaded);
+                                    }
                                 }
                             } else {
                                 internalcallback();
