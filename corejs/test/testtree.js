@@ -11,38 +11,51 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/coretree", "core/mongo", "core/future" ], function (ASSERT, CoreTree, Mongo, FUTURE) {
+requirejs([ "core/assert", "core/coretree", "core/mongo", "core/future" ], function (ASSERT,
+CoreTree, Mongo, FUTURE) {
 	"use strict";
 
 	var mongo = new Mongo();
-	mongo.open(function(err) {
-		
-		var coretree = new CoreTree(mongo);
+	var coretree = new CoreTree(mongo);
 
-		var r1 = coretree.createRoot();
-		var a1 = coretree.getChild(r1, "a");
-		var b1 = coretree.getChild(r1, "b");
-		var c1 = coretree.getChild(r1, "c");
+	var done = FUTURE.adapt(mongo.open)();
 
-		coretree.setData(r1, 1);
-		coretree.setData(r1, {
-			a: 1,
-			b: 2
-		});
+	var r1, a1, b1, c1, d1;
+	
+	done = FUTURE.call(done, function () {
+		console.log("opened");
+	
+		r1 = coretree.createRoot();
+		a1 = coretree.getChild(r1, "a");
+		b1 = coretree.getChild(r1, "b");
+		c1 = coretree.getChild(r1, "c");
+
 		coretree.setProperty(r1, "d", {});
-		coretree.setHashed(c1, false);
-		var d1 = coretree.getChild(r1, "d");
-		coretree.setHashed(d1, false);
-		
-//		console.log(r1);
+		coretree.setProperty(c1, "name", "c");
+		coretree.setHashed(c1, true);
+		d1 = coretree.getChild(r1, "d");
 
-		coretree.normalize(a1);
-		coretree.persist(r1);
+		// console.log(r1);
+
+		a1 = coretree.getChild(r1, "a");
+		
+//		coretree.normalize(b1);
+		return coretree.persist(r1);
+	});
+	
+	done = FUTURE.call(done, function(xxx) {
+		b1 = coretree.getChild(r1, "b");
+		c1 = coretree.getChild(r1, "c");
 
 		console.log(r1);
 
-		coretree.mutate(d1);
-		
-		mongo.close();
+		return coretree.load(c1);
+	});
+
+	done = FUTURE.hide(done);
+	
+	done = FUTURE.call(done, function (xxx) {
+		console.log("closed");
+		return FUTURE.adapt(mongo.close)();
 	});
 });

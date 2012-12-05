@@ -22,7 +22,6 @@ UTIL, FUTURE) {
 		var MAX_TICKS = 1;
 		var HASH_ID = "_id";
 		var EMPTY_DATA = {};
-		var EMPTY_HASH = "#6e149a76c99235e06092bfff8f2dca9862e938c6";
 
 		// ------- static methods
 
@@ -217,17 +216,19 @@ UTIL, FUTURE) {
 			return false;
 		};
 
-		var createRoot = function (hash) {
-			ASSERT(typeof hash === "undefined" || isValidHash(hash));
-
+		var createRoot = function () {
 			__ageRoots();
+
 			var root = {
 				parent: null,
 				relid: null,
 				age: 0,
 				children: [],
-				data: typeof hash !== "undefined" ? hash : EMPTY_DATA
+				data: {
+					_mutable: true
+				}
 			};
+			root.data[HASH_ID] = "";
 
 			roots.push(root);
 			return root;
@@ -298,6 +299,12 @@ UTIL, FUTURE) {
 		var isMutable = function (node) {
 			node = normalize(node);
 			return __isMutableData(node.data);
+		};
+
+		var isObject = function (node) {
+			node = normalize(node);
+
+			return typeof node.data === "object" && node.data !== null;
 		};
 
 		var __isEmptyData = function (data) {
@@ -452,7 +459,6 @@ UTIL, FUTURE) {
 		};
 
 		var __storageSave = FUTURE.adapt(storage.save);
-
 		var __saveData = function (data, promises) {
 			ASSERT(__isMutableData(data));
 
@@ -505,6 +511,25 @@ UTIL, FUTURE) {
 			return FUTURE.array(promises);
 		};
 
+		var __storageLoad = FUTURE.adapt(storage.load);
+		var load = function (node) {
+			node = normalize(node);
+
+			if( isValidHash(node.data) ) {
+				var newdata = __storageLoad(node.data);
+				return __replaceData(node, newdata);
+			}
+
+			return node;
+		};
+
+		var __replaceData = FUTURE.wrap(function (node, newdata) {
+			node = normalize(node);
+			node.data = newdata;
+			__reloadChildrenData(node);
+			return node;
+		});
+
 		return {
 			getParent: getParent,
 			getRelid: getRelid,
@@ -521,6 +546,7 @@ UTIL, FUTURE) {
 			getDescendantByPath: getDescendantByPath,
 
 			isMutable: isMutable,
+			isObject: isObject,
 			mutate: mutate,
 			getData: getData,
 			setData: setData,
@@ -531,6 +557,7 @@ UTIL, FUTURE) {
 			setHashed: setHashed,
 			getHash: getHash,
 			persist: persist,
+			load: load,
 
 			nothing: null
 		};

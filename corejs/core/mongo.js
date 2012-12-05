@@ -66,13 +66,17 @@ define([ "core/assert", "mongodb", "core/config" ], function (ASSERT, MONGODB, C
 
 			collection.findOne({
 				_id: key
-			}, callback);
+			}, function(err, data) {
+				console.log("loaded", data);
+				callback(err, data);
+			});
 		};
 
 		var save = function (node, callback) {
 			ASSERT(node && typeof node === "object");
 			ASSERT(typeof node._id === "string");
 			ASSERT(collection && callback);
+			console.log("saving", node);
 
 			collection.save(node, callback);
 		};
