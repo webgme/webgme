@@ -2,6 +2,10 @@ div.setEditor .items {
     margin: 3px;
     border: 1px solid rgba(0, 0, 0, 0);;
     padding: 10px 5px;
+
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 div.setEditor .items.empty {
