@@ -66,7 +66,7 @@ define(['logManager',
         if (nodeObj) {
             objDescriptor = {};
 
-            objDescriptor.id = nodeObj.getId();
+            objDescriptor.id = nodeObj.getId().toString();
             objDescriptor.name =  nodeObj.getAttribute(nodeAttributeNames.name);
             objDescriptor.kind = nodeObj.getBaseId();
             objDescriptor.decorator = nodeObj.getRegistry(nodeRegistryNames.decorator) || "DefaultDecorator";

@@ -23,7 +23,12 @@ div.setEditor .items.highlight {
 }
 
 div.setEditor .items ul li {
+    border: 1px solid #DDDDDD;
+    background-color: #FFFFFF;
     padding: 2px;
+    margin-bottom: 3px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 div.setEditor .items ul li > button.close {
