@@ -684,6 +684,19 @@ define(['logManager',
             self._showProperties();
         });
 
+        /***** MODE SELECTION  *********/
+
+        /*this._skinParts.btnModeSwitch = $('<div class="btn-group mode-selector inline"><a class="btn active" href="#" title="Read-only" data-mode="readonly"><i class="icon-lock"></i></a><a class="btn" href="#" title="Build model" data-mode="model"><i class="icon-pencil"></i></a><a class="btn" href="#" title="Edit sets" data-mode="set"><i class="icon-th-large"></i></a></div>', {});
+        this._skinParts.modelEditorTop.append(this._skinParts.btnModeSwitch);
+
+        this._skinParts.btnModeSwitch.on("click", ".btn", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._setMode($(this).attr("data-mode"));
+        });*/
+
+        /***** END OF - MODE SELECTION ******/
+
         //CHILDREN container
         this._skinParts.childrenContainer = $('<div/>', {
             "class" : "children",
@@ -1971,6 +1984,31 @@ define(['logManager',
     //TODO: check this here...
     ModelEditorView.prototype.destroy = function () {
         this._el.removeClass("modelEditorView").empty();
+    };
+
+
+    /************** MODE SETTER *****************/
+    ModelEditorView.prototype._setMode = function (mode) {
+        if (this._modelEditorMode !== mode) {
+            this._skinParts.btnModeSwitch.find('.btn.active').removeClass('active');
+            this._skinParts.btnModeSwitch.find('.btn[data-mode="' + mode + '"]').addClass('active');
+            this._modelEditorMode = mode;
+        }
+    };
+
+    /************************ DROPHANDLER ON MODELS *************************/
+    ModelEditorView.prototype.onModelDropOver = function (modelComponentId, event, ui) {
+        //ui.helper contains information about the concrete dragging (ui.helper[0].GMEDragData)
+        var dragParams = ui.helper[0].GMEDragData || "";
+
+        /*switch (dragParams.type) {
+            case "simple-drag":
+                break;
+            case "create-connection":
+                break;
+        }*/
+
+        this._logger.warning("onModelDropOver: '" + modelComponentId + "', helper.GMEDragData: " + JSON.stringify(dragParams));
     };
 
     return ModelEditorView;

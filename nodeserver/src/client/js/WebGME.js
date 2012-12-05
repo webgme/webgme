@@ -22,7 +22,9 @@ define([  'logManager',
     'js/Project/ProjectControl',
     'js/NetworkStatus/NetworkStatusControl',
     'js/NetworkStatus/NetworkStatusView',
-    'js/Project/ProjectTitleView'], function (logManager,
+    'js/Project/ProjectTitleView',
+    'js/SetEditor/SetEditorView',
+    'js/SetEditor/SetEditorControl'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -43,7 +45,9 @@ define([  'logManager',
                                             ProjectControl,
                                             NetworkStatusControl,
                                             NetworkStatusView,
-                                            ProjectTitleView) {
+                                            ProjectTitleView,
+                                            SetEditorView,
+                                            SetEditorControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -92,7 +96,9 @@ define([  'logManager',
         projectController,
         networkStatusView,
         networkStatusControl,
-        projectTitleView;
+        projectTitleView,
+        setEditorView,
+        setEditorControl;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -192,9 +198,6 @@ define([  'logManager',
 
     $("#visualizerPanel").find('a[class="btn-env"]').click(function (event) {
         var vis = $(this).attr("id");
-
-
-
         setActiveVisualizer(vis);
         event.stopPropagation();
     });
@@ -222,6 +225,9 @@ define([  'logManager',
                 if (partBrowserController) {
                     partBrowserController.selectedObjectChanged(currentNodeId);
                 }
+                if (setEditorControl) {
+                    setEditorControl.selectedObjectChanged(currentNodeId);
+                }
             });
             proxy.addEventListener(proxy.events.ACTOR_CHANGED, function () {
                 if (projectTitleView) {
@@ -246,6 +252,9 @@ define([  'logManager',
 
             partBrowserView = new PartBrowserView("pPartBrowser");
             partBrowserController = new PartBrowserControl(proxy, partBrowserView);
+
+            setEditorView = new SetEditorView("pSetEditor");
+            setEditorControl = new SetEditorControl(proxy, setEditorView);
 
             projectPanel = new ProjectPanel("projectHistoryPanel");
             projectController = new ProjectControl(proxy, projectPanel);

@@ -50,7 +50,9 @@ require.config({
         "PartBrowserCSS": "css/PartBrowser",
         "PartBrowser": "js/PartBrowser",
         "Repository": "js/Repository",
-        "RepositoryCSS": "css/Repository"
+        "RepositoryCSS": "css/Repository",
+        "SetEditorCSS": "css/SetEditor",
+        "SetEditor": "js/SetEditor"
     },
     shim: {
         'jquery-ui': ['jquery'],

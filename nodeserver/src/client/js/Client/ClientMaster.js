@@ -821,14 +821,14 @@ define([
         };
 
         //MGAlike - set functions
-        self.addMember = function(path,memberpath){
+        self.addMember = function(path,memberpath,setid){
             if(activeActor){
-                activeActor.addMember(path,memberpath);
+                activeActor.addMember(path,memberpath,setid);
             }
         };
-        self.removeMember = function(path,memberpath){
+        self.removeMember = function(path,memberpath,setid){
             if(activeActor){
-                activeActor.removeMember(path,memberpath);
+                activeActor.removeMember(path,memberpath,setid);
             }
         };
 
