@@ -41,9 +41,7 @@ define(['logManager',
     };
 
     SetEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        var desc = this._getObjectDescriptor(nodeId),
-            node = this._client.getNode(nodeId),
-            setNames = commonUtil.validSetNames,
+        var setNames = commonUtil.validSetNames,
             num = setNames.length;
 
         this._currentNodeId = nodeId;
@@ -53,7 +51,7 @@ define(['logManager',
         //delete everything from model editor
         this._setEditorView.clear();
 
-        while(--num >= 0) {
+        while (num--) {
             this._setEditorView.addSet({"id": setNames[num],
                                         "name": setNames[num]});
         }
@@ -85,7 +83,7 @@ define(['logManager',
             setMemberIds = node.getMemberIds(setId);
             if (setMemberIds) {
                 len = setMemberIds.length;
-                while(--len >= 0) {
+                while (len--) {
                     result.push(this._getObjectDescriptor(setMemberIds[len]));
                 }
             }

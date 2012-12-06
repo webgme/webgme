@@ -24,6 +24,8 @@ define(['logManager',
             return undefined;
         }
         this._logger.debug("Created");
+
+        return this;
     };
 
     SetEditorView.prototype._btnTemplate = ' <span class="caret"></span>';
@@ -53,7 +55,7 @@ define(['logManager',
                 setName = li.find("> a").text();
 
             self.selectSet({ "id": setId,
-                                  "name": setName} );
+                                  "name": setName});
         });
 
         this._divItems.on("click", "li > button.close", function (event) {
@@ -70,10 +72,10 @@ define(['logManager',
         });
 
         this._divItems.droppable({
-            over: function( event, ui ) {
+            over: function (event, ui) {
                 self._onDropOver(event, ui);
             },
-            out: function( event, ui ) {
+            out: function (event, ui) {
                 self._onDropOut(event, ui);
             },
             drop: function (event, ui) {
@@ -140,7 +142,7 @@ define(['logManager',
 
     SetEditorView.prototype._addItemToList = function (objDescriptor) {
         if (objDescriptor) {
-            this._ulItems.append($('<li data-id="' +objDescriptor.id + '"><b>' + objDescriptor.name + '</b><button type="button" class="close">×</button><br/><span class="muted">' + objDescriptor.id + '</span></li>'));
+            this._ulItems.append($('<li data-id="' + objDescriptor.id + '"><b>' + objDescriptor.name + '</b><button type="button" class="close">×</button><br/><span class="muted">' + objDescriptor.id + '</span></li>'));
         }
     };
 
@@ -183,7 +185,7 @@ define(['logManager',
 
     SetEditorView.prototype._highlightItemArea = function (enabled) {
         if (enabled) {
-            this._divItems.addClass('highlight')
+            this._divItems.addClass('highlight');
         } else {
             this._divItems.removeClass('highlight');
         }

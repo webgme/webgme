@@ -58,17 +58,14 @@ define(function () {
 
 	var getValue = function (value) {
 		if( value instanceof Future ) {
-			value = value.value;
-			if( value instanceof Error ) {
-				throw value;
+			if( value.value instanceof Error ) {
+				throw value.value;
 			}
-			else {
-				return value;
+			else if( value.value !== UNRESOLVED ) {
+				return value.value;
 			}
 		}
-		else {
-			return value;
-		}
+		return value;
 	};
 
 	// ------- adapt
@@ -134,25 +131,28 @@ define(function () {
 	Func.prototype = Future.prototype;
 
 	var setArgument = function (future, value) {
-		try {
-			var args = future.args;
-			args[future.index] = value;
+		if( !(value instanceof Error) ) {
+			try {
+				var args = future.args;
+				args[future.index] = value;
 
-			while( ++future.index < args.length ) {
-				value = getValue(args[future.index]);
-				if( value === UNRESOLVED ) {
-					setListener(args[future.index], setArgument, future);
-					return;
+				while( ++future.index < args.length ) {
+					value = args[future.index];
+					if( isUnresolved(value) ) {
+						setListener(value, setArgument, future);
+						return;
+					}
+					else {
+						args[future.index] = getValue(value);
+					}
 				}
-				else {
-					args[future.index] = value;
-				}
+
+				value = future.func.apply(future.that, args);
+				ASSERT(!(value instanceof Error));
 			}
-
-			value = future.func.apply(future.that, args);
-		}
-		catch(error) {
-			value = error instanceof Error ? error : new Error(error);
+			catch(error) {
+				value = error instanceof Error ? error : new Error(error);
+			}
 		}
 
 		setValue(future, value);
@@ -186,7 +186,7 @@ define(function () {
 					return new Func(func, this, arguments, 1);
 				}
 				else {
-					return func.call(this, arg0, arg1);
+					return func.call(this, getValue(arg0), getValue(arg1));
 				}
 			};
 
@@ -197,9 +197,73 @@ define(function () {
 					if( isUnresolved(arguments[i]) ) {
 						return new Func(func, this, arguments, i);
 					}
+					else {
+						arguments[i] = getValue(arguments[i]);
+					}
 				}
 				return func.apply(this, arguments);
 			};
+		}
+	};
+
+	var call = function () {
+		var func = arguments[--arguments.length];
+		ASSERT(typeof func === "function");
+
+		for( var i = 0; i < arguments.length; ++i ) {
+			if( isUnresolved(arguments[i]) ) {
+				return new Func(func, this, arguments, i);
+			}
+			else {
+				arguments[i] = getValue(arguments[i]);
+			}
+		}
+		return func.apply(this, arguments);
+	};
+
+	// ------- hide -------
+
+	var Hide = function (future, handler) {
+		this.value = UNRESOLVED;
+		this.listener = null;
+		this.param = null;
+
+		this.handler = handler;
+		setListener(future, hideValue, this);
+	};
+
+	Hide.prototype = Future.prototype;
+
+	var hideValue = function (future, value) {
+		try {
+			if( value instanceof Error ) {
+				value = future.handler(value);
+			}
+		}
+		catch(error) {
+			value = error instanceof Error ? error : new Error(error);
+		}
+
+		setValue(future, value);
+	};
+
+	var printStack = function (error) {
+		console.log(error.stack);
+	};
+
+	var hide = function (future, handler) {
+		if( typeof handler !== "function" ) {
+			handler = printStack;
+		}
+
+		if( isUnresolved(future) ) {
+			return new Hide(future, handler);
+		}
+		else if( future.value instanceof Error ) {
+			return handler(future.value);
+		}
+		else {
+			return getValue(future);
 		}
 	};
 
@@ -224,13 +288,13 @@ define(function () {
 			array[future.index] = value;
 
 			while( ++future.index < array.length ) {
-				value = getValue(array[future.index]);
-				if( value === UNRESOLVED ) {
-					setListener(array[future.index], setMember, future);
+				value = array[future.index];
+				if( isUnresolved(value) ) {
+					setListener(value, setMember, future);
 					return;
 				}
 				else {
-					array[future.index] = value;
+					array[future.index] = getValue(value);
 				}
 			}
 
@@ -261,6 +325,8 @@ define(function () {
 		adapt: adapt,
 		delay: delay,
 		wrap: wrap,
-		array: array
+		call: call,
+		array: array,
+		hide: hide
 	};
 });
