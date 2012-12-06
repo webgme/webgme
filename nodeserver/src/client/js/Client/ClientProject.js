@@ -67,20 +67,34 @@ define([
                 storage: storage,
                 logger: null
             });
+            currentCore = core;
             var root = core.createNode();
+            var rootid = storeNode(root);
             core.setRegistry(root,"isConnection",false);
             core.setRegistry(root,"position",{ "x": 0, "y": 0});
             core.setAttribute(root,"name","root");
+
+            //we create meta-meta
+            var metameta = core.createNode(root);
+            var metametaid = storeNode(metameta);
+            core.setRegistry(metameta,"isConnection",false);
+            core.setRegistry(metameta,"position",{ "x": 0, "y": 0});
+            core.setAttribute(metameta,"name","META-META");
+            var mmobject = core.createNode(metameta);
+            var mmobjectid = storeNode(mmobject);
+            core.setRegistry(mmobject,"isConnection",false);
+            core.setRegistry(mmobject,"position",{ "x": 0, "y": 0});
+            core.setAttribute(mmobject,"name","object");
+            addMember(mmobjectid,mmobjectid,'ValidChildren');
+            addMember(mmobjectid,mmobjectid,'ValidSource');
+            addMember(mmobjectid,mmobjectid,'ValidDestination');
+
 
             //now we also creates the META folder with one object and the MODEL folder which aims to be the starting point for the projects
             var meta = core.createNode(root);
             core.setRegistry(meta,"isConnection",false);
             core.setRegistry(meta,"position",{ "x": 0, "y": 0});
             core.setAttribute(meta,"name","META");
-            var metachild = core.createNode(meta);
-            core.setRegistry(metachild,"isConnection",false);
-            core.setRegistry(metachild,"position",{ "x": 0, "y": 0});
-            core.setAttribute(metachild,"name","object");
             var model = core.createNode(root);
             core.setRegistry(model,"isConnection",false);
             core.setRegistry(model,"position",{ "x": 0, "y": 0});
