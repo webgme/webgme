@@ -113,7 +113,7 @@ define(function () {
 		return future;
 	};
 
-	// ------- wrap -------
+	// ------- call -------
 
 	var Func = function (func, that, args, index) {
 		this.value = UNRESOLVED;
@@ -158,54 +158,6 @@ define(function () {
 		setValue(future, value);
 	};
 
-	var wrap = function (func) {
-		ASSERT(typeof func === "function");
-
-		switch( func.length ) {
-		case 0:
-			return func;
-
-		case 1:
-			return function (arg0) {
-				ASSERT(arguments.length === 1);
-				if( isUnresolved(arg0) ) {
-					return new Func(func, this, arguments, 0);
-				}
-				else {
-					return func.call(this, getValue(arg0));
-				}
-			};
-
-		case 2:
-			return function (arg0, arg1) {
-				ASSERT(arguments.length === 2);
-				if( isUnresolved(arg0) ) {
-					return new Func(func, this, arguments, 0);
-				}
-				else if( isUnresolved(arg1) ) {
-					return new Func(func, this, arguments, 1);
-				}
-				else {
-					return func.call(this, getValue(arg0), getValue(arg1));
-				}
-			};
-
-		default:
-			return function () {
-				ASSERT(arguments.length === func.length);
-				for( var i = 0; i < arguments.length; ++i ) {
-					if( isUnresolved(arguments[i]) ) {
-						return new Func(func, this, arguments, i);
-					}
-					else {
-						arguments[i] = getValue(arguments[i]);
-					}
-				}
-				return func.apply(this, arguments);
-			};
-		}
-	};
-
 	var call = function () {
 		var func = arguments[--arguments.length];
 		ASSERT(typeof func === "function");
@@ -219,6 +171,31 @@ define(function () {
 			}
 		}
 		return func.apply(this, arguments);
+	};
+
+	// ------- join -------
+
+	var Join = function () {
+		this.value = UNRESOLVED;
+		this.listener = null;
+		this.param = null;
+	};
+
+	Join.prototype = Future.prototype;
+
+	var join = function (first, second) {
+		ASSERT(typeof first === "undefined" || first instanceof Future);
+		ASSERT(typeof second === "undefined" || second instanceof Future);
+
+		if( typeof first === "undefined" ) {
+			return second;
+		}
+		else if( typeof second === "undefined" ) {
+			return first;
+		}
+		else {
+			return new Join();
+		}
 	};
 
 	// ------- hide -------
@@ -324,7 +301,6 @@ define(function () {
 	return {
 		adapt: adapt,
 		delay: delay,
-		wrap: wrap,
 		call: call,
 		array: array,
 		hide: hide

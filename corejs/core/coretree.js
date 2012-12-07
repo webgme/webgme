@@ -63,7 +63,7 @@ UTIL, FUTURE) {
 		// ------- memory management
 
 		var __detachChildren = function (node) {
-			ASSERT(Array.isArray(node.children) && node.age >= MAX_AGE - 1);
+			ASSERT(node.children instanceof Array && node.age >= MAX_AGE - 1);
 
 			var children = node.children;
 			node.children = null;
@@ -75,7 +75,7 @@ UTIL, FUTURE) {
 		};
 
 		var __ageNodes = function (nodes) {
-			ASSERT(Array.isArray(nodes));
+			ASSERT(nodes instanceof Array);
 
 			var i = nodes.length;
 			while( --i >= 0 ) {
@@ -100,7 +100,7 @@ UTIL, FUTURE) {
 		};
 
 		var __getChildNode = function (children, relid) {
-			ASSERT(Array.isArray(children) && typeof relid === "string");
+			ASSERT(children instanceof Array && typeof relid === "string");
 
 			for( var i = 0; i < children.length; ++i ) {
 				var child = children[i];
@@ -216,6 +216,20 @@ UTIL, FUTURE) {
 			return false;
 		};
 
+		var __define_mutable = {
+			value: true,
+			enumerable: false,
+			writable: true,
+			configurable: true
+		};
+
+		var __define_hashid = {
+			value: "",
+			enumerable: false,
+			writable: true,
+			configurable: true
+		};
+
 		var createRoot = function () {
 			__ageRoots();
 
@@ -224,11 +238,11 @@ UTIL, FUTURE) {
 				relid: null,
 				age: 0,
 				children: [],
-				data: {
-					_mutable: true
-				}
+				data: {}
 			};
-			root.data[HASH_ID] = "";
+
+			Object.defineProperty(root.data, "_mutable", __define_mutable);
+			Object.defineProperty(root.data, HASH_ID, __define_hashid);
 
 			roots.push(root);
 			return root;
@@ -335,20 +349,16 @@ UTIL, FUTURE) {
 				return false;
 			}
 
-			var copy = {
-				_mutable: true
-			};
-
+			var copy = {};
 			for( var key in data ) {
 				copy[key] = data[key];
 			}
 
-			if( typeof data[HASH_ID] === "string" ) {
-				copy[HASH_ID] = "";
-			}
+			Object.defineProperty(copy, "_mutable", __define_mutable);
 
-			// make sure we did not overwrite it
-			ASSERT(copy._mutable === true);
+			if( typeof data[HASH_ID] === "string" ) {
+				Object.defineProperty(copy, HASH_ID, __define_hashid);
+			}
 
 			if( node.parent !== null ) {
 				ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
@@ -422,6 +432,16 @@ UTIL, FUTURE) {
 			}
 		};
 
+		var getKeys = function (node) {
+			node = normalize(node);
+
+			if( typeof node.data !== "object" || node.data === null ) {
+				return null;
+			}
+
+			return Object.keys(node.data);
+		};
+
 		// ------- persistence
 
 		var getHash = function (node) {
@@ -449,7 +469,7 @@ UTIL, FUTURE) {
 			}
 
 			if( hashed ) {
-				node.data[HASH_ID] = "";
+				Object.defineProperty(node.data, HASH_ID, __define_hashid);
 			}
 			else {
 				delete node.data[HASH_ID];
@@ -517,18 +537,49 @@ UTIL, FUTURE) {
 
 			if( isValidHash(node.data) ) {
 				var newdata = __storageLoad(node.data);
-				return __replaceData(node, newdata);
+				return FUTURE.call(node, newdata, __replaceData);
 			}
 
 			return node;
 		};
 
-		var __replaceData = FUTURE.wrap(function (node, newdata) {
+		var __replaceData = function (node, newdata) {
 			node = normalize(node);
 			node.data = newdata;
 			__reloadChildrenData(node);
 			return node;
-		});
+		};
+
+		// ------- valid -------
+
+		var __test = function (text, cond) {
+			if( !cond ) {
+				throw new Error(text);
+			}
+		};
+
+		var isValidNode = function (node) {
+			try {
+				__test("object", typeof node === "object" && node !== null);
+				__test("parent", typeof node.parent === "object");
+				__test("relid", typeof node.relid === "string" || node.relid === null);
+				__test("parent 2", (node.parent === null) === (node.relid === null));
+				__test("age", node.age >= 0 && node.age <= MAX_AGE);
+				__test("children", node.children === null || node.children instanceof Array);
+				__test("children 2", (node.age === MAX_AGE) === (node.children === null));
+
+				if( node.parent !== null ) {
+					__test("age 2", node.age >= node.parent.age);
+					__test("mutable", !__isMutableData(node.parent.data)
+					|| __isMutableData(node.data));
+				}
+
+				return true;
+			}
+			catch(error) {
+				return false;
+			}
+		};
 
 		return {
 			getParent: getParent,
@@ -552,6 +603,7 @@ UTIL, FUTURE) {
 			setData: setData,
 			getProperty: getProperty,
 			setProperty: setProperty,
+			getKeys: getKeys,
 
 			isHashed: isHashed,
 			setHashed: setHashed,
@@ -559,7 +611,7 @@ UTIL, FUTURE) {
 			persist: persist,
 			load: load,
 
-			nothing: null
+			isValidNode: isValidNode
 		};
 	};
 });
