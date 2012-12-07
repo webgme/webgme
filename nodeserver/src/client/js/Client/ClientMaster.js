@@ -4,6 +4,7 @@ define([
     'js/Client/ClientStorage',
     'js/Client/ClientProject',
     'js/Client/ClientCommitInfo',
+    'js/Client/ClientTest',
     'commonUtil',
     'socket.io/socket.io.js'
 ],
@@ -13,6 +14,7 @@ define([
         ClientStorage,
         ClientProject,
         ClientCommitInfo,
+        ClientTest,
         commonUtil){
    'use strict';
     var GUID = commonUtil.guid;
@@ -29,7 +31,8 @@ define([
             savedInfoStorage = new ClientLocalStorage(),
             projectsinfo = /*savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || */{},
             proxy = null,
-            viewer = null;
+            viewer = null,
+            mytest = new ClientTest({master:self});
 
 
         /*event functions to relay information between users*/
@@ -834,7 +837,7 @@ define([
 
         //test
         self.testMethod = function(number){
-            switch(number){
+            /*switch(number){
                 case 1:
                     self.addMember("root",selectedObjectId);
                     break;
@@ -844,6 +847,17 @@ define([
                 case 3:
                     var node = self.getNode("root");
                     node.printData();
+                    break;
+            }*/
+            switch(number){
+                case 1:
+                    mytest.init();
+                    break;
+                case 2:
+                    mytest.setTerritoryRoot(selectedObjectId);
+                    break;
+                case 3:
+                    mytest.setEventPrint(null);
                     break;
             }
         };
