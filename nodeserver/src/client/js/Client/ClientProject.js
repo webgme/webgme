@@ -6,12 +6,13 @@ define([
     'js/Client/ClientMeta'],
     function(ClientCore,SHA1,commonUtil,ClientNode,ClientMeta){
     'use strict';
-    var KEY = "_id";
-    var INSERTARR = commonUtil.insertIntoArray;
-    var ISSET = commonUtil.issetrelid;
-    var MINSETID = commonUtil.minsetid;
-    var RELFROMID = commonUtil.relidfromid;
+    var KEY        = "_id";
+    var INSERTARR  = commonUtil.insertIntoArray;
+    var ISSET      = commonUtil.issetrelid;
+    var MINSETID   = commonUtil.minsetid;
+    var RELFROMID  = commonUtil.relidfromid;
     var RELFROMSET = commonUtil.setidtorelid;
+    var COPY       = commonUtil.copy;
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var self = this,
             storage = parameters.storage, //the storage of the project
@@ -952,8 +953,26 @@ define([
         };
         var Loading = function(callback){
             var nupathes = {};
+            var combinePatterns = function(patternone,patterntwo){
+                var resultpattern = {};
+                if(patternone.sets || patterntwo.sets){
+                    resultpattern.sets = true;
+                }
+                if(patternone.children){
+                    if(patterntwo.children){
+                        resultpattern.children = patternone.children > patterntwo.children ? patternone.children : patterntwo.children;
+                    } else {
+                        resultpattern.children = patternone.children;
+                    }
+                } else {
+                    resultpattern.children = patterntwo.children;
+                }
+
+                return resultpattern;
+            };
 
             var counter = 0;
+            var optimizedpatterns = {};
             var patternLoaded = function(){
                 if(--counter === 0){
                     callback(nupathes);
@@ -962,45 +981,176 @@ define([
 
             for(var i in users){
                 for(var j in users[i].PATTERNS){
-                    counter++;
+                    if(optimizedpatterns[j]){
+                        optimizedpatterns[j] = combinePatterns(optimizedpatterns[j],users[i].PATTERNS[j]);
+                    } else {
+                        optimizedpatterns[j] = users[i].PATTERNS[j];
+                        counter++;
+                    }
                 }
             }
             if(counter>0){
-                for(i in users){
-                    for(j in users[i].PATTERNS){
-                        loadPattern(j,users[i].PATTERNS[j],nupathes,patternLoaded);
-                    }
+                for(i in optimizedpatterns){
+                    loadPattern(i,optimizedpatterns[i],nupathes,patternLoaded);
                 }
             } else {
                 callback(nupathes);
             }
 
         };
+        var reLoading = function(callback){
+            //TODO this function ment to be only temporary to solve the multiple object problem
+            //it cleans the nodes, and using only containment it loads all of them again
+            var parentpathes = {};
+            var haselement = false;
+            //building parentpathes array
+            for(var i in currentNodes){
+                var ppath = getNode(i).getParentId();
+                if(ppath !== null && ppath !== 'root' && !parentpathes[ppath]){
+                    parentpathes[ppath] = true;
+                    haselement = true;
+                }
+            }
+
+            //now clearing everything and loading with only usage of loadchildren
+            if(haselement){
+                currentNodes = {};
+                var ongoingcalls = 0;
+                var childrenLoaded = function(err,children){
+                    if(--ongoingcalls === 0){
+                        if(err || !children || children.length===0){
+                            callback();
+                        }
+                    } else {
+                    }
+                    if(!err && children && children.length>0){
+                        var id0 = storeNode(children[0]);
+                        var node = getNode(id0);
+                        delete parentpathes[node.getParentId()];
+                        var needchildren = [];
+                        for(var i=0;i<children.length;i++){
+                            var id = storeNode(children[i]);
+                            if(parentpathes[id]){
+                                ongoingcalls++;
+                                needchildren.push(i);
+                            }
+                        }
+                        if(ongoingcalls === 0){
+                            callback();
+                        } else {
+                            for(i=0;i<needchildren.length;i++){
+                                currentCore.loadChildren(children[needchildren[i]],childrenLoaded);
+                            }
+                        }
+                    }
+                };
+
+                currentCore.loadRoot(currentRoot,function(err,root){
+                    if(!err && root){
+                        storeNode(root);
+                        ongoingcalls++;
+                        currentCore.loadChildren(root,childrenLoaded);
+                    } else {
+                        callback(err);
+                    }
+                });
+            } else {
+                callback();
+            }
+        };
+        var reLoading2 = function(callback){
+            var parentpathes = {};
+            var elemcount = 1;
+            //building parentpathes array
+            for(var i in currentNodes){
+                var ppath = getNode(i).getParentId();
+                if(ppath !== null && ppath !== 'root' && !parentpathes[ppath]){
+                    parentpathes[ppath] = true;
+                    elemcount++;
+                }
+            }
+
+            //now clearing everything and loading with only usage of loadchildren
+            if(elemcount>0){
+                currentNodes = {};
+                var childrenLoaded = function(err,children){
+                    if(!err && children && children.length>0){
+                        for(var i=0;i<children.length;i++){
+                            var id = storeNode(children[i]);
+                            if(parentpathes[id]){
+                                currentCore.loadChildren(children[i],childrenLoaded);
+                            }
+                        }
+                    }
+                    if(--elemcount === 0){
+                        callback();
+                    }
+                };
+
+                currentCore.loadRoot(currentRoot,function(err,root){
+                    if(!err && root){
+                        storeNode(root);
+                        currentCore.loadChildren(root,childrenLoaded);
+                    } else {
+                        callback();
+                    }
+                });
+            } else {
+                callback();
+            }
+        };
+        var checkReLoading = function(pathestocompare){
+            for(var i in pathestocompare){
+                if(!currentNodes[i]){
+                    return false;
+                }
+            }
+            return true;
+        };
         var UpdateUser = function(user,patterns,nupathes){
             var newpathes = [];
             var events = [];
-            user.PATTERNS = JSON.parse(JSON.stringify(patterns));
+            var addChildrenPathes = function(level,path){
+                var node = getNode(path);
+                if(level>0){
+                    var children = node.getChildrenIds();
+                    for(var i=0;i<children.length;i++){
+                        INSERTARR(newpathes,children[i]);
+                        addChildrenPathes(level-1,children[i]);
+                    }
+                }
+            };
+
+            user.PATTERNS = COPY(patterns);
             if(user.SENDEVENTS){
-                for(i in patterns){
-                    if(currentNodes[i]){
-                        INSERTARR(newpathes,i);
-                        var children  = currentCore.getChildrenRelids(currentNodes[i]);
-                        var ownpath = i === "root" ? "" : i+"/";
-                        for(var j=0;j<children.length;j++){
-                            INSERTARR(newpathes,ownpath+children[j]);
+                for(i in user.PATTERNS){
+                    INSERTARR(newpathes,i);
+                    var patternode = getNode(i);
+                    //check the type of patterns and then put the needed pathes to the array
+                    if(patterns[i].children && patterns[i].children>0){
+                        addChildrenPathes(patterns[i].children,i);
+                    }
+                    if(patterns[i].sets){
+                        var setnames = patternode.getSetNames();
+                        for(var i=0;i<setnames.length;i++){
+                            var memberids = patternode.getMemberIds(setnames[i]);
+                            for(var j=0;j<memberids.length;j++){
+                                INSERTARR(newpathes,memberids[j]);
+                            }
                         }
                     }
                 }
 
-                /*generating events*/
-                /*unload*/
+                //we know the paths
+                //generating events
+                //unload
                 for(var i=0;i<user.PATHES.length;i++){
                     if(newpathes.indexOf(user.PATHES[i]) === -1){
                         events.push({etype:"unload",eid:user.PATHES[i]});
                     }
                 }
 
-                /*others*/
+                //others
                 for(i=0;i<newpathes.length;i++){
                     if(user.PATHES.indexOf(newpathes[i]) === -1){
                         events.push({etype:"load",eid:newpathes[i]});
@@ -1013,35 +1163,7 @@ define([
                     user.KEYS[newpathes[i]] = nupathes[newpathes[i]];
                 }
 
-                //now we should hide the set related events, but generate an event to the set itself if something changes in it
-                //TODO event structure should be correctly nehanced with the sets...
-                var indexestoremove = [];
-                var eventstoadd = {};
-                var eventpathes = {};
-                for(i=0;i<events.length;i++){
-                    eventpathes[events[i].eid] = true;
-                    if(ISSET(RELFROMID(events[i].eid))){
-                        indexestoremove.push(i);
-                        var setownerid = "root";
-                        var pathindex = events[i].eid.lastIndexOf('/');
-                        if(pathindex>0){
-                            setownerid = events[i].eid.substring(0,pathindex);
-                        }
-                        if(!eventstoadd[setownerid]){
-                            eventstoadd[setownerid] = {etype:"update",eid:setownerid};
-                        }
-                    }
-                }
-                for(i=indexestoremove.length-1;i>=0;i--){
-                    events.splice(indexestoremove[i],1);
-                }
-                for(i in eventstoadd){
-                    if(!eventpathes[i]){
-                        events.push(eventstoadd[i]);
-                    }
-                }
-
-                /*depending on the oneevent attribute we send it in one array or in events...*/
+                //depending on the oneevent attribute we send it in one array or in events...
                 if(events.length>0){
                     if(user.ONEEVENT){
                         user.UI.onOneEvent(events);
@@ -1054,6 +1176,7 @@ define([
                 }
 
                 user.PATHES = newpathes;
+
             }
         };
         var UpdateTerritory = function(user,patterns,nupathes,callback){
@@ -1062,7 +1185,10 @@ define([
                 var limit = 0;
                 var patternLoaded = function(){
                     if(--counter === 0){
-                        callback(nupathes);
+                        reLoading2(function(){
+                            checkReLoading(nupathes);
+                            callback(nupathes);
+                        });
                     }
                 };
 
@@ -1083,10 +1209,13 @@ define([
         var UpdateAll = function(callback){
             Loading(function(nupathes){
                 currentNupathes = nupathes;
-                for(var i in users){
-                    UpdateUser(users[i],users[i].PATTERNS,nupathes);
-                }
-                callback();
+                reLoading2(function(){
+                    checkReLoading(nupathes);
+                    for(var i in users){
+                        UpdateUser(users[i],users[i].PATTERNS,nupathes);
+                    }
+                    callback();
+                });
             });
         };
         var UpdateSingleUser = function(userID,patterns,callback){

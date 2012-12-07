@@ -79,7 +79,7 @@ define(['commonUtil'],
                 setid = SETTOREL(setid);
                 return actor.getMemberIds(getClientNodePath(),setid);
             };
-            var getSetIds = function(){
+            var getSetNames = function(){
                 var childrenin = core.getChildrenRelids(node);
                 var childrenout = [];
                 for(var i=0;i<childrenin.length;i++){
@@ -88,6 +88,16 @@ define(['commonUtil'],
                         if(setid){
                             childrenout.push(setid);
                         }
+                    }
+                }
+                return childrenout;
+            };
+            var getSetIds = function(){
+                var childrenin = core.getChildrenRelids(node);
+                var childrenout = [];
+                for(var i=0;i<childrenin.length;i++){
+                    if(ISSET(childrenin[i])){
+                        childrenout.push(ownpath+ownpathpostfix+childrenin[i]);
                     }
                 }
                 return childrenout;
@@ -127,7 +137,9 @@ define(['commonUtil'],
                 printData : printData,
                 //META functions
                 getValidChildrenTypes : getValidChildrenTypes,
-                getMemberIds          : getMemberIds
+                getMemberIds          : getMemberIds,
+                getSetIds             : getSetIds,
+                getSetNames           : getSetNames
             }
         };
         return ClientNode;
