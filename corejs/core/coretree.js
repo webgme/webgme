@@ -51,9 +51,9 @@ UTIL, FUTURE) {
 			return node;
 		};
 
-		var getPath = function (node) {
+		var getPath = function (node, base) {
 			var path = "";
-			while( node.relid !== null ) {
+			while( node.relid !== null && node !== base ) {
 				path = "/" + node.relid + path;
 				node = node.parent;
 			}
@@ -389,12 +389,12 @@ UTIL, FUTURE) {
 		};
 
 		var setData = function (node, data) {
-			ASSERT(!__isMutableData(data) && data !== null);
+			ASSERT(!__isMutableData(data) && data !== null && typeof data !== "undefined");
 
 			node = normalize(node);
 			if( node.parent !== null ) {
 				if( !mutate(node.parent) ) {
-					throw new Error("incorrect path");
+					throw new Error("incorrect node data");
 				}
 
 				node.parent.data[node.relid] = data;
@@ -416,11 +416,11 @@ UTIL, FUTURE) {
 
 		var setProperty = function (node, name, data) {
 			ASSERT(typeof name === "string" && name !== HASH_ID);
-			ASSERT(!__isMutableData(data) && data !== null);
+			ASSERT(!__isMutableData(data) && data !== null && data !== undefined);
 
 			node = normalize(node);
 			if( !mutate(node) ) {
-				throw new Error("incorrect path");
+				throw new Error("incorrect node data");
 			}
 
 			node.data[name] = data;
@@ -428,6 +428,23 @@ UTIL, FUTURE) {
 			var child = __getChildNode(node.children, name);
 			if( child !== null ) {
 				child.data = data;
+				__reloadChildrenData(child);
+			}
+		};
+
+		var delProperty = function (node, name) {
+			ASSERT(typeof name === "string" && name !== HASH_ID);
+
+			node = normalize(node);
+			if( !mutate(node) ) {
+				throw new Error("incorrect node data");
+			}
+
+			delete node.data[name];
+
+			var child = __getChildNode(node.children, name);
+			if( child !== null ) {
+				child.data = EMPTY_DATA;
 				__reloadChildrenData(child);
 			}
 		};
@@ -465,7 +482,7 @@ UTIL, FUTURE) {
 
 			node = normalize(node);
 			if( !mutate(node) ) {
-				throw new Error("incorrect path");
+				throw new Error("incorrect node data");
 			}
 
 			if( hashed ) {
@@ -603,6 +620,7 @@ UTIL, FUTURE) {
 			setData: setData,
 			getProperty: getProperty,
 			setProperty: setProperty,
+			delProperty: delProperty,
 			getKeys: getKeys,
 
 			isHashed: isHashed,
