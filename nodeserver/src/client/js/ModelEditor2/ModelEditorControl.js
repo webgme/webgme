@@ -2,8 +2,8 @@
 
 define(['logManager',
         'clientUtil',
-        'nodeAttributeNames',
-        'nodeRegistryNames'], function (logManager,
+        'nodeAttributeNames2',
+        'nodeRegistryNames2'], function (logManager,
                                     util,
                                     nodeAttributeNames,
                                     nodeRegistryNames) {
@@ -16,6 +16,8 @@ define(['logManager',
         this._client = myClient;
         this._modelEditorView = myModelEditor;
         this._modelEditorView._client = myClient;
+
+        this._editModeMeta = false;
 
         this._logger = logManager.create("HTML_ModelEditorControl");
         this._logger.debug("Created");
@@ -33,14 +35,31 @@ define(['logManager',
 
         /*OVERRIDE MODEL EDITOR METHODS*/
         this._modelEditorView.onCreateConnection = function (connDesc) {
-            self._client.makeConnection({   "parentId": self._currentNodeInfo.id,
-                "sourceId": connDesc.sourceId,
-                "targetId": connDesc.targetId,
-                "directed": true });
+            var setName = "";
+
+            if (self._editModeMeta === true) {
+                //connDesc.type has special meaning: inheritance, containment, etc
+                if (connDesc.type === "inheritance") {
+                    setName = 'ValidInheritor';
+                } else if (connDesc.type === "containment") {
+                    setName = 'ValidChildren';
+                }
+                if (setName !== "") {
+                    self._client.addMember(connDesc.sourceId, connDesc.targetId, setName);
+                }
+            } else {
+                self._client.makeConnection({   "parentId": self._currentNodeInfo.id,
+                    "sourceId": connDesc.sourceId,
+                    "targetId": connDesc.targetId,
+                    "directed": true });
+            }
         };
 
         this._modelEditorView.onUpdateConnectionEnd = function (data) {
-            self._client.makePointer(data.connectionId, data.endType, data.newValue);
+            //connection end reposition is not allowed in meta mode
+            if (self._editModeMeta === false) {
+                self._client.makePointer(data.connectionId, data.endType, data.newValue);
+            }
         };
 
         this._modelEditorView.onDragCopy = function (pasteDesc) {
@@ -81,8 +100,39 @@ define(['logManager',
             }
         };
 
-        this._modelEditorView.onDelete = function (ids) {
-            self._client.delMoreNodes(ids);
+        this._modelEditorView.onDelete = function (deleteParams) {
+            var deleteIds = [],
+                i,
+                setName = "";
+
+            if (self._editModeMeta === true) {
+                for (i in deleteParams) {
+                    if (deleteParams.hasOwnProperty(i)) {
+                        if (deleteParams[i].hasOwnProperty("connectionType")) {
+                            setName = "";
+                            if (deleteParams[i].connectionType === "inheritance") {
+                                setName = 'ValidInheritor';
+                            } else if (deleteParams[i].connectionType === "containment") {
+                                setName = 'ValidChildren';
+                            }
+
+                            if (setName !== "") {
+                                self._client.removeMember(deleteParams[i].sourceId, deleteParams[i].targetId, setName);
+                            }
+                        } else {
+                            deleteIds.push(deleteParams[i].id);
+                        }
+                    }
+                }
+                self._client.delMoreNodes(deleteIds);
+            } else {
+                for (i in deleteParams) {
+                    if (deleteParams.hasOwnProperty(i)) {
+                        deleteIds.push(deleteParams[i].id);
+                    }
+                }
+                self._client.delMoreNodes(deleteIds);
+            }
         };
 
         this._modelEditorView.onSaveConnectionSegmentPoints = function (connId, segmentPointsToSave) {
@@ -118,7 +168,7 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
-        this._modelEditorView.onAutRename = function (components) {
+        this._modelEditorView.onAutRename  = function (components) {
             var i,
                 nodeData;
 
@@ -326,6 +376,9 @@ define(['logManager',
 
             this._modelEditorView.updateCanvas(desc);
 
+            this._editModeMeta =  desc.isMeta;
+            this._modelEditorView.enableMetaComponents(this._editModeMeta);
+
             this._territoryId = this._client.addUI(this, true);
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
@@ -343,12 +396,14 @@ define(['logManager',
             objDescriptor.id = nodeObj.getId();
             objDescriptor.name =  nodeObj.getAttribute(nodeAttributeNames.name);
             objDescriptor.parentId = nodeObj.getParentId();
+            objDescriptor.isMeta = nodeObj.getRegistry(nodeRegistryNames.isMeta);
 
             //fill the descriptor based on its type
             if (nodeObj.getBaseId() === "connection") {
                 objDescriptor.kind = "CONNECTION";
                 objDescriptor.source = nodeObj.getPointer("source").to;
                 objDescriptor.target = nodeObj.getPointer("target").to;
+                objDescriptor.connectionType = "connection";
                 if (nodeObj.getAttribute(nodeAttributeNames.directed) === true) {
                     objDescriptor.arrowEnd = "block";
                 }
@@ -373,6 +428,9 @@ define(['logManager',
                 }
 
                 objDescriptor.decorator = nodeObj.getRegistry(nodeRegistryNames.decorator) || "SimpleModelDecorator";
+
+                objDescriptor.validChildren = nodeObj.getMemberIds('ValidChildren');
+                objDescriptor.validInheritor = nodeObj.getMemberIds('ValidInheritor');
             }
         }
 
@@ -428,7 +486,9 @@ define(['logManager',
 
     // PUBLIC METHODS
     ModelEditorControl.prototype._onLoad = function (objectId) {
-        var desc;
+        var desc,
+            connDesc,
+            len;
 
         //component loaded
         //we are interested in the load of subcomponents of the opened component
@@ -438,6 +498,40 @@ define(['logManager',
             if (desc) {
                 if (desc.kind === "MODEL") {
                     this._modelEditorView.createModelComponent(desc);
+
+                    if (this._editModeMeta === true) {
+                        if (desc.validChildren) {
+                            len = desc.validChildren.length;
+
+                            while (len--) {
+                                connDesc = {"id": "containment_" + desc.id + "_" + desc.validChildren[len]};
+                                connDesc.kind = "CONNECTION";
+                                connDesc.source = desc.id;
+                                connDesc.target = desc.validChildren[len];
+                                connDesc.connectionType = "containment";
+                                connDesc.lineType =  "L";
+                                connDesc.segmentPoints = null;
+
+                                this._modelEditorView.createConnectionComponent(connDesc);
+                            }
+                        }
+
+                        if (desc.validInheritor) {
+                            len = desc.validInheritor.length;
+
+                            while (len--) {
+                                connDesc = {"id": "inheritance_" + desc.id + "_" + desc.validInheritor[len]};
+                                connDesc.kind = "CONNECTION";
+                                connDesc.source = desc.id;
+                                connDesc.target = desc.validInheritor[len];
+                                connDesc.connectionType = "inheritance";
+                                connDesc.lineType =  "L";
+                                connDesc.segmentPoints = null;
+
+                                this._modelEditorView.createConnectionComponent(connDesc);
+                            }
+                        }
+                    }
                 }
 
                 if (desc.kind === "CONNECTION") {

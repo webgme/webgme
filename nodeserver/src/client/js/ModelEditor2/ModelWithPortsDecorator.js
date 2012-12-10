@@ -2,8 +2,8 @@
 
 define(['logManager',
     'clientUtil',
-    'nodeAttributeNames',
-    'nodeRegistryNames',
+    'nodeAttributeNames2',
+    'nodeRegistryNames2',
     'ModelEditor2/Port',
     'text!ModelEditor2/ModelWithPortsTmpl.html',
     'css!ModelEditor2CSS/ModelWithPortsDecorator'], function (logManager,

@@ -24,7 +24,11 @@ define([  'logManager',
     'js/NetworkStatus/NetworkStatusView',
     'js/Project/ProjectTitleView',
     'js/SetEditor/SetEditorView',
-    'js/SetEditor/SetEditorControl'], function (logManager,
+    'js/SetEditor/SetEditorControl',
+    'js/DiagramDesigner/ModelDesignerCanvas',
+    'js/DiagramDesigner/ModelDesignerControl',
+    'js/DiagramDesigner/MetaDesignerCanvas',
+    'js/DiagramDesigner/MetaDesignerControl'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -47,7 +51,11 @@ define([  'logManager',
                                             NetworkStatusView,
                                             ProjectTitleView,
                                             SetEditorView,
-                                            SetEditorControl) {
+                                            SetEditorControl,
+                                            ModelDesignerCanvas,
+                                            ModelDesignerControl,
+                                            MetaDesignerCanvas,
+                                            MetaDesignerControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -153,6 +161,12 @@ define([  'logManager',
                     modelEditorView.parentContainerSizeChanged(eW, eH);
                 }
             }
+
+            if (mainView) {
+                if ($.isFunction(mainView.parentContainerSizeChanged)) {
+                    mainView.parentContainerSizeChanged(eW, eH);
+                }
+            }
         }
     };
 
@@ -166,10 +180,10 @@ define([  'logManager',
 
     setActiveVisualizer = function (visualizer) {
         //destroy current controller and visualizer
-        if (mainController) {
+        if (mainController && mainController.destroy) {
             mainController.destroy();
         }
-        if (mainView) {
+        if (mainView && mainView.destroy) {
             mainView.destroy();
         }
 
@@ -187,6 +201,14 @@ define([  'logManager',
         } else if (visualizer === "GraphViz") {
             mainView = new GraphVizView("modelEditorHtml");
             mainController = new GraphVizControl(proxy, mainView);
+        } else if (visualizer === "DesignerCanvas_Model") {
+            mainView = new ModelDesignerCanvas("modelEditorHtml");
+            mainController = new ModelDesignerControl({"client": proxy,
+                                                       "designerCanvas": mainView});
+        } else if (visualizer === "DesignerCanvas_Meta") {
+            mainView = new MetaDesignerCanvas("modelEditorHtml");
+            mainController = new MetaDesignerControl({"client": proxy,
+                                                        "designerCanvas": mainView});
         }
 
         if (currentNodeId) {
@@ -265,15 +287,15 @@ define([  'logManager',
             projectTitleView = new ProjectTitleView("projectInfoContainer");
 
             //TESTING part
-            if(DEBUG === true){
+            if (DEBUG === true) {
                 $('#leftPane').append("<div class=\"sidePaneWidget\"><div class=\"header\">TESTING</div><div id=\"tetingpanel\"><input id=\"testingbtn1\" value=\"test1\" type=\"button\"><input id=\"testingbtn2\" value=\"test2\" type=\"button\"><input id=\"testingbtn3\" value=\"test3\" type=\"button\"></div></div>");
-                $('#testingbtn1').on('click',function(event){
+                $('#testingbtn1').on('click', function (event) {
                     proxy.testMethod(1);
                 });
-                $('#testingbtn2').on('click',function(event){
+                $('#testingbtn2').on('click', function (event) {
                     proxy.testMethod(2);
                 });
-                $('#testingbtn3').on('click',function(event){
+                $('#testingbtn3').on('click', function (event) {
                     proxy.testMethod(3);
                 });
             }

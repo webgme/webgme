@@ -248,7 +248,7 @@ define(['./raphael.core'], function (R) {
                     use = marker.getElementsByTagName("use")[0];
                 }
                 $(use, attr);
-                var delta = dx * (type != "diamond" && type != "oval");
+                var delta = dx /** (type != "diamond" && type != "oval");*/
                 if (isEnd) {
                     from = o._.arrows.startdx * stroke || 0;
                     to = R.getTotalLength(attrs.path) - delta * stroke;
