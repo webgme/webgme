@@ -7,5 +7,6 @@ define([], function () {
     return {     "position" : "position",
         "decorator": "decorator",
         "segmentPoints": "segmentPoints",
-        "lineType": "lineType" };
+        "lineType": "lineType",
+        "isMeta": "isMeta" };
 });

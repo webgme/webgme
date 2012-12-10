@@ -88,18 +88,23 @@ define([
             core.setRegistry(mmobject,"position",{ "x": 0, "y": 0});
             core.setAttribute(mmobject,"name","object");
             core.setRegistry(mmobject,"isMeta",false);
-            addMember(mmobjectid,mmobjectid,'ValidChildren');
-            addMember(mmobjectid,mmobjectid,'ValidSource');
-            addMember(mmobjectid,mmobjectid,'ValidDestination');
+            //TODO currently as we use copy and not inheritance we have to set the base object with empty meta-sets...
+            //addMember(mmobjectid,mmobjectid,'ValidChildren');
+            //addMember(mmobjectid,mmobjectid,'ValidSource');
+            //addMember(mmobjectid,mmobjectid,'ValidDestination');
+            //addMember(mmobjectid,mmobjectid,'ValidInheritor');
 
 
             //now we also creates the META folder with one object and the MODEL folder which aims to be the starting point for the projects
             var meta = core.createNode(root);
+            var metaid = storeNode(meta);
             core.setRegistry(meta,"isConnection",false);
             core.setRegistry(meta,"position",{ "x": 0, "y": 0});
             core.setAttribute(meta,"name","META");
             core.setRegistry(meta,"isMeta",true);
+            addMember(metaid,mmobjectid,'ValidChildren');
             var model = core.createNode(root);
+            var modelid = storeNode(model);
             core.setRegistry(model,"isConnection",false);
             core.setRegistry(model,"position",{ "x": 0, "y": 0});
             core.setAttribute(model,"name","MODEL");
@@ -192,7 +197,7 @@ define([
             var commitobj = {
                 _id     : null,
                 root    : currentRoot,
-                parents : [mycommit[KEY]],
+                parents : mycommit ? [mycommit[KEY]] : [],
                 updates : [userstamp],
                 time    : commonUtil.timestamp(),
                 message : msg,
@@ -866,44 +871,49 @@ define([
             }
         };
         var loadSetPattern = function(patternid,setid,pathessofar,callback){
-            var setpath = patternid === "root" ? setid : patternid+'/'+setid;
-            var membercounter = 0;
-            var memberloaded = function(err,pointernode){
-                if(!err && pointernode){
-                    addNodeToPathes(pathessofar,pointernode);
-                }
-                if(--membercounter === 0){
-                    callback();
-                }
-            };
-            var setloaded = function(err,setobject){
-                if(!err){
-                    currentCore.loadChildren(setobject,function(err2,children){
-                        if(!err2 && children && children.length > 0){
-                            //TODO currently we load the members, maybe this is not necessary
-                            membercounter = children.length;
-                            for(var i=0;i<children.length;i++){
-                                addNodeToPathes(pathessofar,children[i]);
-                                currentCore.loadPointer(children[i],'member',memberloaded);
+            if(currentNodes[patternid]){
+                var setpath = patternid === "root" ? setid : patternid+'/'+setid;
+                var membercounter = 0;
+                var memberloaded = function(err,pointernode){
+                    if(!err && pointernode){
+                        addNodeToPathes(pathessofar,pointernode);
+                    }
+                    if(--membercounter === 0){
+                        callback();
+                    }
+                };
+                var setloaded = function(err,setobject){
+                    if(!err){
+                        addNodeToPathes(pathessofar,setobject);
+                        currentCore.loadChildren(setobject,function(err2,children){
+                            if(!err2 && children && children.length > 0){
+                                //TODO currently we load the members, maybe this is not necessary
+                                membercounter = children.length;
+                                for(var i=0;i<children.length;i++){
+                                    addNodeToPathes(pathessofar,children[i]);
+                                    currentCore.loadPointer(children[i],'member',memberloaded);
+                                }
+                            } else {
+                                callback(err2);
                             }
-                        } else {
-                            callback(err2);
-                        }
-                    });
-                } else {
-                    callback(err);
-                }
-            };
-            if(currentNodes[setpath]){
-                setloaded(null,currentNodes[setpath]);
-            } else {
-                currentCore.loadChild(currentNodes[patternid],setid,function(err,setobject){
-                    if(!err && setobject){
-                        setloaded(null,setobject);
+                        });
                     } else {
                         callback(err);
                     }
-                });
+                };
+                if(currentNodes[setpath]){
+                    setloaded(null,currentNodes[setpath]);
+                } else {
+                    currentCore.loadChild(currentNodes[patternid],setid,function(err,setobject){
+                        if(!err && setobject){
+                            setloaded(null,setobject);
+                        } else {
+                            callback(err);
+                        }
+                    });
+                }
+            } else {
+                console.log("na ezt hogy???");
             }
         };
         var loadPattern = function(patternid,pattern,pathessofar,callback){
@@ -935,8 +945,8 @@ define([
             };
             var patternRootLoaded = function(){
                 //first we start with the set loading
-                if(true /*pattern.sets*/){
-                    setcounter = 4;
+                if(pattern.sets){
+                    setcounter = commonUtil.validSetNames.length;
                     for(var i=0;i<commonUtil.validSetNames.length;i++){
                         loadSetPattern(patternid,RELFROMSET(commonUtil.validSetNames[i]),pathessofar,setloaded);
                     }
@@ -979,7 +989,25 @@ define([
             var optimizedpatterns = {};
             var patternLoaded = function(){
                 if(--counter === 0){
-                    callback(nupathes);
+                    //TODO now this is a hack so it should be harmonized somehow
+                    var innerpatternloaded = function(){
+                        if(--innercounter === 0){
+                            callback(nupathes);
+                        }
+                    };
+                    var mypathes = COPY(nupathes);
+                    var innercounter = 0;
+                    for(var i in nupathes){
+                        innercounter++;
+                    }
+                    if(innercounter>0){
+                        for(var i in mypathes){
+                            loadPattern(i,{sets:true},nupathes,innerpatternloaded);
+                        }
+                    } else {
+                        innercounter = 1;
+                        innerpatternloaded();
+                    }
                 }
             };
 
@@ -995,7 +1023,7 @@ define([
             }
             if(counter>0){
                 for(i in optimizedpatterns){
-                    loadPattern(i,optimizedpatterns[i],nupathes,patternLoaded);
+                    loadPattern(i,{children:optimizedpatterns[i].children},nupathes,patternLoaded);
                 }
             } else {
                 callback(nupathes);
@@ -1064,7 +1092,7 @@ define([
         };
         var reLoading2 = function(callback){
             var parentpathes = {};
-            var elemcount = 1;
+            var elemcount = 0;
             //building parentpathes array
             for(var i in currentNodes){
                 var ppath = getNode(i).getParentId();
@@ -1076,6 +1104,7 @@ define([
 
             //now clearing everything and loading with only usage of loadchildren
             if(elemcount>0){
+                elemcount++;
                 currentNodes = {};
                 var childrenLoaded = function(err,children){
                     if(!err && children && children.length>0){
@@ -1189,10 +1218,28 @@ define([
                 var limit = 0;
                 var patternLoaded = function(){
                     if(--counter === 0){
-                        reLoading2(function(){
-                            checkReLoading(nupathes);
-                            callback(nupathes);
-                        });
+                        //TODO same hack as in oading for loading sets
+                        var innercounter = 0;
+                        var mypathes = COPY(nupathes);
+                        var innerpatternloaded = function(){
+                            if(--innercounter === 0){
+                                reLoading2(function(){
+                                    checkReLoading(nupathes);
+                                    callback(nupathes);
+                                });
+                            }
+                        };
+                        for(var i in nupathes){
+                            innercounter++;
+                        }
+                        if(innercounter>0){
+                            for(i in mypathes){
+                                loadPattern(i,{sets:true},nupathes,innerpatternloaded);
+                            }
+                        } else {
+                            innercounter = 1;
+                            innerpatternloaded();
+                        }
                     }
                 };
 

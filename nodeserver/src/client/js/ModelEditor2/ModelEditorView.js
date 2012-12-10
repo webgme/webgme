@@ -19,7 +19,9 @@ define(['logManager',
                                                         ConnectionPointManager,
                                                         PropertyListView) {
 
-    var ModelEditorView;
+    var ModelEditorView,
+        CONTAINMENT_TYPE_LINE_END = "diamond-wide-long",
+        INHERITANCE_TYPE_LINE_END = "block-wide-long";
 
     ModelEditorView = function (containerElement) {
         this._logger = logManager.create("ModelEditorView_" + containerElement);
@@ -302,6 +304,14 @@ define(['logManager',
 
         objDescriptor.modelEditorView = this;
         objDescriptor.svgPaper = this._skinParts.svgPaper;
+
+        if (objDescriptor.connectionType === "inheritance") {
+            objDescriptor.arrowStart = INHERITANCE_TYPE_LINE_END;
+            objDescriptor.endPointReconnectable = false;
+        } else if (objDescriptor.connectionType === "containment") {
+            objDescriptor.arrowStart = CONTAINMENT_TYPE_LINE_END;
+            objDescriptor.endPointReconnectable = false;
+        }
 
         this._longUpdateQueue.push(componentId);
         this._longUpdateList.insertedConnections.push(componentId);
@@ -611,6 +621,8 @@ define(['logManager',
         this._connectionPointManager.clear();
 
         this._longUpdating = false;
+
+        this._connectionType = "connection";
     };
 
     ModelEditorView.prototype._initializeUI = function (containerElement) {
@@ -751,6 +763,50 @@ define(['logManager',
         });
 
         this._childrenContainerOffset = this._skinParts.childrenContainer.offset();
+
+        /***** META RELATIONSHIP TYPES AS CONNECTION *********/
+
+        this._skinParts.btnMetaConnectionTypeSelector = $('<div class="btn-group meta-connection-type-selector inline"><a class="btn active" href="#" title="Containment" data-mode="containment"><i class="icon-meta-containment"></i></a><a class="btn" href="#" title="Inheritance" data-mode="inheritance"><i class="icon-meta-inheritance"></i></a></div>', {});
+        this._skinParts.modelEditorTop.append(this._skinParts.btnMetaConnectionTypeSelector);
+
+        this._skinParts.btnMetaConnectionTypeSelector.on("click", ".btn", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self._setMetaConnectionType($(this).attr("data-mode"));
+        });
+
+        this._skinParts.btnMetaConnectionTypeSelector.hide();
+
+        /***** END OF - META RELATIONSHIP TYPES AS CONNECTION ******/
+        /*var styles = ['classic', 'block', 'open', 'oval', 'diamond', 'none'];
+        var w = ['wide', 'narrow', 'midium'];
+        var l = ['long', 'short', 'midium'];
+        var iStlyes = styles.length;
+        var iw = w.length;
+        var il = l.length;
+        var xx = 101;
+        var yy = 101;
+
+       while (il--) {
+            while (iw--) {
+                while (iStlyes--) {
+                    this._skinParts.svgPaper.path("M" + xx + "," + yy + ", L" + (xx + 50) + ", " + yy).attr({"stroke-width": 2,
+                        "stroke": "#000000",
+                        "arrow-start": styles[iStlyes] + "-" + w[iw] + "-" + l[il]});
+
+                    this._skinParts.svgPaper.text(xx, yy + 20, styles[iStlyes] + "-" + w[iw] + "-" + l[il] );
+
+                    yy += 100;
+                }
+
+                xx += 150;
+                yy = 101;
+                iStlyes = styles.length;
+            }
+           iw = w.length;
+        }*/
+
+
     };
 
     ModelEditorView.prototype._alignPositionToGrid = function (pX, pY) {
@@ -1100,7 +1156,8 @@ define(['logManager',
         var updateData = {};
         if (data.sourceId && data.targetId) {
             this.onCreateConnection({ "sourceId": data.sourceId,
-                "targetId": data.targetId });
+                "targetId": data.targetId,
+                "type": this._connectionType});
         } else if (data.connId) {
             updateData = { "connectionId": data.connId,
                 "endType": data.endType,
@@ -1513,9 +1570,29 @@ define(['logManager',
             this._skinParts.selectionOutline.append(this._skinParts.copySelection);
 
             this._skinParts.deleteSelection.on("mousedown", function (event) {
+                var deleteParams = {},
+                    selectedComponentIds = self._selectedComponentIds,
+                    len = selectedComponentIds.length,
+                    id,
+                    component;
+
                 event.stopPropagation();
                 event.preventDefault();
-                self.onDelete(self._selectedComponentIds);
+
+                while (len--) {
+                    id = selectedComponentIds[len];
+                    deleteParams[id] = { "id": id };
+                    if (self._modelComponents.indexOf(id) !== -1) {
+                        component = self._modelComponents[id];
+                    } else if (self._connectionComponents.indexOf(id) !== -1) {
+                        component = self._connectionComponents[id];
+                        deleteParams[id].connectionType = component._connectionType;
+                        deleteParams[id].sourceId = component._sourceComponentId;
+                        deleteParams[id].targetId = self._targetComponentId;
+                    }
+                }
+
+                self.onDelete(deleteParams);
                 self._hideSelectionOutline();
             });
 
@@ -2009,6 +2086,41 @@ define(['logManager',
         }*/
 
         this._logger.warning("onModelDropOver: '" + modelComponentId + "', helper.GMEDragData: " + JSON.stringify(dragParams));
+    };
+
+    /******************* META CONNECTION TYPE ************************/
+    ModelEditorView.prototype._setMetaConnectionType = function (mode) {
+        if (this._connectionType !== mode) {
+            this._skinParts.btnMetaConnectionTypeSelector.find('.btn.active').removeClass('active');
+            this._skinParts.btnMetaConnectionTypeSelector.find('.btn[data-mode="' + mode + '"]').addClass('active');
+            this._connectionType = mode;
+            this._setConnectInDrawProperties(this._connectionType);
+        }
+    };
+
+    ModelEditorView.prototype.enableMetaComponents = function (enabled) {
+        if (enabled === true) {
+            this._skinParts.btnMetaConnectionTypeSelector.show();
+            this._setMetaConnectionType("containment");
+        } else {
+            this._skinParts.btnMetaConnectionTypeSelector.hide();
+            this._connectionType = "connection";
+        }
+        this._setConnectInDrawProperties(this._connectionType);
+    };
+
+    ModelEditorView.prototype._setConnectInDrawProperties = function (connectionType) {
+        switch (connectionType) {
+        case "containment":
+            this._connectionInDraw.path.attr({"arrow-start": CONTAINMENT_TYPE_LINE_END});
+            break;
+        case "inheritance":
+            this._connectionInDraw.path.attr({"arrow-start": INHERITANCE_TYPE_LINE_END});
+            break;
+        default:
+            this._connectionInDraw.path.attr({"arrow-start": "none"});
+            break;
+        }
     };
 
     return ModelEditorView;

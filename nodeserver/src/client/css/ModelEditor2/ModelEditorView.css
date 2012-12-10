@@ -107,3 +107,13 @@
 .modelEditorView .children .selectionOutline .dumpSelectionBtn > i {
     margin-top: -2px;
 }
+
+.icon-meta-containment {
+    background-image: url("../../img/metarel.png");
+    background-position: 0px 0px;
+}
+
+.icon-meta-inheritance {
+    background-image: url("../../img/metarel.png");
+    background-position: -14px 0px;
+}

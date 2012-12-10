@@ -74,12 +74,11 @@ define(['logManager',
 
         this._skinParts.path = this._paper.path("M0,0L1,0");
         //this._skinParts.path.remove();
-        this._skinParts.path.attr({ /*"arrow-start": this._pathAttributes.arrowStart,
-            "arrow-end": this._pathAttributes.arrowEnd,*/
+        this._skinParts.path.attr({ "arrow-start": this._pathAttributes.arrowStart,
+            "arrow-end": this._pathAttributes.arrowEnd,
             "stroke": this._pathAttributes.color,
             "fill": "none",
-            "stroke-width": this._pathAttributes.width
-        });
+            "stroke-width": this._pathAttributes.width});
 
         this._skinParts.pathShadow = this._paper.path("M0,0L1,0");
         //this._skinParts.pathShadow.remove();
@@ -116,10 +115,11 @@ define(['logManager',
 
         this._sourceComponentId = objDescriptor.source;
         this._targetComponentId = objDescriptor.target;
+        this._connectionType = objDescriptor.connectionType || "";
 
         /*PathAttributes*/
-        this._pathAttributes.arrowStart = objDescriptor.arrowStart || "oval";
-        this._pathAttributes.arrowEnd = objDescriptor.arrowEnd || "oval";
+        this._pathAttributes.arrowStart = objDescriptor.arrowStart || "none";
+        this._pathAttributes.arrowEnd = objDescriptor.arrowEnd || "none";
         this._pathAttributes.color = objDescriptor.color || "#000000";
         this._pathAttributes.width = objDescriptor.width || "2";
         this._pathAttributes.shadowWidth = objDescriptor.shadowWidth || "5";
@@ -267,7 +267,7 @@ define(['logManager',
 
     ConnectionComponent.prototype.onSelect = function (isMultiple) {
         this._highlightPath();
-        if (isMultiple === false) {
+        if (isMultiple === false && this._pathAttributes.endPointReconnectable === true) {
             this._showConnectionEndEditControls();
         }
     };

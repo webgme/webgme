@@ -52,7 +52,10 @@ require.config({
         "Repository": "js/Repository",
         "RepositoryCSS": "css/Repository",
         "SetEditorCSS": "css/SetEditor",
-        "SetEditor": "js/SetEditor"
+        "SetEditor": "js/SetEditor",
+
+        "DiagramDesignerJS": "js/DiagramDesigner",
+        "DiagramDesignerCSS": "css/DiagramDesigner"
     },
     shim: {
         'jquery-ui': ['jquery'],
