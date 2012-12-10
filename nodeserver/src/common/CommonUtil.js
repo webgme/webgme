@@ -124,6 +124,9 @@ define([], function () {
                 case "ValidDestination":
                     return "2200000003";
                     break;
+                case "ValidInheritor":
+                    return "2200000004";
+                    break;
                 default:
                     return "2200000000";
                     break;
@@ -139,6 +142,9 @@ define([], function () {
                     break;
                 case "2200000003":
                     return "ValidDestination";
+                    break;
+                case "2200000004":
+                    return "ValidInheritor";
                     break;
                 case "2200000000":
                     return "General";
@@ -159,7 +165,7 @@ define([], function () {
                 return id.substr(ind+1);
             }
         },
-        validSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination', 'General'],
+        validSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor', 'General'],
         hashbasedconfig: {
             inuse          : true,
             serverlocation : "http://localhost",
@@ -175,8 +181,8 @@ define([], function () {
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
             logsrv          : "/log",
-            mongoip         : "129.59.105.195",
-            mongoport       : 27017/*888*/,
+            mongoip         : "129.59.105.239",
+            mongoport       : 27017,
             mongocollection : "harmadik", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "multi",
             mongoopt        : {
