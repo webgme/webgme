@@ -74,18 +74,20 @@ define([
             core.setRegistry(root,"isConnection",false);
             core.setRegistry(root,"position",{ "x": 0, "y": 0});
             core.setAttribute(root,"name","root");
-
+            core.setRegistry(root,"isMeta",false);
             //we create meta-meta
             var metameta = core.createNode(root);
             var metametaid = storeNode(metameta);
             core.setRegistry(metameta,"isConnection",false);
             core.setRegistry(metameta,"position",{ "x": 0, "y": 0});
             core.setAttribute(metameta,"name","META-META");
+            core.setRegistry(metameta,"isMeta",false);
             var mmobject = core.createNode(metameta);
             var mmobjectid = storeNode(mmobject);
             core.setRegistry(mmobject,"isConnection",false);
             core.setRegistry(mmobject,"position",{ "x": 0, "y": 0});
             core.setAttribute(mmobject,"name","object");
+            core.setRegistry(mmobject,"isMeta",false);
             addMember(mmobjectid,mmobjectid,'ValidChildren');
             addMember(mmobjectid,mmobjectid,'ValidSource');
             addMember(mmobjectid,mmobjectid,'ValidDestination');
@@ -96,10 +98,12 @@ define([
             core.setRegistry(meta,"isConnection",false);
             core.setRegistry(meta,"position",{ "x": 0, "y": 0});
             core.setAttribute(meta,"name","META");
+            core.setRegistry(meta,"isMeta",true);
             var model = core.createNode(root);
             core.setRegistry(model,"isConnection",false);
             core.setRegistry(model,"position",{ "x": 0, "y": 0});
             core.setAttribute(model,"name","MODEL");
+            core.setRegistry(model,"isMeta",false);
             //now we should save this and create the first commit so afterwards we will be able to connect to this project...
             var key = core.persist(root,function(err){
                 if(err){
