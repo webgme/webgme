@@ -49,9 +49,9 @@ CoreTree, Mongo, FUTURE) {
 		b1 = coretree.getChild(r1, "b");
 		c1 = coretree.getChild(r1, "c");
 
-		console.log(r1);
+		console.log(coretree.getKeys(r1));
 
-		return coretree.load(c1);
+		return coretree.loadRoot(coretree.getHash(r1));
 	});
 
 	done = FUTURE.hide(done);
