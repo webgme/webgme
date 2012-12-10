@@ -979,7 +979,17 @@ define([
             var optimizedpatterns = {};
             var patternLoaded = function(){
                 if(--counter === 0){
-                    callback(nupathes);
+                    //TODO now this is a hack so it should be harmonized somehow
+                    var innercounter = nupathes.length;
+                    var innerpatternloaded = function(){
+                        if(--innercounter === 0){
+                            callback(nupathes);
+                        }
+                    };
+                    var mypathes = COPY(nupathes);
+                    for(var i=0;i<mypathes.length;i++){
+                        loadPattern(mypathes[i],{sets:true},nupathes,innerpatternloaded);
+                    }
                 }
             };
 
