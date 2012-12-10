@@ -105,6 +105,58 @@ define(function () {
 		}
 	};
 
+	var adapt2 = function (func) {
+		ASSERT(typeof func === "function");
+
+		return function () {
+			var args = arguments;
+			var future = new Future();
+
+			args[args.length++] = function (error, value) {
+				if( error ) {
+					value = error instanceof Error ? error : new Error(error);
+				}
+				else {
+					ASSERT(!(value instanceof Error));
+				}
+				setValue(future, value);
+			};
+
+			func.apply(this, args);
+
+			return getValue(future);
+		};
+	};
+
+	var unadapt = function (func) {
+		ASSERT(typeof func === "function");
+
+		return function () {
+			var args = arguments;
+
+			var callback = args[--args.length];
+			ASSERT(typeof callback === "function");
+
+			try {
+				var value = func.apply(this, args);
+				if( isUnresolved(value) ) {
+					setListener(value, function (value) {
+						if( value instanceof Error ) {
+							callback(value);
+						}
+						else {
+							callback(null, value);
+						}
+					}, null);
+					return;
+				}
+			}
+			catch(error) {
+				callback(error);
+			}
+		};
+	};
+
 	var delay = function (delay, value) {
 		var future = new Future();
 		setTimeout(function () {
@@ -159,18 +211,20 @@ define(function () {
 	};
 
 	var call = function () {
-		var func = arguments[--arguments.length];
+		var args = arguments;
+
+		var func = args[--args.length];
 		ASSERT(typeof func === "function");
 
-		for( var i = 0; i < arguments.length; ++i ) {
-			if( isUnresolved(arguments[i]) ) {
-				return new Func(func, this, arguments, i);
+		for( var i = 0; i < args.length; ++i ) {
+			if( isUnresolved(args[i]) ) {
+				return new Func(func, this, args, i);
 			}
 			else {
-				arguments[i] = getValue(arguments[i]);
+				args[i] = getValue(args[i]);
 			}
 		}
-		return func.apply(this, arguments);
+		return func.apply(this, args);
 	};
 
 	// ------- join -------
@@ -260,25 +314,27 @@ define(function () {
 	Arr.prototype = Future.prototype;
 
 	var setMember = function (future, value) {
-		try {
-			var array = future.array;
-			array[future.index] = value;
+		if( !(value instanceof Error) ) {
+			try {
+				var array = future.array;
+				array[future.index] = value;
 
-			while( ++future.index < array.length ) {
-				value = array[future.index];
-				if( isUnresolved(value) ) {
-					setListener(value, setMember, future);
-					return;
+				while( ++future.index < array.length ) {
+					value = array[future.index];
+					if( isUnresolved(value) ) {
+						setListener(value, setMember, future);
+						return;
+					}
+					else {
+						array[future.index] = getValue(value);
+					}
 				}
-				else {
-					array[future.index] = getValue(value);
-				}
+
+				value = array;
 			}
-
-			value = array;
-		}
-		catch(error) {
-			value = error instanceof Error ? error : new Error(error);
+			catch(error) {
+				value = error instanceof Error ? error : new Error(error);
+			}
 		}
 
 		setValue(future, value);
@@ -299,7 +355,8 @@ define(function () {
 	// -------
 
 	return {
-		adapt: adapt,
+		adapt: adapt2,
+		unadapt: unadapt,
 		delay: delay,
 		call: call,
 		array: array,

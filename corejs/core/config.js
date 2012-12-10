@@ -11,7 +11,7 @@ define(function () {
 		mongodb: {
 			// host: "localhost",
 			// host: "129.59.104.16", // kecso
-			host: "129.59.105.195", // cloud
+			host: "129.59.105.239", // cloud
 			port: 27017,
 			database: "test",
 			collection: "storage"

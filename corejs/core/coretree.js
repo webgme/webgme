@@ -216,20 +216,6 @@ UTIL, FUTURE) {
 			return false;
 		};
 
-		var __define_mutable = {
-			value: true,
-			enumerable: false,
-			writable: true,
-			configurable: true
-		};
-
-		var __define_hashid = {
-			value: "",
-			enumerable: false,
-			writable: true,
-			configurable: true
-		};
-
 		var createRoot = function () {
 			__ageRoots();
 
@@ -238,11 +224,11 @@ UTIL, FUTURE) {
 				relid: null,
 				age: 0,
 				children: [],
-				data: {}
+				data: {
+					_mutable: true
+				}
 			};
-
-			Object.defineProperty(root.data, "_mutable", __define_mutable);
-			Object.defineProperty(root.data, HASH_ID, __define_hashid);
+			root.data[HASH_ID] = "";
 
 			roots.push(root);
 			return root;
@@ -349,15 +335,18 @@ UTIL, FUTURE) {
 				return false;
 			}
 
-			var copy = {};
+			var copy = {
+				_mutable: true
+			};
+
 			for( var key in data ) {
 				copy[key] = data[key];
 			}
 
-			Object.defineProperty(copy, "_mutable", __define_mutable);
+			ASSERT(copy._mutable === true);
 
 			if( typeof data[HASH_ID] === "string" ) {
-				Object.defineProperty(copy, HASH_ID, __define_hashid);
+				copy[HASH_ID] = "";
 			}
 
 			if( node.parent !== null ) {
@@ -456,7 +445,20 @@ UTIL, FUTURE) {
 				return null;
 			}
 
-			return Object.keys(node.data);
+			var keys = Object.keys(node.data);
+
+			var i = keys.length;
+			while( --i >= 0 && keys[i].charAt(0) === "_" ) {
+				keys.pop();
+			}
+
+			while( --i >= 0 ) {
+				if( keys[i].charAt(0) === "_" ) {
+					keys[i] = keys.pop();
+				}
+			}
+
+			return keys;
 		};
 
 		// ------- persistence
@@ -486,7 +488,7 @@ UTIL, FUTURE) {
 			}
 
 			if( hashed ) {
-				Object.defineProperty(node.data, HASH_ID, __define_hashid);
+				node.data[HASH_ID] = "";
 			}
 			else {
 				delete node.data[HASH_ID];
@@ -549,21 +551,60 @@ UTIL, FUTURE) {
 		};
 
 		var __storageLoad = FUTURE.adapt(storage.load);
-		var load = function (node) {
-			node = normalize(node);
+		var loadRoot = function (hash) {
+			ASSERT(isValidHash(hash));
+
+			return FUTURE.call(__storageLoad(hash), __loadRoot2);
+		};
+
+		var __loadRoot2 = function (data) {
+			__ageRoots();
+
+			var root = {
+				parent: null,
+				relid: null,
+				age: 0,
+				children: [],
+				data: data
+			};
+
+			roots.push(root);
+			return root;
+		};
+
+		var loadChild = function (node, relid) {
+			if( node === null ) {
+				return null;
+			}
+
+			node = getChild(node, relid);
 
 			if( isValidHash(node.data) ) {
-				var newdata = __storageLoad(node.data);
-				return FUTURE.call(node, newdata, __replaceData);
+				return FUTURE.call(node, __storageLoad(node.data), __loadChild2);
 			}
+			else {
+				return typeof node.data === "object" && node.data !== null ? node : null;
+			}
+		};
+
+		var __loadChild2 = function (node, newdata) {
+			node = normalize(node);
+
+			node.data = newdata;
+			__reloadChildrenData(node);
 
 			return node;
 		};
 
-		var __replaceData = function (node, newdata) {
-			node = normalize(node);
-			node.data = newdata;
-			__reloadChildrenData(node);
+		var loadDescendantByPath = function (node, path) {
+			ASSERT(path === "" || path.charAt(0) === "/");
+
+			path = path.split("/");
+
+			for( var i = 1; i < path.length; ++i ) {
+				node = loadChild(node, path[i]);
+			}
+
 			return node;
 		};
 
@@ -627,7 +668,9 @@ UTIL, FUTURE) {
 			setHashed: setHashed,
 			getHash: getHash,
 			persist: persist,
-			load: load,
+			loadRoot: loadRoot,
+			loadChild: loadChild,
+			loadDescendantByPath: loadDescendantByPath,
 
 			isValidNode: isValidNode
 		};
