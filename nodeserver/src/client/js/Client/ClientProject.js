@@ -88,10 +88,11 @@ define([
             core.setRegistry(mmobject,"position",{ "x": 0, "y": 0});
             core.setAttribute(mmobject,"name","object");
             core.setRegistry(mmobject,"isMeta",false);
-            addMember(mmobjectid,mmobjectid,'ValidChildren');
-            addMember(mmobjectid,mmobjectid,'ValidSource');
-            addMember(mmobjectid,mmobjectid,'ValidDestination');
-            addMember(mmobjectid,mmobjectid,'ValidInheritor');
+            //TODO currently as we use copy and not inheritance we have to set the base object with empty meta-sets...
+            //addMember(mmobjectid,mmobjectid,'ValidChildren');
+            //addMember(mmobjectid,mmobjectid,'ValidSource');
+            //addMember(mmobjectid,mmobjectid,'ValidDestination');
+            //addMember(mmobjectid,mmobjectid,'ValidInheritor');
 
 
             //now we also creates the META folder with one object and the MODEL folder which aims to be the starting point for the projects
