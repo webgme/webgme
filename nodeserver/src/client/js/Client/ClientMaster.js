@@ -20,6 +20,12 @@ define([
     var GUID = commonUtil.guid;
     var COPY = commonUtil.copy;
     var KEY = "_id";
+    var FakeLogger = function(){
+        var self = this;
+        self.log = function(text){
+            //TODO refine the already existing log mechanism or enhance to use it with the multiple project environment
+        };
+    };
     var ClientMaster = function(parameters){
         var self=this,
             selectedObjectId = null,
@@ -32,7 +38,8 @@ define([
             projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {},
             proxy = null,
             viewer = null,
-            mytest = new ClientTest({master:self});
+            mytest = new ClientTest({master:self}),
+            flogger = new FakeLogger();
 
 
         /*event functions to relay information between users*/
@@ -175,7 +182,7 @@ define([
                         projectinfo : project,
                         faulttolerant : true,
                         cache : true,
-                        logger : null,
+                        logger : flogger,
                         log : false,
                         watcher : self
                     });
@@ -304,7 +311,8 @@ define([
                                         userstamp: 'todo',
                                         commit: myinfo.branches[myinfo.currentbranch].commit,
                                         branch: myinfo.currenbtranch,
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     });
                                 }
                             } else {
@@ -322,7 +330,8 @@ define([
                                         userstamp: 'todo',
                                         commit: myinfo.branches['master'].commit,
                                         branch: 'master',
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     });
                                 }
                             } else {
@@ -336,7 +345,8 @@ define([
                                             userstamp: 'todo',
                                             commit: myinfo.branches[i].commit,
                                             branch: i,
-                                            readonly: false
+                                            readonly: false,
+                                            logger: flogger
                                         });
                                     }
                                     break;
@@ -374,7 +384,7 @@ define([
                     projectinfo : projectname,
                     faulttolerant : true,
                     cache : true,
-                    logger : null,
+                    logger : flogger,
                     log : false,
                     watcher : self
                 });
@@ -408,7 +418,8 @@ define([
                                                 userstamp: 'todo',
                                                 commit: null,
                                                 branch: "master",
-                                                readonly: false
+                                                readonly: false,
+                                                logger: flogger
                                             });
                                             actor.createEmpty(function(err){
                                                 if(err){
@@ -476,7 +487,8 @@ define([
                                                    userstamp: 'todo',
                                                    commit: mycommit,
                                                    branch: mycommit.name,
-                                                   readonly: false
+                                                   readonly: false,
+                                                   logger: flogger
                                                });
                                                projectsinfo[activeProject].currentbranch = mycommit.name;
                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
@@ -494,7 +506,8 @@ define([
                                                     userstamp: 'todo',
                                                     commit: mycommit,
                                                     branch: mycommit.name,
-                                                    readonly: false
+                                                    readonly: false,
+                                                    logger: flogger
                                                 }),
                                                 commit: commitid
                                             };
@@ -527,7 +540,8 @@ define([
                 userstamp: 'todo',
                 commit: commitobj,
                 branch: commitobj.name,
-                readonly: true
+                readonly: true,
+                logger: flogger
             });
             activateActor(viewer,null,callback);
         };
@@ -631,7 +645,8 @@ define([
                                         userstamp: 'todo',
                                         commit: commit,
                                         branch: parameters.branch,
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     }),
                                     commit:commitkey
                                 };
