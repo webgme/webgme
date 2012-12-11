@@ -24,11 +24,7 @@ define([  'logManager',
     'js/NetworkStatus/NetworkStatusView',
     'js/Project/ProjectTitleView',
     'js/SetEditor/SetEditorView',
-    'js/SetEditor/SetEditorControl',
-    'js/DiagramDesigner/ModelDesignerCanvas',
-    'js/DiagramDesigner/ModelDesignerControl',
-    'js/DiagramDesigner/MetaDesignerCanvas',
-    'js/DiagramDesigner/MetaDesignerControl'], function (logManager,
+    'js/SetEditor/SetEditorControl'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -51,11 +47,7 @@ define([  'logManager',
                                             NetworkStatusView,
                                             ProjectTitleView,
                                             SetEditorView,
-                                            SetEditorControl,
-                                            ModelDesignerCanvas,
-                                            ModelDesignerControl,
-                                            MetaDesignerCanvas,
-                                            MetaDesignerControl) {
+                                            SetEditorControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -201,16 +193,7 @@ define([  'logManager',
         } else if (visualizer === "GraphViz") {
             mainView = new GraphVizView("modelEditorHtml");
             mainController = new GraphVizControl(proxy, mainView);
-        } else if (visualizer === "DesignerCanvas_Model") {
-            mainView = new ModelDesignerCanvas("modelEditorHtml");
-            mainController = new ModelDesignerControl({"client": proxy,
-                                                       "designerCanvas": mainView});
-        } else if (visualizer === "DesignerCanvas_Meta") {
-            mainView = new MetaDesignerCanvas("modelEditorHtml");
-            mainController = new MetaDesignerControl({"client": proxy,
-                                                        "designerCanvas": mainView});
-        }
-
+        } 
         if (currentNodeId) {
             if (mainController) {
                 mainController.selectedObjectChanged(currentNodeId);

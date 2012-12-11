@@ -66,7 +66,7 @@ define([
         var createEmpty = function(callback){
             var core = new ClientCore({
                 storage: storage,
-                logger: null
+                logger: parameters.logger
             });
             currentCore = core;
             var root = core.createNode();
@@ -162,7 +162,7 @@ define([
             var root = mycommit.root;
             var core = new ClientCore({
                 storage: storage,
-                logger: null
+                logger: parameters.logger
             });
             core.loadRoot(root,function(err,rootnode){
                 if(!err && rootnode){
@@ -641,7 +641,7 @@ define([
                 currentRoot = roothash;
                 var tempcore = new ClientCore({
                     storage : storage,
-                    logger : null
+                    logger : parameters.logger
                 });
                 tempcore.loadRoot(roothash,function(err,node){
                     if(!err && node){
