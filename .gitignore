@@ -7,4 +7,6 @@
 /nodeserver/node_modules
 /node_modules
 
-*/.sass-cache
+*.log
+.idea
+.sass-cache
