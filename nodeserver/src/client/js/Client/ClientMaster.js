@@ -29,7 +29,7 @@ define([
             storages = {},
             commitInfos = {},
             savedInfoStorage = new ClientLocalStorage(),
-            projectsinfo = /*savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || */{},
+            projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {},
             proxy = null,
             viewer = null,
             mytest = new ClientTest({master:self});
@@ -106,6 +106,7 @@ define([
                         }
                     };
 
+                    //TODO we have to check the projects existing only in our info, but now we simply remove them
                     for(var i=0;i<serverlist.length;i++){
                         if(!projectsinfo[serverlist[i]]){
                             projectsinfo[serverlist[i]] = {
@@ -114,6 +115,17 @@ define([
                                 branches: {}
                             }
                         }
+                    }
+                    var deadprojects = [];
+                    for(i in projectsinfo){
+                        if(i !== 'activeProject'){
+                            if(serverlist.indexOf(i) === -1){
+                                deadprojects.push(i);
+                            }
+                        }
+                    }
+                    for(i=0;i<deadprojects.length;i++){
+                        delete projectsinfo[deadprojects[i]];
                     }
                     //we have now all the projects, so we should connect to them...
                     var count = 0;
@@ -220,7 +232,7 @@ define([
             delete info.activeProject;
 
             for(var i in info){
-                for(var j in info.branches){
+                for(var j in info[i].branches){
                     info[i].branches[j].actor = null;
                 }
                 info[i].parameters = null;
