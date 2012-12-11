@@ -20,6 +20,12 @@ define([
     var GUID = commonUtil.guid;
     var COPY = commonUtil.copy;
     var KEY = "_id";
+    var FakeLogger = function(){
+        var self = this;
+        self.log = function(text){
+            //TODO refine the already existing log mechanism or enhance to use it with the multiple project environment
+        };
+    };
     var ClientMaster = function(parameters){
         var self=this,
             selectedObjectId = null,
@@ -29,10 +35,11 @@ define([
             storages = {},
             commitInfos = {},
             savedInfoStorage = new ClientLocalStorage(),
-            projectsinfo = /*savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || */{},
+            projectsinfo = savedInfoStorage.load('#'+parameters.userstamp+'#saved#') || {},
             proxy = null,
             viewer = null,
-            mytest = new ClientTest({master:self});
+            mytest = new ClientTest({master:self}),
+            flogger = new FakeLogger();
 
 
         /*event functions to relay information between users*/
@@ -106,6 +113,7 @@ define([
                         }
                     };
 
+                    //TODO we have to check the projects existing only in our info, but now we simply remove them
                     for(var i=0;i<serverlist.length;i++){
                         if(!projectsinfo[serverlist[i]]){
                             projectsinfo[serverlist[i]] = {
@@ -114,6 +122,17 @@ define([
                                 branches: {}
                             }
                         }
+                    }
+                    var deadprojects = [];
+                    for(i in projectsinfo){
+                        if(i !== 'activeProject'){
+                            if(serverlist.indexOf(i) === -1){
+                                deadprojects.push(i);
+                            }
+                        }
+                    }
+                    for(i=0;i<deadprojects.length;i++){
+                        delete projectsinfo[deadprojects[i]];
                     }
                     //we have now all the projects, so we should connect to them...
                     var count = 0;
@@ -163,7 +182,7 @@ define([
                         projectinfo : project,
                         faulttolerant : true,
                         cache : true,
-                        logger : null,
+                        logger : flogger,
                         log : false,
                         watcher : self
                     });
@@ -220,7 +239,7 @@ define([
             delete info.activeProject;
 
             for(var i in info){
-                for(var j in info.branches){
+                for(var j in info[i].branches){
                     info[i].branches[j].actor = null;
                 }
                 info[i].parameters = null;
@@ -292,7 +311,8 @@ define([
                                         userstamp: 'todo',
                                         commit: myinfo.branches[myinfo.currentbranch].commit,
                                         branch: myinfo.currenbtranch,
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     });
                                 }
                             } else {
@@ -310,7 +330,8 @@ define([
                                         userstamp: 'todo',
                                         commit: myinfo.branches['master'].commit,
                                         branch: 'master',
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     });
                                 }
                             } else {
@@ -324,7 +345,8 @@ define([
                                             userstamp: 'todo',
                                             commit: myinfo.branches[i].commit,
                                             branch: i,
-                                            readonly: false
+                                            readonly: false,
+                                            logger: flogger
                                         });
                                     }
                                     break;
@@ -362,7 +384,7 @@ define([
                     projectinfo : projectname,
                     faulttolerant : true,
                     cache : true,
-                    logger : null,
+                    logger : flogger,
                     log : false,
                     watcher : self
                 });
@@ -396,7 +418,8 @@ define([
                                                 userstamp: 'todo',
                                                 commit: null,
                                                 branch: "master",
-                                                readonly: false
+                                                readonly: false,
+                                                logger: flogger
                                             });
                                             actor.createEmpty(function(err){
                                                 if(err){
@@ -464,7 +487,8 @@ define([
                                                    userstamp: 'todo',
                                                    commit: mycommit,
                                                    branch: mycommit.name,
-                                                   readonly: false
+                                                   readonly: false,
+                                                   logger: flogger
                                                });
                                                projectsinfo[activeProject].currentbranch = mycommit.name;
                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
@@ -482,7 +506,8 @@ define([
                                                     userstamp: 'todo',
                                                     commit: mycommit,
                                                     branch: mycommit.name,
-                                                    readonly: false
+                                                    readonly: false,
+                                                    logger: flogger
                                                 }),
                                                 commit: commitid
                                             };
@@ -515,7 +540,8 @@ define([
                 userstamp: 'todo',
                 commit: commitobj,
                 branch: commitobj.name,
-                readonly: true
+                readonly: true,
+                logger: flogger
             });
             activateActor(viewer,null,callback);
         };
@@ -619,7 +645,8 @@ define([
                                         userstamp: 'todo',
                                         commit: commit,
                                         branch: parameters.branch,
-                                        readonly: false
+                                        readonly: false,
+                                        logger: flogger
                                     }),
                                     commit:commitkey
                                 };
