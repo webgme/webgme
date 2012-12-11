@@ -1,0 +1,23 @@
+.designer-canvas .designer-canvas-header {
+  padding: 5px;
+  height: 30px;
+  background-color: #efefef; }
+  .designer-canvas .designer-canvas-header .designer-canvas-header-title {
+    font-size: 20px;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 10px;
+    margin-left: 10px; }
+.designer-canvas .designer-canvas-body {
+  position: absolute;
+  overflow: auto; }
+  .designer-canvas .designer-canvas-body .items {
+    position: absolute; }
+    .designer-canvas .designer-canvas-body .items:focus {
+      outline: none; }
+    .designer-canvas .designer-canvas-body .items .rubberband {
+      background: rgba(219, 234, 252, 0.49);
+      border: #52a8ec solid 1px;
+      z-index: 100000; }
+  .designer-canvas .designer-canvas-body .connections {
+    position: absolute; }

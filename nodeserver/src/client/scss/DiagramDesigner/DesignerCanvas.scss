@@ -1,0 +1,43 @@
+$designer-canvas-header-background-color: #EFEFEF;
+$designer-canvas-selection-rubber-band-background-color: rgba(219, 234, 252, 0.49);
+$designer-canvas-selection-rubber-band-border-color: #52A8EC;
+
+.designer-canvas {
+
+  .designer-canvas-header {
+    padding: 5px;
+    height: 30px;
+    background-color: $designer-canvas-header-background-color;
+
+    .designer-canvas-header-title {
+      font-size: 20px;
+      font-weight: bold;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+  }
+
+  .designer-canvas-body {
+    position: absolute;
+    overflow: auto;
+
+    .items {
+      position: absolute;
+
+      &:focus {
+        outline: none;
+      }
+
+      .rubberband {
+        background: $designer-canvas-selection-rubber-band-background-color;
+        border: $designer-canvas-selection-rubber-band-border-color solid 1px;
+        z-index: 100000;
+      }
+    }
+
+    .connections {
+      position: absolute;
+    }
+  }
+}
