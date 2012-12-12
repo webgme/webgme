@@ -64,6 +64,7 @@ define([
             master.changeStatus(id,status);
         };
         var createEmpty = function(callback){
+            intransaction =true;
             var core = new ClientCore({
                 storage: storage,
                 logger: parameters.logger
@@ -112,6 +113,7 @@ define([
             //now we should save this and create the first commit so afterwards we will be able to connect to this project...
             var key = core.persist(root,function(err){
                 if(err){
+                    intransaction = false;
                     callback(err);
                 } else {
                     if(!key){
@@ -132,15 +134,18 @@ define([
 
                     storage.save(initialcommit,function(err){
                         if(err){
+                            intransaction = false;
                             callback(err);
                         } else {
                             //we should create the branch object so we can update it :)
                             mycommit = initialcommit;
                             storage.createBranch(branch,function(err){
                                 if(err){
+                                    intransaction = false;
                                     callback(err);
                                 } else {
                                     //now we should be able to update the branch object
+                                    intransaction = false;
                                     storage.updateBranch(branch,mycommit[KEY],callback);
                                 }
                             });
@@ -170,7 +175,7 @@ define([
                     currentRoot = root;
                     storeNode(rootnode);
                     UpdateAll(function(){
-                        storage.load(branchId(),function(err,branchobj){
+                        /*storage.load(branchId(),function(err,branchobj){
                             if(!err && branchobj){
                                 if(branchobj.commit === mycommit[KEY] || branchobj.commit === null){
                                     status = 'online';
@@ -179,6 +184,31 @@ define([
                                     status = 'offline';
                                 }
                             } else {
+                                status = 'offline';
+                            }
+                            master.changeStatus(id,status);
+                            callback();
+                        });*/
+                        master.getBranchesAsync(function(err,branches){
+                            if(!err && branches && branches.length>0){
+                                var foundbranch = false;
+                                for(var i=0;i<branches.length;i++){
+                                    if(branches[i].remotecommit === mycommit[KEY]){
+                                        foundbranch = true;
+                                        status = 'online';
+                                        branch = branches[i].name;
+                                    } else if(branches[i].localcommit === mycommit[KEY]){
+                                        foundbranch = true;
+                                        status = 'offline';
+                                        branch = branches[i].name;
+                                    }
+                                }
+                                if(!foundbranch){
+                                    status = 'offline';
+                                    branch = mycommit.name;
+                                }
+                            } else {
+                                branch = mycommit.name;
                                 status = 'offline';
                             }
                             master.changeStatus(id,status);
