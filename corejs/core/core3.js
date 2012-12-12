@@ -4,45 +4,11 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/corexxxx", "core/lib/sha1", "core/future" ], function (
-ASSERT, CoreTree, SHA1, FUTURE) {
+define([ "core/assert", "core/coretree", "core/lib/sha1", "core/future" ], function (ASSERT,
+CoreTree, SHA1, FUTURE) {
 	"use strict";
 
 	// ----------------- RELID -----------------
-
-	var maxRelid = Math.pow(2, 31);
-
-	var createRelid = function (data, relid) {
-		ASSERT(data && typeof data === "object");
-		ASSERT(relid === undefined || isValidRelid(relid));
-
-		if( !relid || data[relid] !== undefined ) {
-			// TODO: detect infinite cycle?
-			do {
-				relid = Math.floor(Math.random() * maxRelid);
-				// relid = relid.toString();
-			} while( data[relid] !== undefined );
-		}
-
-		return "" + relid;
-	};
-
-	// make relids deterministic
-	if( false ) {
-		var nextRelid = 0;
-		createRelid = function (data, relid) {
-			ASSERT(data && typeof data === "object");
-			ASSERT(relid === undefined || isValidRelid(relid));
-
-			if( !relid || data[relid] !== undefined ) {
-				do {
-					relid = (nextRelid += -1);
-				} while( data[relid] !== undefined );
-			}
-
-			return "" + relid;
-		};
-	}
 
 	var isValidRelid = function (relid) {
 		return typeof relid === "string" && parseInt(relid, 10).toString() === relid;
@@ -145,7 +111,7 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 
 		var delAttribute = function (node, name) {
 			node = coretree.getChild(node, ATTRIBUTES);
-			coretree.delProperty(node, name);
+			coretree.deleteProperty(node, name);
 		};
 
 		var setAttribute = function (node, name, value) {
@@ -160,7 +126,7 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 
 		var delRegistry = function (node, name) {
 			node = coretree.getChild(node, REGISTRY);
-			coretree.delProperty(node, name);
+			coretree.deleteProperty(node, name);
 		};
 
 		var setRegistry = function (node, name, value) {
@@ -202,7 +168,7 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 
 			var node = coretree.getChild(overlays, source);
 			ASSERT(node && coretree.getProperty(node, name) === target);
-			coretree.delProperty(node, name);
+			coretree.deleteProperty(node, name);
 
 			node = coretree.getChild(overlays, target);
 			ASSERT(node);
@@ -215,7 +181,7 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 			if( array.length === 1 ) {
 				ASSERT(array[0] === source);
 
-				coretree.delProperty(node, name);
+				coretree.deleteProperty(node, name);
 			}
 			else {
 				var index = array.indexOf(source);
@@ -272,14 +238,17 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 		var createNode = function (parent, relid) {
 			ASSERT(!parent || isValidNode(parent));
 
-			var node = coretree.createRoot();
-
 			if( parent ) {
-				relid = relid || createRelid(parent.data);
-				coretree.setParent(node, parent, relid);
+				if( relid ) {
+					return coretree.getChild(parent, relid);
+				}
+				else {
+					return coretree.createChild(parent);
+				}
 			}
-
-			return node;
+			else {
+				return coretree.createRoot();
+			}
 		};
 
 		var getSingleNodeHash = function (node) {
@@ -316,7 +285,7 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 			var prefix = coretree.getRelid(node);
 			ASSERT(parent !== null);
 
-			coretree.delProperty(parent, node.relid);
+			coretree.deleteProperty(parent, node.relid);
 
 			while( parent ) {
 				var overlays = coretree.getChild(parent, OVERLAYS);
@@ -346,8 +315,8 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 					return null;
 				}
 
-				newNode = corexxxx.copyNode(node);
-				corexxxx.setParent(newNode, parent, createRelid(parent.data));
+				newNode = coretree.createChild(parent);
+				coretree.setData(newNode, coretree.copyData(node));
 
 				var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 				var ancestorNewPath = coretree.getPath(newNode, ancestor);
@@ -411,7 +380,8 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 				}
 			}
 			else {
-				newNode = corexxxx.copyNode(node);
+				newNode = coretree.createRoot();
+				coretree.setData(newNode, coretree.copyData(node));
 			}
 
 			return newNode;
@@ -431,11 +401,16 @@ ASSERT, CoreTree, SHA1, FUTURE) {
 			var baseOldPath = coretree.getRelid(node);
 			var aboveAncestor = 1;
 
-			corexxxx.delParent(node);
-			corexxxx.setParent(node, parent, createRelid(parent.data, baseOldPath));
+			var oldNode = node;
+			node = coretree.getChild(parent, baseOldPath);
+			if( !coretree.isEmpty(node) ) {
+				return null;
+			}
 
-			var ancestorOverlays = coretree.getChild(ancestor[0], OVERLAYS);
-			var ancestorNewPath = coretree.getPath(node, ancestor[0]);
+			coretree.setData(node, coretree.copyData(oldNode));
+			
+			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
+			var ancestorNewPath = coretree.getPath(node, ancestor);
 
 			while( base ) {
 				var baseOverlays = coretree.getChild(base, OVERLAYS);

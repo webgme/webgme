@@ -13,6 +13,34 @@ UTIL, FUTURE) {
 		return typeof key === "string" && key.length === 41 && HASH_REGEXP.test(key);
 	};
 
+	var MAX_RELID = Math.pow(2, 31);
+	var createRelid = function (data) {
+		ASSERT(data && typeof data === "object");
+
+		var relid;
+		do {
+			relid = Math.floor(Math.random() * MAX_RELID);
+			// relid = relid.toString();
+		} while( data[relid] !== undefined );
+
+		return "" + relid;
+	};
+
+	// make relids deterministic
+	if( false ) {
+		var nextRelid = 0;
+		createRelid = function (data) {
+			ASSERT(data && typeof data === "object");
+
+			var relid;
+			do {
+				relid = (nextRelid += -1);
+			} while( data[relid] !== undefined );
+
+			return "" + relid;
+		};
+	}
+
 	return function (storage) {
 
 		var roots = [];
@@ -63,6 +91,7 @@ UTIL, FUTURE) {
 		// ------- memory management
 
 		var __detachChildren = function (node) {
+			console.log(node);
 			ASSERT(node.children instanceof Array && node.age >= MAX_AGE - 1);
 
 			var children = node.children;
@@ -257,6 +286,28 @@ UTIL, FUTURE) {
 			return child;
 		};
 
+		var createChild = function (node) {
+			node = normalize(node);
+
+			if( typeof node.data !== "object" || node.data === null ) {
+				throw new Error("invalid node data");
+			}
+
+			var relid = createRelid(node.data);
+
+			__ageRoots();
+			var child = {
+				parent: node,
+				relid: relid,
+				age: 0,
+				children: [],
+				data: EMPTY_DATA
+			};
+
+			node.children.push(child);
+			return child;
+		};
+
 		var getDescendant = function (node, head, base) {
 			ASSERT(typeof base === "undefined" || isAncestor(head, base));
 
@@ -305,6 +356,14 @@ UTIL, FUTURE) {
 			node = normalize(node);
 
 			return typeof node.data === "object" && node.data !== null;
+		};
+
+		var isEmpty = function (node) {
+			if( typeof node.data !== "object" || node.data === null ) {
+				return false;
+			}
+
+			return __isEmptyData(node.data);
 		};
 
 		var __isEmptyData = function (data) {
@@ -378,7 +437,7 @@ UTIL, FUTURE) {
 		};
 
 		var setData = function (node, data) {
-			ASSERT(!__isMutableData(data) && data !== null && typeof data !== "undefined");
+			ASSERT(data !== null && typeof data !== "undefined");
 
 			node = normalize(node);
 			if( node.parent !== null ) {
@@ -391,6 +450,35 @@ UTIL, FUTURE) {
 
 			node.data = data;
 			__reloadChildrenData(node);
+		};
+
+		var deleteData = function (node) {
+			node = normalize(node);
+
+			if( node.parent !== null ) {
+				if( !mutate(node.parent) ) {
+					throw new Error("incorrect node data");
+				}
+
+				delete node.parent.data[node.relid];
+			}
+
+			var data = node.data;
+
+			node.data = EMPTY_DATA;
+			__reloadChildrenData(node);
+
+			return data;
+		};
+
+		var copyData = function (node) {
+			node = normalize(node);
+
+			if( typeof node.data !== "object" || node.data === null ) {
+				return node.data;
+			}
+
+			return JSON.parse(JSON.stringify(node.data));
 		};
 
 		var getProperty = function (node, name) {
@@ -421,7 +509,7 @@ UTIL, FUTURE) {
 			}
 		};
 
-		var delProperty = function (node, name) {
+		var deleteProperty = function (node, name) {
 			ASSERT(typeof name === "string" && name !== HASH_ID);
 
 			node = normalize(node);
@@ -625,6 +713,8 @@ UTIL, FUTURE) {
 				__test("age", node.age >= 0 && node.age <= MAX_AGE);
 				__test("children", node.children === null || node.children instanceof Array);
 				__test("children 2", (node.age === MAX_AGE) === (node.children === null));
+				__test("data", typeof node.data === "object" || typeof node.data === "string"
+				|| typeof node.data === "number");
 
 				if( node.parent !== null ) {
 					__test("age 2", node.age >= node.parent.age);
@@ -650,18 +740,22 @@ UTIL, FUTURE) {
 			getAncestor: getAncestor,
 			isAncestor: isAncestor,
 			createRoot: createRoot,
+			createChild: createChild,
 			getChild: getChild,
 			getDescendant: getDescendant,
 			getDescendantByPath: getDescendantByPath,
 
 			isMutable: isMutable,
 			isObject: isObject,
+			isEmpty: isEmpty,
 			mutate: mutate,
 			getData: getData,
 			setData: setData,
+			deleteData: deleteData,
+			copyData: copyData,
 			getProperty: getProperty,
 			setProperty: setProperty,
-			delProperty: delProperty,
+			deleteProperty: deleteProperty,
 			getKeys: getKeys,
 
 			isHashed: isHashed,
