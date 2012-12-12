@@ -31,7 +31,7 @@ define(['logManager'], function (logManager) {
 
         //find connectors
         this.connectors = this.$el.find(CONNECTOR_CLASS);
-        this.connectors.hide();
+        this.hideConnectors();
     };
 
     //Called after the host designer item is added to the canvas DOM and rendered
@@ -85,12 +85,12 @@ define(['logManager'], function (logManager) {
 
     //set the 'connectors' DISPLAY property to TRUE
     DecoratorBase.prototype.showConnectors = function () {
-        this.connectors.show();
+        this.connectors.appendTo(this.$el);
     };
 
     //set the 'connectors' DISPLAY property to FALSE
     DecoratorBase.prototype.hideConnectors = function () {
-        this.connectors.hide();
+        this.connectors.detach();
     };
 
     //called when the designer items becomes selected

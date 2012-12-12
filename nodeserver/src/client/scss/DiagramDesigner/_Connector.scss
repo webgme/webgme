@@ -13,7 +13,6 @@ $connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
   position: absolute;
   cursor: pointer;
   border: $connector-border;
-  display: none;
 
   &:hover {
     border-color: $connector-hover-border-color;
