@@ -408,7 +408,7 @@ CoreTree, SHA1, FUTURE) {
 			}
 
 			coretree.setData(node, coretree.copyData(oldNode));
-			
+
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 			var ancestorNewPath = coretree.getPath(node, ancestor);
 
@@ -838,7 +838,18 @@ CoreTree, SHA1, FUTURE) {
 			// root
 			getKey: coretree.getHash,
 			loadRoot: FUTURE.unadapt(coretree.loadRoot),
-			persist: FUTURE.unadapt(coretree.persist),
+
+			persist: function (node, callback) {
+				var finished = coretree.persist(node);
+
+				FUTURE.call(finished, function () {
+					// TODO: we need to do something with error
+					callback(null);
+				});
+
+				return coretree.getHash(node);
+			},
+
 			getRoot: coretree.getRoot,
 
 			// containment
