@@ -2,81 +2,41 @@
 
 define(['logManager',
     'clientUtil',
+    'js/DiagramDesigner/DecoratorBase',
     'text!js/DiagramDesigner/DefaultDecoratorTemplate.html',
     'css!DiagramDesignerCSS/DefaultDecorator'], function (logManager,
                                                        util,
+                                                       DecoratorBase,
                                                        defaultDecoratorTemplate) {
 
-    var DefaultDecorator;
+    var DefaultDecorator,
+        __parent__ = DecoratorBase,
+        __parent_proto__ = DecoratorBase.prototype;
 
-    DefaultDecorator = function (objectDescriptor) {
-        this.id = objectDescriptor.id;
-        this.hostDesignerItem = objectDescriptor.designerItem;
-        this.name = objectDescriptor.name || "";
+    DefaultDecorator = function (options) {
 
-        this.skinParts = {};
+        var opts = _.extend( {}, options);
 
-        this.connectors = null;
+        opts.loggerName = opts.loggerName || "DefaultDecorator";
 
-        this.logger = logManager.create("DefaultDecorator_" + this.id);
-        this.logger.debug("Created");
+        __parent__.apply(this, [opts]);
+
+        this.logger.debug("DefaultDecorator ctor");
     };
 
-    //Called before the host designer item is added to the canvas DOM
-    DefaultDecorator.prototype.on_addTo = function () {
+    _.extend(DefaultDecorator.prototype, __parent_proto__);
 
-    };
-
-    //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    DefaultDecorator.prototype.on_render = function () {
-        this.$el = this._DOMBase.clone();
-        this.$hostEl = this.hostDesignerItem.$el;
-
-        //find components
-        this.skinParts.name = this.$el.find(".name");
-        this.skinParts.name.text(this.name);
-
-        this.connectors = this.$el.find(".connector");
-        this.connectors.hide();
-    };
-
-    //Called after the host designer item is added to the canvas DOM and rendered
-    DefaultDecorator.prototype.on_afterAdded = function () {
-
-    };
+    /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
     DefaultDecorator.prototype._DOMBase = $(defaultDecoratorTemplate);
 
-    //in the destroy there is no need to touch the UI, it will be cleared out
-    DefaultDecorator.prototype.destroy = function () {
-        this.logger.debug("Destroyed");
+    DefaultDecorator.prototype.on_render = function () {
+        __parent_proto__.on_render.apply(this, arguments);
+
+        //find additional components
+        this.skinParts.$name = this.$el.find(".name");
+        this.skinParts.$name.text(this.name);
     };
-
-    DefaultDecorator.prototype.onMouseEnter = function (event) {
-        this.logger.debug("DefaultDecorator_onMouseEnter: " + this.id);
-
-        this.showConnectors();
-
-        return true;
-    };
-
-    DefaultDecorator.prototype.onMouseLeave = function (event) {
-        this.logger.debug("DefaultDecorator_onMouseLeave: " + this.id);
-
-        this.hideConnectors();
-
-        return true;
-    };
-
-    DefaultDecorator.prototype.showConnectors = function () {
-        this.connectors.show();
-    };
-
-    DefaultDecorator.prototype.hideConnectors = function () {
-        this.connectors.hide();
-    };
-
-
 
     return DefaultDecorator;
 });

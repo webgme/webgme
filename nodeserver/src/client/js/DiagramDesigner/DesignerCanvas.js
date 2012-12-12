@@ -14,14 +14,14 @@ define(['logManager',
                                                       raphaeljs) {
 
     var DesignerCanvas,
-        DEFAULTgridSize = 10;
+        DEFAULT_GRID_SIZE = 10;
 
     DesignerCanvas = function (options) {
         //set properties from options
         this.containerElementId = typeof options === "string" ? options : options.containerElement;
         this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
         this._readOnlyMode = options.readOnlyMode || false;
-        this.gridSize = options.gridSize || DEFAULTgridSize;
+        this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
         this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
 
         //define properties of its own

@@ -2,40 +2,40 @@
 
 define(['logManager',
     'clientUtil',
+    'js/DiagramDesigner/DefaultDecorator',
     'text!js/DiagramDesigner/CircleDecoratorTemplate.html',
     'css!DiagramDesignerCSS/CircleDecorator'], function (logManager,
                                                           util,
+                                                          DefaultDecorator,
                                                           circleDecoratorTemplate) {
 
     var CircleDecorator,
+        __parent__ = DefaultDecorator,
+        __parent_proto__ = DefaultDecorator.prototype,
         CANVAS_SIZE = 40;
 
-    CircleDecorator = function (objectDescriptor) {
-        this.id = objectDescriptor.id;
-        this.hostDesignerItem = objectDescriptor.designerItem;
-        this.name = objectDescriptor.name || "";
+    CircleDecorator = function (options) {
+        var opts = _.extend( {}, options);
 
-        this.skinParts = {};
+        opts.loggerName = opts.loggerName || "CircleDecorator";
 
-        this.logger = logManager.create("CircleDecorator_" + this.id);
-        this.logger.debug("Created");
+        __parent__.apply(this, [opts]);
 
+        this.logger.debug("CircleDecorator ctor");
     };
 
-    //Called before the host designer item is added to the canvas DOM
-    CircleDecorator.prototype.on_addTo = function () {
+    _.extend(CircleDecorator.prototype, __parent_proto__);
 
-    };
+    /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
+
+    CircleDecorator.prototype._DOMBase = $(circleDecoratorTemplate);
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
     CircleDecorator.prototype.on_render = function () {
-        this.$el = this._DOMBase.clone();
-        this.$hostEl = this.hostDesignerItem.$el;
+        //let the parent decorator class do its job first
+        __parent_proto__.on_render.apply(this, arguments);
 
-        //find components
-        this.skinParts.$name = this.$el.find(".name");
-        this.skinParts.$name.text(this.name);
-
+        //find additional CircleDecorator specific UI components
         this.skinParts.$arrowCanvas = this.$el.find('[id="circleCanvas"]');
         this.skinParts.$arrowCanvas[0].height = CANVAS_SIZE;
         this.skinParts.$arrowCanvas[0].width = CANVAS_SIZE;
@@ -43,9 +43,6 @@ define(['logManager',
         if(ctx) {
             ctx.circle(20,20,19, true);
         }
-
-        this.connectors = this.$el.find(".connector");
-        this.connectors.hide();
     };
 
     //Called after the host designer item is added to the canvas DOM and rendered
@@ -55,38 +52,6 @@ define(['logManager',
 
         this.skinParts.$name.css({"top": 45,
                                    "left": shift });
-    };
-
-    CircleDecorator.prototype._DOMBase = $(circleDecoratorTemplate);
-
-    //in the destroy there is no need to touch the UI, it will be cleared out
-    //release the territory, release everything needs to be released and return
-    CircleDecorator.prototype.destroy = function () {
-        this.logger.debug("Destroyed");
-    };
-
-    CircleDecorator.prototype.onMouseEnter = function (event) {
-        this.logger.debug("CircleDecorator_onMouseEnter: " + this.id);
-
-        this.showConnectors();
-
-        return true;
-    };
-
-    CircleDecorator.prototype.onMouseLeave = function (event) {
-        this.logger.debug("CircleDecorator_onMouseLeave: " + this.id);
-
-        this.hideConnectors();
-
-        return true;
-    };
-
-    CircleDecorator.prototype.showConnectors = function () {
-        this.connectors.show();
-    };
-
-    CircleDecorator.prototype.hideConnectors = function () {
-        this.connectors.hide();
     };
 
     return CircleDecorator;
