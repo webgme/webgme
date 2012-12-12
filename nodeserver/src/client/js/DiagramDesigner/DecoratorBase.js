@@ -12,13 +12,13 @@ define(['logManager'], function (logManager) {
 
         this.skinParts = {};
 
-        this.connectors = null;
+        this.$connectors = null;
 
         this.logger = options.logger || logManager.create((options.loggerName || "DecoratorBase") + '_' + this.id);
         this.logger.debug("Created");
     };
 
-    DecoratorBase.prototype._DOMBase = $("");
+    DecoratorBase.prototype.$_DOMBase = $("");
 
     //Called before the host designer item is added to the canvas DOM
     DecoratorBase.prototype.on_addTo = function () {
@@ -26,11 +26,11 @@ define(['logManager'], function (logManager) {
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
     DecoratorBase.prototype.on_render = function () {
-        this.$el = this._DOMBase.clone();
+        this.$el = this.$_DOMBase.clone();
         this.$hostEl = this.hostDesignerItem.$el;
 
         //find connectors
-        this.connectors = this.$el.find(CONNECTOR_CLASS);
+        this.$connectors = this.$el.find(CONNECTOR_CLASS);
         this.hideConnectors();
     };
 
@@ -85,12 +85,12 @@ define(['logManager'], function (logManager) {
 
     //set the 'connectors' DISPLAY property to TRUE
     DecoratorBase.prototype.showConnectors = function () {
-        this.connectors.appendTo(this.$el);
+        this.$connectors.appendTo(this.$el);
     };
 
     //set the 'connectors' DISPLAY property to FALSE
     DecoratorBase.prototype.hideConnectors = function () {
-        this.connectors.detach();
+        this.$connectors.detach();
     };
 
     //called when the designer items becomes selected

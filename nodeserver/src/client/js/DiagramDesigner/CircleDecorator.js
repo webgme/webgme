@@ -28,7 +28,7 @@ define(['logManager',
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    CircleDecorator.prototype._DOMBase = $(circleDecoratorTemplate);
+    CircleDecorator.prototype.$_DOMBase = $(circleDecoratorTemplate);
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
     CircleDecorator.prototype.on_render = function () {

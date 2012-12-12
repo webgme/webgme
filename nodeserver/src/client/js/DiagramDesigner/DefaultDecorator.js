@@ -28,7 +28,7 @@ define(['logManager',
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    DefaultDecorator.prototype._DOMBase = $(defaultDecoratorTemplate);
+    DefaultDecorator.prototype.$_DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_render = function () {
         __parent_proto__.on_render.apply(this, arguments);
