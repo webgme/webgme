@@ -44,11 +44,11 @@ define(['logManager'], function (logManager) {
         this._initializeDecorator(objDescriptor, decoratorClass);
     };
 
-    DesignerItem.prototype._DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
+    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it
-        this.$el = this._DOMBase.clone();
+        this.$el = this.$_DOMBase.clone();
 
         //set additional CSS properties
         this.$el.attr({"id": this.id});
