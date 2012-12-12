@@ -52,6 +52,14 @@ define(['logManager',
 
         this.skinParts.$name.css({"top": 45,
                                    "left": shift });
+
+        //finally let the parent decorator class do its job
+        __parent_proto__.on_afterAdded.apply(this, arguments);
+    };
+
+    CircleDecorator.prototype.calculateDimension = function () {
+        this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
+        this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
     };
 
     return CircleDecorator;

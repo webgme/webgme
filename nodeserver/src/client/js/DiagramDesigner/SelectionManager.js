@@ -194,9 +194,9 @@ define(['logManager',
         for (i in items) {
             if (items.hasOwnProperty(i)) {
                 //TODO: remove stupid commenting
-                /*if (selectionContainsBBox(items[i].getBoundingBox())) {*/
-                    //itemsInSelection.push(i);
-                /*}*/
+                if (selectionContainsBBox(items[i].getBoundingBox())) {
+                    itemsInSelection.push(i);
+                }
             }
         }
 

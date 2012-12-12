@@ -29,8 +29,12 @@ define(['logManager'], function (logManager) {
         this.selected = false;
         this.selectedInMultiSelection = false;
 
+        //location and dimension information
         this.position = {"x": objDescriptor.position.x,
             "y": objDescriptor.position.y};
+
+        this.width = 0;
+        this.height = 0;
 
         objDescriptor.designerItem = this;
         delete objDescriptor.DecoratorClass;
@@ -168,6 +172,17 @@ define(['logManager'], function (logManager) {
         this.logger.debug("destroyed");
     };
 
+    DesignerItem.prototype.getBoundingBox = function () {
+        var bBox = { "x": this.position.x,
+            "y": this.position.y,
+            "width": this.width,
+            "height": this.height };
+        bBox.x2 = bBox.x + bBox.width;
+        bBox.y2 = bBox.y + bBox.height;
+
+        return bBox;
+    };
+
     DesignerItem.prototype.onMouseEnter = function (event) {
         var classes = [HOVER_CLASS];
 
@@ -256,7 +271,7 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype._callDecoratorMethod = function (fnName, args) {
-        var result = false;
+        var result = null;
 
         if (this._decoratorInstance) {
             if (_.isFunction(this._decoratorInstance[fnName])) {

@@ -36,6 +36,12 @@ define(['logManager'], function (logManager) {
 
     //Called after the host designer item is added to the canvas DOM and rendered
     DecoratorBase.prototype.on_afterAdded = function () {
+        this.calculateDimension();
+    };
+
+    DecoratorBase.prototype.calculateDimension = function () {
+        this.hostDesignerItem.width = this.$el.outerWidth(true);
+        this.hostDesignerItem.height = this.$el.outerHeight(true);
     };
 
     //in the destroy there is no need to touch the UI, it will be cleared out
