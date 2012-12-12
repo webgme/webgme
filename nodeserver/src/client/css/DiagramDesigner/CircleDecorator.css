@@ -1,0 +1,46 @@
+/* MAKE SURE TO ADJUST THE 'CANVAS_SIZE' ATTRIBUTE IN CIRCLEDECORATOR.JS */
+.circle-decorator {
+  text-align: center; }
+  .circle-decorator .name {
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: absolute; }
+  .circle-decorator .circle-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0; }
+  .circle-decorator #circleCanvas {
+    position: absolute;
+    top: 0;
+    left: 0; }
+  .circle-decorator .connector {
+    box-sizing: border-box;
+    background-color: #fefefe;
+    height: 12px;
+    width: 12px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    display: none; }
+    .circle-decorator .connector:hover {
+      border-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+    .circle-decorator .connector.top {
+      top: -6px;
+      left: 14px; }
+    .circle-decorator .connector.bottom {
+      top: 34px;
+      left: 14px; }
+    .circle-decorator .connector.left {
+      top: 14px;
+      left: -6px; }
+    .circle-decorator .connector.right {
+      top: 14px;
+      left: 34px; }
+
+.onhover .circle-decorator #circleCanvas {
+  background-color: #FF0000; }

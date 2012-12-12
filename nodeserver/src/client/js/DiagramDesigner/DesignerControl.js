@@ -3,10 +3,12 @@
 define(['logManager',
     'clientUtil',
     'js/DiagramDesigner/NodePropertyNames',
-    'js/DiagramDesigner/DefaultDecorator'], function (logManager,
+    'js/DiagramDesigner/DefaultDecorator',
+    'js/DiagramDesigner/CircleDecorator'], function (logManager,
                                                         util,
                                                         nodePropertyNames,
-                                                        DefaultDecorator) {
+                                                        DefaultDecorator,
+                                                        CircleDecorator) {
 
     var DesignerControl;
 
@@ -68,6 +70,10 @@ define(['logManager',
         }
     };
 
+    var counter = 0;
+    var decorators = [DefaultDecorator, CircleDecorator];
+    var decLength = decorators.length;
+
     DesignerControl.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
@@ -109,7 +115,10 @@ define(['logManager',
                 }
 
                 objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "SimpleModelDecorator";
-                objDescriptor.DecoratorClass = DefaultDecorator;
+
+                //TODO: alternationg decorators
+                objDescriptor.DecoratorClass = decorators[counter % decLength];
+                counter++;
             }
         }
 

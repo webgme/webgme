@@ -58,6 +58,40 @@ define([], function () {
         }
     });
 
+    // Canvas drawing extension
+    if (!!document.createElement('canvas').getContext) {
+        $.extend(CanvasRenderingContext2D.prototype, {
+
+            ellipse: function (aX, aY, r1, r2, fillIt) {
+                aX = aX - r1;
+                aY = aY - r2;
+
+                var aWidth = r1*2;
+                var aHeight = r2*2;
+
+                var hB = (aWidth / 2) * .5522848,
+                    vB = (aHeight / 2) * .5522848,
+                    eX = aX + aWidth,
+                    eY = aY + aHeight,
+                    mX = aX + aWidth / 2,
+                    mY = aY + aHeight / 2;
+                this.beginPath();
+                this.moveTo(aX, mY);
+                this.bezierCurveTo(aX, mY - vB, mX - hB, aY, mX, aY);
+                this.bezierCurveTo(mX + hB, aY, eX, mY - vB, eX, mY);
+                this.bezierCurveTo(eX, mY + vB, mX + hB, eY, mX, eY);
+                this.bezierCurveTo(mX - hB, eY, aX, mY + vB, aX, mY);
+                this.closePath();
+                if (fillIt) this.fill();
+                this.stroke();
+            },
+
+            circle: function(aX, aY, aDiameter, fillIt) {
+                this.ellipse(aX, aY, aDiameter, aDiameter, fillIt)
+            }
+        });
+    }
+
     /*
      *
      * Getting textwidth

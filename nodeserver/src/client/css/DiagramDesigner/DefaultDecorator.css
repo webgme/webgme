@@ -1,0 +1,38 @@
+.default-decorator {
+  min-width: 65px;
+  height: 40px;
+  border: 2px solid black;
+  background-color: #dedede;
+  padding: 3px;
+  text-align: center;
+  position: absolute; }
+  .default-decorator .name {
+    margin-top: 10px;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center; }
+  .default-decorator .connector {
+    box-sizing: border-box;
+    background-color: #fefefe;
+    height: 12px;
+    width: 12px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    display: none;
+    margin-left: -6px;
+    left: 50%; }
+    .default-decorator .connector:hover {
+      border-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+    .default-decorator .connector.top {
+      top: -6px; }
+    .default-decorator .connector.bottom {
+      bottom: -6px; }
+
+.onhover .default-decorator {
+  background-color: #FF0000; }

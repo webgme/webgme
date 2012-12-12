@@ -2,110 +2,80 @@
 
 define(['logManager',
     'clientUtil',
-    'text!js/DiagramDesigner/DefaultDecoratorTemplate.html'], function (logManager,
+    'text!js/DiagramDesigner/DefaultDecoratorTemplate.html',
+    'css!DiagramDesignerCSS/DefaultDecorator'], function (logManager,
                                                        util,
                                                        defaultDecoratorTemplate) {
 
     var DefaultDecorator;
 
     DefaultDecorator = function (objectDescriptor) {
-        /*this._project = objectDescriptor.client;
-        this._id = objectDescriptor.id;
-        this._name = objectDescriptor.name;
-        this._ownerComponent = objectDescriptor.ownerComponent;*/
+        this.id = objectDescriptor.id;
+        this.hostDesignerItem = objectDescriptor.designerItem;
+        this.name = objectDescriptor.name || "";
 
-        this._skinParts = {};
+        this.skinParts = {};
 
-        this._logger = logManager.create("DefaultDecorator_" + this._id);
-        this._logger.debug("Created");
+        this.connectors = null;
+
+        this.logger = logManager.create("DefaultDecorator_" + this.id);
+        this.logger.debug("Created");
+    };
+
+    //Called before the host designer item is added to the canvas DOM
+    DefaultDecorator.prototype.on_addTo = function () {
 
     };
 
-    DefaultDecorator.prototype.render = function () {
+    //Called right after on_addTo and before the host designer item is added to the canvas DOM
+    DefaultDecorator.prototype.on_render = function () {
+        this.$el = this._DOMBase.clone();
+        this.$hostEl = this.hostDesignerItem.$el;
+
+        //find components
+        this.skinParts.name = this.$el.find(".name");
+        this.skinParts.name.text(this.name);
+
+        this.connectors = this.$el.find(".connector");
+        this.connectors.hide();
+    };
+
+    //Called after the host designer item is added to the canvas DOM and rendered
+    DefaultDecorator.prototype.on_afterAdded = function () {
+
     };
 
     DefaultDecorator.prototype._DOMBase = $(defaultDecoratorTemplate);
 
-    DefaultDecorator.prototype._initializeUI = function () {
-        var self = this;
-
-        this.modelComponentEl = this._ownerComponent.el;
-        this.modelComponentEl.append(this._DOMBase.clone());
-
-        //find components
-        this._skinParts.title = this.modelComponentEl.find(".modelTitle");
-        this._skinParts.attributesContainer = this.modelComponentEl.find(".attributes");
-
-        this._skinParts.bottomConnRect = this.modelComponentEl.find(".myConnRect.bottom");
-        this._skinParts.topConnRect = this.modelComponentEl.find(".myConnRect.top");
-
-        this._skinParts.connEndPointLeft =  this.modelComponentEl.find(".connEndPoint.left");
-        this._skinParts.connEndPointRight =  this.modelComponentEl.find(".connEndPoint.right");
-        this._skinParts.connEndPointTop =  this.modelComponentEl.find(".connEndPoint.top");
-        this._skinParts.connEndPointBottom =  this.modelComponentEl.find(".connEndPoint.bottom");
-
-        //set additional attributes
-        this.modelComponentEl.attr({"data-id": this._id});
-        this.modelComponentEl.addClass("modelDefault finishConn");
-
-        this._skinParts.bottomConnRect.attr({"data-id": this._id});
-        this._skinParts.topConnRect.attr({"data-id": this._id});
-
-        this._skinParts.connEndPointLeft.attr({"data-id": this._id});
-        this._skinParts.connEndPointRight.attr({"data-id": this._id});
-        this._skinParts.connEndPointTop.attr({"data-id": this._id});
-        this._skinParts.connEndPointBottom.attr({"data-id": this._id});
-
-        this._skinParts.title.text(this._name);
-
-        //hook up double click for node title edit
-        this._skinParts.title.dblclick(function (event) {
-            self._editNodeTitle.call(self);
-            event.stopPropagation();
-            event.preventDefault();
-        });
-    };
-
-    DefaultDecorator.prototype.afterAppend = function () {
-    };
-
-    DefaultDecorator.prototype.update = function (objDescriptor) {
-        //we handle the updates in our own territory update handler
-        //by default the update should be handled here
-        //and once it finishes, call back
-        if (this._name !== objDescriptor.name) {
-            this._name = objDescriptor.name;
-            this._skinParts.title.text(this._name);
-        }
-
-        this._ownerComponent.decoratorUpdated();
-    };
-
-    DefaultDecorator.prototype._editNodeTitle = function () {
-        var self = this,
-            alreadyEdit = this._skinParts.title.find(":input").length > 0;
-
-        if (alreadyEdit === true) {
-            return;
-        }
-
-        // Replace node with <input>
-        this._skinParts.title.editInPlace("modelTitle", function (newTitle) {
-            self._project.setAttributes(self._id, "name", newTitle);
-            self._refreshChildrenContainer();
-            self._ownerComponent.decoratorUpdated();
-        });
-    };
-
     //in the destroy there is no need to touch the UI, it will be cleared out
-    //release the territory, release everything needs to be released and return
     DefaultDecorator.prototype.destroy = function () {
-        this._logger.debug("Destroyed");
+        this.logger.debug("Destroyed");
     };
 
-    DefaultDecorator.prototype.renderPartBrowserItem = function () {
-        return $('<div class="modelDefault"><div class="modelTitle">' + this._name + '</div></div>');
+    DefaultDecorator.prototype.onMouseEnter = function (event) {
+        this.logger.debug("DefaultDecorator_onMouseEnter: " + this.id);
+
+        this.showConnectors();
+
+        return true;
     };
+
+    DefaultDecorator.prototype.onMouseLeave = function (event) {
+        this.logger.debug("DefaultDecorator_onMouseLeave: " + this.id);
+
+        this.hideConnectors();
+
+        return true;
+    };
+
+    DefaultDecorator.prototype.showConnectors = function () {
+        this.connectors.show();
+    };
+
+    DefaultDecorator.prototype.hideConnectors = function () {
+        this.connectors.hide();
+    };
+
 
 
     return DefaultDecorator;

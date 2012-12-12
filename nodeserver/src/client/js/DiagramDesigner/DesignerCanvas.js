@@ -30,9 +30,7 @@ define(['logManager',
         this._title = "";
         this._redrawEnabled = true;
 
-        this.items = {};
-        this.itemIds = [];
-        this.connectionIds = [];
+        this._initializeCollections();
 
         //initialize UI
         this.initializeUI();
@@ -45,6 +43,12 @@ define(['logManager',
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
 
         this.logger.debug("DesignerCanvas ctor finished");
+    };
+
+    DesignerCanvas.prototype._initializeCollections = function () {
+        this.items = {};
+        this.itemIds = [];
+        this.connectionIds = [];
     };
 
     /****************** PUBLIC FUNCTIONS ***********************************/
@@ -190,18 +194,16 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.clear = function () {
-        /*var i;
+        var i;
 
-        this._hideSelectionOutline();
-
-        for (i in this._childComponents) {
-            if (this._childComponents.hasOwnProperty(i)) {
-                this.deleteComponent(i);
+        for (i in this.items) {
+            if (this.items.hasOwnProperty(i)) {
+                this.items[i].destroy();
             }
         }
 
         //initialize all the required collections with empty value
-        this._initializeCollections();*/
+        this._initializeCollections();
     };
 
     DesignerCanvas.prototype.updateCanvas = function (desc) {
@@ -253,8 +255,9 @@ define(['logManager',
 
         newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
         newComponent._initialize(objDescriptor);
-        newComponent.render();
-        newComponent.el.appendTo(this.skinParts.$itemsContainer);
+        //newComponent.render();
+        newComponent.addTo(this.skinParts.$itemsContainer);
+        //newComponent.el.appendTo(this.skinParts.$itemsContainer);
 
         return newComponent;
     };
