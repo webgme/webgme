@@ -5,7 +5,8 @@ define(['logManager'], function (logManager) {
     var DesignerItem,
         DESIGNER_ITEM_CLASS = "designer-item",
         EVENT_POSTFIX = "DesignerItem",
-        HOVER_CLASS = "hover";
+        HOVER_CLASS = "hover",
+        SELECTABLE_CLASS = "selectable";
 
     DesignerItem = function (objId) {
         this.id = objId;
@@ -25,6 +26,8 @@ define(['logManager'], function (logManager) {
 
         /*instance variables*/
         this._decoratorInstance = null;
+        this.selected = false;
+        this.selectedInMultiSelection = false;
 
         this.position = {"x": objDescriptor.position.x,
             "y": objDescriptor.position.y};
@@ -57,32 +60,47 @@ define(['logManager'], function (logManager) {
         var i,
             self = this;
 
-        this._events = {"mouseenter": "onMouseEnter",
-                        "mouseleave": "onMouseLeave" };
+        this._events = {"mouseenter": { "fn": "onMouseEnter",
+                                        "stopPropagation": true,
+                                        "preventDefault": true },
+                        "mouseleave": { "fn": "onMouseLeave",
+                                        "stopPropagation": true,
+                                        "preventDefault": true },
+                        "mousedown": { "fn": "onMouseDown",
+                                        "stopPropagation": true,
+                                        "preventDefault": true },
+                        "mouseup": { "fn": "onMouseUp",
+                                    "stopPropagation": false,
+                                    "preventDefault": true } };
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
                 this.$el.on( i + '.' + EVENT_POSTFIX, null, null, function (event) {
-                    var eventHandler = self._events[event.type],
+                    var eventHandlerOpts = self._events[event.type],
                         result = true;
 
-                    if (eventHandler) {
+                    if (eventHandlerOpts) {
                         //call pre-decorator event handler (if exist)
-                        if ($.isFunction(self[eventHandler])) {
-                            result = self[eventHandler].call(self, event);
+                        if ($.isFunction(self[eventHandlerOpts.fn])) {
+                            result = self[eventHandlerOpts.fn].call(self, event);
                         }
 
                         //call decorator's handle if needed
                         if (result === true) {
-                            if ($.isFunction(self._decoratorInstance[eventHandler])) {
-                                result = self._decoratorInstance[eventHandler].call(self._decoratorInstance, event);
+                            if ($.isFunction(self._decoratorInstance[eventHandlerOpts.fn])) {
+                                result = self._decoratorInstance[eventHandlerOpts.fn].call(self._decoratorInstance, event);
                             }
                         }
-                    }
 
-                    //finally marked handled
-                    event.stopPropagation();
-                    event.preventDefault();
+                        //finally marked handled if needed
+                        if (eventHandlerOpts.stopPropagation === true) {
+                            event.stopPropagation();
+                        }
+
+                        if (eventHandlerOpts.preventDefault === true) {
+                            event.preventDefault();
+                        }
+                    }
                 });
             }
         }
@@ -99,23 +117,35 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.onMouseEnter = function (event) {
-        this.logger.debug("_onMouseEnter: " + this.id);
+        var classes = [HOVER_CLASS];
 
-        //TODO: does it needs to be called when the item is selected / part of multiple selection
+        this.logger.debug("onMouseEnter: " + this.id);
+
+        if (this.canvas.selectionManager.allowSelection === true) {
+            classes.push(SELECTABLE_CLASS);
+        }
 
         //pre-decorator handle
-        this.$el.addClass(HOVER_CLASS);
+        this.$el.addClass(classes.join(' '));
 
-        return true;
+        return this.selectedInMultiSelection === false;
     };
 
     DesignerItem.prototype.onMouseLeave = function (event) {
-        this.logger.debug("_onMouseLeave: " + this.id);
+        var classes = [HOVER_CLASS, SELECTABLE_CLASS];
 
-        //TODO: does it needs to be called when the item is selected / part of multiple selection
+        this.logger.debug("onMouseLeave: " + this.id);
 
         //pre-decorator handle
-        this.$el.removeClass(HOVER_CLASS);
+        this.$el.removeClass(classes.join(' '));
+
+        return this.selectedInMultiSelection === false;
+    };
+
+    DesignerItem.prototype.onMouseDown = function (event) {
+        this.logger.debug("onMouseDown: " + this.id);
+
+        this.canvas.onItemMouseDown(event, this.id);
 
         return true;
     };
@@ -182,13 +212,27 @@ define(['logManager'], function (logManager) {
         this.logger.debug("destroyed");
     };
 
-/*    DesignerItem.prototype.onSelect = function () {
-        this.el.addClass("selected");
+    DesignerItem.prototype.onSelect = function (multiSelection) {
+        this.selected = true;
+        this.selectedInMultiSelection = multiSelection;
+        this.$el.addClass("selected");
+
+        //let the decorator know that this item become selected
+        if ($.isFunction(this._decoratorInstance.onSelect)) {
+            this._decoratorInstance.onSelect();
+        }
     };
 
     DesignerItem.prototype.onDeselect = function () {
-        this.el.removeClass("selected");
-    };*/
+        this.selected = false;
+        this.selectedInMultiSelection = false;
+        this.$el.removeClass("selected");
+
+        //let the decorator know that this item become deselected
+        if ($.isFunction(this._decoratorInstance.onDeselect)) {
+            this._decoratorInstance.onDeselect();
+        }
+    };
 
     return DesignerItem;
 });

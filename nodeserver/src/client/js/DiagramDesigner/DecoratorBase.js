@@ -76,5 +76,11 @@ define(['logManager'], function (logManager) {
         this.connectors.hide();
     };
 
+    DecoratorBase.prototype.onSelect = function () {
+        if (this.hostDesignerItem.selectedInMultiSelection) {
+            this.connectors.hide();
+        }
+    };
+
     return DecoratorBase;
 });

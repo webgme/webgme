@@ -280,5 +280,19 @@ define(['logManager',
             "y": pY };
     };
 
+    DesignerCanvas.prototype.onItemMouseDown = function (event, itemId) {
+        this.logger.debug("onItemMouseDown: " + itemId);
+
+        //mousedown initiates a component selection
+        this.selectionManager.setSelection([itemId], event);
+
+        event.stopPropagation();
+        event.preventDefault();
+    };
+
+    DesignerCanvas.prototype.showSelectionOutline = function () {
+
+    };
+
     return DesignerCanvas;
 });

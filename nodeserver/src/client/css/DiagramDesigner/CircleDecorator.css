@@ -42,5 +42,13 @@
       top: 14px;
       left: 34px; }
 
-.onhover .circle-decorator #circleCanvas {
-  background-color: #FF0000; }
+.selectable .circle-decorator {
+  cursor: pointer; }
+
+.selected .circle-decorator #circleCanvas {
+  border-width: 2px;
+  border-style: solid;
+  border-color: #52a8ec;
+  background-color: #dbeafc;
+  margin-top: -2px;
+  margin-left: -2px; }

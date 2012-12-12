@@ -41,7 +41,7 @@ define(['logManager',
         this.skinParts.$arrowCanvas[0].width = CANVAS_SIZE;
         var ctx = this.skinParts.$arrowCanvas[0].getContext('2d');
         if(ctx) {
-            ctx.circle(20,20,19, true);
+            ctx.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1, true);
         }
     };
 

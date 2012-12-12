@@ -1,6 +1,10 @@
 @import "Connector";
 
 $canvas-canvas-size: 40px; /* MAKE SURE TO ADJUST THE 'CANVAS_SIZE' ATTRIBUTE IN CIRCLEDECORATOR.JS */
+$selected-background-color: #DBEAFC;
+$selected-border-width: 2px;
+$selected-border-style: solid;
+$selected-border-color: #52A8EC;
 
 .circle-decorator {
   text-align: center;
@@ -50,10 +54,23 @@ $canvas-canvas-size: 40px; /* MAKE SURE TO ADJUST THE 'CANVAS_SIZE' ATTRIBUTE IN
   }
 }
 
-.onhover {
+.selectable {
+  .circle-decorator {
+    cursor: pointer;
+  }
+}
+
+.selected {
   .circle-decorator {
     #circleCanvas {
-      background-color: #FF0000;
+      border: {
+        width: $selected-border-width;
+        style: $selected-border-style;
+        color: $selected-border-color;
+      }
+      background-color: $selected-background-color;
+      margin-top: $selected-border-width * -1;
+      margin-left: $selected-border-width * -1;
     }
   }
 }

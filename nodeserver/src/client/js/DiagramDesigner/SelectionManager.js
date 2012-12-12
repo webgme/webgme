@@ -19,6 +19,10 @@ define(['logManager',
 
         this.selectedItemIdList = [];
 
+        this.allowRubberBandSelection = true;
+        this.allowSelection = true;
+        this.allowMultiSelection = true;
+
         this.logger.debug("SelectionManager ctor finished");
     };
 
@@ -27,11 +31,15 @@ define(['logManager',
 
         this.$el = $el;
 
-        //hook up mousedown on background
-        $el.on('mousedown.SelectionManager', function (event) {
-            self._onBackgroundMouseDown(event);
-        });
+        if (this.allowRubberBandSelection === true) {
+            //hook up mousedown on background
+            $el.on('mousedown.SelectionManager', function (event) {
+                self._onBackgroundMouseDown(event);
+            });
+        }
     };
+
+    /*********************** RUBBERBAND SELECTION *************************************/
 
     SelectionManager.prototype._onBackgroundMouseDown = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event),
@@ -111,7 +119,7 @@ define(['logManager',
 
             this._drawSelectionRubberBand();
 
-            params = {"ctrlPressed": event.ctrlKey || event.metaKey,
+            params = {"event": event,
                 "x": Math.min(this.rubberbandSelection.x, this.rubberbandSelection.x2),
                 "x2": Math.max(this.rubberbandSelection.x, this.rubberbandSelection.x2),
                 "y": Math.min(this.rubberbandSelection.y, this.rubberbandSelection.y2),
@@ -125,26 +133,6 @@ define(['logManager',
 
             delete this.rubberbandSelection;
         }
-    };
-
-    SelectionManager.prototype._clearSelection = function () {
-        var i = this.selectedItemIdList.length,
-            itemId,
-            items = this.canvas.items,
-            item;
-
-        while (i--) {
-            itemId = this.selectedItemIdList[i];
-            item = items[itemId];
-
-            if (item) {
-                if ($.isFunction(item.onDeselect)) {
-                    item.onDeselect();
-                }
-            }
-        }
-
-        this.selectedItemIdList = [];
     };
 
     SelectionManager.prototype._drawSelectionRubberBand = function () {
@@ -175,7 +163,8 @@ define(['logManager',
                 "x2": params.x2,
                 "y2": params.y2 },
             itemsInSelection = [],
-            selectionContainsBBox;
+            selectionContainsBBox,
+            items = this.canvas.items;
 
         this.logger.debug("Select children by rubber band: [" + rbBBox.x + "," + rbBBox.y + "], [" + rbBBox.x2 + "," + rbBBox.y2 + "]");
 
@@ -202,17 +191,144 @@ define(['logManager',
             return false;
         };
 
-        for (i in this.canvas.items) {
-            if (this.canvas.items.hasOwnProperty(i)) {
-                if (selectionContainsBBox(this.canvas.items[i].getBoundingBox())) {
-                    itemsInSelection.push(i);
-                }
+        for (i in items) {
+            if (items.hasOwnProperty(i)) {
+                //TODO: remove stupid commenting
+                /*if (selectionContainsBBox(items[i].getBoundingBox())) {*/
+                    //itemsInSelection.push(i);
+                /*}*/
             }
         }
 
         if (itemsInSelection.length > 0) {
-            this._setSelection(itemsInSelection, params.ctrlPressed);
+            this.setSelection(itemsInSelection, params.event);
         }
+    };
+
+    /*********************** END OF - RUBBERBAND SELECTION *************************************/
+
+    SelectionManager.prototype._clearSelection = function () {
+        var i = this.selectedItemIdList.length,
+            itemId,
+            items = this.canvas.items,
+            item;
+
+        while (i--) {
+            itemId = this.selectedItemIdList[i];
+            item = items[itemId];
+
+            if (item) {
+                if ($.isFunction(item.onDeselect)) {
+                    item.onDeselect();
+                }
+            }
+        }
+
+        this.selectedItemIdList = [];
+    };
+
+    SelectionManager.prototype.setSelection = function (idList, event) {
+        var i,
+            multiSelectionModifier = event.ctrlKey || event.metaKey,
+            len = idList.length,
+            item,
+            items = this.canvas.items,
+            itemId;
+
+        this.logger.debug("setSelection: " + idList + ", multiSelectionModifier: " + multiSelectionModifier);
+
+        if (this.allowSelection !== true) {
+            this.logger.debug("Selection of items are not allowed...");
+        } else {
+            if (len > 0) {
+
+                //if multiple selection is not allowed for any reason
+                // - clear current selection
+                // - keep the first item from the list since only 1 item can be selected
+                if (this.allowMultiSelection !== true) {
+                    this._clearSelection();
+                    idList.splice(0, len - 1);
+                    len = 1;
+                } else {
+                    //by definition multiselection is allowed
+                    //check if user pressed the necessary modifier keys for multiselection
+                    if (multiSelectionModifier === true) {
+                        //if not in the selection yet, add IDs to the selection
+
+                        //first let the already selected items know that they are participating in a multiple selection from now on
+                        i = this.selectedItemIdList.length;
+                        while(i--) {
+                            item = items[this.selectedItemIdList[i]];
+
+                            if ($.isFunction(item.onDeselect)) {
+                                item.onDeselect();
+                            }
+
+                            if ($.isFunction(item.onSelect)) {
+                                item.onSelect(true);
+                            }
+                        }
+
+                        i = idList.length;
+                        len = idList.length + this.selectedItemIdList.length;
+
+                        while (i--) {
+                            itemId = idList[i];
+
+                            if (this.selectedItemIdList.indexOf(itemId) === -1) {
+                                this.selectedItemIdList.push(itemId);
+
+                                item = items[itemId];
+
+                                if ($.isFunction(item.onSelect)) {
+                                    item.onSelect(len > 1);
+                                }
+
+                                if (idList.length === 1) {
+                                    this._lastSelected = idList[0];
+                                }
+                            }
+                        }
+                    } else {
+                        //multiselection modifier key is not pressed
+                        if (idList.length > 1) {
+                            this._clearSelection();
+
+                            i = idList.length;
+                            while(i--) {
+                                itemId = idList[i];
+                                item = items[itemId];
+
+                                this.selectedItemIdList.push(itemId);
+
+                                if ($.isFunction(item.onSelect)) {
+                                    item.onSelect(true);
+                                }
+                            }
+                        } else {
+                            itemId = idList[0];
+
+                            //if not yet in selection
+                            if (this.selectedItemIdList.indexOf(itemId) === -1) {
+                                this._clearSelection();
+
+                                this.selectedItemIdList.push(itemId);
+
+                                item = items[itemId];
+
+                                if ($.isFunction(item.onSelect)) {
+                                    item.onSelect(false);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        this.logger.debug("selected items: " + this.selectedItemIdList);
+
+        this.canvas.showSelectionOutline();
     };
 
     return SelectionManager;
