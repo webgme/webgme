@@ -81,15 +81,13 @@ define(['logManager'], function (logManager) {
 
                     if (eventHandlerOpts) {
                         //call pre-decorator event handler (if exist)
-                        if ($.isFunction(self[eventHandlerOpts.fn])) {
+                        if (_.isFunction(self[eventHandlerOpts.fn])) {
                             result = self[eventHandlerOpts.fn].call(self, event);
                         }
 
                         //call decorator's handle if needed
                         if (result === true) {
-                            if ($.isFunction(self._decoratorInstance[eventHandlerOpts.fn])) {
-                                result = self._decoratorInstance[eventHandlerOpts.fn].call(self._decoratorInstance, event);
-                            }
+                            result = self._callDecoratorMethod(eventHandlerOpts.fn, event);
                         }
 
                         //finally marked handled if needed
@@ -116,40 +114,6 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    DesignerItem.prototype.onMouseEnter = function (event) {
-        var classes = [HOVER_CLASS];
-
-        this.logger.debug("onMouseEnter: " + this.id);
-
-        if (this.canvas.selectionManager.allowSelection === true) {
-            classes.push(SELECTABLE_CLASS);
-        }
-
-        //pre-decorator handle
-        this.$el.addClass(classes.join(' '));
-
-        return this.selectedInMultiSelection === false;
-    };
-
-    DesignerItem.prototype.onMouseLeave = function (event) {
-        var classes = [HOVER_CLASS, SELECTABLE_CLASS];
-
-        this.logger.debug("onMouseLeave: " + this.id);
-
-        //pre-decorator handle
-        this.$el.removeClass(classes.join(' '));
-
-        return this.selectedInMultiSelection === false;
-    };
-
-    DesignerItem.prototype.onMouseDown = function (event) {
-        this.logger.debug("onMouseDown: " + this.id);
-
-        this.canvas.onItemMouseDown(event, this.id);
-
-        return true;
-    };
-
     DesignerItem.prototype._initializeDecorator = function (objDescriptor, DecoratorClass) {
         //decorator class downloaded, attach it to the designeritem
         this._decoratorInstance = new DecoratorClass(objDescriptor);
@@ -164,9 +128,7 @@ define(['logManager'], function (logManager) {
 
             this._containerElement = cElement;
 
-            if ($.isFunction(this._decoratorInstance.on_addTo)) {
-                this._decoratorInstance.on_addTo.call(this._decoratorInstance);
-            }
+            this._callDecoratorMethod("on_addTo");
 
             this.render();
 
@@ -178,18 +140,12 @@ define(['logManager'], function (logManager) {
 
             this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
 
-            if ($.isFunction(this._decoratorInstance.on_afterAdded)) {
-                this._decoratorInstance.on_afterAdded.call(this._decoratorInstance);
-            }
+            this._callDecoratorMethod("on_afterAdded");
         }
     };
 
     DesignerItem.prototype.render = function () {
-        if (this._decoratorInstance) {
-            if ($.isFunction(this._decoratorInstance.on_render)) {
-                this._decoratorInstance.on_render.call(this._decoratorInstance);
-            }
-        }
+        this._callDecoratorMethod("on_render");
     };
 
     DesignerItem.prototype._remove = function() {
@@ -212,15 +168,72 @@ define(['logManager'], function (logManager) {
         this.logger.debug("destroyed");
     };
 
+    DesignerItem.prototype.onMouseEnter = function (event) {
+        var classes = [HOVER_CLASS];
+
+        this.logger.debug("onMouseEnter: " + this.id);
+
+        if (this.canvas.selectionManager.allowSelection === true) {
+            classes.push(SELECTABLE_CLASS);
+        }
+
+        //pre-decorator handle
+        this.$el.addClass(classes.join(' '));
+
+        //in edit mode and when not participating in a multiple selection,
+        //show connectors
+        if (this.canvas.getIsReadOnlyMode() === false) {
+            if (this.selectedInMultiSelection === false) {
+                this.showConnectors();
+            }
+        }
+
+        return true
+    };
+
+    DesignerItem.prototype.onMouseLeave = function (event) {
+        var classes = [HOVER_CLASS, SELECTABLE_CLASS];
+
+        this.logger.debug("onMouseLeave: " + this.id);
+
+        //pre-decorator handle
+        this.$el.removeClass(classes.join(' '));
+
+        //when not currently selected, hide connectors
+        if (this.selected === false) {
+            this.hideConnectors();
+        }
+
+        return true;
+    };
+
+    DesignerItem.prototype.onMouseDown = function (event) {
+        this.logger.debug("onMouseDown: " + this.id);
+
+        this.canvas.onItemMouseDown(event, this.id);
+
+        return true;
+    };
+
     DesignerItem.prototype.onSelect = function (multiSelection) {
         this.selected = true;
         this.selectedInMultiSelection = multiSelection;
         this.$el.addClass("selected");
 
-        //let the decorator know that this item become selected
-        if ($.isFunction(this._decoratorInstance.onSelect)) {
-            this._decoratorInstance.onSelect();
+        //in edit mode and when not participating in a multiple selection,
+        //show connectors
+        if (this.selectedInMultiSelection === true) {
+            this.hideConnectors();
+        } else {
+            if (this.canvas.getIsReadOnlyMode() === false) {
+                this.showConnectors();
+            } else {
+                this.hideConnectors();
+            }
         }
+
+        //let the decorator know that this item become selected
+        this._callDecoratorMethod("onSelect");
     };
 
     DesignerItem.prototype.onDeselect = function () {
@@ -228,10 +241,34 @@ define(['logManager'], function (logManager) {
         this.selectedInMultiSelection = false;
         this.$el.removeClass("selected");
 
+        this.hideConnectors();
+
         //let the decorator know that this item become deselected
-        if ($.isFunction(this._decoratorInstance.onDeselect)) {
-            this._decoratorInstance.onDeselect();
+        this._callDecoratorMethod("onDeselect");
+    };
+
+    DesignerItem.prototype.showConnectors = function () {
+        this._callDecoratorMethod("showConnectors");
+    };
+
+    DesignerItem.prototype.hideConnectors = function () {
+        this._callDecoratorMethod("hideConnectors");
+    };
+
+    DesignerItem.prototype._callDecoratorMethod = function (fnName, args) {
+        var result = false;
+
+        if (this._decoratorInstance) {
+            if (_.isFunction(this._decoratorInstance[fnName])) {
+                result = this._decoratorInstance[fnName].apply(this._decoratorInstance, args);
+            } else {
+                this.logger.warning("DecoratorInstance '" + $.type(this._decoratorInstance) + "' does not have a method with name '" + fnName + "'...");
+            }
+        } else {
+            this.logger.error("DecoratorInstance does not exist...");
         }
+
+        return result;
     };
 
     return DesignerItem;

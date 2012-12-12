@@ -51,6 +51,18 @@ define(['logManager',
         this.connectionIds = [];
     };
 
+    DesignerCanvas.prototype.getIsReadOnlyMode = function () {
+        return this._readOnlyMode;
+    };
+
+    DesignerCanvas.prototype.setIsReadOnlyMode = function (readOnly) {
+        if (this._readOnlyMode !== readOnly) {
+            this._readOnlyMode = readOnly;
+
+            //TODO: UPDATE EVERYTHING
+        }
+    };
+
     /****************** PUBLIC FUNCTIONS ***********************************/
 
         //Called when the browser window is resized
