@@ -357,6 +357,10 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 				--done;
 				next(null);
 			}
+			
+			if( unresolved.length === 0 ) {
+				callback(null);
+			}
 		};
 
 		var stream = FS.createReadStream(filename);

@@ -14,7 +14,7 @@ define(function () {
 			host: "129.59.105.239", // cloud
 			port: 27017,
 			database: "test",
-			collection: "storage"
+			collection: "miklos"
 		},
 
 		parser: {
