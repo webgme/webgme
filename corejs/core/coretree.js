@@ -313,6 +313,8 @@ UTIL, FUTURE) {
 				children: [],
 				data: EMPTY_DATA
 			};
+
+			// TODO: make sure that it is not on the list
 			node.children.push(child);
 
 			__ageRoots();
