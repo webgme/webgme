@@ -137,22 +137,28 @@ define(function () {
 			var callback = args[--args.length];
 			ASSERT(typeof callback === "function");
 
+			var value;
+
 			try {
-				var value = func.apply(this, args);
-				if( isUnresolved(value) ) {
-					setListener(value, function (value) {
-						if( value instanceof Error ) {
-							callback(value);
-						}
-						else {
-							callback(null, value);
-						}
-					}, null);
-					return;
-				}
+				value = func.apply(this, args);
 			}
 			catch(error) {
 				callback(error);
+				return;
+			}
+
+			if( isUnresolved(value) ) {
+				setListener(value, function (value) {
+					if( value instanceof Error ) {
+						callback(value);
+					}
+					else {
+						callback(null, value);
+					}
+				}, null);
+			}
+			else {
+				callback(null, value);
 			}
 		};
 	};

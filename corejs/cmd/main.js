@@ -11,9 +11,9 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/mongo", "core/pertree", "core/core2", "core/util", "cmd/readxml",
-	"cmd/parsemeta", "cmd/tests", "cmd/parsedata", "core/config" ], function (ASSERT, Mongo,
-PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata, CONFIG) {
+requirejs([ "core/assert", "core/mongo", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta",
+	"cmd/tests", "cmd/parsedata", "core/config", "cmd/dumptree" ], function (ASSERT, Mongo, Core,
+UTIL, readxml, parsemeta, tests, parsedata, CONFIG, DUMPTREE) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -185,8 +185,7 @@ PerTree, Core, UTIL, readxml, parsemeta, tests, parsedata, CONFIG) {
 				}
 				else {
 					console.log("Dumping tree ...");
-					var pertree = new PerTree(mongo);
-					pertree.dumpTree(root, function (err) {
+					DUMPTREE.dump(mongo, root, function (err) {
 						console.log(err ? err : "Dumping done");
 						next();
 					});

@@ -4,8 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sax", "fs", "core/core2", "core/config", "core/util", "core/cache" ], function (
-ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
+define(
+[ "core/assert", "core/lib/sax", "fs", "core/core3", "core/config", "core/util", "core/cache" ],
+function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 	"use strict";
 
 	var ID = "id";
@@ -53,8 +54,8 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 		var unresolved = [];
 
 		var timerhandle = setInterval(function () {
-			console.log("  at line " + parser._parser.line + " (" + total + " xml objects, " + idCount
-			+ " ids, " + unresolved.length + " idrefs)");
+			console.log("  at line " + parser._parser.line + " (" + total + " xml objects, "
+			+ idCount + " ids, " + unresolved.length + " idrefs)");
 		}, CONFIG.parser.reportingTime);
 
 		var core = new Core(new Cache(storage));
@@ -73,20 +74,20 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 
 		var tags = [];
 
-		var finishParsing = function(err) {
+		var finishParsing = function (err) {
 			if( err ) {
 				exit(err);
 			}
 			else {
-				core.persist(tags[0].node, function(err) {
+				core.persist(tags[0].node, function (err) {
 					if( err ) {
 						exit(err);
 					}
 					else {
 						var key = core.getKey(tags[0].node);
 
-						console.log("Parsing done (" + total + " xml objects, " + idCount + " ids, "
-						+ unresolved.length + " idrefs)");
+						console.log("Parsing done (" + total + " xml objects, " + idCount
+						+ " ids, " + unresolved.length + " idrefs)");
 						console.log("Root key = " + key);
 
 						tags = null;
@@ -97,7 +98,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 				});
 			}
 		};
-		
+
 		var persisting = 1;
 		var persist = function (last) {
 			ASSERT(tags.length !== 0);
@@ -202,7 +203,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 				clearInterval(timerhandle);
 			}
 			console.log("Waiting for remaining objects to be saved ...");
-			
+
 			ASSERT(tags.length === 1);
 			persist(true);
 		});
@@ -275,7 +276,9 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 		var resolveReferences = function (path, callback) {
 			ASSERT(typeof path === "string" && callback instanceof Function);
 
-			resolveLoadByPath(path, function (err, node) {
+			resolveLoadByPath(
+			path,
+			function (err, node) {
 				if( err ) {
 					exit(err);
 				}
@@ -287,7 +290,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 					var names = core.getAttributeNames(node);
 
 					var targetId, targetPath;
-					
+
 					for( var i = 0; i < names.length; ++i ) {
 						var name = names[i];
 						var type = (DTD[tag] || {})[name];
@@ -304,9 +307,9 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 						else if( type === IDREFS ) {
 							targetId = core.getAttribute(node, name);
 							ASSERT(typeof targetId === "string");
-							
+
 							targetId = targetId === "" ? [] : targetId.split(" ");
-							for(var j = 0; j < targetId.length; ++j) {
+							for( var j = 0; j < targetId.length; ++j ) {
 								targetPath = ids[targetId[j]];
 								if( targetPath === undefined ) {
 									console.log("Missing id " + targetId[j]);
@@ -357,7 +360,7 @@ ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 				--done;
 				next(null);
 			}
-			
+
 			if( unresolved.length === 0 ) {
 				callback(null);
 			}

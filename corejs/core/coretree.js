@@ -47,7 +47,7 @@ UTIL, FUTURE) {
 		var ticks = 0;
 
 		var MAX_AGE = 2;
-		var MAX_TICKS = 1;
+		var MAX_TICKS = 2000;
 		var HASH_ID = "_id";
 		var EMPTY_DATA = {};
 
@@ -55,11 +55,13 @@ UTIL, FUTURE) {
 
 		var getParent = function (node) {
 			ASSERT(typeof node.parent === "object");
+
 			return node.parent;
 		};
 
 		var getRelid = function (node) {
 			ASSERT(node.relid === null || typeof node.relid === "string");
+
 			return node.relid;
 		};
 
@@ -91,7 +93,6 @@ UTIL, FUTURE) {
 		// ------- memory management
 
 		var __detachChildren = function (node) {
-			console.log(node);
 			ASSERT(node.children instanceof Array && node.age >= MAX_AGE - 1);
 
 			var children = node.children;
@@ -123,8 +124,14 @@ UTIL, FUTURE) {
 
 		var __ageRoots = function () {
 			if( ++ticks >= MAX_TICKS ) {
+				for( var i = 0; i < roots.length; ++i ) {
+//					console.log("aging start", printNode(roots[i]));
+				}
 				ticks = 0;
 				__ageNodes(roots);
+				for( i = 0; i < roots.length; ++i ) {
+//					console.log("aging end", printNode(roots[i]));
+				}
 			}
 		};
 
@@ -155,6 +162,8 @@ UTIL, FUTURE) {
 		};
 
 		var normalize = function (node) {
+			// console.log("normalize start", printNode(getRoot(node)));
+
 			var parent;
 
 			if( node.children === null ) {
@@ -162,22 +171,25 @@ UTIL, FUTURE) {
 
 				if( node.parent !== null ) {
 					parent = normalize(node.parent);
-					node.parent = parent;
 
 					var temp = __getChildNode(parent.children, node.relid);
 					if( temp !== null ) {
-						// make old node closer to the correct one
-						node.data = temp.data;
+						// TODO: make the current node close to the returned one
+						
+						// console.log("normalize end1", printNode(getRoot(temp)));
 						return temp;
 					}
+
+					ASSERT(__getChildNode(node.parent.children, node.relid) === null);
+					ASSERT(__getChildNode(parent.children, node.relid) === null);
+
+					node.parent = parent;
+					parent.children.push(node);
 
 					temp = __getChildData(parent.data, node.relid);
 					if( !isValidHash(temp) || temp !== __getChildData(node.data, HASH_ID) ) {
 						node.data = temp;
 					}
-
-					node.parent = parent;
-					parent.children.push(node);
 				}
 				else {
 					roots.push(node);
@@ -194,6 +206,7 @@ UTIL, FUTURE) {
 				} while( parent !== null && parent.age !== 0 );
 			}
 
+			// console.log("normalize end2", printNode(getRoot(node)));
 			return node;
 		};
 
@@ -246,8 +259,6 @@ UTIL, FUTURE) {
 		};
 
 		var createRoot = function () {
-			__ageRoots();
-
 			var root = {
 				parent: null,
 				relid: null,
@@ -258,8 +269,9 @@ UTIL, FUTURE) {
 				}
 			};
 			root.data[HASH_ID] = "";
-
 			roots.push(root);
+
+			__ageRoots();
 			return root;
 		};
 
@@ -273,7 +285,6 @@ UTIL, FUTURE) {
 				return child;
 			}
 
-			__ageRoots();
 			child = {
 				parent: node,
 				relid: relid,
@@ -281,8 +292,9 @@ UTIL, FUTURE) {
 				children: [],
 				data: __getChildData(node.data, relid)
 			};
-
 			node.children.push(child);
+
+			__ageRoots();
 			return child;
 		};
 
@@ -294,8 +306,6 @@ UTIL, FUTURE) {
 			}
 
 			var relid = createRelid(node.data);
-
-			__ageRoots();
 			var child = {
 				parent: node,
 				relid: relid,
@@ -303,8 +313,9 @@ UTIL, FUTURE) {
 				children: [],
 				data: EMPTY_DATA
 			};
-
 			node.children.push(child);
+
+			__ageRoots();
 			return child;
 		};
 
@@ -354,11 +365,11 @@ UTIL, FUTURE) {
 
 		var isObject = function (node) {
 			node = normalize(node);
-
 			return typeof node.data === "object" && node.data !== null;
 		};
 
 		var isEmpty = function (node) {
+			node = normalize(node);
 			if( typeof node.data !== "object" || node.data === null ) {
 				return false;
 			}
@@ -380,6 +391,8 @@ UTIL, FUTURE) {
 		};
 
 		var mutate = function (node) {
+			ASSERT(isValidNode(node));
+
 			node = normalize(node);
 			var data = node.data;
 
@@ -484,10 +497,14 @@ UTIL, FUTURE) {
 		var getProperty = function (node, name) {
 			ASSERT(typeof name === "string" && name !== HASH_ID);
 
+			var data;
 			node = normalize(node);
-			var data = __getChildData(node.data, name);
 
-			ASSERT(!__isMutableData(node.data));
+			if( typeof node.data === "object" && node.data !== null ) {
+				data = node.data[name];
+			}
+
+			ASSERT(!__isMutableData(data));
 			return data;
 		};
 
@@ -552,8 +569,12 @@ UTIL, FUTURE) {
 		// ------- persistence
 
 		var getHash = function (node) {
+			var hash;
+
 			node = normalize(node);
-			var hash = __getChildData(node.data, HASH_ID);
+			if( typeof node.data === "object" && node.data !== null ) {
+				hash = node.data[HASH_ID];
+			}
 
 			ASSERT(typeof hash === "string" || typeof hash === "undefined");
 			return hash;
@@ -561,10 +582,8 @@ UTIL, FUTURE) {
 
 		var isHashed = function (node) {
 			node = normalize(node);
-			var hash = __getChildData(node.data, HASH_ID);
-
-			ASSERT(typeof hash === "string" || typeof hash === "undefined");
-			return typeof hash === "string";
+			return typeof node.data === "object" && node.data !== null
+			&& typeof node.data[HASH_ID] === "string";
 		};
 
 		var setHashed = function (node, hashed) {
@@ -646,8 +665,6 @@ UTIL, FUTURE) {
 		};
 
 		var __loadRoot2 = function (data) {
-			__ageRoots();
-
 			var root = {
 				parent: null,
 				relid: null,
@@ -655,15 +672,14 @@ UTIL, FUTURE) {
 				children: [],
 				data: data
 			};
-
 			roots.push(root);
+
+			__ageRoots();
 			return root;
 		};
 
 		var loadChild = function (node, relid) {
-			if( node === null ) {
-				return null;
-			}
+			ASSERT(isValidNode(node));
 
 			node = getChild(node, relid);
 
@@ -685,6 +701,7 @@ UTIL, FUTURE) {
 		};
 
 		var loadDescendantByPath = function (node, path) {
+			ASSERT(isValidNode(node));
 			ASSERT(path === "" || path.charAt(0) === "/");
 
 			path = path.split("/");
@@ -693,10 +710,38 @@ UTIL, FUTURE) {
 				node = loadChild(node, path[i]);
 			}
 
+			console.log("yyyyy", getPath(node), node);
 			return node;
 		};
 
 		// ------- valid -------
+
+		var printNode = function (node) {
+			var str = "{";
+			str += "age:" + node.age;
+
+			if( typeof node.relid === "string" ) {
+				str += ", relid: \"" + node.relid + "\"";
+			}
+
+			str += ", children:";
+			if( node.children === null ) {
+				str += "null";
+			}
+			else {
+				str += "[";
+				for( var i = 0; i < node.children.length; ++i ) {
+					if( i !== 0 ) {
+						str += ", ";
+					}
+					str += printNode(node.children[i]);
+				}
+				str += "]";
+			}
+
+			str += "}";
+			return str;
+		};
 
 		var __test = function (text, cond) {
 			if( !cond ) {
@@ -705,6 +750,10 @@ UTIL, FUTURE) {
 		};
 
 		var isValidNode = function (node) {
+			// console.log(printNode(getRoot(node)));
+
+			node = normalize(node);
+			
 			try {
 				__test("object", typeof node === "object" && node !== null);
 				__test("parent", typeof node.parent === "object");
@@ -718,13 +767,14 @@ UTIL, FUTURE) {
 
 				if( node.parent !== null ) {
 					__test("age 2", node.age >= node.parent.age);
-					__test("mutable", !__isMutableData(node.parent.data)
-					|| __isMutableData(node.data));
+					__test("mutable", !__isMutableData(node.data)
+					|| __isMutableData(node.parent.data));
 				}
 
 				return true;
 			}
 			catch(error) {
+				console.log("Wrong node", error.stack, node);
 				return false;
 			}
 		};
@@ -758,6 +808,7 @@ UTIL, FUTURE) {
 			deleteProperty: deleteProperty,
 			getKeys: getKeys,
 
+			isValidHash: isValidHash,
 			isHashed: isHashed,
 			setHashed: setHashed,
 			getHash: getHash,
