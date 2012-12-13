@@ -47,19 +47,31 @@ define(['logManager',
 
     //Called after the host designer item is added to the canvas DOM and rendered
     CircleDecorator.prototype.on_afterAdded = function () {
-        var nameWidth = this.skinParts.$name.outerWidth(),
-            shift = (40 - nameWidth) / 2;
-
-        this.skinParts.$name.css({"top": 45,
-                                   "left": shift });
+        this.adjustNamePosition();
 
         //finally let the parent decorator class do its job
         __parent_proto__.on_afterAdded.apply(this, arguments);
     };
 
+    CircleDecorator.prototype.adjustNamePosition = function () {
+        var nameWidth = this.skinParts.$name.outerWidth(),
+            shift = (40 - nameWidth) / 2;
+
+        this.skinParts.$name.css({"top": 45,
+            "left": shift });
+    };
+
     CircleDecorator.prototype.calculateDimension = function () {
         this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
         this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
+    };
+
+    CircleDecorator.prototype.update = function (objDescriptor) {
+        __parent_proto__.update.apply(this, [objDescriptor, true]);
+
+        this.adjustNamePosition();
+
+        this.renderComplete();
     };
 
     return CircleDecorator;

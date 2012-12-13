@@ -30,8 +30,8 @@ define(['logManager'], function (logManager) {
         this.selectedInMultiSelection = false;
 
         //location and dimension information
-        this.position = {"x": objDescriptor.position.x,
-            "y": objDescriptor.position.y};
+        this.positionX = objDescriptor.position.x;
+        this.positionY = objDescriptor.position.y;
 
         this.width = 0;
         this.height = 0;
@@ -54,8 +54,8 @@ define(['logManager'], function (logManager) {
         this.$el.attr({"id": this.id});
 
         this.$el.css({ "position": "absolute",
-            "left": this.position.x,
-            "top": this.position.y });
+            "left": this.positionX,
+            "top": this.positionY });
 
         this._attachUserInteractions();
     };
@@ -106,6 +106,8 @@ define(['logManager'], function (logManager) {
                 });
             }
         }
+
+        this.canvas.dragManager.attachDraggable(this);
     };
 
     DesignerItem.prototype._detachUserInteractions = function () {
@@ -116,6 +118,8 @@ define(['logManager'], function (logManager) {
                 this.$el.off( i + '.' + EVENT_POSTFIX);
             }
         }
+
+        this.canvas.dragManager.detachDraggable(this);
     };
 
     DesignerItem.prototype._initializeDecorator = function (objDescriptor, DecoratorClass) {
@@ -173,8 +177,8 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        var bBox = { "x": this.position.x,
-            "y": this.position.y,
+        var bBox = { "x": this.positionX,
+            "y": this.positionY,
             "width": this.width,
             "height": this.height };
         bBox.x2 = bBox.x + bBox.width;
@@ -284,6 +288,42 @@ define(['logManager'], function (logManager) {
         }
 
         return result;
+    };
+
+    DesignerItem.prototype.update = function (objDescriptor) {
+        var positionChanged = false;
+        //check what might have changed
+
+        //location and dimension information
+        if (this.positionX !== objDescriptor.position.x) {
+            this.positionX = objDescriptor.position.x;
+            positionChanged = true;
+        }
+
+        if (this.positionY !== objDescriptor.position.y) {
+            this.positionY = objDescriptor.position.y;
+            positionChanged = true;
+        }
+
+        if (positionChanged) {
+            this.$el.css({"left": this.positionX,
+                "top": this.positionY });
+        }
+
+        //TODO: should be handled in the concrete decorator
+        /*if (this.width !== objDescriptor.width) {
+            this.width = objDescriptor.width
+        }
+
+        if (this.height !== objDescriptor.height) {
+            this.height = objDescriptor.height
+        }*/
+
+        //TODO: check if decorator changed and need to be updated
+
+        //if decocator instance not changed
+        //let the decorator instance know about the update
+        this._decoratorInstance.update(objDescriptor);
     };
 
     return DesignerItem;

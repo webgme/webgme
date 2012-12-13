@@ -13,6 +13,8 @@ define(['logManager',
     var DesignerControl;
 
     DesignerControl = function (options) {
+        var self = this;
+
         this.logger = options.logger || logManager.create(options.loggerName || "DesignerControl");
 
         if (options.client === undefined) {
@@ -26,6 +28,18 @@ define(['logManager',
             throw ("DesignerControl can not be created");
         }
         this.designerCanvas = options.designerCanvas;
+
+        this.designerCanvas.onReposition = function (repositionDesc) {
+            var id;
+
+            self._client.startTransaction();
+            for (id in repositionDesc) {
+                if (repositionDesc.hasOwnProperty(id)) {
+                    self._client.setRegistry(id, nodePropertyNames.Registry.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
+                }
+            }
+            self._client.completeTransaction();
+        };
 
         this._selfPatterns = {};
         this.components = {};

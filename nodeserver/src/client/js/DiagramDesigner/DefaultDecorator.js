@@ -21,6 +21,8 @@ define(['logManager',
 
         __parent__.apply(this, [opts]);
 
+        this.name = options.name || "";
+
         this.logger.debug("DefaultDecorator ctor");
     };
 
@@ -33,9 +35,22 @@ define(['logManager',
     DefaultDecorator.prototype.on_render = function () {
         __parent_proto__.on_render.apply(this, arguments);
 
-        //find additional components
+        //find name placeholder
         this.skinParts.$name = this.$el.find(".name");
         this.skinParts.$name.text(this.name);
+    };
+
+    DefaultDecorator.prototype.update = function (objDescriptor, silent) {
+        var newName = objDescriptor.name || "";
+
+        if (this.name !== newName) {
+            this.name = newName;
+            this.skinParts.$name.text(this.name);
+        }
+
+        if (!silent) {
+            this.renderComplete();
+        }
     };
 
     return DefaultDecorator;

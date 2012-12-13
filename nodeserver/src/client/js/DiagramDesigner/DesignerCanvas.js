@@ -4,14 +4,18 @@ define(['logManager',
     'clientUtil',
     'commonUtil',
     'js/DiagramDesigner/SelectionManager',
+    'js/DiagramDesigner/DragManager',
     'js/DiagramDesigner/DesignerItem',
     'raphaeljs',
+    'js/DiagramDesigner/DesignerCanvas.DEBUG',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
                                                       SelectionManager,
+                                                      DragManager,
                                                       DesignerItem,
-                                                      raphaeljs) {
+                                                      raphaeljs,
+                                                      DesignerCanvasDEBUG) {
 
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10;
@@ -20,9 +24,11 @@ define(['logManager',
         //set properties from options
         this.containerElementId = typeof options === "string" ? options : options.containerElement;
         this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
-        this._readOnlyMode = options.readOnlyMode || false;
+
+        this._readOnlyMode = options.readOnlyMode || true;
+        this.logger.warning("DesignerCanvas.ctro _readOnlyMode is set to TRUE by default");
+
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
-        this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
 
         //define properties of its own
         this._defaultSize = { "w": 10, "h": 10 };
@@ -35,12 +41,16 @@ define(['logManager',
         //initialize UI
         this.initializeUI();
 
+        this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
+        this.selectionManager.initialize(this.skinParts.$itemsContainer);
+
+        this.dragManager = options.dragManager || new DragManager({"canvas": this});
+        this.dragManager.initialize();
+
         //in DEBUG mode add additional content to canvas
         if (DEBUG) {
             this._addDebugModeExtensions();
         }
-
-        this.selectionManager.initialize(this.skinParts.$itemsContainer);
 
         this.logger.debug("DesignerCanvas ctor finished");
     };
@@ -201,10 +211,6 @@ define(['logManager',
             "mY": pY > 0 ? pY : 0 };
     };
 
-    DesignerCanvas.prototype._addDebugModeExtensions = function () {
-
-    };
-
     DesignerCanvas.prototype.clear = function () {
         var i;
 
@@ -274,6 +280,24 @@ define(['logManager',
         return newComponent;
     };
 
+    DesignerCanvas.prototype.updateModelComponent = function (componentId, objDescriptor) {
+        var alignedPosition;
+
+        if (this.itemIds.indexOf(componentId) !== -1) {
+            this.logger.debug("Updating model component with parameters: " + objDescriptor);
+
+            //adjust its position to this canvas
+            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
+
+            objDescriptor.position.x = alignedPosition.x;
+            objDescriptor.position.y = alignedPosition.y;
+
+            //this._checkPositionOverlap(objDescriptor);
+
+            this.items[componentId].update(objDescriptor);
+        }
+    };
+
     DesignerCanvas.prototype._alignPositionToGrid = function (pX, pY) {
         var posXDelta,
             posYDelta;
@@ -305,6 +329,12 @@ define(['logManager',
     DesignerCanvas.prototype.showSelectionOutline = function () {
 
     };
+
+    //in DEBUG mode add additional content to canvas
+    if (DEBUG) {
+        _.extend(DesignerCanvas.prototype, DesignerCanvasDEBUG.prototype);
+    }
+
 
     return DesignerCanvas;
 });

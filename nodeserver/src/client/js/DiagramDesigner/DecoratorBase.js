@@ -8,7 +8,6 @@ define(['logManager'], function (logManager) {
     DecoratorBase = function (options) {
         this.id = options.id;
         this.hostDesignerItem = options.designerItem;
-        this.name = options.name || "";
 
         this.skinParts = {};
 
@@ -99,6 +98,21 @@ define(['logManager'], function (logManager) {
 
     //called when the designer items becomes deselected
     DecoratorBase.prototype.onDeselect = function () {
+    };
+
+    //called when the designer items becomes deselected
+    DecoratorBase.prototype.update = function (objDescriptor) {
+    };
+
+    DecoratorBase.prototype.renderComplete = function () {
+        //calculate new dimension after update
+
+        //TODO: this will cause performance issues because of REFLOW
+        //TODO: calculateDimension should be called when all the DesignerItems have finished updating/rendering
+        //TODO: that way it would not cause extra REFLOWs
+        this.calculateDimension();
+
+        //TODO:let the hostDesignerItem know about decorator render finished
     };
 
     return DecoratorBase;
