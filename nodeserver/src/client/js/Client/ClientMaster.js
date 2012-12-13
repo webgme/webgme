@@ -240,7 +240,10 @@ define([
 
             for(var i in info){
                 for(var j in info[i].branches){
-                    info[i].branches[j].actor = null;
+                    if(info[i].branches[j].actor){
+                        info[i].branches[j].commit = projectsinfo[i].branches[j].actor.getCurrentCommit();
+                        info[i].branches[j].actor = null;
+                    }
                 }
                 info[i].parameters = null;
             }
