@@ -4,6 +4,7 @@ define([
     'js/Client/ClientStorage',
     'js/Client/ClientProject',
     'js/Client/ClientCommitInfo',
+    'js/Client/ClientLog',
     'js/Client/ClientTest',
     'commonUtil',
     'socket.io/socket.io.js'
@@ -14,18 +15,13 @@ define([
         ClientStorage,
         ClientProject,
         ClientCommitInfo,
+        ClientLog,
         ClientTest,
         commonUtil){
    'use strict';
     var GUID = commonUtil.guid;
     var COPY = commonUtil.copy;
     var KEY = "_id";
-    var FakeLogger = function(){
-        var self = this;
-        self.log = function(text){
-            //TODO refine the already existing log mechanism or enhance to use it with the multiple project environment
-        };
-    };
     var ClientMaster = function(parameters){
         var self=this,
             selectedObjectId = null,
@@ -39,7 +35,7 @@ define([
             proxy = null,
             viewer = null,
             mytest = new ClientTest({master:self}),
-            flogger = new FakeLogger();
+            logger = parameters.log && parameters.logsrv ? new ClientLog(parameters.logsrv) : null;
 
 
         /*event functions to relay information between users*/
@@ -182,7 +178,7 @@ define([
                         projectinfo : project,
                         faulttolerant : true,
                         cache : true,
-                        logger : flogger,
+                        logger : logger,
                         log : false,
                         watcher : self
                     });
@@ -315,7 +311,7 @@ define([
                                         commit: myinfo.branches[myinfo.currentbranch].commit,
                                         branch: myinfo.currenbtranch,
                                         readonly: false,
-                                        logger: flogger
+                                        logger: logger
                                     });
                                 }
                             } else {
@@ -334,7 +330,7 @@ define([
                                         commit: myinfo.branches['master'].commit,
                                         branch: 'master',
                                         readonly: false,
-                                        logger: flogger
+                                        logger: logger
                                     });
                                 }
                             } else {
@@ -349,7 +345,7 @@ define([
                                             commit: myinfo.branches[i].commit,
                                             branch: i,
                                             readonly: false,
-                                            logger: flogger
+                                            logger: logger
                                         });
                                     }
                                     break;
@@ -387,7 +383,7 @@ define([
                     projectinfo : projectname,
                     faulttolerant : true,
                     cache : true,
-                    logger : flogger,
+                    logger : logger,
                     log : false,
                     watcher : self
                 });
@@ -422,7 +418,7 @@ define([
                                                 commit: null,
                                                 branch: "master",
                                                 readonly: false,
-                                                logger: flogger
+                                                logger: logger
                                             });
                                             actor.createEmpty(function(err){
                                                 if(err){
@@ -459,6 +455,10 @@ define([
                 callback("you must use individual name!!!");
             }
         };
+        self.deleteProject = function(projectname,callback){
+            callback = callback || function(){};
+            //we destroy all related
+        };
         self.selectCommitAsync = function(commitid,callback){
             callback = callback || function(){};
             if(activeProject){
@@ -491,7 +491,7 @@ define([
                                                    commit: mycommit,
                                                    branch: mycommit.name,
                                                    readonly: false,
-                                                   logger: flogger
+                                                   logger: logger
                                                });
                                                projectsinfo[activeProject].currentbranch = mycommit.name;
                                                activateActor(projectsinfo[activeProject].branches[mycommit.name].actor,null,callback);
@@ -510,7 +510,7 @@ define([
                                                     commit: mycommit,
                                                     branch: mycommit.name,
                                                     readonly: false,
-                                                    logger: flogger
+                                                    logger: logger
                                                 }),
                                                 commit: commitid
                                             };
@@ -544,7 +544,7 @@ define([
                 commit: commitobj,
                 branch: commitobj.name,
                 readonly: true,
-                logger: flogger
+                logger: logger
             });
             activateActor(viewer,null,callback);
         };
@@ -649,7 +649,7 @@ define([
                                         commit: commit,
                                         branch: parameters.branch,
                                         readonly: false,
-                                        logger: flogger
+                                        logger: logger
                                     }),
                                     commit:commitkey
                                 };
