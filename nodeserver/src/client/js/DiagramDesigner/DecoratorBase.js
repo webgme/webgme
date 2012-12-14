@@ -9,28 +9,53 @@ define(['logManager'], function (logManager) {
         this.id = options.id;
         this.hostDesignerItem = options.designerItem;
 
-        this.skinParts = {};
+        this.logger = options.logger || logManager.create((options.loggerName || "DecoratorBase") + '_' + this.id);
 
+        this.skinParts = {};
         this.$connectors = null;
 
-        this.logger = options.logger || logManager.create((options.loggerName || "DecoratorBase") + '_' + this.id);
+        this._initialize();
+
         this.logger.debug("Created");
     };
 
     DecoratorBase.prototype.$_DOMBase = $("");
 
-    //Called before the host designer item is added to the canvas DOM
-    DecoratorBase.prototype.on_addTo = function () {
-    };
-
-    //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    DecoratorBase.prototype.on_render = function () {
+    DecoratorBase.prototype._initialize = function () {
         this.$el = this.$_DOMBase.clone();
-        this.$hostEl = this.hostDesignerItem.$el;
 
         //find connectors
         this.$connectors = this.$el.find(CONNECTOR_CLASS);
         this.hideConnectors();
+    };
+
+    //Called before the host designer item is added to the canvas DOM
+    //TODO: here you should create the basic DOM of the decorator
+    //this.$el has to be the toplevel container of the decorator, because it will be appended to a documentFragment later
+    //at this point no dimension information is available since the content exist only in memory, not yet rendred
+    DecoratorBase.prototype.on_addTo = function () {
+        this.hostDesignerItem.decoratorUpdated();
+    };
+
+    //Called right after on_addTo and before the host designer item is added to the canvas DOM
+    //TODO: this is called to fill in the contents of the decorator
+    DecoratorBase.prototype.on_render = function () {
+
+    };
+
+    //do anything needs to be done to adjust look, read all width, height, etc information
+    //but do not set anything, do not touch the UI for write
+    DecoratorBase.prototype.on_renderPhase1 = function () {
+        this.calculateDimension();
+
+        this.renderPhase1Cache = {};
+    };
+
+    //using the information from the _onrenderPhase1
+    //do anything needs to be done to adjust look, write all width, height, etc information
+    //but do not read anything, do not touch the UI for read
+    DecoratorBase.prototype.on_renderPhase2 = function () {
+        delete this.renderPhase1Cache;
     };
 
     //Called after the host designer item is added to the canvas DOM and rendered
@@ -102,17 +127,7 @@ define(['logManager'], function (logManager) {
 
     //called when the designer items becomes deselected
     DecoratorBase.prototype.update = function (objDescriptor) {
-    };
-
-    DecoratorBase.prototype.renderComplete = function () {
-        //calculate new dimension after update
-
-        //TODO: this will cause performance issues because of REFLOW
-        //TODO: calculateDimension should be called when all the DesignerItems have finished updating/rendering
-        //TODO: that way it would not cause extra REFLOWs
-        this.calculateDimension();
-
-        //TODO:let the hostDesignerItem know about decorator render finished
+        this.hostDesignerItem.decoratorUpdated();
     };
 
     return DecoratorBase;

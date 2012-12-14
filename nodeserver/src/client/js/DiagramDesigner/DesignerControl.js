@@ -2,15 +2,14 @@
 
 define(['logManager',
     'clientUtil',
-    'js/DiagramDesigner/NodePropertyNames',
-    'js/DiagramDesigner/DefaultDecorator',
-    'js/DiagramDesigner/CircleDecorator'], function (logManager,
+    'js/DiagramDesigner/NodePropertyNames'], function (logManager,
                                                         util,
-                                                        nodePropertyNames,
-                                                        DefaultDecorator,
-                                                        CircleDecorator) {
+                                                        nodePropertyNames) {
 
-    var DesignerControl;
+    var DesignerControl,
+        counter = 0,
+        tempDecorators = ['DefaultDecorator', 'CircleDecorator', 'SlowRenderDecorator'],
+        tempDecoratorsCount = tempDecorators.length;
 
     DesignerControl = function (options) {
         var self = this;
@@ -84,10 +83,6 @@ define(['logManager',
         }
     };
 
-    var counter = 0;
-    var decorators = [DefaultDecorator, CircleDecorator];
-    var decLength = decorators.length;
-
     DesignerControl.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
@@ -128,10 +123,10 @@ define(['logManager',
                     objDescriptor.position.y = 0;
                 }
 
-                objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "SimpleModelDecorator";
+                objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
 
-                //TODO: alternationg decorators
-                objDescriptor.DecoratorClass = decorators[counter % decLength];
+                //TODO: alternating decorators just for testing purpose
+                objDescriptor.decorator = tempDecorators[counter % tempDecoratorsCount];
                 counter++;
             }
         }
@@ -159,13 +154,13 @@ define(['logManager',
         this.logger.debug("onOneEvent '" + i + "' items");
 
         if (i > 0) {
-            this.designerCanvas.enableScreenRefresh(false);
+            this.designerCanvas.beginUpdate();
 
             while (i--) {
                 this.onEvent(events[i].etype, events[i].eid);
             }
 
-            this.designerCanvas.enableScreenRefresh(true);
+            this.designerCanvas.endUpdate();
         }
 
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
@@ -220,12 +215,13 @@ define(['logManager',
         } else {
             if (desc) {
                 if (desc.kind === "MODEL") {
+                    desc.decorator = tempDecorators[counter % tempDecoratorsCount];
                     this.designerCanvas.updateModelComponent(objectId, desc);
                 }
 
-                if (desc.kind === "CONNECTION") {
+                /*if (desc.kind === "CONNECTION") {
                     this.designerCanvas.updateConnectionComponent(objectId, desc);
-                }
+                }*/
             }
         }
     };

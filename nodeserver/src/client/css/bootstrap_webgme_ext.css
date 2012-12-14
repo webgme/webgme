@@ -183,3 +183,12 @@ input[type="submit"].btn.btn-micro {
     border-top-color: #ffffff;
     border-bottom-color: #ffffff;
 }
+
+/**************** additional icons */
+.icon-progress {
+    background-image: url("../img/progress.gif");
+    width: 16px;
+    height: 16px;
+    margin-top: 0px;
+    background-position: 0px 0px;
+}

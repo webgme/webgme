@@ -32,12 +32,13 @@ define(['logManager',
 
     DefaultDecorator.prototype.$_DOMBase = $(defaultDecoratorTemplate);
 
-    DefaultDecorator.prototype.on_render = function () {
-        __parent_proto__.on_render.apply(this, arguments);
-
+    DefaultDecorator.prototype.on_addTo = function () {
         //find name placeholder
         this.skinParts.$name = this.$el.find(".name");
         this.skinParts.$name.text(this.name);
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addTo.apply(this, arguments);
     };
 
     DefaultDecorator.prototype.update = function (objDescriptor, silent) {
@@ -48,9 +49,7 @@ define(['logManager',
             this.skinParts.$name.text(this.name);
         }
 
-        if (!silent) {
-            this.renderComplete();
-        }
+        this.hostDesignerItem.decoratorUpdated();
     };
 
     return DefaultDecorator;

@@ -31,10 +31,7 @@ define(['logManager',
     CircleDecorator.prototype.$_DOMBase = $(circleDecoratorTemplate);
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    CircleDecorator.prototype.on_render = function () {
-        //let the parent decorator class do its job first
-        __parent_proto__.on_render.apply(this, arguments);
-
+    CircleDecorator.prototype.on_addTo = function () {
         //find additional CircleDecorator specific UI components
         this.skinParts.$arrowCanvas = this.$el.find('[id="circleCanvas"]');
         this.skinParts.$arrowCanvas[0].height = CANVAS_SIZE;
@@ -43,35 +40,47 @@ define(['logManager',
         if(ctx) {
             ctx.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1, true);
         }
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addTo.apply(this, arguments);
+    };
+
+    CircleDecorator.prototype.on_renderPhase1 = function () {
+        //let the parent decorator class do its job first
+        __parent_proto__.on_renderPhase1.apply(this, arguments);
+
+        this.renderPhase1Cache.nameWidth = this.skinParts.$name.outerWidth();
+    };
+
+    CircleDecorator.prototype.on_renderPhase2 = function () {
+        var shift = (40 - this.renderPhase1Cache.nameWidth) / 2;
+
+        this.skinParts.$name.css({"top": 45,
+            "left": shift });
+
+        //let the parent decorator class do its job finally
+        __parent_proto__.on_renderPhase2.apply(this, arguments);
     };
 
     //Called after the host designer item is added to the canvas DOM and rendered
     CircleDecorator.prototype.on_afterAdded = function () {
-        this.adjustNamePosition();
+        /*this.adjustNamePosition();
 
         //finally let the parent decorator class do its job
-        __parent_proto__.on_afterAdded.apply(this, arguments);
+        __parent_proto__.on_afterAdded.apply(this, arguments);*/
     };
 
     CircleDecorator.prototype.adjustNamePosition = function () {
-        var nameWidth = this.skinParts.$name.outerWidth(),
+        /*var nameWidth = this.skinParts.$name.outerWidth(),
             shift = (40 - nameWidth) / 2;
 
         this.skinParts.$name.css({"top": 45,
-            "left": shift });
+            "left": shift });*/
     };
 
     CircleDecorator.prototype.calculateDimension = function () {
         this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
         this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
-    };
-
-    CircleDecorator.prototype.update = function (objDescriptor) {
-        __parent_proto__.update.apply(this, [objDescriptor, true]);
-
-        this.adjustNamePosition();
-
-        this.renderComplete();
     };
 
     return CircleDecorator;

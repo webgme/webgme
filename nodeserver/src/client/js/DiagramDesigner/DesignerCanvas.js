@@ -15,10 +15,12 @@ define(['logManager',
                                                       DragManager,
                                                       DesignerItem,
                                                       raphaeljs,
-                                                      DesignerCanvasDEBUG) {
+                                                      DesignerCanvasDEBUG,
+                                                      DefaultDecorator) {
 
     var DesignerCanvas,
-        DEFAULT_GRID_SIZE = 10;
+        DEFAULT_GRID_SIZE = 10,
+        DEFAULT_DECORATOR_NAME = "DefaultDecorator";
 
     DesignerCanvas = function (options) {
         //set properties from options
@@ -41,11 +43,15 @@ define(['logManager',
         //initialize UI
         this.initializeUI();
 
+        this._updating = false;
+
         this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
 
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize();
+
+        this._documentFragment = document.createDocumentFragment();
 
         //in DEBUG mode add additional content to canvas
         if (DEBUG) {
@@ -59,6 +65,13 @@ define(['logManager',
         this.items = {};
         this.itemIds = [];
         this.connectionIds = [];
+
+
+        this._updating = false;
+        this._insertedDesignerItemIDs = null;
+        this._updatedDesignerItemIDs = null;
+        this._deletedDesignerItemIDs = null;
+        this._waitingForDesignerItemAck = null;
     };
 
     DesignerCanvas.prototype.getIsReadOnlyMode = function () {
@@ -129,6 +142,10 @@ define(['logManager',
         });
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$title);
 
+        this.skinParts.$progressBar = $('<div class="btn-group inline"><a class="btn disabled" href="#" title="Refreshing..."><i class="icon-progress"></i></a></div>');
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressBar);
+        this.skinParts.$progressBar.hide();
+
         //'ONE LEVEL UP' in HEADER BAR
         this.skinParts.$btnOneLevelUp = $('<div class="btn-group inline"><a class="btn btnOneLevelUp" href="#" title="One level up" data-num="1"><i class="icon-circle-arrow-up"></i></a></div>');
         this.skinParts.$designerCanvasHeader.prepend(this.skinParts.$btnOneLevelUp);
@@ -161,17 +178,6 @@ define(['logManager',
 
         //finally resize the whole content according to available space
         this._resizeCanvas(_parentSize.w, _parentSize.h);
-
-        /*DUMMY CONTENT*/
-        /*this.skinParts.$itemsContainer.append($("<div style='position: absolute; top: 100px; left: 100px; width: 100px; height: 100px; border: 1px solid #000000; background-color: #FF0000'></div>"));
-        var path = this.skinParts.SVGPaper.path("M10,20L300,40");
-        path.attr({"stroke-width": "5"});
-        var rect = this.skinParts.SVGPaper.rect(10, 10, 80, 80);
-        rect.attr({"stroke-width": "5"});
-
-        var rect2 = this.skinParts.SVGPaper.rect(410, 210, 50, 50);
-        rect2.attr({"fill": "#FFFF00"});*/
-        /*DUMMY CONTENT*/
     };
 
     DesignerCanvas.prototype._resizeCanvas = function (width, height) {
@@ -214,6 +220,8 @@ define(['logManager',
     DesignerCanvas.prototype.clear = function () {
         var i;
 
+        this.skinParts.$progressBar.hide();
+
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
                 this.items[i].destroy();
@@ -242,12 +250,120 @@ define(['logManager',
         this.logger.warning("DesignerCanvas.prototype._onBtnOneLevelUpClick NOT YET IMPLEMENTED");
     };
 
-    DesignerCanvas.prototype.enableScreenRefresh = function (enabled) {
-        this._redrawEnabled = enabled;
 
-        if (this._needsRedraw === true) {
-            this._refreshScreen();
+
+    /*********************************/
+
+    DesignerCanvas.prototype.beginUpdate = function () {
+        this.skinParts.$progressBar.show();
+        this.logger.error("beginUpdate");
+        this._updating = true;
+        this._insertedDesignerItemIDs = this._insertedDesignerItemIDs || [];
+        this._updatedDesignerItemIDs = this._updatedDesignerItemIDs || [];
+        this._deletedDesignerItemIDs = this._deletedDesignerItemIDs || [];
+        this._waitingForDesignerItemAck = this._waitingForDesignerItemAck || [];
+    };
+
+    DesignerCanvas.prototype.endUpdate = function () {
+        this.logger.error("endUpdate");
+        this._updating = false;
+        this.tryRefreshScreen();
+    };
+
+    DesignerCanvas.prototype.decoratorUpdated = function (itemID) {
+        var idx,
+            len = this._waitingForDesignerItemAck ? this._waitingForDesignerItemAck.length : 0;
+
+        //if the item was in the ack-waiting queue
+        if (len > 0) {
+            idx =  this._waitingForDesignerItemAck.indexOf(itemID);
+
+            if (idx > -1) {
+                this._waitingForDesignerItemAck.splice(idx, 1);
+            }
+
+            this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + itemID);
+            this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + this._waitingForDesignerItemAck.length);
         }
+
+        //check if the item is either in the insert queue or the update queue
+        //if not in either, store it in the update queue
+        if (this._insertedDesignerItemIDs.indexOf(itemID) === -1) {
+            if (this._updatedDesignerItemIDs.indexOf(itemID) === -1) {
+                this._updatedDesignerItemIDs.push(itemID);
+            }
+        }
+
+        this.tryRefreshScreen();
+    };
+
+    DesignerCanvas.prototype.tryRefreshScreen = function () {
+        var len = this._waitingForDesignerItemAck ? this._waitingForDesignerItemAck.length : 0,
+            listLen,
+            msg;
+
+        if (this._updating !== true) {
+            if (len > 0) {
+                listLen = len > 5 ? 5 : len;
+                msg = "RefreshScreen is still waiting for [";
+                while (listLen--) {
+                    msg += this._waitingForDesignerItemAck[listLen] + ", ";
+                }
+
+                msg += len > 5 ? "... and " + (len - 5) + " more items to ack ]" : "]";
+                this.logger.error(msg);
+            } else {
+                this.logger.error("_waitingForDesignerItemAck is empty, ready to do the thing");
+                this._refreshScreen();
+            }
+        } else {
+            this.logger.error("refreshScreen is still under update from controller");
+        }
+    };
+
+    DesignerCanvas.prototype._refreshScreen = function () {
+        var i;
+
+//        this.skinParts.$progressBar.show();
+
+        this.logger.error("_refreshScreen START");
+
+        //TODO: updated items probably touched the DOM for modification
+        //hopefully none of them forced a reflow by reading values, only setting values
+        //browsers will optimize this
+        //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
+
+        //add all the inserted items, they are still on a document Fragment
+        this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
+        this._documentFragment = document.createDocumentFragment();
+
+        //call each inserted and updated item's render phase1
+        i = this._insertedDesignerItemIDs.length;
+        while (i--) {
+            this.items[this._insertedDesignerItemIDs[i]].renderPhase1();
+        }
+
+        i = this._updatedDesignerItemIDs.length;
+        while (i--) {
+            this.items[this._updatedDesignerItemIDs[i]].renderPhase1();
+        }
+
+        //call each inserted and updated item's render phase2
+        i = this._insertedDesignerItemIDs.length;
+        while (i--) {
+            this.items[this._insertedDesignerItemIDs[i]].renderPhase2();
+        }
+
+        i = this._updatedDesignerItemIDs.length;
+        while (i--) {
+            this.items[this._updatedDesignerItemIDs[i]].renderPhase2();
+        }
+
+        this._insertedDesignerItemIDs = [];
+        this._updatedDesignerItemIDs = [];
+
+        this.skinParts.$progressBar.hide();
+        this.logger.error("_refreshScreen END");
     };
 
     /*************** MODEL CREATE / UPDATE / DELETE ***********************/
@@ -255,7 +371,8 @@ define(['logManager',
     DesignerCanvas.prototype.createModelComponent = function (objDescriptor) {
         var componentId = objDescriptor.id,
             newComponent,
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
+            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
+            self = this;
 
         this.logger.debug("Creating model component with parameters: " + objDescriptor);
 
@@ -263,19 +380,24 @@ define(['logManager',
         objDescriptor.position.x = alignedPosition.x;
         objDescriptor.position.y = alignedPosition.y;
 
-        //this._checkPositionOverlap(objDescriptor);
+        //make sure it has a specified decorator
+        objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
 
-        //objDescriptor.client = this._client;
+        this._checkPositionOverlap(objDescriptor);
 
-        /*this._longUpdateQueue.push(componentId);
-        this._longUpdateList.insertedModels.push(componentId);*/
         this.itemIds.push(componentId);
 
+        //add to accounting queues for performance optimization
+        this._insertedDesignerItemIDs.push(componentId);
+        this._waitingForDesignerItemAck.push(componentId);
+
+        this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + objDescriptor.id);
+        this.logger.error("createModelComponent_waitingForDesignerItemAck: " + this._waitingForDesignerItemAck.length);
+
         newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
-        newComponent._initialize(objDescriptor);
-        //newComponent.render();
-        newComponent.addTo(this.skinParts.$itemsContainer);
-        //newComponent.el.appendTo(this.skinParts.$itemsContainer);
+        newComponent._initialize(objDescriptor, function () {
+            newComponent.addToDocFragment(self._documentFragment);
+        });
 
         return newComponent;
     };
@@ -292,7 +414,16 @@ define(['logManager',
             objDescriptor.position.x = alignedPosition.x;
             objDescriptor.position.y = alignedPosition.y;
 
-            //this._checkPositionOverlap(objDescriptor);
+            //make sure it has a specified decorator
+            objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
+
+            this._checkPositionOverlap(objDescriptor);
+
+            //add to accounting queus for performance optimization
+            this._updatedDesignerItemIDs.push(componentId);
+            this._waitingForDesignerItemAck.push(componentId);
+
+            objDescriptor.name += "hillybilly";
 
             this.items[componentId].update(objDescriptor);
         }
@@ -301,6 +432,14 @@ define(['logManager',
     DesignerCanvas.prototype._alignPositionToGrid = function (pX, pY) {
         var posXDelta,
             posYDelta;
+
+        if (pX < 0) {
+            pX = this.gridSize;
+        }
+
+        if (pY < 0) {
+            pY = this.gridSize;
+        }
 
         if (this.gridSize > 1) {
             posXDelta = pX % this.gridSize;
@@ -314,6 +453,34 @@ define(['logManager',
 
         return { "x": pX,
             "y": pY };
+    };
+
+    DesignerCanvas.prototype._checkPositionOverlap = function (objDescriptor) {
+        var i,
+            posChanged = true,
+            itemID,
+            item;
+
+        //check if position has to be adjusted to not to put it on some other model
+        while (posChanged === true) {
+            posChanged = false;
+            i = this.itemIds.length;
+
+            while (i--) {
+                itemID = this.itemIds[i];
+
+                if (itemID !== objDescriptor.id) {
+                    item = this.items[itemID];
+
+                    if (objDescriptor.position.x === item.positionX &&
+                        objDescriptor.position.y === item.positionY) {
+                        objDescriptor.position.x += this.gridSize * 2;
+                        objDescriptor.position.y += this.gridSize * 2;
+                        posChanged = true;
+                    }
+                }
+            }
+        }
     };
 
     DesignerCanvas.prototype.onItemMouseDown = function (event, itemId) {

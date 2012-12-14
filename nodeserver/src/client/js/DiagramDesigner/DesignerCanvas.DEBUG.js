@@ -3,7 +3,7 @@
 define([], function () {
 
     var DesignerCanvasDEBUG,
-        AutoUpdaterFreq = 100;
+        AutoUpdaterFreq = 1000;
 
     DesignerCanvasDEBUG = function () {
     };

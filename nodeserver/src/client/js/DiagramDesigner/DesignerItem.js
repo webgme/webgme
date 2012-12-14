@@ -1,12 +1,17 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+    'js/DiagramDesigner/DefaultDecorator' /*load the default decorator just to make sure it's here for sure*/
+    ], function (logManager,
+                 DefaultDecorator) {
 
     var DesignerItem,
         DESIGNER_ITEM_CLASS = "designer-item",
         EVENT_POSTFIX = "DesignerItem",
         HOVER_CLASS = "hover",
-        SELECTABLE_CLASS = "selectable";
+        SELECTABLE_CLASS = "selectable",
+        DECORATOR_PATH = "js/DiagramDesigner/", //TODO: fix path
+        DEFAULT_DECORATOR_CLASS = DefaultDecorator;
 
     DesignerItem = function (objId) {
         this.id = objId;
@@ -15,10 +20,7 @@ define(['logManager'], function (logManager) {
         this.logger.debug("Created");
     };
 
-    DesignerItem.prototype._initialize = function (objDescriptor) {
-        var decoratorClass = objDescriptor.DecoratorClass;
-        /*MODELEDITORCOMPONENT CONSTANTS*/
-
+    DesignerItem.prototype._initialize = function (objDescriptor, fn) {
         this.canvas = objDescriptor.designerCanvas;
         this._containerElement = null;
 
@@ -36,15 +38,51 @@ define(['logManager'], function (logManager) {
         this.width = 0;
         this.height = 0;
 
-        objDescriptor.designerItem = this;
-        delete objDescriptor.DecoratorClass;
-
         this._initializeUI();
 
-        this._initializeDecorator(objDescriptor, decoratorClass);
+        this._initializeDecoratorAsync(objDescriptor, fn);
     };
 
     DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
+
+    DesignerItem.prototype._initializeDecoratorAsync = function (objDescriptor, fn) {
+        var decoratorName = objDescriptor.decorator,
+            self = this,
+            decoratorDownloaded;
+
+        this.decoratorName = decoratorName;
+
+        objDescriptor.designerItem = this;
+
+        decoratorDownloaded = function (DecoratorClass) {
+            self._decoratorInstance = new DecoratorClass(objDescriptor);
+
+            if (fn) {
+                fn();
+            }
+        };
+
+        this._decoratorInstance = null;
+
+        if (_.isString(decoratorName)) {
+            decoratorName = DECORATOR_PATH + decoratorName;
+
+            this.logger.warning("Initiating decorator download: '" + decoratorName + "'...");
+            require([ decoratorName ],
+                function (DecoratorClass) {
+                    self.logger.warning("require(['" + decoratorName + "'] - downloaded");
+                    decoratorDownloaded(DecoratorClass);
+                },
+                function (err) {
+                    self.logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
+                    //for any error use the default decorator so the item is visible on the canvas
+                    decoratorDownloaded(DEFAULT_DECORATOR_CLASS);
+                });
+        } else {
+            this.logger.error("Decorator name type error... Fallback to default...'" + decoratorName + "'");
+            decoratorDownloaded(DEFAULT_DECORATOR_CLASS);
+        }
+    };
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it
@@ -57,12 +95,14 @@ define(['logManager'], function (logManager) {
             "left": this.positionX,
             "top": this.positionY });
 
-        this._attachUserInteractions();
+        //this._attachUserInteractions();
     };
 
     DesignerItem.prototype._attachUserInteractions = function () {
         var i,
             self = this;
+
+        //TODO: make sure to differentiate between READ-ONLY and EDIT mode....
 
         this._events = {"mouseenter": { "fn": "onMouseEnter",
                                         "stopPropagation": true,
@@ -122,39 +162,35 @@ define(['logManager'], function (logManager) {
         this.canvas.dragManager.detachDraggable(this);
     };
 
-    DesignerItem.prototype._initializeDecorator = function (objDescriptor, DecoratorClass) {
-        //decorator class downloaded, attach it to the designeritem
-        this._decoratorInstance = new DecoratorClass(objDescriptor);
+    DesignerItem.prototype.addToDocFragment = function (docFragment) {
+
+        this.$el.html(this._decoratorInstance.$el);
+
+        docFragment.appendChild( this.$el[0] );
+
+        this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
+
+        this._callDecoratorMethod("on_addTo");
     };
 
-    DesignerItem.prototype.addTo = function (cElement) {
-        if (this._containerElement != cElement){
-
-            if (this._containerElement){
-                this.$el.remove();
-            }
-
-            this._containerElement = cElement;
-
-            this._callDecoratorMethod("on_addTo");
-
-            this.render();
-
-            this.$el.html(this._decoratorInstance.$el);
-
-            this.$el.appendTo(this._containerElement);
-
-            //this.$el.css("z-index", this._containerElement.css("z-index"));
-
-            this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
-
-            this._callDecoratorMethod("on_afterAdded");
-        }
+    //whenever a decorator is ready with the rendering, needs to signal it
+    //by calling this method
+    //this will tell the canvas that the item is ready (if in any case the canvas is waiting for it)
+    DesignerItem.prototype.decoratorUpdated = function () {
+        this.canvas.decoratorUpdated(this.id);
     };
 
-    DesignerItem.prototype.render = function () {
+    DesignerItem.prototype.renderPhase1 = function () {
+        this._callDecoratorMethod("on_renderPhase1");
+    };
+
+    DesignerItem.prototype.renderPhase2 = function () {
+        this._callDecoratorMethod("on_renderPhase2");
+    };
+
+    /*DesignerItem.prototype.render = function () {
         this._callDecoratorMethod("on_render");
-    };
+    };*/
 
     DesignerItem.prototype._remove = function() {
         this._containerElement = null;
@@ -291,7 +327,8 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.update = function (objDescriptor) {
-        var positionChanged = false;
+        var positionChanged = false,
+            self = this;
         //check what might have changed
 
         //location and dimension information
@@ -310,20 +347,31 @@ define(['logManager'], function (logManager) {
                 "top": this.positionY });
         }
 
-        //TODO: should be handled in the concrete decorator
-        /*if (this.width !== objDescriptor.width) {
-            this.width = objDescriptor.width
-        }
-
-        if (this.height !== objDescriptor.height) {
-            this.height = objDescriptor.height
-        }*/
-
         //TODO: check if decorator changed and need to be updated
 
-        //if decocator instance not changed
-        //let the decorator instance know about the update
-        this._decoratorInstance.update(objDescriptor);
+        if (objDescriptor.decorator !== this.decoratorName) {
+            this.logger.error("decorator update: '" + this.decoratorName + "' --> '" + objDescriptor.decorator + "'...");
+
+            //destroy old decorator
+            this._callDecoratorMethod("destroy");
+            this.$el.empty();
+
+            //attach new one
+            this.decoratorName = objDescriptor.decoratorName;
+            this._decoratorInstance = null;
+
+            this._initializeDecoratorAsync(objDescriptor, function () {
+                self.$el.html(self._decoratorInstance.$el);
+
+                self.logger.debug("DesignerItem's decorator with id:'" + self.id + "' has been updated.");
+
+                self._callDecoratorMethod("on_addTo");
+            });
+        } else {
+            //if decocator instance not changed
+            //let the decorator instance know about the update
+            this._decoratorInstance.update(objDescriptor);
+        }
     };
 
     return DesignerItem;
