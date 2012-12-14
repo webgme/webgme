@@ -189,6 +189,11 @@ div.progress-big {
     height: 50px;
 }
 
+div.spacer {
+    width: 10px;
+    height: 1px;
+}
+
 /************************/
 
 div.ObjectBrowser {

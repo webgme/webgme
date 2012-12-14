@@ -28,7 +28,8 @@ define([  'logManager',
     'js/DiagramDesigner/ModelDesignerCanvas',
     'js/DiagramDesigner/ModelDesignerControl',
     'js/DiagramDesigner/MetaDesignerCanvas',
-    'js/DiagramDesigner/MetaDesignerControl'], function (logManager,
+    'js/DiagramDesigner/MetaDesignerControl',
+    'js/LoggerStatus/LoggerStatus'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -55,7 +56,8 @@ define([  'logManager',
                                             ModelDesignerCanvas,
                                             ModelDesignerControl,
                                             MetaDesignerCanvas,
-                                            MetaDesignerControl) {
+                                            MetaDesignerControl,
+                                            LoggerStatus) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -223,6 +225,8 @@ define([  'logManager',
         setActiveVisualizer(vis);
         event.stopPropagation();
     });
+
+    new LoggerStatus("panLoggerStatus");
 
     doConnect = function (callback) {
 

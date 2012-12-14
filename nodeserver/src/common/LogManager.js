@@ -127,6 +127,10 @@ define([], function () {
             }
         },
 
+        getLogLevel : function () {
+            return currentLogLevel;
+        },
+
         useColors : function (enabled) {
             if ((enabled === true) || (enabled === false)) {
                 useColors = enabled;
