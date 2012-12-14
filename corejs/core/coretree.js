@@ -47,7 +47,7 @@ UTIL, FUTURE) {
 		var ticks = 0;
 
 		var MAX_AGE = 2;
-		var MAX_TICKS = 2000;
+		var MAX_TICKS = 1000;
 		var HASH_ID = "_id";
 		var EMPTY_DATA = {};
 
@@ -125,12 +125,12 @@ UTIL, FUTURE) {
 		var __ageRoots = function () {
 			if( ++ticks >= MAX_TICKS ) {
 				for( var i = 0; i < roots.length; ++i ) {
-//					console.log("aging start", printNode(roots[i]));
+					// console.log("aging start", printNode(roots[i]));
 				}
 				ticks = 0;
 				__ageNodes(roots);
 				for( i = 0; i < roots.length; ++i ) {
-//					console.log("aging end", printNode(roots[i]));
+					// console.log("aging end", printNode(roots[i]));
 				}
 			}
 		};
@@ -175,8 +175,9 @@ UTIL, FUTURE) {
 					var temp = __getChildNode(parent.children, node.relid);
 					if( temp !== null ) {
 						// TODO: make the current node close to the returned one
-						
-						// console.log("normalize end1", printNode(getRoot(temp)));
+
+						// console.log("normalize end1",
+						// printNode(getRoot(temp)));
 						return temp;
 					}
 
@@ -656,7 +657,12 @@ UTIL, FUTURE) {
 			var promises = [];
 			__saveData(node.data, promises);
 
-			return FUTURE.array(promises);
+			return __storageFsync();
+		};
+
+		var __storageFsync = FUTURE.adapt(storage.fsync);
+		var __persist2 = function () {
+			return __storageFsync();
 		};
 
 		var __storageLoad = FUTURE.adapt(storage.load);
@@ -755,7 +761,7 @@ UTIL, FUTURE) {
 			// console.log(printNode(getRoot(node)));
 
 			node = normalize(node);
-			
+
 			try {
 				__test("object", typeof node === "object" && node !== null);
 				__test("parent", typeof node.parent === "object");
