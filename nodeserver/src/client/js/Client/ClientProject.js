@@ -31,7 +31,8 @@ define([
             //meta = new ClientMeta(master),
             status = null,
             readonly = parameters.readonly || false,
-            intransaction = false;
+            intransaction = false,
+            blocked = false;
 
         //functions that client master will call
         var dismantle = function(){
@@ -51,10 +52,74 @@ define([
         };
         var goOnline = function(callback){
             callback = callback || function(){};
-            if(status !== 'online'){
+            var goOnlineWithCommit = function(){
+                blocked = false;
                 status = 'online';
                 storage.requestPoll(branch,poll);
                 modifyRootOnServer("- going online -",callback);
+            };
+            var isPredecessorCommit = function(youngcommitid,oldcommitid,allcommits){
+                if(youngcommitid === oldcommitid){
+                    return true;
+                }
+                if(allcommits[youngcommitid].parents.length>0){
+                    var possibly = false;
+                    for(var i=0;i<allcommits[youngcommitid].parents.length;i++){
+                        if(isPredecessorCommit(allcommits[youngcommitid].parents[i],oldcommitid,allcommits)){
+                            possibly = true;
+                        }
+                    }
+                    return possibly;
+                } else {
+                    return false;
+                }
+            };
+            if(status !== 'online'){
+                if(currentNodes && currentNodes['root']){
+                    var key = currentCore.getKey(currentNodes['root']);
+                    if(key === currentRoot){
+                        //there were no changes so we should try to simply refresh ourselves to the server
+                        blocked = true;
+                        master.getBranchesAsync(function(err,branches){
+                            if(!err && branches && branches.length>0){
+                                master.getCommitsAsync(function(err,commits){
+                                    if(!err && commits && commits.length>0){
+                                        var mycommits = {};
+                                        for(var i=0;i<commits.length;i++){
+                                            mycommits[commits[i][KEY]] = commits[i];
+                                        }
+                                        var refreshed = false;
+                                        for(i=0;i<branches.length;i++){
+                                            if(isPredecessorCommit(branches[i].remotecommit,mycommit[KEY],mycommits)){
+                                                refreshed = true;
+                                                mycommit = mycommits[branches[i].remotecommit];
+                                                branch = mycommit['name'];
+                                                newRootArrived(mycommit.root,function(){
+                                                    blocked = false;
+                                                    status = 'online';
+                                                    master.changeStatus(id,status);
+                                                    callback();
+                                                });
+                                            }
+                                        }
+                                        if(!refreshed){
+                                            goOnlineWithCommit();
+                                        }
+                                    } else {
+                                        goOnlineWithCommit();
+                                    }
+                                });
+                            } else {
+                                goOnlineWithCommit();
+                            }
+                        });
+                    } else {
+                        goOnlineWithCommit();
+                    }
+                } else {
+                    //not too much to do
+                    callback();
+                }
             } else {
                 callback();
             }
@@ -64,6 +129,10 @@ define([
             master.changeStatus(id,status);
         };
         var createEmpty = function(callback){
+            if(blocked){
+                callback('cannot modify as now the actor is blocked!!!');
+                return;
+            }
             intransaction =true;
             var core = new ClientCore({
                 storage: storage,
@@ -156,6 +225,10 @@ define([
         };
         var buildUp = function(commitid,callback){
             callback = callback || function(){};
+            if(blocked){
+                callback('cannot modify as now the actor is blocked!!!');
+                return;
+            }
             //the initializing function, here we assume that the storage connection is up and running
             //we probably have already set the UI's and the terrytories
             if(commitid){
@@ -239,6 +312,13 @@ define([
             storage.save(commitobj,function(err){
                 callback(err,commitobj);
             });
+        };
+        var simpleCommit = function(commitmsg,callback){
+            if(blocked){
+                callback('cannot modify as now the actor is blocked!!!');
+                return;
+            }
+            modifyRootOnServer(commitmsg,callback);
         };
         var isReadOnly = function(){
             return readonly;
@@ -370,13 +450,22 @@ define([
 
         /*MGA like functions*/
         var startTransaction = function(){
+            if(blocked){
+                return;
+            }
             intransaction = true;
         };
         var completeTransaction = function(){
+            if(blocked){
+                return;
+            }
             intransaction = false;
             modifyRootOnServer();
         };
         var setAttributes = function(path,name,value){
+            if(blocked){
+                return;
+            }
             if(currentNodes[path]){
                 if (_.isString(name)) {
                     currentCore.setAttribute(currentNodes[path],name,value);
@@ -393,6 +482,9 @@ define([
             }
         };
         var setRegistry = function(path,name,value){
+            if(blocked){
+                return;
+            }
             if(currentNodes[path]){
                 if (_.isString(name)) {
                     currentCore.setRegistry(currentNodes[path],name,value);
@@ -409,9 +501,15 @@ define([
             }
         };
         var copyNodes = function(ids){
+            if(blocked){
+                return;
+            }
             clipboard = ids;
         };
         var pasteNodes = function(parentpath){
+            if(blocked){
+                return;
+            }
             Copy(clipboard,parentpath,function(err,copyarr){
                 if(err){
                     rollBackModification();
@@ -421,6 +519,9 @@ define([
             });
         };
         var deleteNode = function(path){
+            if(blocked){
+                return;
+            }
             if(currentNodes[path]){
                 currentCore.deleteNode(currentNodes[path]);
                 modifyRootOnServer();
@@ -428,6 +529,9 @@ define([
             }
         };
         var delMoreNodes = function(pathes){
+            if(blocked){
+                return;
+            }
             var i,
                 candelete = [];
             for(i=0;i<pathes.length;i++){
@@ -455,6 +559,9 @@ define([
             modifyRootOnServer();
         };
         var createChild = function(parameters){
+            if(blocked){
+                return;
+            }
             var baseId,
                 child;
 
@@ -483,6 +590,9 @@ define([
             /*TODO: currently there is no inheritance so no use of this function*/
         };
         var makePointer = function(id,name,to){
+            if(blocked){
+                return;
+            }
             if(currentNodes[id] && currentNodes[to]){
                 currentCore.setPointer(currentNodes[id],name,currentNodes[to]);
                 modifyRootOnServer();
@@ -491,6 +601,9 @@ define([
             }
         };
         var delPointer = function(path,name){
+            if(blocked){
+                return;
+            }
             if(currentNodes[path]){
                 currentCore.deletePointer(currentNodes[path],name);
                 modifyRootOnServer();
@@ -499,6 +612,9 @@ define([
             }
         };
         var makeConnection = function(parameters){
+            if(blocked){
+                return;
+            }
             var commands=[],
                 baseId,
                 connection;
@@ -520,6 +636,9 @@ define([
             }
         };
         var intellyPaste = function(parameters){
+            if(blocked){
+                return;
+            }
             var pathestocopy = [],
                 simplepaste = true;
             if(parameters.parentId && currentNodes[parameters.parentId]){
@@ -569,9 +688,6 @@ define([
             } else{
             }
         };
-        var simpleCommit = function(commitmsg,callback){
-            modifyRootOnServer(commitmsg,callback);
-        };
 
         //set functions and their helping methods
         var getMemberPath = function(path,memberpath,setid){
@@ -596,6 +712,9 @@ define([
             }
         };
         var addMember = function(path,memberpath,setid){
+            if(blocked){
+                return;
+            }
             setid = RELFROMSET(setid);
             var addmember = function(setpath){
                 var newmemberchild = currentCore.createNode(currentNodes[setpath]);
@@ -629,6 +748,9 @@ define([
             }
         };
         var removeMember = function(path,memberpath,setid){
+            if(blocked){
+                return;
+            }
             setid = RELFROMSET(setid);
             if(currentNodes[path] && currentNodes[memberpath]){
                 var mpath = getMemberPath(path,memberpath,setid);

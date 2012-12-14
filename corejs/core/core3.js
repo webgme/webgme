@@ -238,17 +238,21 @@ CoreTree, SHA1, FUTURE) {
 		var createNode = function (parent, relid) {
 			ASSERT(!parent || isValidNode(parent));
 
+			var node;
 			if( parent ) {
 				if( relid ) {
-					return coretree.getChild(parent, relid);
+					node = coretree.getChild(parent, relid);
 				}
 				else {
-					return coretree.createChild(parent);
+					node = coretree.createChild(parent);
 				}
+				coretree.setHashed(node, true);
 			}
 			else {
-				return coretree.createRoot();
+				node = coretree.createRoot();
 			}
+			
+			return node;
 		};
 
 		var getSingleNodeHash = function (node) {
@@ -829,6 +833,8 @@ CoreTree, SHA1, FUTURE) {
 			}
 		};
 
+		var startDate = Date.now();
+		
 		return {
 			// check
 			isValidNode: isValidNode,
