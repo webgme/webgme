@@ -36,7 +36,6 @@ define(['logManager',
         this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
         this._title = "";
-        this._redrawEnabled = true;
 
         this._initializeCollections();
 
@@ -146,6 +145,11 @@ define(['logManager',
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressBar);
         this.skinParts.$progressBar.hide();
 
+        this.skinParts.$progressText = $('<div/>', {
+            "class": "inline"
+        });
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressText);
+
         //'ONE LEVEL UP' in HEADER BAR
         this.skinParts.$btnOneLevelUp = $('<div class="btn-group inline"><a class="btn btnOneLevelUp" href="#" title="One level up" data-num="1"><i class="icon-circle-arrow-up"></i></a></div>');
         this.skinParts.$designerCanvasHeader.prepend(this.skinParts.$btnOneLevelUp);
@@ -156,12 +160,6 @@ define(['logManager',
         });
 
         //CHILDREN container
-        /*this.skinParts.$connectionsContainer = $('<div/>', {
-            "class" : "connections",
-            "id": commonUtil.guid()
-        });
-        this.skinParts.$designerCanvasBody.append(this.skinParts.$connectionsContainer);*/
-
         this.skinParts.$itemsContainer = $('<div/>', {
             "class" : "items",
             "id": commonUtil.guid(),
@@ -192,14 +190,8 @@ define(['logManager',
         this._actualSize.w = Math.max(this._actualSize.w, width);
         this._actualSize.h = Math.max(this._actualSize.h, bodyHeight);
 
-        /*this._actualSize.w += 100;
-        this._actualSize.h += 100;*/
-
         this.skinParts.$itemsContainer.css({"width": this._actualSize.w,
                                             "height": this._actualSize.h});
-
-        /*this.skinParts.$connectionsContainer.css({"width": this._actualSize.w,
-            "height": this._actualSize.h});*/
 
         this.skinParts.SVGPaper.setSize(this._actualSize.w, this._actualSize.h);
         this.skinParts.SVGPaper.setViewBox(0, 0, this._actualSize.w, this._actualSize.h, false);
@@ -257,67 +249,99 @@ define(['logManager',
     DesignerCanvas.prototype.beginUpdate = function () {
         this.skinParts.$progressBar.show();
         this.logger.error("beginUpdate");
+
         this._updating = true;
+
         this._insertedDesignerItemIDs = this._insertedDesignerItemIDs || [];
+        this._insertedDesignerItemAcks = this._insertedDesignerItemAcks || [];
+
         this._updatedDesignerItemIDs = this._updatedDesignerItemIDs || [];
+        this._updatedDesignerItemAcks = this._updatedDesignerItemAcks || [];
+
         this._deletedDesignerItemIDs = this._deletedDesignerItemIDs || [];
-        this._waitingForDesignerItemAck = this._waitingForDesignerItemAck || [];
     };
 
     DesignerCanvas.prototype.endUpdate = function () {
         this.logger.error("endUpdate");
+
         this._updating = false;
         this.tryRefreshScreen();
     };
 
+    DesignerCanvas.prototype.decoratorAdded = function (itemId, decoratorFullReady) {
+        var idx = this._insertedDesignerItemAcks.indexOf(itemId),
+            len = this._insertedDesignerItemAcks.length;
+
+        if (idx !== -1) {
+            this._insertedDesignerItemAcks.splice(idx, 1);
+            len -= 1;
+
+            this.logger.error("decoratorAdded: '" + itemId + "'");
+
+            //if the decorator signaled it is half ready at this point
+            //we put it into the update-ack-waiting-list
+            //and this way we know it is still working
+            if (decoratorFullReady === false) {
+                this._updatedDesignerItemAcks.push(itemId);
+            }
+
+            if (len === 0) {
+                this.tryRefreshScreen();
+            }
+        } else {
+            this.logger.error("DecoratorAdded called with unexpected id: '" + itemId + "'");
+        }
+    };
+
     DesignerCanvas.prototype.decoratorUpdated = function (itemID) {
-        var idx,
-            len = this._waitingForDesignerItemAck ? this._waitingForDesignerItemAck.length : 0;
+        var idx = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.indexOf(itemID) : -1,
+            len = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.length : 0;
 
-        //if the item was in the ack-waiting queue
-        if (len > 0) {
-            idx =  this._waitingForDesignerItemAck.indexOf(itemID);
+        if (idx !== -1) {
+            this._updatedDesignerItemAcks.splice(idx, 1);
+            len -= 1;
 
-            if (idx > -1) {
-                this._waitingForDesignerItemAck.splice(idx, 1);
-            }
-
-            this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + itemID);
-            this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + this._waitingForDesignerItemAck.length);
+            this.logger.error("DecoratorUpdated: '" + itemID + "'");
+        } else {
+            this.logger.error("DecoratorUpdated called with unexpected id: '" + itemID + "'");
         }
 
-        //check if the item is either in the insert queue or the update queue
-        //if not in either, store it in the update queue
-        if (this._insertedDesignerItemIDs.indexOf(itemID) === -1) {
-            if (this._updatedDesignerItemIDs.indexOf(itemID) === -1) {
-                this._updatedDesignerItemIDs.push(itemID);
-            }
-        }
+        this.logger.error("_updatedDesignerItemAcks length is : " + len);
 
         this.tryRefreshScreen();
     };
 
     DesignerCanvas.prototype.tryRefreshScreen = function () {
-        var len = this._waitingForDesignerItemAck ? this._waitingForDesignerItemAck.length : 0,
+        var insertedLen = this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0,
+            insertedWaitingAckLen = this._insertedDesignerItemAcks ? this._insertedDesignerItemAcks.length : 0,
+            updatedLen = this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0,
+            updatedWaitingAckLen = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.length : 0,
             listLen,
-            msg;
+            msg = "";
 
+        //check whether controller update finished or not
         if (this._updating !== true) {
-            if (len > 0) {
-                listLen = len > 5 ? 5 : len;
-                msg = "RefreshScreen is still waiting for [";
+
+            msg += "Added: " + (insertedLen - insertedWaitingAckLen) + "/" + insertedLen;
+            msg += " Updated: " + (updatedLen - updatedWaitingAckLen) + "/" + updatedLen;
+
+            this.logger.error(msg);
+
+            this.skinParts.$progressText.text(msg);
+
+            if (insertedWaitingAckLen > 0) {
+                listLen = insertedWaitingAckLen > 5 ? 5 : insertedWaitingAckLen;
+                msg = "tryRefreshScreen is still waiting for [";
                 while (listLen--) {
-                    msg += this._waitingForDesignerItemAck[listLen] + ", ";
+                    msg += this._insertedDesignerItemAcks[listLen] + ", ";
                 }
 
-                msg += len > 5 ? "... and " + (len - 5) + " more items to ack ]" : "]";
+                msg += insertedWaitingAckLen > 5 ? "... and " + (insertedWaitingAckLen - 5) + " more items to ack ]" : "]";
                 this.logger.error(msg);
             } else {
-                this.logger.error("_waitingForDesignerItemAck is empty, ready to do the thing");
+                this.logger.error("insertedWaitingAckLen is empty, ready to do the thing");
                 this._refreshScreen();
             }
-        } else {
-            this.logger.error("refreshScreen is still under update from controller");
         }
     };
 
@@ -389,10 +413,9 @@ define(['logManager',
 
         //add to accounting queues for performance optimization
         this._insertedDesignerItemIDs.push(componentId);
-        this._waitingForDesignerItemAck.push(componentId);
+        this._insertedDesignerItemAcks.push(componentId);
 
-        this.logger.error("decoratorUpdated_waitingForDesignerItemAck: " + objDescriptor.id);
-        this.logger.error("createModelComponent_waitingForDesignerItemAck: " + this._waitingForDesignerItemAck.length);
+        this.logger.error("createModelComponent_waitingForDesignerItemAck: '" + objDescriptor.id + "', len: " + this._insertedDesignerItemAcks.length);
 
         newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
         newComponent._initialize(objDescriptor, function () {

@@ -38,7 +38,12 @@ define(['logManager',
         this.skinParts.$name.text(this.name);
 
         //let the parent decorator class do its job first
-        __parent_proto__.on_addTo.apply(this, arguments);
+        return __parent_proto__.on_addTo.apply(this, arguments);
+    };
+
+    DefaultDecorator.prototype.calculateDimension = function () {
+        this.hostDesignerItem.width = this.$el.outerWidth(true);
+        this.hostDesignerItem.height = this.$el.outerHeight(true);
     };
 
     DefaultDecorator.prototype.update = function (objDescriptor, silent) {

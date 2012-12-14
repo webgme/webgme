@@ -163,14 +163,19 @@ define(['logManager',
     };
 
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
+        var ready;
+
+        this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
+
+        ready = this._callDecoratorMethod("on_addTo");
 
         this.$el.html(this._decoratorInstance.$el);
 
         docFragment.appendChild( this.$el[0] );
 
-        this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
+        ready = (typeof ready === 'boolean') ? ready : true;
 
-        this._callDecoratorMethod("on_addTo");
+        this.canvas.decoratorAdded(this.id, ready);
     };
 
     //whenever a decorator is ready with the rendering, needs to signal it
@@ -361,11 +366,19 @@ define(['logManager',
             this._decoratorInstance = null;
 
             this._initializeDecoratorAsync(objDescriptor, function () {
+                var ready;
+
                 self.$el.html(self._decoratorInstance.$el);
 
                 self.logger.debug("DesignerItem's decorator with id:'" + self.id + "' has been updated.");
 
-                self._callDecoratorMethod("on_addTo");
+                ready = self._callDecoratorMethod("on_addTo");
+
+                ready = (typeof ready !== 'boolean') ? ready : true;
+
+                if (ready === true) {
+                    self.canvas.decoratorUpdated(self.id);
+                }
             });
         } else {
             //if decocator instance not changed

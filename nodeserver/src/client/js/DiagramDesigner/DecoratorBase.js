@@ -34,13 +34,8 @@ define(['logManager'], function (logManager) {
     //this.$el has to be the toplevel container of the decorator, because it will be appended to a documentFragment later
     //at this point no dimension information is available since the content exist only in memory, not yet rendred
     DecoratorBase.prototype.on_addTo = function () {
-        this.hostDesignerItem.decoratorUpdated();
-    };
-
-    //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    //TODO: this is called to fill in the contents of the decorator
-    DecoratorBase.prototype.on_render = function () {
-
+        //this.hostDesignerItem.decoratorUpdated();
+        return true;
     };
 
     //do anything needs to be done to adjust look, read all width, height, etc information
@@ -58,19 +53,15 @@ define(['logManager'], function (logManager) {
         delete this.renderPhase1Cache;
     };
 
-    //Called after the host designer item is added to the canvas DOM and rendered
-    DecoratorBase.prototype.on_afterAdded = function () {
-        this.calculateDimension();
-    };
-
+    //override to calculate and set the 'this.hostDesignerItem.width'
+    //and 'this.hostDesignerItem.height' attributes with the dimensions of this decorator
+    //the dimension information is used for so many different reasons in the canvas, so please set it correctly
     DecoratorBase.prototype.calculateDimension = function () {
-        this.hostDesignerItem.width = this.$el.outerWidth(true);
-        this.hostDesignerItem.height = this.$el.outerHeight(true);
     };
 
     //in the destroy there is no need to touch the UI, it will be cleared out
     DecoratorBase.prototype.destroy = function () {
-        this.logger.debug("Destroyed");
+        this.logger.debug("DecoratorBase.destroyed");
     };
 
     /******************** EVENT HANDLERS ************************/

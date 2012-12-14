@@ -17,9 +17,6 @@ define(['logManager',
 
         __parent__.apply(this, [opts]);
 
-        /*this.counter = parseInt( Math.random() * 10, 10) + 1;
-        this.timerFreq = parseInt( Math.random() * 1000, 10) + 100;*/
-
         this.counter = 5;
         this.timerFreq = 1000;
 
@@ -41,7 +38,7 @@ define(['logManager',
             self._updateProgress();
         }, this.timerFreq);
 
-        this.hostDesignerItem.decoratorUpdated();
+        return false;
     };
 
     SlowRenderDecorator.prototype._updateProgress = function () {
@@ -90,7 +87,7 @@ define(['logManager',
         }
     };
 
-    DefaultDecorator.prototype.update = function (objDescriptor, silent) {
+    SlowRenderDecorator.prototype.update = function (objDescriptor, silent) {
         if (this.counter === 0) {
             this.hostDesignerItem.decoratorUpdated();
         }

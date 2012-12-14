@@ -59,23 +59,7 @@ define(['logManager',
             "left": shift });
 
         //let the parent decorator class do its job finally
-        __parent_proto__.on_renderPhase2.apply(this, arguments);
-    };
-
-    //Called after the host designer item is added to the canvas DOM and rendered
-    CircleDecorator.prototype.on_afterAdded = function () {
-        /*this.adjustNamePosition();
-
-        //finally let the parent decorator class do its job
-        __parent_proto__.on_afterAdded.apply(this, arguments);*/
-    };
-
-    CircleDecorator.prototype.adjustNamePosition = function () {
-        /*var nameWidth = this.skinParts.$name.outerWidth(),
-            shift = (40 - nameWidth) / 2;
-
-        this.skinParts.$name.css({"top": 45,
-            "left": shift });*/
+        return __parent_proto__.on_renderPhase2.apply(this, arguments);
     };
 
     CircleDecorator.prototype.calculateDimension = function () {
