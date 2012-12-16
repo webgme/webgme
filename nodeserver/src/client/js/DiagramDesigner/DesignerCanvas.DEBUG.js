@@ -12,6 +12,8 @@ define([], function () {
         this.logger.warning("DesignerCanvasDEBUG _addDebugModeExtensions activated...");
 
         this._debugAddAutoUpdater();
+
+        this._debugAddCreateButtons();
     };
 
     DesignerCanvasDEBUG.prototype._debugAddAutoUpdater = function () {
@@ -81,6 +83,51 @@ define([], function () {
         } else {
             delete this._debugAddAutoUpdaterParams;
         }
+    };
+
+    DesignerCanvasDEBUG.prototype._debugAddCreateButtons = function () {
+        var self = this;
+
+        this.skinParts.$debugCreateButtons =  $('<div class="btn-group inline"></div>', {});
+
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 1 Item, 0 connection" data-num="1_0"><i class="icon-plus-sign"></i>1/0</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 50 Item, 0 connection" data-num="50_0"><i class="icon-plus-sign"></i>50/0</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 100 Item, 0 connection" data-num="100_0"><i class="icon-plus-sign"></i>100/0</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 300 Item, 0 connection" data-num="300_0"><i class="icon-plus-sign"></i>300/0</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 500 Item, 0 connection" data-num="500_0"><i class="icon-plus-sign"></i>500/0</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 1000 Item, 0 connection" data-num="1000_0"><i class="icon-plus-sign"></i>1000/0</a>'));
+
+        this.skinParts.$debugCreateButtons.append($('<a class="btn disabled" href="#" title="" ><i class="icon-separator"></i></a>'));
+
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 0 Item, 1 connection" data-num="0_1"><i class="icon-plus-sign"></i>0/1</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 0 Item, 10 connection" data-num="0_10"><i class="icon-plus-sign"></i>0/10</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 0 Item, 50 connection" data-num="0_50"><i class="icon-plus-sign"></i>0/50</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 0 Item, 100 connection" data-num="0_100"><i class="icon-plus-sign"></i>0/100</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 0 Item, 1000 connection" data-num="0_1000"><i class="icon-plus-sign"></i>0/1000</a>'));
+
+        this.skinParts.$debugCreateButtons.append($('<a class="btn disabled" href="#" title="" ><i class="icon-separator"></i></a>'));
+
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 100 Item, 500 connection" data-num="100_500"><i class="icon-plus-sign"></i>100/500</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 300 Item, 1000 connection" data-num="300_1000"><i class="icon-plus-sign"></i>300/1000</a>'));
+        this.skinParts.$debugCreateButtons.append($('<a class="btn btnCreate" href="#" title="Create 1000 Item, 10000 connection" data-num="1000_10000"><i class="icon-plus-sign"></i>1000/10000</a>'));
+
+
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$debugCreateButtons );
+
+        this.skinParts.$debugCreateButtons.on("click", ".btnCreate", function (event) {
+            var data = $(this).attr("data-num"),
+                itemNum = parseInt(data.split("_")[0], 10),
+                connNum = parseInt(data.split("_")[1], 10);
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            self.onDebugCreateItems({"items": itemNum,
+                                     "connections": connNum });
+        });
+
+
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$_debugAutoUpdater);
     };
 
     return DesignerCanvasDEBUG;

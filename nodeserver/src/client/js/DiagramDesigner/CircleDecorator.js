@@ -67,5 +67,44 @@ define(['logManager',
         this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
     };
 
+    CircleDecorator.prototype.getConnectionAreas = function (id) {
+        var result = [],
+            width = this.skinParts.$arrowCanvas[0].width,
+            height = this.skinParts.$arrowCanvas[0].height;
+
+        //by default return the bounding box edges midpoints
+
+        //top left
+        result.push( {"id": "0",
+            "x": width / 2,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "orientation": "N"} );
+
+        result.push( {"id": "1",
+            "x": width / 2,
+            "y": height,
+            "w": 0,
+            "h": 0,
+            "orientation": "S"} );
+
+        result.push( {"id": "2",
+            "x": 0,
+            "y": height / 2,
+            "w": 0,
+            "h": 0,
+            "orientation": "N"} );
+
+        result.push( {"id": "3",
+            "x": width,
+            "y": height / 2,
+            "w": 0,
+            "h": 0,
+            "orientation": "S"} );
+
+        return result;
+    };
+
     return CircleDecorator;
 });

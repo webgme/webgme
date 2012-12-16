@@ -8,6 +8,8 @@ define(['logManager',
     'js/DiagramDesigner/DesignerItem',
     'raphaeljs',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
+    'js/DiagramDesigner/DesignerCanvas.Connections',
+    'js/DiagramDesigner/SimpleConnectionManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
@@ -16,7 +18,8 @@ define(['logManager',
                                                       DesignerItem,
                                                       raphaeljs,
                                                       DesignerCanvasDEBUG,
-                                                      DefaultDecorator) {
+                                                      DesignerCanvasConnections,
+                                                      SimpleConnectionManager) {
 
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10,
@@ -50,6 +53,9 @@ define(['logManager',
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize();
 
+        this.connectionManager = options.connectionManager || new SimpleConnectionManager({"canvas": this});
+        this.connectionManager.initialize();
+
         this._documentFragment = document.createDocumentFragment();
 
         //in DEBUG mode add additional content to canvas
@@ -61,10 +67,19 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype._initializeCollections = function () {
+        //all the designeritems and connections
         this.items = {};
-        this.itemIds = [];
-        this.connectionIds = [];
 
+        //IDs of items
+        this.itemIds = [];
+
+        //IDs of connections
+
+        this.connectionIds = [];
+        //additional helpers for connection accounting
+
+        this.connectionEndIDs = {};
+        this.connectionIDbyEndID = {};
 
         this._updating = false;
         this._insertedDesignerItemIDs = null;
@@ -252,6 +267,7 @@ define(['logManager',
 
         this._updating = true;
 
+        /*designer item acocunting*/
         this._insertedDesignerItemIDs = this._insertedDesignerItemIDs || [];
         this._insertedDesignerItemAcks = this._insertedDesignerItemAcks || [];
 
@@ -259,6 +275,9 @@ define(['logManager',
         this._updatedDesignerItemAcks = this._updatedDesignerItemAcks || [];
 
         this._deletedDesignerItemIDs = this._deletedDesignerItemIDs || [];
+
+        /*connection accounting*/
+        this._insertedConnectionIDs = this._insertedConnectionIDs || [];
     };
 
     DesignerCanvas.prototype.endUpdate = function () {
@@ -346,7 +365,8 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype._refreshScreen = function () {
-        var i;
+        var i,
+            connectionIDsToUpdate = [];
 
 //        this.skinParts.$progressBar.show();
 
@@ -357,6 +377,7 @@ define(['logManager',
         //browsers will optimize this
         //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
 
+        /* DESIGNER ITEMS */
         //add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
@@ -383,8 +404,24 @@ define(['logManager',
             this.items[this._updatedDesignerItemIDs[i]].renderPhase2();
         }
 
+        /* CONNECTIONS */
+
+        //get all the connections that needs to be updated
+        // - inserted connections
+        // - updated connections
+        // - connections that are affected because of
+        //      - endpoint appearance
+        //      - endpoint remove
+        //      - endpoint updated
+        //TODO: fix this, but right now we call refresh on all of the connections
+        connectionIDsToUpdate = this.connectionIds.slice(0);
+        this.connectionManager.redrawConnections(connectionIDsToUpdate);
+
+        /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
+
+        this._insertedConnectionIDs = [];
 
         this.skinParts.$progressBar.hide();
         this.logger.error("_refreshScreen END");
@@ -519,6 +556,9 @@ define(['logManager',
     DesignerCanvas.prototype.showSelectionOutline = function () {
 
     };
+
+    //additional code pieces for DesignerCanvas
+    _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
 
     //in DEBUG mode add additional content to canvas
     if (DEBUG) {

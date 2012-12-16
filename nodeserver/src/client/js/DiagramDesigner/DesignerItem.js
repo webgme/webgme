@@ -387,5 +387,9 @@ define(['logManager',
         }
     };
 
+    DesignerItem.prototype.getConnectionAreas = function (id) {
+        return this._decoratorInstance.getConnectionAreas(id);
+    };
+
     return DesignerItem;
 });

@@ -121,5 +121,25 @@ define(['logManager'], function (logManager) {
         this.hostDesignerItem.decoratorUpdated();
     };
 
+    //should return the connection areas for the component with the given 'id'
+    //id might be the id of this DesignerItem itself
+    //or id can be the ID of one of the subcomponents contained in this component
+    //result should be an array of the area descriptors
+    DecoratorBase.prototype.getConnectionAreas = function (id) {
+        var result = [];
+
+        //by default return the center point of the item
+
+        result.push( {"id": "0",
+                      "x": this.hostDesignerItem.width / 2,
+                      "y": this.hostDesignerItem.height / 2,
+                      "w": 0,
+                      "h": 0,
+                      "orientation": "N"} );
+
+
+        return result;
+    };
+
     return DecoratorBase;
 });

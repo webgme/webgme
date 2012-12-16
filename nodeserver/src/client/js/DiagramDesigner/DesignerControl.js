@@ -2,14 +2,15 @@
 
 define(['logManager',
     'clientUtil',
-    'js/DiagramDesigner/NodePropertyNames'], function (logManager,
+    'js/DiagramDesigner/NodePropertyNames',
+    'js/DiagramDesigner/DesignerControl.DEBUG'], function (logManager,
                                                         util,
-                                                        nodePropertyNames) {
+                                                        nodePropertyNames,
+                                                        DesignerControlDEBUG) {
 
     var DesignerControl,
-        counter = 0,
-        tempDecorators = ['DefaultDecorator', 'CircleDecorator', 'SlowRenderDecorator'],
-        tempDecoratorsCount = tempDecorators.length;
+        counter = 0;
+
 
     DesignerControl = function (options) {
         var self = this;
@@ -40,11 +41,22 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
+        if (DEBUG === true) {
+            this.designerCanvas.onDebugCreateItems = function (options) {
+                self._onDebugCreateItems(options);
+            };
+        }
+
         this._selfPatterns = {};
         this.components = {};
 
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
+
+        //in DEBUG mode add additional content to canvas
+        if (DEBUG) {
+            this._addDebugModeExtensions();
+        }
 
         /*OVERRIDE MODEL EDITOR METHODS*/
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
@@ -126,8 +138,8 @@ define(['logManager',
                 objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
 
                 //TODO: alternating decorators just for testing purpose
-                objDescriptor.decorator = tempDecorators[counter % tempDecoratorsCount];
-                counter++;
+/*                objDescriptor.decorator = tempDecorators[counter % tempDecoratorsCount];
+                counter++;*/
             }
         }
 
@@ -239,6 +251,12 @@ define(['logManager',
     DesignerControl.prototype.destroy = function () {
         this._client.removeUI(this._territoryId);
     };
+
+    //in DEBUG mode add additional content to canvas
+    if (DEBUG) {
+        _.extend(DesignerControl.prototype, DesignerControlDEBUG.prototype);
+    }
+
 
     return DesignerControl;
 });

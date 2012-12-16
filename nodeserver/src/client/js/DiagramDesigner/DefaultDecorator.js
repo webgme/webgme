@@ -57,5 +57,42 @@ define(['logManager',
         this.hostDesignerItem.decoratorUpdated();
     };
 
+    DefaultDecorator.prototype.getConnectionAreas = function (id) {
+        var result = [];
+
+        //by default return the bounding box edges midpoints
+
+        //top left
+        result.push( {"id": "0",
+            "x": this.hostDesignerItem.width / 2,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "orientation": "N"} );
+
+        result.push( {"id": "1",
+            "x": this.hostDesignerItem.width / 2,
+            "y": this.hostDesignerItem.height,
+            "w": 0,
+            "h": 0,
+            "orientation": "S"} );
+
+        result.push( {"id": "2",
+            "x": 0,
+            "y": this.hostDesignerItem.height / 2,
+            "w": 0,
+            "h": 0,
+            "orientation": "N"} );
+
+        result.push( {"id": "3",
+            "x": this.hostDesignerItem.width,
+            "y": this.hostDesignerItem.height / 2,
+            "w": 0,
+            "h": 0,
+            "orientation": "S"} );
+
+        return result;
+    };
+
     return DefaultDecorator;
 });
