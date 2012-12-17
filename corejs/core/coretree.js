@@ -27,7 +27,7 @@ UTIL, FUTURE) {
 	};
 
 	// make relids deterministic
-	if( false ) {
+	if( true ) {
 		var nextRelid = 0;
 		createRelid = function (data) {
 			ASSERT(data && typeof data === "object");
@@ -47,7 +47,7 @@ UTIL, FUTURE) {
 		var ticks = 0;
 
 		var MAX_AGE = 2;
-		var MAX_TICKS = 1000;
+		var MAX_TICKS = 2000;
 		var HASH_ID = "_id";
 		var EMPTY_DATA = {};
 
@@ -82,6 +82,10 @@ UTIL, FUTURE) {
 		};
 
 		var getPath = function (node, base) {
+			if( node === null ) {
+				return null;
+			}
+
 			var path = "";
 			while( node.relid !== null && node !== base ) {
 				path = "/" + node.relid + path;
@@ -572,8 +576,11 @@ UTIL, FUTURE) {
 		// ------- persistence
 
 		var getHash = function (node) {
-			var hash;
+			if( node === null ) {
+				return null;
+			}
 
+			var hash;
 			node = normalize(node);
 			if( typeof node.data === "object" && node.data !== null ) {
 				hash = node.data[HASH_ID];
@@ -657,7 +664,9 @@ UTIL, FUTURE) {
 			var promises = [];
 			__saveData(node.data, promises);
 
-			return __storageFsync();
+			promises.push(__storageFsync());
+
+			return FUTURE.array(promises);
 		};
 
 		var __storageFsync = FUTURE.adapt(storage.fsync);
@@ -759,8 +768,6 @@ UTIL, FUTURE) {
 
 		var isValidNode = function (node) {
 			// console.log(printNode(getRoot(node)));
-
-			node = normalize(node);
 
 			try {
 				__test("object", typeof node === "object" && node !== null);

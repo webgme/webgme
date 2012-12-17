@@ -148,7 +148,7 @@ define(function () {
 			}
 
 			if( isUnresolved(value) ) {
-				setListener(value, function (value) {
+				setListener(value, function (nothing, value) {
 					if( value instanceof Error ) {
 						callback(value);
 					}
