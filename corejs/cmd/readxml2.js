@@ -5,7 +5,7 @@
  */
 
 define(
-[ "core/assert", "core/lib/sax", "fs", "core/core2", "core/config", "core/util", "core/cache" ],
+[ "core/assert", "core/lib/sax", "fs", "core/core3", "core/config", "core/util", "core/cache" ],
 function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 	"use strict";
 
@@ -112,7 +112,8 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 					exit(err);
 				}
 				else if( --persisting === 0 ) {
-					resolveUnresolved(tags[0].node, finishParsing);
+					root = tags[0].node;
+					resolveUnresolved(finishParsing);
 				}
 			});
 		};
@@ -208,55 +209,11 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			persist(true);
 		});
 
-		// We do our caching to avoid concurrent modifications on doubly loaded
-		// nodes
-		var loadedNodes = {};
-
-		var resolveNotifyCallbacks = function (path, err, node) {
-			var callbacks = loadedNodes[path];
-			ASSERT(Array.isArray(callbacks));
-			ASSERT(err || node);
-
-			loadedNodes[path] = err ? undefined : node;
-
-			for( var i = 0; i < callbacks.length; ++i ) {
-				callbacks[i](err, node);
-			}
-		};
-
+		var root;
 		var resolveLoadByPath = function (path, callback) {
-			ASSERT(typeof path === "string");
-
-			var node = loadedNodes[path];
-
-			if( node === undefined ) {
-				ASSERT(path !== "");
-
-				loadedNodes[path] = [ callback ];
-
-				var index = path.lastIndexOf("/");
-				var base = index >= 0 ? path.substr(0, index) : "";
-				var relid = index >= 0 ? path.substr(index + 1) : path;
-				ASSERT(relid !== "");
-
-				resolveLoadByPath(base, function (err, parent) {
-					if( err ) {
-						resolveNotifyCallbacks(path, err);
-					}
-					else {
-						core.loadChild(parent, relid, function (err, node) {
-							resolveNotifyCallbacks(path, err, node);
-						});
-					}
-				});
-			}
-			else if( Array.isArray(node) ) {
-				node.push(callback);
-			}
-			else {
-				ASSERT(typeof node === "object");
-				UTIL.immediateCallback(callback, null, node);
-			}
+			core.loadByPath(root, path, function (err, node) {
+				setTimeout(callback, 0, err, node);
+			});
 		};
 
 		var resolveAddPointer = function (source, name, targetPath, callback) {
@@ -327,10 +284,9 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			});
 		};
 
-		var resolveUnresolved = function (root, callback) {
+		var resolveUnresolved = function (callback) {
 			ASSERT(callback instanceof Function);
 
-			loadedNodes[""] = root;
 			console.log("Resolving " + unresolved.length + " objects with idrefs ...");
 
 			var done = 0;

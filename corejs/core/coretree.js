@@ -94,6 +94,31 @@ UTIL, FUTURE) {
 			return path;
 		};
 
+		var isValidPath = function (path) {
+			return typeof path === "string" && (path === "" || path.charAt(0) === "/");
+		};
+
+		var splitPath = function (path) {
+			ASSERT(isValidPath(path));
+
+			path = path.split("/");
+			path.splice(0, 1);
+
+			return path;
+		};
+
+		var buildPath = function (path) {
+			ASSERT(path instanceof Array);
+
+			return path.length === 0 ? "" : "/" + path.join("/");
+		};
+
+		var joinPaths = function (first, second) {
+			ASSERT(isValidPath(first) && isValidPath(second));
+
+			return first + second;
+		};
+
 		// ------- memory management
 
 		var __detachChildren = function (node) {
@@ -185,7 +210,7 @@ UTIL, FUTURE) {
 						return temp;
 					}
 
-					ASSERT(__getChildNode(node.parent.children, node.relid) === null);
+					ASSERT(node.parent.children === null || __getChildNode(node.parent.children, node.relid) === null);
 					ASSERT(__getChildNode(parent.children, node.relid) === null);
 
 					node.parent = parent;
@@ -717,18 +742,21 @@ UTIL, FUTURE) {
 			return node;
 		};
 
-		var loadDescendantByPath = function (node, path) {
+		var loadByPath = function (node, path) {
 			ASSERT(isValidNode(node));
 			ASSERT(path === "" || path.charAt(0) === "/");
 
 			path = path.split("/");
+			return __loadDescendantByPath2(node, path, 1);
+		};
 
-			for( var i = 1; i < path.length; ++i ) {
-				node = loadChild(node, path[i]);
+		var __loadDescendantByPath2 = function (node, path, index) {
+			if( node === null || index === path.length ) {
+				return node;
 			}
 
-			console.log("yyyyy", getPath(node), node);
-			return node;
+			var child = loadChild(node, path[index]);
+			return FUTURE.call(child, path, index + 1, __loadDescendantByPath2);
 		};
 
 		// ------- valid -------
@@ -771,6 +799,7 @@ UTIL, FUTURE) {
 
 			try {
 				__test("object", typeof node === "object" && node !== null);
+				__test("object 2", node.hasOwnProperty("parent") && node.hasOwnProperty("relid"));
 				__test("parent", typeof node.parent === "object");
 				__test("relid", typeof node.relid === "string" || node.relid === null);
 				__test("parent 2", (node.parent === null) === (node.relid === null));
@@ -789,7 +818,7 @@ UTIL, FUTURE) {
 				return true;
 			}
 			catch(error) {
-				console.log("Wrong node", error.stack, node);
+				console.log("Wrong node", error.stack);
 				return false;
 			}
 		};
@@ -800,6 +829,10 @@ UTIL, FUTURE) {
 			getLevel: getLevel,
 			getRoot: getRoot,
 			getPath: getPath,
+			isValidPath: isValidPath,
+			splitPath: splitPath,
+			buildPath: buildPath,
+			joinPaths: joinPaths,
 
 			normalize: normalize,
 			getAncestor: getAncestor,
@@ -830,7 +863,7 @@ UTIL, FUTURE) {
 			persist: persist,
 			loadRoot: loadRoot,
 			loadChild: loadChild,
-			loadDescendantByPath: loadDescendantByPath,
+			loadByPath: loadByPath,
 
 			isValidNode: isValidNode
 		};

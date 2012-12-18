@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/core2", "core/util", "core/config", "core/cache" ], function (ASSERT,
+define([ "core/assert", "core/core3", "core/util", "core/config", "core/cache" ], function (ASSERT,
 Core, UTIL, CONFIG, Cache) {
 	"use strict";
 

@@ -71,41 +71,6 @@ define(function () {
 	// ------- adapt
 
 	var adapt = function (func) {
-		ASSERT(typeof func === "function" && func.length >= 1);
-
-		if( func.length === 1 ) {
-			return function () {
-				var future = new Future();
-				func.call(this, function (error, value) {
-					if( error !== null ) {
-						value = error instanceof Error ? error : new Error(error);
-					}
-					else {
-						ASSERT(!(value instanceof Error));
-					}
-					setValue(future, value);
-				});
-				return getValue(future);
-			};
-		}
-		else if( func.length === 2 ) {
-			return function (arg0) {
-				var future = new Future();
-				func.call(this, arg0, function (error, value) {
-					if( error ) {
-						value = error instanceof Error ? error : new Error(error);
-					}
-					else {
-						ASSERT(!(value instanceof Error));
-					}
-					setValue(future, value);
-				});
-				return getValue(future);
-			};
-		}
-	};
-
-	var adapt2 = function (func) {
 		ASSERT(typeof func === "function");
 
 		return function () {
@@ -128,39 +93,85 @@ define(function () {
 		};
 	};
 
+	var returnCallback = function (callback, value) {
+		if( value instanceof Error ) {
+			callback(value);
+		}
+		else {
+			callback(null, value);
+		}
+	};
+
+	var calldepth = 0;
+	var returnValue = function (callback, value) {
+		ASSERT(!(value instanceof Error));
+
+		if( isUnresolved(value) ) {
+			setListener(value, returnCallback, callback);
+		}
+		else if( calldepth < 5 ) {
+			++calldepth;
+			try {
+				callback(null, value);
+			}
+			catch(error) {
+				--calldepth;
+				throw error;
+			}
+			--calldepth;
+		}
+		else {
+			setTimeout(callback, 0, null, value);
+		}
+	};
+
 	var unadapt = function (func) {
 		ASSERT(typeof func === "function");
 
-		return function () {
-			var args = arguments;
+		if( func.length === 0 ) {
+			return function (callback) {
+				var value;
+				try {
+					value = func.call(this);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
+		else if( func.length === 1 ) {
+			return function (arg, callback) {
+				var value;
+				try {
+					value = func.call(this, arg);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
+		else {
+			return function () {
+				var args = arguments;
 
-			var callback = args[--args.length];
-			ASSERT(typeof callback === "function");
+				var callback = args[--args.length];
+				ASSERT(typeof callback === "function");
 
-			var value;
-
-			try {
-				value = func.apply(this, args);
-			}
-			catch(error) {
-				callback(error);
-				return;
-			}
-
-			if( isUnresolved(value) ) {
-				setListener(value, function (nothing, value) {
-					if( value instanceof Error ) {
-						callback(value);
-					}
-					else {
-						callback(null, value);
-					}
-				}, null);
-			}
-			else {
-				callback(null, value);
-			}
-		};
+				var value;
+				try {
+					value = func.apply(this, args);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
 	};
 
 	var delay = function (delay, value) {
@@ -361,7 +372,7 @@ define(function () {
 	// -------
 
 	return {
-		adapt: adapt2,
+		adapt: adapt,
 		unadapt: unadapt,
 		delay: delay,
 		call: call,

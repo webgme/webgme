@@ -14,10 +14,6 @@ CoreTree, SHA1, FUTURE) {
 		return typeof relid === "string" && parseInt(relid, 10).toString() === relid;
 	};
 
-	var isValidPath = function (path) {
-		return typeof path === "string";
-	};
-
 	var ATTRIBUTES = "atr";
 	var REGISTRY = "reg";
 	var OVERLAYS = "ovr";
@@ -40,32 +36,6 @@ CoreTree, SHA1, FUTURE) {
 		return true;
 	};
 
-	var __getCommonPathPrefixData = function (first, second) {
-		ASSERT(typeof first === "string" && typeof second === "string");
-
-		first = first ? first.split("/") : [];
-		second = second ? second.split("/") : [];
-
-		var common = [];
-		for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
-			common.push(first[i]);
-		}
-
-		return {
-			common: common.join("/"),
-			first: first.slice(i).join("/"),
-			firstLength: first.length - i,
-			second: second.slice(i).join("/"),
-			secondLength: second.length - i
-		};
-	};
-
-	var __joinStringPaths = function (first, second) {
-		ASSERT(typeof first === "string" && typeof second === "string");
-
-		return second ? (first ? first + "/" + second : second) : first;
-	};
-
 	// ----------------- Core -----------------
 
 	var Core = function (storage) {
@@ -73,6 +43,27 @@ CoreTree, SHA1, FUTURE) {
 		var coretree = new CoreTree(storage);
 
 		var isValidNode = coretree.isValidNode;
+		var isValidPath = coretree.isValidPath;
+
+		var __getCommonPathPrefixData = function (first, second) {
+			ASSERT(typeof first === "string" && typeof second === "string");
+
+			first = coretree.splitPath(first);
+			second = coretree.splitPath(second);
+
+			var common = [];
+			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
+				common.push(first[i]);
+			}
+
+			return {
+				common: coretree.buildPath(common),
+				first: coretree.buildPath(first.slice(i)),
+				firstLength: first.length - i,
+				second: coretree.buildPath(second.slice(i)),
+				secondLength: second.length - i
+			};
+		};
 
 		var getAttributeNames = function (node) {
 			ASSERT(isValidNode(node));
@@ -195,7 +186,7 @@ CoreTree, SHA1, FUTURE) {
 		};
 
 		var overlayQuery = function (overlays, prefix) {
-			ASSERT(isValidNode(overlays) && typeof prefix === "string");
+			ASSERT(isValidNode(overlays) && isValidPath(prefix));
 
 			var list = [];
 
@@ -251,7 +242,7 @@ CoreTree, SHA1, FUTURE) {
 			else {
 				node = coretree.createRoot();
 			}
-			
+
 			return node;
 		};
 
@@ -270,12 +261,7 @@ CoreTree, SHA1, FUTURE) {
 				var rels = coretree.getProperty(overlays, prefix);
 				data[prefix] = rels;
 
-				if( prefix === "" ) {
-					prefix = coretree.getRelid(node);
-				}
-				else {
-					prefix = coretree.getRelid(node) + "/" + prefix;
-				}
+				prefix = "/" + coretree.getRelid(node) + prefix;
 				node = coretree.getParent(node);
 			}
 
@@ -286,10 +272,10 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(isValidNode(node));
 
 			var parent = coretree.getParent(node);
-			var prefix = coretree.getRelid(node);
+			var prefix = "/" + coretree.getRelid(node);
 			ASSERT(parent !== null);
 
-			coretree.deleteProperty(parent, node.relid);
+			coretree.deleteProperty(parent, coretree.getRelid(node));
 
 			while( parent ) {
 				var overlays = coretree.getChild(parent, OVERLAYS);
@@ -300,7 +286,7 @@ CoreTree, SHA1, FUTURE) {
 					overlayRemove(overlays, entry.s, entry.n, entry.t);
 				}
 
-				prefix = coretree.getRelid(parent) + "/" + prefix;
+				prefix = "/" + coretree.getRelid(parent) + prefix;
 				parent = coretree.getParent(parent);
 			}
 		};
@@ -350,7 +336,7 @@ CoreTree, SHA1, FUTURE) {
 
 							if( aboveAncestor > 0 ) {
 								source = ancestorNewPath + entry.s.substr(baseOldPath.length);
-								target = __joinStringPaths(relativePath, entry.t);
+								target = coretree.joinPaths(relativePath, entry.t);
 								overlays = ancestorOverlays;
 							}
 							else if( aboveAncestor === 0 ) {
@@ -362,7 +348,7 @@ CoreTree, SHA1, FUTURE) {
 								}
 								overlays = coretree.getChild(overlays, OVERLAYS);
 
-								source = __joinStringPaths(data.first, entry.s
+								source = coretree.joinPaths(data.first, entry.s
 								.substr(baseOldPath.length + 1));
 								target = data.second;
 							}
@@ -444,7 +430,7 @@ CoreTree, SHA1, FUTURE) {
 
 					if( aboveAncestor > 0 ) {
 						source = ancestorNewPath + entry.s.substr(baseOldPath.length);
-						target = __joinStringPaths(relativePath, entry.t);
+						target = coretree.joinPaths(relativePath, entry.t);
 						overlays = ancestorOverlays;
 					}
 					else if( aboveAncestor === 0 ) {
@@ -456,7 +442,7 @@ CoreTree, SHA1, FUTURE) {
 						}
 						overlays = coretree.getChild(overlays, OVERLAYS);
 
-						source = __joinStringPaths(data.first, entry.s
+						source = coretree.joinPaths(data.first, entry.s
 						.substr(baseOldPath.length + 1));
 						target = data.second;
 					}
@@ -533,13 +519,7 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 
-				if( source === "" ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -564,19 +544,13 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 
-				if( source === "" ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
 			if( target !== undefined ) {
 				ASSERT(node);
-				target = __joinStringPaths(coretree.getPath(node), target);
+				target = coretree.joinPaths(coretree.getPath(node), target);
 			}
 
 			return target;
@@ -596,13 +570,7 @@ CoreTree, SHA1, FUTURE) {
 					return true;
 				}
 
-				if( source === "" ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -627,19 +595,13 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 
-				if( source.length === 0 ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
 			if( target !== undefined ) {
 				ASSERT(node);
-				target = __joinStringPaths(coretree.getPath(node), target);
+				target = coretree.joinPaths(coretree.getPath(node), target);
 			}
 
 			return target;
@@ -663,19 +625,13 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 
-				if( source === "" ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
 			if( target !== undefined ) {
 				ASSERT(typeof target === "string" && node);
-				return coretree.loadDescendantByPath(node, target);
+				return coretree.loadByPath(node, target);
 			}
 			else {
 				return null;
@@ -701,13 +657,7 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 
-				if( target === "" ) {
-					target = coretree.getRelid(node);
-				}
-				else {
-					target = coretree.getRelid(node) + "/" + target;
-				}
-
+				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -732,18 +682,12 @@ CoreTree, SHA1, FUTURE) {
 						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
 						for( var i = 0; i < sources.length; ++i ) {
-							collection.push(coretree.loadDescendantByPath(node, sources[i]));
+							collection.push(coretree.loadByPath(node, sources[i]));
 						}
 					}
 				}
 
-				if( target === "" ) {
-					target = coretree.getRelid(node);
-				}
-				else {
-					target = coretree.getRelid(node) + "/" + target;
-				}
-
+				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -770,18 +714,12 @@ CoreTree, SHA1, FUTURE) {
 						var prefix = coretree.getPath(node);
 
 						for( var i = 0; i < sources.length; ++i ) {
-							result.push(__joinStringPaths(prefix, sources[i]));
+							result.push(coretree.joinPaths(prefix, sources[i]));
 						}
 					}
 				}
 
-				if( target === "" ) {
-					target = coretree.getRelid(node);
-				}
-				else {
-					target = coretree.getRelid(node) + "/" + target;
-				}
-
+				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -803,13 +741,7 @@ CoreTree, SHA1, FUTURE) {
 					return true;
 				}
 
-				if( source === "" ) {
-					source = coretree.getRelid(node);
-				}
-				else {
-					source = coretree.getRelid(node) + "/" + source;
-				}
-
+				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
 			} while( node );
 
@@ -834,7 +766,7 @@ CoreTree, SHA1, FUTURE) {
 		};
 
 		var startDate = Date.now();
-		
+
 		return {
 			// check
 			isValidNode: isValidNode,
@@ -864,7 +796,7 @@ CoreTree, SHA1, FUTURE) {
 			getParent: coretree.getParent,
 			getChildrenRelids: getChildrenRelids,
 			loadChild: FUTURE.unadapt(coretree.loadChild),
-			loadByPath: FUTURE.unadapt(coretree.loadDescendantByPath),
+			loadByPath: FUTURE.unadapt(coretree.loadByPath),
 			loadChildren: FUTURE.unadapt(loadChildren),
 
 			// modify

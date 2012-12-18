@@ -11,9 +11,9 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "core/assert", "core/mongo", "core/core2", "core/util", "cmd/readxml", "cmd/parsemeta",
+requirejs([ "core/assert", "core/mongo", "core/core2", "core/util", "cmd/readxml", "cmd/readxml2", "cmd/parsemeta",
 	"cmd/tests", "cmd/parsedata", "core/config", "cmd/dumptree" ], function (ASSERT, Mongo, Core,
-UTIL, readxml, parsemeta, tests, parsedata, CONFIG, DUMPTREE) {
+UTIL, readxml, readxml2, parsemeta, tests, parsedata, CONFIG, DUMPTREE) {
 	"use strict";
 
 	var argv = process.argv.slice(2);
@@ -127,6 +127,34 @@ UTIL, readxml, parsemeta, tests, parsedata, CONFIG, DUMPTREE) {
 					}
 					else {
 						readxml(mongo, opt, function (err, key) {
+							if( err ) {
+								console.log("XML parsing", err.stack);
+								argv.splice(i, 0, "-end");
+							}
+							else {
+								ASSERT(typeof key === "string");
+								root = key;
+							}
+							next();
+						});
+					}
+				}
+			}
+			else if( cmd === "-readxml2" ) {
+				if( !mongo ) {
+					argv.splice(--i, 0, "-mongo");
+					next();
+				}
+				else {
+					opt = parm();
+
+					if( !opt ) {
+						console.log("Error: XML filename is not specified");
+						argv.splice(i, 0, "-end");
+						next();
+					}
+					else {
+						readxml2(mongo, opt, function (err, key) {
 							if( err ) {
 								console.log("XML parsing", err.stack);
 								argv.splice(i, 0, "-end");
