@@ -1,30 +1,27 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil'], function (logManager,
-                             clientUtil) {
+define(['logManager'], function (logManager) {
 
-    var SimpleConnectionManager;
+    var ConnectionRouteManagerBasic;
 
-    SimpleConnectionManager = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SimpleConnectionManager"));
+    ConnectionRouteManagerBasic = function (options) {
+        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
 
         this.canvas = options ? options.canvas : null;
 
         if (this.canvas === undefined || this.canvas === null) {
-            this.logger.error("Trying to initialize a SimpleConnectionManager without a canvas...");
-            throw ("SimpleConnectionManager can not be created");
+            this.logger.error("Trying to initialize a ConnectionRouteManagerBasic without a canvas...");
+            throw ("ConnectionRouteManagerBasic can not be created");
         }
 
-        this.logger.debug("SimpleConnectionManager ctor finished");
+        this.logger.debug("ConnectionRouteManagerBasic ctor finished");
     };
 
-    SimpleConnectionManager.prototype.initialize = function (params) {
-        //TODO: don't bother with it as of now
+    ConnectionRouteManagerBasic.prototype.initialize = function () {
         //TODO: not sure if needed...
     };
 
-    SimpleConnectionManager.prototype.redrawConnections = function (idList) {
+    ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
         var i = idList.length;
 
         //1 - update all the connection endpoint connectable area information
@@ -35,9 +32,13 @@ define(['logManager',
         while (i--) {
             this._updateConnectionCoordinates(idList[i]);
         }
+
+        //need to return the IDs of the connections that was really
+        //redrawn or any other visual property chenged (width, etc)
+        return idList;
     };
 
-    SimpleConnectionManager.prototype._updateEndpointInfo = function (idList) {
+    ConnectionRouteManagerBasic.prototype._updateEndpointInfo = function (idList) {
         var i = idList.length,
             connId,
             res,
@@ -67,18 +68,16 @@ define(['logManager',
                     res[j].y += designerItem.positionY;
                 }
             } else {
-                //TODO: sourceId is not a known item
-                //TODO: is it a subcomponent inside one of the items
+                //TODO: sourceId is not a known item --> is it a subcomponent inside one of the items
                 res = [];
             }
             this._updateEndpointConnectionAreaInfo(endPointId, res);
         }
     };
 
-    SimpleConnectionManager.prototype._updateEndpointConnectionAreaInfo = function (endPointId, connAreas) {
+    ConnectionRouteManagerBasic.prototype._updateEndpointConnectionAreaInfo = function (endPointId, connAreas) {
         var i = connAreas.length,
-            ca,
-            canvas = this.canvas;
+            ca;
 
         this.endpointConnectionAreaInfo = this.endpointConnectionAreaInfo || {};
 
@@ -91,7 +90,7 @@ define(['logManager',
         }
     };
 
-    SimpleConnectionManager.prototype._updateConnectionCoordinates = function (connectionId) {
+    ConnectionRouteManagerBasic.prototype._updateConnectionCoordinates = function (connectionId) {
         var canvas = this.canvas,
             sourceId = canvas.connectionEndIDs[connectionId].source,
             targetId = canvas.connectionEndIDs[connectionId].target,
@@ -100,22 +99,20 @@ define(['logManager',
             targetConnectionPoints = this.endpointConnectionAreaInfo[targetId] || [],
             sourceCoordinates = null,
             targetCoordinates = null,
-            closestConnPoints,
-            connUpdateInfo,
-            i;
+            closestConnPoints;
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
             closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
             sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
             targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
-        };
+        }
 
         canvas.items[connectionId].setConnectionRenderData([ sourceCoordinates, targetCoordinates ]);
     };
 
     //figure out the shortest side to choose between the two
-    SimpleConnectionManager.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
+    ConnectionRouteManagerBasic.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
         var i,
             j,
             dx,
@@ -163,5 +160,5 @@ define(['logManager',
         return [srcP, tgtP];
     };
 
-    return SimpleConnectionManager;
+    return ConnectionRouteManagerBasic;
 });

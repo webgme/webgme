@@ -1,17 +1,12 @@
 "use strict";
 
-define(['logManager',
-    'js/DiagramDesigner/DefaultDecorator' /*load the default decorator just to make sure it's here for sure*/
-    ], function (logManager,
-                 DefaultDecorator) {
+define(['logManager'], function (logManager) {
 
     var DesignerItem,
         DESIGNER_ITEM_CLASS = "designer-item",
         EVENT_POSTFIX = "DesignerItem",
         HOVER_CLASS = "hover",
-        SELECTABLE_CLASS = "selectable",
-        DECORATOR_PATH = "js/DiagramDesigner/", //TODO: fix path
-        DEFAULT_DECORATOR_CLASS = DefaultDecorator;
+        SELECTABLE_CLASS = "selectable";
 
     DesignerItem = function (objId) {
         this.id = objId;
@@ -20,13 +15,14 @@ define(['logManager',
         this.logger.debug("Created");
     };
 
-    DesignerItem.prototype._initialize = function (objDescriptor, fn) {
+    DesignerItem.prototype._initialize = function (objDescriptor) {
         this.canvas = objDescriptor.designerCanvas;
         this._containerElement = null;
 
         /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
 
         /*instance variables*/
+        this.decoratorName = "";
         this._decoratorInstance = null;
         this.selected = false;
         this.selectedInMultiSelection = false;
@@ -40,48 +36,19 @@ define(['logManager',
 
         this._initializeUI();
 
-        this._initializeDecoratorAsync(objDescriptor, fn);
+        this._initializeDecorator(objDescriptor);
     };
 
     DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
 
-    DesignerItem.prototype._initializeDecoratorAsync = function (objDescriptor, fn) {
+    DesignerItem.prototype._initializeDecorator = function (objDescriptor) {
         var decoratorName = objDescriptor.decorator,
-            self = this,
-            decoratorDownloaded;
-
-        this.decoratorName = decoratorName;
+            DecoratorClass = objDescriptor.DecoratorClass;
 
         objDescriptor.designerItem = this;
 
-        decoratorDownloaded = function (DecoratorClass) {
-            self._decoratorInstance = new DecoratorClass(objDescriptor);
-
-            if (fn) {
-                fn();
-            }
-        };
-
-        this._decoratorInstance = null;
-
-        if (_.isString(decoratorName)) {
-            decoratorName = DECORATOR_PATH + decoratorName;
-
-            this.logger.warning("Initiating decorator download: '" + decoratorName + "'...");
-            require([ decoratorName ],
-                function (DecoratorClass) {
-                    self.logger.warning("require(['" + decoratorName + "'] - downloaded");
-                    decoratorDownloaded(DecoratorClass);
-                },
-                function (err) {
-                    self.logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
-                    //for any error use the default decorator so the item is visible on the canvas
-                    decoratorDownloaded(DEFAULT_DECORATOR_CLASS);
-                });
-        } else {
-            this.logger.error("Decorator name type error... Fallback to default...'" + decoratorName + "'");
-            decoratorDownloaded(DEFAULT_DECORATOR_CLASS);
-        }
+        this.decoratorName = decoratorName;
+        this._decoratorInstance = new DecoratorClass(objDescriptor);
     };
 
     DesignerItem.prototype._initializeUI = function () {
@@ -192,10 +159,6 @@ define(['logManager',
     DesignerItem.prototype.renderPhase2 = function () {
         this._callDecoratorMethod("on_renderPhase2");
     };
-
-    /*DesignerItem.prototype.render = function () {
-        this._callDecoratorMethod("on_render");
-    };*/
 
     DesignerItem.prototype._remove = function() {
         this._containerElement = null;
@@ -333,7 +296,9 @@ define(['logManager',
 
     DesignerItem.prototype.update = function (objDescriptor) {
         var positionChanged = false,
-            self = this;
+            self = this,
+            decoratorName = objDescriptor.decorator,
+            DecoratorClass = objDescriptor.DecoratorClass;
         //check what might have changed
 
         //location and dimension information
@@ -354,32 +319,25 @@ define(['logManager',
 
         //TODO: check if decorator changed and need to be updated
 
-        if (objDescriptor.decorator !== this.decoratorName) {
-            this.logger.error("decorator update: '" + this.decoratorName + "' --> '" + objDescriptor.decorator + "'...");
+        if (decoratorName !== this.decoratorName) {
+            this.logger.error("decorator update: '" + this.decoratorName + "' --> '" + decoratorName + "'...");
 
             //destroy old decorator
             this._callDecoratorMethod("destroy");
             this.$el.empty();
 
             //attach new one
-            this.decoratorName = objDescriptor.decoratorName;
-            this._decoratorInstance = null;
+            this.decoratorName = decoratorName;
+            this._decoratorInstance = new DecoratorClass(objDescriptor);
 
-            this._initializeDecoratorAsync(objDescriptor, function () {
-                var ready;
 
-                self.$el.html(self._decoratorInstance.$el);
+            this.$el.html(this._decoratorInstance.$el);
 
-                self.logger.debug("DesignerItem's decorator with id:'" + self.id + "' has been updated.");
+            this.logger.debug("DesignerItem's decorator with id:'" + this.id + "' has been updated.");
 
-                ready = self._callDecoratorMethod("on_addTo");
+            this._callDecoratorMethod("on_addTo");
 
-                ready = (typeof ready !== 'boolean') ? ready : true;
-
-                if (ready === true) {
-                    self.canvas.decoratorUpdated(self.id);
-                }
-            });
+            this.canvas.decoratorUpdated(this.id);
         } else {
             //if decocator instance not changed
             //let the decorator instance know about the update

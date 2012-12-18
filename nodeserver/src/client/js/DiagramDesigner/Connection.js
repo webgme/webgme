@@ -9,7 +9,8 @@ define(['logManager',
                                                       commonUtil,
                                                       bezierHelper) {
 
-    var ConnectionComponent;
+    var ConnectionComponent,
+        PATH_SHADOW_ID_PREFIX = "p_";
 
     ConnectionComponent = function (objId) {
         this.id = objId;
@@ -54,7 +55,7 @@ define(['logManager',
         this.designerAttributes.color = objDescriptor.color || "#000000";
         this.designerAttributes.width = objDescriptor.width || "2";
         this.designerAttributes.shadowWidth = objDescriptor.shadowWidth || "5";
-        this.designerAttributes.shadowOpacity = objDescriptor.shadowOpacity || 0.001;
+        this.designerAttributes.shadowOpacity = 0;
         this.designerAttributes.shadowOpacityWhenSelected = 0.4;
         this.designerAttributes.shadowColor = objDescriptor.shadowColor || "#52A8EC";
         this.designerAttributes.lineType = objDescriptor.lineType || "L";
@@ -63,20 +64,64 @@ define(['logManager',
     ConnectionComponent.prototype.setConnectionRenderData = function (points) {
         var i = 0,
             len = points.length,
-            path = [],
+            pathDef = [],
             p;
 
         p = points[0];
-        path.push("M" + p.x + "," + p.y);
+        pathDef.push("M" + p.x + "," + p.y);
 
         for (i = 1; i < len; i++) {
             p = points[i];
-            path.push("L" + p.x + "," + p.y);
+            pathDef.push("L" + p.x + "," + p.y);
         }
 
-        path = path.join(" ");
+        pathDef = pathDef.join(" ");
 
-        this.paper.path(path);
+        //check if the prev pathDef is the same as the new
+        //this way the redraw does not need to happen
+        if (this.pathDef !== pathDef) {
+            if (this.skinParts.path) {
+                this.skinParts.path.attr({ "path": pathDef});
+                this.skinParts.pathShadow.attr({ "path": pathDef});
+            } else {
+                /*CREATE PATH*/
+                this.skinParts.path = this.paper.path(pathDef);
+                $(this.skinParts.path.node).attr("id", this.id);
+
+                this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
+                    "arrow-end": this.designerAttributes.arrowEnd,
+                    "stroke": this.designerAttributes.color,
+                    "stroke-width": this.designerAttributes.width});
+
+                /*CREATE SHADOW IF NEEDED*/
+                /*this.skinParts.pathShadow = this.paper.path(pathDef);
+                $(this.skinParts.pathShadow.node).attr("id", PATH_SHADOW_ID_PREFIX + this.id);
+
+                this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
+                    "fill": "none",
+                    "stroke-width": this.designerAttributes.shadowWidth,
+                    "opacity": this.designerAttributes.shadowOpacity});*/
+            }
+
+            this.pathDef = pathDef;
+        }
+    };
+
+    ConnectionComponent.prototype.getBoundingBox = function () {
+        var bBox;
+
+        if (this.skinParts.path) {
+            bBox = this.skinParts.path.getBBox();
+        } else {
+            bBox = { "x": 0,
+                "y": 0,
+                "x2": 0,
+                "y2": 0,
+                "width": 0,
+                "height": 0 };
+        }
+
+        return bBox;
     };
 
     return ConnectionComponent;

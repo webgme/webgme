@@ -9,8 +9,9 @@ define(['logManager',
                                                         DesignerControlDEBUG) {
 
     var DesignerControl,
-        counter = 0;
-
+        LOAD_EVENT_NAME = "load",
+        UPDATE_EVENT_NAME = "update",
+        DECORATOR_PATH = "js/DiagramDesigner/";      //TODO: fix path;
 
     DesignerControl = function (options) {
         var self = this;
@@ -21,7 +22,12 @@ define(['logManager',
             this.logger.error("DesignerControl's client is not specified...");
             throw ("DesignerControl can not be created");
         }
+
         this._client = options.client;
+        this._selfPatterns = {};
+        this.components = {};
+        this.decoratorClasses = {};
+        this.eventQueue = [];
 
         if (options.designerCanvas === undefined) {
             this.logger.error("DesignerControl's DesignerCanvas is not specified...");
@@ -29,6 +35,7 @@ define(['logManager',
         }
         this.designerCanvas = options.designerCanvas;
 
+        /*OVERRIDE MODEL EDITOR METHODS*/
         this.designerCanvas.onReposition = function (repositionDesc) {
             var id;
 
@@ -41,14 +48,13 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
+        //DEBUG mode extensions
         if (DEBUG === true) {
             this.designerCanvas.onDebugCreateItems = function (options) {
                 self._onDebugCreateItems(options);
             };
         }
-
-        this._selfPatterns = {};
-        this.components = {};
+        /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
@@ -58,8 +64,6 @@ define(['logManager',
             this._addDebugModeExtensions();
         }
 
-        /*OVERRIDE MODEL EDITOR METHODS*/
-        /*END OF - OVERRIDE MODEL EDITOR METHODS*/
         this.logger.debug("DesignerControl ctor finished");
     };
 
@@ -136,10 +140,6 @@ define(['logManager',
                 }
 
                 objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
-
-                //TODO: alternating decorators just for testing purpose
-/*                objDescriptor.decorator = tempDecorators[counter % tempDecoratorsCount];
-                counter++;*/
             }
         }
 
@@ -166,74 +166,154 @@ define(['logManager',
         this.logger.debug("onOneEvent '" + i + "' items");
 
         if (i > 0) {
-            this.designerCanvas.beginUpdate();
-
-            while (i--) {
-                this.onEvent(events[i].etype, events[i].eid);
-            }
-
-            this.designerCanvas.endUpdate();
+            this.eventQueue.push(events);
+            this.processNextInQueue();
         }
 
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
-    DesignerControl.prototype.onEvent = function (etype, eid) {
-        this.logger.debug("onEvent '" + etype + "', '" + eid + "'");
-        switch (etype) {
-            case "load":
-                this._onLoad(eid);
-                break;
-            case "update":
-                this._onUpdate(eid);
-                break;
-            case "unload":
-                this._onUnload(eid);
-                break;
-        }
-    };
+    DesignerControl.prototype.processNextInQueue = function () {
+        var nextBatchInQueue,
+            len = this.eventQueue.length,
+            decoratorsToDownload = [],
+            itemDecorator;
 
-    // PUBLIC METHODS
-    DesignerControl.prototype._onLoad = function (objectId) {
-        var desc;
+        if (len > 0) {
+            nextBatchInQueue = this.eventQueue.pop();
 
-        //component loaded
-        //we are interested in the load of subcomponents of the opened component
-        if (this.currentNodeInfo.id !== objectId) {
-            desc = this._getObjectDescriptor(objectId);
+            len = nextBatchInQueue.length;
 
-            if (desc) {
-                if (desc.kind === "MODEL") {
-                    this.designerCanvas.createModelComponent(desc);
+            while (len--) {
+                if ( (nextBatchInQueue[len].etype === LOAD_EVENT_NAME) || (nextBatchInQueue[len].etype === UPDATE_EVENT_NAME)) {
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+
+                    itemDecorator = this._debugObjectDescriptors[nextBatchInQueue[len].eid].decorator;
+
+                    if (itemDecorator && itemDecorator !== "") {
+                        if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
+                            decoratorsToDownload.insertUnique(itemDecorator);
+                        }
+                    }
                 }
+            }
 
-                /*if (desc.kind === "CONNECTION") {
-                    this.designerCanvas.createConnectionComponent(desc);
-                }*/
+            if (decoratorsToDownload.length === 0) {
+                //all the required decorators are already available
+                this._dispatchEvents(nextBatchInQueue);
+            } else {
+                //few decorators need to be downloaded
+                this._downloadDecorators(decoratorsToDownload, { "fn": this._dispatchEvents,
+                                                                 "context": this,
+                                                                 "data": nextBatchInQueue });
             }
         }
     };
 
-    DesignerControl.prototype._onUpdate = function (objectId) {
-        //self or child updated
-        var desc = this._getObjectDescriptor(objectId);
+    DesignerControl.prototype._downloadDecorators = function (decoratorList, callBack) {
+        var len = decoratorList.length,
+            decoratorName,
+            processRemainingList,
+            self = this;
 
+        processRemainingList = function () {
+            var len = decoratorList.length;
+
+            if (len > 0) {
+                self._downloadDecorators(decoratorList, callBack);
+            } else {
+                self.logger.debug("All downloaded...");
+                callBack.fn.call(callBack.context, callBack.data);
+            }
+        };
+
+        this.logger.debug("Remaining: " + len);
+
+        if (len > 0) {
+            decoratorName = decoratorList.pop();
+
+            require([DECORATOR_PATH + decoratorName],
+                function (decoratorClass) {
+                    self.logger.warning("downloaded:" + decoratorName);
+                    self.decoratorClasses[decoratorName] = decoratorClass;
+                    processRemainingList();
+                },
+                function (err) {
+                    //for any error store undefined in the list and the default decorator will be used on the canvas
+                    self.logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
+                    self.decoratorClasses[decoratorName] = undefined;
+                    processRemainingList();
+                });
+        }
+    };
+
+    DesignerControl.prototype._dispatchEvents = function (events) {
+        var i = events.length,
+            e;
+
+        this.logger.debug("_dispatchEvents '" + i + "' items");
+
+        this.designerCanvas.beginUpdate();
+
+        while (i--) {
+            e = events[i];
+            switch (e.etype) {
+                case LOAD_EVENT_NAME:
+                    this._onLoad(e.eid, e.desc);
+                    break;
+                case "update":
+                    this._onUpdate(e.eid, e.desc);
+                    break;
+                case "unload":
+                    this._onUnload(e.eid);
+                    break;
+            }
+        }
+
+        this.designerCanvas.endUpdate();
+
+        this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
+
+        //continue processing event queue
+        this.processNextInQueue();
+    };
+
+    // PUBLIC METHODS
+    DesignerControl.prototype._onLoad = function (objectId, objDesc) {
+        //component loaded
+        //we are interested in the load of subcomponents of the opened component
+        if (this.currentNodeInfo.id !== objectId) {
+            if (objDesc) {
+                if (objDesc.kind === "MODEL") {
+                    objDesc.DecoratorClass = this.decoratorClasses[objDesc.decorator];
+                    this.designerCanvas.createDesignerItem(objDesc);
+                }
+
+                if (objDesc.kind === "CONNECTION") {
+                    this.designerCanvas.createConnection(objDesc);
+                }
+            }
+        }
+    };
+
+    DesignerControl.prototype._onUpdate = function (objectId, objDesc) {
+        //self or child updated
         //check if the updated object is the opened node
         if (objectId === this.currentNodeInfo.id) {
             //the updated object is the parent whose children are displayed here
             //the interest about the parent is:
             // - name change
-            this.designerCanvas.updateCanvas(desc);
+            this.designerCanvas.updateCanvas(objDesc);
         } else {
-            if (desc) {
-                if (desc.kind === "MODEL") {
-                    desc.decorator = tempDecorators[counter % tempDecoratorsCount];
-                    this.designerCanvas.updateModelComponent(objectId, desc);
+            if (objDesc) {
+                if (objDesc.kind === "MODEL") {
+                    objDesc.DecoratorClass = this.decoratorClasses[objDesc.decorator];
+                    this.designerCanvas.updateDesignerItem(objectId, objDesc);
                 }
 
-                /*if (desc.kind === "CONNECTION") {
-                    this.designerCanvas.updateConnectionComponent(objectId, desc);
-                }*/
+                if (objDesc.kind === "CONNECTION") {
+                    this.designerCanvas.updateConnection(objectId, objDesc);
+                }
             }
         }
     };
@@ -256,7 +336,6 @@ define(['logManager',
     if (DEBUG) {
         _.extend(DesignerControl.prototype, DesignerControlDEBUG.prototype);
     }
-
 
     return DesignerControl;
 });

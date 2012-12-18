@@ -5,25 +5,24 @@ define(['logManager',
     'commonUtil',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager',
-    'js/DiagramDesigner/DesignerItem',
     'raphaeljs',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
+    'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
-    'js/DiagramDesigner/SimpleConnectionManager',
+    'js/DiagramDesigner/ConnectionRouteManagerBasic',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
                                                       SelectionManager,
                                                       DragManager,
-                                                      DesignerItem,
                                                       raphaeljs,
                                                       DesignerCanvasDEBUG,
+                                                      DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
-                                                      SimpleConnectionManager) {
+                                                      ConnectionRouteManagerBasic) {
 
     var DesignerCanvas,
-        DEFAULT_GRID_SIZE = 10,
-        DEFAULT_DECORATOR_NAME = "DefaultDecorator";
+        DEFAULT_GRID_SIZE = 10;
 
     DesignerCanvas = function (options) {
         //set properties from options
@@ -53,8 +52,8 @@ define(['logManager',
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize();
 
-        this.connectionManager = options.connectionManager || new SimpleConnectionManager({"canvas": this});
-        this.connectionManager.initialize();
+        this.connectionRouteManager = options.connectionRouteManager || new ConnectionRouteManagerBasic({"canvas": this});
+        this.connectionRouteManager.initialize();
 
         this._documentFragment = document.createDocumentFragment();
 
@@ -67,17 +66,16 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype._initializeCollections = function () {
-        //all the designeritems and connections
+        //all the designer items and connections
         this.items = {};
 
         //IDs of items
         this.itemIds = [];
 
         //IDs of connections
-
         this.connectionIds = [];
-        //additional helpers for connection accounting
 
+        //additional helpers for connection accounting
         this.connectionEndIDs = {};
         this.connectionIDbyEndID = {};
 
@@ -92,13 +90,15 @@ define(['logManager',
         return this._readOnlyMode;
     };
 
-    DesignerCanvas.prototype.setIsReadOnlyMode = function (readOnly) {
+    //TODO: IMPLEMENT SET READONLY MODE
+    /*DesignerCanvas.prototype.setIsReadOnlyMode = function (readOnly) {
         if (this._readOnlyMode !== readOnly) {
             this._readOnlyMode = readOnly;
 
             //TODO: UPDATE EVERYTHING
+
         }
-    };
+    };*/
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 
@@ -156,9 +156,9 @@ define(['logManager',
         });
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$title);
 
-        this.skinParts.$progressBar = $('<div class="btn-group inline"><a class="btn disabled" href="#" title="Refreshing..."><i class="icon-progress"></i></a></div>');
+        /*this.skinParts.$progressBar = $('<div class="btn-group inline"><a class="btn disabled" href="#" title="Refreshing..."><i class="icon-progress"></i></a></div>');
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressBar);
-        this.skinParts.$progressBar.hide();
+        this.skinParts.$progressBar.hide();*/
 
         this.skinParts.$progressText = $('<div/>', {
             "class": "inline"
@@ -202,16 +202,20 @@ define(['logManager',
         this.skinParts.$designerCanvasBody.css({"width": width,
             "height": bodyHeight});
 
+        this._resizeItemContainer(width, bodyHeight);
+
+        this.designerCanvasBodyOffset = this.skinParts.$designerCanvasBody.offset();
+    };
+
+    DesignerCanvas.prototype._resizeItemContainer = function (width, height) {
         this._actualSize.w = Math.max(this._actualSize.w, width);
-        this._actualSize.h = Math.max(this._actualSize.h, bodyHeight);
+        this._actualSize.h = Math.max(this._actualSize.h, height);
 
         this.skinParts.$itemsContainer.css({"width": this._actualSize.w,
-                                            "height": this._actualSize.h});
+            "height": this._actualSize.h});
 
         this.skinParts.SVGPaper.setSize(this._actualSize.w, this._actualSize.h);
         this.skinParts.SVGPaper.setViewBox(0, 0, this._actualSize.w, this._actualSize.h, false);
-
-        this.designerCanvasBodyOffset = this.skinParts.$designerCanvasBody.offset();
     };
 
     DesignerCanvas.prototype.getAdjustedMousePos = function (e) {
@@ -226,8 +230,6 @@ define(['logManager',
 
     DesignerCanvas.prototype.clear = function () {
         var i;
-
-        this.skinParts.$progressBar.hide();
 
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
@@ -257,12 +259,9 @@ define(['logManager',
         this.logger.warning("DesignerCanvas.prototype._onBtnOneLevelUpClick NOT YET IMPLEMENTED");
     };
 
-
-
     /*********************************/
 
     DesignerCanvas.prototype.beginUpdate = function () {
-        this.skinParts.$progressBar.show();
         this.logger.error("beginUpdate");
 
         this._updating = true;
@@ -366,9 +365,11 @@ define(['logManager',
 
     DesignerCanvas.prototype._refreshScreen = function () {
         var i,
-            connectionIDsToUpdate = [];
-
-//        this.skinParts.$progressBar.show();
+            connectionIDsToUpdate = [],
+            maxWidth = 0,
+            maxHeight = 0,
+            itemBBox,
+            redrawnConnectionIDs;
 
         this.logger.error("_refreshScreen START");
 
@@ -386,11 +387,19 @@ define(['logManager',
         i = this._insertedDesignerItemIDs.length;
         while (i--) {
             this.items[this._insertedDesignerItemIDs[i]].renderPhase1();
+
+            itemBBox = this.items[this._insertedDesignerItemIDs[i]].getBoundingBox();
+            maxWidth = Math.max(maxWidth, itemBBox.x2);
+            maxHeight = Math.max(maxHeight, itemBBox.y2);
         }
 
         i = this._updatedDesignerItemIDs.length;
         while (i--) {
             this.items[this._updatedDesignerItemIDs[i]].renderPhase1();
+
+            itemBBox = this.items[this._updatedDesignerItemIDs[i]].getBoundingBox();
+            maxWidth = Math.max(maxWidth, itemBBox.x2);
+            maxHeight = Math.max(maxHeight, itemBBox.y2);
         }
 
         //call each inserted and updated item's render phase2
@@ -415,7 +424,17 @@ define(['logManager',
         //      - endpoint updated
         //TODO: fix this, but right now we call refresh on all of the connections
         connectionIDsToUpdate = this.connectionIds.slice(0);
-        this.connectionManager.redrawConnections(connectionIDsToUpdate);
+        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        i = redrawnConnectionIDs.len;
+
+        while(i--) {
+            itemBBox = this.items[i].getBoundingBox();
+            maxWidth = Math.max(maxWidth, itemBBox.x2);
+            maxHeight = Math.max(maxHeight, itemBBox.y2);
+        };
+
+        this._resizeItemContainer(maxWidth, maxHeight);
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];
@@ -423,71 +442,10 @@ define(['logManager',
 
         this._insertedConnectionIDs = [];
 
-        this.skinParts.$progressBar.hide();
         this.logger.error("_refreshScreen END");
     };
 
     /*************** MODEL CREATE / UPDATE / DELETE ***********************/
-
-    DesignerCanvas.prototype.createModelComponent = function (objDescriptor) {
-        var componentId = objDescriptor.id,
-            newComponent,
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
-            self = this;
-
-        this.logger.debug("Creating model component with parameters: " + objDescriptor);
-
-        objDescriptor.designerCanvas = this;
-        objDescriptor.position.x = alignedPosition.x;
-        objDescriptor.position.y = alignedPosition.y;
-
-        //make sure it has a specified decorator
-        objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
-
-        this._checkPositionOverlap(objDescriptor);
-
-        this.itemIds.push(componentId);
-
-        //add to accounting queues for performance optimization
-        this._insertedDesignerItemIDs.push(componentId);
-        this._insertedDesignerItemAcks.push(componentId);
-
-        this.logger.error("createModelComponent_waitingForDesignerItemAck: '" + objDescriptor.id + "', len: " + this._insertedDesignerItemAcks.length);
-
-        newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
-        newComponent._initialize(objDescriptor, function () {
-            newComponent.addToDocFragment(self._documentFragment);
-        });
-
-        return newComponent;
-    };
-
-    DesignerCanvas.prototype.updateModelComponent = function (componentId, objDescriptor) {
-        var alignedPosition;
-
-        if (this.itemIds.indexOf(componentId) !== -1) {
-            this.logger.debug("Updating model component with parameters: " + objDescriptor);
-
-            //adjust its position to this canvas
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
-
-            objDescriptor.position.x = alignedPosition.x;
-            objDescriptor.position.y = alignedPosition.y;
-
-            //make sure it has a specified decorator
-            objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
-
-            this._checkPositionOverlap(objDescriptor);
-
-            //add to accounting queus for performance optimization
-            this._updatedDesignerItemIDs.push(componentId);
-            this._waitingForDesignerItemAck.push(componentId);
-
-            objDescriptor.name += "hillybilly";
-
-            this.items[componentId].update(objDescriptor);
-        }
-    };
 
     DesignerCanvas.prototype._alignPositionToGrid = function (pX, pY) {
         var posXDelta,
@@ -558,6 +516,7 @@ define(['logManager',
     };
 
     //additional code pieces for DesignerCanvas
+    _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
 
     //in DEBUG mode add additional content to canvas

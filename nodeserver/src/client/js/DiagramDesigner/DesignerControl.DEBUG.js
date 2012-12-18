@@ -5,7 +5,11 @@ define([], function () {
     var DesignerControlDEBUG,
         DEBUG_MODEL_TYPE = "MODEL",
         DEBUG_CONNECTION_TYPE = "CONNECTION",
-        CONNECTIONSTEP = 10;
+        CONNECTIONSTEP = 10,
+        LOAD_EVENT_NAME = "load",
+        EVENT_TYPE_NAME = "etype",
+        EVENT_ID_NAME = "eid",
+        EVENT_DEBUG_TYPE = "debugEvent";
 
     DesignerControlDEBUG = function () {
     };
@@ -15,14 +19,14 @@ define([], function () {
 
         this._debugTempDecorators = ['DefaultDecorator', 'CircleDecorator'/*, 'SlowRenderDecorator'*/];
         this._debugTempDecoratorsCount = this._debugTempDecorators.length;
-
     };
 
     DesignerControlDEBUG.prototype._onDebugCreateItems = function (options) {
-        var self = this,
-            items = options.items || 0,
+        var items = options.items || 0,
             conns = options.connections || 0,
-            id;
+            id,
+            events = [],
+            newEvent;
 
         this.logger.debug("DesignerControlDEBUG _onDebugCreateItems: " + JSON.stringify(options));
 
@@ -35,15 +39,20 @@ define([], function () {
         this._debugItemCounter = this._debugItemCounter || 0;
         this._connectionEndIDCounter = this._connectionEndIDCounter || 0;
 
-        this.designerCanvas.beginUpdate();
-
+        //get descriptor for each item
         while (items--) {
             id = this._debugItemCounter;
 
-            this._debugObjectDescriptors[id] = this._getObjectDescriptorDEBUG(id, DEBUG_MODEL_TYPE);
+            this._debugObjectDescriptors[id] = this._generateObjectDescriptorDEBUG(id, DEBUG_MODEL_TYPE);
             this._debugItemIDs.push(id);
 
-            this.designerCanvas.createModelComponent(this._debugObjectDescriptors[id]);
+            //create new event for this item
+            newEvent = {};
+            newEvent[EVENT_TYPE_NAME] = LOAD_EVENT_NAME;
+            newEvent[EVENT_ID_NAME] = id;
+            newEvent[EVENT_DEBUG_TYPE] = true;
+
+            events.push( newEvent );
 
             this._debugItemCounter += 1;
         }
@@ -51,25 +60,31 @@ define([], function () {
         while (conns--) {
             id = this._debugItemCounter;
 
-            this._debugObjectDescriptors[id] = this._getObjectDescriptorDEBUG(id, DEBUG_CONNECTION_TYPE);
+            this._debugObjectDescriptors[id] = this._generateObjectDescriptorDEBUG(id, DEBUG_CONNECTION_TYPE);
             this._debugConnectionsIDs.push(id);
 
-            this.designerCanvas.createConnection(this._debugObjectDescriptors[id]);
+            //create new event for this connection
+            newEvent = {};
+            newEvent[EVENT_TYPE_NAME] = LOAD_EVENT_NAME;
+            newEvent[EVENT_ID_NAME] = id;
+            newEvent[EVENT_DEBUG_TYPE] = true;
+
+            events.push( newEvent );
 
             this._debugItemCounter += 1;
         }
 
-        this.designerCanvas.endUpdate();
+        this.onOneEvent(events);
     };
 
-    DesignerControlDEBUG.prototype._getObjectDescriptorDEBUG = function (id, type) {
+    DesignerControlDEBUG.prototype._generateObjectDescriptorDEBUG = function (id, type) {
         var objDescriptor;
 
         objDescriptor = this._debugObjectDescriptors[id] || {};
 
         if (_.isEmpty(objDescriptor)) {
 
-            objDescriptor.id = id
+            objDescriptor.id = id;
             objDescriptor.name =  type + "_" + id;
             objDescriptor.kind = type;
             objDescriptor.parentId = null;  //TODO: no parent yet
@@ -102,6 +117,10 @@ define([], function () {
         }
 
         return objDescriptor;
+    };
+
+    DesignerControlDEBUG.prototype._getObjectDescriptorDEBUG = function (id) {
+        return this._debugObjectDescriptors[id];
     };
 
     return DesignerControlDEBUG;
