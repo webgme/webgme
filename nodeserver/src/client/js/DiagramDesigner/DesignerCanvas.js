@@ -30,7 +30,7 @@ define(['logManager',
         this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
 
         this._readOnlyMode = options.readOnlyMode || true;
-        this.logger.warning("DesignerCanvas.ctro _readOnlyMode is set to TRUE by default");
+        this.logger.warning("DesignerCanvas.ctor _readOnlyMode is set to TRUE by default");
 
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
 
@@ -268,10 +268,8 @@ define(['logManager',
 
         /*designer item acocunting*/
         this._insertedDesignerItemIDs = this._insertedDesignerItemIDs || [];
-        this._insertedDesignerItemAcks = this._insertedDesignerItemAcks || [];
 
         this._updatedDesignerItemIDs = this._updatedDesignerItemIDs || [];
-        this._updatedDesignerItemAcks = this._updatedDesignerItemAcks || [];
 
         this._deletedDesignerItemIDs = this._deletedDesignerItemIDs || [];
 
@@ -286,90 +284,41 @@ define(['logManager',
         this.tryRefreshScreen();
     };
 
-    DesignerCanvas.prototype.decoratorAdded = function (itemId, decoratorFullReady) {
-        var idx = this._insertedDesignerItemAcks.indexOf(itemId),
-            len = this._insertedDesignerItemAcks.length;
-
-        if (idx !== -1) {
-            this._insertedDesignerItemAcks.splice(idx, 1);
-            len -= 1;
-
-            this.logger.error("decoratorAdded: '" + itemId + "'");
-
-            //if the decorator signaled it is half ready at this point
-            //we put it into the update-ack-waiting-list
-            //and this way we know it is still working
-            if (decoratorFullReady === false) {
-                this._updatedDesignerItemAcks.push(itemId);
-            }
-
-            if (len === 0) {
-                this.tryRefreshScreen();
-            }
-        } else {
-            this.logger.error("DecoratorAdded called with unexpected id: '" + itemId + "'");
-        }
-    };
-
     DesignerCanvas.prototype.decoratorUpdated = function (itemID) {
-        var idx = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.indexOf(itemID) : -1,
-            len = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.length : 0;
-
-        if (idx !== -1) {
-            this._updatedDesignerItemAcks.splice(idx, 1);
-            len -= 1;
-
-            this.logger.error("DecoratorUpdated: '" + itemID + "'");
-        } else {
-            this.logger.error("DecoratorUpdated called with unexpected id: '" + itemID + "'");
-        }
-
-        this.logger.error("_updatedDesignerItemAcks length is : " + len);
+        this.logger.error("DecoratorUpdated: '" + itemID + "'");
 
         this.tryRefreshScreen();
     };
 
     DesignerCanvas.prototype.tryRefreshScreen = function () {
         var insertedLen = this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0,
-            insertedWaitingAckLen = this._insertedDesignerItemAcks ? this._insertedDesignerItemAcks.length : 0,
             updatedLen = this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0,
-            updatedWaitingAckLen = this._updatedDesignerItemAcks ? this._updatedDesignerItemAcks.length : 0,
-            listLen,
             msg = "";
 
         //check whether controller update finished or not
         if (this._updating !== true) {
 
-            msg += "Added: " + (insertedLen - insertedWaitingAckLen) + "/" + insertedLen;
-            msg += " Updated: " + (updatedLen - updatedWaitingAckLen) + "/" + updatedLen;
+            msg += "Added: " + insertedLen;
+            msg += " Updated: " + updatedLen;
 
             this.logger.error(msg);
 
             this.skinParts.$progressText.text(msg);
 
-            if (insertedWaitingAckLen > 0) {
-                listLen = insertedWaitingAckLen > 5 ? 5 : insertedWaitingAckLen;
-                msg = "tryRefreshScreen is still waiting for [";
-                while (listLen--) {
-                    msg += this._insertedDesignerItemAcks[listLen] + ", ";
-                }
-
-                msg += insertedWaitingAckLen > 5 ? "... and " + (insertedWaitingAckLen - 5) + " more items to ack ]" : "]";
-                this.logger.error(msg);
-            } else {
-                this.logger.error("insertedWaitingAckLen is empty, ready to do the thing");
-                this._refreshScreen();
-            }
+            this._refreshScreen();
         }
     };
 
     DesignerCanvas.prototype._refreshScreen = function () {
         var i,
-            connectionIDsToUpdate = [],
+            connectionIDsToUpdate,
             maxWidth = 0,
             maxHeight = 0,
             itemBBox,
-            redrawnConnectionIDs;
+            redrawnConnectionIDs,
+            doRenderGetLayout,
+            doRenderSetLayout,
+            items = this.items;
 
         this.logger.error("_refreshScreen START");
 
@@ -378,42 +327,44 @@ define(['logManager',
         //browsers will optimize this
         //http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/ --- BROWSER ARE SMART
 
-        /* DESIGNER ITEMS */
+        /***************** FIRST HANDLE THE DESIGNER ITEMS *****************/
         //add all the inserted items, they are still on a document Fragment
         this.skinParts.$itemsContainer[0].appendChild(this._documentFragment);
         this._documentFragment = document.createDocumentFragment();
 
-        //call each inserted and updated item's render phase1
-        i = this._insertedDesignerItemIDs.length;
-        while (i--) {
-            this.items[this._insertedDesignerItemIDs[i]].renderPhase1();
+        //STEP 1: call the inserted and updated items' getRenderLayout
+        doRenderGetLayout = function (itemIDList) {
+            var i = itemIDList.length,
+                itemBBox,
+                cItem;
 
-            itemBBox = this.items[this._insertedDesignerItemIDs[i]].getBoundingBox();
-            maxWidth = Math.max(maxWidth, itemBBox.x2);
-            maxHeight = Math.max(maxHeight, itemBBox.y2);
-        }
+            while (i--) {
+                cItem = items[itemIDList[i]];
+                cItem.renderGetLayoutInfo();
 
-        i = this._updatedDesignerItemIDs.length;
-        while (i--) {
-            this.items[this._updatedDesignerItemIDs[i]].renderPhase1();
+                itemBBox = cItem.getBoundingBox();
+                maxWidth = Math.max(maxWidth, itemBBox.x2);
+                maxHeight = Math.max(maxHeight, itemBBox.y2);
+            }
+        };
+        doRenderGetLayout(this._insertedDesignerItemIDs);
+        doRenderGetLayout(this._updatedDesignerItemIDs);
 
-            itemBBox = this.items[this._updatedDesignerItemIDs[i]].getBoundingBox();
-            maxWidth = Math.max(maxWidth, itemBBox.x2);
-            maxHeight = Math.max(maxHeight, itemBBox.y2);
-        }
+        //STEP 2: call the inserted and updated items' setRenderLayout
+        doRenderSetLayout = function (itemIDList) {
+            var i = itemIDList.length,
+                cItem;
 
-        //call each inserted and updated item's render phase2
-        i = this._insertedDesignerItemIDs.length;
-        while (i--) {
-            this.items[this._insertedDesignerItemIDs[i]].renderPhase2();
-        }
+            while (i--) {
+                cItem = items[itemIDList[i]];
+                cItem.renderSetLayoutInfo();
+            }
+        };
+        doRenderSetLayout(this._insertedDesignerItemIDs);
+        doRenderSetLayout(this._updatedDesignerItemIDs);
 
-        i = this._updatedDesignerItemIDs.length;
-        while (i--) {
-            this.items[this._updatedDesignerItemIDs[i]].renderPhase2();
-        }
 
-        /* CONNECTIONS */
+        /***************** THEN HANDLE THE CONNECTIONS *****************/
 
         //get all the connections that needs to be updated
         // - inserted connections
@@ -429,17 +380,18 @@ define(['logManager',
         i = redrawnConnectionIDs.len;
 
         while(i--) {
-            itemBBox = this.items[i].getBoundingBox();
+            itemBBox = items[i].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
             maxHeight = Math.max(maxHeight, itemBBox.y2);
-        };
+        }
 
+        //adjust the canvas size to the new 'grown' are that the inserted / updated require
+        //TODO: canvas size decrease not handled yet
         this._resizeItemContainer(maxWidth, maxHeight);
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
-
         this._insertedConnectionIDs = [];
 
         this.logger.error("_refreshScreen END");

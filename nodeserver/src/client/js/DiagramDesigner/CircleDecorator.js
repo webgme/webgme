@@ -28,7 +28,7 @@ define(['logManager',
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    CircleDecorator.prototype.$_DOMBase = $(circleDecoratorTemplate);
+    CircleDecorator.prototype.$DOMBase = $(circleDecoratorTemplate);
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
     CircleDecorator.prototype.on_addTo = function () {
@@ -45,21 +45,21 @@ define(['logManager',
         __parent_proto__.on_addTo.apply(this, arguments);
     };
 
-    CircleDecorator.prototype.on_renderPhase1 = function () {
+    CircleDecorator.prototype.on_renderGetLayoutInfo = function () {
         //let the parent decorator class do its job first
-        __parent_proto__.on_renderPhase1.apply(this, arguments);
+        __parent_proto__.on_renderGetLayoutInfo.apply(this, arguments);
 
-        this.renderPhase1Cache.nameWidth = this.skinParts.$name.outerWidth();
+        this.renderLayoutInfo.nameWidth = this.skinParts.$name.outerWidth();
     };
 
-    CircleDecorator.prototype.on_renderPhase2 = function () {
-        var shift = (40 - this.renderPhase1Cache.nameWidth) / 2;
+    CircleDecorator.prototype.on_renderSetLayoutInfo = function () {
+        var shift = (40 - this.renderLayoutInfo.nameWidth) / 2;
 
         this.skinParts.$name.css({"top": 45,
             "left": shift });
 
         //let the parent decorator class do its job finally
-        return __parent_proto__.on_renderPhase2.apply(this, arguments);
+        return __parent_proto__.on_renderSetLayoutInfo.apply(this, arguments);
     };
 
     CircleDecorator.prototype.calculateDimension = function () {

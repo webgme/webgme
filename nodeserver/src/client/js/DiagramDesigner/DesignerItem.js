@@ -130,19 +130,13 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
-        var ready;
-
-        this.logger.debug("DesignerItem with id:'" + this.id + "' added.");
-
-        ready = this._callDecoratorMethod("on_addTo");
+        this._callDecoratorMethod("on_addTo");
 
         this.$el.html(this._decoratorInstance.$el);
 
         docFragment.appendChild( this.$el[0] );
 
-        ready = (typeof ready === 'boolean') ? ready : true;
-
-        this.canvas.decoratorAdded(this.id, ready);
+        this.logger.debug("DesignerItem with id:'" + this.id + "' added to canvas.");
     };
 
     //whenever a decorator is ready with the rendering, needs to signal it
@@ -152,12 +146,12 @@ define(['logManager'], function (logManager) {
         this.canvas.decoratorUpdated(this.id);
     };
 
-    DesignerItem.prototype.renderPhase1 = function () {
-        this._callDecoratorMethod("on_renderPhase1");
+    DesignerItem.prototype.renderGetLayoutInfo = function () {
+        this._callDecoratorMethod("on_renderGetLayoutInfo");
     };
 
-    DesignerItem.prototype.renderPhase2 = function () {
-        this._callDecoratorMethod("on_renderPhase2");
+    DesignerItem.prototype.renderSetLayoutInfo = function () {
+        this._callDecoratorMethod("on_renderSetLayoutInfo");
     };
 
     DesignerItem.prototype._remove = function() {

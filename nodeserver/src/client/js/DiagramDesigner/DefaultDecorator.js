@@ -30,7 +30,7 @@ define(['logManager',
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    DefaultDecorator.prototype.$_DOMBase = $(defaultDecoratorTemplate);
+    DefaultDecorator.prototype.$DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_addTo = function () {
         //find name placeholder

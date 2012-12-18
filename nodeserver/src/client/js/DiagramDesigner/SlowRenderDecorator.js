@@ -37,8 +37,6 @@ define(['logManager',
         setTimeout(function () {
             self._updateProgress();
         }, this.timerFreq);
-
-        return false;
     };
 
     SlowRenderDecorator.prototype._updateProgress = function () {
@@ -61,29 +59,29 @@ define(['logManager',
         }
     };
 
-    SlowRenderDecorator.prototype.on_renderPhase1 = function () {
+    SlowRenderDecorator.prototype.on_renderGetLayoutInfo = function () {
         //check if this guy is ready
         if (this.counter === 0) {
             //let the parent decorator class do its job first
-            __parent_proto__.on_renderPhase1.apply(this, arguments);
+            __parent_proto__.on_renderGetLayoutInfo.apply(this, arguments);
 
-            this.renderPhase1Cache.nameHeight = this.skinParts.$name.outerHeight();
-            this.renderPhase1Cache.boxHeight = this.$el.height();
+            this.renderLayoutInfo.nameHeight = this.skinParts.$name.outerHeight();
+            this.renderLayoutInfo.boxHeight = this.$el.height();
         }
     };
 
-    SlowRenderDecorator.prototype.on_renderPhase2 = function () {
+    SlowRenderDecorator.prototype.on_renderSetLayoutInfo = function () {
         var shift;
 
         //check if this guy is ready
         if (this.counter === 0) {
-            shift = (this.renderPhase1Cache.boxHeight - this.renderPhase1Cache.nameHeight) / 2;
+            shift = (this.renderLayoutInfo.boxHeight - this.renderLayoutInfo.nameHeight) / 2;
 
             this.skinParts.$name.css({"margin-top": shift});
 
 
             //let the parent decorator class do its job finally
-            __parent_proto__.on_renderPhase2.apply(this, arguments);
+            __parent_proto__.on_renderSetLayoutInfo.apply(this, arguments);
         }
     };
 

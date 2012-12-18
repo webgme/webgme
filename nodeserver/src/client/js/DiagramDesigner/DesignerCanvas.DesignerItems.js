@@ -35,9 +35,6 @@ define(['js/DiagramDesigner/DesignerItem',
 
         //add to accounting queues for performance optimization
         this._insertedDesignerItemIDs.push(componentId);
-        this._insertedDesignerItemAcks.push(componentId);
-
-        this.logger.error("createModelComponent_waitingForDesignerItemAck: '" + objDescriptor.id + "', len: " + this._insertedDesignerItemAcks.length);
 
         newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
         newComponent._initialize(objDescriptor);
