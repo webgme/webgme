@@ -9,12 +9,12 @@ define(function () {
 
 	return {
 		mongodb: {
-			// host: "localhost",
+			host: "localhost",
 			// host: "129.59.104.16", // kecso
-			host: "129.59.105.239", // cloud
+			// host: "129.59.105.239", // cloud
 			port: 27017,
-			database: "test",
-			collection: "miklos"
+			database: "test2",
+			collection: "storage"
 		},
 
 		parser: {

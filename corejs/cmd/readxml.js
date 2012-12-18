@@ -112,7 +112,9 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 					exit(err);
 				}
 				else if( --persisting === 0 ) {
-					resolveUnresolved(tags[0].node, finishParsing);
+					setTimeout(function () {
+						resolveUnresolved(tags[0].node, finishParsing);
+					}, 1000);
 				}
 			});
 		};
@@ -215,6 +217,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 		var resolveNotifyCallbacks = function (path, err, node) {
 			var callbacks = loadedNodes[path];
 			ASSERT(Array.isArray(callbacks));
+			ASSERT(err || node);
 
 			loadedNodes[path] = err ? undefined : node;
 
