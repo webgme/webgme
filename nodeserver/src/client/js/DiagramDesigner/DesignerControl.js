@@ -48,12 +48,6 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
-        //DEBUG mode extensions
-        if (DEBUG === true) {
-            this.designerCanvas.onDebugCreateItems = function (options) {
-                self._onDebugCreateItems(options);
-            };
-        }
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         //local variable holding info about the currently opened node
@@ -322,6 +316,7 @@ define(['logManager',
         if (objectId === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.designerCanvas.updateCanvas({"name": "The currently opened model has beed deleted (TODO)"});
+            //TODO: fix this here....
         } else {
             this.designerCanvas.deleteComponent(objectId);
         }

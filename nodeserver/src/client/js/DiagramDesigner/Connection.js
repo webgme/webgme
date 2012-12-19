@@ -81,9 +81,11 @@ define(['logManager',
         //this way the redraw does not need to happen
         if (this.pathDef !== pathDef) {
             if (this.skinParts.path) {
+                this.logger.error("Redrawing connection with ID: '" + this.id + "'");
                 this.skinParts.path.attr({ "path": pathDef});
-                this.skinParts.pathShadow.attr({ "path": pathDef});
+                //this.skinParts.pathShadow.attr({ "path": pathDef});
             } else {
+                this.logger.error("Drawing connection with ID: '" + this.id + "'");
                 /*CREATE PATH*/
                 this.skinParts.path = this.paper.path(pathDef);
                 $(this.skinParts.path.node).attr("id", this.id);
@@ -122,6 +124,23 @@ define(['logManager',
         }
 
         return bBox;
+    };
+
+    ConnectionComponent.prototype.destroy = function () {
+        this._destroying = true;
+
+        //remove from DOM
+        if (this.skinParts.path) {
+            this.skinParts.path.remove();
+            this.skinParts.path = null;
+        }
+
+        if (this.skinParts.pathShadow) {
+            this.skinParts.pathShadow.remove();
+            this.skinParts.pathShadow = null;
+        }
+
+        this.logger.debug("Destroyed");
     };
 
     return ConnectionComponent;

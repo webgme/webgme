@@ -171,7 +171,6 @@ define(['logManager'], function (logManager) {
     /************* ADDITIONAL METHODS ***************************/
     //called when the designer items becomes deselected
     DecoratorBase.prototype.update = function (objDescriptor) {
-        this.hostDesignerItem.decoratorUpdated();
     };
 
 

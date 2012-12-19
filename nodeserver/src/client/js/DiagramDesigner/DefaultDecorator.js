@@ -53,8 +53,6 @@ define(['logManager',
             this.name = newName;
             this.skinParts.$name.text(this.name);
         }
-
-        this.hostDesignerItem.decoratorUpdated();
     };
 
     DefaultDecorator.prototype.getConnectionAreas = function (id) {

@@ -60,14 +60,24 @@ define(['js/DiagramDesigner/DesignerItem',
 
             this._checkPositionOverlap(objDescriptor);
 
-            //add to accounting queus for performance optimization
+            //add to accounting queues for performance optimization
             this._updatedDesignerItemIDs.push(componentId);
-            this._waitingForDesignerItemAck.push(componentId);
-
-            objDescriptor.name += "hillybilly";
 
             this.items[componentId].update(objDescriptor);
         }
+    };
+
+    DesignerCanvas.prototype.deleteDesignerItem  = function (id) {
+        var idx;
+
+        //keep up accounting
+        this._deletedDesignerItemIDs.push(id);
+
+        idx = this.itemIds.indexOf(id);
+        this.itemIds.splice(idx, 1);
+
+        this.items[id].destroy();
+        delete this.items[id];
     };
 
     return DesignerCanvas;

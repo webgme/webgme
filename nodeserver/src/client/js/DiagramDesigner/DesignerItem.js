@@ -165,13 +165,12 @@ define(['logManager'], function (logManager) {
     DesignerItem.prototype.destroy = function () {
         this._destroying = true;
 
-        if (this._decoratorInstance) {
-            this._decoratorInstance.destroy();
-        }
+        //destroy old decorator
+        this._callDecoratorMethod("destroy");
 
         this._remove();
 
-        this.logger.debug("destroyed");
+        this.logger.debug("Destroyed");
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
@@ -331,9 +330,9 @@ define(['logManager'], function (logManager) {
 
             this._callDecoratorMethod("on_addTo");
 
-            this.canvas.decoratorUpdated(this.id);
+            //TODO: fix if the item was selected it should be selected with the new decorator as well
         } else {
-            //if decocator instance not changed
+            //if decorator instance not changed
             //let the decorator instance know about the update
             this._decoratorInstance.update(objDescriptor);
         }

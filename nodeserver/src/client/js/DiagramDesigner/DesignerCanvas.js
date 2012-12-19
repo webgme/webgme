@@ -255,6 +255,16 @@ define(['logManager',
         }
     };
 
+    DesignerCanvas.prototype.deleteComponent = function (componentId) {
+        //TODO: fix --> if there is dragging and the item-to-be-deleted is part of the current selection
+
+        if (this.itemIds.indexOf(componentId) !== -1) {
+            this.deleteDesignerItem(componentId);
+        } else if (this.connectionIds.indexOf(componentId) !== -1) {
+            this.deleteConnection(componentId);
+        }
+    };
+
     DesignerCanvas.prototype._onBtnOneLevelUpClick = function () {
         this.logger.warning("DesignerCanvas.prototype._onBtnOneLevelUpClick NOT YET IMPLEMENTED");
     };
@@ -267,14 +277,16 @@ define(['logManager',
         this._updating = true;
 
         /*designer item acocunting*/
-        this._insertedDesignerItemIDs = this._insertedDesignerItemIDs || [];
+        this._insertedDesignerItemIDs = [];
 
-        this._updatedDesignerItemIDs = this._updatedDesignerItemIDs || [];
+        this._updatedDesignerItemIDs = [];
 
-        this._deletedDesignerItemIDs = this._deletedDesignerItemIDs || [];
+        this._deletedDesignerItemIDs = [];
 
         /*connection accounting*/
-        this._insertedConnectionIDs = this._insertedConnectionIDs || [];
+        this._insertedConnectionIDs = [];
+
+        this._deletedConnectionIDs = [];
     };
 
     DesignerCanvas.prototype.endUpdate = function () {
@@ -389,10 +401,15 @@ define(['logManager',
         //TODO: canvas size decrease not handled yet
         this._resizeItemContainer(maxWidth, maxHeight);
 
+        //let the selection manager know about deleted items and connections
+        this.selectionManager.componentsDeleted(this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
+
         /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
         this._insertedConnectionIDs = [];
+        this._deletedDesignerItemIDs = [];
+        this._deletedConnectionIDs = [];
 
         this.logger.error("_refreshScreen END");
     };

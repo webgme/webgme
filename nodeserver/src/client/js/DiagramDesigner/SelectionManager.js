@@ -331,5 +331,20 @@ define(['logManager',
         this.canvas.showSelectionOutline();
     };
 
+    SelectionManager.prototype.componentsDeleted = function (idList) {
+        var i = idList.length,
+            idx,
+            id;
+
+        //items are already deleted, we just need to remove them from the selectedIdList (if there)
+        while (i--) {
+            id = idList[i];
+            idx = this.selectedItemIdList.indexOf(id);
+            if (idx !== -1) {
+                this.selectedItemIdList.splice(idx, 1);
+            }
+        }
+    };
+
     return SelectionManager;
 });

@@ -9,7 +9,7 @@ define([], function () {
     };
 
     DesignerCanvasDEBUG.prototype._addDebugModeExtensions = function () {
-        var debugBtn = $('<div class="btn-group" style="margin-left: 10px;"><a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" href="#">DEBUG<span class="caret"></span></a><ul class="dropdown-menu"></ul></div>');
+        var debugBtn = $('<div class="btn-group" style="margin-left: 10px;"><a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" href="#">DEBUG <span class="caret"></span></a><ul class="dropdown-menu"></ul></div>');
 
         this.logger.warning("DesignerCanvasDEBUG _addDebugModeExtensions activated...");
 
@@ -19,6 +19,10 @@ define([], function () {
         this._debugAddAutoUpdater();
 
         this._debugAddCreateButtons();
+
+        this._debugAddUpdateButtons();
+
+        this._debugAddDeleteButtons();
     };
 
     DesignerCanvasDEBUG.prototype._debugAddAutoUpdater = function () {
@@ -118,7 +122,7 @@ define([], function () {
 
         debugCreateItemsButtons.append('<li class="divider"></li>');
 
-        debugCreateItemsButtons.append('<li><a tabindex="-1" href="#" data-num="100_500">Create 100 Items + 300 Connections</a></li>');
+        debugCreateItemsButtons.append('<li><a tabindex="-1" href="#" data-num="100_500">Create 100 Items + 500 Connections</a></li>');
         debugCreateItemsButtons.append('<li><a tabindex="-1" href="#" data-num="300_1500">Create 300 Items + 1500 Connections</a></li>');
         debugCreateItemsButtons.append('<li><a tabindex="-1" href="#" data-num="1000_5000">Create 1000 Items + 5000 Connections</a></li>');
         debugCreateItemsButtons.append('<li><a tabindex="-1" href="#" data-num="1000_10000">Create 1000 Items + 10000 Connections</a></li>');
@@ -132,6 +136,54 @@ define([], function () {
 
             self.onDebugCreateItems({"items": itemNum,
                                      "connections": connNum });
+        });
+    };
+
+    DesignerCanvasDEBUG.prototype._debugAddUpdateButtons = function () {
+        var self = this,
+            debugUpdateButtonSubMenu = $('<li class="dropdown-submenu"><a tabindex="-1" href="#">Update Items</a><ul class="dropdown-menu"></ul></li>'),
+            debugUpdateItemsButtons = debugUpdateButtonSubMenu.find(".dropdown-menu") ;
+
+        /* ITEM UPDATES */
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="moveitems">Reposition selected items</a></li>');
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="renameitems">Rename selected items</a></li>');
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="updateitemsdecorator">Update selected items\'s decorator</a></li>');
+
+        debugUpdateItemsButtons.append('<li class="divider"></li>');
+
+        /* CONNECTION UPDATES */
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="connections">Update selected connections</a></li>');
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="connectionsreconnect">Reconnect selected connections</a></li>');
+
+        debugUpdateItemsButtons.append('<li class="divider"></li>');
+
+        /* BOTH */
+        debugUpdateItemsButtons.append('<li><a tabindex="-1" href="#" data-type="delete">Delete selected</a></li>');
+
+        this.skinParts.$_debugBtnDropDown.append(debugUpdateButtonSubMenu);
+
+        debugUpdateItemsButtons.on("click", "> li > a", function () {
+            var data = $(this).attr("data-type");
+
+            self.onDebugUpdateItems(data, self.selectionManager.selectedItemIdList);
+        });
+    };
+
+    DesignerCanvasDEBUG.prototype._debugAddDeleteButtons = function () {
+        var self = this,
+            debugDeleteButtonSubMenu = $('<li class="dropdown-submenu"><a tabindex="-1" href="#">Delete Items</a><ul class="dropdown-menu"></ul></li>'),
+            debugDeleteItemsButtons = debugDeleteButtonSubMenu.find(".dropdown-menu") ;
+
+        debugDeleteItemsButtons.append('<li><a tabindex="-1" href="#" data-type="items">Delete selected items</a></li>');
+        debugDeleteItemsButtons.append('<li><a tabindex="-1" href="#" data-type="connections">Delete selected connections</a></li>');
+        debugDeleteItemsButtons.append('<li><a tabindex="-1" href="#" data-type="all">Delete all</a></li>');
+
+        this.skinParts.$_debugBtnDropDown.append(debugDeleteButtonSubMenu);
+
+        debugDeleteItemsButtons.on("click", "> li > a", function () {
+            var data = $(this).attr("data-type");
+
+            self.onDebugDeleteItems(data, self.selectionManager.selectedItemIdList);
         });
     };
 
