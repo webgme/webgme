@@ -5,7 +5,12 @@ define(['logManager',
                             clientUtil) {
 
     var SelectionManager,
-        SELECTION_OVERLAP_RATIO = 0.5;
+        SELECTION_OVERLAP_RATIO = 0.5,
+        DESIGNER_CONNECTION_CLASS = "designer-connection", //TODO: need a common contants file
+        PATH_SHADOW_ID_PREFIX = "p_",
+        DESIGNER_ITEM_CLASS = "designer-item",
+        SELECTION_OUTLINE_MARGIN = 15,
+        SELECTION_OUTLINE_MIN_WIDTH = 100;
 
     SelectionManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
@@ -30,6 +35,20 @@ define(['logManager',
         var self = this;
 
         this.$el = $el;
+
+        $el.on('mousedown.SelectionManagerItem', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
+            var itemId = $(this).attr("id");
+            self.canvas.onItemMouseDown(event, itemId);
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        $el.on('mousedown.SelectionManagerConnection', 'path[class="' + DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
+            var itemId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
+            self.canvas.onConnectionMouseDown(event, itemId);
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
         if (this.allowRubberBandSelection === true) {
             //hook up mousedown on background
@@ -327,7 +346,7 @@ define(['logManager',
 
         this.logger.debug("selected items: " + this.selectedItemIdList);
 
-        this.canvas.showSelectionOutline();
+        this.showSelectionOutline();
     };
 
     SelectionManager.prototype.componentsDeleted = function (idList) {
@@ -343,6 +362,91 @@ define(['logManager',
                 this.selectedItemIdList.splice(idx, 1);
             }
         }
+    };
+
+    SelectionManager.prototype.showSelectionOutline = function () {
+        var bBox = this._getSelectionBoundingBox(),
+            cW = this.canvas._actualSize.w,
+            cH = this.canvas._actualSize.h;
+
+        if (bBox.hasOwnProperty("x")) {
+
+            bBox.x -= SELECTION_OUTLINE_MARGIN;
+            bBox.y -= SELECTION_OUTLINE_MARGIN;
+            bBox.x2 += SELECTION_OUTLINE_MARGIN;
+            bBox.y2 += SELECTION_OUTLINE_MARGIN;
+
+            if (bBox.x < 0) {
+                bBox.x = 0;
+            }
+
+            if (bBox.y < 0) {
+                bBox.y = 0;
+            }
+
+            if (bBox.x2 > cW) {
+                bBox.x2 = cW;
+            }
+
+            if (bBox.y2 > cH) {
+                bBox.y2 = cH;
+            }
+
+            bBox.w = bBox.x2 - bBox.x;
+            bBox.h = bBox.y2 - bBox.y;
+            if (bBox.w < SELECTION_OUTLINE_MIN_WIDTH) {
+                bBox.x -= (SELECTION_OUTLINE_MIN_WIDTH - bBox.w) / 2;
+                bBox.x2 += (SELECTION_OUTLINE_MIN_WIDTH - bBox.w) / 2;
+                bBox.w = bBox.x2 - bBox.x;
+            }
+
+            if (this.canvas.skinParts.$selectionOutline) {
+                this.canvas.skinParts.$selectionOutline.empty();
+            } else {
+                this.canvas.skinParts.$selectionOutline = $('<div/>', {
+                    "class" : "selection-outline"
+                });
+
+                this.canvas.skinParts.$itemsContainer.append(this.canvas.skinParts.$selectionOutline);
+            }
+
+            this.canvas.skinParts.$selectionOutline.css({ "left": bBox.x,
+                "top": bBox.y,
+                "width": bBox.w,
+                "height": bBox.h });
+        }
+    };
+
+    SelectionManager.prototype._getSelectionBoundingBox = function () {
+        var bBox = { "x": 0,
+                     "y": 0,
+                     "x2": 0,
+                     "y2": 0},
+            i = this.selectedItemIdList.length,
+            id,
+            childBBox,
+            items = this.canvas.items;
+
+        while (i--) {
+            id = this.selectedItemIdList[i];
+
+            childBBox = items[id].getBoundingBox();
+
+            if (childBBox.x < bBox.x) {
+                bBox.x = childBBox.x;
+            }
+            if (childBBox.y < bBox.y) {
+                bBox.y = childBBox.y;
+            }
+            if (childBBox.x2 > bBox.x2) {
+                bBox.x2 = childBBox.x2;
+            }
+            if (childBBox.y2 > bBox.y2) {
+                bBox.y2 = childBBox.y2;
+            }
+        }
+
+        return bBox;
     };
 
     return SelectionManager;

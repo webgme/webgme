@@ -10,6 +10,7 @@ define(['logManager',
                                                       bezierHelper) {
 
     var ConnectionComponent,
+        DESIGNER_CONNECTION_CLASS = "designer-connection",
         PATH_SHADOW_ID_PREFIX = "p_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5;
 
@@ -122,7 +123,8 @@ define(['logManager',
                     this.logger.debug("Drawing connection with ID: '" + this.id + "'");
                     /*CREATE PATH*/
                     this.skinParts.path = this.paper.path(pathDef);
-                    $(this.skinParts.path.node).attr("id", this.id);
+                    $(this.skinParts.path.node).attr({"id": this.id,
+                                                      "class": DESIGNER_CONNECTION_CLASS});
 
                     this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                         "arrow-end": this.designerAttributes.arrowEnd,
@@ -222,7 +224,10 @@ define(['logManager',
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
             this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path(pathDef);
-            $(this.skinParts.pathShadow.node).attr("id", PATH_SHADOW_ID_PREFIX + this.id);
+            /*$(this.skinParts.pathShadow.node).attr("id", /*PATH_SHADOW_ID_PREFIX + this.id);*/
+
+            $(this.skinParts.pathShadow.node).attr({"id": PATH_SHADOW_ID_PREFIX + this.id,
+                "class": DESIGNER_CONNECTION_CLASS});
 
             this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
                 "stroke-width": this.designerAttributes.shadowWidth,

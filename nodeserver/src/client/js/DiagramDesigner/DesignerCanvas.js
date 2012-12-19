@@ -483,13 +483,13 @@ define(['logManager',
 
         //mousedown initiates a component selection
         this.selectionManager.setSelection([itemId], event);
-
-        event.stopPropagation();
-        event.preventDefault();
     };
 
-    DesignerCanvas.prototype.showSelectionOutline = function () {
+    DesignerCanvas.prototype.onConnectionMouseDown = function (event, connId) {
+        this.logger.debug("onConnectionMouseDown: " + connId);
 
+        //mousedown initiates a connection selection
+        this.selectionManager.setSelection([connId], event);
     };
 
     //additional code pieces for DesignerCanvas

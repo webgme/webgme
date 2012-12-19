@@ -62,7 +62,7 @@ define(['logManager'], function (logManager) {
             "left": this.positionX,
             "top": this.positionY });
 
-        //this._attachUserInteractions();
+        this._attachUserInteractions();
     };
 
     DesignerItem.prototype._attachUserInteractions = function () {
@@ -76,13 +76,13 @@ define(['logManager'], function (logManager) {
                                         "preventDefault": true },
                         "mouseleave": { "fn": "onMouseLeave",
                                         "stopPropagation": true,
-                                        "preventDefault": true },
-                        "mousedown": { "fn": "onMouseDown",
+                                        "preventDefault": true }/*,*/
+                        /*"mousedown": { "fn": "onMouseDown",
                                         "stopPropagation": true,
                                         "preventDefault": true },
                         "mouseup": { "fn": "onMouseUp",
                                     "stopPropagation": false,
-                                    "preventDefault": true } };
+                                    "preventDefault": true }*/ };
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
