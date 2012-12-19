@@ -92,7 +92,7 @@ define(['logManager',
         validPath = len > 1;
 
         if (validPath) {
-            //there is at least 2 points given
+            //there is at least 2 points given, good to draw
 
             p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
@@ -104,11 +104,6 @@ define(['logManager',
                 p = points[len - i];
                 pathDef.push("L" + p.x + "," + p.y);
             }
-
-            /*for (i = 1; i < len; i++) {
-                p = points[i];
-
-            }*/
 
             pathDef = pathDef.join(" ");
 
@@ -178,15 +173,8 @@ define(['logManager',
         this._destroying = true;
 
         //remove from DOM
-        if (this.skinParts.path) {
-            this.skinParts.path.remove();
-            this.skinParts.path = null;
-        }
-
-        if (this.skinParts.pathShadow) {
-            this.skinParts.pathShadow.remove();
-            this.skinParts.pathShadow = null;
-        }
+        this._removePath();
+        this._removePathShadow();
 
         this.logger.debug("Destroyed");
     };
