@@ -900,7 +900,8 @@ UTIL, SHA1) {
 			getCollectionPaths: getCollectionPaths,
 			loadCollection: loadCollection,
 
-			getSingleNodeHash: getSingleNodeHash
+			getSingleNodeHash: getSingleNodeHash,
+			getCommonPathPrefixData: pertree.getCommonPathPrefixData
 		};
 	};
 

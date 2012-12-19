@@ -14,7 +14,7 @@ define(function () {
 			// host: "129.59.105.239", // cloud
 			port: 27017,
 			database: "test2",
-			collection: "storage"
+			collection: "storage2"
 		},
 
 		parser: {
@@ -35,11 +35,10 @@ define(function () {
 			maxSize: 10000
 		},
 
-		corepath: {
-			agingLimit: 3000,
-			maxAge: 3
+		future: {
+			maxDepth: 5
 		},
-
+		
 		copyOptions: function (defaults, options) {
 			options = options || {};
 			for( var key in defaults ) {

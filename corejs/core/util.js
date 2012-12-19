@@ -126,6 +126,8 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		};
 
 		var loadChildrenDone = function (parent, err, children) {
+			ASSERT(err || children instanceof Array);
+
 			if( requests ) {
 				if( err ) {
 					requests = null;
@@ -140,14 +142,14 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 					requests[i].s = 3;
 
-					err = children.length;
-					while( --err >= 0 ) {
+					var xlast = children.length;
+					while( --xlast >= 0 ) {
 						requests.splice(i, 0, {
 							s: 0,
-							n: children[err]
+							n: children[xlast]
 						}, {
 							s: 1,
-							n: children[err]
+							n: children[xlast]
 						});
 					}
 

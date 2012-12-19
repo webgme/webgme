@@ -5,7 +5,7 @@
  */
 
 define(
-[ "core/assert", "core/lib/sax", "fs", "core/core2", "core/config", "core/util", "core/cache" ],
+[ "core/assert", "core/lib/sax", "fs", "core/core3", "core/config", "core/util", "core/cache" ],
 function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 	"use strict";
 

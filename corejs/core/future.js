@@ -4,8 +4,10 @@
  * Author: Miklos Maroti
  */
 
-define(function () {
+define([ "core/config" ], function (CONFIG) {
 	"use strict";
+
+	var maxDepth = CONFIG.future.maxDepth || 5;
 
 	var ASSERT = function (cond) {
 		if( !cond ) {
@@ -73,11 +75,11 @@ define(function () {
 	var adapt = function (func) {
 		ASSERT(typeof func === "function");
 
-		return function () {
+		return function adaptx () {
 			var args = arguments;
 			var future = new Future();
 
-			args[args.length++] = function (error, value) {
+			args[args.length++] = function adaptCallback (error, value) {
 				if( error ) {
 					value = error instanceof Error ? error : new Error(error);
 				}
@@ -109,7 +111,7 @@ define(function () {
 		if( isUnresolved(value) ) {
 			setListener(value, returnCallback, callback);
 		}
-		else if( calldepth < 5 ) {
+		else if( calldepth < maxDepth ) {
 			++calldepth;
 			try {
 				callback(null, value);
@@ -129,7 +131,7 @@ define(function () {
 		ASSERT(typeof func === "function");
 
 		if( func.length === 0 ) {
-			return function (callback) {
+			return function unadapt0 (callback) {
 				var value;
 				try {
 					value = func.call(this);
@@ -142,7 +144,7 @@ define(function () {
 			};
 		}
 		else if( func.length === 1 ) {
-			return function (arg, callback) {
+			return function unadapt1 (arg, callback) {
 				var value;
 				try {
 					value = func.call(this, arg);
@@ -155,7 +157,7 @@ define(function () {
 			};
 		}
 		else {
-			return function () {
+			return function unadaptx () {
 				var args = arguments;
 
 				var callback = args[--args.length];
@@ -176,9 +178,7 @@ define(function () {
 
 	var delay = function (delay, value) {
 		var future = new Future();
-		setTimeout(function () {
-			setValue(future, value);
-		}, delay);
+		setTimeout(setValue, delay, future, value);
 		return future;
 	};
 

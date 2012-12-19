@@ -45,7 +45,7 @@ CoreTree, SHA1, FUTURE) {
 		var isValidNode = coretree.isValidNode;
 		var isValidPath = coretree.isValidPath;
 
-		var __getCommonPathPrefixData = function (first, second) {
+		var getCommonPathPrefixData = function (first, second) {
 			ASSERT(typeof first === "string" && typeof second === "string");
 
 			first = coretree.splitPath(first);
@@ -128,7 +128,7 @@ CoreTree, SHA1, FUTURE) {
 		var overlayInsert = function (overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
-			ASSERT(__getCommonPathPrefixData(source, target).common === "");
+			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
 			var node = coretree.getChild(overlays, source);
 
@@ -155,7 +155,7 @@ CoreTree, SHA1, FUTURE) {
 		var overlayRemove = function (overlays, source, name, target) {
 			ASSERT(isValidNode(overlays) && coretree.getRelid(overlays) === OVERLAYS);
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
-			ASSERT(__getCommonPathPrefixData(source, target).common === "");
+			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
 			var node = coretree.getChild(overlays, source);
 			ASSERT(node && coretree.getProperty(node, name) === target);
@@ -340,7 +340,7 @@ CoreTree, SHA1, FUTURE) {
 								overlays = ancestorOverlays;
 							}
 							else if( aboveAncestor === 0 ) {
-								var data = __getCommonPathPrefixData(ancestorNewPath, entry.t);
+								var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 								overlays = newNode;
 								while( data.firstLength-- > 0 ) {
@@ -434,7 +434,7 @@ CoreTree, SHA1, FUTURE) {
 						overlays = ancestorOverlays;
 					}
 					else if( aboveAncestor === 0 ) {
-						var data = __getCommonPathPrefixData(ancestorNewPath, entry.t);
+						var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 						overlays = node;
 						while( data.firstLength-- > 0 ) {
@@ -827,7 +827,8 @@ CoreTree, SHA1, FUTURE) {
 			getCollectionPaths: getCollectionPaths,
 			loadCollection: FUTURE.unadapt(loadCollection),
 
-			getSingleNodeHash: getSingleNodeHash
+			getSingleNodeHash: getSingleNodeHash,
+			getCommonPathPrefixData: getCommonPathPrefixData
 		};
 	};
 
