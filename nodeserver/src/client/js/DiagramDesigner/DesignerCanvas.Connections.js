@@ -39,9 +39,55 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
         return newComponent;
     };
 
+    DesignerCanvas.prototype.updateConnection = function (id, objDescriptor) {
+        var connectionId = objDescriptor.id,
+            sourceId = objDescriptor.source,
+            targetId = objDescriptor.target,
+            idx,
+            endId;
+
+        this.logger.debug("Updating connection component with ID: '" + id + "'");
+
+        //add to accounting queues for performance optimization
+        this._updatedConnectionIDs.push(connectionId);
+
+        /* check if any endpoint of the connection has been changed */
+        //check SOURCE
+        if (sourceId !== this.connectionEndIDs[id].source) {
+            endId = this.connectionEndIDs[id].source;
+            idx = this.connectionIDbyEndID[endId].indexOf(id);
+            if (idx !== -1) {
+                this.connectionIDbyEndID[endId].splice(idx, 1);
+            }
+
+            //account the new
+            this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || [];
+            this.connectionIDbyEndID[sourceId].push(id);
+        }
+
+        //check TARGET
+        if (targetId !== this.connectionEndIDs[id].target) {
+            endId = this.connectionEndIDs[id].target;
+            idx = this.connectionIDbyEndID[endId].indexOf(id);
+            if (idx !== -1) {
+                this.connectionIDbyEndID[endId].splice(idx, 1);
+            }
+
+            //account the new
+            this.connectionIDbyEndID[targetId] = this.connectionIDbyEndID[targetId] || [];
+            this.connectionIDbyEndID[targetId].push(id);
+        }
+
+        //accounting connection info
+        this.connectionEndIDs[connectionId] = {"source": sourceId,
+            "target": targetId };
+    };
+
     DesignerCanvas.prototype.deleteConnection = function (id) {
         var idx,
             endId;
+
+        this.logger.debug("Deleting connection component with ID: '" + id + "'");
 
         //keep up accounting
         this._deletedConnectionIDs.push(id);

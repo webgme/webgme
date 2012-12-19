@@ -185,10 +185,12 @@ define([], function () {
                     this._onDebugUpdateItems_UpdateItemsDecorator(filteredIDs);
                     break;
                 case "connections":
-                    //filteredIDs = this._filterItems(DEBUG_CONNECTION_TYPE, selectedIDs);
+                    filteredIDs = this._filterItems(DEBUG_CONNECTION_TYPE, selectedIDs);
+                    this._onDebugUpdateItems_UpdateConnections(filteredIDs);
                     break;
                 case "connectionsreconnect":
-                    //filteredIDs = this._filterItems(DEBUG_CONNECTION_TYPE, selectedIDs);
+                    filteredIDs = this._filterItems(DEBUG_CONNECTION_TYPE, selectedIDs);
+                    this._onDebugUpdateItems_ReconnectConnections(filteredIDs);
                     break;
             }
 
@@ -247,6 +249,41 @@ define([], function () {
             itemDesc = this._debugObjectDescriptors[itemIDs[i]];
 
             itemDesc.decorator = decorator;
+        }
+    };
+
+    DesignerControlDEBUG.prototype._onDebugUpdateItems_UpdateConnections = function (connectionIDs) {
+        var i = connectionIDs.length,
+            connDesc,
+            j;
+
+        this._debugConnectionSegmentPointX = this._debugConnectionSegmentPointX || 10;
+        this._debugConnectionSegmentPointY = this._debugConnectionSegmentPointY || 10;
+
+        while (i--) {
+            connDesc = this._debugObjectDescriptors[connectionIDs[i]];
+
+            connDesc.segmentPoints = connDesc.segmentPoints || [];
+            connDesc.segmentPoints.push({"x": this._debugConnectionSegmentPointX,
+                                         "y": this._debugConnectionSegmentPointY });
+
+            this._debugConnectionSegmentPointX += 20;
+            if (this._debugConnectionSegmentPointX > 1000) {
+                this._debugConnectionSegmentPointX = 10;
+                this._debugConnectionSegmentPointY += 30;
+            }
+        }
+    };
+
+    DesignerControlDEBUG.prototype._onDebugUpdateItems_ReconnectConnections = function (connectionIDs) {
+        var i = connectionIDs.length,
+            connDesc,
+            j;
+
+        while (i--) {
+            connDesc = this._debugObjectDescriptors[connectionIDs[i]];
+
+            connDesc.target = this._debugItemIDs[(this._connectionEndIDCounter + CONNECTIONSTEP + i) % this._debugItemIDs.length];
         }
     };
 

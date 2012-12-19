@@ -75,7 +75,7 @@ define([], function () {
                                                                                    "actionCounter": 0,
                                                                                    actions: [[1,1], [-1,1], [-1,-1], [1,-1]] };
 
-            this._debugAddAutoUpdaterParams.itemCounter += 1;
+            /*this._debugAddAutoUpdaterParams.itemCounter += 1;
             this._debugAddAutoUpdaterParams.itemCounter %= itemIds.length;
             shiftParams = this._debugAddAutoUpdaterParams.actions[this._debugAddAutoUpdaterParams.actionCounter];
 
@@ -89,7 +89,7 @@ define([], function () {
 
             newPositions[concreteItem.id] = { "x": newX, "y": newY };
 
-            this.onReposition(newPositions);
+            this.onReposition(newPositions);*/
 
             setTimeout(function () {
                 self._debugAddAutoUpdaterTick();

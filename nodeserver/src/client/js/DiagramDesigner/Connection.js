@@ -123,6 +123,16 @@ define(['logManager',
                 "height": 0 };
         }
 
+        //when te line is vertical or horizontal, its dimension information needs to be tweaked
+        //otherwise height or width will be 0, no good for selection matching
+        if (bBox.height === 0 && bBox.width !== 0) {
+            bBox.height = 1;
+            bBox.y2 += 1;
+        } else if (bBox.height !== 0 && bBox.width === 0) {
+            bBox.width = 1;
+            bBox.x2 += 1;
+        }
+
         return bBox;
     };
 

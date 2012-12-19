@@ -70,6 +70,8 @@ define(['js/DiagramDesigner/DesignerItem',
     DesignerCanvas.prototype.deleteDesignerItem  = function (id) {
         var idx;
 
+        this.logger.debug("Deleting DesignerItem with ID: '" + id + "'");
+
         //keep up accounting
         this._deletedDesignerItemIDs.push(id);
 
