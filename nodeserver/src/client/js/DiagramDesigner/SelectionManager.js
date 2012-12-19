@@ -248,7 +248,6 @@ define(['logManager',
                 if (this.allowMultiSelection !== true) {
                     this._clearSelection();
                     idList.splice(0, len - 1);
-                    len = 1;
                 } else {
                     //by definition multiselection is allowed
                     //check if user pressed the necessary modifier keys for multiselection

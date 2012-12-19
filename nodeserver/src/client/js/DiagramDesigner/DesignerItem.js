@@ -313,7 +313,7 @@ define(['logManager'], function (logManager) {
         //TODO: check if decorator changed and need to be updated
 
         if (decoratorName !== this.decoratorName) {
-            this.logger.error("decorator update: '" + this.decoratorName + "' --> '" + decoratorName + "'...");
+            this.logger.debug("decorator update: '" + this.decoratorName + "' --> '" + decoratorName + "'...");
 
             //destroy old decorator
             this._callDecoratorMethod("destroy");

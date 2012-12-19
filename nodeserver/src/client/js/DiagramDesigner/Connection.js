@@ -81,11 +81,11 @@ define(['logManager',
         //this way the redraw does not need to happen
         if (this.pathDef !== pathDef) {
             if (this.skinParts.path) {
-                this.logger.error("Redrawing connection with ID: '" + this.id + "'");
+                this.logger.debug("Redrawing connection with ID: '" + this.id + "'");
                 this.skinParts.path.attr({ "path": pathDef});
                 //this.skinParts.pathShadow.attr({ "path": pathDef});
             } else {
-                this.logger.error("Drawing connection with ID: '" + this.id + "'");
+                this.logger.debug("Drawing connection with ID: '" + this.id + "'");
                 /*CREATE PATH*/
                 this.skinParts.path = this.paper.path(pathDef);
                 $(this.skinParts.path.node).attr("id", this.id);

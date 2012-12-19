@@ -83,7 +83,6 @@ define(['logManager',
         this._insertedDesignerItemIDs = null;
         this._updatedDesignerItemIDs = null;
         this._deletedDesignerItemIDs = null;
-        this._waitingForDesignerItemAck = null;
     };
 
     DesignerCanvas.prototype.getIsReadOnlyMode = function () {
@@ -272,25 +271,23 @@ define(['logManager',
     /*********************************/
 
     DesignerCanvas.prototype.beginUpdate = function () {
-        this.logger.error("beginUpdate");
+        this.logger.debug("beginUpdate");
 
         this._updating = true;
 
         /*designer item acocunting*/
         this._insertedDesignerItemIDs = [];
-
         this._updatedDesignerItemIDs = [];
-
         this._deletedDesignerItemIDs = [];
 
         /*connection accounting*/
         this._insertedConnectionIDs = [];
-
+        this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
     };
 
     DesignerCanvas.prototype.endUpdate = function () {
-        this.logger.error("endUpdate");
+        this.logger.debug("endUpdate");
 
         this._updating = false;
         this.tryRefreshScreen();
@@ -303,17 +300,28 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.tryRefreshScreen = function () {
-        var insertedLen = this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0,
-            updatedLen = this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0,
+        var insertedLen = 0,
+            updatedLen = 0,
+            deletedLen = 0,
             msg = "";
 
         //check whether controller update finished or not
         if (this._updating !== true) {
 
+            insertedLen += this._insertedDesignerItemIDs ? this._insertedDesignerItemIDs.length : 0 ;
+            insertedLen += this._insertedConnectionIDs ? this._insertedConnectionIDs.length : 0 ;
+
+            updatedLen += this._updatedDesignerItemIDs ? this._updatedDesignerItemIDs.length : 0 ;
+            updatedLen += this._updatedConnectionIDs ? this._updatedConnectionIDs.length : 0 ;
+
+            deletedLen += this._deletedDesignerItemIDs ? this._deletedDesignerItemIDs.length : 0 ;
+            deletedLen += this._deletedConnectionIDs ? this._deletedConnectionIDs.length : 0 ;
+
             msg += "Added: " + insertedLen;
             msg += " Updated: " + updatedLen;
+            msg += " Deleted: " + deletedLen;
 
-            this.logger.error(msg);
+            this.logger.debug(msg);
 
             this.skinParts.$progressText.text(msg);
 
@@ -332,7 +340,7 @@ define(['logManager',
             doRenderSetLayout,
             items = this.items;
 
-        this.logger.error("_refreshScreen START");
+        this.logger.debug("_refreshScreen START");
 
         //TODO: updated items probably touched the DOM for modification
         //hopefully none of them forced a reflow by reading values, only setting values
@@ -411,7 +419,7 @@ define(['logManager',
         this._deletedDesignerItemIDs = [];
         this._deletedConnectionIDs = [];
 
-        this.logger.error("_refreshScreen END");
+        this.logger.debug("_refreshScreen END");
     };
 
     /*************** MODEL CREATE / UPDATE / DELETE ***********************/
