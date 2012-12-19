@@ -125,16 +125,20 @@ define([
                         //we have now all the projects, so we should connect to them...
                         var count = 0;
                         for (i in projectsinfo) {
-                            if (firstproject === null) {
-                                firstproject = i;
+                            if(i!=='activeProject'){
+                                if (firstproject === null) {
+                                    firstproject = i;
+                                }
+                                count++;
                             }
-                            count++;
                         }
                         if (count === 0) {
                             console.log("there is no project on this server!!!");
                         }
                         for (i in projectsinfo) {
-                            openProject(i, projopened);
+                            if(i!=='activeProject'){
+                                openProject(i, projopened);
+                            }
                         }
                     });
                 });
