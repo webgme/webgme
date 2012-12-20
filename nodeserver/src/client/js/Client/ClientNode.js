@@ -10,7 +10,8 @@ define(['commonUtil'],
                 core = parameters.core,
                 actor = parameters.actor,
                 ownpath = core.getStringPath(node),
-                ownpathpostfix = ownpath === "" ? "" : "/";
+                //ownpathpostfix = ownpath === "" ? "" : "/";
+                ownpathpostfix = ownpath === "" ? "/" : "/";
 
             var getParentId = function(){
                 var parent = core.getParent(node);

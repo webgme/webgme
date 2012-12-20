@@ -317,7 +317,7 @@ CoreTree, SHA1, FUTURE) {
 
 				while( base ) {
 					var baseOverlays = coretree.getChild(base, OVERLAYS);
-					var list = overlayQuery(baseOverlays, baseOldPath);
+					var list = overlayQuery(baseOverlays, '/'+baseOldPath);
 
 					aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
@@ -394,17 +394,20 @@ CoreTree, SHA1, FUTURE) {
 			var oldNode = node;
 			node = coretree.getChild(parent, baseOldPath);
 			if( !coretree.isEmpty(node) ) {
-				return null;
+                //we have to change the relid of the node, to fit into its new place...
+                node = coretree.createChild(parent);
+				//return null;
 			}
 
 			coretree.setData(node, coretree.copyData(oldNode));
+            deleteNode(oldNode);
 
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 			var ancestorNewPath = coretree.getPath(node, ancestor);
 
 			while( base ) {
 				var baseOverlays = coretree.getChild(base, OVERLAYS);
-				var list = overlayQuery(baseOverlays, baseOldPath);
+				var list = overlayQuery(baseOverlays, '/'+baseOldPath);
 
 				aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
@@ -423,8 +426,8 @@ CoreTree, SHA1, FUTURE) {
 						entry.t = tmp;
 					}
 
-					ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-					ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
+					//ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
+					//ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
 
 					var source, target, overlays;
 
