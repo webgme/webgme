@@ -353,8 +353,9 @@ define([
                             try {
                                 commitInfos[activeProject].getAllCommitsNow(function (err, commits) {
                                     if (!err && commits && commits.length > 0) {
-                                        activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit);
-                                        console.log('activated');
+                                        activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit,function(err){
+                                            console.log('activated');
+                                        });
                                     } else {
                                         throw(err);
                                     }

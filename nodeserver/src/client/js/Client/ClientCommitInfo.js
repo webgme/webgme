@@ -92,7 +92,7 @@ define(['commonUtil'],function(commonUtil){
                 } else {
                     callback(null,getBranches());
                 }
-            })
+            });
         };
 
         var produceCommitTimeline = function(commitid){

@@ -1142,7 +1142,7 @@ define([
             var patternLoaded = function(){
                 if(--counter === 0){
                     //TODO now this is a hack so it should be harmonized somehow
-                    var innerpatternloaded = function(){
+                    /*var innerpatternloaded = function(){
                         if(--innercounter === 0){
                             callback(nupathes);
                         }
@@ -1159,7 +1159,8 @@ define([
                     } else {
                         innercounter = 1;
                         innerpatternloaded();
-                    }
+                    }*/
+                    callback(nupathes);
                 }
             };
 
@@ -1370,8 +1371,8 @@ define([
                 var limit = 0;
                 var patternLoaded = function(){
                     if(--counter === 0){
-                        //TODO same hack as in oading for loading sets
-                        var innercounter = 0;
+                        //TODO same hack as in loading for loading sets
+                        /*var innercounter = 0;
                         var mypathes = COPY(nupathes);
                         var innerpatternloaded = function(){
                             if(--innercounter === 0){
@@ -1391,7 +1392,11 @@ define([
                         } else {
                             innercounter = 1;
                             innerpatternloaded();
-                        }
+                        }*/
+                        reLoading2(function(){
+                            checkReLoading(nupathes);
+                            callback(nupathes);
+                        });
                     }
                 };
 

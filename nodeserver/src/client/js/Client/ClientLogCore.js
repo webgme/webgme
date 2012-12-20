@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define(['commonUtil','core/core2','core/assert'], function (CU,CORE,ASSERT) {
+define(['commonUtil','core/core3','core/assert'], function (CU,CORE,ASSERT) {
     'use strict';
     var GUID = CU.guid;
     var TSSTRING = function(){
