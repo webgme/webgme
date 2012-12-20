@@ -38,9 +38,9 @@ CoreTree, SHA1, FUTURE) {
 
 	// ----------------- Core -----------------
 
-	var Core = function (storage) {
+	var Core = function (storage, options) {
 
-		var coretree = new CoreTree(storage);
+		var coretree = new CoreTree(storage, options);
 
 		var isValidNode = coretree.isValidNode;
 		var isValidPath = coretree.isValidPath;

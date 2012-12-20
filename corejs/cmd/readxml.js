@@ -166,7 +166,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 		addTag({
 			name: "Root",
 			attributes: {
-			// created: (new Date()).toString()
+				created: (new Date()).toString()
 			}
 		});
 

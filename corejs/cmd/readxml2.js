@@ -58,7 +58,9 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			+ idCount + " ids, " + unresolved.length + " idrefs)");
 		}, CONFIG.parser.reportingTime);
 
-		var core = new Core(new Cache(storage));
+		var core = new Core(new Cache(storage), {
+			autopersist: true
+		});
 
 		var exit = function (err, result) {
 			if( timerhandle ) {
@@ -99,27 +101,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			}
 		};
 
-		var persisting = 1;
-		var persist = function (last) {
-			ASSERT(tags.length !== 0);
-			if( !last ) {
-				++persisting;
-			}
-			ASSERT(persisting >= 1);
-
-			core.persist(tags[0].node, function (err) {
-				if( err ) {
-					exit(err);
-				}
-				else if( --persisting === 0 ) {
-					root = tags[0].node;
-					resolveUnresolved(finishParsing);
-				}
-			});
-		};
-
 		var total = 0;
-		var counter = 0;
 
 		var addTag = function (tag) {
 
@@ -156,18 +138,13 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			tag.node = node;
 
 			++total;
-			if( ++counter >= CONFIG.parser.persistingLimit ) {
-				persist(false);
-				counter = 0;
-			}
-
 			tags.push(tag);
 		};
 
 		addTag({
 			name: "Root",
 			attributes: {
-			// created: (new Date()).toString()
+				created: (new Date()).toString()
 			}
 		});
 
@@ -206,7 +183,16 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			console.log("Waiting for remaining objects to be saved ...");
 
 			ASSERT(tags.length === 1);
-			persist(true);
+
+			core.persist(tags[0].node, function (err) {
+				if( err ) {
+					exit(err);
+				}
+				else {
+					root = tags[0].node;
+					resolveUnresolved(finishParsing);
+				}
+			});
 		});
 
 		var root;

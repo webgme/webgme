@@ -4,7 +4,9 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/config" ], function (CONFIG) {
+define(
+[ "core/config" ],
+function (CONFIG) {
 	"use strict";
 
 	var maxDepth = CONFIG.future.maxDepth || 5;
@@ -246,26 +248,50 @@ define([ "core/config" ], function (CONFIG) {
 
 	// ------- join -------
 
-	var Join = function () {
+	var Join = function (first, second) {
 		this.value = UNRESOLVED;
 		this.listener = null;
 		this.param = null;
+
+		this.missing = 2;
+		setListener(first, setJoinand, this);
+		setListener(second, setJoinand, this);
 	};
 
-	Join.prototype = Future.prototype;
+	Join.prototype = Object.create(Future.prototype);
+
+	var setJoinand = function (future, value) {
+		if( value instanceof Error ) {
+			setValue(future, value);
+		}
+		else if( --future.missing <= 0 ) {
+			setValue(future, undefined);
+		}
+	};
 
 	var join = function (first, second) {
-		ASSERT(typeof first === "undefined" || first instanceof Future);
-		ASSERT(typeof second === "undefined" || second instanceof Future);
-
-		if( typeof first === "undefined" ) {
-			return second;
-		}
-		else if( typeof second === "undefined" ) {
-			return first;
+		if( getValue(first) instanceof Future ) {
+			if( getValue(second) instanceof Future ) {
+				if( first instanceof Join ) {
+					first.missing += 1;
+					setListener(second, setJoinand, first);
+					return first;
+				}
+				else if( second instanceof Join ) {
+					second.missing += 1;
+					setListener(first, setJoinand, second);
+					return second;
+				}
+				else {
+					return new Join(first, second);
+				}
+			}
+			else {
+				return first;
+			}
 		}
 		else {
-			return new Join();
+			return getValue(second);
 		}
 	};
 
@@ -377,6 +403,7 @@ define([ "core/config" ], function (CONFIG) {
 		delay: delay,
 		call: call,
 		array: array,
+		join: join,
 		hide: hide
 	};
 });

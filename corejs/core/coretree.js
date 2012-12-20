@@ -4,8 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sha1", "core/util", "core/future" ], function (ASSERT, SHA1,
-UTIL, FUTURE) {
+define([ "core/assert", "core/lib/sha1", "core/util", "core/future", "core/config" ], function (
+ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -41,15 +41,16 @@ UTIL, FUTURE) {
 		};
 	}
 
-	return function (storage) {
+	return function (storage, options) {
+		var MAX_AGE = (options && options.maxage) || CONFIG.coretree.maxage;
+		var MAX_TICKS = (options && options.maxticks) || CONFIG.coretree.maxticks;
+		var autopersist = (options && options.autopersist) || false;
+
+		var HASH_ID = "_id";
+		var EMPTY_DATA = {};
 
 		var roots = [];
 		var ticks = 0;
-
-		var MAX_AGE = 2;
-		var MAX_TICKS = 2000;
-		var HASH_ID = "_id";
-		var EMPTY_DATA = {};
 
 		// ------- static methods
 
@@ -153,13 +154,15 @@ UTIL, FUTURE) {
 
 		var __ageRoots = function () {
 			if( ++ticks >= MAX_TICKS ) {
-				for( var i = 0; i < roots.length; ++i ) {
-					// console.log("aging start", printNode(roots[i]));
-				}
 				ticks = 0;
 				__ageNodes(roots);
-				for( i = 0; i < roots.length; ++i ) {
-					// console.log("aging end", printNode(roots[i]));
+
+				if( autopersist ) {
+					for( var i = 0; i < roots.length; ++i ) {
+						if( __isMutableData(roots[i].data) ) {
+							__saveData(roots[i].data);
+						}
+					}
 				}
 			}
 		};
@@ -210,7 +213,8 @@ UTIL, FUTURE) {
 						return temp;
 					}
 
-					ASSERT(node.parent.children === null || __getChildNode(node.parent.children, node.relid) === null);
+					ASSERT(node.parent.children === null
+					|| __getChildNode(node.parent.children, node.relid) === null);
 					ASSERT(__getChildNode(parent.children, node.relid) === null);
 
 					node.parent = parent;
@@ -640,43 +644,44 @@ UTIL, FUTURE) {
 		};
 
 		var __storageSave = FUTURE.adapt(storage.save);
-		var __saveData = function (data, promises) {
+		var __saveData = function (data) {
 			ASSERT(__isMutableData(data));
 
-			var relid, hash, child, nonempty = false;
+			var done = EMPTY_DATA;
 			delete data._mutable;
 
-			for( relid in data ) {
-				child = data[relid];
+			for( var relid in data ) {
+				var child = data[relid];
 				if( __isMutableData(child) ) {
-					if( __saveData(child, promises) ) {
-						nonempty = true;
+					var sub = __saveData(child);
+					if( sub === EMPTY_DATA ) {
+						delete data[relid];
+					}
+					else {
+						done = FUTURE.join(done, sub);
 						if( typeof child[HASH_ID] === "string" ) {
 							data[relid] = child[HASH_ID];
 						}
 					}
-					else {
-						delete data[relid];
-					}
 				}
 				else {
-					nonempty = true;
+					done = undefined;
 				}
 			}
 
-			if( nonempty ) {
-				hash = data[HASH_ID];
+			if( done !== EMPTY_DATA ) {
+				var hash = data[HASH_ID];
 				ASSERT(hash === "" || typeof key === "undefined");
 
 				if( hash === "" ) {
 					hash = "#" + SHA1(JSON.stringify(data));
 					data[HASH_ID] = hash;
 
-					promises.push(__storageSave(data));
+					done = FUTURE.join(done, __storageSave(data));
 				}
 			}
 
-			return nonempty;
+			return done;
 		};
 
 		var persist = function (node) {
@@ -686,12 +691,8 @@ UTIL, FUTURE) {
 				return false;
 			}
 
-			var promises = [];
-			__saveData(node.data, promises);
-
-			promises.push(__storageFsync());
-
-			return FUTURE.array(promises);
+			var done = __saveData(node.data);
+			return FUTURE.join(done, __storageFsync());
 		};
 
 		var __storageFsync = FUTURE.adapt(storage.fsync);
@@ -726,6 +727,7 @@ UTIL, FUTURE) {
 			node = getChild(node, relid);
 
 			if( isValidHash(node.data) ) {
+				// TODO: this is a hack, we should avoid loading it multiple times
 				return FUTURE.call(node, __storageLoad(node.data), __loadChild2);
 			}
 			else {
@@ -736,8 +738,16 @@ UTIL, FUTURE) {
 		var __loadChild2 = function (node, newdata) {
 			node = normalize(node);
 
-			node.data = newdata;
-			__reloadChildrenData(node);
+			// TODO: this is a hack, we should avoid loading it multiple times
+			if( isValidHash(node.data) ) {
+				ASSERT(node.data === newdata[HASH_ID]);
+
+				node.data = newdata;
+				__reloadChildrenData(node);
+			}
+			else {
+				ASSERT(node.data === newdata);
+			}
 
 			return node;
 		};
