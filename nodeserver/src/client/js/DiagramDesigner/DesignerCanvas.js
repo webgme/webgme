@@ -22,7 +22,8 @@ define(['logManager',
                                                       ConnectionRouteManagerBasic) {
 
     var DesignerCanvas,
-        DEFAULT_GRID_SIZE = 10;
+        DEFAULT_GRID_SIZE = 10,
+        CANVAS_EDGE = 100;
 
     DesignerCanvas = function (options) {
         //set properties from options
@@ -407,7 +408,7 @@ define(['logManager',
 
         //adjust the canvas size to the new 'grown' are that the inserted / updated require
         //TODO: canvas size decrease not handled yet
-        this._resizeItemContainer(maxWidth, maxHeight);
+        this._resizeItemContainer(maxWidth + CANVAS_EDGE, maxHeight + CANVAS_EDGE);
 
         //let the selection manager know about deleted items and connections
         this.selectionManager.componentsDeleted(this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
@@ -500,20 +501,34 @@ define(['logManager',
 
     DesignerCanvas.prototype.onDesignerItemDrag = function (draggedItemId, allDraggedItemIDs) {
         var i = allDraggedItemIDs.length,
-            affectedConnections = [];
+            connectionIDsToUpdate,
+            redrawnConnectionIDs;
 
-        //redraw all the connections that are affected by the dragged objects
-        //when necessary, because in copy mode, no need to redraw the connections
-        /*if (this._dragOptions.mode === this._dragModes.reposition) {
-         for (i = 0; i < this._selectedComponentIds.length; i += 1) {
-         affectedConnections.mergeUnique(this._getConnectionsForModel(this._selectedComponentIds[i]));
-         }
-         this._updateConnections(affectedConnections);
-         }*/
+        //TODO: refresh only the connections that are really needed
+        connectionIDsToUpdate = this.connectionIds.slice(0);
+        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        i = redrawnConnectionIDs.len;
     };
 
     DesignerCanvas.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
+    };
+
+    DesignerCanvas.prototype.designerItemsMove = function (itemIDs) {
+        var i = itemIDs.length,
+            newPositions = {},
+            id,
+            item;
+
+        while (i--) {
+            id = itemIDs[i];
+            item = this.items[id];
+
+            newPositions[id] = { "x": item.positionX, "y": item.positionY };
+        }
+
+        this.onDesignerItemsMove(newPositions);
     };
     /************************** END - DRAG ITEM ***************************/
 

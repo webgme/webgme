@@ -36,6 +36,54 @@ define([], function () {
         this.designerCanvas.onDebugDeleteItems = function (type, selectedIDs) {
             self._onDebugDeleteItems(type, selectedIDs);
         };
+
+        /*********** OVERRIDE NON-DEBUG HANDLERS ***************/
+
+        this.designerCanvas._onDesignerItemsMove = this.designerCanvas.onDesignerItemsMove;
+
+        this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
+            var id,
+                desc,
+                debugIDs = [];
+
+            for (id in repositionDesc) {
+                if (repositionDesc.hasOwnProperty(id)) {
+                    if (DEBUG && self._debugItemIDs.indexOf(id) !== -1) {
+                        desc = self._generateObjectDescriptorDEBUG(id);
+
+                        desc.position.x = repositionDesc[id].x;
+                        desc.position.y = repositionDesc[id].y;
+
+                        delete repositionDesc[id];
+
+                        debugIDs.push(id);
+                    }
+                }
+            }
+
+            self._dispatchUpdateEvent(debugIDs);
+
+            self.designerCanvas._onDesignerItemsMove(repositionDesc);
+        };
+    };
+
+    DesignerControlDEBUG.prototype._dispatchUpdateEvent = function (idList) {
+        var i = idList.length,
+            newEvent,
+            events = [];
+
+        if (i > 0) {
+            while(i--) {
+                newEvent = {};
+                newEvent[EVENT_TYPE_NAME] = UPDATE_EVENT_NAME;
+                newEvent[EVENT_ID_NAME] = idList[i];
+                newEvent[EVENT_DEBUG_TYPE] = true;
+
+                events.push( newEvent );
+            }
+
+            this.onOneEvent(events);
+        }
     };
 
     DesignerControlDEBUG.prototype._onDebugCreateItems = function (options) {
@@ -254,8 +302,7 @@ define([], function () {
 
     DesignerControlDEBUG.prototype._onDebugUpdateItems_UpdateConnections = function (connectionIDs) {
         var i = connectionIDs.length,
-            connDesc,
-            j;
+            connDesc;
 
         this._debugConnectionSegmentPointX = this._debugConnectionSegmentPointX || 10;
         this._debugConnectionSegmentPointY = this._debugConnectionSegmentPointY || 10;
@@ -277,8 +324,7 @@ define([], function () {
 
     DesignerControlDEBUG.prototype._onDebugUpdateItems_ReconnectConnections = function (connectionIDs) {
         var i = connectionIDs.length,
-            connDesc,
-            j;
+            connDesc;
 
         while (i--) {
             connDesc = this._debugObjectDescriptors[connectionIDs[i]];
@@ -291,7 +337,7 @@ define([], function () {
     /******************** DEBUG DELETE HANDLERS ***********************/
 
     DesignerControlDEBUG.prototype._onDebugDeleteItems = function (type, selectedIDs) {
-        var i = selectedIDs.length,
+        var i,
             filteredIDs = [],
             events = [],
             newEvent,

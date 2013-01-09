@@ -1,13 +1,10 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil'], function (logManager,
-                             clientUtil) {
+define(['logManager'], function (logManager) {
 
     var DragManager,
         Z_INDEX = 100000,
         ITEMID_DATA_KEY = "itemId",
-        COPY_CURSOR = "copy",
         MOVE_CURSOR = "move";
 
     DragManager = function (options) {
@@ -171,12 +168,18 @@ define(['logManager',
         var draggedItemID = helper.data(ITEMID_DATA_KEY),
             $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div");
 
+        $draggedItemDecoratorEl.css("cursor", "");
+        this.dragInProgress = false;
+
+        switch(this._dragOptions.mode) {
+            case this._dragModes.move:
+                this.canvas.designerItemsMove(this._dragOptions.allDraggedItemIDs);
+                break;
+        }
+
         //call canvas to do its own job when item dragging happens
         //show connectors, selection outline, etc...
         this.canvas.onDesignerItemDragStop(draggedItemID, this._dragOptions.allDraggedItemIDs);
-
-        $draggedItemDecoratorEl.css("cursor", "");
-        this.dragInProgress = false;
 
         this.logger.error("DragManager.prototype._onDraggableStop, draggedItemID: '" + draggedItemID + "'");
     };

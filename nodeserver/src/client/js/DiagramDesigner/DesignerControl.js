@@ -36,7 +36,7 @@ define(['logManager',
         this.designerCanvas = options.designerCanvas;
 
         /*OVERRIDE MODEL EDITOR METHODS*/
-        this.designerCanvas.onReposition = function (repositionDesc) {
+        this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
             var id;
 
             self._client.startTransaction();

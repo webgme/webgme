@@ -16,8 +16,7 @@ define(['js/DiagramDesigner/DesignerItem',
     DesignerCanvas.prototype.createDesignerItem = function (objDescriptor) {
         var componentId = objDescriptor.id,
             newComponent,
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
-            self = this;
+            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
         this.logger.debug("Creating model component with id: '" + objDescriptor.id + "'");
 
