@@ -288,27 +288,11 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.update = function (objDescriptor) {
-        var positionChanged = false,
-            self = this,
-            decoratorName = objDescriptor.decorator,
+        var decoratorName = objDescriptor.decorator,
             DecoratorClass = objDescriptor.DecoratorClass;
         //check what might have changed
 
-        //location and dimension information
-        if (this.positionX !== objDescriptor.position.x) {
-            this.positionX = objDescriptor.position.x;
-            positionChanged = true;
-        }
-
-        if (this.positionY !== objDescriptor.position.y) {
-            this.positionY = objDescriptor.position.y;
-            positionChanged = true;
-        }
-
-        if (positionChanged) {
-            this.$el.css({"left": this.positionX,
-                "top": this.positionY });
-        }
+        this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
 
         //TODO: check if decorator changed and need to be updated
 
@@ -340,6 +324,27 @@ define(['logManager'], function (logManager) {
 
     DesignerItem.prototype.getConnectionAreas = function (id) {
         return this._decoratorInstance.getConnectionAreas(id);
+    };
+
+    DesignerItem.prototype.moveTo = function (posX, posY) {
+        var positionChanged = false;
+        //check what might have changed
+
+        //location and dimension information
+        if (this.positionX !== posX) {
+            this.positionX = posX;
+            positionChanged = true;
+        }
+
+        if (this.positionY !== posY) {
+            this.positionY = posY;
+            positionChanged = true;
+        }
+
+        if (positionChanged) {
+            this.$el.css({"left": this.positionX,
+                "top": this.positionY });
+        }
     };
 
     return DesignerItem;

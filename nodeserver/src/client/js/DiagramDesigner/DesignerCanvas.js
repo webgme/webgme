@@ -29,7 +29,7 @@ define(['logManager',
         this.containerElementId = typeof options === "string" ? options : options.containerElement;
         this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
 
-        this._readOnlyMode = options.readOnlyMode || true;
+        this._readOnlyMode = options.readOnlyMode || false;
         this.logger.warning("DesignerCanvas.ctor _readOnlyMode is set to TRUE by default");
 
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
@@ -491,6 +491,21 @@ define(['logManager',
         //mousedown initiates a connection selection
         this.selectionManager.setSelection([connId], event);
     };
+
+    /************************** DRAG ITEM ***************************/
+    DesignerCanvas.prototype.onDesignerItemDragStart = function (itemId) {
+        this.selectionManager.hideSelectionOutline();
+        this.items[itemId].hideConnectors();
+    };
+
+    DesignerCanvas.prototype.onDesignerItemDrag = function (itemId) {
+
+    };
+
+    DesignerCanvas.prototype.onDesignerItemDragStop = function (itemId) {
+        this.selectionManager.showSelectionOutline();
+    };
+    /************************** END - DRAG ITEM ***************************/
 
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);

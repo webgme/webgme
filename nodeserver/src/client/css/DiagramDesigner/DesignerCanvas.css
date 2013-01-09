@@ -23,7 +23,7 @@
       background: rgba(255, 255, 0, 0.1);
       border: black dashed 1px;
       position: absolute;
-      z-index: 1002;
+      /*z-index: 1002;*/
       pointer-events: none;
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);

@@ -6,7 +6,7 @@ define(['logManager',
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
-        DESIGNER_CONNECTION_CLASS = "designer-connection", //TODO: need a common contants file
+        DESIGNER_CONNECTION_CLASS = "designer-connection", //TODO: need a common constants file
         PATH_SHADOW_ID_PREFIX = "p_",
         DESIGNER_ITEM_CLASS = "designer-item",
         SELECTION_OUTLINE_MARGIN = 15,
@@ -68,11 +68,11 @@ define(['logManager',
         this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
 
         if (leftButton === true) {
-            if (event.ctrlKey || event.metaKey !== true) {
+            if ((event.ctrlKey || event.metaKey) !== true) {
                 this._clearSelection();
             }
 
-            //start drawing selection rubberband
+            //start drawing selection rubber-band
             this.rubberbandSelection = { "x": mousePos.mX,
                                             "y": mousePos.mY,
                                             "x2": mousePos.mX,
@@ -212,7 +212,6 @@ define(['logManager',
 
         for (i in items) {
             if (items.hasOwnProperty(i)) {
-                //TODO: remove stupid commenting
                 if (selectionContainsBBox(items[i].getBoundingBox())) {
                     itemsInSelection.push(i);
                 }
@@ -244,6 +243,8 @@ define(['logManager',
         }
 
         this.selectedItemIdList = [];
+
+        this.hideSelectionOutline();
     };
 
     SelectionManager.prototype.setSelection = function (idList, event) {
@@ -414,6 +415,14 @@ define(['logManager',
                 "top": bBox.y,
                 "width": bBox.w,
                 "height": bBox.h });
+        }
+    };
+
+    SelectionManager.prototype.hideSelectionOutline = function () {
+        if (this.canvas.skinParts.$selectionOutline) {
+            this.canvas.skinParts.$selectionOutline.empty();
+            this.canvas.skinParts.$selectionOutline.remove();
+            this.canvas.skinParts.$selectionOutline = null;
         }
     };
 
