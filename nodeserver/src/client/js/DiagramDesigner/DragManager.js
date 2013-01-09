@@ -6,7 +6,9 @@ define(['logManager',
 
     var DragManager,
         Z_INDEX = 100000,
-        ITEMID_DATA_KEY = "itemId";
+        ITEMID_DATA_KEY = "itemId",
+        COPY_CURSOR = "copy",
+        MOVE_CURSOR = "move";
 
     DragManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
@@ -28,7 +30,7 @@ define(['logManager',
         //TODO: don't bother with it as of now
 
         this._dragModes = {"copy": 0,
-            "reposition": 1};
+            "move": 1};
 
         this.dragInProgress = false;
     };
@@ -48,7 +50,7 @@ define(['logManager',
 
         //dragging enabled in edit mode only
         if (dragEnabled) {
-            el.css("cursor", "move");
+            /*el.css("cursor", "move");*/
 
             el.draggable({
                 zIndex: Z_INDEX,
@@ -83,13 +85,11 @@ define(['logManager',
             i = selectedItemIDs.length,
             items = this.canvas.items,
             itemIDs = this.canvas.itemIds,
-            id;
+            id,
+            $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div"),
+            cursor = MOVE_CURSOR;
 
         this.dragInProgress = true;
-
-        //call canvas to do its own job when item dragging happens
-        //hide connectors, selection outline, etc...
-        this.canvas.onDesignerItemDragStart(draggedItemID);
 
         this.logger.error("left: " + draggedItem.positionX + ", top: " + draggedItem.positionY);
 
@@ -102,13 +102,17 @@ define(['logManager',
             "startPos": { "x": draggedItem.positionX, "y": draggedItem.positionY },
             "minCoordinates": { "x": this.canvas._actualSize.w, "y": this.canvas._actualSize.h },
             "originalPositions" : {},
-            "mode": this._dragModes.reposition
+            "mode": this._dragModes.move
         };
 
         //is this drag a SmartCopy????
         /*if (event.ctrlKey || event.metaKey === true) {
             this._dragOptions.mode = this._dragModes.copy;
+            cursor = COPY_CURSOR;
         }*/
+
+        //set cursor
+        $draggedItemDecoratorEl.css("cursor", cursor);
 
         while(i--) {
             id = selectedItemIDs[i];
@@ -131,14 +135,18 @@ define(['logManager',
             }
         }
 
+        //call canvas to do its own job when item dragging happens
+        //hide connectors, selection outline, etc...
+        this.canvas.onDesignerItemDragStart(draggedItemID, this._dragOptions.allDraggedItemIDs);
+
         this.logger.error("DragManager.prototype._onDraggableStart, draggedItemID: '" + draggedItemID + "'");
     };
 
     DragManager.prototype._onDraggableDrag = function (event, helper) {
-        //TODO: check if a special callback has to be called
         var dragPos = { "x": parseInt(helper.css("left"), 10), "y": parseInt(helper.css("top"), 10) },
             dX = dragPos.x - this._dragOptions.startPos.x,
-            dY = dragPos.y - this._dragOptions.startPos.y;
+            dY = dragPos.y - this._dragOptions.startPos.y,
+            draggedItemID = helper.data(ITEMID_DATA_KEY);
 
 
         if ((dX !== this._dragOptions.delta.x) || (dY !== this._dragOptions.delta.y)) {
@@ -151,31 +159,33 @@ define(['logManager',
                 dY = -this._dragOptions.minCoordinates.y;
             }
 
-            this._moveSelectedComponentsBy(dX, dY);
+            this._moveDraggedComponentsBy(dX, dY);
 
             this._dragOptions.delta = {"x": dX, "y": dY};
+
+            this.canvas.onDesignerItemDrag(draggedItemID, this._dragOptions.allDraggedItemIDs);
         }
     };
 
     DragManager.prototype._onDraggableStop = function (event, helper) {
-        var draggedItemID = helper.data(ITEMID_DATA_KEY);
-        //TODO: check if a special callback has to be called
+        var draggedItemID = helper.data(ITEMID_DATA_KEY),
+            $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div");
 
         //call canvas to do its own job when item dragging happens
         //show connectors, selection outline, etc...
-        this.canvas.onDesignerItemDragStop(draggedItemID);
+        this.canvas.onDesignerItemDragStop(draggedItemID, this._dragOptions.allDraggedItemIDs);
 
+        $draggedItemDecoratorEl.css("cursor", "");
         this.dragInProgress = false;
 
         this.logger.error("DragManager.prototype._onDraggableStop, draggedItemID: '" + draggedItemID + "'");
     };
 
-    DragManager.prototype._moveSelectedComponentsBy = function (dX, dY) {
+    DragManager.prototype._moveDraggedComponentsBy = function (dX, dY) {
         var i = this._dragOptions.allDraggedItemIDs.length,
             id,
             posX,
             posY,
-            affectedConnections = [],
             newPositions = {};
 
         this.logger.error("dx: " + dX + ", DY: " + dY);
@@ -194,15 +204,6 @@ define(['logManager',
 
             newPositions[id] = { "x": posX, "y": posY };
         }
-
-        //redraw all the connections that are affected by the dragged objects
-        //when necessary, because in copy mode, no need to redraw the connections
-        /*if (this._dragOptions.mode === this._dragModes.reposition) {
-            for (i = 0; i < this._selectedComponentIds.length; i += 1) {
-                affectedConnections.mergeUnique(this._getConnectionsForModel(this._selectedComponentIds[i]));
-            }
-            this._updateConnections(affectedConnections);
-        }*/
 
         return newPositions;
     };

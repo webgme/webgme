@@ -493,16 +493,26 @@ define(['logManager',
     };
 
     /************************** DRAG ITEM ***************************/
-    DesignerCanvas.prototype.onDesignerItemDragStart = function (itemId) {
+    DesignerCanvas.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
-        this.items[itemId].hideConnectors();
+        this.items[draggedItemId].hideConnectors();
     };
 
-    DesignerCanvas.prototype.onDesignerItemDrag = function (itemId) {
+    DesignerCanvas.prototype.onDesignerItemDrag = function (draggedItemId, allDraggedItemIDs) {
+        var i = allDraggedItemIDs.length,
+            affectedConnections = [];
 
+        //redraw all the connections that are affected by the dragged objects
+        //when necessary, because in copy mode, no need to redraw the connections
+        /*if (this._dragOptions.mode === this._dragModes.reposition) {
+         for (i = 0; i < this._selectedComponentIds.length; i += 1) {
+         affectedConnections.mergeUnique(this._getConnectionsForModel(this._selectedComponentIds[i]));
+         }
+         this._updateConnections(affectedConnections);
+         }*/
     };
 
-    DesignerCanvas.prototype.onDesignerItemDragStop = function (itemId) {
+    DesignerCanvas.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
     };
     /************************** END - DRAG ITEM ***************************/
