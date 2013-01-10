@@ -88,8 +88,6 @@ define(['logManager'], function (logManager) {
 
         this.dragInProgress = true;
 
-        this.logger.error("left: " + draggedItem.positionX + ", top: " + draggedItem.positionY);
-
         //simple drag means reposition
         //when CTRL key (META key on Mac) is pressed when drag starts, selected items will be copied
         this._dragOptions = { "draggedItemID": draggedItemID,
@@ -136,7 +134,7 @@ define(['logManager'], function (logManager) {
         //hide connectors, selection outline, etc...
         this.canvas.onDesignerItemDragStart(draggedItemID, this._dragOptions.allDraggedItemIDs);
 
-        this.logger.error("DragManager.prototype._onDraggableStart, draggedItemID: '" + draggedItemID + "'");
+        this.logger.debug("DragManager.prototype._onDraggableStart, draggedItemID: '" + draggedItemID + "'");
     };
 
     DragManager.prototype._onDraggableDrag = function (event, helper) {
@@ -181,7 +179,7 @@ define(['logManager'], function (logManager) {
         //show connectors, selection outline, etc...
         this.canvas.onDesignerItemDragStop(draggedItemID, this._dragOptions.allDraggedItemIDs);
 
-        this.logger.error("DragManager.prototype._onDraggableStop, draggedItemID: '" + draggedItemID + "'");
+        this.logger.debug("DragManager.prototype._onDraggableStop, draggedItemID: '" + draggedItemID + "'");
     };
 
     DragManager.prototype._moveDraggedComponentsBy = function (dX, dY) {
@@ -190,8 +188,6 @@ define(['logManager'], function (logManager) {
             posX,
             posY,
             newPositions = {};
-
-        this.logger.error("dx: " + dX + ", DY: " + dY);
 
         //move all the dragged items
         while(i--) {
