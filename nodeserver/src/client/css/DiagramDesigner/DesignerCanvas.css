@@ -8,6 +8,12 @@
     display: inline-block;
     margin-right: 10px;
     margin-left: 10px; }
+  .designer-canvas .designer-canvas-header .designer-canvas-read-only-mode {
+    font-size: 18px;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 10px;
+    margin-left: 10px; }
 .designer-canvas .designer-canvas-body {
   position: absolute;
   overflow: auto; }

@@ -20,6 +20,14 @@ $designer-canvas-selection-outline-shadow-end: rgba(0, 0, 0, 0.6);
       margin-right: 10px;
       margin-left: 10px;
     }
+
+    .designer-canvas-read-only-mode {
+      font-size: 18px;
+      font-weight: bold;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 10px;
+    }
   }
 
   .designer-canvas-body {

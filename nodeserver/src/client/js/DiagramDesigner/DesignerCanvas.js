@@ -156,6 +156,16 @@ define(['logManager',
         });
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$title);
 
+        //READ-ONLY IN HEADER BAR
+        this.skinParts.$readOnlyMode = $('<div/>', {
+            "class" : "designer-canvas-read-only-mode"
+        });
+        this.skinParts.$readOnlyMode.text("[READ-ONLY]");
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$readOnlyMode);
+        if (this._readOnlyMode === false) {
+            this.skinParts.$readOnlyMode.hide();
+        }
+
         /*this.skinParts.$progressBar = $('<div class="btn-group inline"><a class="btn disabled" href="#" title="Refreshing..."><i class="icon-progress"></i></a></div>');
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressBar);
         this.skinParts.$progressBar.hide();*/
