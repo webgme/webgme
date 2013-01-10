@@ -21,6 +21,10 @@ define([], function () {
 
         this.logger.warning("DesignerControlDEBUG _addDebugModeExtensions activated...");
 
+        this._debugObjectDescriptors = this._debugObjectDescriptors || {};
+        this._debugItemIDs = this._debugItemIDs || [];
+        this._debugConnectionsIDs = this._debugConnectionsIDs || [];
+
         this._debugTempDecorators = ['DefaultDecorator', 'CircleDecorator'/*, 'SlowRenderDecorator'*/];
         this._debugTempDecoratorsCount = this._debugTempDecorators.length;
 
@@ -94,10 +98,6 @@ define([], function () {
             newEvent;
 
         this.logger.debug("DesignerControlDEBUG _onDebugCreateItems: " + JSON.stringify(options));
-
-        this._debugObjectDescriptors = this._debugObjectDescriptors || {};
-        this._debugItemIDs = this._debugItemIDs || [];
-        this._debugConnectionsIDs = this._debugConnectionsIDs || [];
 
         this._debugX = this._debugX || 10;
         this._debugY = this._debugY || 10;
