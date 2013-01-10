@@ -182,7 +182,7 @@ define(['logManager',
                 if ( (nextBatchInQueue[len].etype === LOAD_EVENT_NAME) || (nextBatchInQueue[len].etype === UPDATE_EVENT_NAME)) {
                     nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
-                    itemDecorator = this._debugObjectDescriptors[nextBatchInQueue[len].eid].decorator;
+                    itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                     if (itemDecorator && itemDecorator !== "") {
                         if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
