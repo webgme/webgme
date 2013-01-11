@@ -9,7 +9,7 @@ define([], function () {
     };
 
     DesignerCanvasDEBUG.prototype._addDebugModeExtensions = function () {
-        var debugBtn = $('<div class="btn-group" style="margin-left: 10px;"><a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" href="#">DEBUG <span class="caret"></span></a><ul class="dropdown-menu"></ul></div>');
+        var debugBtn = $('<div class="btn-group"><a class="btn btn-danger dropdown-toggle" data-toggle="dropdown" href="#">DEBUG <span class="caret"></span></a><ul class="dropdown-menu"></ul></div>');
 
         this.logger.warning("DesignerCanvasDEBUG _addDebugModeExtensions activated...");
 

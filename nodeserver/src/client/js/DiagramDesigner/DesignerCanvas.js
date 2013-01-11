@@ -8,6 +8,7 @@ define(['logManager',
     'raphaeljs',
     'js/DiagramDesigner/DesignerCanvas.OperatingModes',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
+    'js/DiagramDesigner/DesignerCanvas.Toolbar',
     'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
@@ -20,6 +21,7 @@ define(['logManager',
                                                       raphaeljs,
                                                       DesignerCanvasOperatingModes,
                                                       DesignerCanvasDEBUG,
+                                                      DesignerCanvasToolbar,
                                                       DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
                                                       ConnectionRouteManagerBasic,
@@ -47,6 +49,8 @@ define(['logManager',
         this.mode = this.OPERATING_MODES.NORMAL;
 
         this._initializeCollections();
+
+        //MUST BE HERE BCOS INITIALIZEUI needs it
 
         //initialize UI
         this.initializeUI();
@@ -184,8 +188,14 @@ define(['logManager',
         });
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressText);
 
+        /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
+        this.skinParts.$toolBar = $('<div/>', {
+            "class": "inline"
+        });
+        this.skinParts.$designerCanvasHeader.append(this.skinParts.$toolBar);
+
         //'ONE LEVEL UP' in HEADER BAR
-        this.skinParts.$btnOneLevelUp = $('<div class="btn-group inline"><a class="btn btnOneLevelUp" href="#" title="One level up" data-num="1"><i class="icon-circle-arrow-up"></i></a></div>');
+        this.skinParts.$btnOneLevelUp = $('<div class="btn-group inline no-margin"><a class="btn btnOneLevelUp" href="#" title="One level up" data-num="1"><i class="icon-circle-arrow-up"></i></a></div>');
         this.skinParts.$designerCanvasHeader.prepend(this.skinParts.$btnOneLevelUp);
         this.skinParts.$btnOneLevelUp.on("click", function (event) {
             event.stopPropagation();
@@ -555,6 +565,7 @@ define(['logManager',
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
+    _.extend(DesignerCanvas.prototype, DesignerCanvasToolbar.prototype);
 
     //in DEBUG mode add additional content to canvas
     if (DEBUG) {

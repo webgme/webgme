@@ -28,6 +28,14 @@ $designer-canvas-selection-outline-shadow-end: rgba(0, 0, 0, 0.6);
       margin-right: 10px;
       margin-left: 10px;
     }
+
+    .btn-group {
+      margin-left: 10px;
+    }
+
+    .btn-group.no-margin {
+      margin-left: 0px;
+    }
   }
 
   .designer-canvas-body {
