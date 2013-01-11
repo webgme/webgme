@@ -31,6 +31,12 @@ define(['logManager'], function (logManager) {
 
         this._connectionType = "connection";
 
+        this._connectionPathProps = { "strokeWidth" : 2,
+            "strokeColor" : "#FF7800",
+            "lineType": "-",
+            "arrowStart": "none",
+            "arrowEnd": "none" };
+
         this.canvas.addBeginModeHandler(this.canvas.OPERATING_MODES.CREATE_CONNECTION, this._modeCREATE_CONNECTIONBeginHandler);
     };
 
@@ -155,14 +161,12 @@ define(['logManager'], function (logManager) {
 
         this._connectionPath = this.paper.path('M' + this._connectionDesc.x + ',' + this._connectionDesc.y + ' L' + this._connectionDesc.x2 + ',' + this._connectionDesc.y2);
 
-        this._connectionPathProps = { "strokeWidth" : 2,
-            "strokeColor" : "#FF7800",
-            "lineType": "-" };
-
         this._connectionPath.attr(
             {   "stroke-width": this._connectionPathProps.strokeWidth,
                 "stroke": this._connectionPathProps.strokeColor,
-                "stroke-dasharray": this._connectionPathProps.lineType}
+                "stroke-dasharray": this._connectionPathProps.lineType,
+                "arrow-start": this._connectionPathProps.arrowStart,
+                "arrow-end": this._connectionPathProps.arrowEnd }
         );
     };
 
@@ -219,6 +223,18 @@ define(['logManager'], function (logManager) {
                                            "dst": endPointId,
                                            "type": this._connectionType });
         }
+    };
+
+    ConnectionDrawingManager.prototype.setConnectionInDrawProperties = function (params) {
+        if (params.connectionType) {
+            this._connectionType = params.connectionType;
+        }
+
+        this._connectionPathProps.strokeWidth = params.width || this._connectionPathProps.strokeWidth;
+
+        this._connectionPathProps.strokeColor = params.color || this._connectionPathProps.strokeColor;
+        this._connectionPathProps.arrowStart = params.arrowStart || this._connectionPathProps.arrowStart;
+        this._connectionPathProps.arrowEnd = params.arrowEnd || this._connectionPathProps.arrowEnd;
     };
 
     /********************** CONCRETE MODE CHANGE HANDLERS *************************/
