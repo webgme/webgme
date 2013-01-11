@@ -22,14 +22,9 @@ define(['logManager'], function (logManager) {
 
     DragManager.prototype.$_draggableHelperDOMBase = $("<div class='drag-manager-drag-helper'></div>");
 
-    DragManager.prototype.initialize = function (params) {
-        //TODO: might pass along callbacks...
-        //TODO: don't bother with it as of now
-
+    DragManager.prototype.initialize = function () {
         this._dragModes = {"copy": 0,
             "move": 1};
-
-        this.dragInProgress = false;
     };
 
     DragManager.prototype.detachDraggable = function (designerItem) {
@@ -52,8 +47,8 @@ define(['logManager'], function (logManager) {
             el.draggable({
                 zIndex: Z_INDEX,
                 grid: [gridSize, gridSize],
-                helper: function (event) {
-                    var h = self._onDraggableHelper(event);
+                helper: function (/*event*/) {
+                    var h = self._onDraggableHelper();
                     h.data(ITEMID_DATA_KEY, itemId);
                     return h;
                 },
@@ -70,8 +65,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    DragManager.prototype._onDraggableHelper = function (event) {
-        //TODO: check if a special callback has to be called
+    DragManager.prototype._onDraggableHelper = function () {
         return this.$_draggableHelperDOMBase.clone();
     };
 
@@ -85,8 +79,6 @@ define(['logManager'], function (logManager) {
             id,
             $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div"),
             cursor = MOVE_CURSOR;
-
-        this.dragInProgress = true;
 
         //simple drag means reposition
         //when CTRL key (META key on Mac) is pressed when drag starts, selected items will be copied
@@ -106,7 +98,7 @@ define(['logManager'], function (logManager) {
             cursor = COPY_CURSOR;
         }*/
 
-        //set cursor
+        //set cursor //TODO:based on operation
         $draggedItemDecoratorEl.css("cursor", cursor);
 
         while(i--) {
@@ -129,6 +121,8 @@ define(['logManager'], function (logManager) {
                                                               "y": items[id].positionY};
             }
         }
+
+        this.canvas.beginMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
 
         //call canvas to do its own job when item dragging happens
         //hide connectors, selection outline, etc...
@@ -167,10 +161,10 @@ define(['logManager'], function (logManager) {
             $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div");
 
         $draggedItemDecoratorEl.css("cursor", "");
-        this.dragInProgress = false;
 
         switch(this._dragOptions.mode) {
             case this._dragModes.move:
+                this.canvas.endMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
                 this.canvas.designerItemsMove(this._dragOptions.allDraggedItemIDs);
                 break;
         }

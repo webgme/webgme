@@ -514,7 +514,6 @@ define(['logManager',
 
     /************************** DRAG ITEM ***************************/
     DesignerCanvas.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
-        this.beginMode(this.OPERATING_MODES.MOVE_ITEMS);
         this.selectionManager.hideSelectionOutline();
         this.items[draggedItemId].hideConnectors();
     };
@@ -533,7 +532,6 @@ define(['logManager',
 
     DesignerCanvas.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
-        this.endMode(this.OPERATING_MODES.MOVE_ITEMS);
     };
 
     DesignerCanvas.prototype.designerItemsMove = function (itemIDs) {
