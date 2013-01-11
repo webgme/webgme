@@ -76,11 +76,6 @@ define(['logManager'], function (logManager) {
                 helper: function () {
                     return $("<div class='draw-connection-drag-helper'></div>");
                 },
-                cursor: 'pointer',
-                cursorAt: {
-                    left: 0,
-                    top: 0
-                },
                 start: function (event) {
                     var el = $(this);
                     event.stopPropagation();
@@ -90,7 +85,7 @@ define(['logManager'], function (logManager) {
                 stop: function (event) {
                     var el = $(this);
                     event.stopPropagation();
-                    self._endConnectionDraw(el, event);
+                    self._endConnectionDraw(event);
                     el.removeClass(ACCEPT_CLASS);
                 },
                 drag: function (event) {
