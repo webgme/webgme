@@ -46,10 +46,16 @@ define(['logManager'], function (logManager) {
     //Shows the 'connectors' - appends them to the DOM
     DecoratorBase.prototype.showConnectors = function () {
         this.$connectors.appendTo(this.$el);
+
+        //hook up connection drawing capability
+        this.hostDesignerItem.canvas.connectionDrawingManager.attachConnectable(this.$connectors, this.id);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
     DecoratorBase.prototype.hideConnectors = function () {
+        //remove up connection drawing capability
+        this.hostDesignerItem.canvas.connectionDrawingManager.detachConnectable(this.$connectors);
+
         this.$connectors.detach();
     };
 

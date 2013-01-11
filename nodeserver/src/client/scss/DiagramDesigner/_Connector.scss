@@ -4,6 +4,7 @@ $connector-size: 12px;
 $connector-hover-border-color: rgba(82, 168, 236, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
+$connection-end-state-hover-background-color: #00FF00;
 
 @mixin connector_basics {
   box-sizing: border-box;
@@ -19,5 +20,9 @@ $connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
     -webkit-box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
     -moz-box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
     box-shadow: inset 0 1px 1px $connector-hover-shadow-color-start, 0 0 8px $connector-hover-shadow-color-end;
+  }
+
+  &.connection-end-state-hover {
+    background-color: $connection-end-state-hover-background-color;
   }
 }

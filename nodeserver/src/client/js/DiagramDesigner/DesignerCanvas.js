@@ -10,6 +10,7 @@ define(['logManager',
     'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
+    'js/DiagramDesigner/ConnectionDrawingManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
@@ -19,7 +20,8 @@ define(['logManager',
                                                       DesignerCanvasDEBUG,
                                                       DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
-                                                      ConnectionRouteManagerBasic) {
+                                                      ConnectionRouteManagerBasic,
+                                                      ConnectionDrawingManager) {
 
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10,
@@ -55,6 +57,9 @@ define(['logManager',
 
         this.connectionRouteManager = options.connectionRouteManager || new ConnectionRouteManagerBasic({"canvas": this});
         this.connectionRouteManager.initialize();
+
+        this.connectionDrawingManager = options.connectionDrawingManager || new ConnectionDrawingManager({"canvas": this});
+        this.connectionDrawingManager.initialize();
 
         this._documentFragment = document.createDocumentFragment();
 
