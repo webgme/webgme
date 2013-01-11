@@ -198,13 +198,17 @@ define(['logManager'], function (logManager) {
 
         //in edit mode and when not participating in a multiple selection,
         //show connectors
-        if (this.canvas.getIsReadOnlyMode() === false) {
-            if (this.selectedInMultiSelection === false) {
+        if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL ||
+            this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION ||
+            this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+
+            //if (this.selectedInMultiSelection === false) {
+            if (this.selected === false) {
                 this.showConnectors();
             }
         }
 
-        return true
+        return true;
     };
 
     DesignerItem.prototype.onMouseLeave = function (event) {
@@ -216,9 +220,9 @@ define(['logManager'], function (logManager) {
         this.$el.removeClass(classes.join(' '));
 
         //when not currently selected, hide connectors
-        if (this.selected === false) {
+        //if (this.selected === false) {
             this.hideConnectors();
-        }
+        //}
 
         return true;
     };
@@ -236,9 +240,12 @@ define(['logManager'], function (logManager) {
         this.selectedInMultiSelection = multiSelection;
         this.$el.addClass("selected");
 
+        //when selected, no connectors are available
+        this.hideConnectors();
+
         //in edit mode and when not participating in a multiple selection,
         //show connectors
-        if (this.selectedInMultiSelection === true) {
+        /*if (this.selectedInMultiSelection === true) {
             this.hideConnectors();
         } else {
             if (this.canvas.getIsReadOnlyMode() === false) {
@@ -246,7 +253,7 @@ define(['logManager'], function (logManager) {
             } else {
                 this.hideConnectors();
             }
-        }
+        }*/
 
         //let the decorator know that this item become selected
         this._callDecoratorMethod("onSelect");
@@ -257,7 +264,7 @@ define(['logManager'], function (logManager) {
         this.selectedInMultiSelection = false;
         this.$el.removeClass("selected");
 
-        this.hideConnectors();
+        //this.hideConnectors();
 
         //let the decorator know that this item become deselected
         this._callDecoratorMethod("onDeselect");

@@ -53,7 +53,10 @@ define(['logManager',
         if (this.allowRubberBandSelection === true) {
             //hook up mousedown on background
             $el.on('mousedown.SelectionManager', function (event) {
-                self._onBackgroundMouseDown(event);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY ||
+                    self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
+                    self._onBackgroundMouseDown(event);
+                }
             });
         }
     };
@@ -68,6 +71,9 @@ define(['logManager',
         this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
 
         if (leftButton === true) {
+
+            this.canvas.beginMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
+
             if ((event.ctrlKey || event.metaKey) !== true) {
                 this._clearSelection();
             }
@@ -151,6 +157,8 @@ define(['logManager',
             this.$rubberBand = null;
 
             delete this.rubberbandSelection;
+
+            this.canvas.endMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
         }
     };
 
@@ -160,8 +168,6 @@ define(['logManager',
             x2 = Math.max(this.rubberbandSelection.x, this.rubberbandSelection.x2),
             y = Math.min(this.rubberbandSelection.y, this.rubberbandSelection.y2),
             y2 = Math.max(this.rubberbandSelection.y, this.rubberbandSelection.y2);
-
-        this.logger.debug('SelectionManager._drawSelectionRubberBand from [' + x + ', ' + y + '] to [' + x2 + ', ' + y2 + ']');
 
         if (x2 - x < minEdgeLength || y2 - y < minEdgeLength) {
             this.$rubberBand.hide();

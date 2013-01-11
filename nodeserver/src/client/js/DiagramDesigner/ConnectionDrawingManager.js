@@ -28,6 +28,10 @@ define(['logManager'], function (logManager) {
     ConnectionDrawingManager.prototype.initialize = function () {
         this._connectionInDraw = false;
         this.paper = this.canvas.skinParts.SVGPaper;
+
+        this._connectionType = "connection";
+
+        this.canvas.addBeginModeHandler(this.canvas.OPERATING_MODES.CREATE_CONNECTION, this._modeCREATE_CONNECTIONBeginHandler);
     };
 
     ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId) {
@@ -101,7 +105,7 @@ define(['logManager'], function (logManager) {
             droppableEl = elements.not(this._connectionInDrawProps.srcEl);
 
         if (droppableEl && droppableEl.length > 0) {
-            droppableEl.droppable('destroy');
+            /*droppableEl.droppable('destroy');
             droppableEl.droppable({
                 accept: '.' + ACCEPT_CLASS,
                 greedy: true,
@@ -114,14 +118,15 @@ define(['logManager'], function (logManager) {
                     //stop event propagation
                     event.stopPropagation();
                 }
-            });
+            });*/
             droppableEl.on(MOUSEENTER, function (event) {
                 //TODO: more complex 'OK' function needs to be provided
                 $(this).addClass(HOVER_CLASS);
             }).on(MOUSELEAVE, function (event) {
                 $(this).removeClass(HOVER_CLASS);
             }).on(MOUSEUP, function (event) {
-                self.logger.error("MOUSEUP: " + objId);
+                self._detachConnectionEndPointHandler(droppableEl);
+                self._connectionEndDrop(objId);
             });
 
             this._connectionInDrawProps.lastAttachedDroppableEl = droppableEl;
@@ -130,6 +135,8 @@ define(['logManager'], function (logManager) {
 
     ConnectionDrawingManager.prototype._startConnectionDraw = function (el, objId) {
         var itemBBox = this.canvas.items[objId].getBoundingBox();
+
+        this.canvas.beginMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
         this.logger.error("Start connection drawing. SRCID: " + objId);
 
@@ -187,6 +194,8 @@ define(['logManager'], function (logManager) {
 
         this._connectionInDrawProps = undefined;
 
+        this.canvas.endMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
+
         this.logger.error("Stopped connection drawing");
     };
 
@@ -200,6 +209,22 @@ define(['logManager'], function (logManager) {
         pathDefinition = "M" + x + "," + y + "L" + x2 + "," + y2;
 
         this._connectionPath.attr({ "path": pathDefinition});
+    };
+
+    ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId) {
+        this.logger.error("MOUSEUP: " + endPointId);
+
+        if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
+            this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
+                                           "dst": endPointId,
+                                           "type": this._connectionType });
+        }
+    };
+
+    /********************** CONCRETE MODE CHANGE HANDLERS *************************/
+    ConnectionDrawingManager.prototype._modeCREATE_CONNECTIONBeginHandler = function () {
+        //'this' will be DesignerCanvas
+        this.selectionManager._clearSelection();
     };
 
     return ConnectionDrawingManager;

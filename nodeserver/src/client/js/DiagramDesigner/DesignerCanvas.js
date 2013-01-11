@@ -6,6 +6,7 @@ define(['logManager',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager',
     'raphaeljs',
+    'js/DiagramDesigner/DesignerCanvas.OperatingModes',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
     'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
@@ -17,6 +18,7 @@ define(['logManager',
                                                       SelectionManager,
                                                       DragManager,
                                                       raphaeljs,
+                                                      DesignerCanvasOperatingModes,
                                                       DesignerCanvasDEBUG,
                                                       DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
@@ -41,6 +43,8 @@ define(['logManager',
         this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
         this._title = "";
+
+        this.mode = this.OPERATING_MODES.NORMAL;
 
         this._initializeCollections();
 
@@ -510,6 +514,7 @@ define(['logManager',
 
     /************************** DRAG ITEM ***************************/
     DesignerCanvas.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
+        this.beginMode(this.OPERATING_MODES.MOVE_ITEMS);
         this.selectionManager.hideSelectionOutline();
         this.items[draggedItemId].hideConnectors();
     };
@@ -528,6 +533,7 @@ define(['logManager',
 
     DesignerCanvas.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
+        this.endMode(this.OPERATING_MODES.MOVE_ITEMS);
     };
 
     DesignerCanvas.prototype.designerItemsMove = function (itemIDs) {
@@ -548,6 +554,7 @@ define(['logManager',
     /************************** END - DRAG ITEM ***************************/
 
     //additional code pieces for DesignerCanvas
+    _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
 
