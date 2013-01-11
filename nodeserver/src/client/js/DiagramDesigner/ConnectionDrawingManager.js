@@ -57,7 +57,7 @@ define(['logManager'], function (logManager) {
     ConnectionDrawingManager.prototype._detachConnectionEndPointHandler = function (elements) {
         if (elements && elements.length > 0) {
             elements.droppable('destroy');
-            elements.off(MOUSEENTER).off(MOUSELEAVE);
+            elements.off(MOUSEENTER).off(MOUSELEAVE).off(MOUSEUP);
             elements.removeClass(HOVER_CLASS);
         }
     };
@@ -73,6 +73,7 @@ define(['logManager'], function (logManager) {
             });
             elements.draggable('destroy');
             elements.draggable({
+                refreshPositions: true,
                 helper: function () {
                     return $("<div class='draw-connection-drag-helper'></div>");
                 },
@@ -119,6 +120,8 @@ define(['logManager'], function (logManager) {
                 $(this).addClass(HOVER_CLASS);
             }).on(MOUSELEAVE, function (event) {
                 $(this).removeClass(HOVER_CLASS);
+            }).on(MOUSEUP, function (event) {
+                self.logger.error("MOUSEUP: " + objId);
             });
 
             this._connectionInDrawProps.lastAttachedDroppableEl = droppableEl;
