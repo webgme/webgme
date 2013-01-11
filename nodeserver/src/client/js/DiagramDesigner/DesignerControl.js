@@ -48,6 +48,13 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
+        this.designerCanvas.onCreateNewConnection = function (params) {
+            self._client.makeConnection({   "parentId": self._currentNodeInfo.id,
+                "sourceId": params.src,
+                "targetId": params.dst,
+                "directed": true });
+        };
+
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
         //local variable holding info about the currently opened node
@@ -180,7 +187,7 @@ define(['logManager',
 
             while (len--) {
                 if ( (nextBatchInQueue[len].etype === LOAD_EVENT_NAME) || (nextBatchInQueue[len].etype === UPDATE_EVENT_NAME)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) ) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 

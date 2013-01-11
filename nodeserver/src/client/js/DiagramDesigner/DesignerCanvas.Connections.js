@@ -118,5 +118,11 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
         delete this.items[id];
     };
 
+    DesignerCanvas.prototype.createNewConnection = function (params) {
+        this.logger.debug("Creating new connection with parameters: '" + JSON.stringify(params) + "'");
+
+        this.onCreateNewConnection(params);
+    };
+
     return DesignerCanvas;
 });
