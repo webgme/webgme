@@ -11,9 +11,15 @@ define(['logManager',
         __parent_proto__ = DesignerControl.prototype;
 
     MetaDesignerControl = function (options) {
+        var self = this;
+
         options.loggerName = options.loggerName || "MetaDesignerControl";
 
         __parent__.apply(this, [options]);
+
+        this.designerCanvas.onSelectionDelete = function (idList) {
+            self.logger.warning("MetaDesignerControl.onSelectionDelete NOT YET IMPLEMENTED: " + idList);
+        };
 
         this.logger.debug("MetaDesignerControl ctor");
     };

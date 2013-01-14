@@ -5,15 +5,15 @@ define(['js/DiagramDesigner/DesignerItem',
         ], function (DesignerItem,
                                                           DefaultDecorator) {
 
-    var DesignerCanvas,
+    var DesignerCanvasDesignerItem,
         DEFAULT_DECORATOR_NAME = "DefaultDecorator",
         DEFAULT_DECORATOR_CLASS = DefaultDecorator;
 
-    DesignerCanvas = function () {
+    DesignerCanvasDesignerItem = function () {
 
     };
 
-    DesignerCanvas.prototype.createDesignerItem = function (objDescriptor) {
+    DesignerCanvasDesignerItem.prototype.createDesignerItem = function (objDescriptor) {
         var componentId = objDescriptor.id,
             newComponent,
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
@@ -42,7 +42,7 @@ define(['js/DiagramDesigner/DesignerItem',
         return newComponent;
     };
 
-    DesignerCanvas.prototype.updateDesignerItem  = function (componentId, objDescriptor) {
+    DesignerCanvasDesignerItem.prototype.updateDesignerItem  = function (componentId, objDescriptor) {
         var alignedPosition;
 
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -66,7 +66,7 @@ define(['js/DiagramDesigner/DesignerItem',
         }
     };
 
-    DesignerCanvas.prototype.deleteDesignerItem  = function (id) {
+    DesignerCanvasDesignerItem.prototype.deleteDesignerItem  = function (id) {
         var idx;
 
         this.logger.debug("Deleting DesignerItem with ID: '" + id + "'");
@@ -81,5 +81,5 @@ define(['js/DiagramDesigner/DesignerItem',
         delete this.items[id];
     };
 
-    return DesignerCanvas;
+    return DesignerCanvasDesignerItem;
 });

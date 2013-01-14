@@ -90,6 +90,28 @@ define([], function () {
                 self.designerCanvas._onCreateNewConnection(params);
             }
         };
+
+        this.designerCanvas._onSelectionDelete = this.designerCanvas.onSelectionDelete;
+        this.designerCanvas.onSelectionDelete = function (idList) {
+            var id,
+                i = idList.length,
+                debugIDs = [],
+                realIDs = [];
+
+            while(i--) {
+                if (DEBUG && (self._debugItemIDs.indexOf(idList[i]) !== -1 || self._debugConnectionsIDs.indexOf(idList[i]) !== -1)) {
+                    debugIDs.push(idList[i]);
+                } else {
+                    realIDs.push(idList[i]);
+                }
+
+            }
+
+            self._onDebugDeleteItems("connections", debugIDs);
+            self._onDebugDeleteItems("items", debugIDs);
+
+            self.designerCanvas._onSelectionDelete(realIDs);
+        };
     };
 
     DesignerControlDEBUG.prototype._dispatchUpdateEvent = function (idList) {

@@ -38,5 +38,21 @@
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
+      .designer-canvas .designer-canvas-body .items .selection-outline .s-btn {
+        position: absolute;
+        /*z-index: 100000;*/
+        width: 26px;
+        height: 26px;
+        background-color: white;
+        border-radius: 13px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
+        .designer-canvas .designer-canvas-body .items .selection-outline .s-btn.delete {
+          top: -13px;
+          right: -13px;
+          background-image: url(../../img/remove.png); }
   .designer-canvas .designer-canvas-body .connections {
     position: absolute; }

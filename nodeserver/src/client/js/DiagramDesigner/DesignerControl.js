@@ -49,10 +49,14 @@ define(['logManager',
         };
 
         this.designerCanvas.onCreateNewConnection = function (params) {
-            self._client.makeConnection({   "parentId": self._currentNodeInfo.id,
+            self._client.makeConnection({   "parentId": self.currentNodeInfo.id,
                 "sourceId": params.src,
                 "targetId": params.dst,
                 "directed": true });
+        };
+
+        this.designerCanvas.onSelectionDelete = function (idList) {
+            self._client.delMoreNodes(idList);
         };
 
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/

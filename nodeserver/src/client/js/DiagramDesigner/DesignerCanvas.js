@@ -32,6 +32,8 @@ define(['logManager',
         CANVAS_EDGE = 100;
 
     DesignerCanvas = function (options) {
+        var self = this;
+
         //set properties from options
         this.containerElementId = typeof options === "string" ? options : options.containerElement;
         this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
@@ -59,6 +61,9 @@ define(['logManager',
 
         this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
+        this.selectionManager.onSelectionDeleteClicked = function (selectedIds) {
+            self._onSelectionDeleteClicked.call(self, selectedIds);
+        }
 
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize();
@@ -560,6 +565,18 @@ define(['logManager',
         this.onDesignerItemsMove(newPositions);
     };
     /************************** END - DRAG ITEM ***************************/
+
+    /************************** SELECTION DELETE CLICK HANDLER ****************************/
+
+    DesignerCanvas.prototype._onSelectionDeleteClicked = function (selectedIds) {
+        this.onSelectionDelete(selectedIds);
+    };
+
+    DesignerCanvas.prototype.onSelectionDelete = function (selectedIds) {
+        this.logger.warning("DesignerCanvas.onSelectionDelete IS NOT OVERRIDDEN IN A CONTROLLER. ID: '" + selectedIds + "'");
+    };
+
+    /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);

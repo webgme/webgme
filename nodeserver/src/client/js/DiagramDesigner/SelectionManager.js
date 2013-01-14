@@ -422,6 +422,11 @@ define(['logManager',
                 "width": bBox.w,
                 "height": bBox.h });
         }
+
+        //in non-readonly mode show action options on selection outline
+        if (this.canvas.getIsReadOnlyMode() === false) {
+            this._renderSelectionActions();
+        }
     };
 
     SelectionManager.prototype.hideSelectionOutline = function () {
@@ -468,6 +473,43 @@ define(['logManager',
         }
 
         return bBox;
+    };
+
+    SelectionManager.prototype._renderSelectionActions = function () {
+        var self = this,
+            deleteBtn;
+
+        deleteBtn = $('<div/>', {
+            "class" : "s-btn delete",
+            "data-id" : "delete"
+        });
+        this.canvas.skinParts.$selectionOutline.append(deleteBtn);
+
+        /*this._skinParts.copySelection = $('<div/>', {
+            "class" : "copySelectionBtn selectionBtn"
+        });
+        this._skinParts.selectionOutline.append(this._skinParts.copySelection);*/
+
+        this.canvas.skinParts.$selectionOutline.on("mousedown", function (event) {
+            event.stopPropagation();
+        }).on("click", ".s-btn", function (event) {
+            var dataId = $(this).attr("data-id");
+            self.logger.debug("Selection button clicked with data-id: '" + dataId + "'");
+
+            switch (dataId) {
+                case "delete":
+                    self.onSelectionDeleteClicked(self.selectedItemIdList);
+                    break;
+                default:
+            }
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+    };
+
+    SelectionManager.prototype.onSelectionDeleteClicked = function (selectedIds) {
+        //NOTE: overridden in DesignerCanvas
     };
 
     return SelectionManager;
