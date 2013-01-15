@@ -9,7 +9,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
     };
 
     DesignerCanvas.prototype.createConnection = function (objDescriptor) {
-        var connectionId = objDescriptor.id,
+        var connectionId = this.getGuid(),
             sourceId = objDescriptor.source,
             targetId = objDescriptor.target,
             newComponent;
@@ -40,7 +40,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
     };
 
     DesignerCanvas.prototype.updateConnection = function (id, objDescriptor) {
-        var connectionId = objDescriptor.id,
+        var connectionId = id,
             sourceId = objDescriptor.source,
             targetId = objDescriptor.target,
             idx,

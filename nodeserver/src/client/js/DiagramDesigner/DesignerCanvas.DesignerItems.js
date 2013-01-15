@@ -3,7 +3,7 @@
 define(['js/DiagramDesigner/DesignerItem',
         'js/DiagramDesigner/DefaultDecorator'   /*load the default decorator just to make sure it's here for sure*/
         ], function (DesignerItem,
-                                                          DefaultDecorator) {
+                     DefaultDecorator) {
 
     var DesignerCanvasDesignerItem,
         DEFAULT_DECORATOR_NAME = "DefaultDecorator",
@@ -14,7 +14,7 @@ define(['js/DiagramDesigner/DesignerItem',
     };
 
     DesignerCanvasDesignerItem.prototype.createDesignerItem = function (objDescriptor) {
-        var componentId = objDescriptor.id,
+        var componentId = this.getGuid(),
             newComponent,
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
@@ -23,6 +23,7 @@ define(['js/DiagramDesigner/DesignerItem',
         objDescriptor.designerCanvas = this;
         objDescriptor.position.x = alignedPosition.x;
         objDescriptor.position.y = alignedPosition.y;
+        objDescriptor.guid = componentId;
 
         //make sure it has a specified decorator
         objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
@@ -35,7 +36,7 @@ define(['js/DiagramDesigner/DesignerItem',
         //add to accounting queues for performance optimization
         this._insertedDesignerItemIDs.push(componentId);
 
-        newComponent = this.items[componentId] = new DesignerItem(objDescriptor.id);
+        newComponent = this.items[componentId] = new DesignerItem(componentId);
         newComponent._initialize(objDescriptor);
         newComponent.addToDocFragment(this._documentFragment);
 

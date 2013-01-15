@@ -47,12 +47,11 @@ define(['logManager',
         this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
         this._title = "";
+        this._itemIDCounter = 0;
 
         this.mode = this.OPERATING_MODES.NORMAL;
 
         this._initializeCollections();
-
-        //MUST BE HERE BCOS INITIALIZEUI needs it
 
         //initialize UI
         this.initializeUI();
@@ -106,6 +105,14 @@ define(['logManager',
 
     DesignerCanvas.prototype.getIsReadOnlyMode = function () {
         return this._readOnlyMode;
+    };
+
+    DesignerCanvas.prototype.getGuid = function () {
+        var nextID = this._itemIDCounter + "";
+
+        this._itemIDCounter++;
+
+        return nextID;
     };
 
     //TODO: IMPLEMENT SET READONLY MODE
@@ -310,7 +317,7 @@ define(['logManager',
 
         this._updating = true;
 
-        /*designer item acocunting*/
+        /*designer item accounting*/
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
         this._deletedDesignerItemIDs = [];
