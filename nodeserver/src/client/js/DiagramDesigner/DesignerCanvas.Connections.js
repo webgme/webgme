@@ -8,8 +8,9 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
     };
 
-    DesignerCanvas.prototype.createConnection = function (objDescriptor) {
-        var connectionId = this.getGuid(),
+    DesignerCanvas.prototype.createConnection = function (objD) {
+        var connectionId = this.getGuid("C_"),
+            objDescriptor = _.extend({}, objD),
             sourceId = objDescriptor.source,
             targetId = objDescriptor.target,
             newComponent;

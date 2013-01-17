@@ -3,13 +3,16 @@
 define(['logManager'], function (logManager) {
 
     var DecoratorBase,
-        CONNECTOR_CLASS = ".connector";
+        CONNECTOR_CLASS = ".connector",
+        DECORATOR_ID = "DecoratorBase";
 
     DecoratorBase = function (options) {
         this.id = options.id;
-        this.hostDesignerItem = options.designerItem;
+        this.hostDesignerItem = null;
 
-        this.logger = options.logger || logManager.create((options.loggerName || "DecoratorBase") + '_' + this.id);
+        this.decoratorID = options.decoratorID || DECORATOR_ID;
+
+        this.logger = options.logger || logManager.create(this.decoratorID + '_' + this.id);
 
         this.skinParts = {};
         this.$connectors = null;
@@ -48,13 +51,15 @@ define(['logManager'], function (logManager) {
         this.$connectors.appendTo(this.$el);
 
         //hook up connection drawing capability
-        this.hostDesignerItem.canvas.connectionDrawingManager.attachConnectable(this.$connectors, this.id);
+        this.hostDesignerItem.canvas.connectionDrawingManager.attachConnectable(this.$connectors, this.hostDesignerItem.id);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
     DecoratorBase.prototype.hideConnectors = function () {
         //remove up connection drawing capability
-        this.hostDesignerItem.canvas.connectionDrawingManager.detachConnectable(this.$connectors);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.canvas.connectionDrawingManager.detachConnectable(this.$connectors);
+        }
 
         this.$connectors.detach();
     };
@@ -129,45 +134,45 @@ define(['logManager'], function (logManager) {
     /******************** EVENT HANDLERS ************************/
 
     //called when the mouse enters the DesignerItem's main container
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onMouseEnter = function (event) {
-        return true;
+        return false;
     };
 
     //called when the mouse leaves the DesignerItem's main container
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onMouseLeave = function (event) {
-        return true;
+        return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mousedown
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onMouseDown = function (event) {
-        return true;
+        return false;
     };
 
     //called when the mouse leaves the DesignerItem's receives mouseup
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onMouseUp = function (event) {
-        return true;
+        return false;
     };
 
     //called when the designer items becomes selected
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onSelect = function () {
-        return true;
+        return false;
     };
 
     //called when the designer items becomes deselected
-    //TODO: figure out if return TRUE / FALSE really needed and used for anything
-    //TODO: can be used to signal that decorator handled the event, DesignerItem does not need to
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onDeselect = function () {
-        return true;
+        return false;
     };
 
     /******************** END OF - EVENT HANDLERS ************************/

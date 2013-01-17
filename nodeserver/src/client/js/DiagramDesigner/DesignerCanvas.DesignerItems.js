@@ -13,23 +13,20 @@ define(['js/DiagramDesigner/DesignerItem',
 
     };
 
-    DesignerCanvasDesignerItem.prototype.createDesignerItem = function (objDescriptor) {
-        var componentId = this.getGuid(),
+    DesignerCanvasDesignerItem.prototype.createDesignerItem = function (objD) {
+        var componentId = this.getGuid("I_"),
+            objDescriptor = _.extend({}, objD),
             newComponent,
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
-        this.logger.debug("Creating model component with id: '" + objDescriptor.id + "'");
+        this.logger.debug("Creating model component with id: '" + componentId + "'");
 
         objDescriptor.designerCanvas = this;
         objDescriptor.position.x = alignedPosition.x;
         objDescriptor.position.y = alignedPosition.y;
         objDescriptor.guid = componentId;
 
-        //make sure it has a specified decorator
-        objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
-        objDescriptor.DecoratorClass = objDescriptor.DecoratorClass || DEFAULT_DECORATOR_CLASS;
-
-        this._checkPositionOverlap(objDescriptor);
+        this._checkPositionOverlap(componentId, objDescriptor);
 
         this.itemIds.push(componentId);
 
@@ -55,10 +52,7 @@ define(['js/DiagramDesigner/DesignerItem',
             objDescriptor.position.x = alignedPosition.x;
             objDescriptor.position.y = alignedPosition.y;
 
-            //make sure it has a specified decorator
-            objDescriptor.decorator = objDescriptor.decorator || DEFAULT_DECORATOR_NAME;
-
-            this._checkPositionOverlap(objDescriptor);
+            this._checkPositionOverlap(componentId, objDescriptor);
 
             //add to accounting queues for performance optimization
             this._updatedDesignerItemIDs.push(componentId);

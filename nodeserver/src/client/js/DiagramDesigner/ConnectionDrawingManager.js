@@ -111,22 +111,10 @@ define(['logManager'], function (logManager) {
             droppableEl = elements.not(this._connectionInDrawProps.srcEl);
 
         if (droppableEl && droppableEl.length > 0) {
-            /*droppableEl.droppable('destroy');
-            droppableEl.droppable({
-                accept: '.' + ACCEPT_CLASS,
-                greedy: true,
-                drop: function (event, ui) {
-                    self.logger.error("dropped on: " + objId);
 
-                    //remove event handlers
-                    self._detachConnectionEndPointHandler(droppableEl);
-
-                    //stop event propagation
-                    event.stopPropagation();
-                }
-            });*/
             droppableEl.on(MOUSEENTER, function (event) {
-                //TODO: more complex 'OK' function needs to be provided
+                //TODO: potentially more complex 'OK' function needs to be provided
+                //ie: can the connection really be drawn here from source
                 $(this).addClass(HOVER_CLASS);
             }).on(MOUSELEAVE, function (event) {
                 $(this).removeClass(HOVER_CLASS);
@@ -144,7 +132,7 @@ define(['logManager'], function (logManager) {
 
         this.canvas.beginMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
-        this.logger.error("Start connection drawing. SRCID: " + objId);
+        this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "'");
 
         this._connectionInDraw = true;
         this._connectionDesc = { "x": itemBBox.x + itemBBox.width / 2,
@@ -200,7 +188,7 @@ define(['logManager'], function (logManager) {
 
         this.canvas.endMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
-        this.logger.error("Stopped connection drawing");
+        this.logger.debug("Stopped connection drawing");
     };
 
     ConnectionDrawingManager.prototype._drawConnection = function () {
@@ -216,7 +204,7 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId) {
-        this.logger.error("MOUSEUP: " + endPointId);
+        this.logger.debug("Connection end dropped on item: '" + endPointId + "'");
 
         if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
             this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,

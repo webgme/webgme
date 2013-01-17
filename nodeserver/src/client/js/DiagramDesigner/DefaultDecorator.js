@@ -11,17 +11,21 @@ define(['logManager',
 
     var DefaultDecorator,
         __parent__ = DecoratorBase,
-        __parent_proto__ = DecoratorBase.prototype;
+        __parent_proto__ = DecoratorBase.prototype,
+        DECORATOR_ID = "DefaultDecorator";
 
     DefaultDecorator = function (options) {
 
         var opts = _.extend( {}, options);
 
-        opts.loggerName = opts.loggerName || "DefaultDecorator";
+        opts.decoratorID = opts.decoratorID || DECORATOR_ID;
 
-        __parent__.apply(this, [opts]);
+            __parent__.apply(this, [opts]);
 
-        this.name = options.name || "";
+        this.name = "";
+
+        //render GME-ID in the DOM, for debugging
+        this.$el.attr({"data-id": this.id});
 
         this.logger.debug("DefaultDecorator ctor");
     };
@@ -33,6 +37,13 @@ define(['logManager',
     DefaultDecorator.prototype.$DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_addTo = function () {
+        //TODO: this might/should get the real GME node from the client and do whatever it needs to do
+        var gmeObjDesc = this.designerControl._getObjectDescriptor(this.id);
+
+        if (gmeObjDesc) {
+            this.name = gmeObjDesc.name || "";
+        }
+
         //find name placeholder
         this.skinParts.$name = this.$el.find(".name");
         this.skinParts.$name.text(this.name);
@@ -46,7 +57,7 @@ define(['logManager',
         this.hostDesignerItem.height = this.$el.outerHeight(true);
     };
 
-    DefaultDecorator.prototype.update = function (objDescriptor, silent) {
+    DefaultDecorator.prototype.update = function (objDescriptor) {
         var newName = objDescriptor.name || "";
 
         if (this.name !== newName) {

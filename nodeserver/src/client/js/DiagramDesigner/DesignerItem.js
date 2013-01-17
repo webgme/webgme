@@ -23,7 +23,13 @@ define(['logManager'], function (logManager) {
 
         /*instance variables*/
         this.decoratorName = "";
-        this._decoratorInstance = null;
+        if (objDescriptor.decoratorInstance === undefined ||
+            objDescriptor.decoratorInstance === null) {
+            this.logger.error("DesignertItem does not have a valid decorator instance!!!");
+            throw ("DesignertItem does not have a valid decorator instance!!!");
+        }
+        this._decoratorInstance = objDescriptor.decoratorInstance;
+        this._decoratorInstance.hostDesignerItem = this;
         this.selected = false;
         this.selectedInMultiSelection = false;
 
@@ -35,21 +41,9 @@ define(['logManager'], function (logManager) {
         this.height = 0;
 
         this._initializeUI();
-
-        this._initializeDecorator(objDescriptor);
     };
 
     DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
-
-    DesignerItem.prototype._initializeDecorator = function (objDescriptor) {
-        var decoratorName = objDescriptor.decorator,
-            DecoratorClass = objDescriptor.DecoratorClass;
-
-        objDescriptor.designerItem = this;
-
-        this.decoratorName = decoratorName;
-        this._decoratorInstance = new DecoratorClass(objDescriptor);
-    };
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it
@@ -76,38 +70,32 @@ define(['logManager'], function (logManager) {
                                         "preventDefault": true },
                         "mouseleave": { "fn": "onMouseLeave",
                                         "stopPropagation": true,
-                                        "preventDefault": true }/*,*/
-                        /*"mousedown": { "fn": "onMouseDown",
-                                        "stopPropagation": true,
-                                        "preventDefault": true },
-                        "mouseup": { "fn": "onMouseUp",
-                                    "stopPropagation": false,
-                                    "preventDefault": true }*/ };
+                                        "preventDefault": true }};
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
                 this.$el.on( i + '.' + EVENT_POSTFIX, null, null, function (event) {
                     var eventHandlerOpts = self._events[event.type],
-                        result = true;
+                        handled = false;
 
                     if (eventHandlerOpts) {
-                        //call pre-decorator event handler (if exist)
-                        if (_.isFunction(self[eventHandlerOpts.fn])) {
-                            result = self[eventHandlerOpts.fn].call(self, event);
+                        //call decorators event handler first
+                        handled = self._callDecoratorMethod(eventHandlerOpts.fn, event);
+
+                        if (handled !== true) {
+                            handled = self[eventHandlerOpts.fn].call(self, event);
                         }
 
-                        //call decorator's handle if needed
-                        if (result === true) {
-                            result = self._callDecoratorMethod(eventHandlerOpts.fn, event);
-                        }
+                        //if still not marked as handled
+                        if (handled !== true) {
+                            //finally marked handled if needed
+                            if (eventHandlerOpts.stopPropagation === true) {
+                                event.stopPropagation();
+                            }
 
-                        //finally marked handled if needed
-                        if (eventHandlerOpts.stopPropagation === true) {
-                            event.stopPropagation();
-                        }
-
-                        if (eventHandlerOpts.preventDefault === true) {
-                            event.preventDefault();
+                            if (eventHandlerOpts.preventDefault === true) {
+                                event.preventDefault();
+                            }
                         }
                     }
                 });
@@ -137,13 +125,6 @@ define(['logManager'], function (logManager) {
         docFragment.appendChild( this.$el[0] );
 
         this.logger.debug("DesignerItem with id:'" + this.id + "' added to canvas.");
-    };
-
-    //whenever a decorator is ready with the rendering, needs to signal it
-    //by calling this method
-    //this will tell the canvas that the item is ready (if in any case the canvas is waiting for it)
-    DesignerItem.prototype.decoratorUpdated = function () {
-        this.canvas.decoratorUpdated(this.id);
     };
 
     DesignerItem.prototype.renderGetLayoutInfo = function () {
@@ -185,15 +166,15 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.onMouseEnter = function (event) {
-        var classes = [HOVER_CLASS];
+        var classes = [];
 
         this.logger.debug("onMouseEnter: " + this.id);
 
+        //add few classes by default
+        classes.push(HOVER_CLASS);
         if (this.canvas.selectionManager.allowSelection === true) {
             classes.push(SELECTABLE_CLASS);
         }
-
-        //pre-decorator handle
         this.$el.addClass(classes.join(' '));
 
         //in edit mode and when not participating in a multiple selection,
@@ -202,13 +183,13 @@ define(['logManager'], function (logManager) {
             this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION ||
             this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
 
-            //if (this.selectedInMultiSelection === false) {
             if (this.selected === false) {
                 this.showConnectors();
             }
         }
 
-        return true;
+        //sign we need the default preventDefault and stopPropagation to be executed
+        return false;
     };
 
     DesignerItem.prototype.onMouseLeave = function (event) {
@@ -216,23 +197,12 @@ define(['logManager'], function (logManager) {
 
         this.logger.debug("onMouseLeave: " + this.id);
 
-        //pre-decorator handle
         this.$el.removeClass(classes.join(' '));
 
-        //when not currently selected, hide connectors
-        //if (this.selected === false) {
-            this.hideConnectors();
-        //}
+        this.hideConnectors();
 
-        return true;
-    };
-
-    DesignerItem.prototype.onMouseDown = function (event) {
-        this.logger.debug("onMouseDown: " + this.id);
-
-        this.canvas.onItemMouseDown(event, this.id);
-
-        return true;
+        //sign we need the default preventDefault and stopPropagation to be executed
+        return false;
     };
 
     DesignerItem.prototype.onSelect = function (multiSelection) {
@@ -295,29 +265,28 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.update = function (objDescriptor) {
-        var decoratorName = objDescriptor.decorator,
-            DecoratorClass = objDescriptor.DecoratorClass;
-        //check what might have changed
+        var decoratorName = this._decoratorInstance.decoratorID,
+            newDecoratorName = objDescriptor.decoratorInstance ? objDescriptor.decoratorInstance.decoratorID : "";
 
+        //check what might have changed
+        //update position
         this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
 
-        //TODO: check if decorator changed and need to be updated
-
-        if (decoratorName !== this.decoratorName) {
-            this.logger.debug("decorator update: '" + this.decoratorName + "' --> '" + decoratorName + "'...");
+        //update decorator if needed
+        if (newDecoratorName !== "" && decoratorName !== newDecoratorName) {
+            this.logger.debug("decorator update: '" + decoratorName + "' --> '" + newDecoratorName + "'...");
 
             //destroy old decorator
             this._callDecoratorMethod("destroy");
             this.$el.empty();
 
+            this._decoratorInstance = objDescriptor.decoratorInstance;
+            this._decoratorInstance.hostDesignerItem = this;
+
             //attach new one
-            this.decoratorName = decoratorName;
-            this._decoratorInstance = new DecoratorClass(objDescriptor);
-
-
             this.$el.html(this._decoratorInstance.$el);
 
-            this.logger.debug("DesignerItem's decorator with id:'" + this.id + "' has been updated.");
+            this.logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
 
             this._callDecoratorMethod("on_addTo");
 

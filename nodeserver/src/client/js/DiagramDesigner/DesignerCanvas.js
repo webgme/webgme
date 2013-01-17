@@ -107,8 +107,8 @@ define(['logManager',
         return this._readOnlyMode;
     };
 
-    DesignerCanvas.prototype.getGuid = function () {
-        var nextID = this._itemIDCounter + "";
+    DesignerCanvas.prototype.getGuid = function (prefix) {
+        var nextID = (prefix || "") + this._itemIDCounter + "";
 
         this._itemIDCounter++;
 
@@ -492,7 +492,7 @@ define(['logManager',
             "y": pY };
     };
 
-    DesignerCanvas.prototype._checkPositionOverlap = function (objDescriptor) {
+    DesignerCanvas.prototype._checkPositionOverlap = function (itemId, objDescriptor) {
         var i,
             posChanged = true,
             itemID,
@@ -506,7 +506,7 @@ define(['logManager',
             while (i--) {
                 itemID = this.itemIds[i];
 
-                if (itemID !== objDescriptor.id) {
+                if (itemID !== itemId) {
                     item = this.items[itemID];
 
                     if (objDescriptor.position.x === item.positionX &&

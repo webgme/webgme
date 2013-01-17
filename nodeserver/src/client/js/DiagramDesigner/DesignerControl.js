@@ -11,7 +11,9 @@ define(['logManager',
     var DesignerControl,
         LOAD_EVENT_NAME = "load",
         UPDATE_EVENT_NAME = "update",
-        DECORATOR_PATH = "js/DiagramDesigner/";      //TODO: fix path;
+        DECORATOR_PATH = "js/DiagramDesigner/",      //TODO: fix path;
+        ___DUPLICATE = false;            //TODO: just for testing purposes
+
 
     DesignerControl = function (options) {
         var self = this;
@@ -26,6 +28,8 @@ define(['logManager',
         this._client = options.client;
         this._selfPatterns = {};
         this.components = {};
+        this.componentsMap = {};
+        this.componentsMapRev = {};
         this.decoratorClasses = {};
         this.eventQueue = [];
 
@@ -42,7 +46,7 @@ define(['logManager',
             self._client.startTransaction();
             for (id in repositionDesc) {
                 if (repositionDesc.hasOwnProperty(id)) {
-                    self._client.setRegistry(id, nodePropertyNames.Registry.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
+                    self._client.setRegistry(self.componentsMapRev[id], nodePropertyNames.Registry.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
                 }
             }
             self._client.completeTransaction();
@@ -50,13 +54,22 @@ define(['logManager',
 
         this.designerCanvas.onCreateNewConnection = function (params) {
             self._client.makeConnection({   "parentId": self.currentNodeInfo.id,
-                "sourceId": params.src,
-                "targetId": params.dst,
+                "sourceId": self.componentsMapRev[params.src],
+                "targetId": self.componentsMapRev[params.dst],
                 "directed": true });
         };
 
         this.designerCanvas.onSelectionDelete = function (idList) {
-            self._client.delMoreNodes(idList);
+            var objIdList = [],
+                i = idList.length;
+
+            while(i--) {
+                objIdList.push(self.componentsMapRev[idList[i]]);
+            }
+
+            if (objIdList.length > 0) {
+                self._client.delMoreNodes(objIdList);
+            }
         };
 
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
@@ -82,6 +95,8 @@ define(['logManager',
 
         //clean up local hash map
         this.components = {};
+        this.componentsMap = {};
+        this.componentsMapRev = {};
 
         //remove current territory patterns
         if (this.currentNodeInfo.id) {
@@ -145,6 +160,7 @@ define(['logManager',
                 }
 
                 objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
+                objDescriptor.decorator = "DefaultDecorator";
             }
         }
 
@@ -198,6 +214,10 @@ define(['logManager',
                     if (itemDecorator && itemDecorator !== "") {
                         if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
                             decoratorsToDownload.insertUnique(itemDecorator);
+
+                            //TODO: hack
+                            decoratorsToDownload.insertUnique("DefaultDecorator");
+                            decoratorsToDownload.insertUnique("CircleDecorator");
                         }
                     }
                 }
@@ -284,24 +304,88 @@ define(['logManager',
     };
 
     // PUBLIC METHODS
-    DesignerControl.prototype._onLoad = function (objectId, objDesc) {
+    DesignerControl.prototype._onLoad = function (objectId, objD) {
+        var obj,
+            srcId, dstId,
+            i, j,GMESrcId, GMEDstId,
+            decoratorInstance,
+            decClass,
+            objDesc;
+
         //component loaded
         //we are interested in the load of subcomponents of the opened component
         if (this.currentNodeInfo.id !== objectId) {
-            if (objDesc) {
+            if (objD) {
+
+                objDesc = _.extend({}, objD);
+                this.componentsMap[objectId] = {};
+
                 if (objDesc.kind === "MODEL") {
-                    objDesc.DecoratorClass = this.decoratorClasses[objDesc.decorator];
-                    this.designerCanvas.createDesignerItem(objDesc);
+
+
+                    if (___DUPLICATE === true) {
+                        decClass = this.decoratorClasses.DefaultDecorator || this.decoratorClasses[objDesc.decorator];
+                    } else {
+                        decClass = this.decoratorClasses[objDesc.decorator];
+                    }
+
+                    objDesc.decoratorInstance = new decClass({"id" : objectId});
+                    objDesc.decoratorInstance.designerControl = this;
+
+                    obj = this.designerCanvas.createDesignerItem(objDesc);
+                    this.componentsMap[objectId][obj.id] = obj;
+                    this.componentsMapRev[obj.id] = objectId;
+
+                    if (___DUPLICATE === true) {
+                        //create obj2
+                        objDesc = _.extend({}, objD);
+                        objDesc.position.x += 0;
+                        objDesc.position.y += 400;
+
+                        decClass = this.decoratorClasses.CircleDecorator || this.decoratorClasses[objDesc.decorator];
+                        objDesc.decoratorInstance = new decClass({"id" : objectId});
+                        objDesc.decoratorInstance.designerControl = this;
+
+                        obj = this.designerCanvas.createDesignerItem(objDesc);
+                        this.componentsMap[objectId][obj.id] = obj;
+                        this.componentsMapRev[obj.id] = objectId;
+                    }
                 }
 
                 if (objDesc.kind === "CONNECTION") {
-                    this.designerCanvas.createConnection(objDesc);
+                    //since all the items are presented double
+                    //1 onnection between 2 boxes will really be
+                    //4 connections:
+                    // orig1 -> orig2
+                    // orig1 -> copy2
+                    // copy1 -> orig2
+                    // copy1 -> copy2
+
+                    GMESrcId = objDesc.source;
+                    GMEDstId = objDesc.target;
+
+                    // orig1 -> orig2
+                    for (i in this.componentsMap[GMESrcId]) {
+                        srcId = i;
+                        for (j in this.componentsMap[GMEDstId]) {
+                            dstId = j;
+
+                            objDesc.source = i;
+                            objDesc.target = j;
+                            obj = this.designerCanvas.createConnection(objDesc);
+                            this.componentsMap[objectId][obj.id] = obj;
+                            this.componentsMapRev[obj.id] = objectId;
+                        }
+                    }
                 }
             }
         }
     };
 
     DesignerControl.prototype._onUpdate = function (objectId, objDesc) {
+        var uiid,
+            decClass;
+
         //self or child updated
         //check if the updated object is the opened node
         if (objectId === this.currentNodeInfo.id) {
@@ -312,8 +396,18 @@ define(['logManager',
         } else {
             if (objDesc) {
                 if (objDesc.kind === "MODEL") {
-                    objDesc.DecoratorClass = this.decoratorClasses[objDesc.decorator];
-                    this.designerCanvas.updateDesignerItem(objectId, objDesc);
+                    for (uiid in this.componentsMap[objectId]) {
+                        if (this.componentsMap[objectId].hasOwnProperty(uiid)) {
+
+                            //TODO:potential decorator update
+                            /*decClass = this.decoratorClasses.CircleDecorator;
+                            objDesc.decoratorInstance = new decClass({"id" : objectId});
+                            objDesc.decoratorInstance.designerControl = this;*/
+
+                            this.designerCanvas.updateDesignerItem(uiid, objDesc);
+                            objDesc.position.y += 400;
+                        }
+                    }
                 }
 
                 if (objDesc.kind === "CONNECTION") {
@@ -324,12 +418,18 @@ define(['logManager',
     };
 
     DesignerControl.prototype._onUnload = function (objectId) {
+        var uiid;
+
         if (objectId === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.designerCanvas.updateCanvas({"name": "The currently opened model has beed deleted (TODO)"});
             //TODO: fix this here....
         } else {
-            this.designerCanvas.deleteComponent(objectId);
+            for (uiid in this.componentsMap[objectId]) {
+                if (this.componentsMap[objectId].hasOwnProperty(uiid)) {
+                    this.designerCanvas.deleteComponent(uiid);
+                }
+            }
         }
     };
 

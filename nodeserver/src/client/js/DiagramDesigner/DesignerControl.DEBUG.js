@@ -5,7 +5,7 @@ define([], function () {
     var DesignerControlDEBUG,
         DEBUG_MODEL_TYPE = "MODEL",
         DEBUG_CONNECTION_TYPE = "CONNECTION",
-        CONNECTIONSTEP = 10,
+        CONNECTIONSTEP = 11,
         LOAD_EVENT_NAME = "load",
         UPDATE_EVENT_NAME = "update",
         UNLOAD_EVENT_NAME = "unload",
@@ -47,21 +47,23 @@ define([], function () {
 
         this.designerCanvas._onDesignerItemsMove = this.designerCanvas.onDesignerItemsMove;
         this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
-            var id,
+            var UIid,
+                objId,
                 desc,
                 debugIDs = [];
 
-            for (id in repositionDesc) {
-                if (repositionDesc.hasOwnProperty(id)) {
-                    if (DEBUG && self._debugItemIDs.indexOf(id) !== -1) {
-                        desc = self._generateObjectDescriptorDEBUG(id);
+            for (UIid in repositionDesc) {
+                if (repositionDesc.hasOwnProperty(UIid)) {
+                    objId = self.componentsMapRev[UIid];
+                    if (DEBUG && self._debugItemIDs.indexOf(objId) !== -1) {
+                        desc = self._generateObjectDescriptorDEBUG(objId);
 
-                        desc.position.x = repositionDesc[id].x;
-                        desc.position.y = repositionDesc[id].y;
+                        desc.position.x = repositionDesc[UIid].x;
+                        desc.position.y = repositionDesc[UIid].y;
 
-                        delete repositionDesc[id];
+                        delete repositionDesc[UIid];
 
-                        debugIDs.push(id);
+                        debugIDs.push(objId);
                     }
                 }
             }
@@ -73,8 +75,8 @@ define([], function () {
 
         this.designerCanvas._onCreateNewConnection = this.designerCanvas.onCreateNewConnection;
         this.designerCanvas.onCreateNewConnection = function (params) {
-            var src = params.src,
-                dst = params.dst,
+            var src = self.componentsMapRev[params.src],
+                dst = self.componentsMapRev[params.dst],
                 desc;
 
             if (DEBUG && (self._debugItemIDs.indexOf(src) !== -1 || self._debugItemIDs.indexOf(dst) !== -1)) {
@@ -99,8 +101,8 @@ define([], function () {
                 realIDs = [];
 
             while(i--) {
-                if (DEBUG && (self._debugItemIDs.indexOf(idList[i]) !== -1 || self._debugConnectionsIDs.indexOf(idList[i]) !== -1)) {
-                    debugIDs.push(idList[i]);
+                if (DEBUG && (self._debugItemIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1 || self._debugConnectionsIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1)) {
+                    debugIDs.push(self.componentsMapRev[idList[i]]);
                 } else {
                     realIDs.push(idList[i]);
                 }
@@ -111,6 +113,15 @@ define([], function () {
             self._onDebugDeleteItems("items", debugIDs);
 
             self.designerCanvas._onSelectionDelete(realIDs);
+        };
+
+        this.__getObjectDescriptor = this._getObjectDescriptor;
+        this._getObjectDescriptor = function (nodeId) {
+            if (this._debugObjectDescriptors[nodeId]) {
+                return this._getObjectDescriptorDEBUG(nodeId);
+            } else {
+                return this.__getObjectDescriptor(nodeId);
+            }
         };
     };
 

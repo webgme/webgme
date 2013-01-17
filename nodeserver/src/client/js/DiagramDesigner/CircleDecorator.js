@@ -12,12 +12,13 @@ define(['logManager',
     var CircleDecorator,
         __parent__ = DefaultDecorator,
         __parent_proto__ = DefaultDecorator.prototype,
+        DECORATOR_ID = "CircleDecorator",
         CANVAS_SIZE = 40;
 
     CircleDecorator = function (options) {
         var opts = _.extend( {}, options);
 
-        opts.loggerName = opts.loggerName || "CircleDecorator";
+        opts.decoratorID = opts.decoratorID || DECORATOR_ID;
 
         __parent__.apply(this, [opts]);
 
