@@ -123,6 +123,85 @@ define([], function () {
                 return this.__getObjectDescriptor(nodeId);
             }
         };
+
+        /*********/
+        this.designerCanvas._onDesignerItemsCopy = this.designerCanvas.onDesignerItemsCopy;
+        this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
+            var id,
+                uidesc,
+                newObjDesc,
+                oldObjDesc,
+                objectIDs = [],
+                lookUpTable = {};
+
+            for (id in copyDesc.items) {
+                uidesc = copyDesc.items[id];
+
+                if (self._debugItemIDs.indexOf(self.componentsMapRev[uidesc.oItemId]) !== -1) {
+                    oldObjDesc = self._generateObjectDescriptorDEBUG(self.componentsMapRev[uidesc.oItemId]);
+
+                    newObjDesc = self._generateObjectDescriptorDEBUG(-1, DEBUG_MODEL_TYPE);
+
+                    newObjDesc.position.x = uidesc.posX;
+                    newObjDesc.position.y = uidesc.posY;
+
+                    newObjDesc.name =  oldObjDesc.name;
+                    newObjDesc.kind = oldObjDesc.kind;
+                    newObjDesc.parentId = oldObjDesc.parentId;
+
+                    newObjDesc.decorator = oldObjDesc.decorator;
+
+                    objectIDs.push(newObjDesc.id);
+
+                    lookUpTable[id] = newObjDesc.id;
+
+                    //remove UI object
+                    self.designerCanvas.deleteComponent(id);
+
+                    //remove entry from copyDesc
+                    delete copyDesc.items[id];
+                }
+            }
+
+            for (id in copyDesc.connections) {
+                uidesc = copyDesc.connections[id];
+
+                if (self._debugConnectionsIDs.indexOf(self.componentsMapRev[uidesc.oConnectionId]) !== -1) {
+                    oldObjDesc = self._generateObjectDescriptorDEBUG(self.componentsMapRev[uidesc.oConnectionId]);
+
+                    newObjDesc = self._generateObjectDescriptorDEBUG(-1, DEBUG_CONNECTION_TYPE);
+
+                    newObjDesc.name =  oldObjDesc.name;
+                    newObjDesc.kind = oldObjDesc.kind;
+                    newObjDesc.parentId = oldObjDesc.parentId;
+
+                    if (lookUpTable.hasOwnProperty(uidesc.src)) {
+                        newObjDesc.source = lookUpTable[uidesc.src];
+                    } else {
+                        newObjDesc.source = self.componentsMapRev[uidesc.src];
+                    }
+
+                    if (lookUpTable.hasOwnProperty(uidesc.dst)) {
+                        newObjDesc.target = lookUpTable[uidesc.dst];
+                    } else {
+                        newObjDesc.target = self.componentsMapRev[uidesc.dst];
+                    }
+
+                    objectIDs.push(newObjDesc.id);
+
+                    //remove UI object
+                    self.designerCanvas.deleteComponent(id);
+
+                    //remove entry from copyDesc
+                    delete copyDesc.connections[id];
+                }
+            }
+
+            self._dispatchCreateEvent(objectIDs);
+
+            self.designerCanvas._onDesignerItemsCopy(copyDesc);
+        };
+        /*********/
     };
 
     DesignerControlDEBUG.prototype._dispatchUpdateEvent = function (idList) {

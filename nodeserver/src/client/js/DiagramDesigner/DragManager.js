@@ -5,7 +5,9 @@ define(['logManager'], function (logManager) {
     var DragManager,
         Z_INDEX = 100000,
         ITEMID_DATA_KEY = "itemId",
-        MOVE_CURSOR = "move";
+        MOVE_CURSOR = "move",
+        COPY_CURSOR = "copy",
+        ALIAS_CURSOR = "alias";
 
     DragManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
@@ -76,9 +78,10 @@ define(['logManager'], function (logManager) {
             i = selectedItemIDs.length,
             items = this.canvas.items,
             itemIDs = this.canvas.itemIds,
+            connectionIDs = this.canvas.connectionIds,
             id,
-            $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div"),
-            cursor = MOVE_CURSOR;
+            ctrlKey = event.ctrlKey || event.metaKey,
+            shiftKey = event.shiftKey;
 
         //simple drag means reposition
         //when CTRL key (META key on Mac) is pressed when drag starts, selected items will be copied
@@ -92,37 +95,122 @@ define(['logManager'], function (logManager) {
             "mode": this._dragModes.move
         };
 
+        //check modifiers to see what kind of drag-and-drop it will be
         //is this drag a SmartCopy????
-        /*if (event.ctrlKey || event.metaKey === true) {
+        if (event.ctrlKey && !event.shiftKey) {
             this._dragOptions.mode = this._dragModes.copy;
-            cursor = COPY_CURSOR;
-        }*/
-
-        //set cursor //TODO:based on operation
-        $draggedItemDecoratorEl.css("cursor", cursor);
-
-        while(i--) {
-            id = selectedItemIDs[i];
-
-            //check if the currently checked item is DesignerItem or Connection
-            if (itemIDs.indexOf(id) !== -1) {
-                if (items[id].positionX < this._dragOptions.minCoordinates.x) {
-                    this._dragOptions.minCoordinates.x = items[id].positionX;
-                }
-
-                if (items[id].positionY < this._dragOptions.minCoordinates.y) {
-                    this._dragOptions.minCoordinates.y = items[id].positionY;
-                }
-
-                //store we are dragging this guy
-                this._dragOptions.allDraggedItemIDs.push(id);
-
-                this._dragOptions.originalPositions[id] = { "x": items[id].positionX,
-                                                              "y": items[id].positionY};
-            }
         }
 
-        this.canvas.beginMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
+        if (this._dragOptions.mode == this._dragModes.move) {
+            /*************************************************************/
+            /***********************     MOVE MODE      ******************/
+            /*************************************************************/
+            while(i--) {
+                id = selectedItemIDs[i];
+
+                //check if the currently checked item is DesignerItem or Connection
+                if (itemIDs.indexOf(id) !== -1) {
+                    if (items[id].positionX < this._dragOptions.minCoordinates.x) {
+                        this._dragOptions.minCoordinates.x = items[id].positionX;
+                    }
+
+                    if (items[id].positionY < this._dragOptions.minCoordinates.y) {
+                        this._dragOptions.minCoordinates.y = items[id].positionY;
+                    }
+
+                    //store we are dragging this guy
+                    this._dragOptions.allDraggedItemIDs.push(id);
+
+                    this._dragOptions.originalPositions[id] = { "x": items[id].positionX,
+                        "y": items[id].positionY};
+                }
+            }
+
+            //set cursor
+            this._dragOptions.$draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div");
+            this._dragOptions.$draggedItemDecoratorEl.css("cursor", MOVE_CURSOR);
+
+            this.canvas.beginMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
+        } else if (this._dragOptions.mode == this._dragModes.copy) {
+            /*************************************************************/
+            /***********************     COPY MODE      ******************/
+            /*************************************************************/
+
+            this._dragOptions.copyData = {};
+
+            this.canvas.beginUpdate();
+
+            //first copy the DesignerItems
+            while(i--) {
+                id = selectedItemIDs[i];
+
+                if (itemIDs.indexOf(id) !== -1) {
+
+                    var objDesc = {};
+                    var srcItem = items[id];
+                    objDesc.position = { "x": srcItem.positionX, "y": srcItem.positionY};
+
+                    var decClass = srcItem.decoratorClass;
+
+                    objDesc.decoratorInstance = new decClass({"id" :  srcItem._decoratorInstance.id });
+                    objDesc.decoratorInstance.designerControl = srcItem._decoratorInstance.designerControl;
+                    objDesc.decoratorClass = decClass;
+
+                    var copiedItem = this.canvas.createDesignerItem(objDesc);
+
+                    if (items[id].positionX < this._dragOptions.minCoordinates.x) {
+                        this._dragOptions.minCoordinates.x = items[id].positionX;
+                    }
+
+                    if (items[id].positionY < this._dragOptions.minCoordinates.y) {
+                        this._dragOptions.minCoordinates.y = items[id].positionY;
+                    }
+
+                    //store we are dragging this guy
+                    this._dragOptions.allDraggedItemIDs.push(copiedItem.id);
+
+                    this._dragOptions.originalPositions[copiedItem.id] = { "x": items[copiedItem.id].positionX,
+                        "y": items[copiedItem.id].positionY};
+
+                    this._dragOptions.copyData[id] = {"copiedItemId": copiedItem.id};
+                }
+            }
+
+            i = selectedItemIDs.length;
+            //then duplicate the connections that are selected
+            while(i--) {
+                id = selectedItemIDs[i];
+
+                if (connectionIDs.indexOf(id) !== -1) {
+
+                    var srcId = this.canvas.connectionEndIDs[id].source;
+                    var dstId = this.canvas.connectionEndIDs[id].target;
+
+                    if (selectedItemIDs.indexOf(srcId) !== -1) {
+                        srcId = this._dragOptions.copyData[srcId].copiedItemId;
+                    }
+
+                    if (selectedItemIDs.indexOf(dstId) !== -1) {
+                        dstId = this._dragOptions.copyData[dstId].copiedItemId;
+                    }
+
+                    var objDesc = {};
+                    objDesc.source = srcId;
+                    objDesc.target = dstId;
+                    var copiedConnection = this.canvas.createConnection(objDesc);
+
+                    this._dragOptions.copyData[copiedConnection.id] = {"connectionId": id,
+                                                                       "srcId": srcId,
+                                                                       "dstId": dstId};
+                }
+            }
+
+            this.canvas.endUpdate();
+
+            //set cursor
+            this._dragOptions.$draggedItemDecoratorEl = this.canvas.items[this._dragOptions.copyData[draggedItemID].copiedItemId].$el.find("> div");
+            this._dragOptions.$draggedItemDecoratorEl.css("cursor", COPY_CURSOR);
+        }
 
         //call canvas to do its own job when item dragging happens
         //hide connectors, selection outline, etc...
@@ -157,21 +245,24 @@ define(['logManager'], function (logManager) {
     };
 
     DragManager.prototype._onDraggableStop = function (event, helper) {
-        var draggedItemID = helper.data(ITEMID_DATA_KEY),
-            $draggedItemDecoratorEl = this.canvas.items[draggedItemID].$el.find("> div");
-
-        $draggedItemDecoratorEl.css("cursor", "");
+        var draggedItemID = helper.data(ITEMID_DATA_KEY);
 
         switch(this._dragOptions.mode) {
             case this._dragModes.move:
                 this.canvas.endMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
                 this.canvas.designerItemsMove(this._dragOptions.allDraggedItemIDs);
                 break;
+            case this._dragModes.copy:
+                this._onCopyEnd();
+                break;
         }
 
         //call canvas to do its own job when item dragging happens
         //show connectors, selection outline, etc...
         this.canvas.onDesignerItemDragStop(draggedItemID, this._dragOptions.allDraggedItemIDs);
+
+        this._dragOptions.$draggedItemDecoratorEl.css("cursor", "");
+        this._dragOptions = {};
 
         this.logger.debug("DragManager.prototype._onDraggableStop, draggedItemID: '" + draggedItemID + "'");
     };
@@ -199,6 +290,34 @@ define(['logManager'], function (logManager) {
         }
 
         return newPositions;
+    };
+
+
+    DragManager.prototype._onCopyEnd = function () {
+        var i,
+            copyDesc = { "items": {},
+                         "connections": {}},
+            desc;
+
+        for (i in this._dragOptions.copyData) {
+            if (this._dragOptions.copyData.hasOwnProperty(i)) {
+                desc = this._dragOptions.copyData[i];
+                if (desc.hasOwnProperty("copiedItemId")) {
+                    //description of a box-copy
+                    copyDesc.items[desc.copiedItemId] = {"oItemId": i,
+                                                         "posX": this.canvas.items[desc.copiedItemId].positionX,
+                                                         "posY": this.canvas.items[desc.copiedItemId].positionY};
+                } else if (desc.hasOwnProperty("connectionId")) {
+                    //description of a connection copy
+                    copyDesc.connections[i] = {"oConnectionId": desc.connectionId,
+                        "src": desc.srcId,
+                        "dst": desc.dstId};
+                }
+            }
+        }
+
+        this.canvas.endMode(this.canvas.OPERATING_MODES.COPY_ITEMS);
+        this.canvas.designerItemsCopy(copyDesc);
     };
 
 

@@ -571,6 +571,28 @@ define(['logManager',
 
         this.onDesignerItemsMove(newPositions);
     };
+
+    DesignerCanvas.prototype.designerItemsCopy = function (copyDesc) {
+        var newSelectionIDs = [],
+            i;
+
+        for (i in copyDesc.items) {
+            if (copyDesc.items.hasOwnProperty(i)) {
+                newSelectionIDs.push(i);
+            }
+        }
+
+        for (i in copyDesc.connections) {
+            if (copyDesc.connections.hasOwnProperty(i)) {
+                newSelectionIDs.push(i);
+            }
+        }
+
+        this.selectionManager._clearSelection();
+        this.selectionManager.setSelection(newSelectionIDs);
+
+        this.onDesignerItemsCopy(copyDesc);
+    };
     /************************** END - DRAG ITEM ***************************/
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/

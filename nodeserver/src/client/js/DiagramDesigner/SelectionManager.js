@@ -255,7 +255,7 @@ define(['logManager',
 
     SelectionManager.prototype.setSelection = function (idList, event) {
         var i,
-            multiSelectionModifier = event.ctrlKey || event.metaKey,
+            multiSelectionModifier = event ? event.ctrlKey || event.metaKey : false,
             len = idList.length,
             item,
             items = this.canvas.items,
@@ -376,7 +376,7 @@ define(['logManager',
             cW = this.canvas._actualSize.w,
             cH = this.canvas._actualSize.h;
 
-        if (bBox.hasOwnProperty("x")) {
+        if (bBox && bBox.hasOwnProperty("x")) {
 
             bBox.x -= SELECTION_OUTLINE_MARGIN;
             bBox.y -= SELECTION_OUTLINE_MARGIN;
@@ -421,11 +421,13 @@ define(['logManager',
                 "top": bBox.y,
                 "width": bBox.w,
                 "height": bBox.h });
-        }
 
-        //in non-readonly mode show action options on selection outline
-        if (this.canvas.getIsReadOnlyMode() === false) {
-            this._renderSelectionActions();
+            //in non-readonly mode show action options on selection outline
+            if (this.canvas.getIsReadOnlyMode() === false) {
+                this._renderSelectionActions();
+            }
+        } else {
+            this.hideSelectionOutline();
         }
     };
 
@@ -447,28 +449,36 @@ define(['logManager',
         if (i === 0) {
            bBox = {};
         } else {
-            bBox = { "x": this.canvas._actualSize.w,
+            /*bBox = { "x": this.canvas._actualSize.w,
                 "y": this.canvas._actualSize.h,
                 "x2": 0,
-                "y2": 0};
+                "y2": 0};*/
         }
 
         while (i--) {
             id = this.selectedItemIdList[i];
 
-            childBBox = items[id].getBoundingBox();
+            if (items[id]) {
 
-            if (childBBox.x < bBox.x) {
-                bBox.x = childBBox.x;
-            }
-            if (childBBox.y < bBox.y) {
-                bBox.y = childBBox.y;
-            }
-            if (childBBox.x2 > bBox.x2) {
-                bBox.x2 = childBBox.x2;
-            }
-            if (childBBox.y2 > bBox.y2) {
-                bBox.y2 = childBBox.y2;
+                bBox = bBox || { "x": this.canvas._actualSize.w,
+                    "y": this.canvas._actualSize.h,
+                    "x2": 0,
+                    "y2": 0};
+
+                childBBox = items[id].getBoundingBox();
+
+                if (childBBox.x < bBox.x) {
+                    bBox.x = childBBox.x;
+                }
+                if (childBBox.y < bBox.y) {
+                    bBox.y = childBBox.y;
+                }
+                if (childBBox.x2 > bBox.x2) {
+                    bBox.x2 = childBBox.x2;
+                }
+                if (childBBox.y2 > bBox.y2) {
+                    bBox.y2 = childBBox.y2;
+                }
             }
         }
 

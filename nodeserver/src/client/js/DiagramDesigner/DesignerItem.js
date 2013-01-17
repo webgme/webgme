@@ -30,6 +30,7 @@ define(['logManager'], function (logManager) {
         }
         this._decoratorInstance = objDescriptor.decoratorInstance;
         this._decoratorInstance.hostDesignerItem = this;
+        this.decoratorClass = objDescriptor.decoratorClass;
         this.selected = false;
         this.selectedInMultiSelection = false;
 

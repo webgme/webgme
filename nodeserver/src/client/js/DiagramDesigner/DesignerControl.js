@@ -12,7 +12,9 @@ define(['logManager',
         LOAD_EVENT_NAME = "load",
         UPDATE_EVENT_NAME = "update",
         DECORATOR_PATH = "js/DiagramDesigner/",      //TODO: fix path;
-        ___DUPLICATE = false;            //TODO: just for testing purposes
+        ___DUPLICATE = false,            //TODO: just for testing purposes
+        ATTRIBUTES_STRING = "attributes",
+        REGISTRY_STRING = "registry";
 
 
     DesignerControl = function (options) {
@@ -50,6 +52,45 @@ define(['logManager',
                 }
             }
             self._client.completeTransaction();
+        };
+
+        this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
+            var copyOpts = { "parentId": self.currentNodeInfo.id },
+                id,
+                desc;
+
+            self.designerCanvas.beginUpdate();
+
+            for (id in copyDesc.items) {
+                if (copyDesc.items.hasOwnProperty(id)) {
+                    desc = copyDesc.items[id];
+
+                    copyOpts[desc.oItemId] = {};
+                    copyOpts[desc.oItemId][ATTRIBUTES_STRING] = {};
+                    copyOpts[desc.oItemId][REGISTRY_STRING] = {};
+
+                    copyOpts[desc.oItemId][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": desc.posX, "y": desc.posY };
+
+                    //remove the component from UI
+                    //it will be recreated when the GME client calls back with the result
+                    self.designerCanvas.deleteComponent(id);
+                }
+            }
+
+            for (id in copyDesc.connections) {
+                if (copyDesc.connections.hasOwnProperty(id)) {
+                    desc = copyDesc.connections[id];
+                    copyOpts[desc.oConnectionId] = {};
+
+                    //remove the component from UI
+                    //it will be recreated when the GME client calls back with the result
+                    self.designerCanvas.deleteComponent(id);
+                }
+            }
+
+            self.designerCanvas.endUpdate();
+
+            self._client.intellyPaste(copyOpts);
         };
 
         this.designerCanvas.onCreateNewConnection = function (params) {
@@ -308,7 +349,6 @@ define(['logManager',
         var obj,
             srcId, dstId,
             i, j,GMESrcId, GMEDstId,
-            decoratorInstance,
             decClass,
             objDesc;
 
@@ -331,6 +371,7 @@ define(['logManager',
 
                     objDesc.decoratorInstance = new decClass({"id" : objectId});
                     objDesc.decoratorInstance.designerControl = this;
+                    objDesc.decoratorClass = decClass;
 
                     obj = this.designerCanvas.createDesignerItem(objDesc);
                     this.componentsMap[objectId][obj.id] = obj;
@@ -345,6 +386,7 @@ define(['logManager',
                         decClass = this.decoratorClasses.CircleDecorator || this.decoratorClasses[objDesc.decorator];
                         objDesc.decoratorInstance = new decClass({"id" : objectId});
                         objDesc.decoratorInstance.designerControl = this;
+                        objDesc.decoratorClass = decClass;
 
                         obj = this.designerCanvas.createDesignerItem(objDesc);
                         this.componentsMap[objectId][obj.id] = obj;
@@ -383,8 +425,8 @@ define(['logManager',
     };
 
     DesignerControl.prototype._onUpdate = function (objectId, objDesc) {
-        var uiid,
-            decClass;
+        var uiid;
+            /*, decClass;*/
 
         //self or child updated
         //check if the updated object is the opened node
@@ -402,7 +444,8 @@ define(['logManager',
                             //TODO:potential decorator update
                             /*decClass = this.decoratorClasses.CircleDecorator;
                             objDesc.decoratorInstance = new decClass({"id" : objectId});
-                            objDesc.decoratorInstance.designerControl = this;*/
+                            objDesc.decoratorInstance.designerControl = this;
+                            objDesc.decoratorClass = decClass;*/
 
                             this.designerCanvas.updateDesignerItem(uiid, objDesc);
                             objDesc.position.y += 400;
