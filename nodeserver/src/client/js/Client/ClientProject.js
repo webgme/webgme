@@ -55,7 +55,7 @@ define([
             var goOnlineWithCommit = function(){
                 blocked = false;
                 status = 'online';
-                storage.requestPoll(branch,poll);
+                storage.requestPoll(branch,projectPoll);
                 modifyRootOnServer("- going online -",callback);
             };
             var isPredecessorCommit = function(youngcommitid,oldcommitid,allcommits){
@@ -97,6 +97,7 @@ define([
                                                 newRootArrived(mycommit.root,function(){
                                                     blocked = false;
                                                     status = 'online';
+                                                    storage.requestPoll(branch,projectPoll);
                                                     master.changeStatus(id,status);
                                                     callback();
                                                 });
@@ -270,6 +271,7 @@ define([
                                         foundbranch = true;
                                         status = 'online';
                                         branch = branches[i].name;
+                                        storage.requestPoll(branch,projectPoll);
                                     } else if(branches[i].localcommit === mycommit[KEY]){
                                         foundbranch = true;
                                         status = 'offline';
@@ -331,10 +333,10 @@ define([
         var branchId = function(){
             return "*#*"+branch;
         };
-        var poll = function(node){
+        var projectPoll = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
-                storage.requestPoll(branch,poll);
+                storage.requestPoll(branch,projectPoll);
                 if(node.commit !== mycommit[KEY]){
                     //we can refresh ourselves as this must be fastforwad from our change
                     storage.load(node.commit,function(err,commitobj){
@@ -1298,7 +1300,7 @@ define([
             var events = [];
             var addChildrenPathes = function(level,path){
                 var node = getNode(path);
-                if(level>0){
+                if(level>0 && node){
                     var children = node.getChildrenIds();
                     for(var i=0;i<children.length;i++){
                         INSERTARR(newpathes,children[i]);
