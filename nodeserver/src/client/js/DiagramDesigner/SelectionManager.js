@@ -446,15 +446,6 @@ define(['logManager',
             childBBox,
             items = this.canvas.items;
 
-        if (i === 0) {
-           bBox = {};
-        } else {
-            /*bBox = { "x": this.canvas._actualSize.w,
-                "y": this.canvas._actualSize.h,
-                "x2": 0,
-                "y2": 0};*/
-        }
-
         while (i--) {
             id = this.selectedItemIdList[i];
 

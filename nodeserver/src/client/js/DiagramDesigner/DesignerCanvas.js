@@ -461,6 +461,8 @@ define(['logManager',
         this._deletedDesignerItemIDs = [];
         this._deletedConnectionIDs = [];
 
+        this.selectionManager.showSelectionOutline();
+
         this.logger.debug("_refreshScreen END");
     };
 
