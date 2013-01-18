@@ -69,6 +69,23 @@ define(['logManager',
         this.designerAttributes.lineType = objDescriptor.lineType || "L";
     };
 
+    ConnectionComponent.prototype.getConnectionProps = function () {
+        var objDescriptor = {};
+
+        objDescriptor.name = this.name;
+        objDescriptor.reconnectable = this.reconnectable;
+
+        /*PathAttributes*/
+        objDescriptor.arrowStart = this.designerAttributes.arrowStart;
+        objDescriptor.arrowEnd = this.designerAttributes.arrowEnd;
+        objDescriptor.color = this.designerAttributes.color;
+        objDescriptor.width = this.designerAttributes.width;
+        objDescriptor.shadowColor = this.designerAttributes.shadowColor;
+        objDescriptor.lineType = this.designerAttributes.lineType;
+
+        return objDescriptor;
+    };
+
     ConnectionComponent.prototype.setConnectionRenderData = function (segPoints) {
         var i = 0,
             len,

@@ -16,7 +16,7 @@ define([], function () {
 
         if (clickFn) {
             $btnGroup.on("click", ".btn", function (event) {
-                clickFn.call(this, event);
+                clickFn.call(this, event, $(this).data());
                 event.stopPropagation();
                 event.preventDefault();
             });
@@ -25,10 +25,21 @@ define([], function () {
         return $btnGroup;
     };
 
+    DesignerCanvasToolBar.prototype.addRadioButtonGroup = function (clickFn) {
+        var $btnGroup;
+
+        $btnGroup = this.addButtonGroup(function (event, data) {
+            $btnGroup.find('.btn.active').removeClass('active');
+            $(this).addClass('active');
+            clickFn.call(this, event, data);
+        });
+
+        return $btnGroup;
+    };
+
     DesignerCanvasToolBar.prototype.addButton = function (params, btnGroup) {
         var $btn,
-            i,
-            dataAttrs;
+            i;
 
         $btn = $('<a/>', {
             "class": "btn " + params.class || "",
@@ -37,14 +48,11 @@ define([], function () {
         });
 
         if (params.data) {
-            dataAttrs = {};
-            for (i in params.data) {
-                if (params.data.hasOwnProperty(i)) {
-                    dataAttrs["data-" + i] = params.data[i];
-                }
-            }
+            $btn.data(params.data);
+        }
 
-            $btn.attr(dataAttrs);
+        if (params.selected === true) {
+            $btn.addClass("active");
         }
 
         if (params.icon) {
@@ -57,7 +65,7 @@ define([], function () {
 
         if (params.clickFn) {
             $btn.on("click", function (event) {
-                params.clickFn.call(this, event);
+                params.clickFn.call(this, event, $(this).data());
                 event.stopPropagation();
                 event.preventDefault();
             });

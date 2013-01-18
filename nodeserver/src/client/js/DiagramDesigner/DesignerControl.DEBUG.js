@@ -95,8 +95,7 @@ define([], function () {
 
         this.designerCanvas._onSelectionDelete = this.designerCanvas.onSelectionDelete;
         this.designerCanvas.onSelectionDelete = function (idList) {
-            var id,
-                i = idList.length,
+            var i = idList.length,
                 debugIDs = [],
                 realIDs = [];
 
@@ -132,7 +131,8 @@ define([], function () {
                 newObjDesc,
                 oldObjDesc,
                 objectIDs = [],
-                lookUpTable = {};
+                lookUpTable = {},
+                newId;
 
             for (id in copyDesc.items) {
                 uidesc = copyDesc.items[id];
@@ -171,9 +171,12 @@ define([], function () {
 
                     newObjDesc = self._generateObjectDescriptorDEBUG(-1, DEBUG_CONNECTION_TYPE);
 
-                    newObjDesc.name =  oldObjDesc.name;
-                    newObjDesc.kind = oldObjDesc.kind;
-                    newObjDesc.parentId = oldObjDesc.parentId;
+                    newId = newObjDesc.id;
+
+                    //copy over properties from the old one
+                    _.extend(newObjDesc, oldObjDesc);
+
+                    newObjDesc.id = newId;
 
                     if (lookUpTable.hasOwnProperty(uidesc.src)) {
                         newObjDesc.source = lookUpTable[uidesc.src];

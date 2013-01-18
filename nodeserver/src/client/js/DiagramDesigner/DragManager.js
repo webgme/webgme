@@ -182,6 +182,7 @@ define(['logManager'], function (logManager) {
                 id = selectedItemIDs[i];
 
                 if (connectionIDs.indexOf(id) !== -1) {
+                    var oConnection = items[id];
 
                     var srcId = this.canvas.connectionEndIDs[id].source;
                     var dstId = this.canvas.connectionEndIDs[id].target;
@@ -194,7 +195,7 @@ define(['logManager'], function (logManager) {
                         dstId = this._dragOptions.copyData[dstId].copiedItemId;
                     }
 
-                    var objDesc = {};
+                    var objDesc = _.extend({}, oConnection.getConnectionProps());
                     objDesc.source = srcId;
                     objDesc.target = dstId;
                     var copiedConnection = this.canvas.createConnection(objDesc);

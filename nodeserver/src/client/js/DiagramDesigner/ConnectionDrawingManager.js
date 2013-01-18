@@ -29,7 +29,7 @@ define(['logManager'], function (logManager) {
         this._connectionInDraw = false;
         this.paper = this.canvas.skinParts.SVGPaper;
 
-        this._connectionType = "connection";
+        this._metaInfo = null;
 
         this._connectionPathProps = { "strokeWidth" : 2,
             "strokeColor" : "#FF7800",
@@ -209,20 +209,24 @@ define(['logManager'], function (logManager) {
         if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
             this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
                                            "dst": endPointId,
-                                           "type": this._connectionType });
+                                           "metaInfo": this._metaInfo });
         }
     };
 
     ConnectionDrawingManager.prototype.setConnectionInDrawProperties = function (params) {
-        if (params.connectionType) {
-            this._connectionType = params.connectionType;
-        }
-
         this._connectionPathProps.strokeWidth = params.width || this._connectionPathProps.strokeWidth;
 
         this._connectionPathProps.strokeColor = params.color || this._connectionPathProps.strokeColor;
         this._connectionPathProps.arrowStart = params.arrowStart || this._connectionPathProps.arrowStart;
         this._connectionPathProps.arrowEnd = params.arrowEnd || this._connectionPathProps.arrowEnd;
+    };
+
+    ConnectionDrawingManager.prototype.setMetaInfo = function (mInfo) {
+        this._metaInfo = mInfo;
+    };
+
+    ConnectionDrawingManager.prototype.getMetaInfo = function () {
+        return this._metaInfo;
     };
 
     /********************** CONCRETE MODE CHANGE HANDLERS *************************/
