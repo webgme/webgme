@@ -4,8 +4,12 @@
  * Author: Miklos Maroti
  */
 
-define(function () {
+define(
+[ "core/config" ],
+function (CONFIG) {
 	"use strict";
+
+	var maxDepth = CONFIG.future.maxDepth || 5;
 
 	var ASSERT = function (cond) {
 		if( !cond ) {
@@ -71,48 +75,13 @@ define(function () {
 	// ------- adapt
 
 	var adapt = function (func) {
-		ASSERT(typeof func === "function" && func.length >= 1);
-
-		if( func.length === 1 ) {
-			return function () {
-				var future = new Future();
-				func.call(this, function (error, value) {
-					if( error !== null ) {
-						value = error instanceof Error ? error : new Error(error);
-					}
-					else {
-						ASSERT(!(value instanceof Error));
-					}
-					setValue(future, value);
-				});
-				return getValue(future);
-			};
-		}
-		else if( func.length === 2 ) {
-			return function (arg0) {
-				var future = new Future();
-				func.call(this, arg0, function (error, value) {
-					if( error ) {
-						value = error instanceof Error ? error : new Error(error);
-					}
-					else {
-						ASSERT(!(value instanceof Error));
-					}
-					setValue(future, value);
-				});
-				return getValue(future);
-			};
-		}
-	};
-
-	var adapt2 = function (func) {
 		ASSERT(typeof func === "function");
 
-		return function () {
+		return function adaptx () {
 			var args = arguments;
 			var future = new Future();
 
-			args[args.length++] = function (error, value) {
+			args[args.length++] = function adaptCallback (error, value) {
 				if( error ) {
 					value = error instanceof Error ? error : new Error(error);
 				}
@@ -128,46 +97,90 @@ define(function () {
 		};
 	};
 
+	var returnCallback = function (callback, value) {
+		if( value instanceof Error ) {
+			callback(value);
+		}
+		else {
+			callback(null, value);
+		}
+	};
+
+	var calldepth = 0;
+	var returnValue = function (callback, value) {
+		ASSERT(!(value instanceof Error));
+
+		if( isUnresolved(value) ) {
+			setListener(value, returnCallback, callback);
+		}
+		else if( calldepth < maxDepth ) {
+			++calldepth;
+			try {
+				callback(null, value);
+			}
+			catch(error) {
+				--calldepth;
+				throw error;
+			}
+			--calldepth;
+		}
+		else {
+			setTimeout(callback, 0, null, value);
+		}
+	};
+
 	var unadapt = function (func) {
 		ASSERT(typeof func === "function");
 
-		return function () {
-			var args = arguments;
+		if( func.length === 0 ) {
+			return function unadapt0 (callback) {
+				var value;
+				try {
+					value = func.call(this);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
+		else if( func.length === 1 ) {
+			return function unadapt1 (arg, callback) {
+				var value;
+				try {
+					value = func.call(this, arg);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
+		else {
+			return function unadaptx () {
+				var args = arguments;
 
-			var callback = args[--args.length];
-			ASSERT(typeof callback === "function");
+				var callback = args[--args.length];
+				ASSERT(typeof callback === "function");
 
-			var value;
-
-			try {
-				value = func.apply(this, args);
-			}
-			catch(error) {
-				callback(error);
-				return;
-			}
-
-			if( isUnresolved(value) ) {
-				setListener(value, function (nothing, value) {
-					if( value instanceof Error ) {
-						callback(value);
-					}
-					else {
-						callback(null, value);
-					}
-				}, null);
-			}
-			else {
-				callback(null, value);
-			}
-		};
+				var value;
+				try {
+					value = func.apply(this, args);
+				}
+				catch(error) {
+					callback(error);
+					return;
+				}
+				returnValue(callback, value);
+			};
+		}
 	};
 
 	var delay = function (delay, value) {
 		var future = new Future();
-		setTimeout(function () {
-			setValue(future, value);
-		}, delay);
+		setTimeout(setValue, delay, future, value);
 		return future;
 	};
 
@@ -235,26 +248,50 @@ define(function () {
 
 	// ------- join -------
 
-	var Join = function () {
+	var Join = function (first, second) {
 		this.value = UNRESOLVED;
 		this.listener = null;
 		this.param = null;
+
+		this.missing = 2;
+		setListener(first, setJoinand, this);
+		setListener(second, setJoinand, this);
 	};
 
-	Join.prototype = Future.prototype;
+	Join.prototype = Object.create(Future.prototype);
+
+	var setJoinand = function (future, value) {
+		if( value instanceof Error ) {
+			setValue(future, value);
+		}
+		else if( --future.missing <= 0 ) {
+			setValue(future, undefined);
+		}
+	};
 
 	var join = function (first, second) {
-		ASSERT(typeof first === "undefined" || first instanceof Future);
-		ASSERT(typeof second === "undefined" || second instanceof Future);
-
-		if( typeof first === "undefined" ) {
-			return second;
-		}
-		else if( typeof second === "undefined" ) {
-			return first;
+		if( getValue(first) instanceof Future ) {
+			if( getValue(second) instanceof Future ) {
+				if( first instanceof Join ) {
+					first.missing += 1;
+					setListener(second, setJoinand, first);
+					return first;
+				}
+				else if( second instanceof Join ) {
+					second.missing += 1;
+					setListener(first, setJoinand, second);
+					return second;
+				}
+				else {
+					return new Join(first, second);
+				}
+			}
+			else {
+				return first;
+			}
 		}
 		else {
-			return new Join();
+			return getValue(second);
 		}
 	};
 
@@ -361,11 +398,12 @@ define(function () {
 	// -------
 
 	return {
-		adapt: adapt2,
+		adapt: adapt,
 		unadapt: unadapt,
 		delay: delay,
 		call: call,
 		array: array,
+		join: join,
 		hide: hide
 	};
 });

@@ -58,7 +58,9 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			+ idCount + " ids, " + unresolved.length + " idrefs)");
 		}, CONFIG.parser.reportingTime);
 
-		var core = new Core(new Cache(storage));
+		var core = new Core(new Cache(storage), {
+			autopersist: true
+		});
 
 		var exit = function (err, result) {
 			if( timerhandle ) {
@@ -99,26 +101,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			}
 		};
 
-		var persisting = 1;
-		var persist = function (last) {
-			ASSERT(tags.length !== 0);
-			if( !last ) {
-				++persisting;
-			}
-			ASSERT(persisting >= 1);
-
-			core.persist(tags[0].node, function (err) {
-				if( err ) {
-					exit(err);
-				}
-				else if( --persisting === 0 ) {
-					resolveUnresolved(tags[0].node, finishParsing);
-				}
-			});
-		};
-
 		var total = 0;
-		var counter = 0;
 
 		var addTag = function (tag) {
 
@@ -155,11 +138,6 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			tag.node = node;
 
 			++total;
-			if( ++counter >= CONFIG.parser.persistingLimit ) {
-				persist(false);
-				counter = 0;
-			}
-
 			tags.push(tag);
 		};
 
@@ -205,58 +183,23 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			console.log("Waiting for remaining objects to be saved ...");
 
 			ASSERT(tags.length === 1);
-			persist(true);
+
+			core.persist(tags[0].node, function (err) {
+				if( err ) {
+					exit(err);
+				}
+				else {
+					root = tags[0].node;
+					resolveUnresolved(finishParsing);
+				}
+			});
 		});
 
-		// We do our caching to avoid concurrent modifications on doubly loaded
-		// nodes
-		var loadedNodes = {};
-
-		var resolveNotifyCallbacks = function (path, err, node) {
-			var callbacks = loadedNodes[path];
-			ASSERT(Array.isArray(callbacks));
-			ASSERT(err || node);
-
-			loadedNodes[path] = err ? undefined : node;
-
-			for( var i = 0; i < callbacks.length; ++i ) {
-				callbacks[i](err, node);
-			}
-		};
-
+		var root;
 		var resolveLoadByPath = function (path, callback) {
-			ASSERT(typeof path === "string");
-
-			var node = loadedNodes[path];
-
-			if( node === undefined ) {
-				ASSERT(path !== "");
-
-				loadedNodes[path] = [ callback ];
-
-				var index = path.lastIndexOf("/");
-				var base = index >= 0 ? path.substr(0, index) : "";
-				var relid = index >= 0 ? path.substr(index + 1) : path;
-				ASSERT(relid !== "");
-
-				resolveLoadByPath(base, function (err, parent) {
-					if( err ) {
-						resolveNotifyCallbacks(path, err);
-					}
-					else {
-						core.loadChild(parent, relid, function (err, node) {
-							resolveNotifyCallbacks(path, err, node);
-						});
-					}
-				});
-			}
-			else if( Array.isArray(node) ) {
-				node.push(callback);
-			}
-			else {
-				ASSERT(typeof node === "object");
-				UTIL.immediateCallback(callback, null, node);
-			}
+			core.loadByPath(root, path, function (err, node) {
+				setTimeout(callback, 0, err, node);
+			});
 		};
 
 		var resolveAddPointer = function (source, name, targetPath, callback) {
@@ -327,10 +270,9 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			});
 		};
 
-		var resolveUnresolved = function (root, callback) {
+		var resolveUnresolved = function (callback) {
 			ASSERT(callback instanceof Function);
 
-			loadedNodes[""] = root;
 			console.log("Resolving " + unresolved.length + " objects with idrefs ...");
 
 			var done = 0;

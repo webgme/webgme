@@ -55,7 +55,7 @@ define([
             var goOnlineWithCommit = function(){
                 blocked = false;
                 status = 'online';
-                storage.requestPoll(branch,poll);
+                storage.requestPoll(branch,projectPoll);
                 modifyRootOnServer("- going online -",callback);
             };
             var isPredecessorCommit = function(youngcommitid,oldcommitid,allcommits){
@@ -97,6 +97,7 @@ define([
                                                 newRootArrived(mycommit.root,function(){
                                                     blocked = false;
                                                     status = 'online';
+                                                    storage.requestPoll(branch,projectPoll);
                                                     master.changeStatus(id,status);
                                                     callback();
                                                 });
@@ -270,6 +271,7 @@ define([
                                         foundbranch = true;
                                         status = 'online';
                                         branch = branches[i].name;
+                                        storage.requestPoll(branch,projectPoll);
                                     } else if(branches[i].localcommit === mycommit[KEY]){
                                         foundbranch = true;
                                         status = 'offline';
@@ -331,10 +333,10 @@ define([
         var branchId = function(){
             return "*#*"+branch;
         };
-        var poll = function(node){
+        var projectPoll = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
-                storage.requestPoll(branch,poll);
+                storage.requestPoll(branch,projectPoll);
                 if(node.commit !== mycommit[KEY]){
                     //we can refresh ourselves as this must be fastforwad from our change
                     storage.load(node.commit,function(err,commitobj){
@@ -1142,7 +1144,7 @@ define([
             var patternLoaded = function(){
                 if(--counter === 0){
                     //TODO now this is a hack so it should be harmonized somehow
-                    var innerpatternloaded = function(){
+                    /*var innerpatternloaded = function(){
                         if(--innercounter === 0){
                             callback(nupathes);
                         }
@@ -1159,7 +1161,8 @@ define([
                     } else {
                         innercounter = 1;
                         innerpatternloaded();
-                    }
+                    }*/
+                    callback(nupathes);
                 }
             };
 
@@ -1297,7 +1300,7 @@ define([
             var events = [];
             var addChildrenPathes = function(level,path){
                 var node = getNode(path);
-                if(level>0){
+                if(level>0 && node){
                     var children = node.getChildrenIds();
                     for(var i=0;i<children.length;i++){
                         INSERTARR(newpathes,children[i]);
@@ -1370,8 +1373,8 @@ define([
                 var limit = 0;
                 var patternLoaded = function(){
                     if(--counter === 0){
-                        //TODO same hack as in oading for loading sets
-                        var innercounter = 0;
+                        //TODO same hack as in loading for loading sets
+                        /*var innercounter = 0;
                         var mypathes = COPY(nupathes);
                         var innerpatternloaded = function(){
                             if(--innercounter === 0){
@@ -1391,7 +1394,11 @@ define([
                         } else {
                             innercounter = 1;
                             innerpatternloaded();
-                        }
+                        }*/
+                        reLoading2(function(){
+                            checkReLoading(nupathes);
+                            callback(nupathes);
+                        });
                     }
                 };
 

@@ -35,11 +35,15 @@ define(function () {
 			maxSize: 10000
 		},
 
-		corepath: {
-			agingLimit: 3000,
-			maxAge: 3
+		future: {
+			maxDepth: 5
 		},
-
+		
+		coretree: {
+			maxage: 2,
+			maxticks: 2000
+		},
+		
 		copyOptions: function (defaults, options) {
 			options = options || {};
 			for( var key in defaults ) {

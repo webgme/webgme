@@ -10,12 +10,9 @@ define(function () {
 	var assert = function (cond) {
 		if( !cond ) {
 			var error = new Error("ASSERT failed");
-			var message = "ASSERT failed at " + error.stack;
 
-			if( typeof process === "undefined" && typeof console === "object" ) {
-				console.log(message);
-			}
-
+			console.log("ASSERT failed at " + error.stack);
+			
 			throw error;
 		}
 	};

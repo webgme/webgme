@@ -69,9 +69,9 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             log("connection arrived",socket.id);
 
             /*mongo functions*/
-            /*socket.on('open',function(callback){
-                _mongo.open(callback);
-            });*/
+            socket.on('disconnect',function(){
+                _mongo.close();
+            });
             socket.on('open',function(callback){
                 _mongo.open(function(err){
                     if(err){
@@ -92,50 +92,6 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             socket.on('load',function(key,callback){
                 _mongo.load(key,callback);
             });
-            /*socket.on('save',function(node,callback){
-
-                var okay = false;
-
-                var saving = function(){
-                    _mongo.save(node,function(err){
-                        if(!err){
-                            if(_polls[node[KEY]]){
-                                console.log('we have polls');
-                                var object = _polls[node[KEY]];
-                                for(var i=0;i<object.length;i++){
-                                    console.log('calling poll');
-                                    if(!!(object[i] && object[i].constructor && object[i].call && object[i].apply)){
-                                        console.log('poll is a function');
-                                        object[i](node);
-                                    }
-                                }
-                                delete _polls[node[KEY]];
-                            }
-                            console.log('save callback '+node[KEY]);
-                            callback();
-                        } else {
-                            callback(err);
-                        }
-                    });
-                };
-
-                //start of the function
-                if(node[KEY].indexOf(BID) === 0){
-                    _mongo.load(node[KEY],function(err,oldroot){
-                        if(err){
-                            callback(err);
-                        } else {
-                            if(compareRoots(oldroot,node)){
-                                saving();
-                            } else {
-                                callback("invalid root cannot be saved!!!");
-                            }
-                        }
-                    });
-                } else {
-                    saving();
-                }
-            });*/
             socket.on('save',function(node,callback){
                 console.log('save '+node[KEY]);
                 //check if the object is hash-based
