@@ -198,7 +198,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 		var root;
 		var resolveLoadByPath = function (path, callback) {
 			core.loadByPath(root, path, function (err, node) {
-				setTimeout(callback, 0, err, node);
+				UTIL.immediateCallback(callback, err, node);
 			});
 		};
 
@@ -299,7 +299,7 @@ function (ASSERT, SAX, FS, Core, CONFIG, UTIL, Cache) {
 			}, CONFIG.parser.reportingTime);
 
 			// resolve concurrently
-			for( var i = 0; i < 20 && done < unresolved.length; ++i ) {
+			for( var i = 0; i < 50 && done < unresolved.length; ++i ) {
 				--done;
 				next(null);
 			}

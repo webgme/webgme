@@ -1,11 +1,10 @@
 /*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  * 
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/coretree", "core/lib/sha1", "core/future" ], function (ASSERT,
-CoreTree, SHA1, FUTURE) {
+define([ "core/assert", "core/coretree", "core/future" ], function (ASSERT, CoreTree, FUTURE) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -246,28 +245,6 @@ CoreTree, SHA1, FUTURE) {
 			return node;
 		};
 
-		var getSingleNodeHash = function (node) {
-			ASSERT(isValidNode(node));
-
-			var data = {
-				attributes: coretree.getProperty(node, ATTRIBUTES),
-				registry: coretree.getProperty(node, REGISTRY),
-				children: coretree.getKeys(node)
-			};
-			var prefix = "";
-
-			while( node ) {
-				var overlays = coretree.getChild(node, OVERLAYS);
-				var rels = coretree.getProperty(overlays, prefix);
-				data[prefix] = rels;
-
-				prefix = "/" + coretree.getRelid(node) + prefix;
-				node = coretree.getParent(node);
-			}
-
-			return SHA1(JSON.stringify(data));
-		};
-
 		var deleteNode = function (node) {
 			ASSERT(isValidNode(node));
 
@@ -317,7 +294,7 @@ CoreTree, SHA1, FUTURE) {
 
 				while( base ) {
 					var baseOverlays = coretree.getChild(base, OVERLAYS);
-					var list = overlayQuery(baseOverlays, '/'+baseOldPath);
+					var list = overlayQuery(baseOverlays, '/' + baseOldPath);
 
 					aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
@@ -394,20 +371,21 @@ CoreTree, SHA1, FUTURE) {
 			var oldNode = node;
 			node = coretree.getChild(parent, baseOldPath);
 			if( !coretree.isEmpty(node) ) {
-                //we have to change the relid of the node, to fit into its new place...
-                node = coretree.createChild(parent);
-				//return null;
+				// we have to change the relid of the node, to fit into its new
+				// place...
+				node = coretree.createChild(parent);
+				// return null;
 			}
 
 			coretree.setData(node, coretree.copyData(oldNode));
-            deleteNode(oldNode);
+			deleteNode(oldNode);
 
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 			var ancestorNewPath = coretree.getPath(node, ancestor);
 
 			while( base ) {
 				var baseOverlays = coretree.getChild(base, OVERLAYS);
-				var list = overlayQuery(baseOverlays, '/'+baseOldPath);
+				var list = overlayQuery(baseOverlays, '/' + baseOldPath);
 
 				aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
@@ -426,8 +404,10 @@ CoreTree, SHA1, FUTURE) {
 						entry.t = tmp;
 					}
 
-					//ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-					//ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
+					// ASSERT(entry.s.substr(0, baseOldPath.length) ===
+					// baseOldPath);
+					// ASSERT(entry.s === baseOldPath ||
+					// entry.s.charAt(baseOldPath.length) === "/");
 
 					var source, target, overlays;
 
@@ -770,14 +750,23 @@ CoreTree, SHA1, FUTURE) {
 		};
 
 		return {
+			getParent: coretree.getParent,
+			getRelid: coretree.getRelid,
+			getLevel: coretree.getLevel,
+			getRoot: coretree.getRoot,
+			getPath: coretree.getPath,
+			isValidPath: coretree.isValidPath,
+			splitPath: coretree.splitPath,
+			buildPath: coretree.buildPath,
+			joinPaths: coretree.joinPaths,
+				
 			// check
 			isValidNode: isValidNode,
 			isValidRelid: isValidRelid,
-			isValidPath: isValidPath,
-
+	
 			// root
 			getKey: coretree.getHash,
-			loadRoot: FUTURE.unadapt(coretree.loadRoot),
+			loadRoot: coretree.loadRoot,
 
 			persist: function (node, callback) {
 				var finished = coretree.persist(node);
@@ -790,13 +779,8 @@ CoreTree, SHA1, FUTURE) {
 				return coretree.getHash(node);
 			},
 
-			getRoot: coretree.getRoot,
-
 			// containment
-			getLevel: coretree.getLevel,
 			getStringPath: coretree.getPath,
-			getParent: coretree.getParent,
-			getRelid: coretree.getRelid,
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
 			loadChild: FUTURE.unadapt(coretree.loadChild),
@@ -831,7 +815,6 @@ CoreTree, SHA1, FUTURE) {
 			getCollectionPaths: getCollectionPaths,
 			loadCollection: FUTURE.unadapt(loadCollection),
 
-			getSingleNodeHash: getSingleNodeHash,
 			getCommonPathPrefixData: getCommonPathPrefixData
 		};
 	};
