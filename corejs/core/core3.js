@@ -494,9 +494,9 @@ CoreTree, SHA1, FUTURE) {
 		var getChildrenPaths = function (node) {
 			var path = coretree.getPath(node);
 
-			var relids = getChildrenRelids();
+			var relids = getChildrenRelids(node);
 			for(var i = 0; i < relids.length; ++i) {
-				relids[i] = path + "/" + relids;
+				relids[i] = path + "/" + relids[i];
 			}
 			
 			return relids;

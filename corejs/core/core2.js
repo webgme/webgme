@@ -520,10 +520,10 @@ UTIL, SHA1) {
 		var getChildrenPaths = function (node) {
 			var path = pertree.getStringPath(node);
 
-			var relids = getChildrenRelids();
+			var relids = getChildrenRelids(node);
 			if( path !== "" ) {
 				for(var i = 0; i < relids.length; ++i) {
-					relids[i] = path + "/" + relids;
+					relids[i] = path + "/" + relids[i];
 				}
 			}
 			
