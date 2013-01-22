@@ -880,6 +880,7 @@ UTIL, SHA1) {
 			getStringPath: pertree.getStringPath,
 			parseStringPath: pertree.parseStringPath,
 			getParent: pertree.getParent,
+			getRelid: pertree.getRelid,
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
 			loadChild: pertree.loadChild,

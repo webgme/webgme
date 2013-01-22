@@ -808,6 +808,7 @@ CoreTree, SHA1, FUTURE) {
 			getLevel: coretree.getLevel,
 			getStringPath: coretree.getPath,
 			getParent: coretree.getParent,
+			getRelid: coretree.getRelid,
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
 			loadChild: FUTURE.unadapt(coretree.loadChild),
