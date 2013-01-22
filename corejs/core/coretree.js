@@ -4,8 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sha1", "core/util", "core/future", "core/config" ], function (
-ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
+define([ "core/assert", "core/lib/sha1", "core/future", "core/config" ], function (ASSERT, SHA1,
+FUTURE, CONFIG) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -585,8 +585,16 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			}
 		};
 
-		var getKeys = function (node) {
+		var noUnderscore = function (relid) {
+			ASSERT(typeof relid === "string");
+			return relid.charAt(0) !== "_";
+		};
+
+		var getKeys = function (node, predicate) {
+			ASSERT(typeof predicate === "undefined" || typeof predicate === "function");
+
 			node = normalize(node);
+			predicate = predicate || noUnderscore;
 
 			if( typeof node.data !== "object" || node.data === null ) {
 				return null;
@@ -595,12 +603,12 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			var keys = Object.keys(node.data);
 
 			var i = keys.length;
-			while( --i >= 0 && keys[i].charAt(0) === "_" ) {
+			while( --i >= 0 && !predicate(keys[i]) ) {
 				keys.pop();
 			}
 
 			while( --i >= 0 ) {
-				if( keys[i].charAt(0) === "_" ) {
+				if( !predicate(keys[i]) ) {
 					keys[i] = keys.pop();
 				}
 			}
