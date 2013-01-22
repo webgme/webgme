@@ -81,6 +81,10 @@ define(['commonUtil','core/core3','core/assert'], function (CU,CORE,ASSERT) {
             log("getLevel("+node["data"]["_id"]+","+base["_id"]+")");
             return core.getLevel(node,base);
         };
+        var getRelid = function (node) {
+            log("getRelid("+node["data"]["_id"]+")");
+            return core.getRelid(node);
+        };
         var getStringPath = function (node, base) {
             log("getStringPath("+node["data"]["_id"]+","+ ( base === undefined ? base : base["_id"] ) +")");
             return core.getStringPath(node,base);
@@ -96,6 +100,10 @@ define(['commonUtil','core/core3','core/assert'], function (CU,CORE,ASSERT) {
         var getChildrenRelids = function (node) {
             log("getChildrenRelids("+node["data"]["_id"]+")");
             return core.getChildrenRelids(node);
+        };
+        var getChildrenPaths = function (node) {
+            log("getChildrenPaths("+node["data"]["_id"]+")");
+            return core.getChildrenPaths(node);
         };
         var loadChild = function (node, relid, callback) {
             var start = TIMESTAMP();
@@ -261,10 +269,12 @@ define(['commonUtil','core/core3','core/assert'], function (CU,CORE,ASSERT) {
 
             // containment
             getLevel: getLevel,
+            getRelid: getRelid,
             getStringPath: getStringPath,
             parseStringPath: parseStringPath,
             getParent: getParent,
             getChildrenRelids: getChildrenRelids,
+            getChildrenPaths: getChildrenPaths,
             loadChild: loadChild,
             loadByPath: loadByPath,
             loadChildren: loadChildren,
