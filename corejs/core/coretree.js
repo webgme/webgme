@@ -44,6 +44,7 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 	return function (storage, options) {
 		var MAX_AGE = (options && options.maxage) || CONFIG.coretree.maxage;
 		var MAX_TICKS = (options && options.maxticks) || CONFIG.coretree.maxticks;
+		var MAX_MUTATE = (options && options.maxmutate) || CONFIG.coretree.maxmutate;
 		var autopersist = (options && options.autopersist) || false;
 
 		var HASH_ID = "_id";
@@ -156,14 +157,6 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			if( ++ticks >= MAX_TICKS ) {
 				ticks = 0;
 				__ageNodes(roots);
-
-				if( autopersist ) {
-					for( var i = 0; i < roots.length; ++i ) {
-						if( __isMutableData(roots[i].data) ) {
-							__saveData(roots[i].data);
-						}
-					}
-				}
 			}
 		};
 
@@ -426,6 +419,7 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			|| (__isEmptyData(data1) && __isEmptyData(data2));
 		};
 
+		var mutateCount = 0;
 		var mutate = function (node) {
 			ASSERT(isValidNode(node));
 
@@ -438,7 +432,19 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			else if( data._mutable === true ) {
 				return true;
 			}
-			else if( node.parent !== null && !mutate(node.parent) ) {
+
+			// TODO: infinite cycle if MAX_MUTATE is smaller than depth!
+			if( autopersist && ++mutateCount > MAX_MUTATE ) {
+				mutateCount = 0;
+
+				for( var i = 0; i < roots.length; ++i ) {
+					if( __isMutableData(roots[i].data) ) {
+						__saveData(roots[i].data);
+					}
+				}
+			}
+
+			if( node.parent !== null && !mutate(node.parent) ) {
 				// this should never happen
 				return false;
 			}
@@ -727,7 +733,8 @@ ASSERT, SHA1, UTIL, FUTURE, CONFIG) {
 			node = getChild(node, relid);
 
 			if( isValidHash(node.data) ) {
-				// TODO: this is a hack, we should avoid loading it multiple times
+				// TODO: this is a hack, we should avoid loading it multiple
+				// times
 				return FUTURE.call(node, __storageLoad(node.data), __loadChild2);
 			}
 			else {

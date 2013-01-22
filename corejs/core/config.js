@@ -40,8 +40,9 @@ define(function () {
 		},
 		
 		coretree: {
-			maxage: 2,
-			maxticks: 2000
+			maxage: 3,
+			maxticks: 2000,
+			maxmutate: 30000
 		},
 		
 		copyOptions: function (defaults, options) {
