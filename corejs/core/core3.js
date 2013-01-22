@@ -491,6 +491,17 @@ CoreTree, SHA1, FUTURE) {
 			return relids;
 		};
 
+		var getChildrenPaths = function (node) {
+			var path = coretree.getPath(node);
+
+			var relids = getChildrenRelids();
+			for(var i = 0; i < relids.length; ++i) {
+				relids[i] = path + "/" + relids;
+			}
+			
+			return relids;
+		};
+		
 		var loadChildren = function (node) {
 			ASSERT(isValidNode(node));
 
@@ -798,6 +809,7 @@ CoreTree, SHA1, FUTURE) {
 			getStringPath: coretree.getPath,
 			getParent: coretree.getParent,
 			getChildrenRelids: getChildrenRelids,
+			getChildrenPaths: getChildrenPaths,
 			loadChild: FUTURE.unadapt(coretree.loadChild),
 			loadByPath: FUTURE.unadapt(coretree.loadByPath),
 			loadChildren: FUTURE.unadapt(loadChildren),
