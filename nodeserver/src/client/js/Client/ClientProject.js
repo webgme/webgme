@@ -713,75 +713,117 @@ define([
                 return null;
             }
         };
-        var addMember = function(path,memberpath,setid){
+        var addMember = function(path,memberpath,setname){
             if(blocked){
                 return;
             }
-            setid = RELFROMSET(setid);
-            var addmember = function(setpath){
-                var newmemberchild = currentCore.createNode(currentNodes[setpath]);
-                storeNode(newmemberchild);
-                currentCore.setPointer(newmemberchild,"member",currentNodes[memberpath]);
-                modifyRootOnServer('addMember');
-            };
+            setname = RELFROMSET(setname);
             if(currentNodes[path] && currentNodes[memberpath]){
                 var node = currentNodes[path];
-                var children = currentCore.getChildrenRelids(node);
-                var setindex = children.indexOf(setid);
+                var setindex = currentCore.getChildrenRelids(node).indexOf(setname);
+                var setnode = null;
                 if(setindex === -1){
-                    var newset = currentCore.createNode(currentNodes[path],setid);
-                    storeNode(newset);
-                    var setpath = path === "root" ? setid : path+'/'+setid;
-                    addmember(setpath);
+                    setnode = currentCore.createNode(node,setname);
+                    storeNode(setnode);
                 } else {
-                    var setpath = path === "root" ? setid : path+'/'+setid;
-                    if(currentNodes[setpath]){
-                        if(getMemberPath(path,memberpath,setid) === null){
-                            addmember(setpath);
-                        } else {
-                            console.log('the member was already in the set');
-                        }
-                    } else {
-                        console.log('the set is not fully loaded');
-                    }
+                    setnode = currentNodes[currentCore.getChildrenPaths(node)[setindex]];
                 }
+                //we should have the setnode at this point otherwise, it is not loaded so we fail
+                if(setnode){
+                    var setmembers = currentCore.getChildrenPaths(setnode);
+                    var alreadyin = false;
+                    for(var i=0;i<setmembers.length;i++){
+                        if(currentNodes[setmembers[i]]){
+                            if(currentCore.getPointerPath(currentNodes[setmembers[i]],'member') === memberpath){
+                                alreadyin = true;
+                                break;
+                            }
+                        }
+                    }
+                    if(!alreadyin){
+                        var newmember = currentCore.createNode(setnode);
+                        storeNode(newmember);
+                        currentCore.setPointer(newmember,'member',currentNodes[memberpath]);
+                        modifyRootOnServer('addMember');
+                    } else {
+                        console.log('member is already in the given set');
+                    }
+                } else {
+                    console.log('cannot load or create the asked set');
+                }
+
             } else {
-                console.log("the set or the member is unknown");
+                console.log('the member of the set owner is missing');
             }
         };
-        var removeMember = function(path,memberpath,setid){
+        var removeMember = function(path,memberpath,setname){
             if(blocked){
                 return;
             }
-            setid = RELFROMSET(setid);
+            setname = RELFROMSET(setname);
             if(currentNodes[path] && currentNodes[memberpath]){
-                var mpath = getMemberPath(path,memberpath,setid);
-                if(mpath){
-                    currentCore.deleteNode(currentNodes[mpath]);
-                    //TODO if the last member was deleted it would be good to delete the set children as well, but currently it doesn't seems to be necessary
-                    modifyRootOnServer();
+                var node = currentNodes[path];
+                var setindex = currentCore.getChildrenRelids(node).indexOf(setname);
+                if(setindex > -1){
+                    var setnode = currentNodes[currentCore.getChildrenPaths(node)[setindex]];
+                    if(setnode){
+                        var setmembers = currentCore.getChildrenPaths(setnode);
+                        var intheset = false;
+                        for(var i=0;i<setmembers.length;i++){
+                            if(currentNodes[setmembers[i]]){
+                                if(currentCore.getPointerPath(currentNodes[setmembers[i]],'member') === memberpath){
+                                    currentCore.deleteNode(currentNodes[setmembers[i]]);
+                                    intheset = true;
+                                }
+                            }
+                        }
+                        if(intheset){
+                            if(setmembers.length === 1){
+                                //TODO why it causes assertion???
+                                //currentCore.deleteNode(setnode);
+                            }
+                            modifyRootOnServer('removeMember');
+                        } else {
+                            console.log('there were no such member found');
+                        }
+                    } else {
+                        console.log('the given set is not fully loaded');
+                    }
                 } else {
-                    console.log('there is no such member in the set or set at all');
+                    console.log('there is no given set');
                 }
             } else {
-                console.log('the set or the member is unknown');
+                console.log('either set owner or set member is missing');
             }
         };
-        var getMemberIds = function(path,setid){
+        var getMemberIds = function(path, setid){
             setid = setid || MINSETID;
-            var setpath = path === "root" ? setid : path+'/'+setid;
-            if(currentNodes[setpath]){
-                var memberids = [];
-                var children = currentCore.getChildrenRelids(currentNodes[setpath]);
-                for(var i=0;i<children.length;i++){
-                    var childid = setpath+'/'+children[i];
-                    if(currentNodes[childid]){
-                        memberids.push(currentCore.getPointerPath(currentNodes[childid],'member'));
+            if(currentNodes[path]){
+                var setindex = currentCore.getChildrenRelids(currentNodes[path]).indexOf(setid);
+                if(setindex > -1){
+                    var setnode = currentNodes[currentCore.getChildrenPaths(currentNodes[path])[setindex]];
+                    if(setnode){
+                        var setmembers = currentCore.getChildrenPaths(setnode);
+                        var memberids = [];
+                        for(var i=0;i<setmembers.length;i++){
+                            if(currentNodes[setmembers[i]]){
+                                var member = currentCore.getPointerPath(currentNodes[setmembers[i]],'member');
+                                if(member){
+                                    memberids.push(member);
+                                } else {
+                                    console.log('not used member child !!!');
+                                }
+                            } else {
+                                return null; //as the set is not fully loaded
+                            }
+                        }
+                        return memberids;
                     } else {
-                        return null;
+                        return null; //as the set is not fully loaded
                     }
+                } else {
+                    return []; //it is an empty set as it is not created yet
                 }
-                return memberids;
             } else {
                 return null;
             }
@@ -1025,49 +1067,56 @@ define([
             }
         };
         var loadSetPattern = function(patternid,setid,pathessofar,callback){
-            if(currentNodes[patternid]){
-                var setpath = patternid === "root" ? setid : patternid+'/'+setid;
-                var membercounter = 0;
-                var memberloaded = function(err,pointernode){
-                    if(!err && pointernode){
-                        addNodeToPathes(pathessofar,pointernode);
+            var membercount = 0;
+            var finalerr = null;
+            var memberloaded = function(err,member){
+                if(!err && member){
+                    addNodeToPathes(pathessofar,member);
+                } else {
+                    if(!finalerr){
+                        finalerr = err;
                     }
-                    if(--membercounter === 0){
-                        callback();
-                    }
-                };
-                var setloaded = function(err,setobject){
-                    if(!err){
-                        addNodeToPathes(pathessofar,setobject);
-                        currentCore.loadChildren(setobject,function(err2,children){
-                            if(!err2 && children && children.length > 0){
-                                //TODO currently we load the members, maybe this is not necessary
-                                membercounter = children.length;
-                                for(var i=0;i<children.length;i++){
-                                    addNodeToPathes(pathessofar,children[i]);
-                                    currentCore.loadPointer(children[i],'member',memberloaded);
-                                }
-                            } else {
-                                callback(err2);
-                            }
-                        });
+                }
+                if(--membercount === 0){
+                    callback(finalerr);
+                }
+            };
+            var setloaded = function(setnode){
+                currentCore.loadChildren(setnode,function(err,setmembers){
+                    if(!err && setmembers && setmembers.length>0){
+                        membercount = setmembers.length;
+                        for(var i=0;i<setmembers.length;i++){
+                            addNodeToPathes(pathessofar,setmembers[i]);
+                            currentCore.loadPointer(setmembers[i],'member',memberloaded);
+                        }
                     } else {
                         callback(err);
                     }
-                };
-                if(currentNodes[setpath]){
-                    setloaded(null,currentNodes[setpath]);
+                });
+            };
+            if(currentNodes[patternid]){
+                var setindex = currentCore.getChildrenRelids(currentNodes[patternid]).indexOf(setid);
+                if(setindex > -1){
+                    var setpath = currentCore.getChildrenPaths(currentNodes[patternid])[setindex];
+                    if(setpath && currentNodes[setpath]){
+                        addNodeToPathes(pathessofar,currentNodes[setpath]);
+                        setloaded(currentNodes[setpath]);
+                    } else {
+                        currentCore.loadChild(currentNodes[patternid],setid,function(err,setobject){
+                            if(!err && setobject){
+                                addNodeToPathes(pathessofar,setobject);
+                                setloaded(setobject);
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    }
                 } else {
-                    currentCore.loadChild(currentNodes[patternid],setid,function(err,setobject){
-                        if(!err && setobject){
-                            setloaded(null,setobject);
-                        } else {
-                            callback(err);
-                        }
-                    });
+                    callback(null);
                 }
             } else {
-                console.log("na ezt hogy???");
+                console.log('emmi???');
+                callback(null);
             }
         };
         var loadPattern = function(patternid,pattern,pathessofar,callback){
@@ -1099,7 +1148,7 @@ define([
             };
             var patternRootLoaded = function(){
                 //first we start with the set loading
-                if(pattern.sets){
+                if(/*pattern.sets*/true){
                     setcounter = commonUtil.validSetNames.length;
                     for(var i=0;i<commonUtil.validSetNames.length;i++){
                         loadSetPattern(patternid,RELFROMSET(commonUtil.validSetNames[i]),pathessofar,setloaded);
@@ -1399,6 +1448,7 @@ define([
                             checkReLoading(nupathes);
                             callback(nupathes);
                         });
+                        //callback(nupathes);
                     }
                 };
 
