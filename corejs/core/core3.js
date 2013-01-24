@@ -824,7 +824,7 @@ CoreTree, SHA1, FUTURE) {
 			getPointerPath: getPointerPath,
 			hasPointer: hasPointer,
 			getOutsidePointerPath: getOutsidePointerPath,
-			loadPointer: loadPointer,
+			loadPointer: FUTURE.unadapt(loadPointer),
 			deletePointer: deletePointer,
 			setPointer: setPointer,
 			getCollectionNames: getCollectionNames,

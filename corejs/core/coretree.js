@@ -761,6 +761,7 @@ FUTURE, CONFIG) {
 				__reloadChildrenData(node);
 			}
 			else {
+				// TODO: if this bites you, use the Cache
 				ASSERT(node.data === newdata);
 			}
 

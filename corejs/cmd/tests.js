@@ -4,8 +4,8 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/core2", "core/util", "core/coretype" ], function (ASSERT, Core, UTIL,
-CoreType) {
+define([ "core/assert", "core/core3", "core/util", "core/coretype", "core/cache" ], function (ASSERT, Core, UTIL,
+CoreType, Cache) {
 	"use strict";
 
 	var tests = {};
@@ -176,7 +176,7 @@ CoreType) {
 	};
 
 	tests[1] = function (storage, root, callback) {
-		core = new Core(storage);
+		core = new Core(new Cache(storage));
 
 		createNode("a");
 		createNode("b", "a");
@@ -190,19 +190,19 @@ CoreType) {
 				core.setPointer(nodes[i], "ptr" + j, nodes[j]);
 			}
 		}
-
+/*
 		// core.deleteNode(nodes.d);
 
 		core.moveNode(nodes.c, nodes.f);
 		// core.setAttribute(nodes.g, "name", "g");
-
+*/
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
 		});
 	};
 
 	tests[2] = function (storage, root, callback) {
-		core = new Core(storage);
+		core = new Core(new Cache(storage));
 
 		var findNameByPath = function (path) {
 			if( path === undefined ) {
@@ -251,7 +251,7 @@ CoreType) {
 	};
 
 	tests[3] = function (storage, root, callback) {
-		core = new Core(storage);
+		core = new Core(new Cache(storage));
 
 		console.log("Printing out tree in alphanumerical order");
 		core.loadRoot(root, function (err, node) {
@@ -318,7 +318,7 @@ CoreType) {
 	};
 
 	tests[4] = function (storage, root, callback) {
-		core = new Core(storage);
+		core = new Core(new Cache(storage));
 
 		createNode("a");
 		createNode("b", "a");
@@ -350,7 +350,7 @@ CoreType) {
 	};
 
 	tests[5] = function (storage, root, callback) {
-		core = new Core(storage);
+		core = new Core(new Cache(storage));
 
 		core.loadRoot(root, function (err, node) {
 			if( err ) {
