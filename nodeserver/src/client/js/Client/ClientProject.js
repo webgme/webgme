@@ -62,16 +62,20 @@ define([
                 if(youngcommitid === oldcommitid){
                     return true;
                 }
-                if(allcommits[youngcommitid].parents.length>0){
-                    var possibly = false;
-                    for(var i=0;i<allcommits[youngcommitid].parents.length;i++){
-                        if(isPredecessorCommit(allcommits[youngcommitid].parents[i],oldcommitid,allcommits)){
-                            possibly = true;
+                if(allcommits[youngcommitid] && allcommits[oldcommitid]){
+                    if(allcommits[youngcommitid].parents.length>0){
+                        var possibly = false;
+                        for(var i=0;i<allcommits[youngcommitid].parents.length;i++){
+                            if(isPredecessorCommit(allcommits[youngcommitid].parents[i],oldcommitid,allcommits)){
+                                possibly = true;
+                            }
                         }
+                        return possibly;
+                    } else {
+                        return false;
                     }
-                    return possibly;
                 } else {
-                    return false;
+                    return false; //some point is missing
                 }
             };
             if(status !== 'online'){
@@ -692,27 +696,6 @@ define([
         };
 
         //set functions and their helping methods
-        var getMemberPath = function(path,memberpath,setid){
-            if(currentNodes[path] && currentNodes[memberpath]){
-                var setpath = path === "root" ? setid : path+'/'+setid;
-                if(currentNodes[setpath]){
-                    var members = currentCore.getChildrenRelids(currentNodes[setpath]);
-                    for(var i=0;i<members.length;i++){
-                        var mpath = setpath + '/' + members[i];
-                        if(currentNodes[mpath]){
-                            if(currentCore.getPointerPath(currentNodes[mpath],'member') === memberpath){
-                                return mpath;
-                            };
-                        }
-                    }
-                    return null;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        };
         var addMember = function(path,memberpath,setname){
             if(blocked){
                 return;
@@ -886,6 +869,9 @@ define([
                                                 master.changeStatus(id,status);
                                                 callback(err);
                                             });
+                                        } else {
+                                            master.changeStatus(id,status);
+                                            callback();
                                         }
                                     } else {
                                         //something wrong happened during commit, so go offline
@@ -1295,45 +1281,49 @@ define([
             }
         };
         var reLoading2 = function(callback){
-            var parentpathes = {};
-            var elemcount = 0;
-            //building parentpathes array
-            for(var i in currentNodes){
-                var ppath = getNode(i).getParentId();
-                if(ppath !== null && ppath !== 'root' && !parentpathes[ppath]){
-                    parentpathes[ppath] = true;
-                    elemcount++;
+            if(currentCore && currentCore.getVersion() === 3){
+                callback();
+            } else {
+                var parentpathes = {};
+                var elemcount = 0;
+                //building parentpathes array
+                for(var i in currentNodes){
+                    var ppath = getNode(i).getParentId();
+                    if(ppath !== null && ppath !== 'root' && !parentpathes[ppath]){
+                        parentpathes[ppath] = true;
+                        elemcount++;
+                    }
                 }
-            }
 
-            //now clearing everything and loading with only usage of loadchildren
-            if(elemcount>0){
-                elemcount++;
-                currentNodes = {};
-                var childrenLoaded = function(err,children){
-                    if(!err && children && children.length>0){
-                        for(var i=0;i<children.length;i++){
-                            var id = storeNode(children[i]);
-                            if(parentpathes[id]){
-                                currentCore.loadChildren(children[i],childrenLoaded);
+                //now clearing everything and loading with only usage of loadchildren
+                if(elemcount>0){
+                    elemcount++;
+                    currentNodes = {};
+                    var childrenLoaded = function(err,children){
+                        if(!err && children && children.length>0){
+                            for(var i=0;i<children.length;i++){
+                                var id = storeNode(children[i]);
+                                if(parentpathes[id]){
+                                    currentCore.loadChildren(children[i],childrenLoaded);
+                                }
                             }
                         }
-                    }
-                    if(--elemcount === 0){
-                        callback();
-                    }
-                };
+                        if(--elemcount === 0){
+                            callback();
+                        }
+                    };
 
-                currentCore.loadRoot(currentRoot,function(err,root){
-                    if(!err && root){
-                        storeNode(root);
-                        currentCore.loadChildren(root,childrenLoaded);
-                    } else {
-                        callback();
-                    }
-                });
-            } else {
-                callback();
+                    currentCore.loadRoot(currentRoot,function(err,root){
+                        if(!err && root){
+                            storeNode(root);
+                            currentCore.loadChildren(root,childrenLoaded);
+                        } else {
+                            callback();
+                        }
+                    });
+                } else {
+                    callback();
+                }
             }
         };
         var checkReLoading = function(pathestocompare){
