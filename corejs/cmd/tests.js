@@ -190,12 +190,13 @@ CoreType, Cache) {
 				core.setPointer(nodes[i], "ptr" + j, nodes[j]);
 			}
 		}
-/*
-		// core.deleteNode(nodes.d);
+
+//		core.deleteNode(nodes.d);
 
 		core.moveNode(nodes.c, nodes.f);
-		// core.setAttribute(nodes.g, "name", "g");
-*/
+//		nodes.g = core.copyNode(nodes.c, nodes.f);
+//		core.setAttribute(nodes.g, "name", "g");
+
 		core.persist(nodes.a, function (err) {
 			callback(err, core.getKey(nodes.a));
 		});

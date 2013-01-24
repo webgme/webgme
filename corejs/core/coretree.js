@@ -187,6 +187,7 @@ FUTURE, CONFIG) {
 		};
 
 		var normalize = function (node) {
+			ASSERT(isValidNode(node));
 			// console.log("normalize start", printNode(getRoot(node)));
 
 			var parent;
@@ -844,7 +845,7 @@ FUTURE, CONFIG) {
 				return true;
 			}
 			catch(error) {
-				console.log("Wrong node", error.stack);
+//				console.log("Wrong node", error.stack);
 				return false;
 			}
 		};
