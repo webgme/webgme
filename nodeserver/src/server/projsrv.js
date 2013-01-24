@@ -11,6 +11,7 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
         var BID = "*";
         var _polls = {};
         var _commits = {};
+        var _clients = [];
 
         if(options.io){
             _socket = options.io.of(options.namespace);
@@ -65,12 +66,28 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             }
         };
 
+        var addClient = function(id){
+            if(_clients.indexOf(id) === -1){
+                _clients.push(id);
+            }
+        };
+        var removeClient = function(id){
+            var idx = _clients.indexOf(id);
+            if(idx > -1 ){
+                _clients.splice(idx,1);
+                if(_clients.length === 0){
+                    _mongo.close();
+                }
+            }
+        };
+
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
+            addClient(socket.id);
 
             /*mongo functions*/
             socket.on('disconnect',function(){
-                _mongo.close();
+                removeClient(socket.id);
             });
             socket.on('open',function(callback){
                 _mongo.open(function(err){
@@ -122,7 +139,11 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                 _mongo.remove(key,callback);
             });
             socket.on('close',function(callback){
-                _mongo.close(callback);
+                //_mongo.close(callback);
+                //TODO how to handle when user tries to close the database connection??
+                if(callback){
+                    callback();
+                }
             });
             socket.on('removeAll',function(callback){
                 _mongo.removeAll(callback);
