@@ -11,7 +11,7 @@ define(function () {
 		if( !cond ) {
 			var error = new Error("ASSERT failed");
 
-			console.log("ASSERT failed at " + error.stack);
+			console.log("Throwing", error.stack);
 			
 			throw error;
 		}

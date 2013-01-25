@@ -187,7 +187,10 @@ define([], function () {
             mongodatabase   : "multi",
             mongoopt        : {
                 'auto_reconnect' : true,
-                'poolSize'       : 1
+                'poolSize'       : 5,
+                'socketOptions'  : {
+                    'keepAlive' : 1
+                }
             },
             logging         : true,
             logfile         : "comblog.log",
@@ -206,11 +209,9 @@ define([], function () {
                 'log level'          : 1
             },
             projsrv         : "/project",
-            projects        : [
-                "egyik",
-                "masik",
-                "harmadik"
-            ]
+            nosaveddata     : true,
+            project         : "dd2"
+
         }
 
     };

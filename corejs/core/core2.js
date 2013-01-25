@@ -517,6 +517,19 @@ UTIL, SHA1) {
 			return relids;
 		};
 
+		var getChildrenPaths = function (node) {
+			var path = pertree.getStringPath(node);
+
+			var relids = getChildrenRelids(node);
+			if( path !== "" ) {
+				for(var i = 0; i < relids.length; ++i) {
+					relids[i] = path + "/" + relids[i];
+				}
+			}
+			
+			return relids;
+		};
+		
 		var loadChildren = function (node, callback) {
 			ASSERT(isValidNode(node) && typeof callback === "function");
 
@@ -867,7 +880,9 @@ UTIL, SHA1) {
 			getStringPath: pertree.getStringPath,
 			parseStringPath: pertree.parseStringPath,
 			getParent: pertree.getParent,
+			getRelid: pertree.getRelid,
 			getChildrenRelids: getChildrenRelids,
+			getChildrenPaths: getChildrenPaths,
 			loadChild: pertree.loadChild,
 			loadByPath: pertree.loadByPath,
 			loadChildren: loadChildren,

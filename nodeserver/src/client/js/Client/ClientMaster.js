@@ -23,7 +23,7 @@ define([
                 storages = {},
                 commitInfos = {},
                 savedInfoStorage = new ClientLocalStorage(),
-                projectsinfo = savedInfoStorage.load('#' + parameters.userstamp + '#saved#') || {},
+                projectsinfo = parameters.nosaveddata ? {} : savedInfoStorage.load('#' + parameters.userstamp + '#saved#') || {},
                 proxy = null,
                 viewer = null,
                 mytest = new ClientTest({master:self}),
@@ -92,10 +92,14 @@ define([
                                 //select one randomly
                                 //TODO this is very rude, should change it...
                                 //TODO soon the default selection will be the no selection ;)
-                                if (projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]) {
-                                    self.selectProject(projectsinfo.activeProject);
+                                if(parameters.nosaveddata && parameters.project && projectsinfo[parameters.project]){
+                                    self.selectProject(parameters.project);
                                 } else {
-                                    self.selectProject(firstproject);
+                                    if (projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]) {
+                                        self.selectProject(projectsinfo.activeProject);
+                                    } else {
+                                        self.selectProject(firstproject);
+                                    }
                                 }
                                 setInterval(saveProjectsInfo, 1000);
                             }

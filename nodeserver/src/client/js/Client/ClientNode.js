@@ -9,9 +9,7 @@ define(['commonUtil'],
                 node = parameters.node,
                 core = parameters.core,
                 actor = parameters.actor,
-                ownpath = core.getStringPath(node),
-                //ownpathpostfix = ownpath === "" ? "" : "/";
-                ownpathpostfix = ownpath === "" ? "/" : "/";
+                ownpath = core.getStringPath(node);
 
             var getParentId = function(){
                 var parent = core.getParent(node);
@@ -29,11 +27,12 @@ define(['commonUtil'],
                 return getClientNodePath(node);
             };
             var getChildrenIds = function(){
-                var childrenin = core.getChildrenRelids(node);
+                var childrenin = core.getChildrenPaths(node);
+                var childrenrelids = core.getChildrenRelids(node);
                 var childrenout = [];
                 for(var i=0;i<childrenin.length;i++){
-                    if(!ISSET(childrenin[i])){
-                        childrenout.push(ownpath+ownpathpostfix+childrenin[i]);
+                    if(!ISSET(childrenrelids[i])){
+                        childrenout.push(childrenin[i]);
                     }
                 }
                 return childrenout;
@@ -94,11 +93,12 @@ define(['commonUtil'],
                 return childrenout;
             };
             var getSetIds = function(){
-                var childrenin = core.getChildrenRelids(node);
+                var childrenin = core.getChildrenPaths(node);
+                var childrenrelids = core.getChildrenRelids(node);
                 var childrenout = [];
                 for(var i=0;i<childrenin.length;i++){
-                    if(ISSET(childrenin[i])){
-                        childrenout.push(ownpath+ownpathpostfix+childrenin[i]);
+                    if(ISSET(childrenrelids[i])){
+                        childrenout.push(childrenin[i]);
                     }
                 }
                 return childrenout;
