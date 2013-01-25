@@ -461,6 +461,7 @@ define([
                 callback = callback || function () {
                 };
                 //we destroy all related
+                callback();
             };
             self.selectCommitAsync = function (commitid, callback) {
                 callback = callback || function () {

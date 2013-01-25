@@ -14,11 +14,7 @@ define([
                 if(doprint !== null){
                     print = doprint;
                 } else {
-                    if(print){
-                        print = false;
-                    } else {
-                        print = true;
-                    }
+                    print = !print;
                 }
             };
 

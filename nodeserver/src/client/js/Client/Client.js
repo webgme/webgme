@@ -19,7 +19,7 @@ define([
 
         var GUID = commonUtil.guid,
             INSERTARR = commonUtil.insertIntoArray,
-            TSSTRING = function(){
+            TSSTRING = function(@return string){
                 return "["+commonUtil.timestamp()+"]";
             },
             TIMESTAMP = commonUtil.timestamp,
@@ -149,7 +149,7 @@ define([
                         }
                         users[i].UI.onOneEvent(events);
                     } else {
-                        for(var j=0;j<users[i].PATHES.length;j++){
+                        for(j=0;j<users[i].PATHES.length;j++){
                             if(currentNodes[users[i].PATHES[j]]){
                                 users[i].UI.onEvent('update',users[i].PATHES[j]);
                             } else {
@@ -520,7 +520,7 @@ define([
 
                                 if(index){
                                     var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
-                                    retarr[index].newfrom = storeNode(node);;
+                                    retarr[index].newfrom = storeNode(node);
                                     if(index !== retarr[index].newfrom){
                                         delete currentNodes[index];
                                     }

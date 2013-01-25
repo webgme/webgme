@@ -27,7 +27,7 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
                                 availableCB = null;
                             }
                             if(callback){
-                                var tc = callback;
+                                tc = callback;
                                 callback = null;
                                 tc(err);
                             }

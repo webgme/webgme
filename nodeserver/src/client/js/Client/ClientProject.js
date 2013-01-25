@@ -417,7 +417,7 @@ define([
                     }
                     users[i].UI.onOneEvent(events);
                 } else {
-                    for(var j=0;j<users[i].PATHES.length;j++){
+                    for(j=0;j<users[i].PATHES.length;j++){
                         if(currentNodes[users[i].PATHES[j]]){
                             users[i].UI.onEvent('update',users[i].PATHES[j]);
                         } else {
@@ -625,7 +625,7 @@ define([
                 baseId,
                 connection;
             if(parameters.parentId && parameters.sourceId && parameters.targetId){
-                baseId = parameters.baseId || "connection";
+                //baseId = parameters.baseId || "connection";
                 if(currentNodes[parameters.parentId] && currentNodes[parameters.sourceId] && currentNodes[parameters.targetId]){
                     connection = currentCore.createNode(currentNodes[parameters.parentId]);
                     storeNode(connection);
@@ -960,7 +960,7 @@ define([
 
                             if(index){
                                 var node = currentCore.moveNode(children[i],currentNodes[retarr[index].origparent]);
-                                retarr[index].newfrom = storeNode(node);;
+                                retarr[index].newfrom = storeNode(node);
                                 if(index !== retarr[index].newfrom){
                                     delete currentNodes[index];
                                 }
@@ -1359,7 +1359,7 @@ define([
                     }
                     if(patterns[i].sets){
                         var setnames = patternode.getSetNames();
-                        for(var i=0;i<setnames.length;i++){
+                        for(i=0;i<setnames.length;i++){
                             var memberids = patternode.getMemberIds(setnames[i]);
                             for(var j=0;j<memberids.length;j++){
                                 INSERTARR(newpathes,memberids[j]);
@@ -1371,7 +1371,7 @@ define([
                 //we know the paths
                 //generating events
                 //unload
-                for(var i=0;i<user.PATHES.length;i++){
+                for(i=0;i<user.PATHES.length;i++){
                     if(newpathes.indexOf(user.PATHES[i]) === -1){
                         events.push({etype:"unload",eid:user.PATHES[i]});
                     }
