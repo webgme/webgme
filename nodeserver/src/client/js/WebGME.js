@@ -220,7 +220,9 @@ define([  'logManager',
                 faulttolerant : options.faulttolerant,
                 cache : options.cache,
                 log : options.logging,
-                logsrv : location.host + options.logsrv
+                logsrv : location.host + options.logsrv,
+                nosaveddata : commonUtil.combinedserver.nosaveddata,
+                project : commonUtil.combinedserver.project
             });
             proxy.addEventListener(proxy.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
                 currentNodeId = nodeId;
