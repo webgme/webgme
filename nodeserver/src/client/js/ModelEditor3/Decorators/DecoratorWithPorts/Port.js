@@ -24,6 +24,7 @@ define(['logManager',
         this.decorator = options.decorator;
 
         //get logger instance for this component
+        //some comment here
         this.logger = logManager.create("Port_" + this.id);
         this.logger.debug("Created");
     };
