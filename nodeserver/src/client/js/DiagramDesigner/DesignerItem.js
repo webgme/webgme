@@ -8,20 +8,59 @@ define(['logManager'], function (logManager) {
         HOVER_CLASS = "hover",
         SELECTABLE_CLASS = "selectable";
 
-    DesignerItem = function (objId) {
+    DesignerItem = function (objId, canvas) {
         this.id = objId;
+        this.canvas = canvas;
+
+        this.__initialize();
 
         this.logger = logManager.create("DesignerItem_" + this.id);
         this.logger.debug("Created");
     };
 
-    DesignerItem.prototype._initialize = function (objDescriptor) {
+    DesignerItem.prototype.__initialize = function () {
+        this._decoratorInstance = null;
+        this.decoratorClass = null;
+
+        this._decoratorID = "";
+
+        this.selected = false;
+        this.selectedInMultiSelection = false;
+
+        //location and dimension information
+        this.positionX = 0;
+        this.positionY = 0;
+
+        this.width = 0;
+        this.height = 0;
+
+        this._initializeUI();
+    };
+
+    DesignerItem.prototype.__setDecorator = function (decoratorClass, control, metaInfo) {
+        if (this._decoratorID !== decoratorClass.prototype.DECORATORID) {
+
+            if (this._decoratorInstance) {
+                //destroy old decorator
+                this._callDecoratorMethod("destroy");
+                this.$el.empty();
+            }
+
+            this._decoratorID = decoratorClass.prototype.DECORATORID;
+
+            this._decoratorClass = decoratorClass;
+
+            this._decoratorInstance = new decoratorClass();
+            this._decoratorInstance.setControl(control);
+            this._decoratorInstance.setMetaInfo(metaInfo);
+            this._decoratorInstance.hostDesignerItem = this;
+        }
+    };
+
+    /*DesignerItem.prototype._initialize = function (objDescriptor) {
         this.canvas = objDescriptor.designerCanvas;
         this._containerElement = null;
 
-        /*ENDOF - MODELEDITORCOMPONENT CONSTANTS*/
-
-        /*instance variables*/
         this.decoratorName = "";
         if (objDescriptor.decoratorInstance === undefined ||
             objDescriptor.decoratorInstance === null) {
@@ -42,7 +81,7 @@ define(['logManager'], function (logManager) {
         this.height = 0;
 
         this._initializeUI();
-    };
+    };*/
 
     DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
 
@@ -266,23 +305,20 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.update = function (objDescriptor) {
-        var decoratorName = this._decoratorInstance.decoratorID,
-            newDecoratorName = objDescriptor.decoratorInstance ? objDescriptor.decoratorInstance.decoratorID : "";
-
         //check what might have changed
         //update position
         this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
 
         //update decorator if needed
-        if (newDecoratorName !== "" && decoratorName !== newDecoratorName) {
-            this.logger.debug("decorator update: '" + decoratorName + "' --> '" + newDecoratorName + "'...");
+        if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
 
-            //destroy old decorator
-            this._callDecoratorMethod("destroy");
-            this.$el.empty();
+            this.logger.debug("decorator update: '" + this._decoratorID + "' --> '" + objDescriptor.decoratorClass.prototype.DECORATORID + "'...");
 
-            this._decoratorInstance = objDescriptor.decoratorInstance;
-            this._decoratorInstance.hostDesignerItem = this;
+            var oldControl = this._decoratorInstance.getControl();
+            var oldMetaInfo = this._decoratorInstance.getMetaInfo();
+
+
+            this.__setDecorator(objDescriptor.decoratorClass, oldControl, oldMetaInfo);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);
@@ -295,7 +331,7 @@ define(['logManager'], function (logManager) {
         } else {
             //if decorator instance not changed
             //let the decorator instance know about the update
-            this._decoratorInstance.update(objDescriptor);
+            this._decoratorInstance.update();
         }
     };
 
@@ -322,6 +358,27 @@ define(['logManager'], function (logManager) {
             this.$el.css({"left": this.positionX,
                 "top": this.positionY });
         }
+    };
+
+    DesignerItem.prototype.moveBy = function (dX, dY) {
+        this.moveTo(this.positionX + dX, this.positionY + dY);
+    };
+
+    /************ SUBCOMPONENT HANDLING *****************/
+    DesignerItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
+        this.canvas.registerSubcomponent(this.id, subComponentId, metaInfo);
+    };
+
+    DesignerItem.prototype.unregisterSubcomponent = function (subComponentId) {
+        this.canvas.unregisterSubcomponent(this.id, subComponentId);
+    };
+
+    DesignerItem.prototype.attachConnectable = function (el, subComponentId) {
+        this.canvas.connectionDrawingManager.attachConnectable(el, this.id, subComponentId);
+    };
+
+    DesignerItem.prototype.detachConnectable = function (el) {
+        this.canvas.connectionDrawingManager.detachConnectable(el);
     };
 
     return DesignerItem;

@@ -1,13 +1,7 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
-    'commonUtil',
-    'bezierHelper',
-    'raphaeljs'], function (logManager,
-                                                      util,
-                                                      commonUtil,
-                                                      bezierHelper) {
+    'raphaeljs'], function (logManager) {
 
     var ConnectionComponent,
         DESIGNER_CONNECTION_CLASS = "designer-connection",
@@ -25,14 +19,9 @@ define(['logManager',
     ConnectionComponent.prototype._DOMBase = $('<div/>').attr({ "class": "connection" });
 
     ConnectionComponent.prototype._initialize = function (objDescriptor) {
-        var self = this;
-
         /*MODELEDITORCONNECTION CONSTANTS*/
         this.canvas = objDescriptor.designerCanvas;
         this.paper = this.canvas.skinParts.SVGPaper;
-
-        this.sourceCoordinate = null;
-        this.targetCoordinate = null;
 
         this.skinParts = {};
 
@@ -50,9 +39,6 @@ define(['logManager',
     };
 
     ConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
-        var i,
-            segmentPointList;
-
         this.name = objDescriptor.name || "";
         this.segmentPoints = objDescriptor.segmentPoints ? objDescriptor.segmentPoints.slice(0) : [];
         this.reconnectable = objDescriptor.reconnectable || true;

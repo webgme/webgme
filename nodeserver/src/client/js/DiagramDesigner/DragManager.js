@@ -6,8 +6,8 @@ define(['logManager'], function (logManager) {
         Z_INDEX = 100000,
         ITEMID_DATA_KEY = "itemId",
         MOVE_CURSOR = "move",
-        COPY_CURSOR = "copy",
-        ALIAS_CURSOR = "alias";
+        COPY_CURSOR = "copy";/*,
+        ALIAS_CURSOR = "alias";*/
 
     DragManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
@@ -81,7 +81,8 @@ define(['logManager'], function (logManager) {
             connectionIDs = this.canvas.connectionIds,
             id,
             ctrlKey = event.ctrlKey || event.metaKey,
-            shiftKey = event.shiftKey;
+            shiftKey = event.shiftKey,
+            objDesc;
 
         //simple drag means reposition
         //when CTRL key (META key on Mac) is pressed when drag starts, selected items will be copied
@@ -97,7 +98,7 @@ define(['logManager'], function (logManager) {
 
         //check modifiers to see what kind of drag-and-drop it will be
         //is this drag a SmartCopy????
-        if (event.ctrlKey && !event.shiftKey) {
+        if (ctrlKey && !shiftKey) {
             this._dragOptions.mode = this._dragModes.copy;
         }
 
@@ -146,15 +147,13 @@ define(['logManager'], function (logManager) {
 
                 if (itemIDs.indexOf(id) !== -1) {
 
-                    var objDesc = {};
+                    objDesc = {};
                     var srcItem = items[id];
                     objDesc.position = { "x": srcItem.positionX, "y": srcItem.positionY};
 
-                    var decClass = srcItem.decoratorClass;
-
-                    objDesc.decoratorInstance = new decClass({"id" :  srcItem._decoratorInstance.id });
-                    objDesc.decoratorInstance.designerControl = srcItem._decoratorInstance.designerControl;
-                    objDesc.decoratorClass = decClass;
+                    objDesc.decoratorClass = srcItem._decoratorClass;
+                    objDesc.control = srcItem._decoratorInstance.getControl();
+                    objDesc.metaInfo = srcItem._decoratorInstance.getMetaInfo();
 
                     var copiedItem = this.canvas.createDesignerItem(objDesc);
 
@@ -184,25 +183,28 @@ define(['logManager'], function (logManager) {
                 if (connectionIDs.indexOf(id) !== -1) {
                     var oConnection = items[id];
 
-                    var srcId = this.canvas.connectionEndIDs[id].source;
-                    var dstId = this.canvas.connectionEndIDs[id].target;
+                    var srcObjId = this.canvas.connectionEndIDs[id].srcObjId;
+                    var srcSubCompId = this.canvas.connectionEndIDs[id].srcSubCompId;
+                    var dstObjId = this.canvas.connectionEndIDs[id].dstObjId;
+                    var dstSubCompId = this.canvas.connectionEndIDs[id].dstSubCompId;
 
-                    if (selectedItemIDs.indexOf(srcId) !== -1) {
-                        srcId = this._dragOptions.copyData[srcId].copiedItemId;
+                    if (selectedItemIDs.indexOf(srcObjId) !== -1) {
+                        srcObjId = this._dragOptions.copyData[srcObjId].copiedItemId;
                     }
 
-                    if (selectedItemIDs.indexOf(dstId) !== -1) {
-                        dstId = this._dragOptions.copyData[dstId].copiedItemId;
+                    if (selectedItemIDs.indexOf(dstObjId) !== -1) {
+                        dstObjId = this._dragOptions.copyData[dstObjId].copiedItemId;
                     }
 
-                    var objDesc = _.extend({}, oConnection.getConnectionProps());
-                    objDesc.source = srcId;
-                    objDesc.target = dstId;
+                    objDesc = _.extend({}, oConnection.getConnectionProps());
+                    objDesc.srcObjId = srcObjId;
+                    objDesc.srcSubCompId = srcSubCompId;
+                    objDesc.dstObjId = dstObjId;
+                    objDesc.dstSubCompId = dstSubCompId;
+
                     var copiedConnection = this.canvas.createConnection(objDesc);
 
-                    this._dragOptions.copyData[copiedConnection.id] = {"connectionId": id,
-                                                                       "srcId": srcId,
-                                                                       "dstId": dstId};
+                    this._dragOptions.copyData[id] = {"copiedConnectionId": copiedConnection.id };
                 }
             }
 
@@ -308,11 +310,9 @@ define(['logManager'], function (logManager) {
                     copyDesc.items[desc.copiedItemId] = {"oItemId": i,
                                                          "posX": this.canvas.items[desc.copiedItemId].positionX,
                                                          "posY": this.canvas.items[desc.copiedItemId].positionY};
-                } else if (desc.hasOwnProperty("connectionId")) {
+                } else if (desc.hasOwnProperty("copiedConnectionId")) {
                     //description of a connection copy
-                    copyDesc.connections[i] = {"oConnectionId": desc.connectionId,
-                        "src": desc.srcId,
-                        "dst": desc.dstId};
+                    copyDesc.connections[desc.copiedConnectionId] = {"oConnectionId": i};
                 }
             }
         }

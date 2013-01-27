@@ -27,7 +27,7 @@ define([], function () {
 
         this._debugItemCounter = this._debugItemCounter || 0;
 
-        this._debugTempDecorators = ['DefaultDecorator', 'CircleDecorator'/*, 'SlowRenderDecorator'*/];
+        this._debugTempDecorators = ['DefaultDecorator', 'CircleDecorator', 'DecoratorWithPorts'];
         this._debugTempDecoratorsCount = this._debugTempDecorators.length;
 
         //DEBUG mode extensions

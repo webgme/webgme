@@ -40,11 +40,11 @@ define(['logManager'], function (logManager) {
         this.canvas.addBeginModeHandler(this.canvas.OPERATING_MODES.CREATE_CONNECTION, this._modeCREATE_CONNECTIONBeginHandler);
     };
 
-    ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId) {
+    ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId, sCompId) {
         if (this._connectionInDraw === true) {
-            this._attachConnectionEndPointHandler(elements, objId);
+            this._attachConnectionEndPointHandler(elements, objId, sCompId);
         } else {
-            this._attachConnectionSourcePointHandler(elements, objId);
+            this._attachConnectionSourcePointHandler(elements, objId, sCompId);
         }
     };
 
@@ -72,7 +72,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionDrawingManager.prototype._attachConnectionSourcePointHandler = function (elements, objId) {
+    ConnectionDrawingManager.prototype._attachConnectionSourcePointHandler = function (elements, objId, sCompId) {
         var self = this;
 
         if (elements && elements.length > 0) {
@@ -91,7 +91,7 @@ define(['logManager'], function (logManager) {
                     var el = $(this);
                     event.stopPropagation();
                     el.addClass(ACCEPT_CLASS);
-                    self._startConnectionDraw(el, objId);
+                    self._startConnectionDraw(el, objId, sCompId);
                 },
                 stop: function (event) {
                     var el = $(this);
@@ -106,7 +106,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionDrawingManager.prototype._attachConnectionEndPointHandler = function (elements, objId) {
+    ConnectionDrawingManager.prototype._attachConnectionEndPointHandler = function (elements, objId, sCompId) {
         var self = this,
             droppableEl = elements.not(this._connectionInDrawProps.srcEl);
 
@@ -120,19 +120,27 @@ define(['logManager'], function (logManager) {
                 $(this).removeClass(HOVER_CLASS);
             }).on(MOUSEUP, function (event) {
                 self._detachConnectionEndPointHandler(droppableEl);
-                self._connectionEndDrop(objId);
+                self._connectionEndDrop(objId, sCompId);
             });
 
             this._connectionInDrawProps.lastAttachedDroppableEl = droppableEl;
         }
     };
 
-    ConnectionDrawingManager.prototype._startConnectionDraw = function (el, objId) {
-        var itemBBox = this.canvas.items[objId].getBoundingBox();
+    ConnectionDrawingManager.prototype._startConnectionDraw = function (el, objId, sCompId) {
+        var itemBBox;
+
+        itemBBox = { "x": el.offset().left,
+                "y": el.offset().top,
+                "width": el.outerWidth(),
+                "height": el.outerHeight()};
+
+        itemBBox.x -= this.canvas.designerCanvasBodyOffset.left;
+        itemBBox.y -= this.canvas.designerCanvasBodyOffset.top;
 
         this.canvas.beginMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
-        this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "'");
+        this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
 
         this._connectionInDraw = true;
         this._connectionDesc = { "x": itemBBox.x + itemBBox.width / 2,
@@ -144,6 +152,7 @@ define(['logManager'], function (logManager) {
 
 
         this._connectionInDrawProps.src = objId;
+        this._connectionInDrawProps.sCompId = sCompId;
         this._connectionInDrawProps.srcEl = el;
         this._connectionInDrawProps.type = "create";
 
@@ -203,12 +212,14 @@ define(['logManager'], function (logManager) {
         this._connectionPath.attr({ "path": pathDefinition});
     };
 
-    ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId) {
-        this.logger.debug("Connection end dropped on item: '" + endPointId + "'");
+    ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId) {
+        this.logger.debug("Connection end dropped on item: '" + endPointId + "', sCompId: '" + sCompId + "'");
 
         if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
             this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
+                                              "srcSubCompId": this._connectionInDrawProps.sCompId,
                                            "dst": endPointId,
+                                           "dstSubCompId": sCompId,
                                            "metaInfo": this._metaInfo });
         }
     };

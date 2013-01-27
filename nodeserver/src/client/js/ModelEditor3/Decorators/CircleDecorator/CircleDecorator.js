@@ -2,9 +2,9 @@
 
 define(['logManager',
     'clientUtil',
-    'js/DiagramDesigner/DefaultDecorator',
-    'text!js/DiagramDesigner/CircleDecoratorTemplate.html',
-    'css!DiagramDesignerCSS/CircleDecorator'], function (logManager,
+    'js/ModelEditor3/Decorators/DefaultDecorator/DefaultDecorator',
+    'text!js/ModelEditor3/Decorators/CircleDecorator/CircleDecoratorTemplate.html',
+    'css!ModelEditor3CSS/Decorators/CircleDecorator/CircleDecorator'], function (logManager,
                                                           util,
                                                           DefaultDecorator,
                                                           circleDecoratorTemplate) {
@@ -18,14 +18,13 @@ define(['logManager',
     CircleDecorator = function (options) {
         var opts = _.extend( {}, options);
 
-        opts.decoratorID = opts.decoratorID || DECORATOR_ID;
-
         __parent__.apply(this, [opts]);
 
         this.logger.debug("CircleDecorator ctor");
     };
 
     _.extend(CircleDecorator.prototype, __parent_proto__);
+    CircleDecorator.prototype.DECORATORID = DECORATOR_ID;
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 

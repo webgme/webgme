@@ -7,12 +7,9 @@ define(['logManager'], function (logManager) {
         DECORATOR_ID = "DecoratorBase";
 
     DecoratorBase = function (options) {
-        this.id = options.id;
         this.hostDesignerItem = null;
 
-        this.decoratorID = options.decoratorID || DECORATOR_ID;
-
-        this.logger = options.logger || logManager.create(this.decoratorID + '_' + this.id);
+        this.logger = options.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};
         this.$connectors = null;
@@ -20,6 +17,27 @@ define(['logManager'], function (logManager) {
         this._initialize();
 
         this.logger.debug("Created");
+    };
+
+    DecoratorBase.prototype.DECORATORID = DECORATOR_ID;
+
+    /*DecoratorBase.prototype.setControlSpecificAttributes = function () {
+    };*/
+
+    DecoratorBase.prototype.setControl = function (control) {
+        this._control = control;
+    };
+
+    DecoratorBase.prototype.getControl = function () {
+        return this._control;
+    };
+
+    DecoratorBase.prototype.setMetaInfo = function (params) {
+        this._metaInfo = params;
+    };
+
+    DecoratorBase.prototype.getMetaInfo = function () {
+        return this._metaInfo;
     };
 
     //TODO - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
@@ -30,10 +48,20 @@ define(['logManager'], function (logManager) {
     //this.$el will be used later in the DesignerItem's code, it must exist
     //TODO - SHOULD NOT BE OVERRIDDEN
     DecoratorBase.prototype._initialize = function () {
+        var self = this;
+
         this.$el = this.$DOMBase.clone();
 
         //extra default initializations
         this.initializeConnectors();
+
+
+        /************ TODO: TEMP *******************/
+        this.$el.on("dblclick", function (event) {
+            self._control._switchToNextDecorator(self._metaInfo.GMEID);
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
     //as a common default functionality, DecoratorBase provides solution for taking care of the connectors
@@ -51,14 +79,14 @@ define(['logManager'], function (logManager) {
         this.$connectors.appendTo(this.$el);
 
         //hook up connection drawing capability
-        this.hostDesignerItem.canvas.connectionDrawingManager.attachConnectable(this.$connectors, this.hostDesignerItem.id);
+        this.hostDesignerItem.attachConnectable(this.$connectors);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
     DecoratorBase.prototype.hideConnectors = function () {
         //remove up connection drawing capability
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.canvas.connectionDrawingManager.detachConnectable(this.$connectors);
+            this.hostDesignerItem.detachConnectable(this.$connectors);
         }
 
         this.$connectors.detach();
@@ -181,7 +209,7 @@ define(['logManager'], function (logManager) {
 
     /************* ADDITIONAL METHODS ***************************/
     //called when the designer items becomes deselected
-    DecoratorBase.prototype.update = function (objDescriptor) {
+    DecoratorBase.prototype.update = function () {
     };
 
 

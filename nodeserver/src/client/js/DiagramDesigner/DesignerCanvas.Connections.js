@@ -2,7 +2,8 @@
 
 define(['js/DiagramDesigner/Connection'], function (Connection) {
 
-    var DesignerCanvas;
+    var DesignerCanvas,
+        SELF = "__SELF__";
 
     DesignerCanvas = function () {
 
@@ -11,8 +12,10 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
     DesignerCanvas.prototype.createConnection = function (objD) {
         var connectionId = this.getGuid("C_"),
             objDescriptor = _.extend({}, objD),
-            sourceId = objDescriptor.source,
-            targetId = objDescriptor.target,
+            sourceId = objDescriptor.srcObjId,
+            sourceSubcomponentId = objDescriptor.srcSubCompId,
+            targetId = objDescriptor.dstObjId,
+            targetSubcomponentId = objDescriptor.dstSubCompId,
             newComponent;
 
         this.logger.debug("Creating connection component with parameters: " + JSON.stringify(objDescriptor));
@@ -25,14 +28,20 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
         this._insertedConnectionIDs.push(connectionId);
 
         //accounting connection info
-        this.connectionEndIDs[connectionId] = {"source": sourceId,
-                                              "target": targetId };
+        this.connectionEndIDs[connectionId] = {"srcObjId": sourceId,
+                                              "srcSubCompId": sourceSubcomponentId,
+                                              "dstObjId": targetId,
+                                              "dstSubCompId": targetSubcomponentId};
 
-        this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || [];
-        this.connectionIDbyEndID[sourceId].push(connectionId);
+        var ssubId = sourceSubcomponentId || SELF;
+        this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || {};
+        this.connectionIDbyEndID[sourceId][ssubId] = this.connectionIDbyEndID[sourceId][ssubId] || [];
+        this.connectionIDbyEndID[sourceId][ssubId].push(connectionId);
 
-        this.connectionIDbyEndID[targetId] = this.connectionIDbyEndID[targetId] || [];
-        this.connectionIDbyEndID[targetId].push(connectionId);
+        ssubId = targetSubcomponentId || SELF;
+        this.connectionIDbyEndID[targetId] = this.connectionIDbyEndID[targetId] || {};
+        this.connectionIDbyEndID[targetId][ssubId] = this.connectionIDbyEndID[targetId][ssubId] || [];
+        this.connectionIDbyEndID[targetId][ssubId].push(connectionId);
 
         newComponent = this.items[connectionId] = new Connection(connectionId);
         newComponent._initialize(objDescriptor);
@@ -41,7 +50,8 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
     };
 
     DesignerCanvas.prototype.updateConnection = function (id, objDescriptor) {
-        var connectionId = id,
+        this.logger.error("updateConnection NOT YET IMPLEMENTED!!!");
+        /*var connectionId = id,
             sourceId = objDescriptor.source,
             targetId = objDescriptor.target,
             idx,
@@ -54,7 +64,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
         /* check if any endpoint of the connection has been changed */
         //check SOURCE
-        if (sourceId !== this.connectionEndIDs[id].source) {
+        /*if (sourceId !== this.connectionEndIDs[id].source) {
             endId = this.connectionEndIDs[id].source;
             idx = this.connectionIDbyEndID[endId].indexOf(id);
             if (idx !== -1) {
@@ -81,12 +91,13 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
         //accounting connection info
         this.connectionEndIDs[connectionId] = {"source": sourceId,
-            "target": targetId };
+            "target": targetId };*/
     };
 
     DesignerCanvas.prototype.deleteConnection = function (id) {
         var idx,
-            endId;
+            objId,
+            subComponentId;
 
         this.logger.debug("Deleting connection component with ID: '" + id + "'");
 
@@ -94,17 +105,19 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
         this._deletedConnectionIDs.push(id);
 
         //remove connection from source list
-        endId = this.connectionEndIDs[id].source;
-        idx = this.connectionIDbyEndID[endId].indexOf(id);
+        objId = this.connectionEndIDs[id].srcObjId;
+        subComponentId = this.connectionEndIDs[id].srcSubCompId || SELF;
+        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
         if (idx !== -1) {
-            this.connectionIDbyEndID[endId].splice(idx, 1);
+            this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
         }
 
         //remove connection from target list
-        endId = this.connectionEndIDs[id].target;
-        idx = this.connectionIDbyEndID[endId].indexOf(id);
+        objId = this.connectionEndIDs[id].dstObjId;
+        subComponentId = this.connectionEndIDs[id].dstSubCompId || SELF;
+        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
         if (idx !== -1) {
-            this.connectionIDbyEndID[endId].splice(idx, 1);
+            this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
         }
 
         //remove connection from connection endpoint list

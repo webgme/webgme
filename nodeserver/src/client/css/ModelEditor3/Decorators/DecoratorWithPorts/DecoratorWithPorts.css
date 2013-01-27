@@ -1,0 +1,68 @@
+.decorator-with-ports {
+  min-width: 65px;
+  min-height: 40px;
+  border: 2px solid black;
+  background-color: #c5f1ff;
+  padding: 3px;
+  text-align: center;
+  position: absolute; }
+  .decorator-with-ports .name {
+    margin-top: 10px;
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center; }
+  .decorator-with-ports .ports {
+    background-color: black;
+    font-size: 10px;
+    min-height: 1px;
+    width: 115px; }
+    .decorator-with-ports .ports .left {
+      /*background-color: $left-ports-background-color;*/
+      text-align: left;
+      float: left;
+      width: 50px;
+      min-height: 1px; }
+      .decorator-with-ports .ports .left .port {
+        position: relative;
+        left: -8px; }
+    .decorator-with-ports .ports .center {
+      /*background-color: $center-ports-background-color;*/
+      width: 15px;
+      height: 1px;
+      float: left; }
+    .decorator-with-ports .ports .right {
+      /*background-color: $right-ports-background-color;*/
+      text-align: right;
+      float: right;
+      width: 50px;
+      min-height: 1px; }
+  .decorator-with-ports .connector {
+    box-sizing: border-box;
+    background-color: #fefefe;
+    height: 12px;
+    width: 12px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    margin-left: -6px;
+    left: 50%; }
+    .decorator-with-ports .connector:hover {
+      border-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+    .decorator-with-ports .connector.connection-end-state-hover {
+      background-color: lime; }
+    .decorator-with-ports .connector.top {
+      top: -6px; }
+    .decorator-with-ports .connector.bottom {
+      bottom: -6px; }
+
+.selectable .default-decorator {
+  cursor: pointer; }
+
+.selected .default-decorator {
+  border: 2px solid #52a8ec;
+  background-color: #dbeafc; }

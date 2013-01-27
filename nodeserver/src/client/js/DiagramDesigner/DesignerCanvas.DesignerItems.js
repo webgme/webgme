@@ -1,13 +1,8 @@
 "use strict";
 
-define(['js/DiagramDesigner/DesignerItem',
-        'js/DiagramDesigner/DefaultDecorator'   /*load the default decorator just to make sure it's here for sure*/
-        ], function (DesignerItem,
-                     DefaultDecorator) {
+define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
 
-    var DesignerCanvasDesignerItem,
-        DEFAULT_DECORATOR_NAME = "DefaultDecorator",
-        DEFAULT_DECORATOR_CLASS = DefaultDecorator;
+    var DesignerCanvasDesignerItem;
 
     DesignerCanvasDesignerItem = function () {
 
@@ -33,8 +28,10 @@ define(['js/DiagramDesigner/DesignerItem',
         //add to accounting queues for performance optimization
         this._insertedDesignerItemIDs.push(componentId);
 
-        newComponent = this.items[componentId] = new DesignerItem(componentId);
-        newComponent._initialize(objDescriptor);
+        newComponent = this.items[componentId] = new DesignerItem(componentId, this);
+        newComponent.moveTo(objDescriptor.position.x, objDescriptor.position.y);
+
+        newComponent.__setDecorator(objDescriptor.decoratorClass, objDescriptor.control, objDescriptor.metaInfo);
         newComponent.addToDocFragment(this._documentFragment);
 
         return newComponent;

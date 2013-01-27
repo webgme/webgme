@@ -2,7 +2,8 @@
 
 define(['logManager'], function (logManager) {
 
-    var ConnectionRouteManagerBasic;
+    var ConnectionRouteManagerBasic,
+        DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
 
     ConnectionRouteManagerBasic = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
@@ -18,7 +19,6 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionRouteManagerBasic.prototype.initialize = function () {
-        //TODO: not sure if needed...
     };
 
     ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
@@ -41,62 +41,61 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManagerBasic.prototype._updateEndpointInfo = function (idList) {
         var i = idList.length,
             connId,
-            res,
-            allConnEndpoints = [],
             canvas = this.canvas,
-            endPointId,
-            j,
-            designerItem;
+            srcObjId,
+            srcSubCompId,
+            dstObjId,
+            dstSubCompId;
+
+        this.endpointConnectionAreaInfo = {};
 
         //first update the available connection endpoint coordinates
         while(i--) {
             connId = idList[i];
-            allConnEndpoints.insertUnique(canvas.connectionEndIDs[connId].source);
-            allConnEndpoints.insertUnique(canvas.connectionEndIDs[connId].target);
+            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
+
+            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
+            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
         }
+    };
 
-        i = allConnEndpoints.length;
-        while(i--) {
-            endPointId = allConnEndpoints[i];
+    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+        var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
+            res,
+            canvas = this.canvas,
+            j,
+            designerItem;
 
-            if (canvas.itemIds.indexOf(endPointId) !== -1) {
-                designerItem = canvas.items[endPointId];
-                res = designerItem.getConnectionAreas(endPointId) || [];
-                j = res.length;
-                while (j--) {
-                    res[j].x += designerItem.positionX;
-                    res[j].y += designerItem.positionY;
-                }
-            } else {
-                //TODO: sourceId is not a known item --> is it a subcomponent inside one of the items
-                res = [];
+        if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
+            designerItem = canvas.items[objId];
+            res = designerItem.getConnectionAreas(subCompId) || [];
+
+            this.endpointConnectionAreaInfo[longid] = [];
+
+            j = res.length;
+            while (j--) {
+                this.endpointConnectionAreaInfo[longid].push({"x": res[j].x + designerItem.positionX,
+                    "y": res[j].y + designerItem.positionY});
             }
-            this._updateEndpointConnectionAreaInfo(endPointId, res);
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._updateEndpointConnectionAreaInfo = function (endPointId, connAreas) {
-        var i = connAreas.length,
-            ca;
 
-        this.endpointConnectionAreaInfo = this.endpointConnectionAreaInfo || {};
-
-        this.endpointConnectionAreaInfo[endPointId] = [];
-
-        while(i--) {
-            ca = connAreas[i];
-
-            this.endpointConnectionAreaInfo[endPointId].push(_.extend({}, ca));
-        }
-    };
 
     ConnectionRouteManagerBasic.prototype._updateConnectionCoordinates = function (connectionId) {
         var canvas = this.canvas,
-            sourceId = canvas.connectionEndIDs[connectionId].source,
-            targetId = canvas.connectionEndIDs[connectionId].target,
+            srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
+            srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
+            dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
+            dstSubCompId = canvas.connectionEndIDs[connectionId].dstSubCompId,
+            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
             segmentPoints = canvas.items[connectionId].segmentPoints,
-            sourceConnectionPoints = this.endpointConnectionAreaInfo[sourceId] || [],
-            targetConnectionPoints = this.endpointConnectionAreaInfo[targetId] || [],
+            sourceConnectionPoints = this.endpointConnectionAreaInfo[sId] || [],
+            targetConnectionPoints = this.endpointConnectionAreaInfo[tId] || [],
             sourceCoordinates = null,
             targetCoordinates = null,
             closestConnPoints;

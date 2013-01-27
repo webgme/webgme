@@ -11,6 +11,7 @@ define(['logManager',
     'js/DiagramDesigner/DesignerCanvas.Toolbar',
     'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
+    'js/DiagramDesigner/DesignerCanvas.Subcomponents',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
     'js/DiagramDesigner/ConnectionDrawingManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
@@ -24,6 +25,7 @@ define(['logManager',
                                                       DesignerCanvasToolbar,
                                                       DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
+                                                      DesignerCanvasSubcomponents,
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionDrawingManager) {
 
@@ -101,6 +103,8 @@ define(['logManager',
         this._insertedDesignerItemIDs = null;
         this._updatedDesignerItemIDs = null;
         this._deletedDesignerItemIDs = null;
+
+        this._itemSubcomponentsMap = {};
     };
 
     DesignerCanvas.prototype.getIsReadOnlyMode = function () {
@@ -206,14 +210,18 @@ define(['logManager',
         });
         this.skinParts.$designerCanvasHeader.append(this.skinParts.$toolBar);
 
-        //'ONE LEVEL UP' in HEADER BAR
-        this.skinParts.$btnOneLevelUp = $('<div class="btn-group inline no-margin"><a class="btn btnOneLevelUp" href="#" title="One level up" data-num="1"><i class="icon-circle-arrow-up"></i></a></div>');
-        this.skinParts.$designerCanvasHeader.prepend(this.skinParts.$btnOneLevelUp);
-        this.skinParts.$btnOneLevelUp.on("click", function (event) {
-            event.stopPropagation();
-            event.preventDefault();
-            self._onBtnOneLevelUpClick();
+        //add extra visual piece
+        this.skinParts.$btnGroupItemAutoOptions = this.addButtonGroup(function (event, data) {
+            self._itemAutoLayout(data.mode);
         });
+
+        this.addButton({ "title": "Grid layout",
+            "icon": "icon-th",
+            "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
+        this.addButton({ "title": "Diagonal",
+            "icon": "icon-signal",
+            "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -282,17 +290,11 @@ define(['logManager',
         this._initializeCollections();
     };
 
-    DesignerCanvas.prototype.updateCanvas = function (desc) {
+    DesignerCanvas.prototype.setTitle = function (newTitle) {
         //apply content to controls based on desc
-        if (this._title !== desc.name) {
-            this._title = desc.name;
+        if (this._title !== newTitle) {
+            this._title = newTitle;
             this.skinParts.$title.text(this._title);
-        }
-
-        if (desc.parentId) {
-            this.skinParts.$btnOneLevelUp.show();
-        } else {
-            this.skinParts.$btnOneLevelUp.hide();
         }
     };
 
@@ -304,10 +306,6 @@ define(['logManager',
         } else if (this.connectionIds.indexOf(componentId) !== -1) {
             this.deleteConnection(componentId);
         }
-    };
-
-    DesignerCanvas.prototype._onBtnOneLevelUpClick = function () {
-        this.logger.warning("DesignerCanvas.prototype._onBtnOneLevelUpClick NOT YET IMPLEMENTED");
     };
 
     /*********************************/
@@ -609,11 +607,60 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
+    /********************** ITEM AUTO LAYOUT ****************************/
+
+    DesignerCanvas.prototype._itemAutoLayout = function (mode) {
+        var i = this.itemIds.length,
+            x = 10,
+            y = 10,
+            dx = 20,
+            dy = 20,
+            w,
+            h = 0;
+
+        this.beginUpdate();
+
+        switch (mode) {
+            case "grid":
+                while (i--) {
+                    w = this.items[this.itemIds[i]].width;
+                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
+                    x += w + dx;
+                    if (x >= 1000) {
+                        x = 10;
+                        y += h + dy;
+                        h = 0;
+                    }
+                }
+                break;
+            case "diagonal":
+                while (i--) {
+                    w = this.items[this.itemIds[i]].width;
+                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
+                    x += w + dx;
+                    y += h + dy;
+                }
+                break;
+            default:
+                break;
+        }
+
+        this.endUpdate();
+
+        this.designerItemsMove(this.itemIds);
+    };
+
+
+    /********************************************************************/
+
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasToolbar.prototype);
+    _.extend(DesignerCanvas.prototype, DesignerCanvasSubcomponents.prototype);
 
     //in DEBUG mode add additional content to canvas
     if (DEBUG) {
