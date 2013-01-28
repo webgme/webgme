@@ -1350,7 +1350,7 @@ define([
 
             user.PATTERNS = COPY(patterns);
             if(user.SENDEVENTS){
-                for(i in user.PATTERNS){
+                for(var i in user.PATTERNS){
                     INSERTARR(newpathes,i);
                     var patternode = getNode(i);
                     //check the type of patterns and then put the needed pathes to the array
