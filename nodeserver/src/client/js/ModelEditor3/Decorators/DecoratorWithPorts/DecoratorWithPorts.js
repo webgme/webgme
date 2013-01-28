@@ -193,7 +193,7 @@ define(['logManager',
         var portId = portNode.getId(),
             portOrientation = "W",
             portContainer = this.skinParts.$portsContainerLeft,
-            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position),
+            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 },
             portToAppendBefore = null,
             i;
 
