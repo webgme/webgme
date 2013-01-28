@@ -110,6 +110,9 @@ define(['logManager'], function (logManager) {
                                         "preventDefault": true },
                         "mouseleave": { "fn": "onMouseLeave",
                                         "stopPropagation": true,
+                                        "preventDefault": true },
+                        "dblclick": { "fn": "onDoubleClick",
+                                        "stopPropagation": true,
                                         "preventDefault": true }};
 
         for (i in this._events) {
@@ -243,6 +246,10 @@ define(['logManager'], function (logManager) {
 
         //sign we need the default preventDefault and stopPropagation to be executed
         return false;
+    };
+
+    DesignerItem.prototype.onDoubleClick = function (event) {
+        this.canvas.onDesignerItemDoubleClick(this.id, event);
     };
 
     DesignerItem.prototype.onSelect = function (multiSelection) {

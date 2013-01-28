@@ -54,14 +54,6 @@ define(['logManager'], function (logManager) {
 
         //extra default initializations
         this.initializeConnectors();
-
-
-        /************ TODO: TEMP *******************/
-        this.$el.on("dblclick", function (event) {
-            self._control._switchToNextDecorator(self._metaInfo.GMEID);
-            event.stopPropagation();
-            event.preventDefault();
-        });
     };
 
     //as a common default functionality, DecoratorBase provides solution for taking care of the connectors
@@ -200,6 +192,13 @@ define(['logManager'], function (logManager) {
     //return TRUE if decorator code handled the event
     //when returned FALSE, DesignerItem's event handler will be executed
     DecoratorBase.prototype.onDeselect = function () {
+        return false;
+    };
+
+    //called when double click happens on the DesignerItem
+    //return TRUE if decorator code handled the event
+    //when returned FALSE, DesignerItem's event handler will be executed
+    DecoratorBase.prototype.onDoubleClick = function (event) {
         return false;
     };
 

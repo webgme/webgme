@@ -73,5 +73,10 @@ define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         delete this.items[id];
     };
 
+    //NOTE: could/should be overridden in the CONTROLLER
+    DesignerCanvasDesignerItem.prototype.onDesignerItemDoubleClick = function (id, event) {
+        this.logger.debug("DesignerItem '" + id + "' received double click.");
+    };
+
     return DesignerCanvasDesignerItem;
 });

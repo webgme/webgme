@@ -195,10 +195,6 @@ define(['logManager',
             this.skinParts.$readOnlyMode.hide();
         }
 
-        /*this.skinParts.$progressBar = $('<div class="btn-group inline"><a class="btn disabled" href="#" title="Refreshing..."><i class="icon-progress"></i></a></div>');
-        this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressBar);
-        this.skinParts.$progressBar.hide();*/
-
         this.skinParts.$progressText = $('<div/>', {
             "class": "inline"
         });

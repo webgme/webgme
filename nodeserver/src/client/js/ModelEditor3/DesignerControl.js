@@ -141,6 +141,20 @@ define(['logManager',
             }
         };
 
+        this.designerCanvas.onDesignerItemDoubleClick = function (id, event) {
+            var gmeID = self._ComponentID2GmeID[id];
+
+            if (gmeID) {
+                //TODO: somewhat tricked here for DEBUG purposes
+                if (event.offsetX < 20 && event.offsetY < 20) {
+                    self._switchToNextDecorator(gmeID);
+                } else {
+                    self.logger.debug("Opening model with id '" + gmeID + "'");
+                    self._client.setSelectedObjectId(gmeID);
+                }
+            }
+        };
+
         this.designerCanvas.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
             //store that a subcomponent with a given ID has been added to object with objID
             self._GMEID2Subcomponent[metaInfo[GME_ID]] = self._GMEID2Subcomponent[metaInfo[GME_ID]] || {};
@@ -158,6 +172,17 @@ define(['logManager',
             delete self._GMEID2Subcomponent[gmeID][objID];
             //TODO: add event handling here that a subcomponent disappeared
         };
+
+        /************** GOTO PARENT **************************/
+
+        this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (event, data) {
+            self._onModelHierarchyUp();
+        });
+
+        this.designerCanvas.addButton({ "title": "Go to parent",
+            "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp );
+
+        /************** END OF - GOTO PARENT **************************/
 
         /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
@@ -232,6 +257,13 @@ define(['logManager',
             this.currentNodeInfo.id = nodeId;
             this.currentNodeInfo.parentId = desc.parentId;
 
+            if (this.currentNodeInfo.parentId) {
+                this.$btnGroupModelHierarchyUp.show();
+            } else {
+                this.$btnGroupModelHierarchyUp.hide();
+            }
+
+
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 2 };
@@ -253,6 +285,7 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
+            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.parentId = nodeObj.getParentId();
 
             //fill the descriptor based on its type
@@ -689,6 +722,12 @@ define(['logManager',
             counter += 1;
         }
         this._client.completeTransaction();
+    };
+
+    DesignerControl.prototype._onModelHierarchyUp = function () {
+        if (this.currentNodeInfo.parentId) {
+            this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
+        }
     };
 
     //in DEBUG mode add additional content to canvas
