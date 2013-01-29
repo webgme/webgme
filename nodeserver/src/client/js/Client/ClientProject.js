@@ -1,7 +1,7 @@
 define([
     'js/Client/ClientLogCore',
     'core/lib/sha1',
-    'common/commonUtil',
+    'common/CommonUtil',
     'js/Client/ClientNode',
     'js/Client/ClientMeta'],
     function(ClientCore,SHA1,commonUtil,ClientNode,ClientMeta){
