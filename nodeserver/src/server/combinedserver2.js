@@ -4,7 +4,6 @@ var commonUtil = require('./../common/CommonUtil.js');
 LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
 LOGMANAGER.useColors( true );
 var logger = LOGMANAGER.create( "server" );
-var MONGO = require('mongodb');
 //var MNGSRV = require('./mngsrv.js');
 var requirejs = require("requirejs");
 

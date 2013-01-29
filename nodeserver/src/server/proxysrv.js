@@ -16,7 +16,7 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
         };
 
         var getAvailableProjects = function(callback){
-            var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port));
+            var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port), {w:1});
             db.open(function(err){
                 if(err){
                     callback(err,[]);
