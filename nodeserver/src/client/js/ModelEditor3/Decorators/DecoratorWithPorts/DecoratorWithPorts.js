@@ -107,37 +107,42 @@ define(['logManager',
     };
 
     DecoratorWithPorts.prototype.getConnectionAreas = function (id) {
-        var result = [];
+        var result = [],
+            edge = 10;
 
         //by default return the bounding box edges midpoints
 
         if (id === undefined || id === this.hostDesignerItem.id) {
             //top left
             result.push( {"id": "0",
-                "x": this.hostDesignerItem.width / 2,
+                "x": edge,
                 "y": 0,
-                "w": 0,
+                "w": this.hostDesignerItem.width - 2 * edge,
                 "h": 0,
-                "orientation": "N"} );
+                "orientation": "N",
+                "len": 10} );
 
             result.push( {"id": "1",
-                "x": this.hostDesignerItem.width / 2,
+                "x": edge,
                 "y": this.hostDesignerItem.height,
-                "w": 0,
+                "w": this.hostDesignerItem.width - 2 * edge,
                 "h": 0,
-                "orientation": "S"} );
+                "orientation": "S",
+                "len": 10} );
         } else {
             //subcomponent
             var loc = this._ports[id].getConnectorLocation(),
                 adjX = loc.left - this.offset.left,
-                adjY = loc.top - this.offset.top;
+                adjY = loc.top - this.offset.top,
+                or = this._ports[id].orientation;
 
-            result.push( {"id": "1",
+            result.push( {"id": this._portIDs.indexOf(id),
                 "x": adjX,
                 "y": adjY,
                 "w": 0,
                 "h": 0,
-                "orientation": "E"} );
+                "orientation": or,
+                "len": 30} );
         }
 
 

@@ -77,8 +77,8 @@ define(['logManager'], function (logManager) {
 
             j = res.length;
             while (j--) {
-                this.endpointConnectionAreaInfo[longid].push({"x": res[j].x + designerItem.positionX,
-                    "y": res[j].y + designerItem.positionY});
+                this.endpointConnectionAreaInfo[longid].push({"x": res[j].x + res[j].w / 2 + designerItem.positionX,
+                    "y": res[j].y + res[j].h / 2 + designerItem.positionY});
             }
         }
     };

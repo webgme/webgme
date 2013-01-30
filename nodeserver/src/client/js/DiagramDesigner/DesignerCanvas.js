@@ -13,6 +13,7 @@ define(['logManager',
     'js/DiagramDesigner/DesignerCanvas.Connections',
     'js/DiagramDesigner/DesignerCanvas.Subcomponents',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
+    'js/DiagramDesigner/ConnectionRouteManager2',
     'js/DiagramDesigner/ConnectionDrawingManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
@@ -27,6 +28,7 @@ define(['logManager',
                                                       DesignerCanvasConnections,
                                                       DesignerCanvasSubcomponents,
                                                       ConnectionRouteManagerBasic,
+                                                      ConnectionRouteManager2,
                                                       ConnectionDrawingManager) {
 
     var DesignerCanvas,
@@ -81,6 +83,22 @@ define(['logManager',
         if (DEBUG) {
             this._addDebugModeExtensions();
         }
+
+        /************** ROuTING MANAGER SELECTION **************************/
+
+        this.$btnGroupConnectionRouteManager = this.addButtonGroup(function (event, data) {
+            self._onConnectionRouteManagerChanged(data.type);
+        });
+
+        this.addButton({ "title": "Basic route manager",
+            "text": "RM #1",
+            "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
+
+        this.addButton({ "title": "Basic+ route manager",
+            "text": "RM #2",
+            "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
+
+        /************** END OF - ROuTING MANAGER SELECTION **************************/
 
         this.logger.debug("DesignerCanvas ctor finished");
     };
@@ -648,8 +666,28 @@ define(['logManager',
         this.designerItemsMove(this.itemIds);
     };
 
-
     /********************************************************************/
+
+    /********* ROUTE MANAGER CHANGE **********************/
+
+    DesignerCanvas.prototype._onConnectionRouteManagerChanged = function (type) {
+        switch(type) {
+            case "basic":
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({"canvas": this});
+                break;
+            case "basic2":
+                this.connectionRouteManager = new ConnectionRouteManager2({"canvas": this});
+                break;
+            default:
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({"canvas": this});
+                break;
+        }
+
+        this.connectionRouteManager.initialize();
+        this._refreshScreen();
+    };
+
+    /********* ROUTE MANAGER CHANGE **********************/
 
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
