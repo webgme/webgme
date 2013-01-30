@@ -227,6 +227,7 @@ define(['logManager',
 
                             objDesc.srcObjId = this._GmeID2ComponentID[gmeID][0];
                             objDesc.srcSubCompId = undefined;
+                            objDesc.reconnectable = false;
 
                             _.extend(objDesc, this._getModeVisualDescriptor(sets[setlen]));
 

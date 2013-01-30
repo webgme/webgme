@@ -1,3 +1,5 @@
+@import "Connector";
+
 $designer-canvas-header-background-color: #EFEFEF;
 $designer-canvas-selection-rubber-band-background-color: rgba(219, 234, 252, 0.49);
 $designer-canvas-selection-rubber-band-border-color: #52A8EC;
@@ -8,6 +10,11 @@ $designer-canvas-selection-outline-shadow-end: rgba(0, 0, 0, 0.6);
 $designer-canvas-selection-outline-s-btn-background-color: #FFFFFF;
 $designer-canvas-selection-outline-s-btn-shadow-start: rgba(0, 0, 0, 0.075);
 $designer-canvas-selection-outline-s-btn-shadow-end: rgba(0, 0, 0, 0.6);
+/* override default connector properties for draggable connector end */
+$connector-border: 1px solid #883333;
+$connector-hover-border-color: rgba( 255, 43, 43, 0.8);
+$connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
+$connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 
 .designer-canvas {
 
@@ -87,6 +94,12 @@ $designer-canvas-selection-outline-s-btn-shadow-end: rgba(0, 0, 0, 0.6);
             background-image: url(../../img/remove.png);
           }
         }
+      }
+
+      .connectionDraggableEnd {
+        @include connector_basics;
+        margin-top: $connector-size / -2;
+        margin-left: $connector-size / -2;
       }
     }
 

@@ -33,6 +33,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
                                               "dstObjId": targetId,
                                               "dstSubCompId": targetSubcomponentId};
 
+
         var ssubId = sourceSubcomponentId || SELF;
         this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || {};
         this.connectionIDbyEndID[sourceId][ssubId] = this.connectionIDbyEndID[sourceId][ssubId] || [];
@@ -45,22 +46,21 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
         newComponent = this.items[connectionId] = new Connection(connectionId);
         newComponent._initialize(objDescriptor);
-
         return newComponent;
     };
 
     DesignerCanvas.prototype.updateConnection = function (id, objDescriptor) {
-        this.logger.error("updateConnection NOT YET IMPLEMENTED!!!");
         /*var connectionId = id,
             sourceId = objDescriptor.source,
             targetId = objDescriptor.target,
             idx,
-            endId;
+            endId;*/
 
-        this.logger.debug("Updating connection component with ID: '" + id + "'");
+        //this.logger.debug("Updating connection component with ID: '" + id + "'");
+        this.logger.error("updateConnection NOT YET IMPLEMENTED!!!!");
 
         //add to accounting queues for performance optimization
-        this._updatedConnectionIDs.push(connectionId);
+        /*this._updatedConnectionIDs.push(connectionId);
 
         /* check if any endpoint of the connection has been changed */
         //check SOURCE
@@ -136,6 +136,27 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
         this.logger.debug("Creating new connection with parameters: '" + JSON.stringify(params) + "'");
 
         this.onCreateNewConnection(params);
+    };
+
+    DesignerCanvas.prototype.modifyConnectionEnd = function (params) {
+        var oConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]),
+            nConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]);
+
+        this.logger.debug("Modifying connection with parameters: '" + JSON.stringify(params) + "'");
+
+        if (params.endPoint === "SOURCE") {
+            nConnectionDesc.srcObjId = params.endId;
+            nConnectionDesc.srcSubCompId = params.endSubCompId;
+        } else {
+            nConnectionDesc.dstObjId = params.endId;
+            nConnectionDesc.dstSubCompId = params.endSubCompId;
+        }
+
+        if (_.isEqual(oConnectionDesc, nConnectionDesc) === false ) {
+            this.onModifyConnectionEnd({ "id": params.id,
+                                         "old": oConnectionDesc,
+                                         "new": nConnectionDesc });
+        }
     };
 
     return DesignerCanvas;

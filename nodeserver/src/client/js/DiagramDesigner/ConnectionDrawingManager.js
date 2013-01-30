@@ -10,7 +10,9 @@ define(['logManager'], function (logManager) {
         MOUSEENTER = 'mouseenter.' + EVENTPOSTFIX,
         MOUSELEAVE = 'mouseleave.' + EVENTPOSTFIX,
         ACCEPT_CLASS = 'connection-source',
-        HOVER_CLASS = 'connection-end-state-hover';
+        HOVER_CLASS = 'connection-end-state-hover',
+        IN_DRAW_COLOR = "#FF7800",
+        IN_DRAW_LINETYPE = "-";
 
     ConnectionDrawingManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionDrawingManager"));
@@ -36,8 +38,6 @@ define(['logManager'], function (logManager) {
             "lineType": "-",
             "arrowStart": "none",
             "arrowEnd": "none" };
-
-        this.canvas.addBeginModeHandler(this.canvas.OPERATING_MODES.CREATE_CONNECTION, this._modeCREATE_CONNECTIONBeginHandler);
     };
 
     ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId, sCompId) {
@@ -83,7 +83,6 @@ define(['logManager'], function (logManager) {
             });
             elements.draggable('destroy');
             elements.draggable({
-                refreshPositions: true,
                 helper: function () {
                     return $("<div class='draw-connection-drag-helper'></div>");
                 },
@@ -165,14 +164,26 @@ define(['logManager'], function (logManager) {
                 "arrow-start": this._connectionPathProps.arrowStart,
                 "arrow-end": this._connectionPathProps.arrowEnd }
         );
+
+        this.canvas.selectionManager._clearSelection();
     };
 
     ConnectionDrawingManager.prototype._onMouseMove = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event);
 
         if (this._connectionInDraw === true) {
-            this._connectionDesc.x2 = mousePos.mX;
-            this._connectionDesc.y2 = mousePos.mY;
+            if (this._connectionInDrawProps.type === "reconnect") {
+                if (this._connectionRedrawProps.srcDragged === true) {
+                    this._connectionDesc.x = mousePos.mX;
+                    this._connectionDesc.y = mousePos.mY;
+                } else {
+                    this._connectionDesc.x2 = mousePos.mX;
+                    this._connectionDesc.y2 = mousePos.mY;
+                }
+            } else {
+                this._connectionDesc.x2 = mousePos.mX;
+                this._connectionDesc.y2 = mousePos.mY;
+            }
             this._drawConnection();
         }
     };
@@ -217,10 +228,15 @@ define(['logManager'], function (logManager) {
 
         if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
             this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
-                                              "srcSubCompId": this._connectionInDrawProps.sCompId,
-                                           "dst": endPointId,
-                                           "dstSubCompId": sCompId,
-                                           "metaInfo": this._metaInfo });
+                "srcSubCompId": this._connectionInDrawProps.sCompId,
+                "dst": endPointId,
+                "dstSubCompId": sCompId,
+                "metaInfo": this._metaInfo });
+        } else if (this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+            this.canvas.modifyConnectionEnd({ "id": this._connectionRedrawProps.connId,
+                "endPoint": this._connectionRedrawProps.srcDragged === true ? "SOURCE" : "END",
+                "endId": endPointId,
+                "endSubCompId": sCompId });
         }
     };
 
@@ -240,11 +256,145 @@ define(['logManager'], function (logManager) {
         return this._metaInfo;
     };
 
-    /********************** CONCRETE MODE CHANGE HANDLERS *************************/
-    ConnectionDrawingManager.prototype._modeCREATE_CONNECTIONBeginHandler = function () {
-        //'this' will be DesignerCanvas
-        this.selectionManager._clearSelection();
+    /********************** CONNECTION RECONNECT *********************************/
+
+    ConnectionDrawingManager.prototype._attachConnectionDraggableEndHandler = function (srcParams, dstParams, connParams) {
+        var self = this,
+            srcEl = srcParams.el,
+            srcCoord = srcParams.coord,
+            dstEl = dstParams.el,
+            dstCoord = dstParams.coord,
+            connID = connParams.id,
+            connProps = connParams.props;
+
+        //register connection-draw start handler
+        srcEl.on(MOUSEDOWN, function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        dstEl.on(MOUSEDOWN, function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        srcEl.draggable('destroy');
+        srcEl.draggable({
+            helper: function () {
+                return $("<div class='draw-connection-drag-helper'></div>");
+            },
+            start: function (event) {
+                var el = $(this);
+                event.stopPropagation();
+                el.addClass(ACCEPT_CLASS);
+                self._connectionRedrawProps = { "srcCoord": srcCoord,
+                                                "dstCoord": dstCoord,
+                                                "srcDragged": true,
+                                                "connId": connID,
+                                                "connProps": connProps };
+                self._startConnectionRedraw();
+            },
+            stop: function (event) {
+                var el = $(this);
+                event.stopPropagation();
+                self._endConnectionRedraw(event);
+                el.removeClass(ACCEPT_CLASS);
+            },
+            drag: function (event) {
+                self._onMouseMove(event);
+            }
+        });
+
+        dstEl.draggable('destroy');
+        dstEl.draggable({
+            helper: function () {
+                return $("<div class='draw-connection-drag-helper'></div>");
+            },
+            start: function (event) {
+                var el = $(this);
+                event.stopPropagation();
+                el.addClass(ACCEPT_CLASS);
+                self._connectionRedrawProps = { "srcCoord": srcCoord,
+                    "dstCoord": dstCoord,
+                    "srcDragged": false,
+                    "connId": connID,
+                    "connProps": connProps };
+                self._startConnectionRedraw();
+            },
+            stop: function (event) {
+                var el = $(this);
+                event.stopPropagation();
+                self._endConnectionRedraw(event);
+                el.removeClass(ACCEPT_CLASS);
+            },
+            drag: function (event) {
+                self._onMouseMove(event);
+            }
+        });
+
     };
+
+    ConnectionDrawingManager.prototype._startConnectionRedraw = function () {
+        this.canvas.beginMode(this.canvas.OPERATING_MODES.RECONNECT_CONNECTION);
+
+        this.logger.debug("Start connection redrawing, connection: '" + this._connectionRedrawProps.connId + "', props: '" + JSON.stringify(this._connectionRedrawProps) + "'");
+
+        this._connectionInDraw = true;
+        this._connectionDesc = { "x": this._connectionRedrawProps.srcCoord.x,
+            "y": this._connectionRedrawProps.srcCoord.y,
+            "x2": this._connectionRedrawProps.dstCoord.x,
+            "y2": this._connectionRedrawProps.dstCoord.y };
+
+        this._connectionInDrawProps = {};
+
+        this._connectionInDrawProps.type = "reconnect";
+
+        this._connectionPath = this.paper.path('M' + this._connectionDesc.x + ',' + this._connectionDesc.y + ' L' + this._connectionDesc.x2 + ',' + this._connectionDesc.y2);
+
+        this._connectionPath.attr(
+            {   "stroke-width": this._connectionRedrawProps.connProps.width,
+                "stroke": IN_DRAW_COLOR,
+                "stroke-dasharray": IN_DRAW_LINETYPE,
+                "arrow-start": this._connectionRedrawProps.connProps.arrowStart,
+                "arrow-end": this._connectionRedrawProps.connProps.arrowEnd }
+        );
+
+        this.canvas.selectionManager.hideSelectionOutline();
+    };
+
+    ConnectionDrawingManager.prototype._endConnectionRedraw = function (event) {
+        var mousePos = this.canvas.getAdjustedMousePos(event);
+
+        if (this._connectionInDraw === true) {
+            if (this._connectionRedrawProps.srcDragged === true) {
+                this._connectionDesc.x = mousePos.mX;
+                this._connectionDesc.y = mousePos.mY;
+            } else {
+                this._connectionDesc.x2 = mousePos.mX;
+                this._connectionDesc.y2 = mousePos.mY;
+            }
+
+            this._drawConnection();
+        }
+
+        this._connectionInDraw = false;
+
+        this._connectionPath.remove();
+        this._connectionPath = undefined;
+
+        this._connectionInDrawProps = undefined;
+
+        this._connectionRedrawProps = {};
+        delete this._connectionRedrawProps;
+
+        this.canvas.endMode(this.canvas.OPERATING_MODES.RECONNECT_CONNECTION);
+
+        this.canvas.selectionManager.showSelectionOutline();
+
+        this.logger.debug("Stopped connection redrawing");
+    };
+
+    /********************* END OF - CONNECTION RECONNECT *********************************/
 
     return ConnectionDrawingManager;
 });

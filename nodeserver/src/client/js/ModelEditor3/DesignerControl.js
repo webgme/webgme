@@ -14,7 +14,9 @@ define(['logManager',
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
-        GME_ID = "GME_ID";
+        GME_ID = "GME_ID",
+        CONNECTION_SOURCE_NAME = "source",
+        CONNECTION_TARGET_NAME = "target";
 
 
     DesignerControl = function (options) {
@@ -152,6 +154,41 @@ define(['logManager',
                     self.logger.debug("Opening model with id '" + gmeID + "'");
                     self._client.setSelectedObjectId(gmeID);
                 }
+            }
+        };
+
+        this.designerCanvas.onModifyConnectionEnd = function (params) {
+            var gmeID = self._ComponentID2GmeID[params.id],
+                oldDesc = params.old,
+                newDesc = params.new,
+                newEndPointGMEID;
+
+            if (gmeID) {
+                self._client.startTransaction();
+
+                //update connection endpoint - SOURCE
+                if (oldDesc.srcObjId !== newDesc.srcObjId ||
+                    oldDesc.srcSubCompId !== newDesc.srcSubCompId) {
+                    if (newDesc.srcSubCompId !== undefined ) {
+                        newEndPointGMEID = self._Subcomponent2GMEID[newDesc.srcObjId][newDesc.srcSubCompId];
+                    } else {
+                        newEndPointGMEID = self._ComponentID2GmeID[newDesc.srcObjId];
+                    }
+                    self._client.makePointer(gmeID, CONNECTION_SOURCE_NAME, newEndPointGMEID);
+                }
+
+                //update connection endpoint - TARGET
+                if (oldDesc.dstObjId !== newDesc.dstObjId ||
+                    oldDesc.dstSubCompId !== newDesc.dstSubCompId) {
+                    if (newDesc.dstSubCompId !== undefined ) {
+                        newEndPointGMEID = self._Subcomponent2GMEID[newDesc.dstObjId][newDesc.dstSubCompId];
+                    } else {
+                        newEndPointGMEID = self._ComponentID2GmeID[newDesc.dstObjId];
+                    }
+                    self._client.makePointer(gmeID, CONNECTION_TARGET_NAME, newEndPointGMEID);
+                }
+
+                self._client.completeTransaction();
             }
         };
 
@@ -583,6 +620,7 @@ define(['logManager',
                                     objDesc.srcSubCompId = sources[k].subCompId;
                                     objDesc.dstObjId = destinations[l].objId;
                                     objDesc.dstSubCompId = destinations[l].subCompId;
+                                    objDesc.reconnectable = true;
 
                                     delete objDesc.source;
                                     delete objDesc.target;
@@ -628,14 +666,18 @@ define(['logManager',
                         }
                     }
 
-                    /*if (objDesc.kind === "CONNECTION") {
-                        for (componentID in this._GmeID2ComponentID[gmeID]) {
-                            if (this._GmeID2ComponentID[gmeID].hasOwnProperty(uiid)) {
-                                this.designerCanvas.updateConnection(uiid, objDesc);
-                            }
+                    //there is a connection associated with this GMEID
+                    if (this._GMEConnections.indexOf(gmeID) !== -1) {
+                        len = this._GmeID2ComponentID[gmeID].length;
+                        while (len--) {
+                            componentID =  this._GmeID2ComponentID[gmeID][len];
+                            this.designerCanvas.deleteComponent(componentID);
                         }
 
-                    }*/
+                        this.delayedEvents.push({ "etype": LOAD_EVENT_NAME,
+                            "eid": gmeID,
+                            "desc": objDesc });
+                    }
                 } else {
                     //update about a subcomponent - will be handled in the decorator
                 }
