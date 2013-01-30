@@ -137,6 +137,9 @@ define(['logManager'], function (logManager) {
         itemBBox.x -= this.canvas.designerCanvasBodyOffset.left;
         itemBBox.y -= this.canvas.designerCanvasBodyOffset.top;
 
+        itemBBox.x += this.canvas.childrenContainerScroll.left;
+        itemBBox.y += this.canvas.childrenContainerScroll.top;
+
         this.canvas.beginMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
         this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
