@@ -2,6 +2,11 @@
   white-space: nowrap; }
   .port:hover {
     cursor: pointer; }
+  .port .title-wrapper {
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis; }
   .port span.dot {
     display: inline-block;
     width: 3px;

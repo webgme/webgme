@@ -39,7 +39,8 @@ define(['logManager',
 
         this.$el = concretePortTemplate.clone();
         this.$el.attr({"id": this.id,
-                      "data-id": this.id});
+                      "data-id": this.id,
+                      "title": this.title});
 
         this.$portTitle = this.$el.find(".title");
         this.$portTitle.text(this.title);

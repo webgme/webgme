@@ -10,6 +10,13 @@ $dot-color: #666666;
     cursor: pointer;
   }
 
+  .title-wrapper {
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   span.dot {
     display: inline-block;
     width: 3px;
