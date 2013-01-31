@@ -192,6 +192,8 @@ define(['logManager',
         });
         this.$el.append(this.skinParts.$designerCanvasBody);
 
+        this.childrenContainerScroll = { "left": 0,
+                                        "top": 0 };
         this.skinParts.$designerCanvasBody.on("scroll", function (event) {
             self.childrenContainerScroll = { "left": self.skinParts.$designerCanvasBody.scrollLeft(),
                 "top": self.skinParts.$designerCanvasBody.scrollTop() };
