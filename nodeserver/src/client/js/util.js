@@ -8,6 +8,8 @@ define([], function () {
     /*
      * Disabling selection on element
      */
+    /* TODO: OBSOLETE SHOULD NOT BE USED EVER
+    *  TODO: USE editOnDblClick INSTEAD */
     $.fn.extend({
         editInPlace : function (editClass, successCallback) {
             this.each(function () {
@@ -57,57 +59,6 @@ define([], function () {
             });
         }
     });
-
-    // Canvas drawing extension
-    if (!!document.createElement('canvas').getContext) {
-        $.extend(CanvasRenderingContext2D.prototype, {
-
-            ellipse: function (aX, aY, r1, r2, fillIt) {
-                aX = aX - r1;
-                aY = aY - r2;
-
-                var aWidth = r1*2;
-                var aHeight = r2*2;
-
-                var hB = (aWidth / 2) * .5522848,
-                    vB = (aHeight / 2) * .5522848,
-                    eX = aX + aWidth,
-                    eY = aY + aHeight,
-                    mX = aX + aWidth / 2,
-                    mY = aY + aHeight / 2;
-                this.beginPath();
-                this.moveTo(aX, mY);
-                this.bezierCurveTo(aX, mY - vB, mX - hB, aY, mX, aY);
-                this.bezierCurveTo(mX + hB, aY, eX, mY - vB, eX, mY);
-                this.bezierCurveTo(eX, mY + vB, mX + hB, eY, mX, eY);
-                this.bezierCurveTo(mX - hB, eY, aX, mY + vB, aX, mY);
-                this.closePath();
-                if (fillIt) this.fill();
-                this.stroke();
-            },
-
-            circle: function(aX, aY, aDiameter, fillIt) {
-                this.ellipse(aX, aY, aDiameter, aDiameter, fillIt)
-            }
-        });
-    }
-
-    /*
-     *
-     * Getting textwidth
-     *
-     */
-    $.fn.textWidth = function () {
-        var html_org, html_calc, width;
-
-        html_org = $(this).html();
-        html_calc = '<span>' + html_org + '</span>';
-        $(this).html(html_calc);
-        width = $(this).find('span:first').width();
-        $(this).html(html_org);
-
-        return width;
-    };
 
     Array.prototype.mergeUnique = function (otherArray) {
         var i;
