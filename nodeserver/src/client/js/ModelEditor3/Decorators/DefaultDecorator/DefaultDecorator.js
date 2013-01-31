@@ -35,7 +35,8 @@ define(['logManager',
 
     DefaultDecorator.prototype.on_addTo = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID);
+            nodeObj = client.getNode(this._metaInfo.GMEID),
+            gmeID = this._metaInfo.GMEID;
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo.GMEID});
@@ -47,6 +48,12 @@ define(['logManager',
         //find name placeholder
         this.skinParts.$name = this.$el.find(".name");
         this.skinParts.$name.text(this.name);
+
+        // set title editable on double-click
+        this.skinParts.$name.editOnDblClick({"class": "",
+            "onChange": function (oldValue, newValue) {
+                client.setAttributes(gmeID, nodePropertyNames.Attributes.name, newValue);
+            }});
 
         //let the parent decorator class do its job first
         return __parent_proto__.on_addTo.apply(this, arguments);
