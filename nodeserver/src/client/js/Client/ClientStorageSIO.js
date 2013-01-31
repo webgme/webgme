@@ -2,6 +2,10 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
     "use strict";
 
     var ClientStorageSIO = function (options) {
+    	if( options.server.substring(0, 7) !== "http://" ) {
+    		options.server = "http://" + options.server;
+    	}
+    	
         var socket = null;
         var isopen = false;
         var availableCB = null;

@@ -88,7 +88,7 @@ requirejs(['server/proxysrv'],function(PROXY){
             console.log("new connection to logserver!!!");
             socket.on('log',function(msg){
                 if(parameters.logging){
-                    if(parameters.logfile){
+                    if(parameters.logfile && FS.appendFileSync){
                         FS.appendFileSync("../test/"+parameters.logfile,"["+socket.id+"] "+msg+"\n","utf8");
                     } else{
                         console.log("["+socket.id+"] "+msg);

@@ -368,7 +368,7 @@ define([
             delete users[uid];
         };
         var updateTerritory = function(userID,patterns){
-            if(_.isEqual(patterns,users[userID].PATTERNS)){
+            if(users[userID] && _.isEqual(patterns,users[userID].PATTERNS)){
 
             }else{
                 if(currentCore){

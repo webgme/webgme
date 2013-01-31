@@ -1,6 +1,10 @@
 define(['socket.io/socket.io.js'],function(){
     'use strict';
     var ClientLog = function(server){
+    	if( server.substring(0, 7) !== "http://" ) {
+    		server = "http://" + server;
+    	}
+    	
         var connection = null,
             connected = false,
             connecting = false,
