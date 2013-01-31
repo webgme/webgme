@@ -75,11 +75,11 @@ define([
             //and create actor for all started branches...
             //if there is none, then we simply collects the projects from the server and waits for a selection from user interface...
             var init = function () {
-            	var proxy = parameters.proxy;
-            	if( proxy.substring(0, 7) !== "http://" ) {
-            		proxy = "http://" + proxy;
+            	var xproxy = parameters.proxy;
+            	if( xproxy.substring(0, 7) !== "http://" ) {
+            		xproxy = "http://" + xproxy;
             	}
-                var tempproxy = io.connect(proxy, parameters.options);
+                var tempproxy = io.connect(xproxy, parameters.options);
                 var firstproject = null;
                 tempproxy.on('connect', function () {
                     proxy = tempproxy;
