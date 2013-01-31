@@ -48,7 +48,8 @@ define(['logManager',
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo.GMEID),
             childrenIDs,
-            len;
+            len,
+            self = this;
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo.GMEID});
@@ -64,7 +65,7 @@ define(['logManager',
         /* FILL WITH DATA */
         if (nodeObj) {
             this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
-            this.skinParts.$name.text(this.name);
+            this._refreshName();
 
             childrenIDs = nodeObj.getChildrenIds();
             len = childrenIDs.length;
@@ -74,7 +75,11 @@ define(['logManager',
             }
         }
 
-
+        // set title editable on double-click
+        this.skinParts.$name.editOnDblClick({"class": "",
+                                             "onChange": function (oldValue, newValue) {
+                                                 self._onNodeTitleChanged(oldValue, newValue);
+                                             }});
     };
 
     DecoratorWithPorts.prototype.calculateDimension = function () {
@@ -99,11 +104,16 @@ define(['logManager',
 
             if (this.name !== newName) {
                 this.name = newName;
-                this.skinParts.$name.text(this.name);
+                this._refreshName();
             }
         }
 
         this._updatePorts();
+    };
+
+    DecoratorWithPorts.prototype._refreshName = function () {
+        this.skinParts.$name.text(this.name);
+        this.skinParts.$name.attr("title", this.name);
     };
 
     DecoratorWithPorts.prototype.getConnectionAreas = function (id) {
@@ -252,6 +262,16 @@ define(['logManager',
             this._removePort(this._portIDs[len]);
         }
     };
+
+    /**************** EDIT NODE TITLE ************************/
+
+    DecoratorWithPorts.prototype._onNodeTitleChanged = function (oldValue, newValue) {
+        var client = this._control._client;
+
+        client.setAttributes(this._metaInfo.GMEID, nodePropertyNames.Attributes.name, newValue);
+    };
+
+    /**************** END OF - EDIT NODE TITLE ************************/
 
     return DecoratorWithPorts;
 });

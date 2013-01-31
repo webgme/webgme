@@ -29,6 +29,9 @@ $ports-separator-width: 15px;
     font-weight: bold;
     text-transform: uppercase;
     text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: $ports-width * 2 + $ports-separator-width;
   }
 
   .ports {

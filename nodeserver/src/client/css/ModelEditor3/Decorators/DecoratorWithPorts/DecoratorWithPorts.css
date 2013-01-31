@@ -12,7 +12,10 @@
     font-size: 9px;
     font-weight: bold;
     text-transform: uppercase;
-    text-align: center; }
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 115px; }
   .decorator-with-ports .ports {
     background-color: black;
     font-size: 10px;
