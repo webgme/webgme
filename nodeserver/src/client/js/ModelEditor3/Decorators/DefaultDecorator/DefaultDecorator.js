@@ -84,28 +84,32 @@ define(['logManager',
                 "y": 0,
                 "w": 0,
                 "h": 0,
-                "orientation": "N"} );
+                "orientation": "N",
+                "len": 10} );
 
             result.push( {"id": "1",
                 "x": this.hostDesignerItem.width / 2,
                 "y": this.hostDesignerItem.height,
                 "w": 0,
                 "h": 0,
-                "orientation": "S"} );
+                "orientation": "S",
+                "len": 10} );
 
             result.push( {"id": "2",
                 "x": 0,
                 "y": this.hostDesignerItem.height / 2,
                 "w": 0,
                 "h": 0,
-                "orientation": "N"} );
+                "orientation": "W",
+                "len": 10} );
 
             result.push( {"id": "3",
                 "x": this.hostDesignerItem.width,
                 "y": this.hostDesignerItem.height / 2,
                 "w": 0,
                 "h": 0,
-                "orientation": "S"} );
+                "orientation": "E",
+                "len": 10} );
         }
 
         return result;

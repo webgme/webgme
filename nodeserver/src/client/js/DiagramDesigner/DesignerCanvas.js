@@ -684,7 +684,8 @@ define(['logManager',
         }
 
         this.connectionRouteManager.initialize();
-        this._refreshScreen();
+
+        this.connectionRouteManager.redrawConnections(this.connectionIds || []) ;
     };
 
     /********* ROUTE MANAGER CHANGE **********************/

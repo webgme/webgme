@@ -138,7 +138,8 @@ define(['logManager'], function (logManager) {
             "y": this.hostDesignerItem.height / 2,
             "w": 0,
             "h": 0,
-            "orientation": "N"} );
+            "orientation": "N",
+            "len": 10} );
 
         return result;
     };
