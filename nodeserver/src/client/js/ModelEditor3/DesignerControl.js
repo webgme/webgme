@@ -3,21 +3,18 @@
 define(['logManager',
     'clientUtil',
     'js/DiagramDesigner/NodePropertyNames',
+    'js/ModelEditor3/DesignerControl.DesignerCanvasEventHandlers',
     'js/ModelEditor3/DesignerControl.DEBUG'], function (logManager,
                                                         util,
                                                         nodePropertyNames,
+                                                        DesignerControlDesignerCanvasEventHandlers,
                                                         DesignerControlDEBUG) {
 
     var DesignerControl,
         LOAD_EVENT_NAME = "load",
         UPDATE_EVENT_NAME = "update",
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
-        ATTRIBUTES_STRING = "attributes",
-        REGISTRY_STRING = "registry",
-        GME_ID = "GME_ID",
-        CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
-
+        GME_ID = "GME_ID";
 
     DesignerControl = function (options) {
         var self = this,
@@ -31,6 +28,14 @@ define(['logManager',
             throw ("DesignerControl can not be created");
         }
 
+        if (options.designerCanvas === undefined) {
+            this.logger.error("DesignerControl's DesignerCanvas is not specified...");
+            throw ("DesignerControl can not be created");
+        }
+
+        //initialize core collections and variables
+        this.designerCanvas = options.designerCanvas;
+
         this._client = options.client;
         this._selfPatterns = {};
         this._components = {};
@@ -39,179 +44,14 @@ define(['logManager',
         this.decoratorClasses = {};
         this.eventQueue = [];
 
-        if (options.designerCanvas === undefined) {
-            this.logger.error("DesignerControl's DesignerCanvas is not specified...");
-            throw ("DesignerControl can not be created");
-        }
-        this.designerCanvas = options.designerCanvas;
+        //local variable holding info about the currently opened node
+        this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
-        /*OVERRIDE MODEL EDITOR METHODS*/
-        this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
-            var id;
 
-            self._client.startTransaction();
-            for (id in repositionDesc) {
-                if (repositionDesc.hasOwnProperty(id)) {
-                    self._client.setRegistry(self._ComponentID2GmeID[id], nodePropertyNames.Registry.position, { "x": repositionDesc[id].x, "y": repositionDesc[id].y });
-                }
-            }
-            self._client.completeTransaction();
-        };
 
-        this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
-            var copyOpts = { "parentId": self.currentNodeInfo.id },
-                id,
-                desc,
-                gmeID;
+        /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
-            self.designerCanvas.beginUpdate();
-
-            for (id in copyDesc.items) {
-                if (copyDesc.items.hasOwnProperty(id)) {
-                    desc = copyDesc.items[id];
-                    gmeID = self._ComponentID2GmeID[desc.oItemId];
-
-                    copyOpts[gmeID] = {};
-                    copyOpts[gmeID][ATTRIBUTES_STRING] = {};
-                    copyOpts[gmeID][REGISTRY_STRING] = {};
-
-                    copyOpts[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": desc.posX, "y": desc.posY };
-
-                    //remove the component from UI
-                    //it will be recreated when the GME client calls back with the result
-                    self.designerCanvas.deleteComponent(id);
-                }
-            }
-
-            for (id in copyDesc.connections) {
-                if (copyDesc.connections.hasOwnProperty(id)) {
-                    desc = copyDesc.connections[id];
-                    gmeID = self._ComponentID2GmeID[desc.oConnectionId];
-
-                    copyOpts[gmeID] = {};
-
-                    //remove the component from UI
-                    //it will be recreated when the GME client calls back with the result
-                    self.designerCanvas.deleteComponent(id);
-                }
-            }
-
-            self.designerCanvas.endUpdate();
-
-            self._client.intellyPaste(copyOpts);
-        };
-
-        this.designerCanvas.onCreateNewConnection = function (params) {
-            var sourceId,
-                targetId;
-
-            if (params.srcSubCompId !== undefined) {
-                sourceId = self._Subcomponent2GMEID[params.src][params.srcSubCompId];
-            } else {
-                sourceId = self._ComponentID2GmeID[params.src];
-            }
-
-            if (params.dstSubCompId !== undefined) {
-                targetId = self._Subcomponent2GMEID[params.dst][params.dstSubCompId];
-            } else {
-                targetId = self._ComponentID2GmeID[params.dst];
-            }
-
-            self._client.makeConnection({   "parentId": self.currentNodeInfo.id,
-                "sourceId": sourceId,
-                "targetId": targetId,
-                "directed": true });
-
-            var p = {   "parentId": self.currentNodeInfo.id,
-                "sourceId": sourceId,
-                "targetId": targetId,
-                "directed": true };
-
-            self.logger.warning("onCreateNewConnection: " + JSON.stringify(p));
-        };
-
-        this.designerCanvas.onSelectionDelete = function (idList) {
-            var objIdList = [],
-                i = idList.length;
-
-            while(i--) {
-                objIdList.insertUnique(self._ComponentID2GmeID[idList[i]]);
-            }
-
-            if (objIdList.length > 0) {
-                self._client.delMoreNodes(objIdList);
-            }
-        };
-
-        this.designerCanvas.onDesignerItemDoubleClick = function (id, event) {
-            var gmeID = self._ComponentID2GmeID[id];
-
-            if (gmeID) {
-                //TODO: somewhat tricked here for DEBUG purposes
-                if (event.offsetX < 20 && event.offsetY < 20) {
-                    self._switchToNextDecorator(gmeID);
-                } else {
-                    self.logger.debug("Opening model with id '" + gmeID + "'");
-                    self._client.setSelectedObjectId(gmeID);
-                }
-            }
-        };
-
-        this.designerCanvas.onModifyConnectionEnd = function (params) {
-            var gmeID = self._ComponentID2GmeID[params.id],
-                oldDesc = params.old,
-                newDesc = params.new,
-                newEndPointGMEID;
-
-            if (gmeID) {
-                self._client.startTransaction();
-
-                //update connection endpoint - SOURCE
-                if (oldDesc.srcObjId !== newDesc.srcObjId ||
-                    oldDesc.srcSubCompId !== newDesc.srcSubCompId) {
-                    if (newDesc.srcSubCompId !== undefined ) {
-                        newEndPointGMEID = self._Subcomponent2GMEID[newDesc.srcObjId][newDesc.srcSubCompId];
-                    } else {
-                        newEndPointGMEID = self._ComponentID2GmeID[newDesc.srcObjId];
-                    }
-                    self._client.makePointer(gmeID, CONNECTION_SOURCE_NAME, newEndPointGMEID);
-                }
-
-                //update connection endpoint - TARGET
-                if (oldDesc.dstObjId !== newDesc.dstObjId ||
-                    oldDesc.dstSubCompId !== newDesc.dstSubCompId) {
-                    if (newDesc.dstSubCompId !== undefined ) {
-                        newEndPointGMEID = self._Subcomponent2GMEID[newDesc.dstObjId][newDesc.dstSubCompId];
-                    } else {
-                        newEndPointGMEID = self._ComponentID2GmeID[newDesc.dstObjId];
-                    }
-                    self._client.makePointer(gmeID, CONNECTION_TARGET_NAME, newEndPointGMEID);
-                }
-
-                self._client.completeTransaction();
-            }
-        };
-
-        this.designerCanvas.onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
-            //store that a subcomponent with a given ID has been added to object with objID
-            self._GMEID2Subcomponent[metaInfo[GME_ID]] = self._GMEID2Subcomponent[metaInfo[GME_ID]] || {};
-            self._GMEID2Subcomponent[metaInfo[GME_ID]][objID] = sCompID;
-
-            self._Subcomponent2GMEID[objID] = self._Subcomponent2GMEID[objID] || {};
-            self._Subcomponent2GMEID[objID][sCompID] = metaInfo[GME_ID];
-            //TODO: add event handling here that a subcomponent appeared
-        };
-
-        this.designerCanvas.onUnregisterSubcomponent = function (objID, sCompID) {
-            var gmeID = self._Subcomponent2GMEID[objID][sCompID];
-
-            delete self._Subcomponent2GMEID[objID][sCompID];
-            delete self._GMEID2Subcomponent[gmeID][objID];
-            //TODO: add event handling here that a subcomponent disappeared
-        };
-
-        /************** GOTO PARENT **************************/
-
+        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
         this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (event, data) {
             self._onModelHierarchyUp();
         });
@@ -219,20 +59,11 @@ define(['logManager',
         this.designerCanvas.addButton({ "title": "Go to parent",
             "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp );
 
-        /************** END OF - GOTO PARENT **************************/
+        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
-        /*END OF - OVERRIDE MODEL EDITOR METHODS*/
 
-        //local variable holding info about the currently opened node
-        this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
-        //in DEBUG mode add additional content to canvas
-        if (DEBUG) {
-            //this._addDebugModeExtensions();
-        }
-
-        //add extra visual piece
-        /************** AUTO RENAME *****************/
+        /************** AUTO RENAME GME NODES *****************/
         $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (event, data) {
             self._autoRenameGMEObjects();
         });
@@ -240,7 +71,12 @@ define(['logManager',
         this.designerCanvas.addButton({ "title": "Auto rename",
             "icon": "icon-th-list"}, $btnGroupAutoRename );
 
-        /************** AUTO CREATE *****************/
+        /************** END OF - AUTO RENAME GME NODES *****************/
+
+
+
+
+        /************** AUTO CREATE NEW NODES *****************/
         $btnGroupAutoCreateModel = this.designerCanvas.addButtonGroup(function (event, data) {
             self._createGMEModels(data.num);
         });
@@ -260,7 +96,17 @@ define(['logManager',
             "text": "10",
             "data": { "num": 10 }}, $btnGroupAutoCreateModel );
 
-        /************** END OF - AUTO CREATE *****************/
+        /************** END OF - AUTO CREATE NEW NODES *****************/
+
+
+
+
+        /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
+
+
+
+        //attach all the event handlers for event's coming from DesignerCanvas
+        this.attachDesignerCanvasEventHandlers();
 
         this.logger.debug("DesignerControl ctor finished");
     };
@@ -716,28 +562,7 @@ define(['logManager',
         this._client.removeUI(this._territoryId);
     };
 
-    DesignerControl.prototype._switchToNextDecorator = function (id) {
-        var objDesc = this._getObjectDescriptor(id),
-            nextDec = "DecoratorWithPorts";
 
-        switch (objDesc.decorator) {
-            case "DefaultDecorator":
-                nextDec = "CircleDecorator";
-                break;
-            case "CircleDecorator":
-                nextDec = "DecoratorWithPorts";
-                break;
-            case "DecoratorWithPorts":
-                nextDec = "DefaultDecorator";
-                break;
-            default:
-                break;
-        }
-
-        this._client.startTransaction();
-        this._client.setRegistry(id, nodePropertyNames.Registry.decorator, nextDec);
-        this._client.completeTransaction();
-    };
 
     DesignerControl.prototype._autoRenameGMEObjects = function () {
         var i = this._GMEModels.length,
@@ -771,6 +596,9 @@ define(['logManager',
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
         }
     };
+
+    //attach DesignerControl - DesignerCanvas event handler functions
+    _.extend(DesignerControl.prototype, DesignerControlDesignerCanvasEventHandlers.prototype);
 
     //in DEBUG mode add additional content to canvas
     if (DEBUG) {
