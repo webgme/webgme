@@ -7,7 +7,15 @@ define(['logManager',
         DESIGNER_CONNECTION_CLASS = "designer-connection",
         PATH_SHADOW_ID_PREFIX = "p_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
-        CONNECTION_DRAGGABLE_END_CLASS = "connectionDraggableEnd";
+        CONNECTION_DRAGGABLE_END_CLASS = "connectionDraggableEnd",
+        CONNECTION_DEFAULT_WIDTH = 2,
+        CONNECTION_DEFAULT_COLOR = "#000000",
+        CONNECTION_DEFAULT_END = "none",
+        CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
+        CONNECTION_SHADOW_DEFAULT_WIDTH = 3,
+        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
+        CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
+        CONNECTION_DEFAULT_LINE_TYPE = "L";
 
     ConnectionComponent = function (objId) {
         this.id = objId;
@@ -44,15 +52,15 @@ define(['logManager',
         this.reconnectable = objDescriptor.reconnectable === true ? true : false;
 
         /*PathAttributes*/
-        this.designerAttributes.arrowStart = objDescriptor.arrowStart || "none";
-        this.designerAttributes.arrowEnd = objDescriptor.arrowEnd || "none";
-        this.designerAttributes.color = objDescriptor.color || "#000000";
-        this.designerAttributes.width = objDescriptor.width || 2;
-        this.designerAttributes.shadowWidth = parseInt(this.designerAttributes.width, 10) + 3;
-        this.designerAttributes.shadowOpacity = 0;
-        this.designerAttributes.shadowOpacityWhenSelected = 0.4;
-        this.designerAttributes.shadowColor = objDescriptor.shadowColor || "#52A8EC";
-        this.designerAttributes.lineType = objDescriptor.lineType || "L";
+        this.designerAttributes.arrowStart = objDescriptor.arrowStart || CONNECTION_DEFAULT_END;
+        this.designerAttributes.arrowEnd = objDescriptor.arrowEnd || CONNECTION_DEFAULT_END;
+        this.designerAttributes.color = objDescriptor.color || CONNECTION_DEFAULT_COLOR;
+        this.designerAttributes.width = objDescriptor.width || CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.shadowWidth = parseInt(this.designerAttributes.width, 10) + CONNECTION_SHADOW_DEFAULT_WIDTH;
+        this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
+        this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
+        this.designerAttributes.shadowColor = objDescriptor.shadowColor || CONNECTION_SHADOW_DEFAULT_COLOR;
+        this.designerAttributes.lineType = objDescriptor.lineType || CONNECTION_DEFAULT_LINE_TYPE;
     };
 
     ConnectionComponent.prototype.getConnectionProps = function () {
