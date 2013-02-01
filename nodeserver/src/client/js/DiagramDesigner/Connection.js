@@ -28,7 +28,7 @@ define(['logManager',
     ConnectionComponent.prototype._DOMBase = $('<div/>').attr({ "class": "connection" });
 
     ConnectionComponent.prototype._initialize = function (objDescriptor) {
-        /*MODELEDITORCONNECTION CONSTANTS*/
+        /*MODELEDITORCONNECTION CONSTANTS***/
         this.canvas = objDescriptor.designerCanvas;
         this.paper = this.canvas.skinParts.SVGPaper;
 
