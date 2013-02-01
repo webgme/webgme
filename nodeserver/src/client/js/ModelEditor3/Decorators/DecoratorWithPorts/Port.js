@@ -125,9 +125,7 @@ define(['logManager',
     };
 
     Port.prototype.calculatePortConnectionArea = function () {
-        var location = this.$portDot.offset(),
-            w = this.$portDot.outerWidth(),
-            h = this.$portDot.outerHeight();
+        var location = this.$portDot.offset();
 
         this.connectionArea.x = location.left;
         this.connectionArea.y = location.top;

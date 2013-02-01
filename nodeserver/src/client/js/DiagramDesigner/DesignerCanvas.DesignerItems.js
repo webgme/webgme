@@ -11,8 +11,8 @@ define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
     DesignerCanvasDesignerItem.prototype.createDesignerItem = function (objD) {
         var componentId = this.getGuid("I_"),
             objDescriptor = _.extend({}, objD),
-            newComponent,
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
+            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
+            newComponent;
 
         this.logger.debug("Creating model component with id: '" + componentId + "'");
 
@@ -86,7 +86,7 @@ define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
 
     //NOTE: could/should be overridden in the CONTROLLER
     DesignerCanvasDesignerItem.prototype.onDesignerItemDoubleClick = function (id, event) {
-        this.logger.debug("DesignerItem '" + id + "' received double click.");
+        this.logger.debug("DesignerItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
     };
 
     return DesignerCanvasDesignerItem;
