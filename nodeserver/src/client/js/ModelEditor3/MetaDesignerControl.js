@@ -211,7 +211,7 @@ define(['logManager',
         //component loaded
         //we are interested in the load of subcomponents of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
-            if (objD) {
+            if (objD && this.currentNodeInfo.id === objD.parentId) {
 
                 objDesc = _.extend({}, objD);
 
