@@ -90,7 +90,7 @@ define(['logManager',
         var i = this._portIDs.length;
 
         while (i--) {
-            this._ports[this._portIDs[i]].calculateConnectorLocation();
+            this._ports[this._portIDs[i]].calculatePortConnectionArea();
         }
     };
 
@@ -141,18 +141,16 @@ define(['logManager',
                 "len": 10} );
         } else {
             //subcomponent
-            var loc = this._ports[id].getConnectorLocation(),
-                adjX = loc.left - this.offset.left,
-                adjY = loc.top - this.offset.top,
-                or = this._ports[id].orientation;
+            var portConnArea = this._ports[id].getConnectorArea(),
+                idx = this._portIDs.indexOf(id);
 
-            result.push( {"id": this._portIDs.indexOf(id),
-                "x": adjX,
-                "y": adjY,
-                "w": 0,
-                "h": 0,
-                "orientation": or,
-                "len": 30} );
+            result.push( {"id": idx,
+                "x": portConnArea.x - this.offset.left,
+                "y": portConnArea.y - this.offset.top,
+                "w": portConnArea.w,
+                "h": portConnArea.h,
+                "orientation": portConnArea.orientation,
+                "len": portConnArea.len /*+ idx * 5*/} );
         }
 
 

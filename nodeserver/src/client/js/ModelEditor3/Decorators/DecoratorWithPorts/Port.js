@@ -11,7 +11,8 @@ define(['logManager',
         CONNECTOR_CLASS = ".connector",
         EVENT_POSTFIX = "Port",
         MOUSE_ENTER = "mouseenter",
-        MOUSE_LEAVE = "mouseleave";
+        MOUSE_LEAVE = "mouseleave",
+        PORT_CONNECTOR_LEN = 20;
 
     Port = function (id, options) {
         this.id = id;
@@ -20,6 +21,12 @@ define(['logManager',
         this.orientation = undefined;
         this.position = {};
         this.skinParts = [];
+        this.connectionArea = { "x": 0,
+            "y": 0,
+            "w": 0,
+            "h": 0,
+            "orientation": "E",
+            "len": PORT_CONNECTOR_LEN};
 
         this.decorator = options.decorator;
 
@@ -47,6 +54,8 @@ define(['logManager',
 
         this.$connectors = this.$el.find(CONNECTOR_CLASS);
         this.hideConnectors();
+
+        this.$portDot = this.$el.find(".dot");
 
         this.$el.on( MOUSE_ENTER + '.' + EVENT_POSTFIX, null, null, function (event) {
             self._mouseEnter();
@@ -114,14 +123,28 @@ define(['logManager',
         this.hideConnectors();
     };
 
-    Port.prototype.calculateConnectorLocation = function () {
-        this.location = this.$el.find(".dot").offset();
-        this.location.left += 2;
-        this.location.top += 3;
+    Port.prototype.calculatePortConnectionArea = function () {
+        var location = this.$portDot.offset(),
+            w = this.$portDot.outerWidth(),
+            h = this.$portDot.outerHeight();
+
+        this.connectionArea.x = location.left;
+        this.connectionArea.y = location.top;
+        this.connectionArea.w = 0;
+        this.connectionArea.h = 7;
+        this.connectionArea.orientation = this.orientation;
+
+        if (this.orientation === "E") {
+            this.connectionArea.x += 2;
+        } else {
+            this.connectionArea.x += 3;
+        }
+
+        this.connectionArea.y += 1;
     };
 
-    Port.prototype.getConnectorLocation = function () {
-        return this.location;
+    Port.prototype.getConnectorArea = function () {
+        return this.connectionArea;
     };
 
     return Port;
