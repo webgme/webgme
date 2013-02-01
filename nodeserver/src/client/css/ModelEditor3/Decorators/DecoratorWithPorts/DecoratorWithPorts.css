@@ -63,9 +63,9 @@
     .decorator-with-ports .connector.bottom {
       bottom: -6px; }
 
-.selectable .default-decorator {
+.selectable .decorator-with-ports {
   cursor: pointer; }
 
-.selected .default-decorator {
+.selected .decorator-with-ports {
   border: 2px solid #52a8ec;
   background-color: #dbeafc; }
