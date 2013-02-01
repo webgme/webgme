@@ -52,7 +52,7 @@ define(['logManager',
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (event, data) {
+        this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
             self._onModelHierarchyUp();
         });
 
@@ -64,7 +64,7 @@ define(['logManager',
 
 
         /************** AUTO RENAME GME NODES *****************/
-        $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (event, data) {
+        $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
             self._autoRenameGMEObjects();
         });
 

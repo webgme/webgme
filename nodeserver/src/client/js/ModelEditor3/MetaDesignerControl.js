@@ -306,7 +306,7 @@ define(['logManager',
                 break;
             case SET_VALIDDESTINATION:
                 params.arrowStart = NOEND;
-                params.arrowEnd = VALIDDESTINATION_TYPE_LINE_END
+                params.arrowEnd = VALIDDESTINATION_TYPE_LINE_END;
                 params.width = "3";
                 params.color = "#AA03C3";
                 break;

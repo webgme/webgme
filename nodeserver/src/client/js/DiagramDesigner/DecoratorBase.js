@@ -40,16 +40,14 @@ define(['logManager'], function (logManager) {
         return this._metaInfo;
     };
 
-    //TODO - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
+    //NOTE - CAN BE OVERRIDDEN TO SPECIFY CUSTOM TEMPLATE FOR THE DECORATOR
     DecoratorBase.prototype.$DOMBase = $("");
 
     //initialization code for the decorator
     //this.$el will be created as the top-level container for the decorator's DOM
     //this.$el will be used later in the DesignerItem's code, it must exist
-    //TODO - SHOULD NOT BE OVERRIDDEN
+    //NOTE - SHOULD NOT BE OVERRIDDEN
     DecoratorBase.prototype._initialize = function () {
-        var self = this;
-
         this.$el = this.$DOMBase.clone();
 
         //extra default initializations
@@ -59,7 +57,7 @@ define(['logManager'], function (logManager) {
     //as a common default functionality, DecoratorBase provides solution for taking care of the connectors
     //DecoratorBase will handle DOM elements with class CONNECTOR_CLASS as connectors
     //these will be queried and detached from the decorator's DOM by default
-    //TODO - CAN BE OVERRIDDEN WHEN NEEDED
+    //NODE - CAN BE OVERRIDDEN WHEN NEEDED
     DecoratorBase.prototype.initializeConnectors = function () {
         //find connectors
         this.$connectors = this.$el.find(CONNECTOR_CLASS);
@@ -87,19 +85,19 @@ define(['logManager'], function (logManager) {
     //Called before the host designer item is added to the canvas DOM (DocumentFragment more precisely)
     //At this point the decorator should create its DOM representation
     //At this point no dimension information is available since the content exist only in memory, not yet rendered
-    //TODO - NOTE - DO NOT ACCESS ANY LAYOUT OR DIMENSION INFORMATION FOR PERFORMANCE REASONS
-    //TODO - NOTE - ALL LAYOUT INFORMATION SHOULD BE QUERIED IN ON_RENDERGETLAYOUTINFO
-    //TODO - SHALL BE OVERRIDDEN WHEN NEEDED
+    //NOTE - DO NOT ACCESS ANY LAYOUT OR DIMENSION INFORMATION FOR PERFORMANCE REASONS
+    //NOTE - ALL LAYOUT INFORMATION SHOULD BE QUERIED IN onRenderGetLayoutInfo
+    //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
     DecoratorBase.prototype.on_addTo = function () {
     };
 
     //All DOM queries that causes reflow (position / width / height / etc) should be done here
     //Use helper object 'this.renderLayoutInfo' to store info needed
-    //TODO - NOTE - But DO NOT SET ANY SUCH SETTING HERE, THAT SHOULD HAPPEN IN 'ON_RENDERGETLAYOUTINFO'
-    //TODO - NOTE - DO NOT TOUCH THE DOM FOR WRITE
-    //TODO - CAN BE OVERRIDDEN WHEN NEEDED
+    //NOTE - But DO NOT SET ANY SUCH SETTING HERE, THAT SHOULD HAPPEN IN 'onRenderGetLayoutInfo'
+    //NOTE - DO NOT TOUCH THE DOM FOR WRITE
+    //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     //NOTE - More info on this: http://www.phpied.com/rendering-repaint-reflowrelayout-restyle/
-    DecoratorBase.prototype.on_renderGetLayoutInfo = function () {
+    DecoratorBase.prototype.onRenderGetLayoutInfo = function () {
         this.calculateDimension();
 
         this.renderLayoutInfo = {};
@@ -107,9 +105,9 @@ define(['logManager'], function (logManager) {
 
     //Do anything needs to be done to adjust look, write all width, height, position, etc infomration
     //Use values stored in helper object 'this.renderLayoutInfo'
-    //TODO - NOTE - But DO NOT READ ANY SUCH INFORMATION, DO NOT TOUCH THE DOM FOR READ
-    //TODO - CAN BE OVERRIDDEN WHEN NEEDED
-    DecoratorBase.prototype.on_renderSetLayoutInfo = function () {
+    //NOTE - But DO NOT READ ANY SUCH INFORMATION, DO NOT TOUCH THE DOM FOR READ
+    //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
+    DecoratorBase.prototype.onRenderSetLayoutInfo = function () {
         delete this.renderLayoutInfo;
     };
 
@@ -118,7 +116,7 @@ define(['logManager'], function (logManager) {
     // - 'this.hostDesignerItem.height' attributes with the correct dimensions of this decorator
     //The dimension information is used for many different reasons in the canvas (line routing, etc...),
     //Please set it correctly
-    //TODO - SHALL BE OVERRIDDEN
+    //NOTE - SHALL BE OVERRIDDEN
     DecoratorBase.prototype.calculateDimension = function () {
     };
 
@@ -127,7 +125,7 @@ define(['logManager'], function (logManager) {
     //'id' might be the id of this DesignerItem itself, or the
     //'id' can be the ID of one of the SubComponents contained in this component
     //result should be an array of the area descriptors
-    //TODO - SHALL BE OVERRIDDEN WHEN NEEDED
+    //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
     DecoratorBase.prototype.getConnectionAreas = function (id) {
         var result = [];
 
@@ -147,7 +145,7 @@ define(['logManager'], function (logManager) {
     //Called when the decorator of the DesignerItem needs to be destroyed
     //There is no need to touch the DOM, it will be taken care of in the DesignerItem's code
     //Remove any additional business logic, free up resources, territory, etc...
-    //TODO - CAN BE OVERRIDDEN WHEN NEEDED
+    //NOTE - CAN BE OVERRIDDEN WHEN NEEDED
     DecoratorBase.prototype.destroy = function () {
         this.logger.debug("DecoratorBase.destroyed");
     };
@@ -215,8 +213,6 @@ define(['logManager'], function (logManager) {
     //called when the designer item's subcomponent should be updated
     DecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
     };
-
-
 
     return DecoratorBase;
 });

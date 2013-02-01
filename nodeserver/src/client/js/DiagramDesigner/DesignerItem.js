@@ -57,32 +57,6 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    /*DesignerItem.prototype._initialize = function (objDescriptor) {
-        this.canvas = objDescriptor.designerCanvas;
-        this._containerElement = null;
-
-        this.decoratorName = "";
-        if (objDescriptor.decoratorInstance === undefined ||
-            objDescriptor.decoratorInstance === null) {
-            this.logger.error("DesignertItem does not have a valid decorator instance!!!");
-            throw ("DesignertItem does not have a valid decorator instance!!!");
-        }
-        this._decoratorInstance = objDescriptor.decoratorInstance;
-        this._decoratorInstance.hostDesignerItem = this;
-        this.decoratorClass = objDescriptor.decoratorClass;
-        this.selected = false;
-        this.selectedInMultiSelection = false;
-
-        //location and dimension information
-        this.positionX = objDescriptor.position.x;
-        this.positionY = objDescriptor.position.y;
-
-        this.width = 0;
-        this.height = 0;
-
-        this._initializeUI();
-    };*/
-
     DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
 
     DesignerItem.prototype._initializeUI = function () {
@@ -171,11 +145,11 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.renderGetLayoutInfo = function () {
-        this._callDecoratorMethod("on_renderGetLayoutInfo");
+        this._callDecoratorMethod("onRenderGetLayoutInfo");
     };
 
     DesignerItem.prototype.renderSetLayoutInfo = function () {
-        this._callDecoratorMethod("on_renderSetLayoutInfo");
+        this._callDecoratorMethod("onRenderSetLayoutInfo");
     };
 
     DesignerItem.prototype._remove = function() {
@@ -198,17 +172,15 @@ define(['logManager'], function (logManager) {
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        var bBox = { "x": this.positionX,
+        return { "x": this.positionX,
             "y": this.positionY,
             "width": this.width,
-            "height": this.height };
-        bBox.x2 = bBox.x + bBox.width;
-        bBox.y2 = bBox.y + bBox.height;
-
-        return bBox;
+            "height": this.height,
+            "x2": this.positionX + this.width,
+            "y2":  this.positionY + this.height};
     };
 
-    DesignerItem.prototype.onMouseEnter = function (event) {
+    DesignerItem.prototype.onMouseEnter = function (/*event*/) {
         var classes = [];
 
         this.logger.debug("onMouseEnter: " + this.id);
@@ -235,7 +207,7 @@ define(['logManager'], function (logManager) {
         return false;
     };
 
-    DesignerItem.prototype.onMouseLeave = function (event) {
+    DesignerItem.prototype.onMouseLeave = function (/*event*/) {
         var classes = [HOVER_CLASS, SELECTABLE_CLASS];
 
         this.logger.debug("onMouseLeave: " + this.id);
@@ -260,19 +232,7 @@ define(['logManager'], function (logManager) {
         //when selected, no connectors are available
         this.hideConnectors();
 
-        //in edit mode and when not participating in a multiple selection,
-        //show connectors
-        /*if (this.selectedInMultiSelection === true) {
-            this.hideConnectors();
-        } else {
-            if (this.canvas.getIsReadOnlyMode() === false) {
-                this.showConnectors();
-            } else {
-                this.hideConnectors();
-            }
-        }*/
-
-        //let the decorator know that this item become selected
+        //let the decorator know that this item became selected
         this._callDecoratorMethod("onSelect");
     };
 
@@ -281,9 +241,7 @@ define(['logManager'], function (logManager) {
         this.selectedInMultiSelection = false;
         this.$el.removeClass("selected");
 
-        //this.hideConnectors();
-
-        //let the decorator know that this item become deselected
+        //let the decorator know that this item became deselected
         this._callDecoratorMethod("onDeselect");
     };
 
@@ -324,7 +282,6 @@ define(['logManager'], function (logManager) {
             var oldControl = this._decoratorInstance.getControl();
             var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
-
             this.__setDecorator(objDescriptor.decoratorClass, oldControl, oldMetaInfo);
 
             //attach new one
@@ -333,8 +290,6 @@ define(['logManager'], function (logManager) {
             this.logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
 
             this._callDecoratorMethod("on_addTo");
-
-            //TODO: fix if the item was selected it should be selected with the new decorator as well
         } else {
             //if decorator instance not changed
             //let the decorator instance know about the update
