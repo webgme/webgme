@@ -261,6 +261,33 @@ define(['logManager',
         }
     };
 
+    //called when the designer item's subcomponent should be updated
+    DecoratorWithPorts.prototype.updateSubcomponent = function (portId) {
+        var idx = this._portIDs.indexOf(portId),
+            client = this._control._client,
+            portNode = client.getNode(portId);
+
+        if (idx !== -1) {
+            this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name)});
+            this._updatePortPosition(portId);
+        }
+    };
+
+    DecoratorWithPorts.prototype._updatePortPosition = function (portId) {
+        var portNode = this._control._client.getNode(portId),
+            portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 };
+
+        //check if is has changed at all
+        if ((this._ports[portId].position.x !== portPosition.x) ||
+            (this._ports[portId].position.y !== portPosition.y)) {
+
+            //remove from current position
+            this._ports[portId].$el.remove();
+
+            this._addPortToContainer(portNode);
+        }
+    };
+
     /**************** EDIT NODE TITLE ************************/
 
     DecoratorWithPorts.prototype._onNodeTitleChanged = function (oldValue, newValue) {

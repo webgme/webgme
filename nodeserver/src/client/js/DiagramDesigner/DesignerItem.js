@@ -388,5 +388,10 @@ define(['logManager'], function (logManager) {
         this.canvas.connectionDrawingManager.detachConnectable(el);
     };
 
+    DesignerItem.prototype.updateSubcomponent = function (subComponentId) {
+        //let the decorator instance know about the update
+        this._decoratorInstance.updateSubcomponent(subComponentId);
+    };
+
     return DesignerItem;
 });

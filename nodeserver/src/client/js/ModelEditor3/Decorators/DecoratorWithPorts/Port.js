@@ -72,7 +72,8 @@ define(['logManager',
         if (options.title) {
             if (this.title !== options.title) {
                 this.title = options.title;
-                this.$portTitle.text(options.title);
+                this.$portTitle.text(this.title);
+                this.$el.attr({"title": this.title});
             }
         }
     };

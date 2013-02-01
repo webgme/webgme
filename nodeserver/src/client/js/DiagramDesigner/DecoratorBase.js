@@ -208,8 +208,12 @@ define(['logManager'], function (logManager) {
 
 
     /************* ADDITIONAL METHODS ***************************/
-    //called when the designer items becomes deselected
+    //called when the designer item should be updated
     DecoratorBase.prototype.update = function () {
+    };
+
+    //called when the designer item's subcomponent should be updated
+    DecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
     };
 
 

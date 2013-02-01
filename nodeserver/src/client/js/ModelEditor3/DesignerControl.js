@@ -487,7 +487,9 @@ define(['logManager',
     DesignerControl.prototype._onUpdate = function (gmeID, objDesc) {
         var componentID,
             len,
-            decClass;
+            decClass,
+            objId,
+            sCompId;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -526,6 +528,13 @@ define(['logManager',
                     }
                 } else {
                     //update about a subcomponent - will be handled in the decorator
+                    //find the host and send update to it
+                    for (objId in this._GMEID2Subcomponent[gmeID]) {
+                        if (this._GMEID2Subcomponent[gmeID].hasOwnProperty(objId)) {
+                            sCompId = this._GMEID2Subcomponent[gmeID][objId];
+                            this.designerCanvas.updateDesignerItemSubComponent(objId, sCompId);
+                        }
+                    }
                 }
             }
         }

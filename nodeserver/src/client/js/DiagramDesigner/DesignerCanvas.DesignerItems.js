@@ -58,6 +58,17 @@ define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         }
     };
 
+    DesignerCanvasDesignerItem.prototype.updateDesignerItemSubComponent = function (componentId, subComponentId) {
+        if (this.itemIds.indexOf(componentId) !== -1) {
+            this.logger.debug("Updating model component's [" + componentId + "] subcomponent: " + subComponentId);
+
+            //add to accounting queues for performance optimization
+            this._updatedDesignerItemIDs.push(componentId);
+
+            this.items[componentId].updateSubcomponent(subComponentId);
+        }
+    };
+
     DesignerCanvasDesignerItem.prototype.deleteDesignerItem  = function (id) {
         var idx;
 
