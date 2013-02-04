@@ -370,6 +370,42 @@ CoreType, Cache) {
 		});
 	};
 
+	tests[6] = function (storage, root, callback) {
+		core = new Core(new Cache(storage));
+
+		createNode("a");
+		createNode("b", "a");
+		createNode("c", "a");
+		createNode("d", "a");
+		
+		core.setPointer(nodes.d, "src", nodes.b);
+		core.setPointer(nodes.d, "trg", nodes.c);
+		
+		createNode("e", "a");
+		nodes.x = core.moveNode(nodes.b, nodes.e);
+		nodes.y = core.moveNode(nodes.c, nodes.e);
+		nodes.z = core.moveNode(nodes.d, nodes.e);
+		
+		nodes.f = core.copyNode(nodes.e, nodes.a);
+		core.setAttribute(nodes.f, "name", "f");
+		
+		core.loadChildren(nodes.e, function(err, children) {
+			console.log(children.length);
+						
+			// core.moveNode(nodes.x, nodes.a);
+			// core.moveNode(nodes.y, nodes.a);
+			// core.moveNode(nodes.z, nodes.a);
+
+			for(var i = 0; i < children.length; ++i) {
+				core.moveNode(children[i], nodes.a);
+			}
+			
+			core.persist(nodes.a, function (err) {
+				callback(err, core.getKey(nodes.a));
+			});
+		});
+	};
+
 	return function (number, storage, root, callback) {
 		if( !tests[number] ) {
 			callback(new Error("no such test program"));

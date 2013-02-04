@@ -92,7 +92,7 @@ var TestStorage = function(cProjectName,cBranchName){
 var DirtyStorage = function(cProjectName,cBranchName){
     var cObjects,
         MONGO = require('mongodb'),
-        DB = new MONGO.Db(cProjectName, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}));
+        DB = new MONGO.Db(cProjectName, new MONGO.Server(commonUtil.MongoDBLocation, commonUtil.MongoDBPort, {},{}), {w:1});
 
     /*public functions*/
     this.get = function(id,cb){

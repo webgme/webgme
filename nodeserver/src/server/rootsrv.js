@@ -1,6 +1,6 @@
 var io = require('socket.io').listen(999);
 var ioc = require('socket.io-client');
-var CU = require('../common/commonUtil');
+var CU = require('../common/CommonUtil');
 var rootHistory = [];
 var currentRoot = null;
 

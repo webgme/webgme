@@ -534,6 +534,7 @@ FUTURE, CONFIG) {
 				return node.data;
 			}
 
+			// TODO: return immutable data without coping
 			return JSON.parse(JSON.stringify(node.data));
 		};
 

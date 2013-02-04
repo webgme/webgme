@@ -130,6 +130,8 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
 			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
+			// console.log("insert", overlays.parent.data.atr.name, source, name, target);
+			
 			var node = coretree.getChild(overlays, source);
 
 			ASSERT(coretree.getProperty(node, name) === undefined);
@@ -157,6 +159,8 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(isValidPath(source) && isValidPath(target) && isPointerName(name));
 			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
+			// console.log("remove", overlays.parent.data.atr.name, source, name, target);
+			
 			var node = coretree.getChild(overlays, source);
 			ASSERT(node && coretree.getProperty(node, name) === target);
 			coretree.deleteProperty(node, name);
@@ -222,6 +226,8 @@ CoreTree, SHA1, FUTURE) {
 					}
 				}
 			}
+
+			// console.log("query", overlays.parent.data.atr.name, prefix, list);
 
 			return list;
 		};
@@ -400,7 +406,6 @@ CoreTree, SHA1, FUTURE) {
 			}
 
 			coretree.setData(node, coretree.copyData(oldNode));
-			deleteNode(oldNode);
 
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 			var ancestorNewPath = coretree.getPath(node, ancestor);
@@ -426,10 +431,8 @@ CoreTree, SHA1, FUTURE) {
 						entry.t = tmp;
 					}
 
-					// ASSERT(entry.s.substr(0, baseOldPath.length) ===
-					// baseOldPath);
-					// ASSERT(entry.s === baseOldPath ||
-					// entry.s.charAt(baseOldPath.length) === "/");
+					ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
+					ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
 
 					var source, target, overlays;
 
@@ -478,6 +481,8 @@ CoreTree, SHA1, FUTURE) {
 				base = coretree.getParent(base);
 			}
 
+			deleteNode(oldNode);
+			
 			return node;
 		};
 

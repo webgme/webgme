@@ -115,7 +115,7 @@ define(['commonUtil',"core/lib/sha1",'js/Client/ClientStorage','core/assert'],
                             //TODO popup for new branch
                             switch(err){
                                 case "invalid root cannot be saved!!!":
-                                    var newbranchid = commonUtil.guid()
+                                    var newbranchid = commonUtil.guid();
                                     myroot["_id"] = BID+newbranchid;
                                     myroot.name = newbranchid;
                                     storage.save(myroot,function(err){

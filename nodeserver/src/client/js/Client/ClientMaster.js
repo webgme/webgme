@@ -15,6 +15,10 @@ define([
             COPY = commonUtil.copy,
             //gKEY = "_id",
             ClientMaster = function (parameters) {
+        	if( parameters.proxy.substring(0, 7) !== "http://" ) {
+        		parameters.proxy = "http://" + parameters.proxy;
+        	}
+        	
             var self = this,
                 selectedObjectId = null,
                 activeProject = null,
@@ -112,7 +116,7 @@ define([
                                     parameters:null,
                                     currentbranch:null,
                                     branches:{}
-                                }
+                                };
                             }
                         }
                         var deadprojects = [];
@@ -201,7 +205,7 @@ define([
                             } else {
                                 callback(null);
                             }
-                        })
+                        });
                     } else {
                         //no direct server info, we collect trough proxy
                         if (proxy) {
@@ -297,7 +301,7 @@ define([
                                     myinfo.branches[branches[i].name] = {
                                         actor:null,
                                         commit:branches[i].commit
-                                    }
+                                    };
                                 }
                             }
                             //at this point all branch info is filled so we can go for the master/first available or the last used one
@@ -354,19 +358,16 @@ define([
                                 }
                             }
                             //at this point we should selected/created our actor - so we simply activate it
-                            try {
-                                commitInfos[activeProject].getAllCommitsNow(function (err, commits) {
-                                    if (!err && commits && commits.length > 0) {
-                                        activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit,function(err){
-                                            console.log('activated');
-                                        });
-                                    } else {
-                                        throw(err);
-                                    }
-                                });
-                            } catch (e) {
-                                console.log(e);
-                            }
+                            commitInfos[activeProject].getAllCommitsNow(function (err, commits) {
+                            	if(err) {
+                                    console.log(err);
+                            	}
+                            	else if (commits && commits.length > 0) {
+                                    activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit,function(err){
+                                        console.log('activated');
+                                    });
+                                }
+                            });
                         } else {
                             //no branch for the given project, baaad
                             console.log('cannot found any branch for the given project!!!');
@@ -461,6 +462,7 @@ define([
                 callback = callback || function () {
                 };
                 //we destroy all related
+                callback();
             };
             self.selectCommitAsync = function (commitid, callback) {
                 callback = callback || function () {
@@ -603,7 +605,7 @@ define([
                                     name:serverbranches[i].name,
                                     remotecommit:serverbranches[i].commit,
                                     localcommit:null
-                                }
+                                };
                             }
                             for (i in projectsinfo[activeProject].branches) {
                                 if (returnlist[i]) {
@@ -613,7 +615,7 @@ define([
                                         name:i,
                                         remotecommit:null,
                                         localcommit:projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
-                                    }
+                                    };
                                 }
                             }
                             var returnarray = [];
