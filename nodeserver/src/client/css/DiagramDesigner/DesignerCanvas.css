@@ -74,3 +74,11 @@
         background-color: lime; }
   .designer-canvas .designer-canvas-body .connections {
     position: absolute; }
+
+.designer-canvas-property-dialog.ui-dialog .ui-dialog-content {
+  position: relative;
+  border: 0;
+  padding: 1px 1px;
+  background-color: black;
+  overflow: auto;
+  zoom: 1; }

@@ -15,6 +15,7 @@ $connector-border: 1px solid #883333;
 $connector-hover-border-color: rgba( 255, 43, 43, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
+$designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
 
 .designer-canvas {
 
@@ -105,6 +106,19 @@ $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 
     .connections {
       position: absolute;
+    }
+  }
+}
+
+.designer-canvas-property-dialog {
+  &.ui-dialog {
+    .ui-dialog-content {
+      position: relative;
+      border: 0;
+      padding: 1px 1px;
+      background-color: $designer-canvas-property-dialog-ui-dialog-content-background-color;
+      overflow: auto;
+      zoom: 1;
     }
   }
 }

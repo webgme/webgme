@@ -1,7 +1,7 @@
 "use strict";
 
 define([
-    'PropertyEditor/Widgets/WidgetBase',
+    'js/PropertyEditor/Widgets/WidgetBase',
     'clientUtil'
 ],
     function (WidgetBase,

@@ -15,6 +15,7 @@ define(['logManager',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
     'js/DiagramDesigner/ConnectionRouteManager2',
     'js/DiagramDesigner/ConnectionDrawingManager',
+    'js/PropertyEditor/PropertyListView',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
@@ -29,11 +30,13 @@ define(['logManager',
                                                       DesignerCanvasSubcomponents,
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionRouteManager2,
-                                                      ConnectionDrawingManager) {
+                                                      ConnectionDrawingManager,
+                                                      PropertyListView) {
 
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10,
-        CANVAS_EDGE = 100;
+        CANVAS_EDGE = 100,
+        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog";
 
     DesignerCanvas = function (options) {
         var self = this;
@@ -65,7 +68,11 @@ define(['logManager',
         this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionDeleteClicked = function (selectedIds) {
-            self._onSelectionDeleteClicked.call(self, selectedIds);
+            self._onSelectionDeleteClicked(selectedIds);
+        }
+
+        this.selectionManager.onSelectionChanged = function (selectedIds) {
+            self._onSelectionChanged(selectedIds);
         }
 
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
@@ -84,7 +91,7 @@ define(['logManager',
             this._addDebugModeExtensions();
         }
 
-        /************** ROuTING MANAGER SELECTION **************************/
+        /************** ROUTING MANAGER SELECTION **************************/
 
         this.$btnGroupConnectionRouteManager = this.addButtonGroup(function (event, data) {
             self._onConnectionRouteManagerChanged(data.type);
@@ -98,7 +105,7 @@ define(['logManager',
             "text": "RM #2",
             "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
 
-        /************** END OF - ROuTING MANAGER SELECTION **************************/
+        /************** END OF - ROUTING MANAGER SELECTION **************************/
 
         this.logger.debug("DesignerCanvas ctor finished");
     };
@@ -238,6 +245,15 @@ define(['logManager',
         this.addButton({ "title": "Diagonal",
             "icon": "icon-signal",
             "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
+
+
+        /************** PROPERTIES BUTTON ***********************/
+        this.skinParts.$btnGroupProperties = this.addButtonGroup(function (event, data) {
+            self._showProperties();
+        });
+
+        this.addButton({ "title": "Properties",
+            "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -477,6 +493,8 @@ define(['logManager',
 
         this.selectionManager.showSelectionOutline();
 
+        this._refreshProperties(this.selectionManager.selectedItemIdList);
+
         this.logger.debug("_refreshScreen END");
     };
 
@@ -623,6 +641,19 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
+    /************************** SELECTION CHANGED HANDLER ****************************/
+
+    DesignerCanvas.prototype._onSelectionChanged = function (selectedIds) {
+        this._refreshProperties(selectedIds);
+        this.onSelectionChanged(selectedIds);
+    };
+
+    DesignerCanvas.prototype.onSelectionChanged = function (selectedIds) {
+        this.logger.debug("DesignerCanvas.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
+    };
+
+    /************************** END OF - SELECTION CHANGED HANDLER ****************************/
+
     /********************** ITEM AUTO LAYOUT ****************************/
 
     DesignerCanvas.prototype._itemAutoLayout = function (mode) {
@@ -691,6 +722,89 @@ define(['logManager',
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
+
+    /************** PROPERTY WIDGET **********************/
+
+    DesignerCanvas.prototype._showProperties = function () {
+        var propList,
+            self = this;
+
+        if (this.propListView === null || this.propListView === undefined) {
+            propList = this._getCommonPropertiesForSelection();
+            if (propList && !_.isEmpty(propList)) {
+
+                if (this.$propertyDialog === undefined) {
+                    this.$propertyDialog = $("<div/>", {id : DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS});
+                    this.$el.append(this.$propertyDialog);
+                } else {
+                    this.$propertyDialog.empty();
+                }
+
+
+                this.$propertyDialog.dialog({"title": "Properties",
+                    "dialogClass": DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS,
+                    "close": function (event, ui) {
+                        self._hideProperties();
+                    } });
+
+                this.propListView = new PropertyListView(this.$propertyDialog);
+
+                this.propListView.onFinishChange(function (args) {
+                    self._onPropertyChanged(args);
+                });
+
+                this.propListView.setPropertyList(propList);
+            }
+        }
+    };
+
+    DesignerCanvas.prototype._hideProperties = function () {
+        if (this.propListView) {
+            this.propListView.destroy();
+            this.propListView = undefined;
+        }
+
+        if (this.$propertyDialog) {
+            this.$propertyDialog.dialog( "destroy" );
+            this.$propertyDialog.empty();
+            this.$propertyDialog.remove();
+            this.$propertyDialog = undefined;
+        }
+
+    };
+
+    DesignerCanvas.prototype._refreshProperties = function (selectedIds) {
+        var propList;
+
+        if (this.propListView) {
+            if (selectedIds.length === 0) {
+                this._hideProperties();
+            } else {
+                propList = this._getCommonPropertiesForSelection();
+
+                this.propListView.setPropertyList(propList);
+            }
+        }
+    };
+
+    DesignerCanvas.prototype._getCommonPropertiesForSelection = function () {
+        return this.onGetCommonPropertiesForSelection(this.selectionManager.selectedItemIdList);
+    };
+
+    DesignerCanvas.prototype.onGetCommonPropertiesForSelection = function (selectedItemIDs) {
+        this.logger.warning("DesignerCanvas.onGetCommonPropertiesForSelection is not overridden!");
+        return {};
+    };
+
+    DesignerCanvas.prototype._onPropertyChanged = function (args) {
+        this.onPropertyChanged(this.selectionManager.selectedItemIdList, args);
+    };
+
+    DesignerCanvas.prototype.onPropertyChanged = function (selectedObjIDs, args) {
+        this.logger.warning("DesignerCanvas.onPropertyChanged is not overridden!");
+    };
+
+    /************** END OF - PROPERTY WIDGET **********************/
 
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);

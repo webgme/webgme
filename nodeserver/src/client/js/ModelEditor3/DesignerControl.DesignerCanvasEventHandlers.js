@@ -52,6 +52,14 @@ define(['logManager',
             self._onUnregisterSubcomponent(objID, sCompID);
         };
 
+        this.designerCanvas.onGetCommonPropertiesForSelection = function (selectedObjectIDs) {
+            return self._onGetCommonPropertiesForSelection(selectedObjectIDs);
+        };
+
+        this.designerCanvas.onPropertyChanged = function (selectedObjIDs, args) {
+            self._onPropertyChanged(selectedObjIDs, args);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -239,6 +247,139 @@ define(['logManager',
 
         this._client.startTransaction();
         this._client.setRegistry(id, nodePropertyNames.Registry.decorator, nextDec);
+        this._client.completeTransaction();
+    };
+
+    DesignerControlDesignerCanvasEventHandlers.prototype._onGetCommonPropertiesForSelection = function (selectedObjIDs) {
+        var propList = {},
+            selectionLength = selectedObjIDs.length,
+            cNode,
+            i,
+            flattenedAttrs,
+            flattenedRegs,
+            commonAttrs = {},
+            commonRegs = {},
+            noCommonValueColor = "#787878",
+            _getNodePropertyValues, //fn
+            _filterCommon, //fn
+            _addItemsToResultList; //fn
+
+        _getNodePropertyValues = function (node, propNameFn, propValueFn) {
+            var result =  {},
+                attrNames = node[propNameFn](),
+                len = attrNames.length;
+
+            while (--len >= 0) {
+                result[attrNames[len]] = node[propValueFn](attrNames[len]);
+            }
+
+            return util.flattenObject(result);
+        };
+
+        _filterCommon = function (resultList, otherList, initPhase) {
+            var it;
+
+            if (initPhase === true) {
+                for (it in otherList) {
+                    if (otherList.hasOwnProperty(it)) {
+                        resultList[it] = { "value": otherList[it],
+                            "valueType": typeof otherList[it],
+                            "isCommon": true };
+                    }
+                }
+            } else {
+                for (it in resultList) {
+                    if (resultList.hasOwnProperty(it)) {
+                        if (otherList.hasOwnProperty(it)) {
+                            if (resultList[it].isCommon) {
+                                resultList[it].isCommon = resultList[it].value === otherList[it];
+                            }
+                        } else {
+                            delete resultList[it];
+                        }
+                    }
+                }
+            }
+        };
+
+        if (selectionLength > 0) {
+            //get all attributes
+            //get all registry elements
+            i = selectionLength;
+            while (--i >= 0) {
+                cNode = this._client.getNode(this._ComponentID2GmeID[selectedObjIDs[i]]);
+
+                flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
+
+                _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
+
+                flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
+
+                _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+            }
+
+            _addItemsToResultList = function (srcList, prefix, dstList) {
+                var i,
+                    extKey,
+                    keyParts;
+
+                if (prefix !== "") {
+                    prefix += ".";
+                }
+
+                for (i in srcList) {
+                    if (srcList.hasOwnProperty(i)) {
+                        extKey = prefix + i;
+                        keyParts = i.split(".");
+                        dstList[extKey] = { "name": keyParts[keyParts.length - 1],
+                            "value": srcList[i].value,
+                            "valueType": srcList[i].valueType};
+
+                        if (i === "position.x" || i === "position.y") {
+                            dstList[extKey].minValue = 0;
+                            dstList[extKey].stepValue = 10;
+                        }
+
+                        if (srcList[i].isCommon === false) {
+                            dstList[extKey].value = "";
+                            dstList[extKey].options = {"textColor": noCommonValueColor};
+                        }
+
+                        if (extKey.indexOf(".x") > -1) {
+                            //let's say its inherited, make it italic
+                            dstList[extKey].options = dstList[extKey].options || {};
+                            dstList[extKey].options.textItalic = true;
+                            dstList[extKey].options.textBold = true;
+                        }
+                    }
+                }
+            };
+
+            _addItemsToResultList(commonAttrs, "Attributes", propList);
+            _addItemsToResultList(commonRegs, "Registry", propList);
+        }
+
+        return propList;
+    };
+
+    DesignerControlDesignerCanvasEventHandlers.prototype._onPropertyChanged = function (selectedObjIDs, args) {
+        var i = selectedObjIDs.length,
+            keyArr,
+            setterFn;
+
+        this._client.startTransaction();
+        while (--i >= 0) {
+            keyArr = args.id.split(".");
+            if (keyArr[0] === "Attributes") {
+                setterFn = "setAttributes";
+            } else {
+                setterFn = "setRegistry";
+            }
+
+            keyArr.splice(0, 1);
+            keyArr = keyArr.join(".");
+            this._client[setterFn](this._ComponentID2GmeID[selectedObjIDs[i]], keyArr, args.newValue);
+        }
         this._client.completeTransaction();
     };
     

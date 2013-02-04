@@ -2,7 +2,7 @@
 
 define(['logManager',
     'clientUtil',
-    'PropertyEditor/WidgetManager',
+    'js/PropertyEditor/WidgetManager',
     'css!PropertyEditorCSS/PropertyEditorGUI.css'], function (logManager,
                                                                util,
                                                                WidgetManager) {

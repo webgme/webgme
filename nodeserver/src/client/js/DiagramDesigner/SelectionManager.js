@@ -226,6 +226,8 @@ define(['logManager',
 
         if (itemsInSelection.length > 0) {
             this.setSelection(itemsInSelection, params.event);
+        } else {
+            this.onSelectionChanged([]);
         }
     };
 
@@ -235,7 +237,8 @@ define(['logManager',
         var i = this.selectedItemIdList.length,
             itemId,
             items = this.canvas.items,
-            item;
+            item,
+            changed = false;
 
         while (i--) {
             itemId = this.selectedItemIdList[i];
@@ -246,11 +249,17 @@ define(['logManager',
                     item.onDeselect();
                 }
             }
+
+            changed = true;
         }
 
         this.selectedItemIdList = [];
 
         this.hideSelectionOutline();
+
+        /*if (changed) {
+            this.onSelectionChanged(this.selectedItemIdList);
+        }*/
     };
 
     SelectionManager.prototype.setSelection = function (idList, event) {
@@ -259,7 +268,8 @@ define(['logManager',
             len = idList.length,
             item,
             items = this.canvas.items,
-            itemId;
+            itemId,
+            changed = false;
 
         this.logger.debug("setSelection: " + idList + ", multiSelectionModifier: " + multiSelectionModifier);
 
@@ -274,6 +284,7 @@ define(['logManager',
                 if (this.allowMultiSelection !== true) {
                     this._clearSelection();
                     idList.splice(0, len - 1);
+                    changed = true;
                 } else {
                     //by definition multiselection is allowed
                     //check if user pressed the necessary modifier keys for multiselection
@@ -312,6 +323,8 @@ define(['logManager',
                                 if (idList.length === 1) {
                                     this._lastSelected = idList[0];
                                 }
+
+                                changed = true;
                             }
                         }
                     } else {
@@ -329,6 +342,8 @@ define(['logManager',
                                 if ($.isFunction(item.onSelect)) {
                                     item.onSelect(true);
                                 }
+
+                                changed = true;
                             }
                         } else {
                             itemId = idList[0];
@@ -344,6 +359,8 @@ define(['logManager',
                                 if ($.isFunction(item.onSelect)) {
                                     item.onSelect(false);
                                 }
+
+                                changed = true;
                             }
                         }
                     }
@@ -354,12 +371,17 @@ define(['logManager',
         this.logger.debug("selected items: " + this.selectedItemIdList);
 
         this.showSelectionOutline();
+
+        if (changed) {
+            this.onSelectionChanged(this.selectedItemIdList);
+        }
     };
 
     SelectionManager.prototype.componentsDeleted = function (idList) {
         var i = idList.length,
             idx,
-            id;
+            id,
+            changed = false;
 
         //items are already deleted, we just need to remove them from the selectedIdList (if there)
         while (i--) {
@@ -367,7 +389,12 @@ define(['logManager',
             idx = this.selectedItemIdList.indexOf(id);
             if (idx !== -1) {
                 this.selectedItemIdList.splice(idx, 1);
+                changed = true;
             }
+        }
+
+        if (changed) {
+            this.onSelectionChanged(this.selectedItemIdList);
         }
     };
 
@@ -510,6 +537,10 @@ define(['logManager',
     };
 
     SelectionManager.prototype.onSelectionDeleteClicked = function (selectedIds) {
+        //NOTE: overridden in DesignerCanvas
+    };
+
+    SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
         //NOTE: overridden in DesignerCanvas
     };
 

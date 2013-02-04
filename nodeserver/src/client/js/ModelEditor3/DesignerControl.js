@@ -19,7 +19,8 @@ define(['logManager',
     DesignerControl = function (options) {
         var self = this,
             $btnGroupAutoRename,
-            $btnGroupAutoCreateModel;
+            $btnGroupAutoCreateModel,
+            $btnGroupPrintNodeData;
 
         this.logger = options.logger || logManager.create(options.loggerName || "DesignerControl");
 
@@ -99,6 +100,15 @@ define(['logManager',
         /************** END OF - AUTO CREATE NEW NODES *****************/
 
 
+        /************** PRINT NODE DATA *****************/
+        $btnGroupPrintNodeData = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+            self._printNodeData();
+        });
+
+        this.designerCanvas.addButton({ "title": "Print node data",
+            "icon": "icon-share"}, $btnGroupPrintNodeData );
+
+        /************** END OF - PRINT NODE DATA *****************/
 
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
@@ -603,6 +613,20 @@ define(['logManager',
     DesignerControl.prototype._onModelHierarchyUp = function () {
         if (this.currentNodeInfo.parentId) {
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
+        }
+    };
+
+    DesignerControl.prototype._printNodeData = function () {
+        var idList = this.designerCanvas.selectionManager.selectedItemIdList,
+            len = idList.length,
+            node;
+
+        while (len--) {
+            node = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
+
+            if (node) {
+                node.printData();
+            }
         }
     };
 

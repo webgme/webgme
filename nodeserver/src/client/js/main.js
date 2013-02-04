@@ -47,7 +47,6 @@ require.config({
         "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
         "ModelEditor2CSS": "css/ModelEditor2",
         "PropertyEditorCSS": "css/PropertyEditor",
-        "PropertyEditor": "js/PropertyEditor",
         "PartBrowserCSS": "css/PartBrowser",
         "PartBrowser": "js/PartBrowser",
         "Repository": "js/Repository",
