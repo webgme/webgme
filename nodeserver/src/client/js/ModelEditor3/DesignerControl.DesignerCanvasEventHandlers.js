@@ -365,20 +365,47 @@ define(['logManager',
     DesignerControlDesignerCanvasEventHandlers.prototype._onPropertyChanged = function (selectedObjIDs, args) {
         var i = selectedObjIDs.length,
             keyArr,
-            setterFn;
+            setterFn,
+            getterFn,
+            propObject,
+            propPointer,
+            gmeID,
+            path;
 
         this._client.startTransaction();
         while (--i >= 0) {
+            gmeID = this._ComponentID2GmeID[selectedObjIDs[i]];
+
             keyArr = args.id.split(".");
             if (keyArr[0] === "Attributes") {
                 setterFn = "setAttributes";
+                getterFn = "getAttribute";
             } else {
                 setterFn = "setRegistry";
+                getterFn = "getRegistry";
             }
 
             keyArr.splice(0, 1);
-            keyArr = keyArr.join(".");
-            this._client[setterFn](this._ComponentID2GmeID[selectedObjIDs[i]], keyArr, args.newValue);
+
+            //get property object from node
+            path = keyArr[0];
+            propObject = this._client.getNode(gmeID)[getterFn](path);
+
+            //get root object
+            propPointer = propObject;
+            keyArr.splice(0, 1);
+
+            //dig down to leaf property
+            while (keyArr.length > 1) {
+                propPointer = propPointer[keyArr[0]];
+                keyArr.splice(0, 1);
+            }
+
+            //set value
+            propPointer[keyArr[0]] = args.newValue;
+
+            //save back object
+            this._client[setterFn](gmeID, path, propObject);
         }
         this._client.completeTransaction();
     };
