@@ -55,13 +55,21 @@ define(['logManager'], function (logManager) {
                     return h;
                 },
                 start: function (event, ui) {
-                    return self._onDraggableStart(event, ui.helper);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
+                        self._onDraggableStart(event, ui.helper);
+                    }
                 },
                 stop: function (event, ui) {
-                    return self._onDraggableStop(event, ui.helper);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.MOVE_ITEMS ||
+                        self.canvas.mode === self.canvas.OPERATING_MODES.COPY_ITEMS) {
+                        self._onDraggableStop(event, ui.helper);
+                    }
                 },
                 drag: function (event, ui) {
-                    return self._onDraggableDrag(event, ui.helper);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.MOVE_ITEMS ||
+                        self.canvas.mode === self.canvas.OPERATING_MODES.COPY_ITEMS) {
+                        self._onDraggableDrag(event, ui.helper);
+                    }
                 }
             });
         }
@@ -213,6 +221,8 @@ define(['logManager'], function (logManager) {
             //set cursor
             this._dragOptions.$draggedItemDecoratorEl = this.canvas.items[this._dragOptions.copyData[draggedItemID].copiedItemId].$el.find("> div");
             this._dragOptions.$draggedItemDecoratorEl.css("cursor", COPY_CURSOR);
+
+            this.canvas.beginMode(this.canvas.OPERATING_MODES.COPY_ITEMS);
         }
 
         //call canvas to do its own job when item dragging happens

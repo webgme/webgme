@@ -16,6 +16,7 @@ $connector-hover-border-color: rgba( 255, 43, 43, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
+$designer-canvas-body-read-only-background-color: #AAAAAA;
 
 .designer-canvas {
 
@@ -52,6 +53,10 @@ $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
   .designer-canvas-body {
     position: absolute;
     overflow: auto;
+
+    &.read-only {
+      background-color: $designer-canvas-body-read-only-background-color;
+    }
 
     .items {
       position: absolute;

@@ -53,10 +53,7 @@ define(['logManager',
         if (this.allowRubberBandSelection === true) {
             //hook up mousedown on background
             $el.on('mousedown.SelectionManager', function (event) {
-                if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY ||
-                    self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
-                    self._onBackgroundMouseDown(event);
-                }
+                self._onBackgroundMouseDown(event);
             });
         }
     };
@@ -72,33 +69,38 @@ define(['logManager',
 
         if (leftButton === true) {
 
-            this.canvas.beginMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
-
             if ((event.ctrlKey || event.metaKey) !== true) {
                 this._clearSelection();
+
             }
 
-            //start drawing selection rubber-band
-            this.rubberbandSelection = { "x": mousePos.mX,
-                                            "y": mousePos.mY,
-                                            "x2": mousePos.mX,
-                                            "y2": mousePos.mY };
+            if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+                this.canvas.beginMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
 
-            this.$rubberBand = this.createRubberBand();
+                //start drawing selection rubber-band
+                this.rubberbandSelection = { "x": mousePos.mX,
+                    "y": mousePos.mY,
+                    "x2": mousePos.mX,
+                    "y2": mousePos.mY };
 
-            this.$el.append(this.$rubberBand);
+                this.$rubberBand = this.createRubberBand();
 
-            //hook up MouseMove and MouseUp
-            this._onBackgroundMouseMoveCallBack = function (event) {
-                self._onBackgroundMouseMove(event);
-            };
+                this.$el.append(this.$rubberBand);
 
-            this._onBackgroundMouseUpCallBack = function (event) {
-                self._onBackgroundMouseUp(event);
-            };
+                //hook up MouseMove and MouseUp
+                this._onBackgroundMouseMoveCallBack = function (event) {
+                    self._onBackgroundMouseMove(event);
+                };
 
-            $(document).on('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
-            $(document).on('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
+                this._onBackgroundMouseUpCallBack = function (event) {
+                    self._onBackgroundMouseUp(event);
+                };
+
+                $(document).on('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
+                $(document).on('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
+            } else {
+                this.onSelectionChanged([]);
+            }
 
             event.stopPropagation();
         }
@@ -450,7 +452,7 @@ define(['logManager',
                 "height": bBox.h });
 
             //in non-readonly mode show action options on selection outline
-            if (this.canvas.getIsReadOnlyMode() === false) {
+            if (this.canvas.mode !== this.canvas.OPERATING_MODES.READ_ONLY) {
                 this._renderSelectionActions();
             }
         } else {
@@ -542,6 +544,10 @@ define(['logManager',
 
     SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
         //NOTE: overridden in DesignerCanvas
+    };
+
+    SelectionManager.prototype.readOnlyMode = function (readOnly) {
+        this.showSelectionOutline()
     };
 
     return SelectionManager;

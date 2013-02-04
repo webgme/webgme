@@ -339,5 +339,11 @@ define(['logManager',
 
     /************** END OF - HANDLING SELECTION EVENT *********************/
 
+    ConnectionComponent.prototype.readOnlyMode = function (readOnly) {
+        if (readOnly === true) {
+            this.hideConnectors();
+        }
+    };
+
     return ConnectionComponent;
 });

@@ -214,5 +214,9 @@ define(['logManager'], function (logManager) {
     DecoratorBase.prototype.updateSubcomponent = function (subComponentId) {
     };
 
+    DecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    };
+
+
     return DecoratorBase;
 });

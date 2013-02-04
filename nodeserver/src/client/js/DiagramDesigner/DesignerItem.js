@@ -77,41 +77,49 @@ define(['logManager'], function (logManager) {
         var i,
             self = this;
 
-        //TODO: make sure to differentiate between READ-ONLY and EDIT mode....
-
         this._events = {"mouseenter": { "fn": "onMouseEnter",
                                         "stopPropagation": true,
-                                        "preventDefault": true },
+                                        "preventDefault": true,
+                                        "enabledInReadOnlyMode": false},
                         "mouseleave": { "fn": "onMouseLeave",
                                         "stopPropagation": true,
-                                        "preventDefault": true },
+                                        "preventDefault": true,
+                                        "enabledInReadOnlyMode": false},
                         "dblclick": { "fn": "onDoubleClick",
                                         "stopPropagation": true,
-                                        "preventDefault": true }};
+                                        "preventDefault": true,
+                                        "enabledInReadOnlyMode": true}};
 
         for (i in this._events) {
             if (this._events.hasOwnProperty(i)) {
                 this.$el.on( i + '.' + EVENT_POSTFIX, null, null, function (event) {
                     var eventHandlerOpts = self._events[event.type],
-                        handled = false;
+                        handled = false,
+                        enabled = true;
 
                     if (eventHandlerOpts) {
-                        //call decorators event handler first
-                        handled = self._callDecoratorMethod(eventHandlerOpts.fn, event);
-
-                        if (handled !== true) {
-                            handled = self[eventHandlerOpts.fn].call(self, event);
+                        if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY) {
+                            enabled = eventHandlerOpts.enabledInReadOnlyMode;
                         }
 
-                        //if still not marked as handled
-                        if (handled !== true) {
-                            //finally marked handled if needed
-                            if (eventHandlerOpts.stopPropagation === true) {
-                                event.stopPropagation();
+                        if (enabled) {
+                            //call decorators event handler first
+                            handled = self._callDecoratorMethod(eventHandlerOpts.fn, event);
+
+                            if (handled !== true) {
+                                handled = self[eventHandlerOpts.fn].call(self, event);
                             }
 
-                            if (eventHandlerOpts.preventDefault === true) {
-                                event.preventDefault();
+                            //if still not marked as handled
+                            if (handled !== true) {
+                                //finally marked handled if needed
+                                if (eventHandlerOpts.stopPropagation === true) {
+                                    event.stopPropagation();
+                                }
+
+                                if (eventHandlerOpts.preventDefault === true) {
+                                    event.preventDefault();
+                                }
                             }
                         }
                     }
@@ -322,9 +330,9 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    DesignerItem.prototype.moveBy = function (dX, dY) {
+    /*DesignerItem.prototype.moveBy = function (dX, dY) {
         this.moveTo(this.positionX + dX, this.positionY + dY);
-    };
+    };*/
 
     /************ SUBCOMPONENT HANDLING *****************/
     DesignerItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
@@ -346,6 +354,11 @@ define(['logManager'], function (logManager) {
     DesignerItem.prototype.updateSubcomponent = function (subComponentId) {
         //let the decorator instance know about the update
         this._decoratorInstance.updateSubcomponent(subComponentId);
+    };
+
+    /****** READ-ONLY HANDLER ************/
+    DesignerItem.prototype.readOnlyMode = function (readOnly) {
+        this._decoratorInstance.readOnlyMode(readOnly);
     };
 
     return DesignerItem;

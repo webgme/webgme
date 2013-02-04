@@ -89,17 +89,23 @@ define(['logManager'], function (logManager) {
                 start: function (event) {
                     var el = $(this);
                     event.stopPropagation();
-                    el.addClass(ACCEPT_CLASS);
-                    self._startConnectionDraw(el, objId, sCompId);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
+                        el.addClass(ACCEPT_CLASS);
+                        self._startConnectionDraw(el, objId, sCompId);
+                    }
                 },
                 stop: function (event) {
                     var el = $(this);
                     event.stopPropagation();
-                    self._endConnectionDraw(event);
-                    el.removeClass(ACCEPT_CLASS);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.CREATE_CONNECTION) {
+                        self._endConnectionDraw(event);
+                        el.removeClass(ACCEPT_CLASS);
+                    }
                 },
                 drag: function (event) {
-                    self._onMouseMove(event);
+                    if (self.canvas.mode === self.canvas.OPERATING_MODES.CREATE_CONNECTION) {
+                        self._onMouseMove(event);
+                    }
                 }
             });
         }
@@ -118,8 +124,11 @@ define(['logManager'], function (logManager) {
             }).on(MOUSELEAVE, function (event) {
                 $(this).removeClass(HOVER_CLASS);
             }).on(MOUSEUP, function (event) {
-                self._detachConnectionEndPointHandler(droppableEl);
-                self._connectionEndDrop(objId, sCompId);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.CREATE_CONNECTION ||
+                    self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+                    self._detachConnectionEndPointHandler(droppableEl);
+                    self._connectionEndDrop(objId, sCompId);
+                }
             });
 
             this._connectionInDrawProps.lastAttachedDroppableEl = droppableEl;
@@ -289,22 +298,28 @@ define(['logManager'], function (logManager) {
             start: function (event) {
                 var el = $(this);
                 event.stopPropagation();
-                el.addClass(ACCEPT_CLASS);
-                self._connectionRedrawProps = { "srcCoord": srcCoord,
-                                                "dstCoord": dstCoord,
-                                                "srcDragged": true,
-                                                "connId": connID,
-                                                "connProps": connProps };
-                self._startConnectionRedraw();
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
+                    el.addClass(ACCEPT_CLASS);
+                    self._connectionRedrawProps = { "srcCoord": srcCoord,
+                                                    "dstCoord": dstCoord,
+                                                    "srcDragged": true,
+                                                    "connId": connID,
+                                                    "connProps": connProps };
+                    self._startConnectionRedraw();
+                }
             },
             stop: function (event) {
                 var el = $(this);
                 event.stopPropagation();
-                self._endConnectionRedraw(event);
-                el.removeClass(ACCEPT_CLASS);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+                    self._endConnectionRedraw(event);
+                    el.removeClass(ACCEPT_CLASS);
+                }
             },
             drag: function (event) {
-                self._onMouseMove(event);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+                    self._onMouseMove(event);
+                }
             }
         });
 
@@ -316,22 +331,28 @@ define(['logManager'], function (logManager) {
             start: function (event) {
                 var el = $(this);
                 event.stopPropagation();
-                el.addClass(ACCEPT_CLASS);
-                self._connectionRedrawProps = { "srcCoord": srcCoord,
-                    "dstCoord": dstCoord,
-                    "srcDragged": false,
-                    "connId": connID,
-                    "connProps": connProps };
-                self._startConnectionRedraw();
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
+                    el.addClass(ACCEPT_CLASS);
+                    self._connectionRedrawProps = { "srcCoord": srcCoord,
+                        "dstCoord": dstCoord,
+                        "srcDragged": false,
+                        "connId": connID,
+                        "connProps": connProps };
+                    self._startConnectionRedraw();
+                }
             },
             stop: function (event) {
                 var el = $(this);
                 event.stopPropagation();
-                self._endConnectionRedraw(event);
-                el.removeClass(ACCEPT_CLASS);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+                    self._endConnectionRedraw(event);
+                    el.removeClass(ACCEPT_CLASS);
+                }
             },
             drag: function (event) {
-                self._onMouseMove(event);
+                if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+                    self._onMouseMove(event);
+                }
             }
         });
 
@@ -398,6 +419,9 @@ define(['logManager'], function (logManager) {
     };
 
     /********************* END OF - CONNECTION RECONNECT *********************************/
+
+    ConnectionDrawingManager.prototype.readOnlyMode = function (readOnly) {
+    };
 
     return ConnectionDrawingManager;
 });

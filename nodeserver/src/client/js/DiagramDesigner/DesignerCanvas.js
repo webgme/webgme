@@ -36,7 +36,8 @@ define(['logManager',
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
-        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog";
+        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog",
+        READ_ONLY_CLASS = "read-only";
 
     DesignerCanvas = function (options) {
         var self = this;
@@ -107,6 +108,22 @@ define(['logManager',
 
         /************** END OF - ROUTING MANAGER SELECTION **************************/
 
+        /************** READ ONLY MODE **************************/
+
+        this.$btnGroupReadOnly = this.addButtonGroup(function (event, data) {
+            self.setReadOnlyMode(data.mode);
+        });
+
+        this.addButton({ "title": "READ-ONLY ON",
+            "text": "READ-ONLY: ON",
+            "data": { "mode": true}}, this.$btnGroupReadOnly );
+
+        this.addButton({ "title": "READ-ONLY OFF",
+            "text": "READ-ONLY: OFF",
+            "data": { "mode": false}}, this.$btnGroupReadOnly );
+
+        /************** END OF - READ ONLY MODE **************************/
+
         this.logger.debug("DesignerCanvas ctor finished");
     };
 
@@ -132,10 +149,6 @@ define(['logManager',
         this._itemSubcomponentsMap = {};
     };
 
-    DesignerCanvas.prototype.getIsReadOnlyMode = function () {
-        return this._readOnlyMode;
-    };
-
     DesignerCanvas.prototype.getGuid = function (prefix) {
         var nextID = (prefix || "") + this._itemIDCounter + "";
 
@@ -144,15 +157,50 @@ define(['logManager',
         return nextID;
     };
 
-    //TODO: IMPLEMENT SET READONLY MODE
-    /*DesignerCanvas.prototype.setIsReadOnlyMode = function (readOnly) {
-        if (this._readOnlyMode !== readOnly) {
-            this._readOnlyMode = readOnly;
+    DesignerCanvas.prototype.getIsReadOnlyMode = function () {
+        /*return this._readOnlyMode;*/
+        return this.mode === this.OPERATING_MODES.READ_ONLY;
+    };
 
-            //TODO: UPDATE EVERYTHING
-
+    DesignerCanvas.prototype.setReadOnlyMode = function (readOnly) {
+        if (readOnly === true && this.mode !== this.OPERATING_MODES.READ_ONLY) {
+            //enter READ-ONLY mode
+            this.mode = this.OPERATING_MODES.READ_ONLY;
+            this._readOnlyOn();
+        } else if (readOnly === false && this.mode === this.OPERATING_MODES.READ_ONLY) {
+            //enter normal mode from read-only
+            this.mode = this.OPERATING_MODES.NORMAL;
+            this._readOnlyOff();
         }
-    };*/
+    };
+
+    DesignerCanvas.prototype._readOnlyOn = function () {
+        this.skinParts.$readOnlyMode.show();
+        this.skinParts.$designerCanvasBody.addClass(READ_ONLY_CLASS);
+        this._setManagersReadOnlyMode(true);
+    };
+
+    DesignerCanvas.prototype._readOnlyOff = function () {
+        this.skinParts.$readOnlyMode.hide();
+        this.skinParts.$designerCanvasBody.removeClass(READ_ONLY_CLASS);
+        this._setManagersReadOnlyMode(false);
+    };
+
+    DesignerCanvas.prototype._setManagersReadOnlyMode = function (readOnly) {
+        var i;
+        this.selectionManager.readOnlyMode(readOnly);
+        this.connectionDrawingManager.readOnlyMode(readOnly);
+
+        i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].readOnlyMode(readOnly);
+        }
+
+        i = this.connectionIds.length;
+        while (i--) {
+            this.items[this.connectionIds[i]].readOnlyMode(readOnly);
+        }
+    };
 
     /****************** PUBLIC FUNCTIONS ***********************************/
 

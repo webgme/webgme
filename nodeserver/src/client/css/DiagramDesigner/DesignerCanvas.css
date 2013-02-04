@@ -22,6 +22,8 @@
 .designer-canvas .designer-canvas-body {
   position: absolute;
   overflow: auto; }
+  .designer-canvas .designer-canvas-body.read-only {
+    background-color: #aaaaaa; }
   .designer-canvas .designer-canvas-body .items {
     position: absolute; }
     .designer-canvas .designer-canvas-body .items:focus {
