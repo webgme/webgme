@@ -16,7 +16,7 @@ $connector-hover-border-color: rgba( 255, 43, 43, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
-$designer-canvas-body-read-only-background-color: #AAAAAA;
+$designer-canvas-body-read-only-background-color: #EDEDED;
 
 .designer-canvas {
 
@@ -24,6 +24,8 @@ $designer-canvas-body-read-only-background-color: #AAAAAA;
     padding: 5px;
     height: 30px;
     background-color: $designer-canvas-header-background-color;
+    overflow: hidden;
+    white-space: nowrap;
 
     .designer-canvas-header-title {
       font-size: 20px;
