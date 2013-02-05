@@ -20,7 +20,7 @@ define(['logManager',
         VALIDINHERITOR_TYPE_LINE_END = "block-wide-long",
         VALIDSOURCE_TYPE_LINE_END = "oval-wide-long",
         VALIDDESTINATION_TYPE_LINE_END = "open-wide-long",
-        GENERAL_TYPE_LINE_END = "none",
+        GENERAL_TYPE_LINE_END = "classic-wide-long",
         NOEND = "none",
         LOAD_EVENT_NAME = "load",
         SET_VALIDCHILDREN = 'ValidChildren',
@@ -65,6 +65,15 @@ define(['logManager',
             //connDesc.type has special meaning: inheritance, containment, etc
             if (type) {
                 self._client.addMember(sourceId, targetId, type);
+            }
+        };
+
+        this.designerCanvas.onDesignerItemDoubleClick = function (id, event) {
+            var gmeID = self._ComponentID2GmeID[id];
+
+            if (gmeID) {
+                self.logger.debug("Opening model with id '" + gmeID + "'");
+                self._client.setSelectedObjectId(gmeID);
             }
         };
 
@@ -289,31 +298,31 @@ define(['logManager',
             case SET_VALIDCHILDREN:
                 params.arrowStart = VALIDCHILDREN_TYPE_LINE_END;
                 params.arrowEnd = NOEND;
-                params.width = "5";
+                params.width = 2;
                 params.color = "#FF0000";
                 break;
             case SET_VALIDINHERITOR:
                 params.arrowStart = VALIDINHERITOR_TYPE_LINE_END;
                 params.arrowEnd = NOEND;
-                params.width = "3";
+                params.width = 2;
                 params.color = "#0000FF";
                 break;
             case SET_VALIDSOURCE:
                 params.arrowStart = VALIDSOURCE_TYPE_LINE_END;
                 params.arrowEnd = NOEND;
-                params.width = "3";
+                params.width = 2;
                 params.color = "#00FF00";
                 break;
             case SET_VALIDDESTINATION:
-                params.arrowStart = NOEND;
-                params.arrowEnd = VALIDDESTINATION_TYPE_LINE_END;
-                params.width = "3";
+                params.arrowStart = VALIDDESTINATION_TYPE_LINE_END;
+                params.arrowEnd = NOEND;
+                params.width = 2;
                 params.color = "#AA03C3";
                 break;
             case SET_GENERAL:
                 params.arrowStart = GENERAL_TYPE_LINE_END;
                 params.arrowEnd = NOEND;
-                params.width = "2";
+                params.width = 2;
                 params.color = "#000000";
                 break;
             default:
