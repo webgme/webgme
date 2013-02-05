@@ -115,11 +115,11 @@ define(['logManager',
         });
 
         this.addButton({ "title": "READ-ONLY ON",
-            "text": "READ-ONLY: ON",
+            "text": "RO: ON",
             "data": { "mode": true}}, this.$btnGroupReadOnly );
 
         this.addButton({ "title": "READ-ONLY OFF",
-            "text": "READ-ONLY: OFF",
+            "text": "RO: OFF",
             "data": { "mode": false}}, this.$btnGroupReadOnly );
 
         /************** END OF - READ ONLY MODE **************************/
