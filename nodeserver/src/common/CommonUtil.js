@@ -165,7 +165,9 @@ define([], function () {
                 return id.substr(ind+1);
             }
         },
-        validSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor', 'General'],
+        validSetNames     : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor', 'General'],
+        validMetaSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor'],
+        validRealSetNames : ['General'],
         hashbasedconfig: {
             inuse          : true,
             serverlocation : "http://localhost",
