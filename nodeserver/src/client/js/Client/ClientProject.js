@@ -1135,9 +1135,9 @@ define([
             var patternRootLoaded = function(){
                 //first we start with the set loading
                 if(/*pattern.sets*/true){
-                    setcounter = commonUtil.validSetNames.length;
-                    for(var i=0;i<commonUtil.validSetNames.length;i++){
-                        loadSetPattern(patternid,RELFROMSET(commonUtil.validSetNames[i]),pathessofar,setloaded);
+                    setcounter = commonUtil.validRealSetNames.length;
+                    for(var i=0;i<commonUtil.validRealSetNames.length;i++){
+                        loadSetPattern(patternid,RELFROMSET(commonUtil.validRealSetNames[i]),pathessofar,setloaded);
                     }
                 } else {
                     setsloaded(null);
@@ -1152,6 +1152,44 @@ define([
                         patternRootLoaded();
                     }
                 });
+            }
+        };
+        var loadMetaSets = function(baseid,pathessofar,callback){
+            var globalerr = null;
+            var setcounter = commonUtil.validMetaSetNames.length;
+            var metaSetLoaded = function(err){
+                if(globalerr === null){
+                    globalerr = err;
+                }
+                if(--setcounter === 0){
+                    callback(globalerr);
+                }
+            };
+            //start
+            for(var i=0;i<commonUtil.validMetaSetNames.length;i++){
+                loadSetPattern(baseid,RELFROMSET(commonUtil.validMetaSetNames[i]),pathessofar,metaSetLoaded);
+            }
+        };
+        var loadMetaInfo = function(pathessofar,callback){
+            var pathesNeedMeta = [];
+            for(var i in pathessofar){
+                pathesNeedMeta.push(i);
+            }
+            var globalerr = null;
+            var counter = pathesNeedMeta.length;
+            var metaLoaded = function(err){
+                if(!globalerr){
+                    globalerr = err;
+                }
+                if(--counter === 0){
+                    callback(globalerr);
+                }
+            };
+            for(i=0;i<pathesNeedMeta.length;i++){
+                loadMetaSets(pathesNeedMeta[i],pathessofar,metaLoaded);
+            }
+            if(pathesNeedMeta.length === 0){
+                callback(null);
             }
         };
         var Loading = function(callback){
@@ -1219,66 +1257,6 @@ define([
                 callback(nupathes);
             }
 
-        };
-        var reLoading = function(callback){
-            //TODO this function ment to be only temporary to solve the multiple object problem
-            //it cleans the nodes, and using only containment it loads all of them again
-            var parentpathes = {};
-            var haselement = false;
-            //building parentpathes array
-            for(var i in currentNodes){
-                var ppath = getNode(i).getParentId();
-                if(ppath !== null && ppath !== 'root' && !parentpathes[ppath]){
-                    parentpathes[ppath] = true;
-                    haselement = true;
-                }
-            }
-
-            //now clearing everything and loading with only usage of loadchildren
-            if(haselement){
-                currentNodes = {};
-                var ongoingcalls = 0;
-                var childrenLoaded = function(err,children){
-                    if(--ongoingcalls === 0){
-                        if(err || !children || children.length===0){
-                            callback();
-                        }
-                    } else {
-                    }
-                    if(!err && children && children.length>0){
-                        var id0 = storeNode(children[0]);
-                        var node = getNode(id0);
-                        delete parentpathes[node.getParentId()];
-                        var needchildren = [];
-                        for(var i=0;i<children.length;i++){
-                            var id = storeNode(children[i]);
-                            if(parentpathes[id]){
-                                ongoingcalls++;
-                                needchildren.push(i);
-                            }
-                        }
-                        if(ongoingcalls === 0){
-                            callback();
-                        } else {
-                            for(i=0;i<needchildren.length;i++){
-                                currentCore.loadChildren(children[needchildren[i]],childrenLoaded);
-                            }
-                        }
-                    }
-                };
-
-                currentCore.loadRoot(currentRoot,function(err,root){
-                    if(!err && root){
-                        storeNode(root);
-                        ongoingcalls++;
-                        currentCore.loadChildren(root,childrenLoaded);
-                    } else {
-                        callback(err);
-                    }
-                });
-            } else {
-                callback();
-            }
         };
         var reLoading2 = function(callback){
             if(currentCore && currentCore.getVersion() === 3){
@@ -1413,32 +1391,13 @@ define([
                 var patternLoaded = function(){
                     if(--counter === 0){
                         //TODO same hack as in loading for loading sets
-                        /*var innercounter = 0;
-                        var mypathes = COPY(nupathes);
-                        var innerpatternloaded = function(){
-                            if(--innercounter === 0){
-                                reLoading2(function(){
-                                    checkReLoading(nupathes);
-                                    callback(nupathes);
-                                });
-                            }
-                        };
-                        for(var i in nupathes){
-                            innercounter++;
-                        }
-                        if(innercounter>0){
-                            for(i in mypathes){
-                                loadPattern(i,{sets:true},nupathes,innerpatternloaded);
-                            }
-                        } else {
-                            innercounter = 1;
-                            innerpatternloaded();
-                        }*/
-                        reLoading2(function(){
-                            checkReLoading(nupathes);
-                            callback(nupathes);
+                        loadMetaInfo(nupathes,function(err){
+                            reLoading2(function(){
+                                checkReLoading(nupathes);
+                                callback(nupathes);
+                            });
+                            //callback(nupathes);
                         });
-                        //callback(nupathes);
                     }
                 };
 
@@ -1458,13 +1417,15 @@ define([
         };
         var UpdateAll = function(callback){
             Loading(function(nupathes){
-                currentNupathes = nupathes;
-                reLoading2(function(){
-                    checkReLoading(nupathes);
-                    for(var i in users){
-                        UpdateUser(users[i],users[i].PATTERNS,nupathes);
-                    }
-                    callback();
+                loadMetaInfo(nupathes,function(err){
+                    currentNupathes = nupathes;
+                    reLoading2(function(){
+                        checkReLoading(nupathes);
+                        for(var i in users){
+                            UpdateUser(users[i],users[i].PATTERNS,nupathes);
+                        }
+                        callback();
+                    });
                 });
             });
         };
