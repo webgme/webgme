@@ -80,41 +80,42 @@ define(['logManager',
     };
 
     DefaultDecorator.prototype.getConnectionAreas = function (id) {
-        var result = [];
+        var result = [],
+            edge = 10;
 
         //by default return the bounding box edge's midpoints
 
         if (id === undefined) {
             //top left
             result.push( {"id": "0",
-                "x": this.hostDesignerItem.width / 2,
+                "x": edge,
                 "y": 0,
-                "w": 0,
+                "w": this.hostDesignerItem.width - 2 * edge,
                 "h": 0,
                 "orientation": "N",
                 "len": 10} );
 
             result.push( {"id": "1",
-                "x": this.hostDesignerItem.width / 2,
+                "x": edge,
                 "y": this.hostDesignerItem.height,
-                "w": 0,
+                "w": this.hostDesignerItem.width - 2 * edge,
                 "h": 0,
                 "orientation": "S",
                 "len": 10} );
 
             result.push( {"id": "2",
                 "x": 0,
-                "y": this.hostDesignerItem.height / 2,
+                "y": edge,
                 "w": 0,
-                "h": 0,
+                "h": this.hostDesignerItem.height - 2 * edge,
                 "orientation": "W",
                 "len": 10} );
 
             result.push( {"id": "3",
                 "x": this.hostDesignerItem.width,
-                "y": this.hostDesignerItem.height / 2,
+                "y": edge,
                 "w": 0,
-                "h": 0,
+                "h": this.hostDesignerItem.height - 2 * edge,
                 "orientation": "E",
                 "len": 10} );
         }
