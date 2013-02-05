@@ -884,7 +884,6 @@ FUTURE, CONFIG) {
 			deleteProperty: deleteProperty,
 			getKeys: getKeys,
 
-			isValidHash: isValidHash,
 			isHashed: isHashed,
 			setHashed: setHashed,
 			getHash: getHash,

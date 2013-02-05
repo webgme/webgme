@@ -73,6 +73,7 @@ CoreTree, SHA1, FUTURE) {
 			var i = keys.length;
 			while( --i >= 0 ) {
 				if( keys[i].charAt(0) === "" ) {
+					console.log("***** This happens?");
 					keys.splice(i, 1);
 				}
 			}
@@ -88,6 +89,7 @@ CoreTree, SHA1, FUTURE) {
 			var i = keys.length;
 			while( --i >= 0 ) {
 				if( keys[i].charAt(0) === "" ) {
+					console.log("***** This happens?");
 					keys.splice(i, 1);
 				}
 			}
@@ -192,12 +194,13 @@ CoreTree, SHA1, FUTURE) {
 		var overlayQuery = function (overlays, prefix) {
 			ASSERT(isValidNode(overlays) && isValidPath(prefix));
 
+			var prefix2 = prefix + "/";
 			var list = [];
 			var paths = coretree.getKeys(overlays);
 			
 			for( var i = 0; i < paths.length; ++i ) {
 				var path = paths[i];
-				if( path.substr(0, prefix.length) === prefix ) {
+				if( path === prefix || path.substr(0, prefix2.length) === prefix2 ) {
 					var node = coretree.getChild(overlays, path);
 					var names = coretree.getKeys(node);
 					for( var j = 0; j < names.length; ++j ) {
@@ -301,6 +304,7 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(isValidNode(node));
 			ASSERT(!parent || isValidNode(parent));
 
+			node = coretree.normalize(node);
 			var newNode;
 
 			if( parent ) {
@@ -386,6 +390,7 @@ CoreTree, SHA1, FUTURE) {
 		var moveNode = function (node, parent) {
 			ASSERT(isValidNode(node) && isValidNode(parent));
 
+			node = coretree.normalize(node);
 			var ancestor = coretree.getAncestor(node, parent);
 
 			// cannot move inside of itself
