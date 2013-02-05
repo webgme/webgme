@@ -20,7 +20,8 @@ define(['logManager',
         var self = this,
             $btnGroupAutoRename,
             $btnGroupAutoCreateModel,
-            $btnGroupPrintNodeData;
+            $btnGroupPrintNodeData,
+            $btnGroupAutoCreateConnection;
 
         this.logger = options.logger || logManager.create(options.loggerName || "DesignerControl");
 
@@ -98,6 +99,38 @@ define(['logManager',
             "data": { "num": 10 }}, $btnGroupAutoCreateModel );
 
         /************** END OF - AUTO CREATE NEW NODES *****************/
+
+        /************** AUTO CREATE NEW CONNECTIONS *****************/
+        $btnGroupAutoCreateConnection = this.designerCanvas.addButtonGroup(function (event, data) {
+            self._createGMEConnections(data.num);
+        });
+
+        this.designerCanvas.addButton({ "title": "Create 1 connection",
+            "icon": "icon-resize-horizontal",
+            "text": "1",
+            "data": { "num": 1 }}, $btnGroupAutoCreateConnection );
+
+        this.designerCanvas.addButton({ "title": "Create 5 connections",
+            "icon": "icon-resize-horizontal",
+            "text": "5",
+            "data": { "num": 5 }}, $btnGroupAutoCreateConnection );
+
+        this.designerCanvas.addButton({ "title": "Create 10 connections",
+            "icon": "icon-resize-horizontal",
+            "text": "10",
+            "data": { "num": 10 }}, $btnGroupAutoCreateConnection );
+
+        this.designerCanvas.addButton({ "title": "Create 50 connections",
+            "icon": "icon-resize-horizontal",
+            "text": "50",
+            "data": { "num": 50 }}, $btnGroupAutoCreateConnection );
+
+        this.designerCanvas.addButton({ "title": "Create 100 connections",
+            "icon": "icon-resize-horizontal",
+            "text": "100",
+            "data": { "num": 100 }}, $btnGroupAutoCreateConnection );
+
+        /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
 
         /************** PRINT NODE DATA *****************/
@@ -604,6 +637,51 @@ define(['logManager',
         while (num--) {
             this._client.createChild({ "parentId": this.currentNodeInfo.id,
                 "name": prefix + counter });
+
+            counter += 1;
+        }
+        this._client.completeTransaction();
+    };
+
+    DesignerControl.prototype._createGMEConnections = function (num) {
+        var counter = this._GMEConnections.length,
+            prefix = "Connection_",
+            allGMEID = [],
+            i,
+            sourceId,
+            targetId,
+            connDesc;
+
+        for (i in this._GmeID2ComponentID) {
+            if (this._GmeID2ComponentID.hasOwnProperty(i)) {
+                allGMEID.insertUnique(i);
+            }
+        }
+
+        for (i in this._GMEID2Subcomponent) {
+            if (this._GMEID2Subcomponent.hasOwnProperty(i)) {
+                allGMEID.insertUnique(i);
+            }
+        }
+
+        i = allGMEID.length;
+
+        this._client.startTransaction();
+
+        while (num--) {
+            targetId = sourceId = Math.floor((Math.random()*( i / 2 )));
+            while (targetId === sourceId) {
+                targetId = Math.floor((Math.random()*(i / 2 ) + (i / 2)));
+            }
+
+            connDesc = {   "parentId": this.currentNodeInfo.id,
+                "sourceId": allGMEID[sourceId],
+                "targetId": allGMEID[targetId],
+                "directed": true };
+
+            this._client.makeConnection(connDesc);
+
+            this.logger.warning(JSON.stringify(connDesc));
 
             counter += 1;
         }
