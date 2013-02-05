@@ -380,6 +380,8 @@ CoreType, Cache) {
 		
 		core.setPointer(nodes.d, "src", nodes.b);
 		core.setPointer(nodes.d, "trg", nodes.c);
+
+		core.persist(nodes.a, function(err) {});
 		
 		createNode("e", "a");
 		nodes.x = core.moveNode(nodes.b, nodes.e);
