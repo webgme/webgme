@@ -121,7 +121,7 @@ define(['logManager',
     //attach DesignerControl - DesignerCanvas event handler functions
     _.extend(SetEditorControl.prototype, SetEditorControlDesignerCanvasEventHandlers.prototype);
 
-    SetEditorControl.prototype.CONTROLLER_REGISTRY_ENTRY_NAME = "SetEditorControl",
+    SetEditorControl.prototype.CONTROLLER_REGISTRY_ENTRY_NAME = "SetEditorControl";
 
     //called from the outside world when the selection in the TreeBrowser changes
     SetEditorControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -177,6 +177,10 @@ define(['logManager',
         }
 
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
+    };
+
+    SetEditorControl.prototype.destroy = function () {
+        this._client.removeUI(this._territoryId);
     };
 
     SetEditorControl.prototype._processNextInQueue = function () {
@@ -262,11 +266,14 @@ define(['logManager',
         if (nodeObj) {
             objDescriptor = { "id": undefined,
                               "parentId": undefined,
+                              "name": "",
                               "position": { "x": 100, "y": 100 },
                               "decorator": DECORATOR_CLASS };
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.parentId = nodeObj.getParentId();
+
+            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
 
             controllerRegistryEntry = nodeObj.getRegistry(this.CONTROLLER_REGISTRY_ENTRY_NAME);
 
@@ -303,10 +310,10 @@ define(['logManager',
                 case LOAD_EVENT_NAME:
                     this._onLoad(e.eid, e.desc);
                     break;
-                case "update":
+                case UPDATE_EVENT_NAME:
                     this._onUpdate(e.eid, e.desc);
                     break;
-                case "unload":
+                case UNLOAD_EVENT_NAME:
                     this._onUnload(e.eid);
                     break;
             }
@@ -343,18 +350,17 @@ define(['logManager',
             decClass,
             uiComponent;
 
-
         //component loaded
         //we are interested in the load of subcomponents of the opened component
         if (this.currentNodeInfo.id !== gmeID) {
             if (objD && this.currentNodeInfo.id === objD.parentId) {
 
-                objDesc = _.extend({}, objD);
-
                 if (this.firstRun === false) {
                     this._updateSetRelations(gmeID);
                 } else {
                     this._GmeID2ComponentID[gmeID] = [];
+
+                    objDesc = _.extend({}, objD);
 
                     decClass = this.decoratorClasses[objDesc.decorator];
 
@@ -374,9 +380,7 @@ define(['logManager',
     SetEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
         var componentID,
             len,
-            decClass,
-            objId,
-            sCompId;
+            decClass;
 
         //self or child updated
         //check if the updated object is the opened node
@@ -388,33 +392,77 @@ define(['logManager',
         } else {
             if (objDesc) {
                 if (objDesc.parentId == this.currentNodeInfo.id) {
-                    /*if (objDesc.kind === "MODEL") {
-                        len = this._GmeID2ComponentID[gmeID].length;
-                        while (len--) {
-                            componentID = this._GmeID2ComponentID[gmeID][len];
 
-                            decClass = this.decoratorClasses[objDesc.decorator];
+                    //update position if necessary
+                    len = this._GmeID2ComponentID[gmeID].length;
+                    while (len--) {
+                        componentID = this._GmeID2ComponentID[gmeID][len];
 
-                            objDesc.decoratorClass = decClass;
+                        decClass = this.decoratorClasses[objDesc.decorator];
 
-                            this.designerCanvas.updateDesignerItem(componentID, objDesc);
-                        }
+                        objDesc.decoratorClass = decClass;
+
+                        this.designerCanvas.updateDesignerItem(componentID, objDesc);
                     }
 
-                    //there is a connection associated with this GMEID
-                    if (this._GMEConnections.indexOf(gmeID) !== -1) {
-                        len = this._GmeID2ComponentID[gmeID].length;
-                        while (len--) {
-                            componentID =  this._GmeID2ComponentID[gmeID][len];
-                            this.designerCanvas.deleteComponent(componentID);
-                        }
-
-                        this.delayedEvents.push({ "etype": LOAD_EVENT_NAME,
-                            "eid": gmeID,
-                            "desc": objDesc });
-                    }*/
+                    //update set relations
+                    this._updateSetRelations(gmeID);
                 }
             }
+        }
+    };
+
+    SetEditorControl.prototype._onUnload = function (gmeID) {
+        var componentID,
+            len,
+            connectionIDsToRemove = [],
+            set,
+            i,
+            connId;
+
+        //self or child updated
+        //check if the updated object is the opened node
+        if (gmeID === this.currentNodeInfo.id) {
+            //the updated object is the parent whose children are displayed here
+            //the interest about the parent is:
+            // - name change
+            this.designerCanvas.setTitle("!!!OBJECT has been deleted, not HANDLED CORRECTLY :(!!!!");
+            this.logger.error("!!!OBJECT has been deleted, not HANDLED CORRECTLY :(!!!!");
+        } else {
+            //get all the set-relation representation for this guy
+            //remove all the connections associated with it
+            if (this._GMESetRelations[gmeID]) {
+                for (set in this._GMESetRelations[gmeID]) {
+                    if (this._GMESetRelations[gmeID].hasOwnProperty(set)) {
+                        for (i in this._GMESetRelations[gmeID][set]) {
+                            if (this._GMESetRelations[gmeID][set].hasOwnProperty(i)) {
+                                connectionIDsToRemove.push(this._GMESetRelations[gmeID][set][i]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            i = connectionIDsToRemove.length;
+            while (i--) {
+                connId = connectionIDsToRemove[i];
+                this.designerCanvas.deleteComponent(connId);
+
+                //update accounting maps
+                delete this._setRelations[connId];
+            }
+
+            //update accounting maps
+            delete this._GMESetRelations[gmeID];
+
+            //check if it was an object represented by an item and remove them
+            len = this._GmeID2ComponentID[gmeID].length;
+            while (len--) {
+                componentID = this._GmeID2ComponentID[gmeID][len];
+
+                this.designerCanvas.deleteComponent(componentID);
+            }
+
         }
     };
 
@@ -484,47 +532,73 @@ define(['logManager',
 
     SetEditorControl.prototype._updateSetRelations = function (gmeID) {
         var nodeObj = this._client.getNode(gmeID),
-            obj,
             objDesc,
-            setMemberIds,
             i,
             sets = [SET_VALIDINHERITOR, SET_VALIDCHILDREN, SET_VALIDDESTINATION, SET_VALIDSOURCE, SET_GENERAL],
-            setlen = sets.length;
+            setlen = sets.length,
+            displayedSetMembers,
+            currentSetMembers,
+            currentSet,
+            diff,
+            connId;
 
         while (setlen--) {
-            setMemberIds = nodeObj.getMemberIds(sets[setlen]);
-            if (setMemberIds) {
+            currentSet = sets[setlen];
 
+            //query displayed set members
+            displayedSetMembers = [];
+            if (this._GMESetRelations[gmeID]) {
+                for (i in this._GMESetRelations[gmeID][currentSet]) {
+                    if (this._GMESetRelations[gmeID][currentSet].hasOwnProperty(i)) {
+                        displayedSetMembers.push(i);
+                    }
+                }
+            }
+
+            //query the actual set members from GME object
+            currentSetMembers = nodeObj.getMemberIds(currentSet) || [];
+
+            //let's see who has been deleted and remove them from the screen
+            diff = clientUtil.arrayMinus(displayedSetMembers, currentSetMembers);
+            i = diff.length;
+            while (i--) {
+                connId = this._GMESetRelations[gmeID][currentSet][diff[i]];
+                this.designerCanvas.deleteComponent(connId);
+
+                //update accounting maps
+                delete this._setRelations[connId];
+                delete this._GMESetRelations[gmeID][currentSet][diff[i]];
+            }
+
+            //let's see who is new and add them to the screen
+            diff = clientUtil.arrayMinus(currentSetMembers, displayedSetMembers);
+            i = diff.length;
+            if (i > 0) {
                 objDesc = {};
 
                 objDesc.srcObjId = this._GmeID2ComponentID[gmeID][0];
                 objDesc.srcSubCompId = undefined;
                 objDesc.reconnectable = false;
 
-                _.extend(objDesc, this._getModeVisualDescriptor(sets[setlen]));
+                _.extend(objDesc, this._getModeVisualDescriptor(currentSet));
 
-                i = setMemberIds.length;
                 while (i--) {
-                    if (this._GmeID2ComponentID.hasOwnProperty(setMemberIds[i]) &&
-                        this._GmeID2ComponentID[setMemberIds[i]].length > 0) {
+                    if (this._GmeID2ComponentID.hasOwnProperty(diff[i]) &&
+                        this._GmeID2ComponentID[diff[i]].length > 0) {
 
                         this._GMESetRelations[gmeID] = this._GMESetRelations[gmeID] || {};
-                        this._GMESetRelations[gmeID][sets[setlen]] = this._GMESetRelations[gmeID][sets[setlen]] || {};
+                        this._GMESetRelations[gmeID][currentSet] = this._GMESetRelations[gmeID][currentSet] || {};
 
-                        if (this._GMESetRelations[gmeID][sets[setlen]][setMemberIds[i]]) {
-                            //there is already a connection representing this set-member relationship
-                        }
-
-                        objDesc.dstObjId = this._GmeID2ComponentID[setMemberIds[i]][0];
+                        objDesc.dstObjId = this._GmeID2ComponentID[diff[i]][0];
                         objDesc.dstSubCompId = undefined;
-                        obj = this.designerCanvas.createConnection(objDesc);
+                        connId = this.designerCanvas.createConnection(objDesc).id;
 
-                        this._setRelations[obj.id] = { "owner": gmeID,
-                            "member": setMemberIds[i],
-                            "set": sets[setlen] };
+                        this._setRelations[connId] = { "owner": gmeID,
+                            "member": diff[i],
+                            "set": currentSet };
 
 
-                        this._GMESetRelations[gmeID][sets[setlen]][setMemberIds[i]] = obj.id;
+                        this._GMESetRelations[gmeID][currentSet][diff[i]] = connId;
                     }
                 }
             }

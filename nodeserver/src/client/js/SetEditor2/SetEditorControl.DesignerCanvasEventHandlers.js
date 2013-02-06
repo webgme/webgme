@@ -1,17 +1,8 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
-    'js/DiagramDesigner/NodePropertyNames'], function (logManager,
-                                                       util,
-                                                       nodePropertyNames) {
+define([], function () {
 
-    var SetEditorControlDesignerCanvasEventHandlers,
-        ATTRIBUTES_STRING = "attributes",
-        REGISTRY_STRING = "registry",
-        GME_ID = "GME_ID",
-        CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
+    var SetEditorControlDesignerCanvasEventHandlers;
 
     SetEditorControlDesignerCanvasEventHandlers = function () {
     };
@@ -24,7 +15,8 @@ define(['logManager',
             self._onDesignerItemsMove(repositionDesc);
         };
 
-        this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
+        //TODO
+        this.designerCanvas.onDesignerItemsCopy = function (/*copyDesc*/) {
             self.logger.error("onDesignerItemsCopy  should never happen in this mode!!!!");
         };
 
@@ -76,23 +68,23 @@ define(['logManager',
     };
 
     SetEditorControlDesignerCanvasEventHandlers.prototype._onSelectionDelete = function (idList) {
-        /*
          var len = idList.length,
-         desc;
+             desc,
+             id;
 
-         while (len--) {
-         if (self._setRelations[idList[len]]) {
-         desc = self._setRelations[idList[len]];
-         self._client.removeMember(desc.owner, desc.member, desc.set);
-         delete self._setRelations[idList[len]];
-         self.designerCanvas.deleteComponent(idList[len]);
-
+        this._client.startTransaction();
+        while (len--) {
+             id = idList[len];
+             //check if the to-be-deleted id is representing a connection (set membership)
+             if (this._setRelations[id]) {
+                 desc = this._setRelations[id];
+                 this._client.removeMember(desc.owner, desc.member, desc.set);
+             }
          }
-         }
-        * */
+        this._client.completeTransaction();
     };
 
-    SetEditorControlDesignerCanvasEventHandlers.prototype._onDesignerItemDoubleClick = function (id, event) {
+    SetEditorControlDesignerCanvasEventHandlers.prototype._onDesignerItemDoubleClick = function (id/*, event*/) {
         var gmeID = this._ComponentID2GmeID[id];
 
         if (gmeID) {
