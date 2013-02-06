@@ -1,10 +1,11 @@
 define([
+    'core/assert',
     'js/Client/ClientLogCore',
     'core/lib/sha1',
     'common/CommonUtil',
     'js/Client/ClientNode',
     'js/Client/ClientMeta'],
-    function(ClientCore,SHA1,commonUtil,ClientNode,ClientMeta){
+    function(ASSERT,ClientCore,SHA1,commonUtil,ClientNode,ClientMeta){
     'use strict';
     var KEY        = "_id";
     var INSERTARR  = commonUtil.insertIntoArray;
@@ -448,7 +449,11 @@ define([
             }
         };
         var getCurrentCommit = function(){
-            return mycommit[KEY];
+            if(mycommit){
+                return mycommit[KEY];
+            } else {
+                return null;
+            }
         };
         var getCurrentBranch = function(){
             return mycommit['name'];
@@ -516,7 +521,7 @@ define([
             if(blocked){
                 return;
             }
-            Copy(clipboard,parentpath,function(err,copyarr){
+            nuCopy(clipboard,parentpath,function(err,copyarr){
                 if(err){
                     rollBackModification();
                 } else {
@@ -641,7 +646,7 @@ define([
             else{
             }
         };
-        var intellyPaste = function(parameters){
+        var nuIntellyPaste = function(parameters){
             if(blocked){
                 return;
             }
@@ -654,10 +659,10 @@ define([
                         simplepaste = false;
                     }
                 }
-
                 if(simplepaste){
                     pathestocopy = clipboard || [];
                 }
+
                 if(pathestocopy.length < 1){
                 } else if(pathestocopy.length === 1){
                     var newnode = currentCore.copyNode(currentNodes[pathestocopy[0]],currentNodes[parameters.parentId]);
@@ -672,7 +677,7 @@ define([
                     }
                     modifyRootOnServer();
                 } else {
-                    Copy(pathestocopy,parameters.parentId,function(err,copyarr){
+                    nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
                         if(err){
                             rollBackModification();
                         }
@@ -680,10 +685,10 @@ define([
                             for(var i in copyarr){
                                 if(copyarr.hasOwnProperty(i) && parameters.hasOwnProperty(i)){
                                     for(var j in parameters[i].attributes){
-                                        currentCore.setAttribute(currentNodes[copyarr[i].topath],j,parameters[i].attributes[j]);
+                                        currentCore.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
                                     }
                                     for(j in parameters[i].registry){
-                                        currentCore.setRegistry(currentNodes[copyarr[i].topath],j,parameters[i].registry[j]);
+                                        currentCore.setRegistry(copyarr[i],j,parameters[i].registry[j]);
                                     }
                                 }
                             }
@@ -691,7 +696,8 @@ define([
                         }
                     });
                 }
-            } else{
+            } else {
+                console.log('wrong parameters in intelligent paste operation - denied -');
             }
         };
 
@@ -903,6 +909,7 @@ define([
         };
 
         var getNodePath = function(node){
+            ASSERT(node);
             var path = currentCore.getStringPath(node);
             if(path === ""){
                 path = "root";
@@ -930,6 +937,61 @@ define([
             }
         };
 
+        var nuCopy = function(pathes, parentpath,callback){
+            var helpArray = {},
+                subPathArray = {},
+                parent = currentNodes[parentpath],
+                returnArray = {};
+
+            ASSERT(parent);
+
+
+
+            //creating the 'from' object
+            var tempfrom = currentCore.createNode(parent);
+            //and moving every node under it
+            for(var i=0;i<pathes.length;i++){
+                helpArray[pathes[i]] = {};
+                helpArray[pathes[i]].origparent = currentCore.getParent(currentNodes[pathes[i]]);
+                helpArray[pathes[i]].tempnode = currentCore.moveNode(currentNodes[pathes[i]],tempfrom);
+                helpArray[pathes[i]].subpath = currentCore.getStringPath(helpArray[pathes[i]].tempnode,tempfrom);
+                subPathArray[helpArray[pathes[i]].subpath] = pathes[i];
+                delete currentNodes[pathes[i]];
+            }
+
+            //do the copy
+            var tempto = currentCore.copyNode(tempfrom,parent);
+
+            //moving back the temporary source
+            for(var i=0;i<pathes.length;i++){
+                helpArray[pathes[i]].node = currentCore.moveNode(helpArray[pathes[i]].tempnode,helpArray[pathes[i]].origparent);
+                storeNode(helpArray[pathes[i]].node);
+            }
+
+            //gathering the destination nodes
+            currentCore.loadChildren(tempto,function(err,children){
+                if(!err && children && children.length>0){
+                    for(i=0;i<children.length;i++){
+                        var subpath = currentCore.getStringPath(children[i],tempto);
+                        if(subPathArray[subpath]){
+                            var newnode = currentCore.moveNode(children[i],parent);
+                            storeNode(newnode);
+                            returnArray[subPathArray[subpath]] = newnode;
+                        } else {
+                            console.log('l973 - should never happen!!!');
+                        }
+                    }
+                    currentCore.deleteNode(tempfrom);
+                    currentCore.deleteNode(tempto);
+                    callback(null,returnArray);
+                } else {
+                    //clean up the mess and return
+                    currentCore.deleteNode(tempfrom);
+                    currentCore.deleteNode(tempto);
+                    callback(err,{});
+                }
+            });
+        };
         var Copy = function(pathes,parentpath,callback){
             var retarr = {},
                 parent = currentNodes[parentpath];
@@ -1473,7 +1535,7 @@ define([
             makePointer         : makePointer,
             delPointer          : delPointer,
             makeConnection      : makeConnection,
-            intellyPaste        : intellyPaste,
+            intellyPaste        : nuIntellyPaste,
             //MGAlike - set
             addMember    : addMember,
             removeMember : removeMember
