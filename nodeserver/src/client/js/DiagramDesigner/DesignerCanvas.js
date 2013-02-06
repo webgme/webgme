@@ -854,6 +854,14 @@ define(['logManager',
 
     /************** END OF - PROPERTY WIDGET **********************/
 
+    /************** API REGARDING TO MANAGERS ***********************/
+
+    DesignerCanvas.prototype.enableDragCopy = function (enabled) {
+        this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+    };
+
+    /************** END OF - API REGARDING TO MANAGERS ***********************/
+
     //additional code pieces for DesignerCanvas
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);

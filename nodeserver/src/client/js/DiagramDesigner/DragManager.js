@@ -24,9 +24,20 @@ define(['logManager'], function (logManager) {
 
     DragManager.prototype.$_draggableHelperDOMBase = $("<div class='drag-manager-drag-helper'></div>");
 
+    DragManager.prototype.DRAGMODE_COPY = "copy";
+    DragManager.prototype.DRAGMODE_MOVE = "move";
+
     DragManager.prototype.initialize = function () {
-        this._dragModes = {"copy": 0,
-            "move": 1};
+        this._dragModes = {};
+
+        this._dragModes[this.DRAGMODE_COPY] = true;
+        this._dragModes[this.DRAGMODE_MOVE] = true;
+    };
+
+    DragManager.prototype.enableMode = function (mode, enabled) {
+        if (this._dragModes[mode]) {
+            this._dragModes[mode] = enabled;
+        }
     };
 
     DragManager.prototype.detachDraggable = function (designerItem) {
@@ -90,7 +101,18 @@ define(['logManager'], function (logManager) {
             id,
             ctrlKey = event.ctrlKey || event.metaKey,
             shiftKey = event.shiftKey,
-            objDesc;
+            objDesc,
+            currentDragMode = this.DRAGMODE_MOVE;  //by default drag is treated as move
+
+        //determine based on modifier keys what mode the DRAG should work
+        //check modifiers to see what kind of drag-and-drop it will be
+        //is this drag a 'COPY'
+        if (ctrlKey && !shiftKey) {
+            //if the copy mode is enabled at all?
+            if (this._dragModes[this.DRAGMODE_COPY] === true) {
+                currentDragMode = this.DRAGMODE_COPY;
+            }
+        }
 
         //simple drag means reposition
         //when CTRL key (META key on Mac) is pressed when drag starts, selected items will be copied
@@ -101,16 +123,10 @@ define(['logManager'], function (logManager) {
             "startPos": { "x": draggedItem.positionX, "y": draggedItem.positionY },
             "minCoordinates": { "x": this.canvas._actualSize.w, "y": this.canvas._actualSize.h },
             "originalPositions" : {},
-            "mode": this._dragModes.move
+            "mode": currentDragMode
         };
 
-        //check modifiers to see what kind of drag-and-drop it will be
-        //is this drag a SmartCopy????
-        if (ctrlKey && !shiftKey) {
-            this._dragOptions.mode = this._dragModes.copy;
-        }
-
-        if (this._dragOptions.mode == this._dragModes.move) {
+        if (this._dragOptions.mode === this.DRAGMODE_MOVE) {
             /*************************************************************/
             /***********************     MOVE MODE      ******************/
             /*************************************************************/
@@ -140,7 +156,7 @@ define(['logManager'], function (logManager) {
             this._dragOptions.$draggedItemDecoratorEl.css("cursor", MOVE_CURSOR);
 
             this.canvas.beginMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
-        } else if (this._dragOptions.mode == this._dragModes.copy) {
+        } else if (this._dragOptions.mode === this.DRAGMODE_COPY) {
             /*************************************************************/
             /***********************     COPY MODE      ******************/
             /*************************************************************/
@@ -261,11 +277,11 @@ define(['logManager'], function (logManager) {
         var draggedItemID = helper.data(ITEMID_DATA_KEY);
 
         switch(this._dragOptions.mode) {
-            case this._dragModes.move:
+            case this.DRAGMODE_MOVE:
                 this.canvas.endMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
                 this.canvas.designerItemsMove(this._dragOptions.allDraggedItemIDs);
                 break;
-            case this._dragModes.copy:
+            case this.DRAGMODE_COPY:
                 this._onCopyEnd();
                 break;
         }

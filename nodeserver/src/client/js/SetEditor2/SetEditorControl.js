@@ -48,6 +48,8 @@ define(['logManager',
 
         //initialize core collections and variables
         this.designerCanvas = options.designerCanvas;
+        //in set edit mode DRAG & COPY is not enabled
+        this.designerCanvas.enableDragCopy(false);
 
         this._client = options.client;
         this._selfPatterns = {};

@@ -15,11 +15,6 @@ define([], function () {
             self._onDesignerItemsMove(repositionDesc);
         };
 
-        //TODO
-        this.designerCanvas.onDesignerItemsCopy = function (/*copyDesc*/) {
-            self.logger.error("onDesignerItemsCopy  should never happen in this mode!!!!");
-        };
-
         this.designerCanvas.onCreateNewConnection = function (params) {
             self._onCreateNewConnection(params);
         };
