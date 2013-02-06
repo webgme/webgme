@@ -2,17 +2,17 @@
 
 define(['logManager',
     'clientUtil',
+    'js/Constants',
     'js/DiagramDesigner/NodePropertyNames',
     'js/ModelEditor3/DesignerControl.DesignerCanvasEventHandlers',
     'js/ModelEditor3/DesignerControl.DEBUG'], function (logManager,
                                                         util,
+                                                        CONSTANTS,
                                                         nodePropertyNames,
                                                         DesignerControlDesignerCanvasEventHandlers,
                                                         DesignerControlDEBUG) {
 
     var DesignerControl,
-        LOAD_EVENT_NAME = "load",
-        UPDATE_EVENT_NAME = "update",
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
         GME_ID = "GME_ID";
 
@@ -294,7 +294,7 @@ define(['logManager',
             len = nextBatchInQueue.length;
 
             while (len--) {
-                if ( (nextBatchInQueue[len].etype === LOAD_EVENT_NAME) || (nextBatchInQueue[len].etype === UPDATE_EVENT_NAME)) {
+                if ( (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
                     nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) ) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
@@ -378,13 +378,13 @@ define(['logManager',
         while (i--) {
             e = events[i];
             switch (e.etype) {
-                case LOAD_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid, e.desc);
                     break;
-                case "update":
+                case CONSTANTS.TERRITORY_EVENT_UPDATE:
                     this._onUpdate(e.eid, e.desc);
                     break;
-                case "unload":
+                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
             }
@@ -397,7 +397,7 @@ define(['logManager',
         while (i--) {
             e = this.delayedEvents[i];
             switch (e.etype) {
-                case LOAD_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid, e.desc);
                     break;
             }
@@ -452,7 +452,7 @@ define(['logManager',
 
                     if (objDesc.kind === "CONNECTION") {
                         if (this.firstRun === true) {
-                            this.delayedEvents.push({ "etype": LOAD_EVENT_NAME,
+                            this.delayedEvents.push({ "etype": CONSTANTS.TERRITORY_EVENT_LOAD,
                                 "eid": gmeID,
                                 "desc": objD });
                         } else {
@@ -565,7 +565,7 @@ define(['logManager',
                             this.designerCanvas.deleteComponent(componentID);
                         }
 
-                        this.delayedEvents.push({ "etype": LOAD_EVENT_NAME,
+                        this.delayedEvents.push({ "etype": CONSTANTS.TERRITORY_EVENT_LOAD,
                             "eid": gmeID,
                             "desc": objDesc });
                     }

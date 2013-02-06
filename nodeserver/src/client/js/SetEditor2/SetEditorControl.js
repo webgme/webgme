@@ -3,11 +3,13 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/Constants',
     'js/DiagramDesigner/NodePropertyNames',
     'js/SetEditor2/SetEditorControl.DesignerCanvasEventHandlers',
     'css!SetEditor2CSS/SetEditorControl'], function (logManager,
                                                      clientUtil,
                                                      commonUtil,
+                                                     CONSTANTS,
                                                      nodePropertyNames,
                                                      SetEditorControlDesignerCanvasEventHandlers) {
 
@@ -19,9 +21,6 @@ define(['logManager',
         VALIDDESTINATION_TYPE_LINE_END = "open-wide-long",
         GENERAL_TYPE_LINE_END = "classic-wide-long",
         NOEND = "none",
-        LOAD_EVENT_NAME = "load",
-        UPDATE_EVENT_NAME = "update",
-        UNLOAD_EVENT_NAME = "unload",
         SET_VALIDCHILDREN = 'ValidChildren',
         SET_VALIDSOURCE = 'ValidSource',
         SET_VALIDDESTINATION = 'ValidDestination',
@@ -197,7 +196,7 @@ define(['logManager',
             len = nextBatchInQueue.length;
 
             while (len--) {
-                if ( (nextBatchInQueue[len].etype === LOAD_EVENT_NAME) || (nextBatchInQueue[len].etype === UPDATE_EVENT_NAME)) {
+                if ( (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
                     nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) ) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
@@ -309,13 +308,13 @@ define(['logManager',
         while (i--) {
             e = events[i];
             switch (e.etype) {
-                case LOAD_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid, e.desc);
                     break;
-                case UPDATE_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_UPDATE:
                     this._onUpdate(e.eid, e.desc);
                     break;
-                case UNLOAD_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
                     this._onUnload(e.eid);
                     break;
             }
@@ -328,7 +327,7 @@ define(['logManager',
         while (i--) {
             e = events[i];
             switch (e.etype) {
-                case LOAD_EVENT_NAME:
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
                     this._onLoad(e.eid, e.desc);
                     break;
             }
