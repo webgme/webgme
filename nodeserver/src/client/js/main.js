@@ -55,7 +55,8 @@ require.config({
         "SetEditor": "js/SetEditor",
 
         "DiagramDesignerCSS": "css/DiagramDesigner",
-        "ModelEditor3CSS": "css/ModelEditor3"
+        "ModelEditor3CSS": "css/ModelEditor3",
+        "SetEditor2CSS": "css/SetEditor2"
     },
     shim: {
         'jquery-ui': ['jquery'],
