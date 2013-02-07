@@ -1387,17 +1387,15 @@ define([
                     }
                 }
             };
-            var addSetPathes = function(path,needmembers){
+            var addMetaSetPathes = function(path){
                 var node = getNode(path);
                 var sets = node.getSetIds();
                 for(var i=0;i<sets.length;i++){
                     var setnode = getNode(sets[i]);
                     INSERTARR(newpathes,sets[i]);
-                    /*var children = setnode.getChildrenIds();
-                    for(var j=0;j<children.length;j++){
-                        INSERTARR(newpathes,children[j]);
-                    }*/
                 }
+            };
+            var addSetPathes = function(path,needmembers){
                 if(needmembers){
                     var setnames = node.getSetNames();
                     for(i=0;i<setnames.length;i++){
@@ -1419,6 +1417,14 @@ define([
                         addChildrenPathes(patterns[i].children,i);
                     }
                     addSetPathes(i,patterns[i].sets);
+                }
+                //adding all the sets to the checked pathes
+                var temparray = [];
+                for(i=0;i<newpathes.length;i++){
+                    temparray.push(newpathes[i]);
+                }
+                for(i=0;i<temparray.length;i++){
+                    addMetaSetPathes(temparray[i]);
                 }
 
                 //we know the paths
