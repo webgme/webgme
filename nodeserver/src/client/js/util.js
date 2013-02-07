@@ -8,6 +8,8 @@ define([], function () {
     /*
      * Disabling selection on element
      */
+    /* TODO: OBSOLETE SHOULD NOT BE USED EVER
+    *  TODO: USE editOnDblClick INSTEAD */
     $.fn.extend({
         editInPlace : function (editClass, successCallback) {
             this.each(function () {
@@ -57,23 +59,6 @@ define([], function () {
             });
         }
     });
-
-    /*
-     *
-     * Getting textwidth
-     *
-     */
-    $.fn.textWidth = function () {
-        var html_org, html_calc, width;
-
-        html_org = $(this).html();
-        html_calc = '<span>' + html_org + '</span>';
-        $(this).html(html_calc);
-        width = $(this).find('span:first').width();
-        $(this).html(html_org);
-
-        return width;
-    };
 
     Array.prototype.mergeUnique = function (otherArray) {
         var i;

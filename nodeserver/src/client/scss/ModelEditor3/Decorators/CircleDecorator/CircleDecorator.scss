@@ -1,0 +1,76 @@
+@import "../../../DiagramDesigner/Connector";
+
+$canvas-canvas-size: 40px; /* MAKE SURE TO ADJUST THE 'CANVAS_SIZE' ATTRIBUTE IN CIRCLEDECORATOR.JS */
+$selected-background-color: #DBEAFC;
+$selected-border-width: 2px;
+$selected-border-style: solid;
+$selected-border-color: #52A8EC;
+
+.circle-decorator {
+  text-align: center;
+
+  .name {
+    white-space: nowrap;
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    position: absolute;
+  }
+
+  .circle-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  #circleCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .connector {
+    @include connector_basics;
+
+    &.top {
+      top: $connector-size / -2;
+      left: ( $canvas-canvas-size - $connector-size ) / 2;
+    }
+
+    &.bottom {
+      top: $canvas-canvas-size - $connector-size / 2;
+      left: ( $canvas-canvas-size - $connector-size ) / 2;
+    }
+
+    &.left {
+      top: ( $canvas-canvas-size - $connector-size ) / 2;
+      left: $connector-size / -2;
+    }
+
+    &.right {
+      top: ( $canvas-canvas-size - $connector-size ) / 2;
+      left: $canvas-canvas-size - $connector-size / 2;
+    }
+  }
+}
+
+.selectable {
+  .circle-decorator {
+    cursor: pointer;
+  }
+}
+
+.selected {
+  .circle-decorator {
+    #circleCanvas {
+      border: {
+        width: $selected-border-width;
+        style: $selected-border-style;
+        color: $selected-border-color;
+      }
+      background-color: $selected-background-color;
+      margin-top: $selected-border-width * -1;
+      margin-left: $selected-border-width * -1;
+    }
+  }
+}

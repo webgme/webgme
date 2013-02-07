@@ -478,6 +478,7 @@ CoreTree, SHA1, FUTURE) {
 						target = tmp;
 					}
 
+					console.log(source, target);
 					overlayInsert(overlays, source, entry.n, target);
 				}
 

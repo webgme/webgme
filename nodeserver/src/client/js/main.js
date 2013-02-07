@@ -17,6 +17,7 @@ require.config({
         "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
         "datGUI": 'lib/datGUI/dat.gui.min',
+        "jquery-WebGME": 'js/jquery.WebGME',
 
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
@@ -46,7 +47,6 @@ require.config({
         "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
         "ModelEditor2CSS": "css/ModelEditor2",
         "PropertyEditorCSS": "css/PropertyEditor",
-        "PropertyEditor": "js/PropertyEditor",
         "PartBrowserCSS": "css/PartBrowser",
         "PartBrowser": "js/PartBrowser",
         "Repository": "js/Repository",
@@ -54,13 +54,15 @@ require.config({
         "SetEditorCSS": "css/SetEditor",
         "SetEditor": "js/SetEditor",
 
-        "DiagramDesignerJS": "js/DiagramDesigner",
-        "DiagramDesignerCSS": "css/DiagramDesigner"
+        "DiagramDesignerCSS": "css/DiagramDesigner",
+        "ModelEditor3CSS": "css/ModelEditor3",
+        "SetEditor2CSS": "css/SetEditor2"
     },
     shim: {
         'jquery-ui': ['jquery'],
         'bootstrap': ['jquery'],
-        'clientUtil': ['jquery']
+        'clientUtil': ['jquery'],
+        'jquery-WebGME': ['jquery']
     }
 });
 
@@ -69,11 +71,12 @@ require(
         'domReady',
         'jquery',
         'jquery-ui',
+        'jquery-WebGME',
         'bootstrap',
         'underscore',
         'js/WebGME'
     ],
-    function (domReady, jQuery, jQueryUi, bootstrap, underscore, webGME) {
+    function (domReady, jQuery, jQueryUi, jqueryWebGME, bootstrap, underscore, webGME) {
         domReady(function () {
             webGME.start();
         });

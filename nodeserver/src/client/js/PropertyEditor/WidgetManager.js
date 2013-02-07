@@ -1,9 +1,9 @@
 "use strict";
 
 define([
-    'PropertyEditor/Widgets/StringWidget',
-    'PropertyEditor/Widgets/NumberBoxWidget',
-    'PropertyEditor/Widgets/BooleanWidget'
+    'js/PropertyEditor/Widgets/StringWidget',
+    'js/PropertyEditor/Widgets/NumberBoxWidget',
+    'js/PropertyEditor/Widgets/BooleanWidget'
 ],
     function (StringWidget,
               NumberBoxWidget,

@@ -2,7 +2,7 @@
 
 define(['logManager',
     'clientUtil',
-    'PropertyEditor/PropertyEditorGUI',
+    'js/PropertyEditor/PropertyEditorGUI',
     'css!PropertyEditorCSS/PropertyListView'], function (logManager,
                                                       util,
                                                       PropertyEditorGUI) {
@@ -101,6 +101,10 @@ define(['logManager',
 
     PropertyListView.prototype.onFinishChange = function (fnc) {
         this.__onFinishChange = fnc;
+    };
+
+    PropertyListView.prototype.destroy = function () {
+        this._gui.clear();
     };
 
     return PropertyListView;

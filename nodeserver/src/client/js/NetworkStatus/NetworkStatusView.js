@@ -16,7 +16,7 @@ define(['logManager',
         //initialize UI
         this._initializeUI(containerId);
         if (this._el.length === 0) {
-            this._logger.error("ModelEditorView can not be created");
+            this._logger.error("NetworkStatusView can not be created");
             return undefined;
         }
 

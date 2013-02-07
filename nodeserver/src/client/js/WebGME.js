@@ -24,7 +24,12 @@ define([  'logManager',
     'js/NetworkStatus/NetworkStatusView',
     'js/Project/ProjectTitleView',
     'js/SetEditor/SetEditorView',
-    'js/SetEditor/SetEditorControl'], function (logManager,
+    'js/SetEditor/SetEditorControl',
+    'js/ModelEditor3/ModelDesignerCanvas',
+    'js/ModelEditor3/ModelDesignerControl',
+    'js/SetEditor2/SetEditorCanvas',
+    'js/SetEditor2/SetEditorControl',
+    'js/LoggerStatus/LoggerStatus'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -47,7 +52,12 @@ define([  'logManager',
                                             NetworkStatusView,
                                             ProjectTitleView,
                                             SetEditorView,
-                                            SetEditorControl) {
+                                            SetEditorControl,
+                                            ModelDesignerCanvas,
+                                            ModelDesignerControl,
+                                            SetEditor2Canvas,
+                                            SetEditor2Control,
+                                            LoggerStatus) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -193,7 +203,16 @@ define([  'logManager',
         } else if (visualizer === "GraphViz") {
             mainView = new GraphVizView("modelEditorHtml");
             mainController = new GraphVizControl(proxy, mainView);
-        } 
+        } else if (visualizer === "DesignerCanvas_Model") {
+            mainView = new ModelDesignerCanvas("modelEditorHtml");
+            mainController = new ModelDesignerControl({"client": proxy,
+                                                       "designerCanvas": mainView});
+        } else if (visualizer === "SetEditorCanvas") {
+            mainView = new SetEditor2Canvas("modelEditorHtml");
+            mainController = new SetEditor2Control({"client": proxy,
+                                    "designerCanvas": mainView});
+        }
+
         if (currentNodeId) {
             if (mainController) {
                 mainController.selectedObjectChanged(currentNodeId);
@@ -206,6 +225,8 @@ define([  'logManager',
         setActiveVisualizer(vis);
         event.stopPropagation();
     });
+
+    new LoggerStatus("panLoggerStatus");
 
     doConnect = function (callback) {
 

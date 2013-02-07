@@ -212,7 +212,7 @@ define([], function () {
             },
             projsrv         : "/project",
             nosaveddata     : true,
-            project         : "_core3_"
+            project         : "dd2"
 
         }
 
