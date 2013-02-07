@@ -27,8 +27,6 @@ define([  'logManager',
     'js/SetEditor/SetEditorControl',
     'js/ModelEditor3/ModelDesignerCanvas',
     'js/ModelEditor3/ModelDesignerControl',
-    'js/ModelEditor3/MetaDesignerCanvas',
-    'js/ModelEditor3/MetaDesignerControl',
     'js/SetEditor2/SetEditorCanvas',
     'js/SetEditor2/SetEditorControl',
     'js/LoggerStatus/LoggerStatus'], function (logManager,
@@ -57,8 +55,6 @@ define([  'logManager',
                                             SetEditorControl,
                                             ModelDesignerCanvas,
                                             ModelDesignerControl,
-                                            MetaDesignerCanvas,
-                                            MetaDesignerControl,
                                             SetEditor2Canvas,
                                             SetEditor2Control,
                                             LoggerStatus) {
@@ -211,10 +207,6 @@ define([  'logManager',
             mainView = new ModelDesignerCanvas("modelEditorHtml");
             mainController = new ModelDesignerControl({"client": proxy,
                                                        "designerCanvas": mainView});
-        } else if (visualizer === "DesignerCanvas_Meta") {
-            mainView = new MetaDesignerCanvas("modelEditorHtml");
-            mainController = new MetaDesignerControl({"client": proxy,
-                                                        "designerCanvas": mainView});
         } else if (visualizer === "SetEditorCanvas") {
             mainView = new SetEditor2Canvas("modelEditorHtml");
             mainController = new SetEditor2Control({"client": proxy,
