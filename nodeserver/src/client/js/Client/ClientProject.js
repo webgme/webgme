@@ -1196,7 +1196,7 @@ define([
             };
             var patternRootLoaded = function(){
                 //first we start with the set loading
-                if(/*pattern.sets*/true){
+                if(pattern.sets){
                     setcounter = commonUtil.validRealSetNames.length;
                     for(var i=0;i<commonUtil.validRealSetNames.length;i++){
                         loadSetPattern(patternid,RELFROMSET(commonUtil.validRealSetNames[i]),pathessofar,setloaded);
@@ -1218,7 +1218,7 @@ define([
         };
         var loadMetaSets = function(baseid,pathessofar,callback){
             var globalerr = null;
-            var setcounter = commonUtil.validMetaSetNames.length;
+            var setcounter = commonUtil.validSetNames.length; //TODO we have to clear what to load and when
             var metaSetLoaded = function(err){
                 if(globalerr === null){
                     globalerr = err;
@@ -1228,8 +1228,8 @@ define([
                 }
             };
             //start
-            for(var i=0;i<commonUtil.validMetaSetNames.length;i++){
-                loadSetPattern(baseid,RELFROMSET(commonUtil.validMetaSetNames[i]),pathessofar,metaSetLoaded);
+            for(var i=0;i<commonUtil.validSetNames.length;i++){
+                loadSetPattern(baseid,RELFROMSET(commonUtil.validSetNames[i]),pathessofar,metaSetLoaded);
             }
         };
         var loadMetaInfo = function(pathessofar,callback){
@@ -1387,6 +1387,27 @@ define([
                     }
                 }
             };
+            var addSetPathes = function(path,needmembers){
+                var node = getNode(path);
+                var sets = node.getSetIds();
+                for(var i=0;i<sets.length;i++){
+                    var setnode = getNode(sets[i]);
+                    INSERTARR(newpathes,sets[i]);
+                    /*var children = setnode.getChildrenIds();
+                    for(var j=0;j<children.length;j++){
+                        INSERTARR(newpathes,children[j]);
+                    }*/
+                }
+                if(needmembers){
+                    var setnames = node.getSetNames();
+                    for(i=0;i<setnames.length;i++){
+                        var setmembers = node.getMemberIds(setnames[i]);
+                        for(var j=0;j<setmembers.length;j++){
+                            INSERTARR(newpathes,setmembers[j]);
+                        }
+                    }
+                }
+            };
 
             user.PATTERNS = COPY(patterns);
             if(user.SENDEVENTS){
@@ -1397,15 +1418,7 @@ define([
                     if(patterns[i].children && patterns[i].children>0){
                         addChildrenPathes(patterns[i].children,i);
                     }
-                    if(patterns[i].sets){
-                        var setnames = patternode.getSetNames();
-                        for(i=0;i<setnames.length;i++){
-                            var memberids = patternode.getMemberIds(setnames[i]);
-                            for(var j=0;j<memberids.length;j++){
-                                INSERTARR(newpathes,memberids[j]);
-                            }
-                        }
-                    }
+                    addSetPathes(i,patterns[i].sets);
                 }
 
                 //we know the paths
@@ -1428,6 +1441,26 @@ define([
                         }
                     }
                     user.KEYS[newpathes[i]] = nupathes[newpathes[i]];
+                }
+
+                //we need to postprocesses our events as they probably contain setelements where they should contain only the set owner
+                var eventstoadd = {};
+                for(i=events.length-1;i>=0;i--){
+                    var pathnode = getNode(events[i].eid);
+                    if(pathnode.isSetNode()){
+                        eventstoadd[pathnode.getParentId()] = true;
+                        events.splice(i,1);
+                    }
+                }
+                //now we search wether the setowner is already among the events
+                for(i=0;i<events.length;i++){
+                    if(eventstoadd[events[i].eid]){
+                        delete eventstoadd[events[i].eid];
+                    }
+                }
+                //and we add the rest as update
+                for(i in eventstoadd){
+                    events.push({etype:'update',eid:i});
                 }
 
                 //depending on the oneevent attribute we send it in one array or in events...

@@ -122,6 +122,11 @@ define(['commonUtil'],
 
             };
 
+            var isSetNode = function(){
+                var relid = core.getRelid(node);
+                return ISSET(relid);
+            };
+
             return {
                 getParentId : getParentId,
                 getId       : getId,
@@ -136,11 +141,12 @@ define(['commonUtil'],
                 getRegistryNames : getRegistryNames,
                 //helping functions
                 printData : printData,
+                isSetNode : isSetNode,
                 //META functions
                 getValidChildrenTypes : getValidChildrenTypes,
                 getMemberIds          : getMemberIds,
                 getSetIds             : getSetIds,
-                getSetNames           : getSetNames
+                getSetNames           : getSetNames,
             }
         };
         return ClientNode;
