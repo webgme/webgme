@@ -1,32 +1,59 @@
-.setEditor .items {
+.setEditor .set-editor-title {
+  font-size: 20px;
+  font-weight: bold;
+  display: inline-block;
+  margin-right: 10px;
+  position: relative;
+  top: 4px;
+  max-width: 143px;
+  overflow: hidden;
+  text-overflow: ellipsis; }
+.setEditor .set-list-container {
   margin: 3px;
   border: 1px solid rgba(0, 0, 0, 0);
   padding: 10px 5px;
   max-height: 300px;
   overflow-y: auto;
   overflow-x: hidden; }
-  .setEditor .items.empty {
-    border-color: #3a87ad;
-    text-align: center;
-    color: #3a87ad; }
-  .setEditor .items.highlight {
-    border-color: rgba(82, 168, 236, 0.8);
-    outline: 0;
-    outline: thin dotted \9;
-    /* IE6-9 */
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
-  .setEditor .items ul li {
-    border: 1px solid #dddddd;
-    background-color: white;
-    padding: 2px;
-    margin-bottom: 3px;
-    overflow: hidden;
-    text-overflow: ellipsis; }
-    .setEditor .items ul li > button.close {
+  .setEditor .set-list-container ul.set-list li.set {
+    border: 1px solid rgba(0, 0, 0, 0);
+    margin-bottom: 10px; }
+    .setEditor .set-list-container ul.set-list li.set .set-title {
+      border: 1px solid #aeaeae;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-weight: bold;
+      background-color: rgba(82, 168, 236, 0.25);
+      padding: 2px; }
+      .setEditor .set-list-container ul.set-list li.set .set-title > button.close {
+        line-height: 14px; }
+    .setEditor .set-list-container ul.set-list li.set .set-items {
+      font-size: 9px;
       display: none; }
-    .setEditor .items ul li:hover {
-      background-color: rgba(82, 168, 236, 0.2); }
-      .setEditor .items ul li:hover > button.close {
-        display: inline; }
+      .setEditor .set-list-container ul.set-list li.set .set-items.empty {
+        border-color: #3a87ad;
+        text-align: center;
+        color: #3a87ad; }
+      .setEditor .set-list-container ul.set-list li.set .set-items ul.set-members li {
+        border: 1px solid #dddddd;
+        background-color: white;
+        padding: 2px;
+        margin-top: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis; }
+        .setEditor .set-list-container ul.set-list li.set .set-items ul.set-members li > button.close {
+          display: none; }
+        .setEditor .set-list-container ul.set-list li.set .set-items ul.set-members li div {
+          line-height: 14px; }
+        .setEditor .set-list-container ul.set-list li.set .set-items ul.set-members li:hover {
+          background-color: rgba(82, 168, 236, 0.2); }
+          .setEditor .set-list-container ul.set-list li.set .set-items ul.set-members li:hover > button.close {
+            display: inline; }
+    .setEditor .set-list-container ul.set-list li.set.highlight {
+      border: 1px solid rgba(82, 168, 236, 0.8);
+      outline: 0;
+      outline: thin dotted \9;
+      /* IE6-9 */
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }

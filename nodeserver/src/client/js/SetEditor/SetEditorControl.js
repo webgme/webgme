@@ -3,10 +3,12 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/Constants',
     'nodeAttributeNames',
     'nodeRegistryNames'], function (logManager,
                                     util,
                                     commonUtil,
+                                    CONSTANTS,
                                     nodeAttributeNames,
                                     nodeRegistryNames) {
 
@@ -32,8 +34,10 @@ define(['logManager',
             }
         };
 
-        this._setEditorView.onGetSetMembers = function (setId) {
-            return self._onGetSetMembers(setId);
+        this._setEditorView.onRefresh = function () {
+            if (self._currentNodeId) {
+                self._refreshSetMember(self._currentNodeId);
+            }
         };
 
         this._logger = logManager.create("SetEditorControl");
@@ -41,19 +45,103 @@ define(['logManager',
     };
 
     SetEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        var setNames = commonUtil.validSetNames,
-            num = setNames.length;
+        var desc;
+
+        this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+
+        //remove current territory patterns
+        if (this._currentNodeId) {
+            this._client.removeUI(this._territoryId);
+        }
 
         this._currentNodeId = nodeId;
 
-        this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
+        if (this._currentNodeId) {
+            //put new node's info into territory rules
+            this._selfPatterns = {};
+            this._selfPatterns[nodeId] = { "children": 0 };
+
+            desc = this._getObjectDescriptor(this._currentNodeId);
+
+            this._setEditorView.setTitle(desc.name);
+
+            this._territoryId = this._client.addUI(this, true);
+            //update the territory
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        }
+    };
+
+    SetEditorControl.prototype.onOneEvent = function (events) {
+        var i = events ? events.length : 0,
+            e;
+
+        this._logger.debug("onOneEvent '" + i + "' items");
+
+        while (i--) {
+            e = events[i];
+            switch (e.etype) {
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    this._onLoad(e.eid);
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    this._onUpdate(e.eid);
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
+                    this._onUnload(e.eid);
+                    break;
+            }
+        }
+
+        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
+    };
+
+    // PUBLIC METHODS
+    SetEditorControl.prototype._onLoad = function (gmeID) {
+        if (this._currentNodeId === gmeID) {
+            this._refreshSetMember(gmeID);
+        }
+    };
+
+    SetEditorControl.prototype._onUpdate = function (gmeID) {
+        if (this._currentNodeId === gmeID) {
+            this._refreshSetMember(gmeID);
+        }
+    };
+
+    SetEditorControl.prototype._onUnload = function (gmeID) {
+        if (this._currentNodeId === gmeID) {
+            this._refreshSetMember(gmeID);
+        }
+    };
+
+    SetEditorControl.prototype._refreshSetMember = function (gmeID) {
+        var setNames = commonUtil.validSetNames,
+            num = setNames.length,
+            nodeObj = this._client.getNode(gmeID),
+            result = [],
+            node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
+            setMemberIds,
+            len;
 
         //delete everything from model editor
         this._setEditorView.clear();
 
-        while (num--) {
-            this._setEditorView.addSet({"id": setNames[num],
-                                        "name": setNames[num]});
+        if (nodeObj) {
+            while (num--) {
+                this._setEditorView.addSet({"id": setNames[num],
+                    "name": setNames[num]});
+
+                setMemberIds = node.getMemberIds(setNames[num]);
+                if (setMemberIds) {
+                    len = setMemberIds.length;
+                    result = [];
+                    while (len--) {
+                        result.push(this._getObjectDescriptor(setMemberIds[len]));
+                    }
+
+                    this._setEditorView.addSetMembers(setNames[num], result);
+                }
+            }
         }
     };
 
@@ -72,27 +160,6 @@ define(['logManager',
 
         return objDescriptor;
     };
-
-    SetEditorControl.prototype._onGetSetMembers = function (setId) {
-        var result = [],
-            node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
-            setMemberIds,
-            len;
-
-        if (node) {
-            setMemberIds = node.getMemberIds(setId);
-            if (setMemberIds) {
-                len = setMemberIds.length;
-                while (len--) {
-                    result.push(this._getObjectDescriptor(setMemberIds[len]));
-                }
-            }
-        }
-
-        return result;
-    };
-
-
 
     return SetEditorControl;
 });

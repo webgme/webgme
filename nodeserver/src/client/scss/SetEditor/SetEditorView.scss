@@ -1,60 +1,107 @@
-$item-container-border-color: rgba(0, 0, 0, 0);
-$item-container-empty-border-color: #3A87AD;
-$item-container-empty-text-color: $item-container-empty-border-color;
-$item-container-highlight-border-color: rgba(82, 168, 236, 0.8);
-$item-container-highlight-border-begin-color: rgba(0, 0, 0, 0.075);
-$item-container-highlight-border-end-color: rgba(82, 168, 236, 0.6);
-$item-container-max-height: 300px;
-$item-border-color: #DDDDDD;
-$item-background-color: #FFFFFF;
-$item-background-hover-color: rgba(82, 168, 236, 0.2);
+$set-list-container-border-color: rgba(0, 0, 0, 0);
+$set-items-empty-border-color: #3A87AD;
+$set-items-empty-text-color: $set-items-empty-border-color;
+$set-container-highlight-border-color: rgba(82, 168, 236, 0.8);
+$set-container-highlight-border-begin-color: rgba(0, 0, 0, 0.075);
+$set-container-highlight-border-end-color: rgba(82, 168, 236, 0.6);
+$set-list-container-max-height: 300px;
+$set-member-border-color: #DDDDDD;
+$set-member-background-color: #FFFFFF;
+$set-member-background-hover-color: rgba(82, 168, 236, 0.2);
+$set-title-background-color: rgba(82, 168, 236, 0.25);
+$set-title-border-color: #AEAEAE;
 
 .setEditor {
 
-  .items {
+  .set-editor-title {
+    font-size: 20px;
+    font-weight: bold;
+    display: inline-block;
+    margin-right: 10px;
+    position: relative;
+    top: 4px;
+    max-width: 143px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .set-list-container {
     margin: 3px;
-    border: 1px solid $item-container-border-color;
+    border: 1px solid $set-list-container-border-color;
     padding: 10px 5px;
 
-    max-height: $item-container-max-height;
+    max-height: $set-list-container-max-height;
     overflow-y: auto;
     overflow-x: hidden;
 
-    &.empty {
-      border-color: $item-container-empty-border-color;
-      text-align: center;
-      color: $item-container-empty-text-color;
-    }
+    ul.set-list {
 
-    &.highlight {
-      border-color: $item-container-highlight-border-color;
-      outline: 0;
-      outline: thin dotted \9;
+      li.set {
 
-      /* IE6-9 */
+        border: 1px solid rgba(0,0,0,0);
 
-      -webkit-box-shadow: inset 0 1px 1px $item-container-highlight-border-begin-color, 0 0 8px $item-container-highlight-border-end-color;
-      -moz-box-shadow: inset 0 1px 1px $item-container-highlight-border-begin-color, 0 0 8px $item-container-highlight-border-end-color;
-      box-shadow: inset 0 1px 1px $item-container-highlight-border-begin-color, 0 0 8px $item-container-highlight-border-end-color;
-    }
+        margin-bottom: 10px;
 
-    ul li {
-      border: 1px solid $item-border-color;
-      background-color: $item-background-color;
-      padding: 2px;
-      margin-bottom: 3px;
-      overflow: hidden;
-      text-overflow: ellipsis;
+        .set-title {
+          border: 1px solid $set-title-border-color;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          font-weight: bold;
+          background-color: $set-title-background-color;
+          padding: 2px;
 
-      > button.close {
-        display: none;
-      }
+          > button.close {
+            line-height: 14px;
+          }
+        }
 
-      &:hover {
-        background-color: $item-background-hover-color;
+        .set-items {
 
-        > button.close {
-          display: inline;
+          font-size : 9px;
+          display: none;
+
+          &.empty {
+            border-color: $set-items-empty-border-color;
+            text-align: center;
+            color: $set-items-empty-text-color;
+          }
+
+          ul.set-members li {
+            border: 1px solid $set-member-border-color;
+            background-color: $set-member-background-color;
+            padding: 2px;
+            margin-top: 3px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
+            > button.close {
+              display: none;
+            }
+
+            div {
+              line-height: 14px;
+            }
+
+            &:hover {
+              background-color: $set-member-background-hover-color;
+
+              > button.close {
+                display: inline;
+              }
+            }
+          }
+        }
+
+        &.highlight {
+          border: 1px solid $set-container-highlight-border-color;
+          outline: 0;
+          outline: thin dotted \9;
+
+          /* IE6-9 */
+
+          -webkit-box-shadow: inset 0 1px 1px $set-container-highlight-border-begin-color, 0 0 8px $set-container-highlight-border-end-color;
+          -moz-box-shadow: inset 0 1px 1px $set-container-highlight-border-begin-color, 0 0 8px $set-container-highlight-border-end-color;
+          box-shadow: inset 0 1px 1px $set-container-highlight-border-begin-color, 0 0 8px $set-container-highlight-border-end-color;
         }
       }
     }

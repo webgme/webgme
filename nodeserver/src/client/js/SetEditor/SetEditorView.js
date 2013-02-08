@@ -3,9 +3,13 @@
 define(['logManager',
     'clientUtil',
     'text!./SetDropDownTmpl.html',
+    'text!./SetTemplate.html',
+    'text!./SetItemTemplate.html',
     'css!SetEditorCSS/SetEditorView.css'], function (logManager,
                                                      util,
-                                                     setDropDownTmpl) {
+                                                     setDropDownTmpl,
+                                                     setTemplate,
+                                                     setItemTemplate) {
 
     var SetEditorView;
 
@@ -13,22 +17,17 @@ define(['logManager',
         this._logger = logManager.create("SetEditorView_" + containerElement);
 
         //Step 1: initialize object variables
-        this._selectedSetId = null;
-
-        //default view size
 
         //STEP 2: initialize UI
         this._initializeUI(containerElement);
         if (this._el.length === 0) {
             this._logger.error("SetEditorView can not be created");
-            return undefined;
+            throw "SetEditorView can not be created";
         }
         this._logger.debug("Created");
 
         return this;
     };
-
-    SetEditorView.prototype._btnTemplate = ' <span class="caret"></span>';
 
     SetEditorView.prototype._initializeUI = function (containerElement) {
         var self = this;
@@ -37,158 +36,161 @@ define(['logManager',
         this._el = $("#" + containerElement);
         if (this._el.length === 0) {
             this._logger.warning("SetEditorView's container control with id:'" + containerElement + "' could not be found");
-            return undefined;
+            throw "SetEditorView's container control with id:'" + containerElement + "' could not be found";
         }
 
         this._el.addClass("setEditor");
 
         this._el.html(setDropDownTmpl);
 
-        this._btnCurrent = this._el.find(".btn-group > .btnDropDown");
+        this._title = this._el.find(".set-editor-title");
+        this._ulSetList = this._el.find(".set-list");
+
         this._btnRefresh = this._el.find(".btn-group > .btnRefresh");
-        this._ulDropDown = this._el.find(".btn-group > .dropdown-menu");
-        this._divItems = this._el.find(".items");
-
-        this._ulDropDown.on("click", "li", function (event) {
-            var li = $(this),
-                setId = li.attr("data-id"),
-                setName = li.find("> a").text();
-
-            self.selectSet({ "id": setId,
-                                  "name": setName});
-        });
-
-        this._divItems.on("click", "li > button.close", function (event) {
-            var btn = $(this),
-                itemId = btn.parent().attr("data-id");
-
-            self.onSetMemberRemove({"id": itemId,
-                "setId": self._selectedSetId });
-
-            event.preventDefault();
-            event.stopPropagation();
-
-            self._refreshItemList();
-        });
-
-        this._divItems.droppable({
-            over: function (event, ui) {
-                self._onDropOver(event, ui);
-            },
-            out: function (event, ui) {
-                self._onDropOut(event, ui);
-            },
-            drop: function (event, ui) {
-                self._onDrop(event, ui);
-                event.stopPropagation();
-            }
-        });
 
         this._btnRefresh.on("click", function (event) {
-            self._refreshItemList();
+            self.onRefresh();
             event.stopPropagation();
             event.preventDefault();
         });
     };
 
     SetEditorView.prototype.clear = function () {
-        this._divItems.empty();
-        this._divItems.hide();
-        this._ulDropDown.empty();
-        this._btnCurrent.html(this._btnTemplate);
-        this._selectedSetId = null;
+        this._ulSetList.empty();
     };
 
-    SetEditorView.prototype.selectSet = function (setDescriptor) {
-        if (this._selectedSetId !== setDescriptor.id) {
-            this._btnCurrent.html(setDescriptor.name + this._btnTemplate);
-            this._selectedSetId = setDescriptor.id;
-            this._selectedSetName = setDescriptor.name;
-            this._refreshItemList();
-        }
+    SetEditorView.prototype.setTitle = function (title) {
+        this._title.text(title);
+        this._title.attr("title", title);
     };
 
     SetEditorView.prototype.addSet = function (setDescriptor) {
-        var setLi = $('<li data-id="' + setDescriptor.id + '"><a href="#">' + setDescriptor.name + '</a></li>');
-        this._ulDropDown.append(setLi);
+        var setLi = $('<li data-id="' + setDescriptor.id + '"><a href="#">' + setDescriptor.name + '</a></li>'),
+            self = this;
 
-        if (this._selectedSetId === null) {
-            this.selectSet(setDescriptor);
-        }
+        setLi = $(setTemplate);
+        setLi.attr("data-setid", setDescriptor.id);
+        setLi.find(".set-title > .title").text(setDescriptor.name);
+        setLi.find(".set-title > .counter").text("(0)");
+
+        this._ulSetList.append(setLi);
+
+        setLi.droppable({
+            over: function (event, ui) {
+                self._onDropOver(setLi, event, ui);
+            },
+            out: function (/*event, ui*/) {
+                self._onDropOut(setLi/*, event, ui*/);
+            },
+            drop: function (event, ui) {
+                self._onDrop(setLi, event, ui);
+                event.stopPropagation();
+            }
+        });
+
+        setLi.on("click", "button.close.delete", function (event) {
+            var btn = $(this),
+                itemId = btn.parent().parent().attr("data-id"),
+                setId = btn.parent().parent().parent().parent().parent().attr("data-setid");
+
+            btn.remove();
+
+            self.onSetMemberRemove({"id": itemId,
+                "setId": setId });
+
+            event.preventDefault();
+            event.stopPropagation();
+        });
+
+        setLi.on("click", "button.close.openclose", function (event) {
+            var btn = $(this),
+                setItems = btn.parent().next(),
+                action = btn.attr("data-action"),
+                i = btn.find("> i");
+
+            if (action === "open") {
+                setItems.show();
+                btn.attr("data-action", "close");
+                i.attr("class", "icon-chevron-up");
+            } else {
+                setItems.hide();
+                btn.attr("data-action", "open");
+                i.attr("class", "icon-chevron-down");
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+        });
     };
 
-    SetEditorView.prototype._refreshItemList = function () {
-        var items = this.onGetSetMembers(this._selectedSetId),
-            len = items.length;
+    SetEditorView.prototype.addSetMembers = function (setId, memberDesriptors) {
+        var setLi = this._ulSetList.find("li.set[data-setid='"+setId+"']"),
+            setItems,
+            len = memberDesriptors.length,
+            setMembersUL = $('<ul class="set-members unstyled"></ul>'),
+            setItemLi;
 
-        this._divItems.empty();
-        this._divItems.show();
+        if (setLi.length > 0) {
+            if (len > 0) {
+                setLi.find(".set-title > .counter").text("(" + len + ")");
 
-        this._btnCurrent.html(this._selectedSetName + ' (' + len + ')' + this._btnTemplate);
+                while(len--) {
+                    setItemLi = $(setItemTemplate);
+                    setItemLi.attr("data-id", memberDesriptors[len].id);
+                    setItemLi.find(".title").text(memberDesriptors[len].name);
+                    setItemLi.find(".muted").text(memberDesriptors[len].id);
 
-        if (len === 0) {
-            this._divItems.html('Drag items here to add to the set...');
-            this._divItems.addClass('empty');
-        } else {
-            this._divItems.removeClass('empty');
-            this._divItems.html('<ul class="unstyled"></ul>');
-            this._ulItems = this._divItems.find('> ul');
+                    setMembersUL.append(setItemLi);
+                }
 
-            while (--len >= 0) {
-                this._addItemToList(items[len]);
+                setItems = setLi.find(".set-items");
+                setItems.empty();
+                setItems.removeClass('empty');
+                setItems.append(setMembersUL);
             }
         }
     };
 
-    SetEditorView.prototype._addItemToList = function (objDescriptor) {
-        if (objDescriptor) {
-            this._ulItems.append($('<li data-id="' + objDescriptor.id + '"><b>' + objDescriptor.name + '</b><button type="button" class="close">×</button><br/><span class="muted">' + objDescriptor.id + '</span></li>'));
-        }
-    };
-
-    SetEditorView.prototype.onGetSetMembers = function (setId) {
-        this._logger.warning("onGetSetMembers is not overridden!!! id: '" + setId + "'");
-        return [];
-    };
-
-    SetEditorView.prototype._onDropOver = function (event, ui) {
+    SetEditorView.prototype._onDropOver = function (setLi, event, ui) {
         //ui.helper contains information about the concrete dragging (ui.helper[0].GMEDragData)
         var dragParams = ui.helper[0].GMEDragData || "";
 
         if (this._isAcceptableDrag(dragParams)) {
-            this._highlightItemArea(true);
+            this._highlightItemArea(setLi, true);
         }
     };
 
-    SetEditorView.prototype._onDrop = function (event, ui) {
+    SetEditorView.prototype._onDrop = function (setLi, event, ui) {
         //ui.helper contains information about the concrete dragging (ui.helper[0].GMEDragData)
         var dragParams = ui.helper[0].GMEDragData || "";
 
         if (this._isAcceptableDrag(dragParams)) {
 
             this.onSetMemberAdd({"id": dragParams.id,
-                                 "setId": this._selectedSetId });
+                                 "setId": setLi.attr("data-setid")});
 
-            this._highlightItemArea(false);
-
-            this._refreshItemList();
+            this._highlightItemArea(setLi, false);
         }
     };
 
-    SetEditorView.prototype._onDropOut = function (event, ui) {
-        this._highlightItemArea(false);
+    SetEditorView.prototype._onDropOut = function (setLi) {
+        this._highlightItemArea(setLi, false);
     };
 
     SetEditorView.prototype._isAcceptableDrag = function (dragParams) {
         return dragParams.id;
     };
 
-    SetEditorView.prototype._highlightItemArea = function (enabled) {
+    SetEditorView.prototype._highlightItemArea = function (setLi, enabled) {
         if (enabled) {
-            this._divItems.addClass('highlight');
+            setLi.addClass('highlight');
         } else {
-            this._divItems.removeClass('highlight');
+            setLi.removeClass('highlight');
         }
+    };
+
+    SetEditorView.prototype.onRefresh = function () {
+        this._logger.warning("onRefresh is not overridden!!!");
     };
 
     SetEditorView.prototype.onSetMemberAdd = function (params) {
