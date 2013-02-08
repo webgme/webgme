@@ -52,6 +52,8 @@ define(['logManager',
         //remove current territory patterns
         if (this._currentNodeId) {
             this._client.removeUI(this._territoryId);
+            this._setEditorView.setTitle("");
+            this._setEditorView.clear();
         }
 
         this._currentNodeId = nodeId;
@@ -60,6 +62,8 @@ define(['logManager',
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
+
+            this._setItems = {};
 
             desc = this._getObjectDescriptor(this._currentNodeId);
 
@@ -118,28 +122,44 @@ define(['logManager',
         var setNames = commonUtil.validSetNames,
             num = setNames.length,
             nodeObj = this._client.getNode(gmeID),
-            result = [],
             node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
-            setMemberIds,
-            len;
-
-        //delete everything from model editor
-        this._setEditorView.clear();
+            len,
+            oldMembers,
+            currentMembers,
+            diff,
+            idx,
+            id;
 
         if (nodeObj) {
             while (num--) {
-                this._setEditorView.addSet({"id": setNames[num],
-                    "name": setNames[num]});
+                if (!this._setItems[setNames[num]]) {
+                    this._setEditorView.addSet({"id": setNames[num],
+                        "name": setNames[num]});
 
-                setMemberIds = node.getMemberIds(setNames[num]);
-                if (setMemberIds) {
-                    len = setMemberIds.length;
-                    result = [];
-                    while (len--) {
-                        result.push(this._getObjectDescriptor(setMemberIds[len]));
-                    }
+                    this._setItems[setNames[num]] = [];
+                }
 
-                    this._setEditorView.addSetMembers(setNames[num], result);
+                oldMembers = this._setItems[setNames[num]];
+
+                currentMembers = node.getMemberIds(setNames[num]) || [];
+
+                //check the deleted ones
+                diff = util.arrayMinus(oldMembers, currentMembers);
+                len = diff.length;
+                while (len--) {
+                    id = diff[len];
+                    this._setEditorView.removeSetMember(setNames[num], id);
+                    idx = this._setItems[setNames[num]].indexOf(id);
+                    this._setItems[setNames[num]].splice(idx, 1);
+                }
+
+                //check the added ones
+                diff = util.arrayMinus(currentMembers, oldMembers);
+                len = diff.length;
+                while (len--) {
+                    id = diff[len];
+                    this._setEditorView.addSetMember(setNames[num], this._getObjectDescriptor(id));
+                    this._setItems[setNames[num]].push(id);
                 }
             }
         }

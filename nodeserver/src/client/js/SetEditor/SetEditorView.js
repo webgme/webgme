@@ -11,7 +11,8 @@ define(['logManager',
                                                      setTemplate,
                                                      setItemTemplate) {
 
-    var SetEditorView;
+    var SetEditorView,
+        EMPTY_SET_STRING = "Empty now... Drag items here to add...";
 
     SetEditorView = function (containerElement) {
         this._logger = logManager.create("SetEditorView_" + containerElement);
@@ -129,30 +130,59 @@ define(['logManager',
         this._setListContainer.show();
     };
 
-    SetEditorView.prototype.addSetMembers = function (setId, memberDesriptors) {
+    SetEditorView.prototype.addSetMember = function (setId, memberDesc) {
         var setLi = this._ulSetList.find("li.set[data-setid='"+setId+"']"),
             setItems,
-            len = memberDesriptors.length,
-            setMembersUL = $('<ul class="set-members unstyled"></ul>'),
+            setMembersUl = setLi.find(".set-members"),
             setItemLi;
 
         if (setLi.length > 0) {
-            if (len > 0) {
-                setLi.find(".set-title > .counter").text("(" + len + ")");
-
-                while(len--) {
-                    setItemLi = $(setItemTemplate);
-                    setItemLi.attr("data-id", memberDesriptors[len].id);
-                    setItemLi.find(".title").text(memberDesriptors[len].name);
-                    setItemLi.find(".muted").text(memberDesriptors[len].id);
-
-                    setMembersUL.append(setItemLi);
-                }
+            if (setMembersUl.length === 0) {
+                //it was an empty collection
 
                 setItems = setLi.find(".set-items");
                 setItems.empty();
                 setItems.removeClass('empty');
-                setItems.append(setMembersUL);
+                setMembersUl = $('<ul class="set-members unstyled"></ul>');
+                setItems.append(setMembersUl);
+            }
+
+            //already has a UL
+            setItemLi = $(setItemTemplate);
+            setItemLi.attr("data-id", memberDesc.id);
+            setItemLi.find(".title").text(memberDesc.name);
+            setItemLi.find(".muted").text(memberDesc.id);
+
+            setMembersUl.append(setItemLi);
+
+            setLi.find(".set-title > .counter").text("(" + setMembersUl.find("li").length + ")");
+        }
+    };
+
+    SetEditorView.prototype.removeSetMember = function (setId, memberId) {
+        var setLi = this._ulSetList.find("li.set[data-setid='"+setId+"']"),
+            setMembersUl,
+            setItemLi,
+            counter,
+            setItems;
+
+        if (setLi.length > 0) {
+            setMembersUl = setLi.find(".set-members");
+            if (setMembersUl.length > 0) {
+                //it was an empty collection
+                setItemLi = setMembersUl.find("li[data-id='" + memberId + "']");
+                setItemLi.remove();
+            }
+
+            counter =  setMembersUl.find("li").length;
+            setLi.find(".set-title > .counter").text("(" + counter + ")");
+
+            //check if the set become empty
+            if (counter === 0) {
+                setItems = setLi.find(".set-items");
+                setItems.empty();
+                setItems.addClass('empty');
+                setItems.html(EMPTY_SET_STRING);
             }
         }
     };
