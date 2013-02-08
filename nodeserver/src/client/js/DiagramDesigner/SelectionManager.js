@@ -520,6 +520,8 @@ define(['logManager',
         });
         this._skinParts.selectionOutline.append(this._skinParts.copySelection);*/
 
+        this.canvas.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
+
         this.canvas.skinParts.$selectionOutline.on("mousedown", function (event) {
             event.stopPropagation();
         }).on("click", ".s-btn", function (event) {
