@@ -2,12 +2,12 @@
 
 define(['logManager',
     'clientUtil',
-    'text!./SetDropDownTmpl.html',
+    'text!./SetEditorViewTemplate.html',
     'text!./SetTemplate.html',
     'text!./SetItemTemplate.html',
     'css!SetEditorCSS/SetEditorView.css'], function (logManager,
                                                      util,
-                                                     setDropDownTmpl,
+                                                     setEditorViewTemplate,
                                                      setTemplate,
                                                      setItemTemplate) {
 
@@ -41,10 +41,11 @@ define(['logManager',
 
         this._el.addClass("setEditor");
 
-        this._el.html(setDropDownTmpl);
+        this._el.html(setEditorViewTemplate);
 
         this._title = this._el.find(".set-editor-title");
         this._ulSetList = this._el.find(".set-list");
+        this._setListContainer = this._el.find(".set-list-container");
 
         this._btnRefresh = this._el.find(".btn-group > .btnRefresh");
 
@@ -53,10 +54,13 @@ define(['logManager',
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._setListContainer.hide();
     };
 
     SetEditorView.prototype.clear = function () {
         this._ulSetList.empty();
+        this._setListContainer.hide();
     };
 
     SetEditorView.prototype.setTitle = function (title) {
@@ -121,6 +125,8 @@ define(['logManager',
             event.preventDefault();
             event.stopPropagation();
         });
+
+        this._setListContainer.show();
     };
 
     SetEditorView.prototype.addSetMembers = function (setId, memberDesriptors) {
