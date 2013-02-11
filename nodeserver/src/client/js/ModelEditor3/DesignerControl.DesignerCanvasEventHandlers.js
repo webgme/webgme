@@ -2,14 +2,15 @@
 
 define(['logManager',
     'clientUtil',
+    'js/Constants',
     'js/DiagramDesigner/NodePropertyNames'], function (logManager,
                                                         util,
+                                                        CONSTANTS,
                                                         nodePropertyNames) {
 
     var DesignerControlDesignerCanvasEventHandlers,
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
-        GME_ID = "GME_ID",
         CONNECTION_SOURCE_NAME = "source",
         CONNECTION_TARGET_NAME = "target";
 
@@ -211,11 +212,11 @@ define(['logManager',
 
     DesignerControlDesignerCanvasEventHandlers.prototype._onRegisterSubcomponent = function (objID, sCompID, metaInfo) {
         //store that a subcomponent with a given ID has been added to object with objID
-        this._GMEID2Subcomponent[metaInfo[GME_ID]] = this._GMEID2Subcomponent[metaInfo[GME_ID]] || {};
-        this._GMEID2Subcomponent[metaInfo[GME_ID]][objID] = sCompID;
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] = this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]] || {};
+        this._GMEID2Subcomponent[metaInfo[CONSTANTS.GME_ID]][objID] = sCompID;
 
         this._Subcomponent2GMEID[objID] = this._Subcomponent2GMEID[objID] || {};
-        this._Subcomponent2GMEID[objID][sCompID] = metaInfo[GME_ID];
+        this._Subcomponent2GMEID[objID][sCompID] = metaInfo[CONSTANTS.GME_ID];
         //TODO: add event handling here that a subcomponent appeared
     };
 

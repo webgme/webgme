@@ -2,12 +2,14 @@
 
 define(['logManager',
     'clientUtil',
+    'js/Constants',
     'js/DiagramDesigner/DecoratorBase',
     'text!js/ModelEditor3/Decorators/DecoratorWithPorts/DecoratorWithPortsTemplate.html',
     'js/DiagramDesigner/NodePropertyNames',
     'js/ModelEditor3/Decorators/DecoratorWithPorts/Port',
     'css!ModelEditor3CSS/Decorators/DecoratorWithPorts/DecoratorWithPorts'], function (logManager,
                                                           util,
+                                                          CONSTANTS,
                                                           DecoratorBase,
                                                           decoratorWithPortsTemplate,
                                                           nodePropertyNames,
@@ -16,8 +18,7 @@ define(['logManager',
     var DecoratorWithPorts,
         __parent__ = DecoratorBase,
         __parent_proto__ = DecoratorBase.prototype,
-        DECORATOR_ID = "DecoratorWithPorts",
-        GME_ID = "GME_ID";
+        DECORATOR_ID = "DecoratorWithPorts";
 
     DecoratorWithPorts = function (options) {
 
@@ -46,13 +47,13 @@ define(['logManager',
 
     DecoratorWithPorts.prototype.on_addTo = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID),
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             childrenIDs,
             len,
             self = this;
 
         //render GME-ID in the DOM, for debugging
-        this.$el.attr({"data-id": this._metaInfo.GMEID});
+        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
 
         /* BUILD UI*/
         //find name placeholder
@@ -96,7 +97,7 @@ define(['logManager',
 
     DecoratorWithPorts.prototype.update = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID),
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newName = "";
 
         if (nodeObj) {
@@ -160,7 +161,7 @@ define(['logManager',
     /***************  CUSTOM DECORATOR PART ****************************/
     DecoratorWithPorts.prototype._updatePorts = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID),
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newChildrenIDs = nodeObj ?  nodeObj.getChildrenIds() : [],
             len,
             currentChildrenIDs = this._portIDs.slice(0),
@@ -293,7 +294,7 @@ define(['logManager',
     DecoratorWithPorts.prototype._onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
 
-        client.setAttributes(this._metaInfo.GMEID, nodePropertyNames.Attributes.name, newValue);
+        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
     };
 
     /**************** END OF - EDIT NODE TITLE ************************/

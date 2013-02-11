@@ -367,7 +367,9 @@ define(['logManager',
 
                     objDesc.decoratorClass = decClass;
                     objDesc.control = this;
-                    objDesc.metaInfo = {"GMEID" : gmeID};
+                    objDesc.metaInfo = {};
+                    objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
+
 
                     uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 

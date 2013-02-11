@@ -3,12 +3,14 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/Constants',
     'js/ModelEditor3/DesignerControl',
     'js/DiagramDesigner/NodePropertyNames',
     'js/ModelEditor3/MetaDesignerControl.DEBUG',
     'css!ModelEditor3CSS/MetaDesignerControl'], function (logManager,
                                                      clientUtil,
                                                      commonUtil,
+                                                     CONSTANTS,
                                                      DesignerControl,
                                                      nodePropertyNames,
                                                      MetaDesignerControlDEBUG) {
@@ -263,7 +265,8 @@ define(['logManager',
 
                     objDesc.decoratorClass = decClass;
                     objDesc.control = this;
-                    objDesc.metaInfo = {"GMEID" : gmeID};
+                    objDesc.metaInfo = {};
+                    objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
                     uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 

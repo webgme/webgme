@@ -2,11 +2,13 @@
 
 define(['logManager',
     'clientUtil',
+    'js/Constants',
     'js/DiagramDesigner/DecoratorBase',
     'text!js/ModelEditor3/Decorators/DefaultDecorator/DefaultDecoratorTemplate.html',
     'js/DiagramDesigner/NodePropertyNames',
     'css!ModelEditor3CSS/Decorators/DefaultDecorator/DefaultDecorator'], function (logManager,
                                                        util,
+                                                       CONSTANTS,
                                                        DecoratorBase,
                                                        defaultDecoratorTemplate,
                                                        nodePropertyNames) {
@@ -35,11 +37,11 @@ define(['logManager',
 
     DefaultDecorator.prototype.on_addTo = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID),
-            gmeID = this._metaInfo.GMEID;
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            gmeID = this._metaInfo[CONSTANTS.GME_ID];
 
         //render GME-ID in the DOM, for debugging
-        this.$el.attr({"data-id": this._metaInfo.GMEID});
+        this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
 
         if (nodeObj) {
             this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
@@ -66,7 +68,7 @@ define(['logManager',
 
     DefaultDecorator.prototype.update = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo.GMEID),
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newName = "";
 
         if (nodeObj) {

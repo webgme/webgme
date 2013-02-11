@@ -5,13 +5,18 @@
 
 define([], function () {
 
-    //return utility functions
+    //return string constants
     return {
         /*
          * TERRITORY EVENTS
          */
         TERRITORY_EVENT_LOAD : "load",
         TERRITORY_EVENT_UPDATE : "update",
-        TERRITORY_EVENT_UNLOAD : "unload"
+        TERRITORY_EVENT_UNLOAD : "unload",
+
+        /*
+         * GME_ID: wherever a GME object ID needs to be present
+         */
+        GME_ID: "GME_ID"
     };
 });
