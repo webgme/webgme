@@ -1,11 +1,9 @@
 "use strict";
 
 define([
-    'js/PropertyEditor/Widgets/WidgetBase',
-    'clientUtil'
-],
-    function (WidgetBase,
-              clientUtil) {
+    'js/PropertyEditor/Widgets/WidgetBase'],
+
+    function (WidgetBase) {
 
         var StringWidget;
 
@@ -26,7 +24,7 @@ define([
                 _self.setValue(_self.__input.val());
             });
 
-            this.__input.on('blur', function (e) {
+            this.__input.on('blur', function (/*e*/) {
                 _self.fireFinishChange();
             });
 
@@ -43,10 +41,7 @@ define([
 
         StringWidget.superclass = WidgetBase;
 
-        clientUtil.extend(
-            StringWidget.prototype,
-            WidgetBase.prototype
-        );
+        _.extend(StringWidget.prototype, WidgetBase.prototype);
 
         StringWidget.prototype.updateDisplay = function () {
             // Stops the caret from moving on account of:
