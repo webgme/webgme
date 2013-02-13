@@ -38,7 +38,10 @@ define(['logManager',
         if (this._currentNodeId) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+            //this._selfPatterns[nodeId] = { "children": 0 };
+            this._selfPatterns[nodeId] = {};
+            this._selfPatterns[nodeId][CONSTANTS.TERRITORY_CHILDREN] = 0;
+            this._selfPatterns[nodeId][CONSTANTS.TERRITORY_SETS] = true;
 
             this._displayedParts = [];
 
@@ -86,18 +89,22 @@ define(['logManager',
         if (len > 0) {
             decoratorName = decoratorList.pop();
 
-            require([DECORATOR_PATH + decoratorName + "/" + decoratorName],
-                function (decoratorClass) {
-                    self._logger.warning("downloaded:" + decoratorName);
-                    self._decoratorClasses[decoratorName] = decoratorClass;
-                    processRemainingList();
-                },
-                function (err) {
-                    //for any error store undefined in the list and the default decorator will be used on the canvas
-                    self._logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
-                    self._decoratorClasses[decoratorName] = undefined;
-                    processRemainingList();
-                });
+            if (!this._decoratorClasses[decoratorName]) {
+                require([DECORATOR_PATH + decoratorName + "/" + decoratorName],
+                    function (decoratorClass) {
+                        self._logger.warning("downloaded:" + decoratorName);
+                        self._decoratorClasses[decoratorName] = decoratorClass;
+                        processRemainingList();
+                    },
+                    function (err) {
+                        //for any error store undefined in the list and the default decorator will be used on the canvas
+                        self._logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
+                        self._decoratorClasses[decoratorName] = undefined;
+                        processRemainingList();
+                    });
+            } else {
+                processRemainingList();
+            }
         }
     };
 
@@ -135,6 +142,11 @@ define(['logManager',
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
         if (this._currentNodeId === gmeID) {
             this._refreshParts(gmeID);
+        } else {
+            if (this._displayedParts.indexOf(gmeID) !== -1) {
+                //one of the displayed part number received an update
+                this._refreshParts(this._currentNodeId);
+            }
         }
     };
 
@@ -159,7 +171,7 @@ define(['logManager',
         if (node) {
 
             //check the deleted ones
-            diff = util.arrayMinus(oldMembers, currentMembers);
+            diff = _.difference(oldMembers, currentMembers);
             len = diff.length;
             while (len--) {
                 id = diff[len];
@@ -169,7 +181,7 @@ define(['logManager',
             }
 
             //check the added ones
-            diffInserted = util.arrayMinus(currentMembers, oldMembers);
+            diffInserted = _.difference(currentMembers, oldMembers);
             len = diffInserted.length;
             while (len--) {
                 id = diffInserted[len];
@@ -177,8 +189,12 @@ define(['logManager',
             }
 
             //check the updated ones (decorator update, name change, etc????)
-            //...
-            diffUpdated = [];
+            diffUpdated = _.intersection(currentMembers, oldMembers);
+            len = diffUpdated.length;
+            while (len--) {
+                id = diffUpdated[len];
+                requiredDecorators.insertUnique(this._getObjectDescriptor(id).decorator);
+            }
 
             this._downloadDecorators(requiredDecorators, { "fn": this._refreshInsertedUpdatedParts,
                                                            "context": this,
@@ -215,8 +231,15 @@ define(['logManager',
         while (len--) {
             id = updated[len];
             desc = this._getObjectDescriptor(id);
-            //this._partBrowserView.updatePart(id, desc);
-            //TODO: fix here , handle update correctly
+
+            decClass = this._decoratorClasses[desc.decorator];
+
+            desc.decoratorClass = decClass;
+            desc.control = this;
+            desc.metaInfo = {};
+            desc.metaInfo[CONSTANTS.GME_ID] = id;
+
+            this._partBrowserView.updatePart(id, desc);
         }
     };
 

@@ -10,6 +10,7 @@ define(['logManager',
         this._logger = logManager.create("PartBrowserView_" + containerElement);
 
         //Step 1: initialize object variables
+        this._partDecoratorInstances = {};
 
         //default view size
 
@@ -36,6 +37,7 @@ define(['logManager',
 
     PartBrowserView.prototype.clear = function () {
         this._list.empty();
+        this._partDecoratorInstances = {};
     };
 
     PartBrowserView.prototype.$_DOMBase = $('<div/>').attr({ "class": PART_CLASS });
@@ -49,7 +51,7 @@ define(['logManager',
         if (partContainerDiv.length > 0) {
             this.updatePart(partId, partDesc);
         } else {
-            decoratorInstance = new DecoratorClass();
+            this._partDecoratorInstances[partId] = decoratorInstance = new DecoratorClass();
             decoratorInstance.setControl(partDesc.control);
             decoratorInstance.setMetaInfo(partDesc.metaInfo);
 
@@ -73,7 +75,7 @@ define(['logManager',
 
     PartBrowserView.prototype._makeDraggable = function (params) {
         var el = params.el,
-            DecoratorClass = params.partDesc.decoratorClass,
+            DecoratorClass,
             self = this;
 
         //hook up draggable
@@ -83,6 +85,7 @@ define(['logManager',
                     decoratorInstance,
                     partContainerLi = $("<li/>");
 
+                DecoratorClass = params.partDesc.decoratorClass;
                 decoratorInstance = new DecoratorClass();
                 decoratorInstance.setControl(params.partDesc.control);
                 decoratorInstance.setMetaInfo(params.partDesc.metaInfo);
@@ -121,12 +124,41 @@ define(['logManager',
             partContainer = partContainer.parent(); //this is the <li> contains the part
             partContainer.remove();
             partContainer.empty();
+            delete this._partDecoratorInstances[partId];
         }
     };
 
     PartBrowserView.prototype.updatePart = function (partId, partDesc) {
-        //TODO: NOT YET IMPLEMENTED
-        this._logger.warning("PartBrowserView.prototype.updatePart NOT YET IMPLEMENTED!!!");
+        var decoratorInstance = this._partDecoratorInstances[partId],
+            partContainer = this._list.find("div[id='" + partId + "']"),
+            DecoratorClass;
+
+        if (decoratorInstance) {
+            if (partDesc.decoratorClass.prototype.DECORATORID !== decoratorInstance.DECORATORID) {
+                //decorator change
+                partContainer.draggable( "destroy" );
+
+                decoratorInstance.destroy();
+
+                partContainer.empty();
+
+                DecoratorClass = partDesc.decoratorClass;
+                this._partDecoratorInstances[partId] = decoratorInstance = new DecoratorClass();
+                decoratorInstance.setControl(partDesc.control);
+                decoratorInstance.setMetaInfo(partDesc.metaInfo);
+
+                decoratorInstance.on_addToPartBrowser();
+                partContainer.append(decoratorInstance.$el);
+
+                this._makeDraggable({ "el": partContainer,
+                    "partDesc": partDesc });
+            } else {
+                decoratorInstance.update();
+            }
+
+            decoratorInstance.onRenderGetLayoutInfo();
+            decoratorInstance.onRenderSetLayoutInfo();
+        }
     };
 
     return PartBrowserView;
