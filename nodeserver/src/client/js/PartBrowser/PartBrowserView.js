@@ -10,7 +10,6 @@ define(['logManager',
         this._logger = logManager.create("PartBrowserView_" + containerElement);
 
         //Step 1: initialize object variables
-        this._parts = {};
 
         //default view size
 
@@ -42,12 +41,12 @@ define(['logManager',
     PartBrowserView.prototype.$_DOMBase = $('<div/>').attr({ "class": PART_CLASS });
 
     PartBrowserView.prototype.addPart = function (partId, partDesc) {
-        var partContainerDiv,
+        var partContainerDiv = this._list.find("div[id='" + partId + "']"),
             partContainerLi = $("<li/>"),
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
 
-        if (this._parts[partId]) {
+        if (partContainerDiv.length > 0) {
             this.updatePart(partId, partDesc);
         } else {
             decoratorInstance = new DecoratorClass();
@@ -115,8 +114,14 @@ define(['logManager',
     };
 
     PartBrowserView.prototype.removePart = function (partId) {
-        //TODO: NOT YET IMPLEMENTED
-        this._logger.warning("PartBrowserView.prototype.removePart NOT YET IMPLEMENTED!!!");
+        var partContainer = this._list.find("div[id='" + partId + "']");
+
+        if (partContainer.length > 0) {
+            partContainer.draggable( "destroy" );
+            partContainer = partContainer.parent(); //this is the <li> contains the part
+            partContainer.remove();
+            partContainer.empty();
+        }
     };
 
     PartBrowserView.prototype.updatePart = function (partId, partDesc) {
