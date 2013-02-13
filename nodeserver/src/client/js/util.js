@@ -88,23 +88,6 @@ define([], function () {
     //return utility functions
     return {
         /*
-         * Computes the difference between two arrays
-         */
-        arrayMinus : function (arrayA, arrayB) {
-            var result = [], i, val;
-            for (i = 0; i < arrayA.length; i += 1) {
-                if (arrayA[i]) {
-                    val = arrayA[i];
-                    if (arrayB.indexOf(val) === -1) {
-                        result.push(val);
-                    }
-                }
-            }
-
-            return result;
-        },
-
-        /*
          * Returns true if the two boundingbox overlap
          */
         overlap : function (boundingBoxA, boundingBoxB) {

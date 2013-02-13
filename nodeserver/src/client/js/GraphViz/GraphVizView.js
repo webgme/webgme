@@ -168,7 +168,7 @@ define(['logManager',
             }
         }
 
-        deletedPointers = util.arrayMinus(oldPointerNames, newPointerNames);
+        deletedPointers = _.difference(oldPointerNames, newPointerNames);
         for (i = 0; i < deletedPointers.length; i += 1) {
             delete this._pointers[id][deletedPointers[i]];
         }

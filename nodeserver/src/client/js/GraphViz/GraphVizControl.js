@@ -226,7 +226,7 @@ define(['logManager',
             newChildren = updatedObject.getChildrenIds() || [];
 
             //Handle children deletion
-            childrenDiff = util.arrayMinus(oldChildren, newChildren);
+            childrenDiff = _.difference(oldChildren, newChildren);
 
             for (i = 0; i < childrenDiff.length; i += 1) {
                 childId = childrenDiff[i];
@@ -237,7 +237,7 @@ define(['logManager',
             }
 
             //Handle children addition
-            childrenDiff = util.arrayMinus(newChildren, oldChildren);
+            childrenDiff = _.difference(newChildren, oldChildren);
             for (i = 0; i < childrenDiff.length; i += 1) {
                 childId = childrenDiff[i];
 
