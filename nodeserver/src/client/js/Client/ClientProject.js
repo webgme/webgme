@@ -1397,6 +1397,7 @@ define([
             };
             var addSetPathes = function(path,needmembers){
                 if(needmembers){
+                    var node = getNode(path);
                     var setnames = node.getSetNames();
                     for(i=0;i<setnames.length;i++){
                         var setmembers = node.getMemberIds(setnames[i]);
