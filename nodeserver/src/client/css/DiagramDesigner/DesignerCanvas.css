@@ -30,6 +30,8 @@
     position: absolute; }
     .designer-canvas .designer-canvas-body .items:focus {
       outline: none; }
+    .designer-canvas .designer-canvas-body .items.accept-droppable {
+      background-color: rgba(0, 255, 0, 0.1); }
     .designer-canvas .designer-canvas-body .items .rubberband {
       background: rgba(219, 234, 252, 0.49);
       border: #52a8ec solid 1px;

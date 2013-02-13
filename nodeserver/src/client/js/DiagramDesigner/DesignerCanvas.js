@@ -880,15 +880,13 @@ define(['logManager',
 
         if (metaInfo) {
             if (this.onBackgroundDroppableAccept(metaInfo) === true) {
-                this._acceptDroppable = true;
-                this.skinParts.$itemsContainer.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+                this._doAcceptDroppable(true);
             }
         }
     };
 
     DesignerCanvas.prototype._onBackgroundDroppableOut = function (/*ui*/) {
-        this._acceptDroppable = false;
-        this.skinParts.$itemsContainer.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+        this._doAcceptDroppable(false);
     };
 
     DesignerCanvas.prototype._onBackgroundDrop = function (ui) {
@@ -900,7 +898,17 @@ define(['logManager',
             this.onBackgroundDrop(metaInfo, { "x": posX, "y": posY });
         }
 
-        this._acceptDroppable = false;
+        this._doAcceptDroppable(false);
+    };
+
+    DesignerCanvas.prototype._doAcceptDroppable = function (accept) {
+        if (accept === true) {
+            this._acceptDroppable = true;
+            this.skinParts.$itemsContainer.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+        } else {
+            this._acceptDroppable = false;
+            this.skinParts.$itemsContainer.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+        }
     };
 
     DesignerCanvas.prototype.onBackgroundDroppableAccept = function (metaInfo) {

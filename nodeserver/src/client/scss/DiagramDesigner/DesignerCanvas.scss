@@ -17,6 +17,7 @@ $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
 $designer-canvas-body-read-only-background-color: #EDEDED;
+$items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
 
 .designer-canvas {
 
@@ -65,6 +66,10 @@ $designer-canvas-body-read-only-background-color: #EDEDED;
 
       &:focus {
         outline: none;
+      }
+
+      &.accept-droppable {
+        background-color: $items-accept-droppable-background-color;
       }
 
       .rubberband {
