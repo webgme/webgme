@@ -14,6 +14,8 @@ define(['logManager'], function (logManager) {
         this.skinParts = {};
         this.$connectors = null;
 
+        this.renderedInPartBrowser = false;
+
         this._initialize();
 
         this.logger.debug("Created");
@@ -215,6 +217,16 @@ define(['logManager'], function (logManager) {
     };
 
     DecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    };
+
+    //Called before the decorator is added to the PartBrowser widget
+    //At this point the decorator should create its DOM representation for the PartBrowser
+    //At this point no dimension information is available since the content exist only in memory, not yet rendered
+    //NOTE - DO NOT ACCESS ANY LAYOUT OR DIMENSION INFORMATION FOR PERFORMANCE REASONS
+    //NOTE - ALL LAYOUT INFORMATION SHOULD BE QUERIED IN onRenderGetLayoutInfo
+    //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
+    DecoratorBase.prototype.on_addToPartBrowser = function () {
+        this.renderedInPartBrowser = true;
     };
 
 

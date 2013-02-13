@@ -36,9 +36,30 @@ define(['logManager',
     DefaultDecorator.prototype.$DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_addTo = function () {
+        var gmeID = this._metaInfo[CONSTANTS.GME_ID];
+
+        this._renderName();
+
+        // set title editable on double-click
+        this.skinParts.$name.editOnDblClick({"class": "",
+            "onChange": function (oldValue, newValue) {
+                client.setAttributes(gmeID, nodePropertyNames.Attributes.name, newValue);
+            }});
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addTo.apply(this, arguments);
+    };
+
+    DefaultDecorator.prototype.on_addToPartBrowser = function () {
+        this._renderName();
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
+    };
+
+    DefaultDecorator.prototype._renderName = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            gmeID = this._metaInfo[CONSTANTS.GME_ID];
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
@@ -50,20 +71,13 @@ define(['logManager',
         //find name placeholder
         this.skinParts.$name = this.$el.find(".name");
         this.skinParts.$name.text(this.name);
-
-        // set title editable on double-click
-        this.skinParts.$name.editOnDblClick({"class": "",
-            "onChange": function (oldValue, newValue) {
-                client.setAttributes(gmeID, nodePropertyNames.Attributes.name, newValue);
-            }});
-
-        //let the parent decorator class do its job first
-        return __parent_proto__.on_addTo.apply(this, arguments);
     };
 
     DefaultDecorator.prototype.calculateDimension = function () {
-        this.hostDesignerItem.width = this.$el.outerWidth(true);
-        this.hostDesignerItem.height = this.$el.outerHeight(true);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.width = this.$el.outerWidth(true);
+            this.hostDesignerItem.height = this.$el.outerHeight(true);
+        }
     };
 
     DefaultDecorator.prototype.update = function () {

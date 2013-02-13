@@ -61,6 +61,14 @@ define(['logManager',
             self._onPropertyChanged(selectedObjIDs, args);
         };
 
+        this.designerCanvas.onBackgroundDroppableAccept = function (metaInfo) {
+            return self._onBackgroundDroppableAccept(metaInfo);
+        };
+
+        this.designerCanvas.onBackgroundDrop = function (metaInfo, position) {
+            self._onBackgroundDrop(metaInfo, position);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -409,6 +417,36 @@ define(['logManager',
             this._client[setterFn](gmeID, path, propObject);
         }
         this._client.completeTransaction();
+    };
+
+    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDroppableAccept = function (metaInfo) {
+        if (metaInfo) {
+            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+                return true;
+            }
+        }
+
+        return false;
+    };
+
+    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDrop = function (metaInfo, position) {
+        var intellyPasteOpts,
+            gmeID;
+
+        if (metaInfo) {
+            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+
+                intellyPasteOpts = { "parentId": this.currentNodeInfo.id };
+
+                gmeID = metaInfo[CONSTANTS.GME_ID];
+
+                intellyPasteOpts[gmeID] = { "attributes": {}, registry: {} };
+                intellyPasteOpts[gmeID].registry[nodePropertyNames.Registry.position] = { "x": position.x,
+                                    "y": position.y };
+
+                this._client.intellyPaste(intellyPasteOpts);
+            }
+        }
     };
     
 

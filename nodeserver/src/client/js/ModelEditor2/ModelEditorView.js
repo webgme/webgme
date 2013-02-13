@@ -3,6 +3,7 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/Constants',
     'raphaeljs',
     'notificationManager',
     './ModelComponent.js',
@@ -12,6 +13,7 @@ define(['logManager',
     'css!ModelEditor2CSS/ModelEditorView'], function (logManager,
                                                         util,
                                                         commonUtil,
+                                                        CONSTANTS,
                                                         raphaeljs,
                                                         notificationManager,
                                                         ModelComponent,
@@ -1967,16 +1969,18 @@ define(['logManager',
     /*********  HANDLE COMPONENT DROP ON BACKGROUND ***********/
 
     ModelEditorView.prototype._onBackgroundDrop = function (ui) {
-        var id = ui.helper.attr("id"),
-            name = ui.helper.attr("data-name"),
-            kind = ui.helper.attr("data-kind"),
+        var metaInfo = ui.helper.data("metaInfo"),
             posX = ui.offset.left - this._childrenContainerOffset.left,
             posY = ui.offset.top - this._childrenContainerOffset.top,
-            newNodeDesc = { "id": id,
+            newNodeDesc = { "id": undefined,
                             "position": { "x": posX,
                                           "y": posY } };
 
-        this.onCreateNode(newNodeDesc);
+        if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+            newNodeDesc.id = metaInfo[CONSTANTS.GME_ID];
+
+            this.onCreateNode(newNodeDesc);
+        }
     };
 
     /********* END OF - HANDLE COMPONENT DROP ON BACKGROUND ***********/

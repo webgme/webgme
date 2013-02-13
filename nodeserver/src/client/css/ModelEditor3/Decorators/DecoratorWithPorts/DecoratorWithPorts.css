@@ -5,9 +5,8 @@
   background-color: #c5f1ff;
   padding: 3px;
   text-align: center;
-  position: absolute; }
+  /*position: absolute;*/ }
   .decorator-with-ports .name {
-    margin-top: 10px;
     white-space: nowrap;
     font-size: 9px;
     font-weight: bold;
@@ -15,16 +14,17 @@
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 115px; }
+    width: 121px;
+    border-bottom: 1px solid #000000; }
   .decorator-with-ports .ports {
-    background-color: black;
+    /*background-color: $ports-background-color;*/
     font-size: 10px;
     min-height: 1px;
-    width: 115px; }
+    width: 121px; }
     .decorator-with-ports .ports .left {
       /*background-color: $left-ports-background-color;*/
-      text-align: left;
-      float: left;
+      display: inline-block;
+      vertical-align: top;
       width: 50px;
       min-height: 1px; }
       .decorator-with-ports .ports .left .port {
@@ -34,11 +34,12 @@
       /*background-color: $center-ports-background-color;*/
       width: 15px;
       height: 1px;
-      float: left; }
+      display: inline-block;
+      vertical-align: top; }
     .decorator-with-ports .ports .right {
       /*background-color: $right-ports-background-color;*/
-      text-align: right;
-      float: right;
+      display: inline-block;
+      vertical-align: top;
       width: 50px;
       min-height: 1px; }
   .decorator-with-ports .connector {

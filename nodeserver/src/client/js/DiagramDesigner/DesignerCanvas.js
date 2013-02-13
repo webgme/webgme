@@ -3,6 +3,7 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/Constants',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager',
     'raphaeljs',
@@ -19,6 +20,7 @@ define(['logManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
+                                                      CONSTANTS,
                                                       SelectionManager,
                                                       DragManager,
                                                       raphaeljs,
@@ -37,7 +39,8 @@ define(['logManager',
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog",
-        READ_ONLY_CLASS = "read-only";
+        READ_ONLY_CLASS = "read-only",
+        ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable";
 
     DesignerCanvas = function (options) {
         var self = this;
@@ -320,6 +323,20 @@ define(['logManager',
 
         //finally resize the whole content according to available space
         this._resizeCanvas(_parentSize.w, _parentSize.h);
+
+        //hook up drop event handler on children container
+        this._acceptDroppable = false;
+        this.skinParts.$itemsContainer.droppable({
+            over: function( event, ui ) {
+                self._onBackgroundDroppableOver(ui);
+            },
+            out: function( event, ui ) {
+                self._onBackgroundDroppableOut(ui);
+            },
+            drop: function (event, ui) {
+                self._onBackgroundDrop(ui);
+            }
+        });
     };
 
     DesignerCanvas.prototype._resizeCanvas = function (width, height) {
@@ -853,6 +870,49 @@ define(['logManager',
     };
 
     /************** END OF - PROPERTY WIDGET **********************/
+
+    /************** ITEM CONTAINER DROPPABLE HANDLERS *************/
+
+    DesignerCanvas.prototype._onBackgroundDroppableOver = function (ui) {
+        var metaInfo = ui.helper.data("metaInfo"); /*,
+            posX = ui.offset.left - this.designerCanvasBodyOffset.left,
+            posY = ui.offset.top - this.designerCanvasBodyOffset.top;*/
+
+        if (metaInfo) {
+            if (this.onBackgroundDroppableAccept(metaInfo) === true) {
+                this._acceptDroppable = true;
+                this.skinParts.$itemsContainer.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+            }
+        }
+    };
+
+    DesignerCanvas.prototype._onBackgroundDroppableOut = function (/*ui*/) {
+        this._acceptDroppable = false;
+        this.skinParts.$itemsContainer.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+    };
+
+    DesignerCanvas.prototype._onBackgroundDrop = function (ui) {
+        var metaInfo = ui.helper.data("metaInfo"),
+            posX = ui.offset.left - this.designerCanvasBodyOffset.left,
+            posY = ui.offset.top - this.designerCanvasBodyOffset.top;
+
+        if (this._acceptDroppable === true) {
+            this.onBackgroundDrop(metaInfo, { "x": posX, "y": posY });
+        }
+
+        this._acceptDroppable = false;
+    };
+
+    DesignerCanvas.prototype.onBackgroundDroppableAccept = function (metaInfo) {
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDroppableAccept not overridden in controller!!! metainfo: '" + JSON.stringify(metaInfo) + "'");
+        return false;
+    };
+
+    DesignerCanvas.prototype.onBackgroundDrop = function (metaInfo, position) {
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDrop not overridden in controller!!! metainfo: '" + JSON.stringify(metaInfo) + "', position: '" + JSON.stringify(position) + "'");
+    };
+
+    /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
 
     /************** API REGARDING TO MANAGERS ***********************/
 

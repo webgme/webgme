@@ -5,28 +5,24 @@ $selected-background-color: #DBEAFC;
 $selected-border-width: 2px;
 $selected-border-style: solid;
 $selected-border-color: #52A8EC;
+$circle-decorator-width: 40px;
 
 .circle-decorator {
   text-align: center;
+  width: $circle-decorator-width;
 
   .name {
     white-space: nowrap;
     font-size: 9px;
     font-weight: bold;
     text-transform: uppercase;
-    position: absolute;
+    position: relative;
   }
 
   .circle-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
   }
 
   #circleCanvas {
-    position: absolute;
-    top: 0;
-    left: 0;
   }
 
   .connector {
@@ -71,6 +67,10 @@ $selected-border-color: #52A8EC;
       background-color: $selected-background-color;
       margin-top: $selected-border-width * -1;
       margin-left: $selected-border-width * -1;
+    }
+
+    .name {
+      top: $selected-border-width * -1;
     }
   }
 }

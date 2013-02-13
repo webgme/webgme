@@ -57,15 +57,17 @@ define(['logManager',
 
         this.$portDot = this.$el.find(".dot");
 
-        this.$el.on( MOUSE_ENTER + '.' + EVENT_POSTFIX, null, null, function (event) {
-            self._mouseEnter();
-            event.preventDefault();
-            event.stopPropagation();
-        }).on( MOUSE_LEAVE + '.' + EVENT_POSTFIX, null, null, function (event) {
-            self._mouseLeave();
-            event.preventDefault();
-            event.stopPropagation();
-        });
+        if (this.decorator.renderedInPartBrowser !== true) {
+            this.$el.on( MOUSE_ENTER + '.' + EVENT_POSTFIX, null, null, function (event) {
+                self._mouseEnter();
+                event.preventDefault();
+                event.stopPropagation();
+            }).on( MOUSE_LEAVE + '.' + EVENT_POSTFIX, null, null, function (event) {
+                    self._mouseLeave();
+                    event.preventDefault();
+                    event.stopPropagation();
+                });
+        }
     };
 
     Port.prototype.update = function (options) {

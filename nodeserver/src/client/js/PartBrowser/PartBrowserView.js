@@ -1,41 +1,31 @@
 "use strict";
 
-var __decoratorDir = 'ModelEditor2',
-    __decoratorPath = './js/' + __decoratorDir + '/';
-
 define(['logManager',
-    'clientUtil',
-    './../' + __decoratorDir + '/DefaultDecorator.js',
-    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager,
-                                                         util,
-                                                         DefaultDecorator) {
+    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager) {
 
-    var PartBrowserView;
+    var PartBrowserView,
+        PART_CLASS = "part";
 
     PartBrowserView = function (containerElement) {
         this._logger = logManager.create("PartBrowserView_" + containerElement);
 
         //Step 1: initialize object variables
+        this._parts = {};
 
         //default view size
 
         //STEP 2: initialize UI
         this._initializeUI(containerElement);
-        if (this._el.length === 0) {
-            this._logger.error("PartBrowserView can not be created");
-            return undefined;
-        }
+
         this._logger.debug("Created");
     };
 
     PartBrowserView.prototype._initializeUI = function (containerElement) {
-        var self = this;
-
         //get container first
         this._el = $("#" + containerElement);
         if (this._el.length === 0) {
             this._logger.warning("PartBrowserView's container control with id:'" + containerElement + "' could not be found");
-            return undefined;
+            throw "PartBrowserView's container control with id:'" + containerElement + "' could not be found";
         }
 
         this._el.addClass("partBrowser");
@@ -49,58 +39,72 @@ define(['logManager',
         this._list.empty();
     };
 
-    PartBrowserView.prototype.addPart = function (partDescriptor) {
-        this._initializeDecorator(partDescriptor);
-    };
+    PartBrowserView.prototype.$_DOMBase = $('<div/>').attr({ "class": PART_CLASS });
 
-    PartBrowserView.prototype._initializeDecorator = function (partDescriptor) {
-        var decoratorName = partDescriptor.decorator,
-            self = this;
+    PartBrowserView.prototype.addPart = function (partId, partDesc) {
+        var partContainerDiv,
+            partContainerLi = $("<li/>"),
+            DecoratorClass = partDesc.decoratorClass,
+            decoratorInstance;
 
-        if (_.isString(decoratorName)) {
-            //TODO: delete
-            decoratorName = "ModelWithPortsDecorator";
-            //TODO: enddelete
-            decoratorName = __decoratorPath + decoratorName + '.js';
-
-            this._logger.debug("require(['" + decoratorName + "'] - phase1");
-            require([ decoratorName ],
-                function (DecoratorClass) {
-                    self._logger.debug("require(['" + decoratorName + "'] - phase3");
-                    self._decoratorDownloaded(partDescriptor, DecoratorClass);
-                },
-                function (err) {
-                    self._logger.error("Failed to load decorator because of '" + err.requireType + "' with module" + err.requireModules[0] + "'. Fallback to DefaultDecorator...");
-                    //for any error use the default decorator, does not know anything, just displays a box and writes title
-                    self._decoratorDownloaded(partDescriptor, DefaultDecorator);
-                });
-            this._logger.debug("require(['" + decoratorName + "'] - phase2");
+        if (this._parts[partId]) {
+            this.updatePart(partId, partDesc);
         } else {
-            this._logger.error("Invalid decorator name '" + decoratorName + "'");
+            decoratorInstance = new DecoratorClass();
+            decoratorInstance.setControl(partDesc.control);
+            decoratorInstance.setMetaInfo(partDesc.metaInfo);
+
+            partContainerDiv = this.$_DOMBase.clone();
+            partContainerDiv.attr({"id": partId});
+
+            //render the part inside 'partContainerDiv'
+            decoratorInstance.on_addToPartBrowser();
+            partContainerDiv.append(decoratorInstance.$el);
+
+            //add part's GUI
+            this._list.append(partContainerLi.append(partContainerDiv));
+
+            decoratorInstance.onRenderGetLayoutInfo();
+            decoratorInstance.onRenderSetLayoutInfo();
+
+            this._makeDraggable({ "el": partContainerDiv,
+                                  "partDesc": partDesc });
         }
     };
 
-    PartBrowserView.prototype._decoratorDownloaded = function (partDescriptor, DecoratorClass) {
-        var partContainerLi = $("<li/>"),
-            partContainerDiv,
-            self = this,
-            decoratorInstance = new DecoratorClass(partDescriptor, "PartBrowser");
-
-        partContainerDiv = $("<div/>", { "id": partDescriptor.id,
-            "class": "part",
-            "data-kind": partDescriptor.kind,
-            "data-name": partDescriptor.name});
-
-        //render the part inside 'partContainerDiv'
-        partContainerDiv.append(decoratorInstance.renderPartBrowserItem());
-
-        //add part's GUI
-        this._list.append(partContainerLi.append(partContainerDiv));
+    PartBrowserView.prototype._makeDraggable = function (params) {
+        var el = params.el,
+            DecoratorClass = params.partDesc.decoratorClass,
+            self = this;
 
         //hook up draggable
-        partContainerDiv.draggable({
+        el.draggable({
             helper: function () {
-                return $(this).clone();
+                var draggedEl = self.$_DOMBase.clone(),
+                    decoratorInstance,
+                    partContainerLi = $("<li/>");
+
+                decoratorInstance = new DecoratorClass();
+                decoratorInstance.setControl(params.partDesc.control);
+                decoratorInstance.setMetaInfo(params.partDesc.metaInfo);
+
+                //render the part inside 'draggedEl'
+                decoratorInstance.on_addToPartBrowser();
+                draggedEl.append(decoratorInstance.$el);
+
+                //add part's GUI
+                self._list.append(partContainerLi.append(draggedEl));
+
+                decoratorInstance.onRenderGetLayoutInfo();
+                decoratorInstance.onRenderSetLayoutInfo();
+
+                draggedEl.remove();
+                partContainerLi.remove();
+
+                //set it up with GME related info
+                draggedEl.data("metaInfo", params.partDesc.metaInfo);
+
+                return draggedEl;
             },
             zIndex: 200000,
             cursorAt: {
@@ -108,6 +112,16 @@ define(['logManager',
                 top: 0
             }
         });
+    };
+
+    PartBrowserView.prototype.removePart = function (partId) {
+        //TODO: NOT YET IMPLEMENTED
+        this._logger.warning("PartBrowserView.prototype.removePart NOT YET IMPLEMENTED!!!");
+    };
+
+    PartBrowserView.prototype.updatePart = function (partId, partDesc) {
+        //TODO: NOT YET IMPLEMENTED
+        this._logger.warning("PartBrowserView.prototype.updatePart NOT YET IMPLEMENTED!!!");
     };
 
     return PartBrowserView;

@@ -32,6 +32,21 @@ define(['logManager',
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
     CircleDecorator.prototype.on_addTo = function () {
+        this._renderCircle();
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addTo.apply(this, arguments);
+    };
+
+    //Called right after on_addTo and before the host designer item is added to the canvas DOM
+    CircleDecorator.prototype.on_addToPartBrowser = function () {
+        this._renderCircle();
+
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
+    };
+
+    CircleDecorator.prototype._renderCircle = function () {
         //find additional CircleDecorator specific UI components
         this.skinParts.$arrowCanvas = this.$el.find('[id="circleCanvas"]');
         this.skinParts.$arrowCanvas[0].height = CANVAS_SIZE;
@@ -40,9 +55,6 @@ define(['logManager',
         if(ctx) {
             ctx.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1, true);
         }
-
-        //let the parent decorator class do its job first
-        __parent_proto__.on_addTo.apply(this, arguments);
     };
 
     CircleDecorator.prototype.onRenderGetLayoutInfo = function () {
@@ -55,16 +67,17 @@ define(['logManager',
     CircleDecorator.prototype.onRenderSetLayoutInfo = function () {
         var shift = (40 - this.renderLayoutInfo.nameWidth) / 2;
 
-        this.skinParts.$name.css({"top": 45,
-            "left": shift });
+        this.skinParts.$name.css({ "left": shift });
 
         //let the parent decorator class do its job finally
-        return __parent_proto__.onRenderSetLayoutInfo.apply(this, arguments);
+        __parent_proto__.onRenderSetLayoutInfo.apply(this, arguments);
     };
 
     CircleDecorator.prototype.calculateDimension = function () {
-        this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
-        this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
+            this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
+        }
     };
 
     CircleDecorator.prototype.getConnectionAreas = function (/*id*/) {

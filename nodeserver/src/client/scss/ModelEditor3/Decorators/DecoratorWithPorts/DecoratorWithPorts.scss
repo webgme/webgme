@@ -12,6 +12,7 @@ $right-ports-background-color: rgba(0, 0, 255, 0.5);
 $center-ports-background-color: rgba(0, 255, 0, 0.5);
 $ports-width : 50px;
 $ports-separator-width: 15px;
+$ports-width-magic-coefficient: 6px; //TODO: figure out why it is needed
 
 .decorator-with-ports {
   min-width: $min-width;
@@ -20,10 +21,9 @@ $ports-separator-width: 15px;
   background-color: $background-color;
   padding: 3px;
   text-align: center;
-  position: absolute;
+  /*position: absolute;*/
 
   .name {
-    margin-top: 10px;
     white-space: nowrap;
     font-size: 9px;
     font-weight: bold;
@@ -31,19 +31,21 @@ $ports-separator-width: 15px;
     text-align: center;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: $ports-width * 2 + $ports-separator-width;
+    width: $ports-width * 2 + $ports-separator-width + $ports-width-magic-coefficient;
+    border-bottom: 1px solid #000000;
   }
 
   .ports {
-    background-color: $ports-background-color;
+    /*background-color: $ports-background-color;*/
     font-size: 10px;
     min-height: 1px;
-    width: $ports-width * 2 + $ports-separator-width;
+    width: $ports-width * 2 + $ports-separator-width + $ports-width-magic-coefficient;
 
     .left {
       /*background-color: $left-ports-background-color;*/
-      text-align: left;
-      float: left;
+
+      display: inline-block;
+      vertical-align: top;
 
       width: $ports-width;
       min-height: 1px;
@@ -58,13 +60,15 @@ $ports-separator-width: 15px;
       /*background-color: $center-ports-background-color;*/
       width: $ports-separator-width;
       height: 1px;
-      float: left;
+
+      display: inline-block;
+      vertical-align: top;
     }
 
     .right {
       /*background-color: $right-ports-background-color;*/
-      text-align: right;
-      float: right;
+      display: inline-block;
+      vertical-align: top;
 
       width: $ports-width;
       min-height: 1px;

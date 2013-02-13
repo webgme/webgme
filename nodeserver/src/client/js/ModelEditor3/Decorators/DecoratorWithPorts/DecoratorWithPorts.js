@@ -46,11 +46,30 @@ define(['logManager',
     DecoratorWithPorts.prototype.$DOMBase = $(decoratorWithPortsTemplate);
 
     DecoratorWithPorts.prototype.on_addTo = function () {
+        var self = this;
+
+        this._renderContent();
+
+        // set title editable on double-click
+        this.skinParts.$name.editOnDblClick({"class": "",
+                                             "onChange": function (oldValue, newValue) {
+                                                 self._onNodeTitleChanged(oldValue, newValue);
+                                             }});
+    };
+
+    //Called right after on_addTo and before the host designer item is added to the canvas DOM
+    DecoratorWithPorts.prototype.on_addToPartBrowser = function () {
+        //let the parent decorator class do its job first
+        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
+
+        this._renderContent();
+    };
+
+    DecoratorWithPorts.prototype._renderContent = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             childrenIDs,
-            len,
-            self = this;
+            len;
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
@@ -72,20 +91,16 @@ define(['logManager',
             len = childrenIDs.length;
 
             while (len--) {
-                this._renderPort(client.getNode(childrenIDs[len]));
+                this._renderPort(childrenIDs[len]);
             }
         }
-
-        // set title editable on double-click
-        this.skinParts.$name.editOnDblClick({"class": "",
-                                             "onChange": function (oldValue, newValue) {
-                                                 self._onNodeTitleChanged(oldValue, newValue);
-                                             }});
     };
 
     DecoratorWithPorts.prototype.calculateDimension = function () {
-        this.hostDesignerItem.width = this.$el.outerWidth(true);
-        this.hostDesignerItem.height = this.$el.outerHeight(true);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.width = this.$el.outerWidth(true);
+            this.hostDesignerItem.height = this.$el.outerHeight(true);
+        }
 
         this.offset = this.$el.offset();
         var i = this._portIDs.length;
@@ -177,19 +192,24 @@ define(['logManager',
         addedChildren = util.arrayMinus(newChildrenIDs, currentChildrenIDs);
         len = addedChildren.length;
         while (len--) {
-            this._renderPort(client.getNode(addedChildren[len]));
+            this._renderPort(addedChildren[len]);
         }
     };
 
-    DecoratorWithPorts.prototype._renderPort = function (portNode) {
-        var portId = portNode.getId();
+    DecoratorWithPorts.prototype._renderPort = function (portId) {
+        var client = this._control._client,
+            portNode = client.getNode(portId);
 
-        this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
-                                                "decorator": this});
+        if (portNode) {
+            this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+                "decorator": this});
 
-        this._portIDs.push(portId);
-        this._addPortToContainer(portNode);
-        this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
+            this._portIDs.push(portId);
+            this._addPortToContainer(portNode);
+            if (this.hostDesignerItem) {
+                this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
+            }
+        }
     };
 
     DecoratorWithPorts.prototype._removePort = function (portId) {
@@ -199,7 +219,9 @@ define(['logManager',
             this._ports[portId].destroy();
             delete this._ports[portId];
             this._portIDs.splice(idx,1);
-            this.hostDesignerItem.unregisterSubcomponent(portId);
+            if (this.hostDesignerItem) {
+                this.hostDesignerItem.unregisterSubcomponent(portId);
+            }
         }
     };
 
@@ -248,11 +270,15 @@ define(['logManager',
     };
 
     DecoratorWithPorts.prototype.attachConnectableSubcomponent = function (el, sCompID) {
-        this.hostDesignerItem.attachConnectable(el, sCompID);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.attachConnectable(el, sCompID);
+        }
     };
 
     DecoratorWithPorts.prototype.detachConnectableSubcomponent = function (el) {
-        this.hostDesignerItem.detachConnectable(el);
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.detachConnectable(el);
+        }
     };
 
     DecoratorWithPorts.prototype.destroy = function () {

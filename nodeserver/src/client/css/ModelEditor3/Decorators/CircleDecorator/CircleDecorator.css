@@ -1,20 +1,13 @@
 /* MAKE SURE TO ADJUST THE 'CANVAS_SIZE' ATTRIBUTE IN CIRCLEDECORATOR.JS */
 .circle-decorator {
-  text-align: center; }
+  text-align: center;
+  width: 40px; }
   .circle-decorator .name {
     white-space: nowrap;
     font-size: 9px;
     font-weight: bold;
     text-transform: uppercase;
-    position: absolute; }
-  .circle-decorator .circle-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0; }
-  .circle-decorator #circleCanvas {
-    position: absolute;
-    top: 0;
-    left: 0; }
+    position: relative; }
   .circle-decorator .connector {
     box-sizing: border-box;
     background-color: #fefefe;
@@ -53,3 +46,5 @@
   background-color: #dbeafc;
   margin-top: -2px;
   margin-left: -2px; }
+.selected .circle-decorator .name {
+  top: -2px; }
