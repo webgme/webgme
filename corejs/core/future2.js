@@ -13,10 +13,10 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 	function getLine (name, func) {
 		if( func ) {
-			return "\n    at " + (func.name || "anonymous") + " (" + name + ")";
+			return "\n    at " + (func.name || "anonymous") + " (future." + name + ")";
 		}
 		else {
-			return "\n    (" + name + ")";
+			return "\n    (future." + name + ")";
 		}
 	}
 
