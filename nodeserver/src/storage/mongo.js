@@ -150,7 +150,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						findHash: findHash,
 						dumpObjects: dumpObjects,
 						getBranchNames: getBranchNames,
-						getBranchHash: getBrfrommers australiaanchHash,
+						getBranchHash: getBranchHash,
 						setBranchHash: setBranchHash
 					});
 				}
