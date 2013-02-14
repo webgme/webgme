@@ -1,9 +1,11 @@
 "use strict";
 
 define([
-    'js/PropertyEditor/Widgets/WidgetBase'
+    'js/PropertyEditor/Widgets/WidgetBase',
+    'clientUtil'
 ],
-    function (WidgetBase) {
+    function (WidgetBase,
+              clientUtil) {
 
   /**
    * @class Represents a given property of an object that is a number.
@@ -12,7 +14,7 @@ define([
    * @param {Number} [params.max] Maximum allowed value
    * @param {Number} [params.step] Increment by which to change value
    *
-   *
+   * @member dat.controllers
    */
         var NumberWidgetBase;
 
@@ -41,7 +43,10 @@ define([
         /* 'INHERIT' FROM WidgetBase */
         NumberWidgetBase.superclass = WidgetBase;
 
-        _.extend(NumberWidgetBase.prototype, WidgetBase.prototype);
+        clientUtil.extend(
+            NumberWidgetBase.prototype,
+            WidgetBase.prototype
+        );
 
         /*OVERRIDE INHERITED PROPERTIES*/
         NumberWidgetBase.prototype.setValue = function (v) {

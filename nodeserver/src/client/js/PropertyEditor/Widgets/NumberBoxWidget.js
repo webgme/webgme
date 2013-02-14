@@ -1,12 +1,17 @@
 "use strict";
 
 define([
-    'js/PropertyEditor/Widgets/NumberWidgetBase'
-], function (NumberWidgetBase) {
+    'js/PropertyEditor/Widgets/NumberWidgetBase',
+    'clientUtil'
+], function (NumberWidgetBase,
+             clientUtil) {
 
   /**
    * @class Represents a given property of an object that is a number and
    * provides an input element with which to manipulate it.
+   *
+   * @extends dat.controllers.Controller
+   * @extends dat.controllers.NumberController
    *
    * @param {Object} object The object to be manipulated
    * @param {string} property The name of the property to be manipulated
@@ -15,7 +20,7 @@ define([
    * @param {Number} [params.max] Maximum allowed value
    * @param {Number} [params.step] Increment by which to change value
    *
-   *
+   * @member dat.controllers
    */
     var NumberBoxWidget;
 
@@ -33,10 +38,10 @@ define([
 
         // Makes it so manually specified values are not truncated.
 
-        this.__input.on('change', function (/*e*/) {
+        this.__input.on('change', function (e) {
             self._onChange();
         });
-        this.__input.on('blur', function (/*e*/) {
+        this.__input.on('blur', function (e) {
             self._onBlur();
         });
         this.__input.on('mousedown', function (e) {
@@ -50,7 +55,7 @@ define([
                 prev_y = e.clientY;
             };
 
-            onMouseUp = function (/*e*/) {
+            onMouseUp = function (e) {
                 $(window).off('mousemove', onMouseDrag);
                 $(window).off('mouseup', onMouseUp);
             };
@@ -75,7 +80,11 @@ define([
 
     NumberBoxWidget.superclass = NumberWidgetBase;
 
-    _.extend(NumberBoxWidget.prototype, NumberWidgetBase.prototype);
+    clientUtil.extend(
+
+        NumberBoxWidget.prototype,
+        NumberWidgetBase.prototype
+    );
 
     /*OVERRIDE INHERITED PROPERTIES*/
 

@@ -1,9 +1,11 @@
 "use strict";
 
 define([
-    'js/PropertyEditor/Widgets/WidgetBase'
+    'js/PropertyEditor/Widgets/WidgetBase',
+    'clientUtil'
 ],
-    function (WidgetBase) {
+    function (WidgetBase,
+              clientUtil) {
 
         var BooleanWidget;
 
@@ -17,7 +19,7 @@ define([
                 "checked": this.propertyValue
             });
 
-            this.__checkbox.on('change', function (/*e*/) {
+            this.__checkbox.on('change', function (e) {
                 self.setValue($(this).is(':checked'));
                 self.fireFinishChange();
             });
@@ -29,7 +31,10 @@ define([
 
         BooleanWidget.superclass = WidgetBase;
 
-        _.extend(BooleanWidget.prototype, WidgetBase.prototype);
+        clientUtil.extend(
+            BooleanWidget.prototype,
+            WidgetBase.prototype
+        );
 
         BooleanWidget.prototype.updateDisplay =  function () {
 

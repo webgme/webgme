@@ -562,7 +562,7 @@ define(['logManager',
             currentSetMembers = nodeObj.getMemberIds(currentSet) || [];
 
             //let's see who has been deleted and remove them from the screen
-            diff = _.difference(displayedSetMembers, currentSetMembers);
+            diff = clientUtil.arrayMinus(displayedSetMembers, currentSetMembers);
             i = diff.length;
             while (i--) {
                 connId = this._GMESetRelations[gmeID][currentSet][diff[i]];
@@ -574,7 +574,7 @@ define(['logManager',
             }
 
             //let's see who is new and add them to the screen
-            diff = _.difference(currentSetMembers, displayedSetMembers);
+            diff = clientUtil.arrayMinus(currentSetMembers, displayedSetMembers);
             i = diff.length;
             if (i > 0) {
                 objDesc = {};

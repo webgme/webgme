@@ -271,7 +271,7 @@ define(['logManager',
                             //the concrete child deletion is important only if the node is open in the tree
                             if (treeBrowser.isExpanded(nodes[objectId].treeNode)) {
                                 //figure out what are the deleted children's IDs
-                                childrenDeleted = _.difference(oldChildren, currentChildren);
+                                childrenDeleted = util.arrayMinus(oldChildren, currentChildren);
 
                                 //removes all the (nested)childrendIDs from the local hashmap accounting the currently opened nodes's info
                                 deleteNodeAndChildrenFromLocalHash = function (childNodeId) {
@@ -312,7 +312,7 @@ define(['logManager',
                             //the concrete child addition is important only if the node is open in the tree
                             if (treeBrowser.isExpanded(nodes[objectId].treeNode)) {
                                 //figure out what are the new children's IDs
-                                childrenAdded = _.difference(currentChildren, oldChildren);
+                                childrenAdded = util.arrayMinus(currentChildren, oldChildren);
 
                                 //handle added children
                                 for (j = 0; j < childrenAdded.length; j += 1) {

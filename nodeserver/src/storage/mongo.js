@@ -124,14 +124,14 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 		function deleteProject (project, callback) {
 			ASSERT(typeof project === "string" && typeof callback === "function");
-			ASSERT(PROJECT_REGEXP.find(project));
+			ASSERT(PROJECT_REGEXP.test(project));
 
 			database.dropCollection(project, callback);
 		}
 
 		function openProject (project, callback) {
 			ASSERT(database !== null && typeof callback === "function");
-			ASSERT(typeof project === "string" && PROJECT_REGEXP.find(project));
+			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
 
 			var collection = null;
 
@@ -242,16 +242,16 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			}
 
 			function getBranchHash (branch, oldhash, callback) {
-				ASSERT(typeof branch === "string" && BRANCH_REGEXP.find(branch));
-				ASSERT(typeof oldhash === "string" && HASH_REGEXP.find(oldhash));
+				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+				ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
 				ASSERT(typeof callback === "function");
 
 			}
 
 			function setBranchHash (branch, oldhash, newhash, callback) {
-				ASSERT(typeof branch === "string" && BRANCH_REGEXP.find(branch));
-				ASSERT(typeof oldhash === "string" && HASH_REGEXP.find(oldhash));
-				ASSERT(typeof newhash === "string" && HASH_REGEXP.find(newhash));
+				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+				ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
+				ASSERT(typeof newhash === "string" && HASH_REGEXP.test(newhash));
 
 				ASSERT(typeof callback === "function");
 			}

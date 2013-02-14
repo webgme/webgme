@@ -128,7 +128,7 @@ define(['logManager',
             updatedChildrenIds = updatedObject.getChildrenIds() || [];
 
             //Handle children deletion
-            diffChildrenIds = _.difference(oldChildrenIds, updatedChildrenIds);
+            diffChildrenIds = util.arrayMinus(oldChildrenIds, updatedChildrenIds);
 
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 if (this.ports[diffChildrenIds[i]]) {
@@ -139,7 +139,7 @@ define(['logManager',
             }
 
             //Handle children addition
-            diffChildrenIds = _.difference(updatedChildrenIds, oldChildrenIds);
+            diffChildrenIds = util.arrayMinus(updatedChildrenIds, oldChildrenIds);
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 childPort = this.project.getNode(diffChildrenIds[i]);
                 if (childPort && childPort.getAttribute(nodeAttributeNames.isPort) === true) {

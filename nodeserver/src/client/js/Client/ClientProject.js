@@ -1454,7 +1454,7 @@ define([
                 var eventstoadd = {};
                 for(i=events.length-1;i>=0;i--){
                     var pathnode = getNode(events[i].eid);
-                    if(pathnode.isSetNode()){
+                    if(pathnode && pathnode.isSetNode()){
                         eventstoadd[pathnode.getParentId()] = true;
                         events.splice(i,1);
                     }

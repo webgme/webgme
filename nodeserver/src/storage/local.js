@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
  *
- * Author: Miklos Maroti
+ * Author: Tamas Kecskes
  */
 
 define([ "util/assert" ], function (ASSERT) {
@@ -23,65 +23,67 @@ define([ "util/assert" ], function (ASSERT) {
 
 
         var storageOk = false,
-            storage =null,
+            storage = null,
+            realstorage = {},
+            storageproto = function(data){
+                this.data = data;
+            },
             database = options.database;
         if(options.local === "memory"){
             storageOk = true;
-            storage = {
-                data : {}
-            };
-            storage.prototype.getItem = function(key){
+            realstorage = {};
+            storageproto.prototype.getItem = function(key){
                 ASSERT(typeof key === "string");
-                return storage.data[key];
+                return this.data[key];
             };
-            storage.prototype.setItem = function(key,object){
+            storageproto.prototype.setItem = function(key,object){
                 ASSERT(typeof key === "string" && typeof object === "string");
-                storage.data[key] = object;
+                this.data[key] = object;
             };
-            storage.prototype.removeItem = function(key){
+            storageproto.prototype.removeItem = function(key){
                 ASSERT(typeof key === "string");
-                delete storage.data[key];
+                delete this.data[key];
             };
-            storage.prototype.length =function(){
-                return Object.keys(storage.data).length;
+            storageproto.prototype.length =function(){
+                return Object.keys(this.data).length;
             };
-            storage.prototype.key = function(index){
+            storageproto.prototype.key = function(index){
                 ASSERT(typeof index === "number");
-                return Object.keys(storage.data)[index];
+                return Object.keys(this.data)[index];
             };
         } else {
             if(options.local === "local"){
                 if(localStorage){
                     storageOk = true;
-                    storage = {data : localStorage};
+                    realstorage = localStorage;
                 }
             }
             if(options.local == "session"){
                 if(sessionStorage){
                     storageOk = true;
-                    storage = {data : sessionStorage};
+                    realstorage = sessionStorage;
                 }
             }
 
             if(storageOk){
-                storage.prototype.getItem = function(key){
+                storageproto.prototype.getItem = function(key){
                     ASSERT(typeof key === "string");
-                    return storage.data.getItem(key);
+                    return this.data.getItem(key);
                 };
-                storage.prototype.setItem = function(key,object){
+                storageproto.prototype.setItem = function(key,object){
                     ASSERT(typeof key === "string" && typeof object === "string");
-                    storage.data.setItem(key,object);
+                    this.data.setItem(key,object);
                 };
-                storage.prototype.removeItem = function(key){
+                storageproto.prototype.removeItem = function(key){
                     ASSERT(typeof key === "string");
-                    storage.data.removeItem(key);
+                    this.data.removeItem(key);
                 };
-                storage.prototype.length =function(){
-                    return storage.data.length;
+                storageproto.prototype.length =function(){
+                    return this.data.length;
                 };
-                storage.prototype.key = function(index){
+                storageproto.prototype.key = function(index){
                     ASSERT(typeof index === "number");
-                    return storage.data.key(i);
+                    return this.data.key(i);
                 };
             }
         }
@@ -90,6 +92,7 @@ define([ "util/assert" ], function (ASSERT) {
         if(!storageOk){
             callback(new Error('the expected storage is unavailable'));
         } else {
+            storage = new storageproto(realstorage);
             callback(null, {
                 closeDatabase: closeDatabase,
                 fsyncDatabase: fsyncDatabase,

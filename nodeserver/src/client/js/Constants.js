@@ -15,12 +15,6 @@ define([], function () {
         TERRITORY_EVENT_UNLOAD : "unload",
 
         /*
-         * TERRITORY COLLECTIONS
-         */
-        TERRITORY_CHILDREN : "children",
-        TERRITORY_SETS : "sets",
-
-        /*
          * GME_ID: wherever a GME object ID needs to be present
          */
         GME_ID: "GME_ID"
