@@ -14,30 +14,26 @@ requirejs.config({
 requirejs([ "core/future2" ], function (FUTURE) {
 	"use strict";
 
-	var delayed = FUTURE.futurify(function delayed (delay, value, callback) {
+	var delayed = FUTURE.wrap(function (delay, value, callback) {
 		setTimeout(callback, delay, null, value);
 	});
 
-	var thrower = FUTURE.futurify(function thrower(delay, value, callback) {
+	var thrower = FUTURE.wrap(function (delay, value, callback) {
 		setTimeout(function () {
 			callback(new Error(value));
 		}, delay);
 	});
 
-	var adder = FUTURE.async(function adder (c, d) {
-		return c[0] + c[1] + d;
-	});
+	function adder (a, b) {
+		return a + b;
+	}
 
-	var test = FUTURE.callbackify(function test () {
-		var a = delayed(1000, 1);
-		var b = thrower(1000, "b");
-		var c = FUTURE.lift([a, b]);
-		var d = delayed(2000, 2);
-		return adder(c, d);
-	});
+	var a = thrower(1000, 0), b;
+	for (b = 1; b <= 3; ++b) {
+		a = FUTURE.invoke(adder, b, a);
+	}
 
-	test(function (err, value) {
-		console.log(err && err.stack);
-		console.log(value);
+	FUTURE.then(a, function (err, value) {
+		console.log(err && err.stack, value);
 	});
 });
