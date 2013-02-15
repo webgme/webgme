@@ -19,18 +19,16 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		options.database = options.database || "webgme";
 		options.timeout = options.timeout || 1000000;
 
-		var database = new MONGODB.Db(options.database, new MONGODB.Server(options.host,
-		options.port), {
+		var database = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
 			w: 0
 		});
 
 		database.open(function (err) {
-			if( err ) {
+			if (err) {
 				database.close();
 				database = null;
 				callback(err);
-			}
-			else {
+			} else {
 				callback(null, {
 					closeDatabase: closeDatabase,
 					fsyncDatabase: fsyncDatabase,
@@ -42,32 +40,34 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		});
 
 		function closeDatabase (callback) {
-			ASSERT(database !== null);
+			ASSERT(typeof callback === "function");
 
-			fsyncDatabase(function () {
-				database.close(function () {
-					database = null;
-					if( typeof callback === "function" ) {
+			if (database !== null) {
+				fsyncDatabase(function () {
+					database.close(function () {
+						database = null;
 						callback();
-					}
+					});
 				});
-			});
+			} else {
+				callback();
+			}
 		}
 
 		function fsyncDatabase (callback) {
-			ASSERT(database !== null && typeof callback === "function");
+			ASSERT(typeof callback === "function");
 
 			var error = null;
 			var synced = 0;
 
-			function fsync2 (conn) {
+			function fsyncConnection (conn) {
 				database.lastError({
 					fsync: true
 				}, {
 					connection: conn
 				}, function (err, res) {
 					error = error || err || res[0].err;
-					if( ++synced === conns.length ) {
+					if (++synced === conns.length) {
 						callback(error);
 					}
 				});
@@ -76,44 +76,41 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			var conns = database.serverConfig.allRawConnections();
 			ASSERT(Array.isArray(conns) && conns.length >= 1);
 
-			for( var i = 0; i < conns.length; ++i ) {
-				fsync2(conns[i]);
+			for ( var i = 0; i < conns.length; ++i) {
+				fsyncConnection(conns[i]);
 			}
 		}
 
-		function getDatabaseStatus (callback) {
+		var STATUS_UNREACHABLE = "mongodb unreachable";
+		var STATUS_CONNECTED = "connected";
+
+		function getDatabaseStatus (oldstatus, callback) {
 			ASSERT(typeof callback === "function");
 
-			if( database !== null ) {
-				database.command({
-					ping: 1
-				}, function (err) {
-					if( err ) {
-						callback("mongodb server unreachable");
-					}
-					else {
-						setTimeout(callback, options.timeout, null, null);
-					}
-				});
-			}
-			else {
-				callback("mongodb connection closed");
-			}
+			database.command({
+				ping: 1
+			}, function (err) {
+				var newstatus = err ? STATUS_UNREACHABLE : STATUS_CONNECTED;
+				if (oldstatus !== newstatus) {
+					callback(null, newstatus);
+				} else {
+					setTimeout(callback, options.timeout, null, newstatus);
+				}
+			});
 		}
 
 		function getProjectNames (callback) {
 			ASSERT(typeof callback === "function");
 
 			database.collectionNames(function (err, collections) {
-				if( err ) {
+				if (err) {
 					callback(err);
-				}
-				else {
+				} else {
 					var names = [];
-					for( var i = 0; i < collections.length; i++ ) {
+					for ( var i = 0; i < collections.length; i++) {
 						var p = collections[i].name.indexOf(".");
 						var n = collections[i].name.substring(p + 1);
-						if( n.indexOf('system') === -1 && n.indexOf('.') === -1 ) {
+						if (n.indexOf('system') === -1 && n.indexOf('.') === -1) {
 							names.push(n);
 						}
 					}
@@ -136,10 +133,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			var collection = null;
 
 			database.collection(project, function (err, result) {
-				if( err ) {
+				if (err) {
 					callback(err);
-				}
-				else {
+				} else {
 					collection = result;
 					callback(null, {
 						fsyncDatabase: fsyncDatabase,
@@ -181,10 +177,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			function findHash (beginning, callback) {
 				ASSERT(typeof beginning === "string" && typeof callback === "function");
 
-				if( !HASH_REGEXP.test(beginning) ) {
+				if (!HASH_REGEXP.test(beginning)) {
 					callback(new Error("hash " + beginning + " not valid"));
-				}
-				else {
+				} else {
 					collection.find({
 						_id: {
 							$regex: "^" + beginning
@@ -192,16 +187,13 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 					}, {
 						limit: 2
 					}).toArray(function (err, docs) {
-						if( err ) {
+						if (err) {
 							callback(err);
-						}
-						else if( docs.length === 0 ) {
+						} else if (docs.length === 0) {
 							callback(new Error("hash " + beginning + " not found"));
-						}
-						else if( docs.length !== 1 ) {
+						} else if (docs.length !== 1) {
 							callback(new Error("hash " + beginning + " not unique"));
-						}
-						else {
+						} else {
 							callback(null, docs[0]._id);
 						}
 					});
@@ -212,10 +204,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				ASSERT(typeof callback === "function");
 
 				collection.find().each(function (err, item) {
-					if( err || item === null ) {
+					if (err || item === null) {
 						callback(err);
-					}
-					else {
+					} else {
 						console.log(item);
 					}
 				});
@@ -229,12 +220,11 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						$regex: "^\\*"
 					}
 				}).toArray(function (err, docs) {
-					if( err ) {
+					if (err) {
 						callback(err);
-					}
-					else {
+					} else {
 						var branches = {};
-						for( var i = 0; i < docs.length; ++i ) {
+						for ( var i = 0; i < docs.length; ++i) {
 							branches[docs[i]._id] = docs[i].hash;
 						}
 					}
