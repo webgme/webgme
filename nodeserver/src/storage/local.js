@@ -24,14 +24,9 @@ define([ "util/assert" ], function (ASSERT) {
 
         var storageOk = false,
             storage = null,
-            //realstorage = {},
-            /*storageproto = function(data){
-                this.data = data;
-            },*/
             database = options.database;
         if(options.local === "memory"){
             storageOk = true;
-            //realstorage = {};
             storage = {
                 length : 0,
                 keys : [],
@@ -50,67 +45,25 @@ define([ "util/assert" ], function (ASSERT) {
                     return this.keys[i];
                 }
             };
-            /*storageproto.prototype.getItem = function(key){
-                ASSERT(typeof key === "string");
-                return this.data[key];
-            };
-            storageproto.prototype.setItem = function(key,object){
-                ASSERT(typeof key === "string" && typeof object === "string");
-                this.data[key] = object;
-            };
-            storageproto.prototype.removeItem = function(key){
-                ASSERT(typeof key === "string");
-                delete this.data[key];
-            };
-            storageproto.prototype.length =function(){
-                return Object.keys(this.data).length;
-            };
-            storageproto.prototype.key = function(index){
-                ASSERT(typeof index === "number");
-                return Object.keys(this.data)[index];
-            };*/
         } else {
             if(options.local === "local"){
                 if(localStorage){
                     storageOk = true;
-                    /*real*/storage = localStorage;
+                    storage = localStorage;
                 }
             }
             if(options.local == "session"){
                 if(sessionStorage){
                     storageOk = true;
-                    /*real*/storage = sessionStorage;
+                    storage = sessionStorage;
                 }
             }
-
-            /*if(storageOk){
-                storageproto.prototype.getItem = function(key){
-                    ASSERT(typeof key === "string");
-                    return this.data.getItem(key);
-                };
-                storageproto.prototype.setItem = function(key,object){
-                    ASSERT(typeof key === "string" && typeof object === "string");
-                    this.data.setItem(key,object);
-                };
-                storageproto.prototype.removeItem = function(key){
-                    ASSERT(typeof key === "string");
-                    this.data.removeItem(key);
-                };
-                storageproto.prototype.length =function(){
-                    return this.data.length;
-                };
-                storageproto.prototype.key = function(index){
-                    ASSERT(typeof index === "number");
-                    return this.data.key(i);
-                };
-            }*/
         }
 
 
         if(!storageOk){
             callback(new Error('the expected storage is unavailable'));
         } else {
-            /*storage = new storageproto(realstorage);*/
             callback(null, {
                 closeDatabase: closeDatabase,
                 fsyncDatabase: fsyncDatabase,
