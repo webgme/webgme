@@ -3,16 +3,8 @@
  *
  * Author: Tamas Kecskes
  */
-var requirejs = require("requirejs");
 
-requirejs.config({
-    nodeRequire: require,
-    baseUrl: "..",
-    paths: {
-    }
-});
-
-requirejs([ "util/assert","storage/mongo","socket.io" ],function(ASSERT,STORAGE,IO){
+define([ "util/assert","basestoragelayer","socket.io" ],function(ASSERT,STORAGE,IO){
 
     var server = function(options){
         var _socket = IO.listen(options.socketioport),
@@ -147,12 +139,5 @@ requirejs([ "util/assert","storage/mongo","socket.io" ],function(ASSERT,STORAGE,
 
     };
 
-    var socketioServer = new server({
-        socketioport:888,
-        host: "129.59.105.239",
-        port: 27017,
-        database: "newtest",
-        timeout: 100000,
-        local: "memory"
-    });
+    return server;
 });

@@ -24,15 +24,33 @@ define([ "util/assert" ], function (ASSERT) {
 
         var storageOk = false,
             storage = null,
-            realstorage = {},
-            storageproto = function(data){
+            //realstorage = {},
+            /*storageproto = function(data){
                 this.data = data;
-            },
+            },*/
             database = options.database;
         if(options.local === "memory"){
             storageOk = true;
-            realstorage = {};
-            storageproto.prototype.getItem = function(key){
+            //realstorage = {};
+            storage = {
+                length : 0,
+                keys : [],
+                data : {},
+                getItem : function(key){
+                    ASSERT(typeof key === "string");
+                    return this.data[key];
+                },
+                setItem : function(key,object){
+                    ASSERT(typeof key === "string" && typeof object === "string");
+                    this.data[key] = object;
+                    this.keys.push(key);
+                    this.length++;
+                },
+                key : function(index){
+                    return this.keys[i];
+                }
+            };
+            /*storageproto.prototype.getItem = function(key){
                 ASSERT(typeof key === "string");
                 return this.data[key];
             };
@@ -50,22 +68,22 @@ define([ "util/assert" ], function (ASSERT) {
             storageproto.prototype.key = function(index){
                 ASSERT(typeof index === "number");
                 return Object.keys(this.data)[index];
-            };
+            };*/
         } else {
             if(options.local === "local"){
                 if(localStorage){
                     storageOk = true;
-                    realstorage = localStorage;
+                    /*real*/storage = localStorage;
                 }
             }
             if(options.local == "session"){
                 if(sessionStorage){
                     storageOk = true;
-                    realstorage = sessionStorage;
+                    /*real*/storage = sessionStorage;
                 }
             }
 
-            if(storageOk){
+            /*if(storageOk){
                 storageproto.prototype.getItem = function(key){
                     ASSERT(typeof key === "string");
                     return this.data.getItem(key);
@@ -85,14 +103,14 @@ define([ "util/assert" ], function (ASSERT) {
                     ASSERT(typeof index === "number");
                     return this.data.key(i);
                 };
-            }
+            }*/
         }
 
 
         if(!storageOk){
             callback(new Error('the expected storage is unavailable'));
         } else {
-            storage = new storageproto(realstorage);
+            /*storage = new storageproto(realstorage);*/
             callback(null, {
                 closeDatabase: closeDatabase,
                 fsyncDatabase: fsyncDatabase,

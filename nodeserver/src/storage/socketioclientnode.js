@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Tamas Kecskes
+ */
+
 define([ "util/assert", "socket.io-client" ], function (ASSERT,IO) {
     "use strict";
 
