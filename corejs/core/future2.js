@@ -8,37 +8,80 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 	"use strict";
 
 	var MAX_DEPTH = CONFIG.future.maxDepth || 5;
-	var DEBUG = true;
 
 	// ------- future -------
 
-	var getCaller = DEBUG ? function () {
-		var i, trace = new Error().stack.split("\n");
-		for (i = 0; i < trace.length - 1; ++i) {
-			if (trace[i].indexOf("__future__") >= 0) {
-				return trace[i + 1];
-			}
-		}
-		return "unknown";
-	} : function () {
+	var UNRESOLVED = {};
+	Object.seal(UNRESOLVED);
+
+	var current = {
+		depth: 0,
+		next: 0
 	};
 
-	function FutureError (error, name, func) {
-		this.error = error instanceof FutureError ? error.error : error;
+	function Future () {
+		this.value = UNRESOLVED;
+		this.listeners = null;
+
+		this.depth = current.depth + 1;
+		this.index = ++current.next;
+		this.next = 0;
+		this.parent = current;
+
+		this.stack = new Error();
+
+		console.log("future created", getPath(this));
+	}
+
+	function getPath (future) {
+		var path = [];
+		while (future.depth !== 0) {
+			path.push(future.index);
+			future = future.parent;
+		}
+		return path;
+	}
+
+	function getStack (future) {
+		var stack = "";
+		while (future.depth !== 0) {
+			stack += "*** future ***\n";
+			stack += getStackSlice(future.stack.stack);
+			future = future.parent;
+		}
+		return stack;
+	}
+
+	function getStackSlice (stack) {
+		var end = stack.indexOf("__future__setValue");
+		if (end >= 0) {
+			end = stack.lastIndexOf("\n", end);
+			end = stack.lastIndexOf("\n", end - 1) + 1;
+		} else {
+			end = undefined;
+		}
+
+		var start = stack.indexOf("__future__");
+		start = stack.indexOf("\n", start) + 1;
+
+		return stack.substring(start, end);
+	}
+
+	function getStackHead (stack, base) {
+		ASSERT(base.substring(0, 10) === "__future__");
+		
+		var start = stack.indexOf(base);
+		start = start >= 0 ? stack.lastIndexOf("\n", start) : undefined;
+
+		return stack.substring(0, start);
+	}
+
+	function FutureError (future, error, base) {
+		this.original = error;
 		this.message = error.message;
-		this.stack = error.stack;
+		this.stack = getStackHead(error.stack, base) + "\n" + getStack(future);
 
-		if (this.error === error) {
-			this.stack += "\nFuture Backtrace:";
-		}
-
-		if (typeof func === "function") {
-			name += ": around " + (func.name || "anonymous");
-		} else if (typeof func === "string") {
-			name += ": " + func.trim();
-		}
-
-		this.stack += "\n    " + name;
+		console.log("future error", getPath(future));
 	}
 
 	FutureError.prototype = Object.create(Error.prototype, {
@@ -51,15 +94,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		}
 	});
 
-	var UNRESOLVED = {};
-	Object.seal(UNRESOLVED);
-
-	function Future () {
-		this.value = UNRESOLVED;
-		this.listeners = null;
-	}
-
-	function setValue (future, value) {
+	function __future__setValue (future, value) {
 		ASSERT(future instanceof Future && future.value === UNRESOLVED);
 		ASSERT(!(value instanceof Future) && value !== UNRESOLVED);
 
@@ -76,6 +111,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			}
 		} catch (err) {
 			console.log("FUTURE ERROR: this should not happen happen");
+			console.log(new Error().stack);
 		}
 
 		future.listeners = null;
@@ -103,16 +139,15 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			return func.wrapped;
 		}
 
-		var wrapped = function __future__wrapped () {
-			var args = arguments, future = new Future(), caller = getCaller();
+		var wrapped = function __future__wrap () {
+			var args = arguments, future = new Future();
 
-			args[args.length++] = function callback (error, value) {
+			args[args.length++] = function (error, value) {
 				if (error) {
-					value = error instanceof Error ? error : new Error(error);
-
-					value = new FutureError(value, "wrap", caller || func);
+					error = error instanceof Error ? error : new Error(error);
+					value = error instanceof FutureError ? error : new FutureError(future, error, wrapped.name);
 				}
-				setValue(future, value);
+				__future__setValue(future, value);
 			};
 
 			func.apply(this, args);
@@ -120,7 +155,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 			if (future.value === UNRESOLVED) {
 				return future;
 			} else if (future.value instanceof FutureError) {
-				throw new FutureError(future.value, "wrap", getCaller() || func);
+				throw future.value;
 			} else {
 				return future.value;
 			}
@@ -158,7 +193,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 					addListener(value, function (result) {
 						try {
 							if (result instanceof FutureError) {
-								callback(new FutureError(result, "unwrap", func));
+								callback(result);
 							} else {
 								callback(null, result);
 							}
@@ -168,7 +203,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 						}
 					});
 				} else if (value.value instanceof FutureError) {
-					setTimeout(callback, 0, new FutureError(value.value, "unwrap", func));
+					setTimeout(callback, 0, value.value);
 				} else {
 					setTimeout(callback, 0, null, value.value);
 				}
@@ -188,16 +223,15 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 		if (value instanceof Future) {
 			if (value.value === UNRESOLVED) {
-				var caller = getCaller();
 				addListener(value, function (result) {
 					if (result instanceof FutureError) {
-						func(new FutureError(result, "then", caller || func));
+						func(result);
 					} else {
 						func(null, result);
 					}
 				});
 			} else if (value.value instanceof FutureError) {
-				func(new FutureError(value.value, "then", getCaller() || func));
+				func(value.value);
 			} else {
 				func(null, value.value);
 			}
@@ -215,12 +249,12 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		for (i = 0; i < array.length; ++i) {
 			if (array[i] instanceof Future) {
 				if (array[i].value === UNRESOLVED) {
-					var future = new Future(), caller = getCaller();
+					var future = new Future();
 
 					/*jshint loopfunc:true*/
 					var setter = function (value) {
 						if (value instanceof FutureError) {
-							setValue(future, new FutureError(value, "array", caller));
+							__future__setValue(value);
 						} else {
 							array[i] = value;
 
@@ -230,7 +264,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 										addListener(array[i], setter);
 										return;
 									} else if (array[i].value instanceof FutureError) {
-										setValue(future, new FutureError(array[i].value, "array", caller));
+										__future__setValue(array[i].value);
 										return;
 									} else {
 										array[i] = array[i].value;
@@ -238,14 +272,14 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 								}
 							}
 
-							setValue(future, array);
+							__future__setValue(future, array);
 						}
 					};
 
 					addListener(array[i], setter);
 					return future;
 				} else if (array[i].value instanceof FutureError) {
-					throw new FutureError(array[i].value, "array", getCaller());
+					throw array[i].value;
 				} else {
 					array[i] = array[i].value;
 				}
@@ -253,63 +287,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		}
 
 		return array;
-	}
-
-	// ------- async -------
-
-	function async (func) {
-		ASSERT(typeof func === "function");
-
-		return function wrapper () {
-			var i, array = arguments;
-			for (i = 0; i < array.length; ++i) {
-				if (array[i] instanceof Future) {
-					if (array[i].value === UNRESOLVED) {
-						var future = new Future(), that = this;
-
-						/*jshint loopfunc:true*/
-						var setter = function (value) {
-							if (value instanceof FutureError) {
-								setValue(future, new FutureError(value, "async", func));
-							} else {
-								array[i] = value;
-
-								while (++i < array.length) {
-									if (array[i] instanceof Future) {
-										if (array[i].value === UNRESOLVED) {
-											addListener(array[i], setter);
-											return;
-										} else if (array[i].value instanceof FutureError) {
-											setValue(future, new FutureError(array[i].value, "async", func));
-											return;
-										} else {
-											array[i] = array[i].value;
-											console.log(arguments);
-										}
-									}
-								}
-
-								try {
-									value = func.apply(that, array);
-								} catch (error) {
-									value = new FutureError(error, "async", func);
-								}
-								setValue(future, value);
-							}
-						};
-
-						addListener(array[i], setter);
-						return future;
-					} else if (array[i].value instanceof FutureError) {
-						throw new FutureError(array[i].value, "async", func);
-					} else {
-						array[i] = array[i].value;
-					}
-				}
-			}
-
-			return func.apply(this, arguments);
-		};
 	}
 
 	// ------- invoke -------
@@ -325,12 +302,12 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 			if (array[i] instanceof Future) {
 				if (array[i].value === UNRESOLVED) {
-					var future = new Future(), caller = getCaller();
+					var future = new Future();
 
 					/*jshint loopfunc:true*/
-					var setter = function (value) {
+					var setter = function __future__setter (value) {
 						if (value instanceof FutureError) {
-							setValue(future, new FutureError(value, "invoke." + i, caller || func));
+							__future__setValue(future, value);
 						} else {
 							array[i] = value;
 
@@ -342,28 +319,40 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 										addListener(array[i], setter);
 										return;
 									} else if (array[i].value instanceof FutureError) {
-										setValue(future, new FutureError(array[i].value, "invoke." + i, caller || func));
+										__future__setValue(future, array[i].value);
 										return;
 									} else {
 										array[i] = array[i].value;
-										console.log(arguments);
 									}
 								}
 							}
 
+							current = future;
 							try {
 								value = func.apply(null, array);
 							} catch (error) {
-								value = new FutureError(error, "invoke.call", caller || func);
+								value = (error instanceof FutureError) ? error : new FutureError(future, error, setter.name);
 							}
-							setValue(future, value);
+							current = future.parent;
+
+							if (value instanceof Future) {
+								if (value.value === UNRESOLVED) {
+									addListener(value, function (result) {
+										__future__setValue(future, result);
+									});
+								} else {
+									__future__setValue(future, value.value);
+								}
+							} else {
+								__future__setValue(future, value);
+							}
 						}
 					};
 
 					addListener(array[i], setter);
 					return future;
 				} else if (array[i].value instanceof FutureError) {
-					throw new FutureError(array[i].value, "invoke." + i, getCaller() || func);
+					throw array[i].value;
 				} else {
 					array[i] = array[i].value;
 				}
@@ -373,50 +362,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		return func.apply(null, arguments);
 	}
 
-	// ------- join -------
-
-	var Join = function (first, second) {
-		this.value = UNRESOLVED;
-		this.listener = null;
-		this.param = null;
-
-		this.missing = 2;
-		setListener(first, setJoinand, this);
-		setListener(second, setJoinand, this);
-	};
-
-	Join.prototype = Object.create(Future.prototype);
-
-	var setJoinand = function (future, value) {
-		if (value instanceof Error) {
-			setValue(future, value);
-		} else if (--future.missing <= 0) {
-			setValue(future, undefined);
-		}
-	};
-
-	var join = function (first, second) {
-		if (getValue(first) instanceof Future) {
-			if (getValue(second) instanceof Future) {
-				if (first instanceof Join) {
-					first.missing += 1;
-					setListener(second, setJoinand, first);
-					return first;
-				} else if (second instanceof Join) {
-					second.missing += 1;
-					setListener(first, setJoinand, second);
-					return second;
-				} else {
-					return new Join(first, second);
-				}
-			} else {
-				return first;
-			}
-		} else {
-			return getValue(second);
-		}
-	};
-
 	// -------
 
 	return {
@@ -424,7 +369,6 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 		unwrap: unwrap,
 		then: __future__then,
 		array: __future__array,
-		async: async,
 		invoke: __future__invoke
 	};
 });
