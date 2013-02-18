@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "http:/localhost:888/socket.io/socket.io.js" ], function (ASSERT) {
+define([ "util/assert", "socketiowrapper" ], function (ASSERT,IO) {
     "use strict";
 
     function openDatabase(options,callback){
@@ -15,7 +15,7 @@ define([ "util/assert", "http:/localhost:888/socket.io/socket.io.js" ], function
 
     var database = null;
     var myCallback = callback;
-    var socket = io.connect(options.socketiohost+":"+options.socketioport);
+    var socket = IO.connect(options.socketiohost+":"+options.socketioport);
 
     socket.on('connect',function(){
         if(myCallback){

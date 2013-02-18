@@ -10,7 +10,7 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: "..",
     paths: {
-        basestoragelayer : "storage/local"
+        basestoragelayer : "storage/local",
     }
 });
 

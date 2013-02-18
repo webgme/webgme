@@ -42,7 +42,7 @@ define([ "util/assert" ], function (ASSERT) {
                     this.length++;
                 },
                 key : function(index){
-                    return this.keys[i];
+                    return this.keys[index];
                 }
             };
         } else {
@@ -93,7 +93,7 @@ define([ "util/assert" ], function (ASSERT) {
             ASSERT(typeof callback === "function");
 
             var names = [];
-            for(var i=0;i<storage.length();i++){
+            for(var i=0;i<storage.length;i++){
                 var key = storage.key(i);
                 var keyArray = key.split(SEPARATOR);
                 ASSERT(keyArray.length !== 3);
@@ -104,6 +104,7 @@ define([ "util/assert" ], function (ASSERT) {
                     }
                 }
             }
+            callback(names);
         }
 
         function deleteProject (project, callback) {
@@ -111,7 +112,7 @@ define([ "util/assert" ], function (ASSERT) {
             ASSERT(PROJECT_REGEXP.test(project));
 
             var namesToRemove = [];
-            for(var i=0;i<storage.length();i++){
+            for(var i=0;i<storage.length;i++){
                 var key = storage.key(i);
                 var keyArray = key.split(SEPARATOR);
                 ASSERT(keyArray.length !== 3);
@@ -125,6 +126,7 @@ define([ "util/assert" ], function (ASSERT) {
             for(var i=0;i<namesToRemove.length;i++){
                 storage.removeItem(namesToRemove[i]);
             }
+            callback(null);
         }
 
         function openProject (project, callback) {
@@ -179,7 +181,7 @@ define([ "util/assert" ], function (ASSERT) {
                 else {
                     var found = 0,
                         fullKey = "";
-                    for(var i=0;i<storage.length();i++){
+                    for(var i=0;i<storage.length;i++){
                         if(storage.key(i).indexOf(database+SEPARATOR+project+SEPARATOR+beginning) === 0){
                             found++;
                             fullKey = storage.key(i);
@@ -214,7 +216,7 @@ define([ "util/assert" ], function (ASSERT) {
                 ASSERT(typeof callback === "function");
 
                 var branchNames = [];
-                for(var i=0;i<storage.length();i++){
+                for(var i=0;i<storage.length;i++){
                     var keyArray = storage.key(i).split(SEPARATOR);
                     ASSERT(keyArray.length === 3);
                     if(BRANCH_REGEXP.test(keyArray[2])){
