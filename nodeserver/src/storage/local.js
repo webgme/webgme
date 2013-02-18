@@ -11,6 +11,8 @@ define([ "util/assert" ], function (ASSERT) {
     var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
     var BRANCH_REGEXP = new RegExp("^\\*[0-9a-zA-Z_]*$");
     var SEPARATOR = '$';
+    var STATUS_UNREACHABLE = "storage unreachable";
+    var STATUS_CONNECTED = "connected";
 
     function openDatabase (options, callback) {
         ASSERT(typeof options === "object" && typeof callback === "function");
@@ -67,6 +69,7 @@ define([ "util/assert" ], function (ASSERT) {
             callback(null, {
                 closeDatabase: closeDatabase,
                 fsyncDatabase: fsyncDatabase,
+                getDatabaseStatus: getDatabaseStatus,
                 getProjectNames: getProjectNames,
                 openProject: openProject,
                 deleteProject: deleteProject
@@ -84,9 +87,13 @@ define([ "util/assert" ], function (ASSERT) {
             callback();
         }
 
-        function getDatabaseStatus (callback) {
-            ASSERT(typeof callback === "function");
-            setTimeout(callback, options.timeout, null, null);
+        function getDatabaseStatus (oldstatus,callback) {
+            ASSERT(typeof callback === "function" && (typeof oldstatus === "string" || oldstatus === null));
+            if(oldstatus !== STATUS_UNREACHABLE){
+                callback(null,STATUS_CONNECTED);
+            } else {
+                setTimeout(callback, options.timeout, null, STATUS_CONNECTED);
+            }
         }
 
         function getProjectNames (callback) {
