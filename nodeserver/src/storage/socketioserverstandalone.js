@@ -14,7 +14,7 @@ requirejs.config({
     }
 });
 
-requirejs([ "util/assert","storage/socketioserversimple" ],function(ASSERT,SERVER){
+requirejs([ "util/assert","storage/socketioserver" ],function(ASSERT,SERVER){
     var socketioServer = new SERVER({
         socketioport:888,
         host: "129.59.105.239",
