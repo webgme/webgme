@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","socketiowrapper" ], function (ASSERT,GUID,IO) {
+define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
 
     function openDatabase(options,callback){
@@ -12,6 +12,8 @@ define([ "util/assert","util/guid","socketiowrapper" ], function (ASSERT,GUID,IO
 
         options.socketiohost = options.socketiohost || "http://localhost";
         options.socketioport = options.socketioport || 888;
+        options.socketioclient = options.socketioclient || "browser";
+        options.timeout = options.timeout || 10000;
 
         var dbId = null;
         var status = null;
@@ -20,7 +22,60 @@ define([ "util/assert","util/guid","socketiowrapper" ], function (ASSERT,GUID,IO
         var STATUS_NETWORK_DISCONNECTED = "socket.io network is disconnected";
         var TIMEOUT_ERROR = new Error("no valid response arrived in time");
         var myCallback = callback;
-        var socket = IO.connect(options.socketiohost+":"+options.socketioport);
+        var socket = null;
+        var IO = null;
+        var IOReady = function(){
+            socket = IO.connect(options.socketiohost+":"+options.socketioport);
+            socket.on('connect',function(){
+                if(myCallback){
+                    socket.emit('openDatabase',options,function(err,db){
+                        if(!err && db){
+                            dbId = db;
+                            myCallback = null;
+                            socket.emit('getDatabaseStatus',dbId,null,function(err,newstatus){
+                                if(!err && newstatus){
+                                    status = newstatus;
+                                    callback(null,{
+                                        closeDatabase: closeDatabase,
+                                        fsyncDatabase: fsyncDatabase,
+                                        getProjectNames: getProjectNames,
+                                        openProject: openProject,
+                                        deleteProject: deleteProject
+                                    });
+                                } else {
+                                    callback(err,null);
+                                }
+                            });
+                        } else {
+                            socket.emit('disconnect');
+                            callback(err,null);
+                        }
+                    });
+                } else {
+                    socket.emit('getDatabaseStatus',dbId,status,function(err,newstatus){
+                        if(!err && newstatus){
+                            status = newstatus;
+                            clearDbCallbacks();
+                        }
+                    });
+                }
+            });
+            socket.on('disconnect',function(){
+                status = STATUS_NETWORK_DISCONNECTED;
+                clearDbCallbacks();
+                clearCallbacks();
+            });
+        };
+
+        if(options.socketioclient === 'browser'){
+            require([/*options.socketiohost+":"+options.socketioport+*/"http://localhost:888"+"/socket.io/socket.io.js"], function(){
+                IO = io;
+                IOReady();
+            });
+        } else {
+            IO = require("socket.io-client");
+            IOReady();
+        }
 
         var clearDbCallbacks = function(){
             for(var i in getDbStatusCallbacks){
@@ -47,45 +102,7 @@ define([ "util/assert","util/guid","socketiowrapper" ], function (ASSERT,GUID,IO
             cb(TIMEOUT_ERROR);
         };
 
-        socket.on('connect',function(){
-            if(myCallback){
-                socket.emit('openDatabase',options,function(err,db){
-                    if(!err && db){
-                        dbId = db;
-                        myCallback = null;
-                        socket.emit('getDatabaseStatus',dbId,null,function(err,newstatus){
-                            if(!err && newstatus){
-                                status = newstatus;
-                                callback(null,{
-                                    closeDatabase: closeDatabase,
-                                    fsyncDatabase: fsyncDatabase,
-                                    getProjectNames: getProjectNames,
-                                    openProject: openProject,
-                                    deleteProject: deleteProject
-                                });
-                            } else {
-                                callback(err,null);
-                            }
-                        });
-                    } else {
-                        socket.emit('disconnect');
-                        callback(err,null);
-                    }
-                });
-            } else {
-                socket.emit('getDatabaseStatus',dbId,status,function(err,newstatus){
-                    if(!err && newstatus){
-                        status = newstatus;
-                        clearDbCallbacks();
-                    }
-                });
-            }
-        });
-        socket.on('disconnect',function(){
-            status = STATUS_NETWORK_DISCONNECTED;
-            clearDbCallbacks();
-            clearCallbacks();
-        });
+
 
         function closeDatabase (callback) {
             var guid = GUID();
