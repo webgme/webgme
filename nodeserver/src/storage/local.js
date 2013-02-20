@@ -111,7 +111,7 @@ define([ "util/assert" ], function (ASSERT) {
                     }
                 }
             }
-            callback(names);
+            callback(null,names);
         }
 
         function deleteProject (project, callback) {

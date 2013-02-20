@@ -10,17 +10,17 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: "..",
     paths: {
-        basestoragelayer : "storage/local",
     }
 });
 
-requirejs([ "util/assert","storage/socketioserversimple" ],function(ASSERT,SERVER){
+requirejs([ "util/assert","storage/socketioserver" ],function(ASSERT,SERVER){
     var socketioServer = new SERVER({
         socketioport:888,
         host: "129.59.105.239",
         port: 27017,
         database: "newtest",
         timeout: 10000,
-        local: "memory"
+        local: "memory",
+        layers:['storage/socketioserver','storage/mongo']
     });
 });

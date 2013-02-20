@@ -4,136 +4,120 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","basestoragelayer","socket.io" ],function(ASSERT,STORAGE,IO){
+define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
     var server = function(options){
         var _socket = IO.listen(options.socketioport),
-            _clients = {},
-            _database = null,
-            _projects = {};
+            _objects = {};
 
 
         _socket.on('connection',function(socket){
             socket.on('openDatabase', function(clientoptions, callback){
-                if(!_clients[socket.id]){
-                    _clients[socket.id] = {};
-                }
-
-                if(_database === null){
-                    STORAGE(options,function(err,db){
-                        if(!err && db){
-                            _database = db;
-                        } else {
-                            callback(err,null);
-                        }
-                    });
-                } else {
-                    callback(null,_database);
-                }
-            });
-
-            socket.on('closeDatabase', function(callback){
-                delete _clients[socket.id];
-                var clientNumber = 0;
-                for(var i in _clients){
-                    clientNumber++;
-                }
-                if(clientNumber === 0 && _database){
-                    _database.closeDatabase(callback);
-                } else {
-                    callback(null);
-                }
-            });
-
-            socket.on('fsyncDatabase', function(callback){
-               _database.fsyncDatabase(callback);
-            });
-
-            socket.on('getProjectNames', function(callback){
-                _database.getProjectNames(callback);
-            });
-
-            socket.on('openProject', function(projectName,callback){
-                if(!_projects[projectName]){
-                    _database.openProject(projectName,function(err,proj){
-                        if(!err && proj){
-                            _projects[projectName] = proj;
-                            _clients[socket.id][projectName] = _projects[projectName];
-                            callback(null,_projects[projectName]);
-                        } else {
-                            callback(err,null);
-                        }
-                    });
-                } else {
-                    if(_clients[socket.id][projectName] === _projects[projectName]){
-                        callback(null,_projects[projectName]);
-                    } else {
-                        _clients[socket.id][projectName] = _projects[projectName];
-                        callback(null,_projects[projectName]);
-                    }
-                }
-            });
-
-            socket.on('deleteProject', function(projectName,callback){
-                //TODO what to do with already opened projects??? notification something???
-                _database.deleteProject(projectName,callback);
-            });
-
-            socket.on('getDatabaseStatus', function(projectName,callback){
-                //TODO here we have to add a second layer of status message when this layer notices some problem
-                _clients[socket.id][projectName].getDatabaseStatus(callback);
-            });
-
-            socket.on('closeProject', function(projectName,callback){
-                delete _clients[socket.id][projectName];
-                var hasClient = false;
-                for(var i in _clients){
-                    if(_clients[i][projectName]){
-                        hasClient = true;
+                /*first we need the underlying layer*/
+                var index = -1;
+                for(var i=0;i<clientoptions.layers.length;i++){
+                    if(clientoptions.layers[i].indexOf('socketioserver') !== -1){
+                        index = i+1;
                         break;
                     }
                 }
-
-                if(!hasClient){
-                    _projects[projectName].closeProject(function(){
-                        delete _projects[projectName];
-                        callback(null);
+                if(index>0 && index<clientoptions.layers.length){
+                    require([clientoptions.layers[index]],function(STORAGE){
+                        STORAGE(clientoptions,function(err,db){
+                            if(!err && db){
+                                var guid = GUID();
+                                _objects[guid] = db;
+                                callback(null,guid);
+                            } else {
+                                callback(err,db);
+                            }
+                        });
                     });
                 } else {
-                    callback(null);
+                    callback(new Error('missing underlying layer'),null);
                 }
             });
 
-            socket.on('loadObject', function(projectName,hash,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].loadObject(hash,callback);
+            socket.on('closeDatabase', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].closeDatabase(function(){
+                    delete _objects[guid];
+                    callback(null);
+                });
             });
 
-            socket.on('insertObject', function(projectName,object,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].insertObject(object,callback);
+            socket.on('fsyncDatabase', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].fsyncDatabase(callback);
             });
 
-            socket.on('findHash', function(projectName,beginning,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].findHash(beginning,callback);
+            socket.on('getProjectNames', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].getProjectNames(callback);
             });
 
-            socket.on('dumpObjects', function(projectName,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].dumpObjects(callback);
+            socket.on('openProject', function(guid,projectName,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].openProject(projectName,function(err,proj){
+                    if(!err && proj){
+                        var projguid = GUID();
+                        _objects[projguid] = proj;
+                        callback(null,projguid);
+                    } else {
+                        callback(err,null);
+                    }
+                });
             });
-            socket.on('getBranchNames', function(projectName,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].getBranchNames(callback);
+
+            socket.on('deleteProject', function(guid,projectName,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].deleteProject(projectName,callback);
             });
-            socket.on('getBranchHash', function(projectName,branch,oldhash,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].getBranchHash(branch,oldhash,callback);
+
+            socket.on('getDatabaseStatus', function(guid,oldstatus,callback){
+                //TODO here we have to add a second layer of status message when this layer notices some problem
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].getDatabaseStatus(oldstatus,callback);
             });
-            socket.on('setBranchHash', function(projectName,branch,oldhash,newhash,callback){
-                ASSERT(_clients[socket.id][projectName]);
-                _projects[projectName].setBranchHash(branch,oldhash,newhash,callback);
+
+            socket.on('closeProject', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].closeProject(function(){
+                    delete _objects[guid];
+                    callback(null);
+                });
+            });
+
+            socket.on('loadObject', function(guid,hash,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].loadObject(hash,callback);
+            });
+
+            socket.on('insertObject', function(guid,object,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].insertObject(object,callback);
+            });
+
+            socket.on('findHash', function(guid,beginning,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].findHash(beginning,callback);
+            });
+
+            socket.on('dumpObjects', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].dumpObjects(callback);
+            });
+            socket.on('getBranchNames', function(guid,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].getBranchNames(callback);
+            });
+            socket.on('getBranchHash', function(guid,branch,oldhash,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].getBranchHash(branch,oldhash,callback);
+            });
+            socket.on('setBranchHash', function(guid,branch,oldhash,newhash,callback){
+                ASSERT(guid && _objects[guid]);
+                _objects[guid].setBranchHash(branch,oldhash,newhash,callback);
             });
         });
 
