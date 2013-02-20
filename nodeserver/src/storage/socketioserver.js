@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid","basestoragelayer","socket.io" ],function(ASSERT,GUID,STORAGE,IO){
+define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
     var server = function(options){
         var _socket = IO.listen(options.socketioport),
@@ -13,15 +13,29 @@ define([ "util/assert","util/guid","basestoragelayer","socket.io" ],function(ASS
 
         _socket.on('connection',function(socket){
             socket.on('openDatabase', function(clientoptions, callback){
-                STORAGE(options,function(err,db){
-                        if(!err && db){
-                            var guid = GUID();
-                            _objects[guid] = db;
-                            callback(null,guid);
-                        } else {
-                            callback(err,null);
-                        }
+                /*first we need the underlying layer*/
+                var index = -1;
+                for(var i=0;i<clientoptions.layers.length;i++){
+                    if(clientoptions.layers[i].indexOf('socketioserver') !== -1){
+                        index = i+1;
+                        break;
+                    }
+                }
+                if(index>0 && index<clientoptions.layers.length){
+                    require([clientoptions.layers[index]],function(STORAGE){
+                        STORAGE(clientoptions,function(err,db){
+                            if(!err && db){
+                                var guid = GUID();
+                                _objects[guid] = db;
+                                callback(null,guid);
+                            } else {
+                                callback(err,db);
+                            }
+                        });
                     });
+                } else {
+                    callback(new Error('missing underlying layer'),null);
+                }
             });
 
             socket.on('closeDatabase', function(guid,callback){

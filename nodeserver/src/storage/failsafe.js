@@ -8,7 +8,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
 
     function openDatabase(options,callback){
-        ASSERT(typeof options === "object" && typeof callback === "function" && typeof options.layers === "array");
+        ASSERT(typeof options === "object" && typeof callback === "function" && options.layers.length>0);
 
         options.failsafe = options.failsafe || "memory";
         options.failsafefrequency = options.failsafefrequency || 10000;
@@ -25,7 +25,24 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         } else if(options.failsafe === "session" && sessionStorage){
             storage = sessionStorage;
         } else if(options.failsafe === "memory"){
-
+            storage = {
+                length : 0,
+                keys : [],
+                data : {},
+                getItem : function(key){
+                    ASSERT(typeof key === "string");
+                    return this.data[key];
+                },
+                setItem : function(key,object){
+                    ASSERT(typeof key === "string" && typeof object === "string");
+                    this.data[key] = object;
+                    this.keys.push(key);
+                    this.length++;
+                },
+                key : function(index){
+                    return this.keys[index];
+                }
+            };
         }
 
         if(storage){
@@ -43,6 +60,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 require([options.layers[index]],function(STORAGE){
                     STORAGE(options,function(err,db){
                         if(!err && db){
+                            database = db;
                             callback(null,{
                                 closeDatabase: closeDatabase,
                                 fsyncDatabase: fsyncDatabase,
@@ -186,7 +204,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(exceptionErrors.indexOf(err) !== -1){
                             callback(err,object);
                         } else {
-                            if(pendingStorage[projectName][hash]){
+                            if(pendingStorage[projectName] && pendingStorage[projectName][hash]){
                                 callback(null,pendingStorage[projectName][hash]);
                             } else {
                                 callback(err,object);

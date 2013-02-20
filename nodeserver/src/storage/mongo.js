@@ -32,6 +32,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				callback(null, {
 					closeDatabase: closeDatabase,
 					fsyncDatabase: fsyncDatabase,
+                    getDatabaseStatus: getDatabaseStatus,
 					getProjectNames: getProjectNames,
 					openProject: openProject,
 					deleteProject: deleteProject

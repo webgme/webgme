@@ -10,7 +10,6 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: "..",
     paths: {
-        basestoragelayer : "storage/local",
     }
 });
 
@@ -21,6 +20,7 @@ requirejs([ "util/assert","storage/socketioserver" ],function(ASSERT,SERVER){
         port: 27017,
         database: "newtest",
         timeout: 10000,
-        local: "memory"
+        local: "memory",
+        layers:['storage/socketioserver','storage/mongo']
     });
 });
