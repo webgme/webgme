@@ -15,7 +15,7 @@ define([ "core/assert", "mongodb", "core/config" ], function (ASSERT, MONGODB, C
 		var open = function (callback) {
 			database = new MONGODB.Db(options.database, new MONGODB.Server(options.host,
 			options.port), {
-				w: 0
+				w: 1
 			});
 
 			var abort = function (err) {
