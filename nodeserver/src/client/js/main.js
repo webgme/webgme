@@ -18,6 +18,8 @@ require.config({
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
         "datGUI": 'lib/datGUI/dat.gui.min',
         "jquery-WebGME": 'js/jquery.WebGME',
+        "jquery-dataTables": 'lib/jquery/jquery.dataTables' + (DEBUG ? '' : '.min'),
+        "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
 
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
@@ -56,13 +58,16 @@ require.config({
 
         "DiagramDesignerCSS": "css/DiagramDesigner",
         "ModelEditor3CSS": "css/ModelEditor3",
-        "SetEditor2CSS": "css/SetEditor2"
+        "SetEditor2CSS": "css/SetEditor2",
+        "DataGridCSS": "css/DataGrid"
     },
     shim: {
         'jquery-ui': ['jquery'],
         'bootstrap': ['jquery'],
         'clientUtil': ['jquery'],
-        'jquery-WebGME': ['jquery']
+        'jquery-WebGME': ['jquery'],
+        'jquery-dataTables': ['jquery'],
+        'jquery-dataTables-bootstrapped': ['jquery-dataTables']
     }
 });
 
@@ -72,11 +77,12 @@ require(
         'jquery',
         'jquery-ui',
         'jquery-WebGME',
+        'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
         'js/WebGME'
     ],
-    function (domReady, jQuery, jQueryUi, jqueryWebGME, bootstrap, underscore, webGME) {
+    function (domReady, jQuery, jQueryUi, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
         domReady(function () {
             webGME.start();
         });
