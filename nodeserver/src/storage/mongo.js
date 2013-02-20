@@ -20,7 +20,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		options.timeout = options.timeout || 1000000;
 
 		var database = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
-			w: 0
+			w: 1
 		});
 
 		database.open(function (err) {

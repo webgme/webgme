@@ -217,7 +217,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             function insertObject(object,callback){
                 project.insertObject(object,function(err){
                     if(err){
-                        if(exceptionErrors.indexOf(err)){
+                        if(exceptionErrors.indexOf(err) !== -1){
                             callback(err);
                         } else {
                             //TODO have to check if the id is already taken...
@@ -225,6 +225,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                 pendingStorage[projectName]={};
                             }
                             pendingStorage[projectName][object._id] = object;
+                            callback(null);
                         }
                     } else {
                         synchronise(function(){
