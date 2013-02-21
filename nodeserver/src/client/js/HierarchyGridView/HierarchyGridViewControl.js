@@ -98,11 +98,13 @@ define(['logManager',
                                   "ParentID": undefined,
                                   "Attributes": undefined,
                                   "Registry": undefined,
-                                  "Sets": undefined},
+                                  "Sets": undefined,
+                                  "Pointers": undefined},
 
                 cNode = this._client.getNode(gmeID),
                 _getNodePropertyValues,
-                _getSetMembershipInfo;
+                _getSetMembershipInfo,
+                _getPointerInfo;
 
             _getNodePropertyValues = function (node, propNameFn, propValueFn) {
                 var result =  {},
@@ -128,6 +130,18 @@ define(['logManager',
                 return result;
             };
 
+            _getPointerInfo = function (node) {
+                var result = {},
+                    availablePointers = node.getPointerNames(),
+                    len = availablePointers.length;
+
+                while (len--) {
+                    result[availablePointers[len]] = node.getPointer(availablePointers[len]);
+                }
+    
+                return result;
+            };
+
             if (cNode) {
                 nodeDescriptor.ID = gmeID;
                 nodeDescriptor.ParentID = cNode.getParentId();
@@ -135,6 +149,7 @@ define(['logManager',
                 nodeDescriptor.Attributes = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
                 nodeDescriptor.Registry = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
                 nodeDescriptor.Sets = _getSetMembershipInfo(cNode);
+                nodeDescriptor.Pointers = _getPointerInfo(cNode);
             }
 
             return nodeDescriptor;
