@@ -23,7 +23,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		this._host = options.host || "localhost";
 		this._port = options.port || 27017;
 		this._database = options.database || "webgme";
-		this._timeout = options.timeout || 1000000;
+		this._timeout = options.timeout || 1000;
 
 		this._mongo = null;
 		this._projects = {};
@@ -98,23 +98,22 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 	};
 
 	Database.prototype.getDatabaseStatus = function (oldstatus, callback) {
+		ASSERT(oldstatus === null || typeof oldstatus === "string");
 		ASSERT(typeof callback === "function");
 
 		if (this._mongo === null) {
 			this._reportStatus(oldstatus, STATUS_CLOSED, callback);
 		} else {
+			var that = this;
 			this._mongo.command({
 				ping: 1
 			}, function (err) {
-				this._reportStatus(oldstatus, err ? STATUS_UNREACHABLE : STATUS_CONNECTED, callback);
+				that._reportStatus(oldstatus, err ? STATUS_UNREACHABLE : STATUS_CONNECTED, callback);
 			});
 		}
 	};
 
 	Database.prototype._reportStatus = function (oldstatus, newstatus, callback) {
-		ASSERT(oldstatus === null || typeof oldstatus === "string");
-		ASSERT(typeof newstatus === "string" && typeof callback === "callback");
-
 		if (oldstatus !== newstatus) {
 			callback(null, newstatus);
 		} else {

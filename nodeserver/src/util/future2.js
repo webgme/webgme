@@ -4,10 +4,10 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
+define([ "util/assert" ], function (ASSERT) {
 	"use strict";
 
-	var MAX_DEPTH = CONFIG.future.maxDepth || 5;
+	var MAX_DEPTH = 5;
 
 	// ------- future -------
 
@@ -69,7 +69,7 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 	function getStackHead (stack, base) {
 		ASSERT(base.substring(0, 10) === "__future__");
-		
+
 		var start = stack.indexOf(base);
 		start = start >= 0 ? stack.lastIndexOf("\n", start) : undefined;
 
@@ -242,98 +242,192 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 
 	// ------- array -------
 
-	function __future__array (array) {
-		ASSERT(array instanceof Array);
+	function future_array (arr) {
+		ASSERT(typeof arr === "object" && typeof arr.length === "number");
 
-		var i;
-		for (i = 0; i < array.length; ++i) {
-			if (array[i] instanceof Future) {
-				if (array[i].value === UNRESOLVED) {
+		for ( var i = 0; i < arr.length; ++i) {
+			if (arr[i] instanceof Future) {
+				if (arr[i].value === UNRESOLVED) {
 					var future = new Future();
 
 					/*jshint loopfunc:true*/
 					var setter = function (value) {
 						if (value instanceof FutureError) {
-							__future__setValue(value);
+							__future__setValue(future, value);
 						} else {
-							array[i] = value;
+							arr[i] = value;
 
-							while (++i < array.length) {
-								if (array[i] instanceof Future) {
-									if (array[i].value === UNRESOLVED) {
-										addListener(array[i], setter);
+							while (++i < arr.length) {
+								if (arr[i] instanceof Future) {
+									if (arr[i].value === UNRESOLVED) {
+										addListener(arr[i], setter);
 										return;
-									} else if (array[i].value instanceof FutureError) {
-										__future__setValue(array[i].value);
+									} else if (arr[i].value instanceof FutureError) {
+										__future__setValue(arr[i].value);
 										return;
 									} else {
-										array[i] = array[i].value;
+										arr[i] = arr[i].value;
 									}
 								}
 							}
 
-							__future__setValue(future, array);
+							__future__setValue(future, arr);
 						}
 					};
 
-					addListener(array[i], setter);
+					addListener(arr[i], setter);
 					return future;
-				} else if (array[i].value instanceof FutureError) {
-					throw array[i].value;
+				} else if (arr[i].value instanceof FutureError) {
+					throw arr[i].value;
 				} else {
-					array[i] = array[i].value;
+					arr[i] = arr[i].value;
 				}
 			}
 		}
 
-		return array;
+		return arr;
 	}
 
-	// ------- invoke -------
+	// ------- ncall -------
 
-	function __future__invoke (func) {
+	function future_ncall (func, obj) {
 		ASSERT(typeof func === "function");
 
-		var i, array = arguments;
-		array.length -= 1;
+		var future = new Future();
+		var callback = function (err, value) {
+			if (err) {
+				err = err instanceof Error ? err : new Error(err);
+				value = err instanceof FutureError ? err : new FutureError(future, err, "__future__");
+			}
+			__future__setValue(future, err);
+		};
 
-		for (i = 0; i < array.length; ++i) {
-			array[i] = array[i + 1];
+		var args = arguments;
+		args[args.length] = arguments[1];
 
-			if (array[i] instanceof Future) {
-				if (array[i].value === UNRESOLVED) {
-					var future = new Future();
+		for ( var i = 2; i <= args.length; ++i) {
+			if (args[i] instanceof Future) {
+				if (args[i].value === UNRESOLVED) {
 
 					/*jshint loopfunc:true*/
-					var setter = function __future__setter (value) {
+					var setter = function (value) {
 						if (value instanceof FutureError) {
 							__future__setValue(future, value);
 						} else {
-							array[i] = value;
+							args[i - 2] = value;
 
-							while (++i < array.length) {
-								array[i] = array[i + 1];
-
-								if (array[i] instanceof Future) {
-									if (array[i].value === UNRESOLVED) {
-										addListener(array[i], setter);
+							while (++i <= args.length) {
+								if (args[i] instanceof Future) {
+									if (args[i].value === UNRESOLVED) {
+										addListener(args[i], setter);
 										return;
-									} else if (array[i].value instanceof FutureError) {
-										__future__setValue(future, array[i].value);
+									} else if (args[i].value instanceof FutureError) {
+										__future__setValue(future, args[i].value);
 										return;
 									} else {
-										array[i] = array[i].value;
+										args[i - 2] = args[i].value;
 									}
+								} else {
+									args[i - 2] = args[i];
 								}
 							}
 
-							current = future;
+							obj = args[args.length - 2];
+							args[args.length - 2] = callback;
+							args.length -= 1;
+
 							try {
-								value = func.apply(null, array);
-							} catch (error) {
-								value = (error instanceof FutureError) ? error : new FutureError(future, error, setter.name);
+								current = future;
+								func.apply(obj, args);
+								current = future.parent;
+							} catch (err) {
+								current = future.parent;
+								value = err instanceof Error ? err : new Error(err);
+								__future__setValue(future, (value instanceof FutureError) ? value : new FutureError(future, value, "__future__"));
 							}
-							current = future.parent;
+						}
+					};
+
+					addListener(args[i], setter);
+					return future;
+				} else if (args[i].value instanceof FutureError) {
+					throw args[i].value;
+				} else {
+					args[i - 2] = args[i].value;
+				}
+			} else {
+				args[i - 2] = args[i];
+			}
+		}
+
+		obj = args[args.length - 2];
+		args[args.length - 2] = callback;
+		args.length -= 1;
+
+		current = future;
+		try {
+			func.apply(obj, args);
+		} finally {
+			current = future.parent;
+		}
+
+		if (future.value === UNRESOLVED) {
+			return future;
+		} else if (future.value instanceof FutureError) {
+			throw future.value;
+		} else {
+			return future.value;
+		}
+	}
+
+	// ------- fcall -------
+
+	function future_fcall (func, obj) {
+		ASSERT(typeof func === "function");
+
+		var args = arguments;
+		args[args.length] = arguments[1];
+
+		for ( var i = 2; i <= args.length; ++i) {
+			if (args[i] instanceof Future) {
+				if (args[i].value === UNRESOLVED) {
+					var future = new Future();
+
+					/*jshint loopfunc:true*/
+					var setter = function (value) {
+						if (value instanceof FutureError) {
+							__future__setValue(future, value);
+						} else {
+							args[i - 2] = value;
+
+							while (++i <= args.length) {
+								if (args[i] instanceof Future) {
+									if (args[i].value === UNRESOLVED) {
+										addListener(args[i], setter);
+										return;
+									} else if (args[i].value instanceof FutureError) {
+										__future__setValue(future, args[i].value);
+										return;
+									} else {
+										args[i - 2] = args[i].value;
+									}
+								} else {
+									args[i - 2] = args[i];
+								}
+							}
+
+							args.length -= 2;
+							obj = args[args.length];
+
+							try {
+								current = future;
+								value = func.apply(obj, args);
+								current = future.parent;
+							} catch (err) {
+								current = future.parent;
+								value = err instanceof Error ? err : new Error(err);
+								__future__setValue(future, (value instanceof FutureError) ? value : new FutureError(future, value, "__future__"));
+							}
 
 							if (value instanceof Future) {
 								if (value.value === UNRESOLVED) {
@@ -349,26 +443,57 @@ define([ "core/assert", "core/config" ], function (ASSERT, CONFIG) {
 						}
 					};
 
-					addListener(array[i], setter);
+					addListener(args[i], setter);
 					return future;
-				} else if (array[i].value instanceof FutureError) {
-					throw array[i].value;
+				} else if (args[i].value instanceof FutureError) {
+					throw args[i].value;
 				} else {
-					array[i] = array[i].value;
+					args[i - 2] = args[i].value;
 				}
+			} else {
+				args[i - 2] = args[i];
 			}
 		}
 
-		return func.apply(null, arguments);
+		args.length -= 2;
+		obj = args[args.length];
+
+		return func.apply(obj, args);
+	}
+
+	// ------- join -------
+
+	function future_join (left, right) {
+		// TODO: do it in general
+		ASSERT(!(left instanceof Future));
+
+		if (left instanceof Future && left.value instanceof FutureError) {
+			throw left.value;
+		} else if (right instanceof Future) {
+			if (right.value === UNRESOLVED) {
+				var future = new Future();
+				addListener(right, function (value) {
+					__future__setValue(future, value instanceof FutureError ? value : left);
+				});
+				return future;
+			} else if (right.value instanceof FutureError) {
+				throw right.value;
+			}
+		}
+
+		return left;
 	}
 
 	// -------
 
 	return {
+		array: future_array,
+		ncall: future_ncall,
+		fcall: future_fcall,
+		join: future_join,
+
 		wrap: wrap,
 		unwrap: unwrap,
-		then: __future__then,
-		array: __future__array,
-		invoke: __future__invoke
+		then: __future__then
 	};
 });
