@@ -138,7 +138,7 @@ define(['logManager',
                 while (len--) {
                     result[availablePointers[len]] = node.getPointer(availablePointers[len]);
                 }
-    
+
                 return result;
             };
 
