@@ -218,6 +218,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(!err && object){
                         callback(null,object);
                     } else {
+                        errorMode();
                         if(exceptionErrors.indexOf(err) !== -1){
                             callback(err,object);
                         } else {
@@ -234,6 +235,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             function insertObject(object,callback){
                 project.insertObject(object,function(err){
                     if(err){
+                        errorMode();
                         if(exceptionErrors.indexOf(err) !== -1){
                             callback(err);
                         } else {
