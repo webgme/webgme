@@ -29,7 +29,9 @@ define([  'logManager',
     'js/ModelEditor3/ModelDesignerControl',
     'js/SetEditor2/SetEditorCanvas',
     'js/SetEditor2/SetEditorControl',
-    'js/LoggerStatus/LoggerStatus'], function (logManager,
+    'js/LoggerStatus/LoggerStatus',
+    'js/HierarchyGridView/HierarchyGridViewCanvas',
+    'js/HierarchyGridView/HierarchyGridViewControl'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
@@ -57,7 +59,9 @@ define([  'logManager',
                                             ModelDesignerControl,
                                             SetEditor2Canvas,
                                             SetEditor2Control,
-                                            LoggerStatus) {
+                                            LoggerStatus,
+                                            HierarchyGridViewCanvas,
+                                            HierarchyGridViewControl) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -211,6 +215,10 @@ define([  'logManager',
             mainView = new SetEditor2Canvas("modelEditorHtml");
             mainController = new SetEditor2Control({"client": proxy,
                                     "designerCanvas": mainView});
+        } else if (visualizer === "HierarchyGridViewControl") {
+            mainView = new HierarchyGridViewCanvas("modelEditorHtml");
+            mainController = new HierarchyGridViewControl({"client": proxy,
+                "widget": mainView});
         }
 
         if (currentNodeId) {

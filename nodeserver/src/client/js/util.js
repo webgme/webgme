@@ -175,7 +175,7 @@ define([], function () {
 
                 for (i in o) {
                     if (o.hasOwnProperty(i)) {
-                        if (_.isObject(o[i])) {
+                        if (_.isObject(o[i]) && !_.isArray(o[i])) {
                             discover(o[i], prefix === "" ? i + "." : prefix + i + ".");
                         } else {
                             result[prefix + i] = o[i];

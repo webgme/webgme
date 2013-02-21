@@ -3,6 +3,7 @@
 @import url("qtip/jquery.qtip.css");
 @import url("../design/css/jquery.gritter.css");
 @import url("jqueryui/jquery-ui-1.9.0.custom.css");
+@import url("../design/css/jquery.dataTables.bootstrapped.css");
 @import url("Project/ProjectTitleView.css");
 /* OWN STYLES */
 html,body {
@@ -13,9 +14,7 @@ html,body {
     background-color:white;
     font-family: Helvetica, Arial;
     font-size: 12px;
-}
 
-*{
     -khtml-user-select:none;
     -moz-user-select:-moz-none;
     -webkit-user-select:none;

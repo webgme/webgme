@@ -1,0 +1,7 @@
+$dataTable-cell-undefined-value-background-color: #F5E1E1;
+
+.dataTable {
+  td.undefined-value {
+    background-color: $dataTable-cell-undefined-value-background-color !important;
+  }
+}

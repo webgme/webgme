@@ -18,6 +18,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         var dbId = options.database;
         var fsId = "FS";
         var SEPARATOR = "$";
+        var STATUS_CONNECTED = "connected";
         var pendingStorage = {};
         var storage = null;
         if(options.failsafe === "local" && localStorage){
@@ -110,6 +111,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function getDatabaseStatus (oldstatus,callback) {
+            //TODO we stick the synchronisation to the proper state answer
             database.getDatabasestatus(oldstatus,callback);
         }
 
@@ -127,6 +129,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
         function openProject (projectName, callback) {
             var project = null;
+            var inSync = true;
             database.openProject(projectName,function(err,proj){
                 if(!err && proj){
                     project = proj;
@@ -182,12 +185,28 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 }
             }
 
+            function errorMode(){
+                if(inSync){
+                    inSync = false;
+                    var checkIfAvailable = function(err,newstate){
+                        if(newstate === STATUS_CONNECTED){
+                            synchronise(function(){
+                                inSync = true;
+                            });
+                        } else {
+                            getDatabaseStatus(newstate,checkIfAvailable);
+                        }
+                    }
+
+                }
+            }
+
             function fsyncDatabase(callback){
                 project.fsyncDatabase(callback);
             }
 
-            function getDatabaseStatus(callback){
-                project.getDatabaseStatus(callback);
+            function getDatabaseStatus(oldstatus,callback){
+                project.getDatabaseStatus(oldstatus,callback);
             }
 
             function closeProject(callback){
@@ -197,10 +216,9 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             function loadObject(hash,callback){
                 project.loadObject(hash,function(err,object){
                     if(!err && object){
-                        synchronise(function(){
-                            callback(null,object);
-                        });
+                        callback(null,object);
                     } else {
+                        errorMode();
                         if(exceptionErrors.indexOf(err) !== -1){
                             callback(err,object);
                         } else {
@@ -217,6 +235,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             function insertObject(object,callback){
                 project.insertObject(object,function(err){
                     if(err){
+                        errorMode();
                         if(exceptionErrors.indexOf(err) !== -1){
                             callback(err);
                         } else {
@@ -228,9 +247,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback(null);
                         }
                     } else {
-                        synchronise(function(){
-                            callback(err);
-                        });
+                        callback(err);
                     }
                 });
             }

@@ -8,7 +8,8 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
     var server = function(options){
         var _socket = IO.listen(options.socketioport),
-            _objects = {};
+            _objects = {},
+            ERROR_DEAD_GUID = 'the given object does not exists';
 
 
         _socket.on('connection',function(socket){
@@ -39,7 +40,11 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             });
 
             socket.on('closeDatabase', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].closeDatabase(function(){
                     delete _objects[guid];
                     callback(null);
@@ -47,17 +52,29 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             });
 
             socket.on('fsyncDatabase', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].fsyncDatabase(callback);
             });
 
             socket.on('getProjectNames', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].getProjectNames(callback);
             });
 
             socket.on('openProject', function(guid,projectName,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].openProject(projectName,function(err,proj){
                     if(!err && proj){
                         var projguid = GUID();
@@ -70,18 +87,30 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             });
 
             socket.on('deleteProject', function(guid,projectName,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].deleteProject(projectName,callback);
             });
 
             socket.on('getDatabaseStatus', function(guid,oldstatus,callback){
                 //TODO here we have to add a second layer of status message when this layer notices some problem
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].getDatabaseStatus(oldstatus,callback);
             });
 
             socket.on('closeProject', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].closeProject(function(){
                     delete _objects[guid];
                     callback(null);
@@ -89,34 +118,62 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             });
 
             socket.on('loadObject', function(guid,hash,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].loadObject(hash,callback);
             });
 
             socket.on('insertObject', function(guid,object,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].insertObject(object,callback);
             });
 
             socket.on('findHash', function(guid,beginning,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].findHash(beginning,callback);
             });
 
             socket.on('dumpObjects', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].dumpObjects(callback);
             });
             socket.on('getBranchNames', function(guid,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].getBranchNames(callback);
             });
             socket.on('getBranchHash', function(guid,branch,oldhash,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].getBranchHash(branch,oldhash,callback);
             });
             socket.on('setBranchHash', function(guid,branch,oldhash,newhash,callback){
-                ASSERT(guid && _objects[guid]);
+                ASSERT(guid);
+                if(!_objects[guid]){
+                    callback(ERROR_DEAD_GUID);
+                    return;
+                }
                 _objects[guid].setBranchHash(branch,oldhash,newhash,callback);
             });
         });
