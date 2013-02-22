@@ -308,8 +308,6 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		ASSERT(typeof name === "string" && BRANCH_REGEXP.test(name));
 		ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
 		ASSERT(typeof callback === "function");
-
-		this.
 	};
 
 	Project.prototype.setBranchHash = function (name, oldhash, newhash, callback) {
