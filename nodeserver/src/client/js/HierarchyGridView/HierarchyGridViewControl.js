@@ -2,9 +2,11 @@
 
 define(['logManager',
     'clientUtil',
-    'js/Constants'], function (logManager,
+    'js/Constants',
+    'js/HierarchyGridView/HierarchyGridViewControl.DataGridViewEventHandlers'], function (logManager,
                                     util,
-                                    CONSTANTS) {
+                                    CONSTANTS,
+                                    HierarchyGridViewControlDataGridViewEventHandlers) {
 
     var HierarchyGridViewControl;
 
@@ -15,6 +17,10 @@ define(['logManager',
         this._currentNodeId = null;
 
         this._logger = logManager.create("HierarchyGridViewControl");
+
+        //attach all the event handlers for event's coming from DesignerCanvas
+        this.attachDataGridViewEventHandlers();
+
         this._logger.debug("Created");
     };
 
@@ -35,8 +41,6 @@ define(['logManager',
             this._selfPatterns[nodeId] = { "children": 1 };
 
             this._displayedParts = {};
-
-            this._firstRender = true;
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
@@ -154,6 +158,9 @@ define(['logManager',
 
             return nodeDescriptor;
     };
+
+    //attach HierarchyGridViewControl - DataGridViewEventHandlers event handler functions
+    _.extend(HierarchyGridViewControl.prototype, HierarchyGridViewControlDataGridViewEventHandlers.prototype);
 
     return HierarchyGridViewControl;
 });

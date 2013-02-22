@@ -19,7 +19,7 @@ define(['logManager',
         this.containerElementId = typeof options === "string" ? options : options.containerElement;
         this.logger = options.logger || logManager.create((options.loggerName || "DataGridView") + '_' + this.containerElementId);
 
-        this._readOnlyMode = options.readOnlyMode || true;
+        this._readOnlyMode = options.readOnlyMode || false;
         this.logger.warning("DataGridView.ctor _readOnlyMode is set to TRUE by default");
 
         //initialize UI
@@ -58,6 +58,7 @@ define(['logManager',
         }
 
         if (this.$table) {
+            this.$table.empty();
             this.$table.remove();
             this.$table = undefined;
         }
@@ -90,6 +91,14 @@ define(['logManager',
                     self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
                 },
             "aoColumns": columns.slice(0)});
+
+        this.$table.on('dblclick', 'td', function (event) {
+            if (!self._readOnlyMode) {
+                self._editCell(this);
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
     DataGridView.prototype._buildGroupedHeader = function (columns) {
@@ -330,33 +339,46 @@ define(['logManager',
         //let it be the first column
         if (this.dataMemberID && this.dataMemberID !== "") {
             if (columnNames.indexOf(this.dataMemberID) !== -1) {
-                this._addColumnDef(this.dataMemberID, this.dataMemberID);
+                this._addColumnDef(this.dataMemberID, this.dataMemberID, false);
             }
         }
 
         for (i = 0; i < len; i += 1) {
             n = columnNames[i];
             if (this.dataMemberID !== n) {
-                this._addColumnDef(columns[n].title, columns[n].data);
+                this._addColumnDef(columns[n].title, columns[n].data, true);
             }
         }
+
+        this.onColumnsAutoDetected(this._columns);
+
+        this._extendColumnDefs();
 
         this._initializeTable(this._columns);
     };
 
-    DataGridView.prototype._addColumnDef = function (title, data) {
-        var self = this;
-
+    DataGridView.prototype._addColumnDef = function (title, data, editable) {
         this._columns.push({"sTitle": title,
             "mData": data,
-            "mRender": function ( data , type, full ) {
-                return self._mRender( data , type, full );
-            },
-            "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE
+            "bEditable": editable
            });
     };
 
-    DataGridView.prototype._mRender = function ( data , type, full ) {
+    DataGridView.prototype._extendColumnDefs = function () {
+        var len = this._columns.length,
+            self = this;
+
+        while (len--) {
+            $.extend(this._columns[len], {
+                "mRender": function (data , type, full) {
+                    return self._mRender(data, type, full);
+                },
+                "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE
+            });
+        }
+    };
+
+    DataGridView.prototype._mRender = function (data , type, full) {
         if (data === DEFAULT_NON_EXISTING_VALUE ) {
             return '';
         }
@@ -368,13 +390,15 @@ define(['logManager',
         return data;
     };
 
-    DataGridView.prototype._fnRowCallback = function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+    DataGridView.prototype._fnRowCallback = function (nRow/*, aData, iDisplayIndex, iDisplayIndexFull*/) {
         var len = nRow.cells.length,
             d,
-            $td;
+            $td,
+            aPos;
 
         while (len--) {
-            d = this._oTable.fnSettings().aoColumns[len].fnGetData(aData);
+            aPos = this._oTable.fnGetPosition( nRow.cells[len] );
+            d = this._oTable.fnGetData( aPos[0], aPos[2] );
             $td = $(nRow.cells[len]);
             if (d === DEFAULT_NON_EXISTING_VALUE) {
                 $td.addClass(UNDEFINED_VALUE_CLASS);
@@ -399,6 +423,66 @@ define(['logManager',
         } else {
             return object[k];
         }
+    };
+
+    DataGridView.prototype._editCell = function (td) {
+        var $td = $(td),
+            aPos = this._oTable.fnGetPosition(td),
+            aData = this._oTable.fnGetData( aPos[0]),
+            id = this._fetchData(aData, this.dataMemberID),
+            colSettings = this._oTable.fnSettings().aoColumns[aPos[2]],
+            oldVal = colSettings.fnGetData(aData),
+            mData = colSettings.mData,
+            sType = colSettings.sType,
+            self = this;
+
+
+        if (this.dataMemberID && this.dataMemberID !== '') {
+            if (this._columns[aPos[2]].bEditable) {
+                $td.editInPlace({"enableEmpty": true,
+                                 "onChange": function (oldValue, newValue) {
+                    var typeSafeOldValue = self._typeSafeValue(oldValue, oldValue),
+                        typeSafeNewValue = self._typeSafeValue(newValue, oldValue);
+
+                    if (typeSafeNewValue !== typeSafeOldValue) {
+                        self._onCellEdit(id, mData, oldValue, newValue);
+                    } else {
+                        $td.html(oldValue);
+                    }
+                }});
+            }
+        } else {
+            this.logger.warning("Cell edit is not possible since dataMemberID is not set...");
+        }
+
+
+        /*var aPos = self._oTable.fnGetPosition( this );
+         self.logger.warning(aPos);
+         var aData = self._oTable.fnGetData( aPos[0] );
+         var bVis = self._oTable.fnSettings().aoColumns[1].bVisible;
+         self._oTable.fnSetColumnVis( 1, bVis ? false : true  );*/
+    };
+
+    DataGridView.prototype._typeSafeValue = function (val, defaultValue) {
+        //TODO:
+        return val;
+    };
+
+    DataGridView.prototype._onCellEdit = function (id, prop, oldValue, newValue) {
+        this.onCellEdit({"id": id,
+                         "prop": prop,
+                         "oldValue": oldValue,
+                         "newValue": newValue });
+    };
+
+    /************** PUBLIC API OVVERRIDABLES **************************/
+
+    DataGridView.prototype.onCellEdit = function (params) {
+        this.logger.warning("onCellEdit is not overridden... " + JSON.stringify(params));
+    };
+
+    DataGridView.prototype.onColumnsAutoDetected = function (columnDefs) {
+        this.logger.warning("onColumnsAutoDetected is not overridden... " + JSON.stringify(columnDefs));
     };
 
     return DataGridView;
