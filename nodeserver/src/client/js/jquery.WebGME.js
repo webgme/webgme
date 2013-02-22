@@ -7,15 +7,29 @@ define(['jquery'], function () {
 
     $.fn.extend({
         editOnDblClick : function (params) {
-            var editClass = params.class,
-                onChangeFn = params.onChange,
+            this.each(function () {
+                $(this).on("dblclick.editOnDblClick", null, function (event) {
+                    $(this).editInPlace(params);
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
+            });
+        }
+    });
+
+    $.fn.extend({
+        editInPlace : function (params) {
+            var editClass = params && params.class || null,
+                onChangeFn = params && params.onChange || null,
+                enableEmpty = params && params.enableEmpty || false,
                 __editInPlace;
 
             __editInPlace = function (el) {
                 var w = el.width(),
                     h = el.height(),
                     originalValue,
-                    inputCtrl;
+                    inputCtrl,
+                    originalFontSize = el.css("font-size");
 
                 //check if already in edit mode
                 //if so, select the content
@@ -50,8 +64,9 @@ define(['jquery'], function () {
                 el.html(inputCtrl);
 
                 //set font size accordingly
-                h = inputCtrl.height();
-                inputCtrl.css({"font-size": h});
+                //TODO: multiple line editor not handled correctly
+                /*h = inputCtrl.height();*/
+                inputCtrl.css({"font-size": originalFontSize});
 
                 //finally put the control in focus
                 inputCtrl.focus();
@@ -79,11 +94,11 @@ define(['jquery'], function () {
                                 break;
                         }
                     }
-                ).blur(function (event) {
+                ).blur(function (/*event*/) {
                         var newValue = inputCtrl.val();
 
                         //revert edit mode, when user leaves <input>
-                        if (newValue === "") {
+                        if (newValue === "" && enableEmpty === false) {
                             newValue = originalValue;
                         }
 
@@ -99,11 +114,7 @@ define(['jquery'], function () {
             };
 
             this.each(function () {
-                $(this).on("dblclick.editOnDblClick", null, function (event) {
-                    __editInPlace($(this));
-                    event.stopPropagation();
-                    event.preventDefault();
-                });
+                __editInPlace($(this));
             });
         }
     });
