@@ -36,14 +36,15 @@ define(['logManager',
     DefaultDecorator.prototype.$DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_addTo = function () {
-        var gmeID = this._metaInfo[CONSTANTS.GME_ID];
+        var gmeID = this._metaInfo[CONSTANTS.GME_ID],
+            self = this;
 
         this._renderName();
 
         // set title editable on double-click
         this.skinParts.$name.editOnDblClick({"class": "",
             "onChange": function (oldValue, newValue) {
-                client.setAttributes(gmeID, nodePropertyNames.Attributes.name, newValue);
+                self._onNodeTitleChanged(oldValue, newValue);
             }});
 
         //let the parent decorator class do its job first
@@ -138,6 +139,16 @@ define(['logManager',
 
         return result;
     };
+
+    /**************** EDIT NODE TITLE ************************/
+
+    DefaultDecorator.prototype._onNodeTitleChanged = function (oldValue, newValue) {
+        var client = this._control._client;
+
+        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
+    };
+
+    /**************** END OF - EDIT NODE TITLE ************************/
 
     return DefaultDecorator;
 });
