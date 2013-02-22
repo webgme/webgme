@@ -11,7 +11,7 @@ define([], function () {
     /* TODO: OBSOLETE SHOULD NOT BE USED EVER
     *  TODO: USE editOnDblClick INSTEAD */
     $.fn.extend({
-        editInPlace : function (editClass, successCallback) {
+        editInPlace_Obsolete : function (editClass, successCallback) {
             this.each(function () {
                 var contentWidth = $(this).outerWidth(),
                     inputCtrl,

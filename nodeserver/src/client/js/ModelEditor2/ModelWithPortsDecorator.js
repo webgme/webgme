@@ -280,7 +280,7 @@ define(['logManager',
         }
 
         // Replace node with <input>
-        this._skinParts.title.editInPlace("modelTitle", function (newTitle) {
+        this._skinParts.title.editInPlace_Obsolete("modelTitle", function (newTitle) {
             self._project.setAttributes(self._id, "name", newTitle);
             self._refreshChildrenContainer();
             self._ownerComponent.decoratorUpdated();
