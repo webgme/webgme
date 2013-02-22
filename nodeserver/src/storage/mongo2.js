@@ -22,7 +22,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 		this._host = options.host || "localhost";
 		this._port = options.port || 27017;
-		this._database = options.database || "webgme";
+		this._name = options.database || "webgme";
 		this._timeout = options.timeout || 1000;
 
 		this._mongo = null;
@@ -38,7 +38,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 	Database.prototype.openDatabase = function (callback) {
 		ASSERT(this._mongo === null && typeof callback === "function");
 
-		this._mongo = new MONGODB.Db(this._database, new MONGODB.Server(this._host, this._port), {
+		this._mongo = new MONGODB.Db(this._name, new MONGODB.Server(this._host, this._port), {
 			w: 1
 		});
 
@@ -142,63 +142,90 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		});
 	};
 
-	Database.prototype.openProject = function (project, callback) {
-		ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
+	Database.prototype.openProject = function (name, callback) {
+		ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 		ASSERT(this._mongo !== null && typeof callback === "function");
 
-		var p = new Project(this._mongo, project);
-		p.openProject(function (err) {
-			if (err) {
-				callback(err);
-			} else {
-				callback(null, p);
-			}
-		});
-	};
-
-	Database.prototype.deleteProject = function (project, callback) {
-		ASSERT(this._mongo !== null && typeof callback === "function");
-		ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
-
-		this._mongo.dropCollection(project, callback);
-	};
-
-	// ------- Project -------
-
-	var Project = function (mongo, project) {
-		ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
-
-		this._project = project;
-		this._mongo = mongo;
-		this._refcount = 0;
-		this._collection = null;
-	};
-
-	Project.prototype.openProject = function (callback) {
-		ASSERT((this._refcount === 0) === (this._collection === null));
-		ASSERT(typeof callback === "function");
-
-		if (++this._refcount >= 2) {
-			callback(null);
+		var p = this._projects[name];
+		if (p instanceof Project) {
+			ASSERT(p._refcount >= 1);
+			p._refcount += 1;
+			callback(null, p);
+		} else if (p instanceof Array) {
+			p.push(callback);
 		} else {
+			ASSERT(typeof p === "undefined");
+			this._projects[name] = [ callback ];
+
 			var that = this;
-			this._mongo.collection(this._project, function (err, result) {
+			p = new Project(this, name);
+			p._openProject(function (err) {
+				var callbacks = that._projects[name];
+				ASSERT(callbacks instanceof Array);
+
 				if (err) {
-					callback(err);
+					delete that._projects[name];
+					p = undefined;
 				} else {
-					that._collection = result;
-					callback(null);
+					err = null;
+					that._projects[name] = p;
+					p._refcount += callbacks.length;
+				}
+
+				for ( var i = 0; i < callbacks.length; ++i) {
+					callbacks[i](err, p);
 				}
 			});
 		}
 	};
 
+	Database.prototype.deleteProject = function (name, callback) {
+		ASSERT(this._mongo !== null && typeof callback === "function");
+		ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
+
+		this._mongo.dropCollection(name, callback);
+	};
+
+	// ------- Project -------
+
+	var Project = function (database, name) {
+		ASSERT(database instanceof Database);
+		ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
+
+		this._database = database;
+		this._name = name;
+		this._refcount = 0;
+		this._collection = null;
+		this._branches = {};
+	};
+
+	Project.prototype._openProject = function (callback) {
+		ASSERT((this._refcount === 0 && this._collection === null));
+		ASSERT(typeof callback === "function");
+
+		var that = this;
+		this._database._mongo.collection(this._name, function (err, result) {
+			if (err) {
+				callback(err);
+			} else {
+				ASSERT(that._collection === null && that._refcount === 0);
+
+				that._refcount = 1;
+				that._collection = result;
+				callback(null);
+			}
+		});
+	};
+
 	Project.prototype.closeProject = function (callback) {
-		ASSERT((this._refcount === 0) === (this._collection === null));
+		ASSERT((this._refcount >= 1 && this._collection !== null));
 		ASSERT(typeof callback === "function");
 
 		if (--this._refcount === 0) {
 			this._collection = null;
+
+			ASSERT(this._database._projects[this._name] === this);
+			delete this._database._projects[this._name];
 		}
 
 		callback(null);
@@ -277,15 +304,16 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		});
 	};
 
-	Project.prototype.getBranchHash = function (branch, oldhash, callback) {
-		ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+	Project.prototype.getBranchHash = function (name, oldhash, callback) {
+		ASSERT(typeof name === "string" && BRANCH_REGEXP.test(name));
 		ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
 		ASSERT(typeof callback === "function");
 
+		this.
 	};
 
-	Project.prototype.setBranchHash = function (branch, oldhash, newhash, callback) {
-		ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+	Project.prototype.setBranchHash = function (name, oldhash, newhash, callback) {
+		ASSERT(typeof name === "string" && BRANCH_REGEXP.test(name));
 		ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
 		ASSERT(typeof newhash === "string" && HASH_REGEXP.test(newhash));
 		ASSERT(typeof callback === "function");
@@ -294,11 +322,11 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 	// ------- Branch -------
 
-	var Branch = function (collection, branch) {
-		ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+	var Branch = function (collection, name) {
+		ASSERT(typeof name === "string" && BRANCH_REGEXP.test(name));
 
 		this._collection = collection;
-		this._branch = branch;
+		this._name = name;
 		this._hash = "";
 		this._callbacks = [];
 	};

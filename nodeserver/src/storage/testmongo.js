@@ -11,7 +11,7 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "storage/mongo2", "util/future2" ], function (MONGO, FUTURE) {
+requirejs([ "storage/mongo2" ], function (MONGO) {
 	"use strict";
 
 	function test1 () {
@@ -20,19 +20,25 @@ requirejs([ "storage/mongo2", "util/future2" ], function (MONGO, FUTURE) {
 			console.log("openDatabase", err);
 			database.getProjectNames(function (err, names) {
 				console.log("getProjectNames", err, names);
-				database.getDatabaseStatus(null, function (err, data) {
+				database.getDatabaseStatus("xconnected", function (err, data) {
 					console.log("getDatabaseStatus", err, data);
 				});
 				database.openProject("hihi", function (err, project) {
-					console.log("openProject", err);
+					console.log("openProject1", err);
 					project.dumpObjects(function (err) {
 						console.log("dumpObjects", err);
 						project.closeProject(function (err) {
-							console.log("closeProject", err);
+							console.log("closeProject1", err);
 							database.closeDatabase(function (err) {
 								console.log("closeDatabase", err);
 							});
 						});
+					});
+				});
+				database.openProject("hihi", function (err, project) {
+					console.log("openProject2", err);
+					project.closeProject(function (err) {
+						console.log("closeProject2", err);
 					});
 				});
 			});
@@ -41,13 +47,13 @@ requirejs([ "storage/mongo2", "util/future2" ], function (MONGO, FUTURE) {
 
 	function test2 () {
 		var database = new MONGO.Database({});
-		var done = FUTURE.ncall(database.openDatabase, database);
-		var names = FUTURE.ncall(database.getProjectNames, FUTURE.join(database, done));
-		FUTURE.fcall(function (names) {
-			console.log(names);
-		}, null, names);
-		done = FUTURE.ncall(database.closeDatabase, FUTURE.join(database, done));
+		database.openDatabase(function (err) {
+			console.log(err);
+		});
+		database.fsyncDatabase(function (err) {
+			console.log(err);
+		});
 	}
 
-	test2();
+	test1();
 });
