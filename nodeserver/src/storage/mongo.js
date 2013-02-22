@@ -15,49 +15,46 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 	var STATUS_UNREACHABLE = "mongodb unreachable";
 	var STATUS_CONNECTED = "connected";
 
-	function openDatabase (options, callback) {
-		ASSERT(typeof options === "object" && typeof callback === "function");
+	function Database (options) {
+		ASSERT(typeof options === "object");
 
 		options.host = options.host || "localhost";
 		options.port = options.port || 27017;
 		options.database = options.database || "webgme";
-		options.timeout = options.timeout || 1000000;
+		options.timeout = options.timeout || (1000 * 60 * 10);
 
-		var branches = {};
+		var mongo = null;
 
-		var database = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
-			w: 1
-		});
+		function openDatabase (callback) {
+			ASSERT(mongo === null && typeof callback === "function");
 
-		database.open(function (err) {
-			if (err) {
-				database.close();
-				database = null;
-				callback(err);
-			} else {
-				callback(null, {
-					closeDatabase: closeDatabase,
-					fsyncDatabase: fsyncDatabase,
-                    getDatabaseStatus: getDatabaseStatus,
-					getProjectNames: getProjectNames,
-					openProject: openProject,
-					deleteProject: deleteProject
-				});
-			}
-		});
+			mongo = new MONGODB.Db(options.database, new MONGODB.Server(options.host, options.port), {
+				w: 1
+			});
+
+			mongo.open(function (err) {
+				if (err) {
+					mongo.close();
+					mongo = null;
+					callback(err);
+				} else {
+					callback(null);
+				}
+			});
+		}
 
 		function closeDatabase (callback) {
 			ASSERT(typeof callback === "function");
 
-			if (database !== null) {
+			if (mongo !== null) {
 				fsyncDatabase(function () {
-					database.close(function () {
-						database = null;
-						callback();
+					mongo.close(function () {
+						mongo = null;
+						callback(null);
 					});
 				});
 			} else {
-				callback();
+				callback(null);
 			}
 		}
 
@@ -68,7 +65,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			var synced = 0;
 
 			function fsyncConnection (conn) {
-				database.lastError({
+				mongo.lastError({
 					fsync: true
 				}, {
 					connection: conn
@@ -80,7 +77,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				});
 			}
 
-			var conns = database.serverConfig.allRawConnections();
+			var conns = mongo.serverConfig.allRawConnections();
 			ASSERT(Array.isArray(conns) && conns.length >= 1);
 
 			for ( var i = 0; i < conns.length; ++i) {
@@ -92,10 +89,10 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			ASSERT(oldstatus === null || typeof oldstatus === "string");
 			ASSERT(typeof callback === "function");
 
-			if (database === null) {
+			if (mongo === null) {
 				reportStatus(oldstatus, STATUS_CLOSED, callback);
 			} else {
-				database.command({
+				mongo.command({
 					ping: 1
 				}, function (err) {
 					reportStatus(oldstatus, err ? STATUS_UNREACHABLE : STATUS_CONNECTED, callback);
@@ -107,14 +104,19 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			if (oldstatus !== newstatus) {
 				callback(null, newstatus);
 			} else {
-				setTimeout(callback, options.timeout, null, newstatus);
+				setTimeout(function () {
+					if (mongo === null) {
+						newstatus = STATUS_CLOSED;
+					}
+					callback(null, newstatus);
+				}, options.timeout);
 			}
 		}
 
 		function getProjectNames (callback) {
 			ASSERT(typeof callback === "function");
 
-			database.collectionNames(function (err, collections) {
+			mongo.collectionNames(function (err, collections) {
 				if (err) {
 					callback(err);
 				} else {
@@ -132,19 +134,19 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		}
 
 		function deleteProject (project, callback) {
-			ASSERT(typeof project === "string" && typeof callback === "function");
-			ASSERT(PROJECT_REGEXP.test(project));
+			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
+			ASSERT(typeof callback === "function");
 
-			database.dropCollection(project, callback);
+			mongo.dropCollection(project, callback);
 		}
 
 		function openProject (project, callback) {
-			ASSERT(database !== null && typeof callback === "function");
+			ASSERT(mongo !== null && typeof callback === "function");
 			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
 
 			var collection = null;
 
-			database.collection(project, function (err, result) {
+			mongo.collection(project, function (err, result) {
 				if (err) {
 					callback(err);
 				} else {
@@ -152,6 +154,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 					callback(null, {
 						fsyncDatabase: fsyncDatabase,
 						getDatabaseStatus: getDatabaseStatus,
+						closeProject: closeProject,
 						loadObject: loadObject,
 						insertObject: insertObject,
 						findHash: findHash,
@@ -238,49 +241,62 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						for ( var i = 0; i < docs.length; ++i) {
 							branches[docs[i]._id] = docs[i].hash;
 						}
+						callback(null, branches);
 					}
 				});
 			}
 
-			function getBranchObj (branch) {
-				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
-
-				var name = project + "/" + branch;
-				if (typeof branches[name] === "object") {
-					return branches[name];
-				}
-				else {
-					
-				}
-			}
-
 			function getBranchHash (branch, oldhash, callback) {
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
-				ASSERT(typeof oldhash === "string" && HASH_REGEXP.test(oldhash));
+				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
 				ASSERT(typeof callback === "function");
 
+				collection.findOne({
+					_id: branch
+				}, function (err, obj) {
+					if (err) {
+						callback(err);
+					} else {
+						var newhash = (obj && obj.hash) || "";
+						if (oldhash !== newhash) {
+							callback(null, newhash);
+						} else {
+							setTimeout(callback, options.timeout, null, newhash);
+						}
+					}
+				});
 			}
 
 			function setBranchHash (branch, oldhash, newhash, callback) {
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
-				ASSERT(typeof newhash === "string" && HASH_REGEXP.test(newhash));
+				ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
 				ASSERT(typeof callback === "function");
 
-				if (oldhash === "") {
-					collection.insert({
-						_id: branch,
-						hash: newhash
-					}, {
-						w: 1
+				if (oldhash === newhash) {
+					collection.findOne({
+						_id: branch
+					}, function (err, obj) {
+						if (!err && oldhash !== ((obj && obj.hash) || "")) {
+							err = new Error("branch hash mismatch");
+						}
+						callback(err);
 					});
 				} else if (newhash === "") {
 					collection.remove({
 						_id: branch,
 						hash: oldhash
-					}, {
-						w: 1
+					}, function (err, num) {
+						if (!err && num !== 1) {
+							err = new Error("branch hash mismatch");
+						}
+						callback(err);
 					});
+				} else if (oldhash === "") {
+					collection.insert({
+						_id: branch,
+						hash: newhash
+					}, callback);
 				} else {
 					collection.update({
 						_id: branch,
@@ -289,19 +305,26 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						$set: {
 							hash: newhash
 						}
-					}, {
-						w: 1
+					}, function (err, num) {
+						if (!err && num !== 1) {
+							err = new Error("branch hash mismatch");
+						}
+						callback(err);
 					});
-				}
-
-				var n = project + "/" + branch;
-				var b = branches[n];
-				if (typeof b === "object") {
-
 				}
 			}
 		}
+
+		return {
+			openDatabase: openDatabase,
+			closeDatabase: closeDatabase,
+			fsyncDatabase: fsyncDatabase,
+			getDatabaseStatus: getDatabaseStatus,
+			getProjectNames: getProjectNames,
+			openProject: openProject,
+			deleteProject: deleteProject
+		};
 	}
 
-	return openDatabase;
+	return Database;
 });
