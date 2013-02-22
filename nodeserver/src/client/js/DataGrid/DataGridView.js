@@ -11,7 +11,7 @@ define(['logManager',
 
     var DataGridView,
         DEFAULT_DATAMEMBER_ID = "ID",
-        DEFAULT_NON_EXISTING_VALUE = '__DEFAULT_NON_EXISTING_VALUE__',
+        DEFAULT_NON_EXISTING_VALUE = '__undefined__',
         UNDEFINED_VALUE_CLASS = "undefined-value";
 
     DataGridView = function (options) {
@@ -50,6 +50,7 @@ define(['logManager',
     DataGridView.prototype.clear = function () {
         this.dataMemberID = DEFAULT_DATAMEMBER_ID;
         this._columns = [];
+        this._dataMap = {};
 
         if (this._oTable) {
             this._oTable.fnClearTable();
@@ -67,6 +68,8 @@ define(['logManager',
     };
 
     DataGridView.prototype._initializeTable = function (columns) {
+        var self = this;
+
         this.$table = this.$_dataTableBase.clone();
         this.$el.append(this.$table);
 
@@ -83,7 +86,10 @@ define(['logManager',
              "bAutoWidth": false,
              "bDestroy": true,
              "bRetrieve": false,
-            "aoColumns": columns});
+                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                    self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
+                },
+            "aoColumns": columns.slice(0)});
     };
 
     DataGridView.prototype._buildGroupedHeader = function (columns) {
@@ -213,13 +219,84 @@ define(['logManager',
     };
 
     DataGridView.prototype.insertObjects = function (objects) {
-        //check if the columns are defined already
-        //if so, just load the data
-        if (this._columns.length === 0) {
-            this._autoDetectColumns(objects);
-        }
+        var result,
+            len,
+            rowIdx,
+            key;
 
-        this._oTable.fnAddData(objects);
+        if (objects.length > 0) {
+            //check if the columns are defined already
+            //if so, just load the data
+            if (this._columns.length === 0) {
+                this._autoDetectColumns(objects);
+            }
+
+            result = this._oTable.fnAddData(objects);
+            if (this.dataMemberID) {
+                len = result.length;
+                while (len--) {
+                    rowIdx = result[len];
+                    key = this._getDataMemberID(objects[len]);
+                    this._dataMap[key] = rowIdx;
+                }
+            }
+        }
+    };
+
+    DataGridView.prototype.updateObjects = function (objects) {
+        var len = objects.length,
+            key;
+
+        if (len > 0) {
+            //TODO: check if there are additional columns appearing!!!
+            if (this.dataMemberID) {
+                while (len--) {
+                    key = this._getDataMemberID(objects[len]);
+                    if (this._dataMap.hasOwnProperty(key)) {
+                        if( 1 === this._oTable.fnUpdate( objects[len], this._dataMap[key]) ) {
+                            this.logger.warning("Updating object with dataMemberID '" + key + "' was unsuccessful");
+                        }
+                    } else {
+                        this.logger.warning("Can not update object with dataMemberID '" + key + "'. Object with this ID is not present in grid...");
+                    }
+                }
+            } else {
+                this.logger.warning("Cannot update grid since dataMemberID is not set. Can not match elements...");
+            }
+        }
+    };
+
+    DataGridView.prototype.deleteObjects = function (objectIDs) {
+        var len = objectIDs.length,
+            key,
+            rowIdx,
+            i;
+
+        if (len > 0) {
+            if (this.dataMemberID) {
+                while (len--) {
+                    key = objectIDs[len];
+                    if (this._dataMap.hasOwnProperty(key)) {
+                        rowIdx = this._dataMap[key];
+                        this._oTable.fnDeleteRow(rowIdx);
+                        delete this._dataMap[key];
+
+                        //fix indexes
+                        for (i in this._dataMap) {
+                            if (this._dataMap.hasOwnProperty(i)) {
+                                if (this._dataMap[i] > rowIdx) {
+                                    this._dataMap[i] -= 1;
+                                }
+                            }
+                        }
+                    } else {
+                        this.logger.warning("Can not delete object with dataMemberID '" + key + "'. Object with this dataMemberID is not present in grid...");
+                    }
+                }
+            } else {
+                this.logger.warning("Cannot delete objects from grid since dataMemberID is not set. Can not match elements...");
+            }
+        }
     };
 
     DataGridView.prototype._autoDetectColumns = function (objects) {
@@ -229,8 +306,7 @@ define(['logManager',
             flattenedObj,
             prop,
             n,
-            i,
-            self = this;
+            i;
 
         while (len--) {
             flattenedObj = util.flattenObject( objects[len]);
@@ -254,40 +330,62 @@ define(['logManager',
         //let it be the first column
         if (this.dataMemberID && this.dataMemberID !== "") {
             if (columnNames.indexOf(this.dataMemberID) !== -1) {
-                this._columns.push({"sTitle": this.dataMemberID,
-                    "mData": this.dataMemberID});
+                this._addColumnDef(this.dataMemberID, this.dataMemberID);
             }
         }
 
         for (i = 0; i < len; i += 1) {
             n = columnNames[i];
             if (this.dataMemberID !== n) {
-                this._columns.push({"sTitle": columns[n].title,
-                    "mData": columns[n].data,
-                    "mRender": function ( data /*, type, full*/ ) {
-                        if (data === DEFAULT_NON_EXISTING_VALUE) {
-                            return '';
-                        }
-
-                        return data;
-                    },
-                    "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE,
-                    "fnCreatedCell": function (nTd, sData, oData, iRow, iCol) {
-                        self._fnCreatedCell(nTd, sData, oData, iRow, iCol);
-                    }});
+                this._addColumnDef(columns[n].title, columns[n].data);
             }
         }
 
         this._initializeTable(this._columns);
     };
 
-    DataGridView.prototype._fnCreatedCell = function (nTd, sData, oData, iRow, iCol) {
-        var nData = this._oTable.fnGetData(iRow, iCol);
-        if (nData === DEFAULT_NON_EXISTING_VALUE) {
-            $(nTd).addClass(UNDEFINED_VALUE_CLASS);
-        } else if (_.isArray(nData)) {
-            $(nTd).html(nData.join('<br/>'));
+    DataGridView.prototype._addColumnDef = function (title, data) {
+        var self = this;
+
+        this._columns.push({"sTitle": title,
+            "mData": data,
+            "mRender": function ( data , type, full ) {
+                return self._mRender( data , type, full );
+            },
+            "sDefaultContent" : DEFAULT_NON_EXISTING_VALUE
+           });
+    };
+
+    DataGridView.prototype._mRender = function ( data , type, full ) {
+        if (data === DEFAULT_NON_EXISTING_VALUE ) {
+            return '';
         }
+
+        if (_.isArray(data) && type === 'display') {
+            return data.join('<br/>');
+        }
+
+        return data;
+    };
+
+    DataGridView.prototype._fnRowCallback = function (nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+        var len = nRow.cells.length,
+            d,
+            $td;
+
+        while (len--) {
+            d = this._oTable.fnSettings().aoColumns[len].fnGetData(aData);
+            $td = $(nRow.cells[len]);
+            if (d === DEFAULT_NON_EXISTING_VALUE) {
+                $td.addClass(UNDEFINED_VALUE_CLASS);
+            } else {
+                $td.removeClass(UNDEFINED_VALUE_CLASS);
+            }
+        }
+    };
+
+    DataGridView.prototype._getDataMemberID = function (dataObject) {
+        return this._fetchData(dataObject, this.dataMemberID);
     };
 
     DataGridView.prototype._fetchData = function (object, data) {
