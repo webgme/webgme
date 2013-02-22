@@ -70,8 +70,8 @@ define(['logManager',
         }
 
         this._myHierarchyGridView.insertObjects(this._insertList);
-        /*this._myHierarchyGridView.updateObjects(this._updateList);
-        this._myHierarchyGridView.deleteObjects(this._deleteList);*/
+        this._myHierarchyGridView.updateObjects(this._updateList);
+        this._myHierarchyGridView.deleteObjects(this._deleteList);
 
         this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };

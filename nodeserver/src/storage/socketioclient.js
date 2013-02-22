@@ -75,7 +75,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         if(options.socketioclient === 'browser'){
-            require([/*options.socketiohost+":"+options.socketioport+*/"http://localhost:888"+"/socket.io/socket.io.js"], function(){
+            require([options.socketiohost+":"+options.socketioport+"/socket.io/socket.io.js"], function(){
                 IO = io;
                 IOReady();
             });
@@ -144,6 +144,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function closeDatabase (callback) {
+            ASSERT(typeof callback === 'function');
             if(commonPreCheck() === null){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -151,7 +152,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
-                        callback(err);
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                closeDatabase(callback);
+                            } else {
+                                callback(err2);
+                            }
+                        });
                     }
                 });
             } else {
@@ -160,6 +167,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function fsyncDatabase (callback) {
+            ASSERT(typeof callback === 'function');
             if(commonPreCheck() === null){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -167,7 +175,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
-                        callback(err);
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                closeDatabase(callback);
+                            } else {
+                                callback(err2);
+                            }
+                        });
                     }
                 });
             } else {
@@ -176,6 +190,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function getDatabaseStatus (oldstatus,callback) {
+            ASSERT(typeof callback === 'function');
             if(status !== oldstatus || status === STATUS_NETWORK_DISCONNECTED){
                 callback(null,status);
             } else {
@@ -188,13 +203,20 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(getDbStatusCallbacks[guid].to);
                         delete getDbStatusCallbacks[guid];
-                        callback(err,newstatus);
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                getDatabaseStatus(oldstatus,callback);
+                            } else {
+                                callback(err2,newstatus);
+                            }
+                        });
                     }
                 });
             }
         }
 
         function getProjectNames (callback) {
+            ASSERT(typeof callback === 'function');
             if(commonPreCheck() === null){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -202,7 +224,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
-                        callback(err,names);
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                getProjectNames(callback);
+                            } else {
+                                callback(err2,names);
+                            }
+                        });
                     }
                 });
             } else {
@@ -211,6 +239,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function deleteProject (project, callback) {
+            ASSERT(typeof callback === 'function');
             if(commonPreCheck() === null){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -218,7 +247,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
-                        callback(err);
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                deleteProject(callback);
+                            } else {
+                                callback(err2);
+                            }
+                        });
                     }
                 });
             } else {
@@ -227,6 +262,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function openProject (project, callback) {
+            ASSERT(typeof callback === 'function');
             if(commonPreCheck() === null){
                 var projId = null;
                 var guid = GUID();
@@ -235,23 +271,30 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     if(callbacks[guid]){
                         clearTimeout(callbacks[guid].to);
                         delete callbacks[guid];
-                        if(!err && proj){
-                            projId = proj;
-                            callback(null, {
-                                fsyncDatabase: fsyncDatabase,
-                                getDatabaseStatus: getDatabaseStatus,
-                                closeProject: closeProject,
-                                loadObject: loadObject,
-                                insertObject: insertObject,
-                                findHash: findHash,
-                                dumpObjects: dumpObjects,
-                                getBranchNames: getBranchNames,
-                                getBranchHash: getBranchHash,
-                                setBranchHash: setBranchHash
-                            });
-                        } else {
-                            callback(err,null);
-                        }
+                        commonErrorCheck(err,function(err2,needRedo){
+                            if(needRedo){
+                                openProject(project,callback);
+
+                            } else {
+                                if(!err2 && proj){
+                                    projId = proj;
+                                    callback(null, {
+                                        fsyncDatabase: fsyncDatabase,
+                                        getDatabaseStatus: getDatabaseStatus,
+                                        closeProject: closeProject,
+                                        loadObject: loadObject,
+                                        insertObject: insertObject,
+                                        findHash: findHash,
+                                        dumpObjects: dumpObjects,
+                                        getBranchNames: getBranchNames,
+                                        getBranchHash: getBranchHash,
+                                        setBranchHash: setBranchHash
+                                    });
+                                } else {
+                                    callback(err2,null);
+                                }
+                            }
+                        });
                     }
                 });
 
@@ -298,6 +341,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function fsyncDatabase(callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -305,7 +349,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    fsyncDatabase(callback);
+                                } else {
+                                    callback(err2);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -313,7 +363,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 }
             }
 
-            function getDatabaseStatus(callback){
+            function getDatabaseStatus(oldstatus,callback){
+                ASSERT(typeof callback === 'function');
                 if(status !== oldstatus || status === STATUS_NETWORK_DISCONNECTED){
                     callback(null,status);
                 } else {
@@ -326,13 +377,20 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(getDbStatusCallbacks[guid].to);
                             delete getDbStatusCallbacks[guid];
-                            callback(err,newstatus);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    getDatabaseStatus(oldstatus,callback);
+                                } else {
+                                    callback(err2,newstatus);
+                                }
+                            });
                         }
                     });
                 }
             }
 
             function closeProject(callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -340,7 +398,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    closeProject(callback);
+                                } else {
+                                    callback(err2);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -349,6 +413,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function loadObject(hash,callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -356,7 +421,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err,object);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    loadObject(hash,callback);
+                                } else {
+                                    callback(err2,object);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -365,6 +436,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function insertObject(object,callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     var needRedo = false;
@@ -373,14 +445,14 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    insertObject(object,callback);
+                                } else {
+                                    callback(err2);
+                                }
+                            });
                         }
-                        commonErrorCheck(err,function(err2,needRedo){
-                            if(needRedo){
-                                insertObject(object,callback);
-                            } else {
-                                callback(err2);
-                            }
-                        });
                     });
                 } else {
                     callback(commonPreCheck());
@@ -388,6 +460,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function findHash(beginning,callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -395,7 +468,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err,hash);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    findHash(beginning,callback);
+                                } else {
+                                    callback(err2,hash);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -404,6 +483,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function dumpObjects(callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -411,7 +491,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    dumpObjects(callback);
+                                } else {
+                                    callback(err2);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -420,6 +506,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function getBranchNames(callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -427,7 +514,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err,names);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    getBranchNames(callback);
+                                } else {
+                                    callback(err2,names);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -436,6 +529,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function getBranchHash(branch,oldhash,callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -443,7 +537,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err,newhash);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    getBranchHash(branch,oldhash,callback);
+                                } else {
+                                    callback(err2,newhash);
+                                }
+                            });
                         }
                     });
                 } else {
@@ -452,6 +552,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function setBranchHash(branch,oldhash,newhash,callback){
+                ASSERT(typeof callback === 'function');
                 if(commonPreCheck() === null){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -459,7 +560,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    setBranchHash(branch,oldhash,newhash,callback);
+                                } else {
+                                    callback(err2);
+                                }
+                            });
                         }
                     });
                 } else {
