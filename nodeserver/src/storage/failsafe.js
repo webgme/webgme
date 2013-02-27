@@ -244,6 +244,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             closeDatabase: closeDatabase,
             fsyncDatabase: fsyncDatabase,
             getProjectNames: getProjectNames,
+            getDatabaseStatus: _database.getDatabaseStatus,
             openProject: openProject,
             deleteProject: deleteProject
         }

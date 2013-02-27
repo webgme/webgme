@@ -10,9 +10,9 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     function Database(options){
         ASSERT(typeof options === "object");
 
-        options.socketiohost = options.socketiohost || "http://localhost";
-        options.socketioport = options.socketioport || 888;
-        options.socketioclient = options.socketioclient || "browser";
+        options.host = options.host || "http://localhost";
+        options.port = options.port || 888;
+        options.type = options.type || "browser";
         options.timeout = options.timeout || 10000;
 
         var socketConnected = false,
@@ -53,7 +53,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 delete callbacks[guid];
                 cb(ERROR_TIMEOUT);
             } else if(getDbStatusCallbacks[guid]){
-                cb = getDbStatusCallbacks[guid];
+                cb = getDbStatusCallbacks[guid].cb;
                 delete getDbStatusCallbacks[guid];
                 cb(null,status);
             }
@@ -98,11 +98,15 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
 
                 function IOReady(){
-                    socket = IO.connect(options.socketiohost+":"+options.socketioport,{
-                        'connect timeout': 1000,
-                        'reconnection delay': 100
+                    socket = IO.connect(options.host+":"+options.port,{
+                        'connect timeout': 100,
+                        'reconnection delay': 100,
+                        'force new connection': true
                     });
 
+                    socket.on('reconnect',function(){
+                        console.log("WOA!!!");
+                    });
                     socket.on('connect',function(){
                         socketConnected = true;
                         if(firstConnection){
@@ -147,8 +151,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     });
                 }
 
-                if(options.socketioclient === 'browser'){
-                    require([options.socketiohost+":"+options.socketioport+"/socket.io/socket.io.js"], function(){
+                if(options.type === 'browser'){
+                    require([options.host+":"+options.port+"/socket.io/socket.io.js"], function(){
                         IO = io;
                         IOReady();
                     });
@@ -196,7 +200,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             } else {
                 var guid = GUID();
                 getDbStatusCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                socket.emit('getDatabaseStatus',dbId,oldstatus,function(err,newstatus){
+                socket.emit('getDatabaseStatus',oldstatus,function(err,newstatus){
                     if(!err && newstatus){
                         status = newstatus;
                     }
@@ -217,47 +221,31 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
         function getProjectNames (callback) {
             ASSERT(typeof callback === 'function');
-            if(commonPreCheck() === null){
+            if(socketConnected){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                socket.emit('getProjectNames',dbId,function(err,names){
-                    if(callbacks[guid]){
-                        clearTimeout(callbacks[guid].to);
-                        delete callbacks[guid];
-                        commonErrorCheck(err,function(err2,needRedo){
-                            if(needRedo){
-                                getProjectNames(callback);
-                            } else {
-                                callback(err2,names);
-                            }
-                        });
-                    }
+                socket.emit('getProjectNames',function(err,names){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err,names);
                 });
             } else {
-                callback(commonPreCheck());
+                callback(ERROR_DISCONNECTED);
             }
         }
 
         function deleteProject (project, callback) {
             ASSERT(typeof callback === 'function');
-            if(commonPreCheck() === null){
+            if(socketConnected){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                socket.emit('deleteProject',dbId,project,function(err){
-                    if(callbacks[guid]){
-                        clearTimeout(callbacks[guid].to);
-                        delete callbacks[guid];
-                        commonErrorCheck(err,function(err2,needRedo){
-                            if(needRedo){
-                                deleteProject(callback);
-                            } else {
-                                callback(err2);
-                            }
-                        });
-                    }
+                socket.emit('deleteProject',project,function(err){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err);
                 });
             } else {
-                callback(commonPreCheck());
+                callback(ERROR_DISCONNECTED);
             }
         }
 

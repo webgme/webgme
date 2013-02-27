@@ -242,7 +242,27 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         }
 
         function close(){
-            //TODO
+
+            //disconnect clients
+            if(_socket){
+                _socket.sockets.emit('disconnect');
+                _socket = null;
+            }
+
+            if(_databaseOpened){
+                //close projects
+                for(var i in _projects){
+                    _projects[i].closeProject(function(err){});
+                }
+
+                //close database
+                _database.closeDatabase(function(err){});
+            }
+
+            _objects = {};
+            _projects = {};
+            _references = {};
+            _databaseOpened = false;
         }
 
         return {
