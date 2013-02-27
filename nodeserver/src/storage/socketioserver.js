@@ -18,7 +18,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             ERROR_DEAD_GUID = 'the given object does not exists';
 
         function addClient(id,project){
-            if(_references[project] === null){
+            if(!_references[project]){
                 _references[project] = [];
             }
             if(_references[project].indexOf(id) === -1){
@@ -105,11 +105,13 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('openProject', function(projectName,callback){
                     if(_projects[projectName]){
                         addClient(socket.id,projectName);
+                        callback(null,_projects[projectName]);
                     } else {
                         _database.openProject(projectName,function(err,project){
                             if(!err && project){
                                 _projects[projectName] = project;
                                 addClient(socket.id,projectName);
+                                callback(null,_projects[projectName]);
                             } else {
                                 callback(err);
                             }
@@ -117,12 +119,12 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                     }
                 });
 
-                socket.on('getDatabaseStatus', function(projectName,oldstatus,callback){
-                    checkProject(socket.id,function(err){
+                socket.on('getDatabaseStatus', function(oldstatus,callback){
+                    checkDatabase(function(err){
                         if(err){
                             callback(err);
                         } else {
-                            _projects[projectName].getDatabaseStatus(oldstatus,callback);
+                            _database.getDatabaseStatus(oldstatus,callback);
                         }
                     });
                 });
@@ -223,7 +225,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                                 if(_references[i].length === 0){
                                     todelete.push(i);
                                     var proj = _projects[i];
-                                    delete _project[i];
+                                    delete _projects[i];
                                     proj.closeProject(function(err){});
                                 }
                             }

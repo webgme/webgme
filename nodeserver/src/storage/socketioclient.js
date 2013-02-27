@@ -60,8 +60,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function registerProject(id,name){
-            if(references[name] === null || references[name] === undefined){
-                projetcs[name] = [];
+            if(!references[name]){
+                references[name] = [];
             }
             if(references[name].indexOf(id) === -1){
                 references[name].push(id);
