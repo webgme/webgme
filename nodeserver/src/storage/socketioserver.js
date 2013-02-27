@@ -63,18 +63,15 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
             _socket.on('connection',function(socket){
                 socket.on('openDatabase', function(callback){
-                    ASSERT(typeof callback === 'function');
                     checkDatabase(callback);
                 });
 
                 socket.on('closeDatabase', function(callback){
-                    ASSERT(typeof callback === 'function');
                     _databaseOpened = false;
                     _database.closeDatabase(callback);
                 });
 
                 socket.on('fsyncDatabase', function(callback){
-                    ASSERT(typeof callback === 'function');
                     checkDatabase(function(err){
                         if(err){
                             callback(err)
@@ -85,7 +82,6 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 });
 
                 socket.on('getProjectNames', function(callback){
-                    ASSERT(typeof callback === 'function');
                     checkDatabase(function(err){
                         if(err){
                             callback(err)

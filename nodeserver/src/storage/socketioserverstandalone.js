@@ -13,14 +13,14 @@ requirejs.config({
     }
 });
 
-requirejs([ "util/assert","storage/socketioserver" ],function(ASSERT,SERVER){
-    var socketioServer = new SERVER({
-        socketioport:888,
-        host: "129.59.105.239",
-        port: 27017,
-        database: "newtest",
-        timeout: 10000,
-        local: "memory",
-        layers:['storage/socketioserver','storage/mongo']
-    });
+requirejs([ "util/assert","storage/socketioserver","storage/local" ],function(ASSERT,SERVER,LOCAL){
+    var server = new SERVER(new LOCAL({
+            host: "129.59.105.239",
+            port: 27017,
+            database: "newtest",
+            timeout: 10000,
+            local: "memory"
+            }),{port:888});
+
+    server.open();
 });

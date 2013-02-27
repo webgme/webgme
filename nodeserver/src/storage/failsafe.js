@@ -7,80 +7,17 @@
 define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
 
-    function openDatabase(options,callback){
-        ASSERT(typeof options === "object" && typeof callback === "function" && options.layers.length>0);
-
+    function Database(_database,options){
+        ASSERT(typeof options === "object" && typeof _database === "object");
         options.failsafe = options.failsafe || "memory";
         options.failsafefrequency = options.failsafefrequency || 10000;
 
-        var exceptionErrors = [];
-        var database = null;
-        var dbId = options.database;
-        var fsId = "FS";
-        var SEPARATOR = "$";
-        var STATUS_CONNECTED = "connected";
-        var pendingStorage = {};
-        var storage = null;
-        if(options.failsafe === "local" && localStorage){
-            storage = localStorage;
-        } else if(options.failsafe === "session" && sessionStorage){
-            storage = sessionStorage;
-        } else if(options.failsafe === "memory"){
-            storage = {
-                length : 0,
-                keys : [],
-                data : {},
-                getItem : function(key){
-                    ASSERT(typeof key === "string");
-                    return this.data[key];
-                },
-                setItem : function(key,object){
-                    ASSERT(typeof key === "string" && typeof object === "string");
-                    this.data[key] = object;
-                    this.keys.push(key);
-                    this.length++;
-                },
-                key : function(index){
-                    return this.keys[index];
-                }
-            };
-        }
-
-        if(storage){
-            loadPending();
-            setInterval(savePending,options.failsafefrequency);
-            /*first we need the underlying layer*/
-            var index = -1;
-            for(var i=0;i<options.layers.length;i++){
-                if(options.layers[i].indexOf('failsafe') !== -1){
-                    index = i+1;
-                    break;
-                }
-            }
-            if(index>0 && index<options.layers.length){
-                require([options.layers[index]],function(STORAGE){
-                    STORAGE(options,function(err,db){
-                        if(!err && db){
-                            database = db;
-                            callback(null,{
-                                closeDatabase: closeDatabase,
-                                fsyncDatabase: fsyncDatabase,
-                                getProjectNames: getProjectNames,
-                                openProject: openProject,
-                                deleteProject: deleteProject
-                            });
-                        } else {
-                            callback(err,db);
-                        }
-                    });
-                });
-            } else {
-                callback(new Error('missing underlying layer'),null);
-            }
-        } else {
-            callback(new Error('cannot initialize fail safe storage'),null);
-        }
-
+        var exceptionErrors = [],
+            fsId = "FS",
+            SEPARATOR = "$",
+            STATUS_CONNECTED = "connected",
+            pendingStorage = {},
+            storage = null;
 
         function loadPending(){
             for(var i=0;i<storage.length;i++){
@@ -102,48 +39,74 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
         }
 
-        function closeDatabase (callback) {
-            database.closeDatabase(callback);
-        }
-
-        function fsyncDatabase (callback) {
-            database.fsyncDatabase(callback);
-        }
-
-        function getDatabaseStatus (oldstatus,callback) {
-            //TODO we stick the synchronisation to the proper state answer
-            database.getDatabasestatus(oldstatus,callback);
-        }
-
-        function getProjectNames (callback) {
-            database.getProjectNames(callback);
-        }
-
-        function deleteProject (project, callback) {
-            if(pendingStorage[project]){
-                callback("the project cannot be deleted as it has pending objects");
-            } else {
-                database.deleteProject(project,callback);
+        function openDatabase(callback){
+            if(options.failsafe === "local" && localStorage){
+                storage = localStorage;
+            } else if(options.failsafe === "session" && sessionStorage){
+                storage = sessionStorage;
+            } else if(options.failsafe === "memory"){
+                storage = {
+                    length : 0,
+                    keys : [],
+                    data : {},
+                    getItem : function(key){
+                        ASSERT(typeof key === "string");
+                        return this.data[key];
+                    },
+                    setItem : function(key,object){
+                        ASSERT(typeof key === "string" && typeof object === "string");
+                        this.data[key] = object;
+                        this.keys.push(key);
+                        this.length++;
+                    },
+                    key : function(index){
+                        return this.keys[index];
+                    }
+                };
             }
+
+            if(storage){
+                loadPending();
+                setInterval(savePending,options.failsafefrequency);
+                _database.openDatabase(callback);
+            } else {
+                callback('cannot initialize fail safe storage');
+            }
+        }
+
+        function closeDatabase(callback){
+            _database.closeDatabase(callback);
+        }
+
+        function fsyncDatabase(callback){
+            _database.fsyncDatabase(callback);
+        }
+
+        function getProjectNames(callback){
+            _database.getProjectNames(callback);
+        }
+
+        function deleteProject(project,callback){
+            _database.deleteProject(project,callback);
         }
 
         function openProject (projectName, callback) {
             var project = null;
             var inSync = true;
-            database.openProject(projectName,function(err,proj){
+            _database.openProject(projectName,function(err,proj){
                 if(!err && proj){
                     project = proj;
                     callback(null,{
-                        fsyncDatabase: fsyncDatabase,
-                        getDatabaseStatus: getDatabaseStatus,
-                        closeProject: closeProject,
+                        fsyncDatabase: project.fsyncDatabase,
+                        getDatabaseStatus: project.getDatabaseStatus,
+                        closeProject: project.closeProject,
                         loadObject: loadObject,
                         insertObject: insertObject,
-                        findHash: findHash,
-                        dumpObjects: dumpObjects,
-                        getBranchNames: getBranchNames,
-                        getBranchHash: getBranchHash,
-                        setBranchHash: setBranchHash
+                        findHash: project.findHash,
+                        dumpObjects: project.dumpObjects,
+                        getBranchNames: project.getBranchNames,
+                        getBranchHash: project.getBranchHash,
+                        setBranchHash: project.setBranchHash
                     });
                 } else {
                     callback(err,project);
@@ -194,23 +157,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                 inSync = true;
                             });
                         } else {
-                            getDatabaseStatus(newstate,checkIfAvailable);
+                            project.getDatabaseStatus(newstate,checkIfAvailable);
                         }
                     }
-
+                    project.getDatabaseStatus(null,checkIfAvailable);
                 }
-            }
-
-            function fsyncDatabase(callback){
-                project.fsyncDatabase(callback);
-            }
-
-            function getDatabaseStatus(oldstatus,callback){
-                project.getDatabaseStatus(oldstatus,callback);
-            }
-
-            function closeProject(callback){
-                project.closeProject(callback);
             }
 
             function loadObject(hash,callback){
@@ -252,16 +203,22 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 });
             }
 
+
+            /*
+            function getDatabaseStatus(oldstatus,callback){
+                project.getDatabaseStatus(oldstatus,callback);
+            }
+
+            function fsyncDatabase(callback){
+                project.fsyncDatabase(callback);
+            }
+
+            function closeProject(callback){
+                project.closeProject(callback);
+            }
+
             function findHash(beginning,callback){
-                project.findHash(beginning,function(err,hash){
-                    if(!err && hash){
-                        synchronise(function(){
-                            callback(err,hash);
-                        });
-                    } else {
-                        callback(err,hash);
-                    }
-                });
+                project.findHash(beginning,callback);
             }
 
             function dumpObjects(callback){
@@ -269,15 +226,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function getBranchNames(callback){
-                project.getBranchNames(function(err,names){
-                    if(!err && names){
-                        synchronise(function(){
-                            callback(err,names);
-                        });
-                    } else {
-                        callback(err,names);
-                    }
-                });
+                project.getBranchNames(callback);
             }
 
             function getBranchHash(branch,oldhash,callback){
@@ -285,19 +234,21 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function setBranchHash(branch,oldhash,newhash,callback){
-                project.setBranchHash(branch,oldhash,newhash,function(err){
-                    if(err){
-                        callback(err);
-                    } else {
-                        synchronise(function(){
-                            callback(err);
-                        });
-                    }
-                });
+                project.setBranchHash(branch,oldhash,newhash,callback);
             }
+            */
+        }
+
+        return {
+            openDatabase : openDatabase,
+            closeDatabase: closeDatabase,
+            fsyncDatabase: fsyncDatabase,
+            getProjectNames: getProjectNames,
+            openProject: openProject,
+            deleteProject: deleteProject
         }
     }
 
-    return openDatabase;
+    return Database;
 });
 

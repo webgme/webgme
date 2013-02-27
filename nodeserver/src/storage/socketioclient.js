@@ -5,7 +5,7 @@
  */
 
 define([ "util/assert","util/guid"], function (ASSERT,GUID) {
-    "use strict";
+    //"use strict";
 
     function Database(options){
         ASSERT(typeof options === "object");
@@ -16,12 +16,17 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         options.timeout = options.timeout || 10000;
 
         var socketConnected = false,
+            socket = null,
             status = null,
             reconnect = false,
             getDbStatusCallbacks = {},
             callbacks = {},
+            IO = null,
+            projects = {},
+            references = {},
             ERROR_DISCONNECTED = 'The socket.io is disconnected',
-            ERROR_TIMEOUT = "no valid response arrived in time";
+            ERROR_TIMEOUT = "no valid response arrived in time",
+            STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
 
         function clearDbCallbacks(){
             for(var i in getDbStatusCallbacks){
@@ -42,551 +47,114 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function callbackTimeout(guid){
-            var cb = callbacks[guid].cb || getDbStatusCallbacks[guid].cb;
-            delete callbacks[guid];
-            delete getDbStatusCallbacks[guid];
-            cb(ERROR_TIMEOUT);
+            var cb = null;
+            if(callbacks[guid]){
+                cb = callbacks[guid].cb;
+                delete callbacks[guid];
+                cb(ERROR_TIMEOUT);
+            } else if(getDbStatusCallbacks[guid]){
+                cb = getDbStatusCallbacks[guid];
+                delete getDbStatusCallbacks[guid];
+                cb(null,status);
+            }
+        }
+
+        function registerProject(id,name){
+            if(references[name] === null || references[name] === undefined){
+                projetcs[name] = [];
+            }
+            if(references[name].indexOf(id) === -1){
+                references[name].push(id);
+            }
+        }
+
+        function unRegisterProject(id,name){
+            if(references[name]){
+                var index = references[name].indexOf(id);
+                if(index>-1){
+                    references[name].splice(index,1);
+                    if(references[name].length === 0){
+                        delete references[name];
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
         }
 
         function openDatabase(callback){
             ASSERT(typeof callback === "function");
 
+            if(socket){
+                callback(null);
+            } else {
+                var guid = GUID(),
+                    firstConnection = true;
+                callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
 
+                function IOReady(){
+                    socket = IO.connect(options.socketiohost+":"+options.socketioport,{
+                        'connect timeout': 1000,
+                        'reconnection delay': 100
+                    });
 
-            var dbId = null;
-            var status = null;
-            var getDbStatusCallbacks = {};
-            var callbacks = {};
-            var STATUS_NETWORK_DISCONNECTED = "socket.io network is disconnected";
-            var ERROR_NETWORK = 'the network is disconnected';
-            var ERROR_TIMEOUT = "no valid response arrived in time";
-            var ERROR_DEAD_GUID = 'the given object does not exists';
-            var myCallback = callback;
-            var socket = null;
-            var IO = null;
-            function IOReady(){
-                socket = IO.connect(options.socketiohost+":"+options.socketioport,{
-                    'connect timeout': 1000,
-                    'reconnection delay': 100
-                });
-                socket.on('connect',function(){
-                    if(myCallback){
-                        socket.emit('openDatabase',options,function(err,db){
-                            if(!err && db){
-                                dbId = db;
-                                myCallback = null;
-                                socket.emit('getDatabaseStatus',dbId,null,function(err,newstatus){
-                                    if(!err && newstatus){
-                                        status = newstatus;
-                                        callback(null,{
-                                            closeDatabase: closeDatabase,
-                                            fsyncDatabase: fsyncDatabase,
-                                            getProjectNames: getProjectNames,
-                                            openProject: openProject,
-                                            deleteProject: deleteProject
-                                        });
-                                    } else {
-                                        callback(err,null);
+                    socket.on('connect',function(){
+                        socketConnected = true;
+                        if(firstConnection){
+                            firstConnection = false;
+                            socket.emit('openDatabase',function(err){
+                                if(!err){
+                                    socket.emit('getDatabaseStatus',null,function(err,newstatus){
+                                        if(!err && newstatus){
+                                            status = newstatus;
+                                        }
+                                        if(callbacks[guid]){
+                                            clearTimeout(callbacks[guid].to);
+                                            delete callbacks[guid];
+                                            callback(err);
+                                        }
+                                    });
+                                } else {
+                                    socket.emit('disconnect');
+                                    socket = null;
+                                    if(callbacks[guid]){
+                                        clearTimeout(callbacks[guid].to);
+                                        delete callbacks[guid];
+                                        callback(err);
                                     }
-                                });
-                            } else {
-                                socket.emit('disconnect');
-                                callback(err,null);
-                            }
-                        });
-                    } else {
-                        socket.emit('getDatabaseStatus',dbId,status,function(err,newstatus){
-                            commonErrorCheck(err,function(err2,needRedo){
+                                }
+                            });
+                        } else {
+                            socket.emit('getDatabaseStatus',status,function(err,newstatus){
                                 if(!err && newstatus){
                                     status = newstatus;
                                     clearDbCallbacks();
                                 }
                             });
-                        });
-                    }
-                });
-                socket.on('disconnect',function(){
-                    status = STATUS_NETWORK_DISCONNECTED;
-                    clearDbCallbacks();
-                    clearCallbacks();
-                });
-            }
+                        }
+                    });
 
-            if(options.socketioclient === 'browser'){
-                require([options.socketiohost+":"+options.socketioport+"/socket.io/socket.io.js"], function(){
-                    IO = io;
+                    socket.on('disconnect',function(){
+                        status = STATUS_NETWORK_DISCONNECTED;
+                        socketConnected = false;
+                        clearDbCallbacks();
+                        clearCallbacks();
+                    });
+                }
+
+                if(options.socketioclient === 'browser'){
+                    require([options.socketiohost+":"+options.socketioport+"/socket.io/socket.io.js"], function(){
+                        IO = io;
+                        IOReady();
+                    });
+                } else {
+                    IO = require("socket.io-client");
                     IOReady();
-                });
-            } else {
-                IO = require("socket.io-client");
-                IOReady();
-            }
-
-
-
-
-            function rebuildDatabase(callback){
-                dbId = null;
-                socket.emit('openDatabase',options,function(err,db){
-                    if(!err){
-                        dbId = db;
-                        callback(null);
-                    } else {
-                        callback(err);
-                    }
-                });
-            }
-
-            function commonPreCheck(){
-                if(status === STATUS_NETWORK_DISCONNECTED){
-                    return ERROR_NETWORK;
-                }
-                return null;
-            }
-
-            function commonErrorCheck(err,callback){
-                if(err === ERROR_DEAD_GUID){
-                    rebuildDatabase(function(err){
-                        if(err){
-                            callback(err,false);
-                        } else {
-                            callback(null,true);
-                        }
-                    });
-                } else {
-                    callback(err,false);
-                }
-            }
-
-            function closeDatabase (callback) {
-                ASSERT(typeof callback === 'function');
-                if(commonPreCheck() === null){
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('closeDatabase',dbId,function(err){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    closeDatabase(callback);
-                                } else {
-                                    callback(err2);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    callback(commonPreCheck());
-                }
-            }
-
-            function fsyncDatabase (callback) {
-                ASSERT(typeof callback === 'function');
-                if(commonPreCheck() === null){
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('fsyncDatabase',dbId,function(err){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    closeDatabase(callback);
-                                } else {
-                                    callback(err2);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    callback(commonPreCheck());
-                }
-            }
-
-            function getDatabaseStatus (oldstatus,callback) {
-                ASSERT(typeof callback === 'function');
-                if(status !== oldstatus || status === STATUS_NETWORK_DISCONNECTED){
-                    callback(null,status);
-                } else {
-                    var guid = GUID();
-                    getDbStatusCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('getDatabaseStatus',dbId,oldstatus,function(err,newstatus){
-                        if(!err && newstatus){
-                            status = newstatus;
-                        }
-                        if(callbacks[guid]){
-                            clearTimeout(getDbStatusCallbacks[guid].to);
-                            delete getDbStatusCallbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    getDatabaseStatus(oldstatus,callback);
-                                } else {
-                                    callback(err2,newstatus);
-                                }
-                            });
-                        }
-                    });
-                }
-            }
-
-            function getProjectNames (callback) {
-                ASSERT(typeof callback === 'function');
-                if(commonPreCheck() === null){
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('getProjectNames',dbId,function(err,names){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    getProjectNames(callback);
-                                } else {
-                                    callback(err2,names);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    callback(commonPreCheck());
-                }
-            }
-
-            function deleteProject (project, callback) {
-                ASSERT(typeof callback === 'function');
-                if(commonPreCheck() === null){
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('deleteProject',dbId,project,function(err){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    deleteProject(callback);
-                                } else {
-                                    callback(err2);
-                                }
-                            });
-                        }
-                    });
-                } else {
-                    callback(commonPreCheck());
-                }
-            }
-
-            function openProject (project, callback) {
-                ASSERT(typeof callback === 'function');
-                if(commonPreCheck() === null){
-                    var projId = null;
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('openProject',dbId,project,function(err,proj){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
-                            commonErrorCheck(err,function(err2,needRedo){
-                                if(needRedo){
-                                    openProject(project,callback);
-
-                                } else {
-                                    if(!err2 && proj){
-                                        projId = proj;
-                                        callback(null, {
-                                            fsyncDatabase: fsyncDatabase,
-                                            getDatabaseStatus: getDatabaseStatus,
-                                            closeProject: closeProject,
-                                            loadObject: loadObject,
-                                            insertObject: insertObject,
-                                            findHash: findHash,
-                                            dumpObjects: dumpObjects,
-                                            getBranchNames: getBranchNames,
-                                            getBranchHash: getBranchHash,
-                                            setBranchHash: setBranchHash
-                                        });
-                                    } else {
-                                        callback(err2,null);
-                                    }
-                                }
-                            });
-                        }
-                    });
-
-                } else {
-                    callback(commonPreCheck());
-                }
-
-                //functions
-                function rebuildProject(callback){
-                    //after server restart it is possible to re-build the server side connection
-                    projId=null;
-                    if(dbId){
-                        socket.emit('openProject',dbId,project,function(err,proj){
-                            if(err){
-                                callback(err);
-                            } else {
-                                projId = proj;
-                                callback(null);
-                            }
-                        });
-                    } else {
-                        rebuildDatabase(function(err){
-                            if(err){
-                                callback(err);
-                            } else {
-                                rebuildProject(callback);
-                            }
-                        });
-                    }
-                }
-
-                function commonErrorCheck(err,callback){
-                    if(err === ERROR_DEAD_GUID){
-                        rebuildProject(function(err){
-                            if(err){
-                                callback(err,false);
-                            } else {
-                                callback(null,true);
-                            }
-                        });
-                    } else {
-                        callback(err,false);
-                    }
-                }
-
-                function fsyncDatabase(callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('fsyncDatabase',projId,project,function(err){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        fsyncDatabase(callback);
-                                    } else {
-                                        callback(err2);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function getDatabaseStatus(oldstatus,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(status !== oldstatus || status === STATUS_NETWORK_DISCONNECTED){
-                        callback(null,status);
-                    } else {
-                        var guid = GUID();
-                        getDbStatusCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('getDatabaseStatus',projId,oldstatus,function(err,newstatus){
-                            if(!err && newstatus){
-                                status = newstatus;
-                            }
-                            if(callbacks[guid]){
-                                clearTimeout(getDbStatusCallbacks[guid].to);
-                                delete getDbStatusCallbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        getDatabaseStatus(oldstatus,callback);
-                                    } else {
-                                        callback(err2,newstatus);
-                                    }
-                                });
-                            }
-                        });
-                    }
-                }
-
-                function closeProject(callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('closeProject',projId,function(err){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        closeProject(callback);
-                                    } else {
-                                        callback(err2);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function loadObject(hash,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('loadObject',projId,hash,function(err,object){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        loadObject(hash,callback);
-                                    } else {
-                                        callback(err2,object);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function insertObject(object,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        var needRedo = false;
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('insertObject',projId,object,function(err){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        insertObject(object,callback);
-                                    } else {
-                                        callback(err2);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function findHash(beginning,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('findHash',projId,beginning,function(err,hash){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        findHash(beginning,callback);
-                                    } else {
-                                        callback(err2,hash);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function dumpObjects(callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('dumpObjects',projId,function(err){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        dumpObjects(callback);
-                                    } else {
-                                        callback(err2);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function getBranchNames(callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('getBranchNames',projId,function(err,names){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        getBranchNames(callback);
-                                    } else {
-                                        callback(err2,names);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function getBranchHash(branch,oldhash,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('getBranchHash',projId,branch,oldhash,function(err,newhash){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        getBranchHash(branch,oldhash,callback);
-                                    } else {
-                                        callback(err2,newhash);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
-                }
-
-                function setBranchHash(branch,oldhash,newhash,callback){
-                    ASSERT(typeof callback === 'function');
-                    if(commonPreCheck() === null){
-                        var guid = GUID();
-                        callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                        socket.emit('setBranchHash',projId,branch,oldhash,newhash,function(err){
-                            if(callbacks[guid]){
-                                clearTimeout(callbacks[guid].to);
-                                delete callbacks[guid];
-                                commonErrorCheck(err,function(err2,needRedo){
-                                    if(needRedo){
-                                        setBranchHash(branch,oldhash,newhash,callback);
-                                    } else {
-                                        callback(err2);
-                                    }
-                                });
-                            }
-                        });
-                    } else {
-                        callback(commonPreCheck());
-                    }
                 }
             }
         }
@@ -608,24 +176,16 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
         function fsyncDatabase (callback) {
             ASSERT(typeof callback === 'function');
-            if(commonPreCheck() === null){
+            if(socketConnected){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                socket.emit('fsyncDatabase',dbId,function(err){
-                    if(callbacks[guid]){
-                        clearTimeout(callbacks[guid].to);
-                        delete callbacks[guid];
-                        commonErrorCheck(err,function(err2,needRedo){
-                            if(needRedo){
-                                closeDatabase(callback);
-                            } else {
-                                callback(err2);
-                            }
-                        });
-                    }
+                socket.emit('fsyncDatabase',function(err){
+                    clearTimeout(callbacks[guid].to);
+                    delete callbacks[guid];
+                    callback(err);
                 });
             } else {
-                callback(commonPreCheck());
+                callback(ERROR_DISCONNECTED);
             }
         }
 
@@ -699,6 +259,233 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             } else {
                 callback(commonPreCheck());
             }
+        }
+
+        function openProject (project, callback) {
+            ASSERT(typeof callback === 'function');
+            var ownId = GUID();
+            if(projects[project]){
+                registerProject(ownId,project);
+                callback(projects[project]);
+            } else {
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('openProject',project,function(err){
+                        if(!err){
+                            registerProject(ownId,project);
+                            if(callbacks[guid]){
+                                clearTimeout(callbacks[guid].to);
+                                delete callbacks[guid];
+                                projects[project] = {
+                                    fsyncDatabase: fsyncDatabase,
+                                    getDatabaseStatus: getDatabaseStatus,
+                                    closeProject: closeProject,
+                                    loadObject: loadObject,
+                                    insertObject: insertObject,
+                                    findHash: findHash,
+                                    dumpObjects: dumpObjects,
+                                    getBranchNames: getBranchNames,
+                                    getBranchHash: getBranchHash,
+                                    setBranchHash: setBranchHash
+                                };
+                                callback(null,projects[project]);
+                            }
+                        } else {
+                            callback(err,null);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            //functions
+
+            function fsyncDatabase(callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('fsyncDatabase',function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function getDatabaseStatus(oldstatus,callback){
+                ASSERT(typeof callback === 'function');
+                if(status !== oldstatus){
+                    callback(null,status);
+                } else {
+                    var guid = GUID();
+                    getDbStatusCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    if(socketConnected){
+                        socket.emit('getDatabaseStatus',oldstatus,function(err,newstatus){
+                            if(getDbStatusCallbacks[guid]){
+                                clearTimeout(getDbStatusCallbacks[guid].to);
+                                delete getDbStatusCallbacks[guid];
+                                if(!err && newstatus){
+                                    status = newstatus;
+                                }
+                                callback(err,newstatus);
+                            }
+                        });
+                    }
+                }
+            }
+
+            function closeProject(callback){
+                ASSERT(typeof callback === 'function');
+                if(unRegisterProject(ownId,project)){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('closeProject',project,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(null);
+                }
+            }
+
+            function loadObject(hash,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('loadObject',project,hash,function(err,object){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err,object);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function insertObject(object,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('insertObject',project,object,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function findHash(beginning,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('findHash',project,beginning,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function dumpObjects(callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('dumpObjects',project,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function getBranchNames(callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('getBranchNames',project,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function getBranchHash(branch,oldhash,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('insertObject',project,branch,oldhash,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function setBranchHash(branch,oldhash,newhash,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('insertObject',project,branch,oldhash,newhash,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+        }
+
+        return {
+            openDatabase : openDatabase,
+            closeDatabase: closeDatabase,
+            fsyncDatabase: fsyncDatabase,
+            getDatabaseStatus: getDatabaseStatus,
+            getProjectNames: getProjectNames,
+            deleteProject: deleteProject,
+            openProject: openProject
         }
     }
     return Database;
