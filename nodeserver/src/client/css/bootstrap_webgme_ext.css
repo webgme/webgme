@@ -193,3 +193,8 @@ input[type="submit"].btn.btn-micro {
     background-position: 0px 0px;
 }
 
+/************** pointer on hover ******************/
+.pointer:hover {
+    cursor: pointer;
+}
+
