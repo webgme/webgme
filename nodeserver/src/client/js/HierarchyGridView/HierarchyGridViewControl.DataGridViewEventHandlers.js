@@ -1,6 +1,6 @@
 "use strict";
 
-define([], function () {
+define(['js/DiagramDesigner/NodePropertyNames'], function (nodePropertyNames) {
 
     var HierarchyGridViewControlDataGridViewEventHandlers;
 
@@ -17,6 +17,14 @@ define([], function () {
 
         this._myHierarchyGridView.onColumnsAutoDetected = function (columnDefs) {
             self._onColumnsAutoDetected(columnDefs);
+        };
+
+        this._myHierarchyGridView.onRowDelete = function (id, aData) {
+            self._onRowDelete(id, aData);
+        };
+
+        this._myHierarchyGridView.onRowEdit = function (id, oData, nData) {
+            self._onRowEdit(id, oData, nData);
         };
 
         this._logger.debug("attachDataGridViewEventHandlers finished");
@@ -88,6 +96,51 @@ define([], function () {
                 cDef.mData.indexOf('Pointers.') === 0) {
                 cDef.bEditable = false;
             }
+        }
+    };
+
+    HierarchyGridViewControlDataGridViewEventHandlers.prototype._onRowDelete = function (id, aData) {
+        this._client.delMoreNodes([id]);
+    };
+
+    HierarchyGridViewControlDataGridViewEventHandlers.prototype._onRowEdit = function (id, oData, nData) {
+        var cNode = this._client.getNode(id),
+            attrVal;
+
+        if (cNode) {
+            this._client.startTransaction();
+
+            attrVal = this._fetchData(nData, "Attributes.name");
+            if (attrVal !== null && attrVal !== undefined) {
+                this._client.setAttributes(id, nodePropertyNames.Attributes.name, attrVal);
+            }
+
+            attrVal = this._fetchData(nData, "Registry.decorator");
+            if (attrVal !== null && attrVal !== undefined) {
+                this._client.setRegistry(id, nodePropertyNames.Registry.decorator, attrVal);
+            }
+
+            attrVal = this._fetchData(nData, "Registry.position");
+            if (attrVal !== null && attrVal !== undefined) {
+                attrVal.x = parseInt(attrVal.x, 10) || 0;
+                attrVal.y = parseInt(attrVal.y, 10) || 0;
+                this._client.setRegistry(id, nodePropertyNames.Registry.position, attrVal);
+            }
+
+            this._client.completeTransaction();
+        }
+    };
+
+    HierarchyGridViewControlDataGridViewEventHandlers.prototype._fetchData = function (object, data) {
+        var a = data.split('.'),
+            k = a[0];
+
+        if (a.length > 1 ) {
+            a.splice(0,1);
+
+            return this._fetchData(object[k], a.join('.'));
+        } else {
+            return object[k];
         }
     };
 

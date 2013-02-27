@@ -549,12 +549,17 @@ define(['logManager',
 
         switch(command) {
             case ROW_COMMAND_DELETE:
-                this.onRowDelete(aRow, id, aData);
+                this._onRowDelete(id, aData);
                 break;
             case ROW_COMMAND_EDIT:
                 this._onRowEdit(aRow, id, aData);
                 break;
         }
+    };
+
+    DataGridView.prototype._onRowDelete = function (id, aData) {
+        this.deleteObjects([id]);
+        this.onRowDelete(id, aData);
     };
 
     DataGridView.prototype.$_editSaveCancel = $('<i class="icon-ok editSave"></i> <i class="icon-remove editCancel"></i>');
@@ -699,8 +704,8 @@ define(['logManager',
         this.logger.warning("onColumnsAutoDetected is not overridden... " + JSON.stringify(columnDefs));
     };
 
-    DataGridView.prototype.onRowDelete = function (rowIndex, id, aData) {
-        this.deleteObjects([id]);
+    DataGridView.prototype.onRowDelete = function (id, aData) {
+        this.logger.warning("onRowDelete is not overridden... ID:'" + id + "'\r\naData:" + JSON.stringify(aData));
     };
 
     DataGridView.prototype.onRowEdit = function (id, oData, nData) {
