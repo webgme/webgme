@@ -43,6 +43,10 @@ define([ "util/assert" ], function (ASSERT) {
                     this.keys.push(key);
                     this.length++;
                 },
+                removeItem : function(key){
+                    ASSERT(typeof key === "string");
+                    delete this.data[key];
+                },
                 key : function(index){
                     return this.keys[index];
                 }
@@ -117,7 +121,7 @@ define([ "util/assert" ], function (ASSERT) {
             for(var i=0;i<storage.length;i++){
                 var key = storage.key(i);
                 var keyArray = key.split(SEPARATOR);
-                ASSERT(keyArray.length !== 3);
+                ASSERT(keyArray.length === 3);
                 if(keyArray[0] === database){
                     if(keyArray[1] === project){
                         namesToRemove.push(key);

@@ -35,6 +35,8 @@ requirejs([
             server = null,
             clientOne = null,
             clientTwo = null,
+            projectOne = null,
+            projectTwo = null,
             firstSetObjects = [
                 {_id:'#0',data:"one"},
                 {_id:'#1',data:"two"},
@@ -237,45 +239,27 @@ requirejs([
         }
 
         function endTest(){
-            console.log('successfully ending test');
+            console.log('successfully ending testing');
             setTimeout(function(){
                 server.close();
                 throw 'finished';
             },1000);
         }
 
-        connectToProject(clientOne,function(projectOne){
-            writeObjects(projectOne,firstSetObjects,function(){
-                checkProjectNames(clientOne,['smoketest'],function(){
-                    connectToProject(clientTwo,function(projectTwo){
-                        checkProjectNames(clientTwo,['smoketest'],function(){
-                            checkFsync(clientOne,function(){
-                                checkFsync(clientTwo,function(){
-                                    checkFsync(projectOne,function(){
-                                        checkFsync(projectTwo,function(){
-                                            checkServerClose(clientOne,function(){
-                                                writeObjects(projectTwo,secondSetObjects,function(){
-                                                    projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
-                                                        console.log('loadObject',err,object);
-                                                        if(err.indexOf('discon') !== -1){
-                                                            checkServerReopen(projectTwo,function(){
-                                                                projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
-                                                                    console.log('loadObject -2-',err,object);
-                                                                    if(!err && object){
-                                                                        checkObjects(projectOne,secondSetObjects,function(){
-                                                                            checkObjects(projectTwo,firstSetObjects,function(){
-                                                                                endTest();
-                                                                            });
-                                                                        });
-                                                                    } else {
-                                                                        throw new Error('loadObject-2- failed');
-                                                                    }
-                                                                });
-                                                            });
-                                                        } else {
-                                                            throw new Error('loadObject failed');
-                                                        }
-                                                    });
+        function basicConnectionTest(callback){
+            connectToProject(clientOne,function(p){
+                projectOne = p;
+                writeObjects(projectOne,firstSetObjects,function(){
+                    checkProjectNames(clientOne,['smoketest'],function(){
+                        connectToProject(clientTwo,function(p){
+                            projectTwo = p;
+                            checkProjectNames(clientTwo,['smoketest'],function(){
+                                checkFsync(clientOne,function(){
+                                    checkFsync(clientTwo,function(){
+                                        checkFsync(projectOne,function(){
+                                            checkFsync(projectTwo,function(){
+                                                checkObjects(projectOne,firstSetObjects,function(){
+                                                    callback();
                                                 });
                                             });
                                         });
@@ -285,6 +269,126 @@ requirejs([
                         });
                     });
                 });
+            });
+        }
+
+        function basicServerRestartTest(callback){
+            checkServerClose(clientOne,function(){
+                writeObjects(projectTwo,secondSetObjects,function(){
+                    projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
+                        console.log('basicServerCloseTest->loadObject->1',err,object);
+                        if(err.indexOf('discon') !== -1){
+                            checkServerReopen(projectTwo,function(){
+                                projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
+                                    console.log('basicServerCloseTest->loadObject->2',err,object);
+                                    if(!err && object){
+                                        callback();
+                                    } else {
+                                        throw new Error('basicServerCloseTest->loadObject->2 failed');
+                                    }
+                                });
+                            });
+                        } else {
+                            throw new Error('basicServerCloseTest->loadObject->1 failed');
+                        }
+                    });
+                });
+            });
+        }
+
+        function basicConnectedTest(callback){
+            checkObjects(projectOne,firstSetObjects,function(){
+                checkObjects(projectOne,secondSetObjects,function(){
+                    checkObjects(projectTwo,firstSetObjects,function(){
+                        checkObjects(projectTwo,secondSetObjects,function(){
+                            callback();
+                        });
+                    });
+                });
+            });
+        }
+
+        function basicBranchTesting(callback){
+            projectOne.setBranchHash("smoketest","",firstSetObjects[0]._id,function(err){
+                console.log('basicBranchTesting->setBranchHash->1',err);
+                if(!err){
+                    callback();
+                } else {
+                    throw new Error('basicBranchTesting -1- failed');
+                }
+            });
+        }
+
+        function testEnding(callback){
+            projectOne.closeProject(function(err){
+                console.log('testEnding->closeProject->1',err);
+                if(!err){
+                    projectOne = null;
+                    projectTwo.closeProject(function(err){
+                        console.log('testEnding->closeProject->2',err);
+                        if(!err){
+                            projectTwo = null;
+                            clientOne.closeDatabase(function(err){
+                                console.log('testEnding->closeDatabase->1',err);
+                                if(!err){
+                                    clientTwo.deleteProject('smoketest',function(err){
+                                        console.log('testEnding->deleteProject',err);
+                                        if(!err){
+                                            clientTwo.closeDatabase(function(err){
+                                                console.log('testEnding->closeDatabase->2',err);
+                                                if(!err){
+                                                    callback();
+                                                } else {
+                                                    throw new Error('testEnding -5- failed');
+                                                }
+                                            });
+                                        } else {
+                                            throw new Error('testEnding -4- failed');
+                                        }
+                                    });
+                                } else {
+                                    throw new Error('testEnding -3- failed');
+                                }
+                            });
+                        } else {
+                            throw new Error('testEnding -2- failed');
+                        }
+                    });
+                } else {
+                    throw new Error('testEnding -1- failed');
+                }
+            });
+        }
+
+        function testOne(callback){
+            //connecting two clients having a server restart...
+            basicConnectionTest(function(){
+                basicServerRestartTest(function(){
+                    basicConnectedTest(function(){
+                        testEnding(function(){
+                            console.log('***testOne succeeded***');
+                            callback();
+                        });
+                    });
+                });
+            });
+        }
+
+        function testTwo(callback){
+            basicConnectionTest(function(){
+                basicBranchTesting(function(){
+                    testEnding(function(){
+                        console.log('***testTwo succeeded***');
+                        callback();
+                    });
+                });
+            });
+        }
+
+
+        testOne(function(){
+            testTwo(function(){
+                endTest();
             });
         });
 });

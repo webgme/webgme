@@ -263,7 +263,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             var ownId = GUID();
             if(projects[project]){
                 registerProject(ownId,project);
-                callback(projects[project]);
+                callback(null,projects[project]);
             } else {
                 if(socketConnected){
                     var guid = GUID();
