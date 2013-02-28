@@ -10,12 +10,12 @@ define(['logManager',
 
     var ModelEditorControl;
 
-    ModelEditorControl = function (myClient, myModelEditor) {
+    ModelEditorControl = function (params) {
         var self = this;
 
-        this._client = myClient;
-        this._modelEditorView = myModelEditor;
-        this._modelEditorView._client = myClient;
+        this._client = params.client;
+        this._modelEditorView = params.widget;
+        this._modelEditorView._client = this._client;
 
         this._editModeMeta = false;
 

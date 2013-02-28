@@ -30,13 +30,13 @@ define(['logManager',
             throw ("DesignerControl can not be created");
         }
 
-        if (options.designerCanvas === undefined) {
+        if (options.widget === undefined) {
             this.logger.error("DesignerControl's DesignerCanvas is not specified...");
             throw ("DesignerControl can not be created");
         }
 
         //initialize core collections and variables
-        this.designerCanvas = options.designerCanvas;
+        this.designerCanvas = options.widget;
 
         this._client = options.client;
         this._selfPatterns = {};

@@ -8,14 +8,6 @@ define([  'logManager',
     'js/Client/ClientMaster',
     'js/ObjectBrowser/TreeBrowserControl',
     'js/ObjectBrowser/JSTreeBrowserWidget',
-    'js/ModelEditor/HTML/ModelEditorControl',
-    'js/ModelEditor/HTML/ModelEditorView',
-    'js/GraphViz/GraphVizControl',
-    'js/GraphViz/GraphVizView',
-    'js/ModelEditor2/ModelEditorControl',
-    'js/ModelEditor2/ModelEditorView',
-    'js/SimpleGraph/SVGGraphCommitCtrl',
-    'js/SimpleGraph/SVGGraphView',
     'js/PartBrowser/PartBrowserView',
     'js/PartBrowser/PartBrowserControl',
     'js/Project/ProjectPanel',
@@ -25,27 +17,15 @@ define([  'logManager',
     'js/Project/ProjectTitleView',
     'js/SetEditor/SetEditorView',
     'js/SetEditor/SetEditorControl',
-    'js/ModelEditor3/ModelDesignerCanvas',
-    'js/ModelEditor3/ModelDesignerControl',
-    'js/SetEditor2/SetEditorCanvas',
-    'js/SetEditor2/SetEditorControl',
     'js/LoggerStatus/LoggerStatus',
-    'js/HierarchyGridView/HierarchyGridViewCanvas',
-    'js/HierarchyGridView/HierarchyGridViewControl'], function (logManager,
+    'js/VisualizerPanel/VisualizerPanel',
+    'text!js/Visualizers.json'], function (logManager,
                                             commonUtil,
                                             util,
                                             Client,
                                             Core,
                                             TreeBrowserControl,
                                             JSTreeBrowserWidget,
-                                            ModelEditorControl,
-                                            ModelEditorView,
-                                            GraphVizControl,
-                                            GraphVizView,
-                                            ModelEditorControl2,
-                                            ModelEditorView2,
-                                            CommitCtrl,
-                                            CommitView,
                                             PartBrowserView,
                                             PartBrowserControl,
                                             ProjectPanel,
@@ -55,13 +35,9 @@ define([  'logManager',
                                             ProjectTitleView,
                                             SetEditorView,
                                             SetEditorControl,
-                                            ModelDesignerCanvas,
-                                            ModelDesignerControl,
-                                            SetEditor2Canvas,
-                                            SetEditor2Control,
                                             LoggerStatus,
-                                            HierarchyGridViewCanvas,
-                                            HierarchyGridViewControl) {
+                                            VisualizerPanel,
+                                            VisualizersJSON) {
 
     if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -86,24 +62,15 @@ define([  'logManager',
 
     }
 
-    var client,
-        proxy = null,
-    /*tDynaTree,*/
+    var proxy = null,
         tJSTree,
-        modelEditorSVG,
-        modelEditorHTML,
+        mainWidget,
         doConnect,
         lastContainerWidth = 0,
         lastContainerHeight = 0,
         resizeMiddlePane,
-        graphViz,
-        setActiveVisualizer,
-        modelEditorView,
         mainController,
-        mainView,
         currentNodeId = null,
-        commitView,
-        commitCtrl,
         partBrowserController,
         partBrowserView,
         projectPanel,
@@ -112,7 +79,9 @@ define([  'logManager',
         networkStatusControl,
         projectTitleView,
         setEditorView,
-        setEditorControl;
+        setEditorControl,
+        visualizerPanel,
+        visArray;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -123,55 +92,20 @@ define([  'logManager',
         var cW = $("#contentContainer").width(),
             cH = $("#contentContainer").height(),
             eW = 0,
-            eH = 0,
-            horizontalSplit = false;
+            eH = 0;
+
         if (cW !== lastContainerWidth || cH !== lastContainerHeight) {
             $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
             lastContainerWidth = cW;
             lastContainerHeight = cH;
 
-            //by default lay out in vertical split
-            /*eW = Math.floor($("#middlePane").width() / 2);
-             eH = Math.floor($("#middlePane").height());*/
-
-            /*if (eW < 560) {
-             //inner children has to be laid out under each other (horizontal split)
-             eW = Math.floor($("#middlePane").width());
-             eH = Math.floor($("#middlePane").height() / 2);
-             horizontalSplit = true;
-             }*/
-
-            /*$("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-             $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);*/
-
-            /******************/
             eW = Math.floor($("#middlePane").width());
             eH = Math.floor($("#middlePane").height());
 
-            $("#modelEditorContainer1").outerWidth(eW).outerHeight(eH);
-            $("#modelEditorContainer2").outerWidth(eW).outerHeight(eH);
+            $("#mainWidgetContainer").outerWidth(eW).outerHeight(eH);
 
-            /******************/
-
-            //set container position correctly
-            /*if (horizontalSplit === true) {
-             $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").outerHeight() + $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").position().left});
-             } else {
-             $("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
-             }*/
-
-            //$("#modelEditorContainer2").offset({ "top": $("#modelEditorContainer1").position().top, "left": $("#modelEditorContainer1").outerWidth() + $("#modelEditorContainer1").position().left });
-
-            if (modelEditorView) {
-                if ($.isFunction(modelEditorView.parentContainerSizeChanged)) {
-                    modelEditorView.parentContainerSizeChanged(eW, eH);
-                }
-            }
-
-            if (mainView) {
-                if ($.isFunction(mainView.parentContainerSizeChanged)) {
-                    mainView.parentContainerSizeChanged(eW, eH);
-                }
+            if (visualizerPanel) {
+                visualizerPanel.widgetContainerSizeChanged(eW, eH);
             }
         }
     };
@@ -184,62 +118,13 @@ define([  'logManager',
     //and call if for the first time as well
     resizeMiddlePane();
 
-    setActiveVisualizer = function (visualizer) {
-        //destroy current controller and visualizer
-        if (mainController && mainController.destroy) {
-            mainController.destroy();
-        }
-        if (mainView && mainView.destroy) {
-            mainView.destroy();
-        }
-
-        $("#visualizerPanel").find('a[class="btn-env"]').parent().removeClass('active');
-        $("#visualizerPanel").find('a[class="btn-env"][id="' + visualizer + '"]').parent().addClass('active');
-
-        mainController = null;
-        mainView = null;
-        if (visualizer === "ModelEditor") {
-            mainView = new ModelEditorView("modelEditorHtml");
-            mainController = new ModelEditorControl(proxy, mainView);
-        } else if (visualizer === "ModelEditor2") {
-            mainView = new ModelEditorView2("modelEditorHtml");
-            mainController = new ModelEditorControl2(proxy, mainView);
-        } else if (visualizer === "GraphViz") {
-            mainView = new GraphVizView("modelEditorHtml");
-            mainController = new GraphVizControl(proxy, mainView);
-        } else if (visualizer === "DesignerCanvas_Model") {
-            mainView = new ModelDesignerCanvas("modelEditorHtml");
-            mainController = new ModelDesignerControl({"client": proxy,
-                                                       "designerCanvas": mainView});
-        } else if (visualizer === "SetEditorCanvas") {
-            mainView = new SetEditor2Canvas("modelEditorHtml");
-            mainController = new SetEditor2Control({"client": proxy,
-                                    "designerCanvas": mainView});
-        } else if (visualizer === "HierarchyGridViewControl") {
-            mainView = new HierarchyGridViewCanvas("modelEditorHtml");
-            mainController = new HierarchyGridViewControl({"client": proxy,
-                "widget": mainView});
-        }
-
-        if (currentNodeId) {
-            if (mainController) {
-                mainController.selectedObjectChanged(currentNodeId);
-            }
-        }
-    };
-
-    $("#visualizerPanel").find('a[class="btn-env"]').click(function (event) {
-        var vis = $(this).attr("id");
-        setActiveVisualizer(vis);
-        event.stopPropagation();
-    });
-
     new LoggerStatus("panLoggerStatus");
 
     doConnect = function (callback) {
 
 
-        var options = commonUtil.combinedserver;
+        var options = commonUtil.combinedserver,
+            i;
         if (proxy === null) {
             proxy = new Core({
                 proxy: location.host + options.projsrv,
@@ -264,6 +149,9 @@ define([  'logManager',
                 if (setEditorControl) {
                     setEditorControl.selectedObjectChanged(currentNodeId);
                 }
+                if (visualizerPanel) {
+                    visualizerPanel.selectedObjectChanged(currentNodeId);
+                }
             });
             proxy.addEventListener(proxy.events.ACTOR_CHANGED, function () {
                 if (projectTitleView) {
@@ -275,9 +163,9 @@ define([  'logManager',
             tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
 
             //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-            //modelEditorHTML = new WidgetManager(client, $("#modelEditorHtml"));
-            //modelEditorView = new ModelEditorView("modelEditorHtml");
-            //modelEditorHTML = new ModelEditorControl(client, modelEditorView);
+            //mainWidget = new WidgetManager(client, $("#mainWidget"));
+            //modelEditorView = new ModelEditorView("mainWidget");
+            //mainWidget = new ModelEditorControl(client, modelEditorView);
             //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
 
             //hide GraphViz first and hook up radio button
@@ -300,6 +188,15 @@ define([  'logManager',
 
             projectTitleView = new ProjectTitleView("projectInfoContainer");
 
+            visualizerPanel = new VisualizerPanel({"containerElement": "visualizerPanel",
+                                                   "client": proxy,
+                                                   "widgetContainer": "mainWidget"});
+
+            visArray = JSON.parse(VisualizersJSON);
+            for (i = 0; i < visArray.length; i += 1) {
+                visualizerPanel.add(visArray[i]);
+            }
+
             //TESTING part
             if (DEBUG === true) {
                 $('#leftPane').append("<div class=\"sidePaneWidget\"><div class=\"header\">TESTING</div><div id=\"tetingpanel\"><input id=\"testingbtn1\" value=\"test1\" type=\"button\"><input id=\"testingbtn2\" value=\"test2\" type=\"button\"><input id=\"testingbtn3\" value=\"test3\" type=\"button\"></div></div>");
@@ -321,7 +218,7 @@ define([  'logManager',
         start : function () {
             doConnect(function (err) {
                 if (!err) {
-                    setActiveVisualizer("ModelEditor2");
+                    visualizerPanel.setActiveVisualizer("ModelEditor2");
                 }
             });
         }

@@ -40,13 +40,13 @@ define(['logManager',
             throw ("SetEditorControl can not be created");
         }
 
-        if (options.designerCanvas === undefined) {
+        if (options.widget === undefined) {
             this.logger.error("SetEditorControl's DesignerCanvas is not specified...");
             throw ("SetEditorControl can not be created");
         }
 
         //initialize core collections and variables
-        this.designerCanvas = options.designerCanvas;
+        this.designerCanvas = options.widget;
         //in set edit mode DRAG & COPY is not enabled
         this.designerCanvas.enableDragCopy(false);
 

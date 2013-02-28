@@ -27,38 +27,12 @@
             <div id="leftPane" class="pull-left">
                 <div class="sidePaneWidget">
                     <div class="header">Visualizer</div>
-                    <div id="visualizerPanel">
-                        <ul class="nav nav-pills nav-stacked">
-                            <li class="center pointer">
-                                <a class="btn-env" id="ModelEditor">Model Editor</a>
-                            </li>
-                            <li class="center pointer">
-                                <a class="btn-env" id="GraphViz">Graph Visualizer</a>
-                            </li>
-                            <li class="center pointer">
-                                <a class="btn-env" id="ModelEditor2">Model Editor #2</a>
-                            </li>
-                            <li class="center pointer">
-                                <a class="btn-env" id="DesignerCanvas_Model">ModelEditor #3</a>
-                            </li>
-                            <li class="center pointer">
-                                <a class="btn-env" id="SetEditorCanvas">SetEditor</a>
-                            </li>
-                            <li class="center pointer">
-                                <a class="btn-env" id="HierarchyGridViewControl">GridView - Containment</a>
-                            </li>
-                        </ul>
-                    </div>
+                    <div id="visualizerPanel"></div>
                 </div>
                 <div class="sidePaneWidget">
                     <div class="header">Project</div>
                     <div id="projectHistoryPanel"></div>
                 </div>
-                <!--<div class="sidePaneWidget">
-                    <div class="header">Commit Browser</div>
-                    <div id="commitbrowser"></div>
-                </div>
-                -->
                 <div class="sidePaneWidget">
                     <div class="header">Part browser</div>
                     <div id="pPartBrowser"></div>
@@ -69,11 +43,8 @@
                 </div>
             </div>
             <div id="middlePane" class="pull-left" style="overflow: hidden">
-                    <div id="modelEditorContainer1" style="overflow: auto; float: left; position: absolute;">
-                        <div id="modelEditorSVG"></div>
-                    </div>
-                    <div id="modelEditorContainer2" style="overflow: auto;float: left; position: absolute;">
-                        <div id="modelEditorHtml"></div>
+                    <div id="mainWidgetContainer" style="overflow: auto;float: left; position: absolute;">
+                        <div id="mainWidget"></div>
                     </div>
             </div>
             <div id="rightPane" class="pull-right">
