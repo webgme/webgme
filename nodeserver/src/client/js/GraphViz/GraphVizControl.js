@@ -10,11 +10,11 @@ define(['logManager',
 
     var GraphVizControl;
 
-    GraphVizControl = function (myClient, myGraphVizView) {
+    GraphVizControl = function (params) {
         var self = this;
 
-        this._client = myClient;
-        this._graphVizView = myGraphVizView;
+        this._client = params.client;
+        this._graphVizView = params.widget;
 
         this._logger = logManager.create("GraphVizControl");
         this._logger.debug("Created");

@@ -10,11 +10,11 @@ define(['logManager',
 
     var ModelEditorControl;
 
-    ModelEditorControl = function (myClient, myModelEditor) {
+    ModelEditorControl = function (params) {
         var self = this;
 
-        this._client = myClient;
-        this._modelEditorView = myModelEditor;
+        this._client = params.client;
+        this._modelEditorView = params.widget;
 
         this._logger = logManager.create("HTML_ModelEditorControl");
         this._logger.debug("Created");
