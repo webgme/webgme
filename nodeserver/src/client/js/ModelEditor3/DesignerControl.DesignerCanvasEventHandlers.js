@@ -3,7 +3,7 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
-    'js/DiagramDesigner/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames) {

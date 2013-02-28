@@ -1,6 +1,6 @@
 "use strict";
 
-define(['js/DiagramDesigner/NodePropertyNames'], function (nodePropertyNames) {
+define(['js/NodePropertyNames'], function (nodePropertyNames) {
 
     var HierarchyGridViewControlDataGridViewEventHandlers;
 

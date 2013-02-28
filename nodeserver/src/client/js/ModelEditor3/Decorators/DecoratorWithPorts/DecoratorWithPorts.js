@@ -3,16 +3,16 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
+    'js/NodePropertyNames',
     'js/DiagramDesigner/DecoratorBase',
     'text!js/ModelEditor3/Decorators/DecoratorWithPorts/DecoratorWithPortsTemplate.html',
-    'js/DiagramDesigner/NodePropertyNames',
     'js/ModelEditor3/Decorators/DecoratorWithPorts/Port',
     'css!ModelEditor3CSS/Decorators/DecoratorWithPorts/DecoratorWithPorts'], function (logManager,
                                                           util,
                                                           CONSTANTS,
+                                                          nodePropertyNames,
                                                           DecoratorBase,
                                                           decoratorWithPortsTemplate,
-                                                          nodePropertyNames,
                                                           Port) {
 
     var DecoratorWithPorts,
