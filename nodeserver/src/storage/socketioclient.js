@@ -29,20 +29,26 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
 
         function clearDbCallbacks(){
+            var myCallbacks = [];
             for(var i in getDbStatusCallbacks){
-                var cb = getDbStatusCallbacks[i].cb;
+                myCallbacks.push(getDbStatusCallbacks[i]);
                 clearTimeout(getDbStatusCallbacks[i].to);
-                delete getDbStatusCallbacks[i];
-                cb(null,status);
+            }
+            getDbStatusCallbacks = {};
+            for(i=0;i<myCallbacks.length;i++){
+                myCallbacks[i].cb(null,status);
             }
         }
 
         function clearCallbacks(){
+            var myCallbacks = [];
             for(var i in callbacks){
-                var cb = callbacks[i].cb;
+                myCallbacks.push(callbacks[i]);
                 clearTimeout(callbacks[i].to);
-                delete callbacks[i];
-                cb(ERROR_DISCONNECTED);
+            }
+            callbacks = {};
+            for(i=0;i<myCallbacks.length;i++){
+                callbacks[i].cb(ERROR_DISCONNECTED);
             }
         }
 
@@ -101,15 +107,10 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     socket = IO.connect(options.host+":"+options.port,{
                         'connect timeout': 10,
                         'reconnection delay': 1,
-                        'force new connection': true
+                        'force new connection': true,
+                        'reconnect': false
                     });
 
-                    socket.on('reconnect',function(){
-                        console.log("WOA!!!");
-                    });
-                    socket.on('reconnecting',function(){
-                        console.log('reconnecting');
-                    });
                     socket.on('connect',function(){
                         socketConnected = true;
                         if(firstConnection){
@@ -151,6 +152,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         socketConnected = false;
                         clearDbCallbacks();
                         clearCallbacks();
+                        socket.socket.reconnect();
                     });
                 }
 

@@ -62,7 +62,7 @@ requirejs([
 
         server = new SERVER(new LOCAL({
             database: "smoketest",
-            timeout: 10000,
+            timeout: 60000,
             local: "memory"
         }),
             {
@@ -74,7 +74,7 @@ requirejs([
         clientOne = new FS(new CLIENT({
             host: 'http://localhost',
             port: testport,
-            timeout: 10000,
+            timeout: 60000,
             type: 'node'
         }),
             {});
@@ -161,7 +161,7 @@ requirejs([
                             console.log('checkServerClose->getDatabaseStatus',err,newstatus);
                             if(!err && newstatus && newstatus !== oldstatus){
                                 canGoOn = true;
-                                callback();
+                                setTimeout(callback,2000);
                             } else {
                                 throw new Error('checkServerClose -4- failed');
                             }
@@ -197,7 +197,7 @@ requirejs([
                                 throw new Error('checkServerReopen -4- failed');
                             }
                         });
-                        server.close();
+                        server.open();
                         setTimeout(function(){
                             if(!canGoOn){
                                 throw new Error('checkServerReopen -3- failed');
@@ -211,6 +211,29 @@ requirejs([
                     throw new Error('checkServerReopen -1- failed');
                 }
             });
+        }
+
+        function checkObjects(project,objects,callback){
+            var count = objects.length;
+            function load(index){
+                project.loadObject(objects[index]._id,function(err,object){
+                    console.log('checkObjects->loadObject',index,err,object);
+                    if(!err && object){
+                        if(JSON.stringify(object) === JSON.stringify(objects[index])){
+                            if(--count === 0){
+                                callback();
+                            }
+                        } else {
+                            throw new Error('checkObjects -2- failed');
+                        }
+                    } else {
+                        throw new Error('checkObjects -1- failed');
+                    }
+                });
+            }
+            for(var i=0;i<objects.length;i++){
+                load(i);
+            }
         }
 
         function endTest(){
@@ -236,7 +259,18 @@ requirejs([
                                                         console.log('loadObject',err,object);
                                                         if(err.indexOf('discon') !== -1){
                                                             checkServerReopen(projectTwo,function(){
-                                                                endTest();
+                                                                projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
+                                                                    console.log('loadObject -2-',err,object);
+                                                                    if(!err && object){
+                                                                        checkObjects(projectOne,secondSetObjects,function(){
+                                                                            checkObjects(projectTwo,firstSetObjects,function(){
+                                                                                endTest();
+                                                                            });
+                                                                        });
+                                                                    } else {
+                                                                        throw new Error('loadObject-2- failed');
+                                                                    }
+                                                                });
                                                             });
                                                         } else {
                                                             throw new Error('loadObject failed');

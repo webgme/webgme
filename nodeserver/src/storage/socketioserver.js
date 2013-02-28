@@ -238,6 +238,11 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                         delete _references[todelete[i]];
                     }
                 });
+
+                socket.on('bmeg',function(){
+                    console.log('bmeg...');
+                    socket.disconnect();
+                });
             });
         }
 
@@ -245,7 +250,11 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
             //disconnect clients
             if(_socket){
-                _socket.sockets.emit('disconnect');
+                //_socket.sockets.emit('disconnect');
+                _socket.sockets.clients().forEach(function (socket){
+                    socket.disconnect();
+                });
+                _socket.server.close();
                 _socket = null;
             }
 

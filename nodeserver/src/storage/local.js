@@ -24,46 +24,46 @@ define([ "util/assert" ], function (ASSERT) {
         options.local    = options.local    || "memory";
 
         var storage  = null,
-            database = options.database;
+            database = options.database,
+            storageOk = false;
+
+        if(options.local === "memory"){
+            storageOk = true;
+            storage = {
+                length : 0,
+                keys : [],
+                data : {},
+                getItem : function(key){
+                    ASSERT(typeof key === "string");
+                    return this.data[key];
+                },
+                setItem : function(key,object){
+                    ASSERT(typeof key === "string" && typeof object === "string");
+                    this.data[key] = object;
+                    this.keys.push(key);
+                    this.length++;
+                },
+                key : function(index){
+                    return this.keys[index];
+                }
+            };
+        } else {
+            if(options.local === "local"){
+                if(localStorage){
+                    storageOk = true;
+                    storage = localStorage;
+                }
+            }
+            if(options.local == "session"){
+                if(sessionStorage){
+                    storageOk = true;
+                    storage = sessionStorage;
+                }
+            }
+        }
 
         function openDatabase (callback) {
             ASSERT(typeof callback === "function");
-            var storageOk = false;
-            if(options.local === "memory"){
-                storageOk = true;
-                storage = {
-                    length : 0,
-                    keys : [],
-                    data : {},
-                    getItem : function(key){
-                        ASSERT(typeof key === "string");
-                        return this.data[key];
-                    },
-                    setItem : function(key,object){
-                        ASSERT(typeof key === "string" && typeof object === "string");
-                        this.data[key] = object;
-                        this.keys.push(key);
-                        this.length++;
-                    },
-                    key : function(index){
-                        return this.keys[index];
-                    }
-                };
-            } else {
-                if(options.local === "local"){
-                    if(localStorage){
-                        storageOk = true;
-                        storage = localStorage;
-                    }
-                }
-                if(options.local == "session"){
-                    if(sessionStorage){
-                        storageOk = true;
-                        storage = sessionStorage;
-                    }
-                }
-            }
-
             if(!storageOk){
                 callback(new Error('the expected storage is unavailable'));
             } else {

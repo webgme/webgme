@@ -8,7 +8,7 @@ var requirejs = require("requirejs");
 
 requirejs.config({
 	nodeRequire: require,
-	baseUrl: ".."
+	baseUrl: "../.."
 });
 
 requirejs([ "storage/mongo" ], function (Mongo) {
