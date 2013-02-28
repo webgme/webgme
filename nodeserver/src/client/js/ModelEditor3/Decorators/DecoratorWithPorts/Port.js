@@ -1,11 +1,6 @@
 "use strict";
 
-define(['logManager',
-    'text!js/ModelEditor3/Decorators/DecoratorWithPorts/PortLeftTmpl.html',
-    'text!js/ModelEditor3/Decorators/DecoratorWithPorts/PortRightTmpl.html',
-    'css!ModelEditor3CSS/Decorators/DecoratorWithPorts/Port'], function (logManager,
-                                              modelPortLeftTmpl,
-                                              modelPortRightTmpl) {
+define(['logManager'], function (logManager) {
 
     var Port,
         CONNECTOR_CLASS = ".connector",
@@ -36,9 +31,14 @@ define(['logManager',
         this.logger.debug("Created");
     };
 
-    Port.prototype._DOMBaseLeftTemplate = $(modelPortLeftTmpl);
+    Port.prototype._DOMPortBase = $('<div  id="__ID__" class="port" data-id="__ID__"></div>');
+    Port.prototype._DOMTitleWrapper = $('<div class="title-wrapper"><span class="title">__NAME__</span></div>');
+    Port.prototype._DOMDot = $('<span class="dot" data-id="__ID__" data-or="E20"></span>');
+    Port.prototype._DOMConnector = $('<div class="connector"></div>');
 
-    Port.prototype._DOMBaseRightTemplate = $(modelPortRightTmpl);
+    Port.prototype._DOMBaseLeftTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone()).append(Port.prototype._DOMTitleWrapper.clone());
+
+    Port.prototype._DOMBaseRightTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
 
     Port.prototype._initialize = function () {
         var self = this,
