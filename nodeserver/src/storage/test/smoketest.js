@@ -31,7 +31,8 @@ requirejs([
         FS,
         CLIENT){
 
-        var server = null,
+        var testport = 6666,
+            server = null,
             clientOne = null,
             clientTwo = null,
             firstSetObjects = [
@@ -65,21 +66,21 @@ requirejs([
             local: "memory"
         }),
             {
-                port:888
+                port:testport
             });
 
         server.open();
 
         clientOne = new FS(new CLIENT({
             host: 'http://localhost',
-            port: '888',
+            port: testport,
             timeout: 10000,
             type: 'node'
         }),
             {});
         clientTwo = new FS(new CLIENT({
             host: 'http://localhost',
-            port: '888',
+            port: testport,
             timeout: 10000,
             type: 'node'
         }),
@@ -139,13 +140,114 @@ requirejs([
             });
         }
 
+        function checkFsync(object,callback){
+            object.fsyncDatabase(function(err){
+                console.log('checkFsync->fsyncDatabase',err);
+                if(!err){
+                    callback();
+                } else {
+                    throw new Error('checkFsync -1- failed');
+                }
+            });
+        }
+
+        function checkServerClose(object,callback){
+            object.getDatabaseStatus(null,function(err,oldstatus){
+                console.log('checkServerClose->getDatabaseStatus-1-',err,oldstatus);
+                if(!err && oldstatus){
+                    if(oldstatus.indexOf('discon') === -1){
+                        var canGoOn = false;
+                        object.getDatabaseStatus(oldstatus,function(err,newstatus){
+                            console.log('checkServerClose->getDatabaseStatus',err,newstatus);
+                            if(!err && newstatus && newstatus !== oldstatus){
+                                canGoOn = true;
+                                callback();
+                            } else {
+                                throw new Error('checkServerClose -4- failed');
+                            }
+                        });
+                        server.close();
+                        setTimeout(function(){
+                            if(!canGoOn){
+                                throw new Error('checkServerClose -3- failed');
+                            }
+                        },10000);
+
+                    } else {
+                        throw new Error('checkServerClose -2- failed');
+                    }
+                } else {
+                    throw new Error('checkServerClose -1- failed');
+                }
+            });
+        }
+
+        function checkServerReopen(object,callback){
+            object.getDatabaseStatus(null,function(err,oldstatus){
+                console.log('checkServerReopen->getDatabaseStatus-1-',err,oldstatus);
+                if(!err && oldstatus){
+                    if(oldstatus.indexOf('discon') !== -1){
+                        var canGoOn = false;
+                        object.getDatabaseStatus(oldstatus,function(err,newstatus){
+                            console.log('checkServerReopen->getDatabaseStatus',err,newstatus);
+                            if(!err && newstatus && newstatus !== oldstatus){
+                                canGoOn = true;
+                                callback();
+                            } else {
+                                throw new Error('checkServerReopen -4- failed');
+                            }
+                        });
+                        server.close();
+                        setTimeout(function(){
+                            if(!canGoOn){
+                                throw new Error('checkServerReopen -3- failed');
+                            }
+                        },10000);
+
+                    } else {
+                        throw new Error('checkServerReopen -2- failed');
+                    }
+                } else {
+                    throw new Error('checkServerReopen -1- failed');
+                }
+            });
+        }
+
+        function endTest(){
+            console.log('successfully ending test');
+            setTimeout(function(){
+                server.close();
+                throw 'finished';
+            },1000);
+        }
+
         connectToProject(clientOne,function(projectOne){
             writeObjects(projectOne,firstSetObjects,function(){
                 checkProjectNames(clientOne,['smoketest'],function(){
                     connectToProject(clientTwo,function(projectTwo){
                         checkProjectNames(clientTwo,['smoketest'],function(){
-                           console.log('test succeeded');
-                            setTimeout(function(){server.close();throw 'finished';},1000);
+                            checkFsync(clientOne,function(){
+                                checkFsync(clientTwo,function(){
+                                    checkFsync(projectOne,function(){
+                                        checkFsync(projectTwo,function(){
+                                            checkServerClose(clientOne,function(){
+                                                writeObjects(projectTwo,secondSetObjects,function(){
+                                                    projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
+                                                        console.log('loadObject',err,object);
+                                                        if(err.indexOf('discon') !== -1){
+                                                            checkServerReopen(projectTwo,function(){
+                                                                endTest();
+                                                            });
+                                                        } else {
+                                                            throw new Error('loadObject failed');
+                                                        }
+                                                    });
+                                                });
+                                            });
+                                        });
+                                    });
+                                });
+                            });
                         });
                     });
                 });

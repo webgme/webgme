@@ -12,8 +12,10 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         options.failsafe = options.failsafe || "memory";
         options.failsafefrequency = options.failsafefrequency || 10000;
 
+
         var exceptionErrors = [],
             fsId = "FS",
+            dbId = options.database || "noID",
             SEPARATOR = "$",
             STATUS_CONNECTED = "connected",
             pendingStorage = {},

@@ -99,13 +99,16 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
                 function IOReady(){
                     socket = IO.connect(options.host+":"+options.port,{
-                        'connect timeout': 100,
-                        'reconnection delay': 100,
+                        'connect timeout': 10,
+                        'reconnection delay': 1,
                         'force new connection': true
                     });
 
                     socket.on('reconnect',function(){
                         console.log("WOA!!!");
+                    });
+                    socket.on('reconnecting',function(){
+                        console.log('reconnecting');
                     });
                     socket.on('connect',function(){
                         socketConnected = true;
@@ -157,8 +160,12 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         IOReady();
                     });
                 } else {
-                    IO = require("socket.io-client");
-                    IOReady();
+                    /*IO = require("socket.io-client");
+                    IOReady();*/
+                    require(['socket.io-client'],function(io){
+                        IO = io;
+                        IOReady();
+                    });
                 }
             }
         }
