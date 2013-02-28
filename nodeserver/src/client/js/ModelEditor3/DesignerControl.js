@@ -3,7 +3,7 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
-    'js/DiagramDesigner/NodePropertyNames',
+    'js/NodePropertyNames',
     'js/ModelEditor3/DesignerControl.DesignerCanvasEventHandlers',
     'js/ModelEditor3/DesignerControl.DEBUG'], function (logManager,
                                                         util,

@@ -3,15 +3,15 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
+    'js/NodePropertyNames',
     'js/DiagramDesigner/DecoratorBase',
     'text!js/ModelEditor3/Decorators/DefaultDecorator/DefaultDecoratorTemplate.html',
-    'js/DiagramDesigner/NodePropertyNames',
     'css!ModelEditor3CSS/Decorators/DefaultDecorator/DefaultDecorator'], function (logManager,
                                                        util,
                                                        CONSTANTS,
+                                                       nodePropertyNames,
                                                        DecoratorBase,
-                                                       defaultDecoratorTemplate,
-                                                       nodePropertyNames) {
+                                                       defaultDecoratorTemplate) {
 
     var DefaultDecorator,
         __parent__ = DecoratorBase,
