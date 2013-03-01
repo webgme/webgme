@@ -64,7 +64,7 @@ requirejs([
 
         server = new SERVER(new LOCAL({
             database: "smoketest",
-            timeout: 60000,
+            timeout: 10000,
             local: "memory"
         }),
             {
@@ -83,7 +83,7 @@ requirejs([
         clientTwo = new FS(new CLIENT({
             host: 'http://localhost',
             port: testport,
-            timeout: 10000,
+            timeout: 60000,
             type: 'node'
         }),
             {});
@@ -194,7 +194,7 @@ requirejs([
                             console.log('checkServerReopen->getDatabaseStatus',err,newstatus);
                             if(!err && newstatus && newstatus !== oldstatus){
                                 canGoOn = true;
-                                callback();
+                                setTimeout(callback,1000);
                             } else {
                                 throw new Error('checkServerReopen -4- failed');
                             }
@@ -204,7 +204,7 @@ requirejs([
                             if(!canGoOn){
                                 throw new Error('checkServerReopen -3- failed');
                             }
-                        },10000);
+                        },60000);
 
                     } else {
                         throw new Error('checkServerReopen -2- failed');
@@ -242,7 +242,7 @@ requirejs([
             console.log('successfully ending testing');
             setTimeout(function(){
                 server.close();
-                throw 'finished';
+                process.exit(0);
             },1000);
         }
 
@@ -280,16 +280,16 @@ requirejs([
                         if(err.indexOf('discon') !== -1){
                             checkServerReopen(projectTwo,function(){
                                 projectOne.loadObject(secondSetObjects[0]._id,function(err,object){
-                                    console.log('basicServerCloseTest->loadObject->2',err,object);
+                                    console.log('basicServerRestartTest->loadObject->2',err,object);
                                     if(!err && object){
                                         callback();
                                     } else {
-                                        throw new Error('basicServerCloseTest->loadObject->2 failed');
+                                        throw new Error('basicServerRestartTest->loadObject->2 failed');
                                     }
                                 });
                             });
                         } else {
-                            throw new Error('basicServerCloseTest->loadObject->1 failed');
+                            throw new Error('basicServerRestartTest->loadObject->1 failed');
                         }
                     });
                 });
@@ -309,10 +309,70 @@ requirejs([
         }
 
         function basicBranchTesting(callback){
-            projectOne.setBranchHash("smoketest","",firstSetObjects[0]._id,function(err){
+            var branch = "*smoketest";
+            projectOne.setBranchHash(branch,"",firstSetObjects[0]._id,function(err){
                 console.log('basicBranchTesting->setBranchHash->1',err);
                 if(!err){
-                    callback();
+                    projectOne.getBranchHash(branch,"",function(err,newhash){
+                        console.log('basicBranchTesting->getBranchHash->1',err,newhash);
+                        if(!err && newhash){
+                            if(newhash === firstSetObjects[0]._id){
+                                projectOne.getBranchNames(function(err,names){
+                                    console.log('basicBranchTesting->getBranchNames->1',err,names);
+                                    if(!err && names){
+                                        if(names.length === 1 && names[0] === branch){
+                                            projectOne.getBranchHash(branch,firstSetObjects[0]._id,function(err,newhash){
+                                                console.log('basicBranchTesting->getBranchHash->2',err,newhash);
+                                                if(!err && newhash){
+                                                    if(newhash === firstSetObjects[1]._id){
+                                                        projectOne.setBranchHash(branch,firstSetObjects[1]._id,"",function(err){
+                                                            console.log('basicBranchTesting->setBranchHash->3',err);
+                                                            if(!err){
+                                                                projectTwo.getBranchNames(function(err,names){
+                                                                    console.log('basicBranchTesting->getBranchNames->2',err,names);
+                                                                    if(!err && names){
+                                                                        if(names.length === 0){
+                                                                            callback();
+                                                                        } else {
+                                                                            throw new Error('basicBranchTesting -11- failed');
+                                                                        }
+                                                                    } else {
+                                                                        throw new Error('basicBranchTesting -10- failed');
+                                                                    }
+                                                                });
+                                                            } else {
+                                                                throw new Error('basicBranchTesting -9- failed');
+                                                            }
+                                                        });
+                                                    } else {
+                                                        throw new Error('basicBranchTesting -8- failed');
+                                                    }
+                                                } else {
+                                                    throw new Error('basicBranchTesting -7- failed');
+                                                }
+                                            });
+                                            projectTwo.setBranchHash(branch,firstSetObjects[0]._id,firstSetObjects[1]._id,function(err){
+                                                console.log('basicBranchTesting->setBranchHash->2',err);
+                                                if(!err){
+                                                    //nothing to do we wait for return with the other client
+                                                } else {
+                                                    throw new Error('basicBranchTesting -6- failed');
+                                                }
+                                            });
+                                        } else {
+                                            throw new Error('basicBranchTesting -5- failed');
+                                        }
+                                    } else {
+                                        throw new Error('basicBranchTesting -4- failed');
+                                    }
+                                });
+                            } else {
+                                throw new Error('basicBranchTesting -3- failed');
+                            }
+                        } else {
+                            throw new Error('basicBranchTesting -2- failed');
+                        }
+                    });
                 } else {
                     throw new Error('basicBranchTesting -1- failed');
                 }

@@ -40,12 +40,19 @@ define([ "util/assert" ], function (ASSERT) {
                 setItem : function(key,object){
                     ASSERT(typeof key === "string" && typeof object === "string");
                     this.data[key] = object;
-                    this.keys.push(key);
-                    this.length++;
+                    if(this.keys.indexOf(key) === -1){
+                        this.keys.push(key);
+                        this.length++;
+                    }
                 },
                 removeItem : function(key){
                     ASSERT(typeof key === "string");
                     delete this.data[key];
+                    var index = this.keys.indexOf(key);
+                    if(index>-1){
+                        this.keys.splice(index,1);
+                        this.length--;
+                    }
                 },
                 key : function(index){
                     return this.keys[index];
@@ -161,7 +168,11 @@ define([ "util/assert" ], function (ASSERT) {
             function loadObject (hash, callback) {
                 ASSERT(typeof hash === "string" && HASH_REGEXP.test(hash));
 
-                callback(null,JSON.parse(storage.getItem(database+SEPARATOR+project+SEPARATOR+hash)));
+                var object = storage.getItem(database+SEPARATOR+project+SEPARATOR+hash);
+                if(object){
+                    object = JSON.parse(object);
+                }
+                callback(null,object);
             }
 
             function insertObject (object, callback) {
@@ -224,24 +235,68 @@ define([ "util/assert" ], function (ASSERT) {
                     var keyArray = storage.key(i).split(SEPARATOR);
                     ASSERT(keyArray.length === 3);
                     if(BRANCH_REGEXP.test(keyArray[2])){
-                        branchNames.push(keyArray[2]);
+                        if(keyArray[0] === database && keyArray[1] === project){
+                            branchNames.push(keyArray[2]);
+                        }
                     }
                 }
                 callback(null,branchNames);
             }
 
             function getBranchHash (branch, oldhash, callback) {
-                ASSERT(typeof branch === "string" && BRANCH_REGEXP.find(branch));
-                ASSERT(typeof oldhash === "string" && HASH_REGEXP.find(oldhash));
+                ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+                ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
                 ASSERT(typeof callback === "function");
 
+                var hash = storage.getItem(database+SEPARATOR+project+SEPARATOR+branch);
+                if(hash){
+                    hash = JSON.parse(hash);
+                }
+                hash = (hash && hash.hash) || "";
+                if(hash !== oldhash){
+                    callback(null,hash);
+                } else {
+                    setTimeout(function(){
+                        hash = storage.getItem(database+SEPARATOR+project+SEPARATOR+branch);
+                        if(hash){
+                            hash = JSON.parse(hash);
+                        }
+                        hash = (hash && hash.hash) || "";
+                        callback(null,hash);
+                    },options.timeout);
+                }
             }
 
             function setBranchHash (branch, oldhash, newhash, callback) {
-                ASSERT(typeof branch === "string" && BRANCH_REGEXP.find(branch));
-                ASSERT(typeof oldhash === "string" && HASH_REGEXP.find(oldhash));
-                ASSERT(typeof newhash === "string" && HASH_REGEXP.find(newhash));
+                ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
+                ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
+                ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
                 ASSERT(typeof callback === "function");
+
+                var hash = storage.getItem(database+SEPARATOR+project+SEPARATOR+branch);
+                if(hash){
+                    hash = JSON.parse(hash);
+                }
+                hash = (hash && hash.hash) || "";
+
+                if(oldhash === newhash){
+                    if(oldhash === hash){
+                        callback(null);
+                    } else {
+                        callback('branch has mismatch');
+                    }
+                } else {
+                    if(oldhash === hash){
+                        if(newhash === ""){
+                            storage.removeItem(database+SEPARATOR+project+SEPARATOR+branch);
+                        } else {
+                            storage.setItem(database+SEPARATOR+project+SEPARATOR+branch,JSON.stringify({_id:branch,hash:newhash}));
+                        }
+                        callback(null);
+                    } else {
+                        callback('branch has mismatch');
+                    }
+                }
             }
         }
 

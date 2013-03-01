@@ -428,11 +428,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 if(socketConnected){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('getBranchNames',project,function(err){
+                    socket.emit('getBranchNames',project,function(err,names){
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            callback(err,names);
                         }
                     });
                 } else {
@@ -445,11 +445,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 if(socketConnected){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('insertObject',project,branch,oldhash,function(err){
+                    socket.emit('getBranchHash',project,branch,oldhash,function(err,newhash){
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
-                            callback(err);
+                            callback(err,newhash);
                         }
                     });
                 } else {
@@ -462,7 +462,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 if(socketConnected){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('insertObject',project,branch,oldhash,newhash,function(err){
+                    socket.emit('setBranchHash',project,branch,oldhash,newhash,function(err){
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
