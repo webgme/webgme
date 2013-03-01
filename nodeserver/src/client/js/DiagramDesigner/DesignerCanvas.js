@@ -7,6 +7,7 @@ define(['logManager',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager',
     'raphaeljs',
+    'loader',
     'js/DiagramDesigner/DesignerCanvas.OperatingModes',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
     'js/DiagramDesigner/DesignerCanvas.Toolbar',
@@ -24,6 +25,7 @@ define(['logManager',
                                                       SelectionManager,
                                                       DragManager,
                                                       raphaeljs,
+                                                      Loader,
                                                       DesignerCanvasOperatingModes,
                                                       DesignerCanvasDEBUG,
                                                       DesignerCanvasToolbar,
@@ -213,6 +215,7 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.destroy = function () {
+        this.__loader.destroy();
         this.$el.empty();
         this.$el.attr("style", "");
     };
@@ -337,6 +340,9 @@ define(['logManager',
                 self._onBackgroundDrop(ui);
             }
         });
+
+
+        this.__loader = new Loader({"containerElement": this.$el.parent()});
     };
 
     DesignerCanvas.prototype._resizeCanvas = function (width, height) {
@@ -921,6 +927,17 @@ define(['logManager',
     };
 
     /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
+
+    /************** WAITPROGRESS *********************/
+    DesignerCanvas.prototype.showPogressbar = function () {
+        this.__loader.start();
+    };
+
+    DesignerCanvas.prototype.hidePogressbar = function () {
+        this.__loader.stop();
+    };
+
+    /************** END OF - WAITPROGRESS *********************/
 
     /************** API REGARDING TO MANAGERS ***********************/
 

@@ -1,6 +1,8 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+    'loader'], function (logManager,
+                          Loader) {
 
     var VisualizerPanel;
 
@@ -50,6 +52,10 @@ define(['logManager'], function (logManager) {
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this.__loader = new Loader({"containerElement": this._el.parent()});
+        this.__loader.foreGroundColor("rgba(0,0,0,0.8)");
+        this.__loader.setSize(30);
     };
 
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer) {
@@ -114,7 +120,9 @@ define(['logManager'], function (logManager) {
             this._ul.append(li);
 
             if (menuDesc.widgetJS && menuDesc.controlJS) {
-                a.append(' <i class="icon-progress"></i>');
+
+
+                this._incQueue();
 
                 require([menuDesc.widgetJS,
                     menuDesc.controlJS],
@@ -123,19 +131,32 @@ define(['logManager'], function (logManager) {
                         self._visualizers[menuDesc.id] = {"widget": widgetClass,
                             "control": controlClass};
 
-                        a.find('> i').remove();
+                        self._decQueue();
                     },
                     function (err) {
                         //for any error store undefined in the list and the default decorator will be used on the canvas
                         self.logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
-                        a.find('> i').attr({"class": "icon-warning-sign",
-                            "title": "Failed to download source"});
+                        a.append(' <i class="icon-warning-sign" title="Failed to download source"></i>');
+                        self._decQueue();
                     });
             } else {
                 a.append(' <i class="icon-warning-sign"></i>');
 
                 this._logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing widgetJS or controlJS");
             }
+        }
+    };
+
+    VisualizerPanel.prototype._incQueue = function () {
+        this._dlQueue = this._dlQueue || 0;
+        this._dlQueue += 1;
+        this.__loader.start();
+    };
+
+    VisualizerPanel.prototype._decQueue = function () {
+        this._dlQueue -= 1;
+        if (this._dlQueue === 0) {
+            this.__loader.stop();
         }
     };
 

@@ -196,6 +196,8 @@ define(['logManager',
 
             this.designerCanvas.setTitle(desc.name);
 
+            this.designerCanvas.showPogressbar();
+
             this._territoryId = this._client.addUI(this, true);
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
@@ -408,6 +410,8 @@ define(['logManager',
         this.delayedEvents = [];
 
         this.designerCanvas.endUpdate();
+
+        this.designerCanvas.hidePogressbar();
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 

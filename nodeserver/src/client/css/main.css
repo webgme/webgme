@@ -139,6 +139,7 @@ body {
 }
 
 .sidePaneWidget {
+    position: relative;
     padding: 3px;
     margin-bottom: 2px;
     background-color: whiteSmoke;

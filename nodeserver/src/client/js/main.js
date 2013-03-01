@@ -36,6 +36,7 @@ require.config({
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "bezierHelper" : 'js/BezierHelper',
+        "loader": "js/Loader/LoaderView",
 
         "ModelEditorHTML": "js/ModelEditor/HTML",
         "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
@@ -59,7 +60,8 @@ require.config({
         "DiagramDesignerCSS": "css/DiagramDesigner",
         "ModelEditor3CSS": "css/ModelEditor3",
         "SetEditor2CSS": "css/SetEditor2",
-        "DataGridCSS": "css/DataGrid"
+        "DataGridCSS": "css/DataGrid",
+        "LoaderCSS": "css/Loader"
     },
     shim: {
         'jquery-ui': ['jquery'],
