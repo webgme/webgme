@@ -6,6 +6,7 @@
 
 define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
+    var BRANCH_REGEXP = new RegExp("^\\*[0-9a-zA-Z_]*$");
 
     function Database(_database,options){
         ASSERT(typeof options === "object" && typeof _database === "object");
@@ -205,6 +206,41 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 });
             }
 
+            function getBranchNames(callback){
+                project.getBranchNames(function(err,names){
+                    //we need the locally stored names either way
+                    var locals = [];
+                    for(var i in pendingStorage[projectName]){
+                        if(BRANCH_REGEXP.test(i)){
+                            locals.push(i);
+                        }
+                    }
+
+                    if(err){
+                        errorMode();
+                        if(exceptionErrors.indexOf(err) !== -1){
+                            callback(err);
+                        } else {
+                            callback(null,locals);
+                        }
+                    } else {
+                        for(i=0;i<names.length;i++){
+                            if(locals.indexOf(names[i]) === -1){
+                                locals.push(names[i]);
+                            }
+                        }
+                        callback(err,locals);
+                    }
+                });
+            }
+
+            function getBranchHash(branch,oldhash,callback){
+                project.getBranchHash(branch,oldhash,callback);
+            }
+
+            function setBranchHash(branch,oldhash,newhash,callback){
+                project.setBranchHash(branch,oldhash,newhash,callback);
+            }
 
             /*
             function getDatabaseStatus(oldstatus,callback){
