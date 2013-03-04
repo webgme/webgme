@@ -1,3 +1,13 @@
+/* ORIGINAL COLORS */
+/*** BLUE VERSION */
+/*$loader-border-color: #0088CC;
+$loader-fill-color: #00ABE0;
+
+$loader-border-color2: #009CD8;
+$loader-fill-color2: #00BAE7;
+
+$loader-border-color3: #00B4E4;
+$loader-fill-color3: #d0d5e8;*/
 div.loader-progressbar {
   zoom: 1;
   /* Increase this for a bigger symbol*/

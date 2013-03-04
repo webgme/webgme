@@ -1,25 +1,54 @@
+/* ORIGINAL COLORS */
+$loader-border-color: #8490c6;
+$loader-fill-color: #aeb5da;
+
+$loader-border-color2: #9fa6d2;
+$loader-fill-color2: #c0c5e1;
+
+$loader-border-color3: #b9bedd;
+$loader-fill-color3: #d0d5e8;
+
+$loader-border-color4: #e7eaf4;
+$loader-fill-color4: #eef1f8;
+
+$loader-border-color5: #ececf5;
+$loader-fill-color5: #f2f3f9;
+
+$loader-border-color6: #f4f5fa;
+$loader-fill-color6: #f6f9fb;
+
+/*** BLUE VERSION */
+/*$loader-border-color: #0088CC;
+$loader-fill-color: #00ABE0;
+
+$loader-border-color2: #009CD8;
+$loader-fill-color2: #00BAE7;
+
+$loader-border-color3: #00B4E4;
+$loader-fill-color3: #d0d5e8;*/
+
 div.loader-progressbar {
   zoom: 1; /* Increase this for a bigger symbol*/
   width: 16px;
   height: 16px;
 
-  background: linear-gradient(0deg, #f4f5fa 1px, transparent 0, transparent 8px, #f4f5fa 8px),   /* 6  */
-  linear-gradient(90deg, #f4f5fa 1px, #f6f9fb 0, #f6f9fb 3px, #f4f5fa 3px),
+  background: linear-gradient(0deg, $loader-border-color6 1px, transparent 0, transparent 8px, $loader-border-color6 8px),   /* 6  */
+  linear-gradient(90deg, $loader-border-color6 1px, $loader-fill-color6 0, $loader-fill-color6 3px, $loader-border-color6 3px),
 
-  linear-gradient(0deg, #ececf5 1px, transparent 0, transparent 8px, #ececf5 8px),   /* 5  */
-  linear-gradient(90deg, #ececf5 1px, #f2f3f9 0, #f2f3f9 3px, #ececf5 3px),
+  linear-gradient(0deg, $loader-border-color5 1px, transparent 0, transparent 8px, $loader-border-color5 8px),   /* 5  */
+  linear-gradient(90deg, $loader-border-color5 1px, $loader-fill-color5 0, $loader-fill-color5 3px, $loader-border-color5 3px),
 
-  linear-gradient(0deg, #e7eaf4 1px, transparent 0, transparent 8px, #e7eaf4 8px),   /* 4  */
-  linear-gradient(90deg, #e7eaf4 1px, #eef1f8 0, #eef1f8 3px, #e7eaf4 3px),
+  linear-gradient(0deg, $loader-border-color4 1px, transparent 0, transparent 8px, $loader-border-color4 8px),   /* 4  */
+  linear-gradient(90deg, $loader-border-color4 1px, $loader-fill-color4 0, $loader-fill-color4 3px, $loader-border-color4 3px),
 
-  linear-gradient(0deg, #b9bedd 1px, transparent 0, transparent 10px, #b9bedd 10px), /* 3  */
-  linear-gradient(90deg, #b9bedd 1px, #d0d5e8 0, #d0d5e8 3px, #b9bedd 3px),
+  linear-gradient(0deg, $loader-border-color3 1px, transparent 0, transparent 10px, $loader-border-color3 10px), /* 3  */
+  linear-gradient(90deg, $loader-border-color3 1px, $loader-fill-color3 0, $loader-fill-color3 3px, $loader-border-color3 3px),
 
-  linear-gradient(0deg, #9fa6d2 1px, transparent 0, transparent 15px, #9fa6d2 15px), /* 2  */
-  linear-gradient(90deg, #9fa6d2 1px, #c0c5e1 0, #c0c5e1 3px, #9fa6d2 3px),
+  linear-gradient(0deg, $loader-border-color2 1px, transparent 0, transparent 15px, $loader-border-color2 15px), /* 2  */
+  linear-gradient(90deg, $loader-border-color2 1px, $loader-fill-color2 0, $loader-fill-color2 3px, $loader-border-color2 3px),
 
-  linear-gradient(0deg, #8490c6 1px, transparent 0, transparent 15px, #8490c6 15px), /* 1  */
-  linear-gradient(90deg, #8490c6 1px, #aeb5da 0, #aeb5da 3px, #8490c6 3px);
+  linear-gradient(0deg, $loader-border-color 1px, transparent 0, transparent 15px, $loader-border-color 15px), /* 1  */
+  linear-gradient(90deg, $loader-border-color 1px, $loader-fill-color 0, $loader-fill-color 3px, $loader-border-color 3px);
 
   background-repeat: no-repeat;
 
