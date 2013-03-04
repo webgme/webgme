@@ -7,7 +7,7 @@ define(['logManager',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager',
     'raphaeljs',
-    'loader',
+    'loaderCircles',
     'js/DiagramDesigner/DesignerCanvas.OperatingModes',
     'js/DiagramDesigner/DesignerCanvas.DEBUG',
     'js/DiagramDesigner/DesignerCanvas.Toolbar',
@@ -25,7 +25,7 @@ define(['logManager',
                                                       SelectionManager,
                                                       DragManager,
                                                       raphaeljs,
-                                                      Loader,
+                                                      LoaderCircles,
                                                       DesignerCanvasOperatingModes,
                                                       DesignerCanvasDEBUG,
                                                       DesignerCanvasToolbar,
@@ -342,7 +342,7 @@ define(['logManager',
         });
 
 
-        this.__loader = new Loader({"containerElement": this.$el.parent()});
+        this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
     };
 
     DesignerCanvas.prototype._resizeCanvas = function (width, height) {

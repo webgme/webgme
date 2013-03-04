@@ -1,31 +1,31 @@
 "use strict";
 
-define(['css!LoaderCSS/Loader'], function () {
+define(['css!LoaderCSS/LoaderCircles'], function () {
 
-    var LoaderView,
+    var LoaderCircles,
         CIRCLE_O_SHADOW_SIZE = 36,
         CIRCLE_BORDER_SIZE = 5,
         MIN_SIZE = 30,
         MAX_SIZE = 200,
         CIRCLE_I_SIZE_DIFF = 20;
 
-    LoaderView = function (params) {
+    LoaderCircles = function (params) {
 
         this._el = params.containerElement;
 
         if (this._el.length === 0) {
-            throw "LoaderView's container control with id:'" + params.containerElement + "' could not be found";
+            throw "LoaderCircles's container control with id:'" + params.containerElement + "' could not be found";
         }
 
         this._loaderBackgroundCssProps = {};
         this._loaderContentCssProps = {};
     };
 
-    LoaderView.prototype._initialize = function () {
+    LoaderCircles.prototype._initialize = function () {
         this._createElements();
     };
 
-    LoaderView.prototype._removeElements = function () {
+    LoaderCircles.prototype._removeElements = function () {
         if (this._loaderContainer) {
             this._loaderContainer.remove();
         }
@@ -37,7 +37,7 @@ define(['css!LoaderCSS/Loader'], function () {
         this._loaderBackground = null;
     };
 
-    LoaderView.prototype._createElements = function () {
+    LoaderCircles.prototype._createElements = function () {
         if (!this._loaderContainer) {
             this._loaderContainer = $('<div/>', { "class" : "loader-container" }).css(this._loaderContentCssProps);
 
@@ -66,26 +66,29 @@ define(['css!LoaderCSS/Loader'], function () {
             this._loaderContainer.append(this._circleOuter).append(this._circleInner);
 
             this._el.append(this._loaderBackground).append(this._loaderContainer);
+
+            //force reflow
+            this._el.width();
         }
     };
 
-    LoaderView.prototype.destroy = function () {
+    LoaderCircles.prototype.destroy = function () {
         this._removeElements();
     };
 
-    LoaderView.prototype.stop = function () {
+    LoaderCircles.prototype.stop = function () {
         this._removeElements();
     };
 
-    LoaderView.prototype.start = function () {
+    LoaderCircles.prototype.start = function () {
         this._createElements();
     };
 
-    LoaderView.prototype.foreGroundColor = function (color) {
+    LoaderCircles.prototype.foreGroundColor = function (color) {
         this._loaderContentCssProps["background-color"] = color;
     };
 
-    LoaderView.prototype.setSize = function (size) {
+    LoaderCircles.prototype.setSize = function (size) {
         var pSize = parseInt(size, 10);
 
         if (pSize < MIN_SIZE) {
@@ -99,5 +102,5 @@ define(['css!LoaderCSS/Loader'], function () {
         }
     };
 
-    return LoaderView;
+    return LoaderCircles;
 });

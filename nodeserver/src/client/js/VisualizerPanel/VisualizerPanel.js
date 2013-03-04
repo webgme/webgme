@@ -1,8 +1,9 @@
 "use strict";
 
 define(['logManager',
-    'loader'], function (logManager,
-                          Loader) {
+    'loaderProgressBar',
+    'css!VisualizerPanelCSS/VisualizerPanel'], function (logManager,
+                                    LoaderProgressBar) {
 
     var VisualizerPanel;
 
@@ -52,10 +53,6 @@ define(['logManager',
             event.stopPropagation();
             event.preventDefault();
         });
-
-        this.__loader = new Loader({"containerElement": this._el.parent()});
-        this.__loader.foreGroundColor("rgba(0,0,0,0.8)");
-        this.__loader.setSize(30);
     };
 
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer) {
@@ -109,7 +106,8 @@ define(['logManager',
     VisualizerPanel.prototype.add = function (menuDesc) {
         var li = $('<li class="center pointer"><a class="btn-env" id=""></a></li>'),
             a = li.find('> a'),
-            self = this;
+            self = this,
+            loaderDiv;
 
         if (this._visualizers[menuDesc.id]) {
             this._logger.warning("A visualizer with the ID '" + menuDesc.id + "' already exists...");
@@ -121,8 +119,11 @@ define(['logManager',
 
             if (menuDesc.widgetJS && menuDesc.controlJS) {
 
+                loaderDiv = $("<div/>", { "class": "vis-loader"});
 
-                this._incQueue();
+                li.loader = new LoaderProgressBar({"containerElement": loaderDiv});
+                li.loader.start();
+                a.append(loaderDiv);
 
                 require([menuDesc.widgetJS,
                     menuDesc.controlJS],
@@ -131,13 +132,13 @@ define(['logManager',
                         self._visualizers[menuDesc.id] = {"widget": widgetClass,
                             "control": controlClass};
 
-                        self._decQueue();
+                        self._removeLoader(li, loaderDiv);
                     },
                     function (err) {
                         //for any error store undefined in the list and the default decorator will be used on the canvas
                         self.logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
                         a.append(' <i class="icon-warning-sign" title="Failed to download source"></i>');
-                        self._decQueue();
+                        self._removeLoader(li, loaderDiv);
                     });
             } else {
                 a.append(' <i class="icon-warning-sign"></i>');
@@ -147,17 +148,11 @@ define(['logManager',
         }
     };
 
-    VisualizerPanel.prototype._incQueue = function () {
-        this._dlQueue = this._dlQueue || 0;
-        this._dlQueue += 1;
-        this.__loader.start();
-    };
-
-    VisualizerPanel.prototype._decQueue = function () {
-        this._dlQueue -= 1;
-        if (this._dlQueue === 0) {
-            this.__loader.stop();
-        }
+    VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
+        li.loader.stop();
+        li.loader.destroy();
+        delete li.loader;
+        loaderDiv.remove();
     };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {

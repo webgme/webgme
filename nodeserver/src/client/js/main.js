@@ -36,7 +36,8 @@ require.config({
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "bezierHelper" : 'js/BezierHelper',
-        "loader": "js/Loader/LoaderView",
+        "loaderCircles": "js/Loader/LoaderCircles",
+        "loaderProgressBar": "js/Loader/LoaderProgressBar",
 
         "ModelEditorHTML": "js/ModelEditor/HTML",
         "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
@@ -61,7 +62,8 @@ require.config({
         "ModelEditor3CSS": "css/ModelEditor3",
         "SetEditor2CSS": "css/SetEditor2",
         "DataGridCSS": "css/DataGrid",
-        "LoaderCSS": "css/Loader"
+        "LoaderCSS": "css/Loader",
+        "VisualizerPanelCSS": "css/VisualizerPanel"
     },
     shim: {
         'jquery-ui': ['jquery'],
