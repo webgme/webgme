@@ -22,7 +22,7 @@ html,body {
     user-select:none;
 }
 
-.unselectable {
+.user-select-off {
     -khtml-user-select:none;
     -moz-user-select:-moz-none;
     -webkit-user-select:none;
@@ -30,7 +30,7 @@ html,body {
     user-select:none;
 }
 
-.selectable {
+.user-select-on {
     -khtml-user-select: all;
     -moz-user-select:-moz-all;
     -webkit-user-select:all;
