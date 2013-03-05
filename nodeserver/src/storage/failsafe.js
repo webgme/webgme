@@ -162,7 +162,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         } else {
                             project.getDatabaseStatus(newstate,checkIfAvailable);
                         }
-                    }
+                    };
                     project.getDatabaseStatus(null,checkIfAvailable);
                 }
             }
@@ -285,7 +285,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             getDatabaseStatus: _database.getDatabaseStatus,
             openProject: openProject,
             deleteProject: deleteProject
-        }
+        };
     }
 
     return Database;

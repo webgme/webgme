@@ -44,16 +44,16 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		}
 
 		function closeDatabase (callback) {
-			ASSERT(typeof callback === "function");
-
 			if (mongo !== null) {
 				fsyncDatabase(function () {
 					mongo.close(function () {
 						mongo = null;
-						callback(null);
+						if (typeof callback === "function") {
+							callback(null);
+						}
 					});
 				});
-			} else {
+			} else if (typeof callback === "function") {
 				callback(null);
 			}
 		}
@@ -167,10 +167,10 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			});
 
 			function closeProject (callback) {
-				ASSERT(typeof callback === "function");
-
 				collection = null;
-				callback(null);
+				if (typeof callback === "function") {
+					callback(null);
+				}
 			}
 
 			function loadObject (hash, callback) {
