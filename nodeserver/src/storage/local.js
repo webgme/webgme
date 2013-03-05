@@ -124,8 +124,8 @@ define([ "util/assert" ], function (ASSERT) {
             ASSERT(typeof project === "string" && typeof callback === "function");
             ASSERT(PROJECT_REGEXP.test(project));
 
-            var namesToRemove = [];
-            for(var i=0;i<storage.length;i++){
+            var i, namesToRemove = [];
+            for(i=0;i<storage.length;i++){
                 var key = storage.key(i);
                 var keyArray = key.split(SEPARATOR);
                 ASSERT(keyArray.length === 3);
@@ -136,7 +136,7 @@ define([ "util/assert" ], function (ASSERT) {
                 }
             }
 
-            for(var i=0;i<namesToRemove.length;i++){
+            for(i=0;i<namesToRemove.length;i++){
                 storage.removeItem(namesToRemove[i]);
             }
             callback(null);
@@ -160,9 +160,9 @@ define([ "util/assert" ], function (ASSERT) {
             });
 
             function closeProject (callback) {
-                ASSERT(typeof callback === "function");
-
-                callback(null);
+                if(typeof callback === "function"){
+                    callback(null);
+                }
             }
 
             function loadObject (hash, callback) {
@@ -308,7 +308,7 @@ define([ "util/assert" ], function (ASSERT) {
             getProjectNames: getProjectNames,
             openProject: openProject,
             deleteProject: deleteProject
-        }
+        };
     }
 
     return Database;

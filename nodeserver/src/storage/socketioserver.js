@@ -37,7 +37,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                         _databaseOpened = true;
                         callback(null);
                     }
-                })
+                });
             }
         }
 
@@ -74,7 +74,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('fsyncDatabase', function(callback){
                     checkDatabase(function(err){
                         if(err){
-                            callback(err)
+                            callback(err);
                         } else {
                             _database.fsyncDatabase(callback);
                         }
@@ -84,7 +84,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('getProjectNames', function(callback){
                     checkDatabase(function(err){
                         if(err){
-                            callback(err)
+                            callback(err);
                         } else {
                             _database.getProjectNames(callback);
                         }
@@ -130,8 +130,9 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 });
 
                 socket.on('closeProject', function(projectName,callback){
+                    callback = callback || function() {};
                     checkProject(socket.id,projectName,function(err){
-                        if(err){
+                        if(err) {
                             callback(err);
                         } else {
                             var index = _references[projectName].indexOf(socket.id);
@@ -145,7 +146,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                                 callback(null);
                             }
                         }
-                    })
+                    });
                 });
 
                 socket.on('loadObject', function(projectName,hash,callback){
@@ -226,7 +227,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                                     todelete.push(i);
                                     var proj = _projects[i];
                                     delete _projects[i];
-                                    proj.closeProject(function(err){});
+                                    proj.closeProject(null);
                                 }
                             }
                         } else {
@@ -261,11 +262,11 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             if(_databaseOpened){
                 //close projects
                 for(var i in _projects){
-                    _projects[i].closeProject(function(err){});
+                    _projects[i].closeProject(null);
                 }
 
                 //close database
-                _database.closeDatabase(function(err){});
+                _database.closeDatabase(null);
             }
 
             _objects = {};
@@ -277,7 +278,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         return {
             open: open,
             close: close
-        }
+        };
     };
 
     return server;

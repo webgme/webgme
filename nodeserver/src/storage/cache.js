@@ -60,15 +60,13 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 		}
 
 		function closeDatabase (callback) {
-			ASSERT(typeof callback === "function");
-
 			dlock.lock(function () {
 				var n;
 				for (n in projects) {
 					projects[n].abort();
 				}
 				projects = {};
-				callback(null);
+				database.closeDatabase(callback);
 				dlock.unlock();
 			});
 		}
@@ -175,8 +173,6 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 			}
 
 			function abortProject (callback) {
-				ASSERT(typeof callback === "function");
-
 				if (project !== null) {
 					var p = project;
 					project = null;
@@ -198,17 +194,17 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 					cacheSize = 0;
 
 					p.closeProject(callback);
-				} else {
+				} else if (typeof callback === "function ") {
 					callback(null);
 				}
 			}
 
 			function closeProject (callback) {
-				ASSERT(typeof callback === "function" && refcount >= 1);
+				ASSERT(refcount >= 1);
 
 				if (--refcount === 0) {
 					abortProject(callback);
-				} else {
+				} else if (typeof callback === "function") {
 					callback(null);
 				}
 			}

@@ -103,7 +103,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     firstConnection = true;
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
 
-                function IOReady(){
+                var IOReady = function (){
                     socket = IO.connect(options.host+":"+options.port,{
                         'connect timeout': 10,
                         'reconnection delay': 1,
@@ -154,7 +154,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         clearCallbacks();
                         socket.socket.reconnect();
                     });
-                }
+                };
 
                 if(options.type === 'browser'){
                     require([options.host+":"+options.port+"/socket.io/socket.io.js"], function(){
@@ -173,7 +173,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function closeDatabase (callback) {
-            ASSERT(typeof callback === 'function');
+            callback = callback || function() {};
             if(socketConnected){
                 var guid = GUID();
                 callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -339,7 +339,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
 
             function closeProject(callback){
-                ASSERT(typeof callback === 'function');
+                callback = callback || function() {};
                 if(unRegisterProject(ownId,project)){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
@@ -483,7 +483,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             getProjectNames: getProjectNames,
             deleteProject: deleteProject,
             openProject: openProject
-        }
+        };
     }
     return Database;
 });
