@@ -133,20 +133,20 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			});
 		}
 
-		function deleteProject (project, callback) {
-			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
+		function deleteProject (name, callback) {
+			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(name));
 			ASSERT(typeof callback === "function");
 
-			mongo.dropCollection(project, callback);
+			mongo.dropCollection(name, callback);
 		}
 
-		function openProject (project, callback) {
+		function openProject (name, callback) {
 			ASSERT(mongo !== null && typeof callback === "function");
-			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(project));
+			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(name));
 
 			var collection = null;
 
-			mongo.collection(project, function (err, result) {
+			mongo.collection(name, function (err, result) {
 				if (err) {
 					callback(err);
 				} else {
@@ -322,7 +322,8 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			getDatabaseStatus: getDatabaseStatus,
 			getProjectNames: getProjectNames,
 			openProject: openProject,
-			deleteProject: deleteProject
+			deleteProject: deleteProject,
+			ID_NAME: "_id"
 		};
 	}
 

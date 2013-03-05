@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
  * 
  * Author: Miklos Maroti
  */
@@ -7,70 +7,113 @@
 define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CONFIG) {
 	"use strict";
 
-	var Cache = function (storage, options) {
-		ASSERT(storage !== null);
+	var Lock = function () {
+		var waiters = [];
 
-		options = CONFIG.copyOptions(CONFIG.cache, options);
-
-		var KEYNAME = storage.KEYNAME;
-		var missing = {};
-		var backup = {};
-		var cache = {};
-		var cacheSize = 0;
-
-		var open = function (callback) {
-			ASSERT(!storage.opened() && cacheSize === 0);
-
-			storage.open(callback);
-		};
-
-		var close = function (callback) {
-			ASSERT(storage.opened());
-
-			storage.close(function () {
-				for ( var key in missing) {
-					var callbacks = missing[key];
-
-					var cb;
-					while ((cb = callbacks.pop())) {
-						cb(new Error("storage closed"));
-					}
+		return {
+			lock: function (func) {
+				waiters.push(func);
+				if (waiters.length === 1) {
+					func();
 				}
+			},
 
-				missing = {};
-				backup = {};
-				cache = {};
-				cacheSize = 0;
-
-				callback();
-			});
-		};
-
-		var cacheInsert = function (key, obj) {
-			ASSERT(cache[key] === undefined && obj[KEYNAME] === key);
-
-			cache[key] = obj;
-			if (++cacheSize >= options.maxSize) {
-				backup = cache;
-				cache = {};
-				cacheSize = 0;
+			unlock: function () {
+				waiters.pop();
+				if (waiters.length >= 1) {
+					var func = waiters[0];
+					func();
+				}
 			}
 		};
+	};
 
-		var load = function (key, callback) {
-			ASSERT(typeof key === "string" && typeof callback === "function");
+	var Database = function (database, options) {
+		ASSERT(typeof database === "object" && typeof options === "object");
 
-			if (key.charAt(0) === "#") {
+		options.size = options.size || 2000;
+
+		var ID_NAME = database.ID_NAME;
+		var projects = {};
+		var dlock = new Lock();
+
+		function openProject (name, callback) {
+			ASSERT(typeof name === "string" && typeof callback === "function");
+
+			dlock.lock(function () {
+				if (typeof projects[name] !== "undefined") {
+					callback(null, projects[name].reopenProject());
+					dlock.unlock();
+				} else {
+					database.openProject(name, function (err, project) {
+						if (err) {
+							callback(err);
+						} else {
+							project = wrapProject(name, project);
+							projects[name] = project;
+							callback(null, project.reopenProject());
+						}
+						dlock.unlock();
+					});
+				}
+			});
+		}
+
+		function closeDatabase (callback) {
+			ASSERT(typeof callback === "function");
+
+			dlock.lock(function () {
+				var n;
+				for (n in projects) {
+					projects[n].abort();
+				}
+				projects = {};
+				callback(null);
+				dlock.unlock();
+			});
+		}
+
+		function deleteProject (name, callback) {
+			if (typeof projects[name] !== "undefined") {
+				projects[name].deleteProject();
+			}
+
+			database.deleteProject(name, callback);
+		}
+
+		function wrapProject (name, project) {
+			var refcount = 0;
+
+			var missing = {};
+			var backup = {};
+			var cache = {};
+			var cacheSize = 0;
+
+			function cacheInsert (key, obj) {
+				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
+
+				cache[key] = obj;
+				if (++cacheSize >= options.size) {
+					backup = cache;
+					cache = {};
+					cacheSize = 0;
+				}
+			}
+
+			var loadObject = function (key, callback) {
+				ASSERT(typeof key === "string" && typeof callback === "function");
+				ASSERT(project !== null);
+
 				var obj = cache[key];
-				if (obj === undefined) {
+				if (typeof obj === "undefined") {
 					obj = backup[key];
-					if (obj === undefined) {
+					if (typeof obj === "undefined") {
 						obj = missing[key];
-						if (obj === undefined) {
+						if (typeof obj === "undefined") {
 							obj = [ callback ];
 							missing[key] = obj;
-							storage.load(key, function (err, obj2) {
-								ASSERT(typeof obj2 === "object" || obj2 === undefined);
+							project.loadObject(key, function (err, obj2) {
+								ASSERT(typeof obj2 === "object" || typeof obj2 === "undefined");
 
 								if (obj.length !== 0) {
 									ASSERT(missing[key] === obj);
@@ -95,33 +138,29 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 					}
 				}
 
-				ASSERT(typeof obj === "object" && obj !== null && obj[KEYNAME] === key);
-				UTIL.immediateCallback(callback, null, obj);
-			} else {
-				storage.load(key, callback);
-			}
-		};
+				ASSERT(typeof obj === "object" && obj !== null && obj[ID_NAME] === key);
+				callback(null, obj);
+			};
 
-		var save = function (obj, callback) {
-			ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
+			function insertObject (obj, callback) {
+				ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
 
-			var key = obj[KEYNAME];
-			ASSERT(typeof key === "string");
+				var key = obj[ID_NAME];
+				ASSERT(typeof key === "string");
 
-			if (key.charAt(0) === "#") {
-				if (cache[key] !== undefined) {
-					UTIL.immediateCallback(callback);
+				if (typeof cache[key] !== "undefined") {
+					callback(null);
 					return;
 				} else {
 					var item = backup[key];
 					cacheInsert(key, obj);
 
-					if (item !== undefined) {
-						UTIL.immediateCallback(callback);
+					if (typeof item !== "undefined") {
+						callback(null);
 						return;
 					} else {
 						item = missing[key];
-						if (item !== undefined) {
+						if (typeof item !== "undefined") {
 							delete missing[key];
 
 							var cb;
@@ -131,71 +170,102 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 						}
 					}
 				}
+
+				project.insertObject(obj, callback);
 			}
 
-			storage.save(obj, callback);
-		};
+			function abortProject (callback) {
+				ASSERT(typeof callback === "function");
 
-		var remove = function (key, callback) {
-			ASSERT(typeof key === "string" && typeof callback === "function");
+				if (project !== null) {
+					var p = project;
+					project = null;
+					delete projects[name];
 
-			var item = cache[key];
+					var key, err = new Error("cache closed");
+					for (key in missing) {
+						var callbacks = missing[key];
 
-			delete cache[key];
-			delete backup[key];
+						var cb;
+						while ((cb = callbacks.pop())) {
+							cb(err);
+						}
+					}
 
-			var callbacks = missing[key];
-			if (callbacks) {
-				delete missing[key];
+					missing = {};
+					backup = {};
+					cache = {};
+					cacheSize = 0;
 
-				var cb;
-				while ((cb = callbacks.pop())) {
-					cb(null, null);
+					p.closeProject(callback);
+				} else {
+					callback(null);
 				}
 			}
 
-			storage.remove(key, callback);
-		};
+			function closeProject (callback) {
+				ASSERT(typeof callback === "function" && refcount >= 1);
 
-		var removeAll = function (callback) {
-			ASSERT(typeof callback === "function");
-
-			for ( var key in missing) {
-				var callbacks = missing[key];
-
-				var cb;
-				while ((cb = callbacks.pop())) {
-					cb(null, null);
+				if (--refcount === 0) {
+					abortProject(callback);
+				} else {
+					callback(null);
 				}
 			}
 
-			missing = {};
-			backup = {};
-			cache = {};
-			cacheSize = 0;
+			var deleteProject = function () {
+				var key;
+				for (key in missing) {
+					var callbacks = missing[key];
 
-			storage.removeAll(callback);
-		};
+					var cb;
+					while ((cb = callbacks.pop())) {
+						cb(null, null);
+					}
+				}
+
+				missing = {};
+				backup = {};
+				cache = {};
+				cacheSize = 0;
+			};
+
+			function reopenProject (callback) {
+				ASSERT(project !== null && refcount >= 0);
+
+				++refcount;
+				callback(null, {
+					fsyncDatabase: project.fsyncDatabase,
+					getDatabaseStatus: project.getDatabaseStatus,
+					closeProject: closeProject,
+					loadObject: loadObject,
+					insertObject: insertObject,
+					findHash: project.findHash,
+					dumpObjects: project.dumpObjects,
+					getBranchNames: project.getBranchNames,
+					getBranchHash: project.getBranchHash,
+					setBranchHash: project.setBranchHash
+				});
+			}
+
+			return {
+				reopenProject: reopenProject,
+				abortProject: abortProject,
+				deleteProject: deleteProject
+			};
+		}
 
 		return {
-			open: open,
-			opened: storage.opened,
-			close: close,
-			KEYNAME: KEYNAME,
-			load: load,
-			save: save,
-			remove: remove,
-			dumpAll: storage.dumpAll,
-			removeAll: removeAll,
-			searchId: storage.searchId,
-			fsync: storage.fsync,
-			find: storage.find, //TODO: it should work more like load, but for now it is okay as it is
-			requestPoll: storage.requestPoll,
-			createBranch: storage.createBranch,
-			deleteBranch: storage.deleteBranch,
-			updateBranch: storage.updateBranch
+			openDatabase: database.openDatabase,
+			closeDatabase: closeDatabase,
+			fsyncDatabase: database.fsyncDatabase,
+			getDatabaseStatus: database.getDatabaseStatus,
+			getProjectNames: database.getProjectNames,
+			openProject: openProject,
+			deleteProject: deleteProject,
+			ID_NAME: ID_NAME
 		};
 	};
 
-	return Cache;
+	return Database;
 });
