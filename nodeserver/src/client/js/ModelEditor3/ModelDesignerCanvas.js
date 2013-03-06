@@ -29,7 +29,7 @@ define(['logManager',
         __parent_proto__.initializeUI.apply(this, arguments);
         this.logger.debug("ModelDesignerCanvas.initializeUI");
 
-        var text = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, "ModelDesignerCanvas");
+        var text = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, "ModelEditor");
         text.attr({"fill": "#DEDEDE"});
     };
 
