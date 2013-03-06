@@ -30,6 +30,10 @@ define(['logManager'], function (logManager) {
         this._logger.warning("onBtnProjectOpenClick is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
     };
 
+    ProjectsView.prototype.onBtnProjectDeleteClick = function (params) {
+        this._logger.warning("onBtnProjectDeleteClick is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
+    };
+
     ProjectsView.prototype.render = function () {
         var it,
             len = this._orderedItemIds.length,
@@ -49,6 +53,8 @@ define(['logManager'], function (logManager) {
                 li.addClass('active');
             }
         }
+
+        this._showButtons(false);
     };
 
     ProjectsView.prototype._insertIntoOrderedListByKey = function (objId, key, orderedList, objList) {
@@ -93,6 +99,7 @@ define(['logManager'], function (logManager) {
         this._createProjectPanel = this._el.parent().find("#createProjectPanel");
 
         this._btnOpenProject = this._el.parent().find("#btnOpenProject");
+        this._btnDeleteProject = this._el.parent().find("#btnDeleteProject");
         this._btnCreateNewProject = this._el.parent().find("#btnCreateNewProject");
 
         this._btnNewProjectCancel = this._el.parent().find("#btnNewProjectCancel");
@@ -112,9 +119,9 @@ define(['logManager'], function (logManager) {
             self._ul.find('a[class="btn-env"][id="' + selectedId + '"]').parent().addClass('active');
 
             if (selectedId === self._actualId) {
-                self._btnOpenProject.addClass("disabled");
+                self._showButtons(false);
             } else {
-                self._btnOpenProject.removeClass("disabled");
+                self._showButtons(true);
             }
         });
 
@@ -122,6 +129,15 @@ define(['logManager'], function (logManager) {
             self._actualId = selectedId;
             self._btnOpenProject.addClass("disabled");
             self.onBtnProjectOpenClick({"id": selectedId});
+
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this._btnDeleteProject.on('click', function (event) {
+            self._actualId = selectedId;
+            self._btnDeleteProject.addClass("disabled");
+            self.onBtnProjectDeleteClick({"id": selectedId});
 
             event.stopPropagation();
             event.preventDefault();
@@ -181,6 +197,18 @@ define(['logManager'], function (logManager) {
                 self._btnNewProjectCreate.removeClass("disabled");
             }
         });
+    };
+
+    ProjectsView.prototype._showButtons = function (enabled) {
+        var showMethod = enabled === true ? "show" : "hide",
+            enableClass = enabled === true ? "removeClass" : "addClass",
+            btnList = [this._btnOpenProject, this._btnDeleteProject],
+            len = btnList.length;
+
+        while (len--) {
+            btnList[len][showMethod]();
+            btnList[len][enableClass]('disabled');
+        }
     };
 
     ProjectsView.prototype.onCreateNewProjectClick = function (projectName) {
