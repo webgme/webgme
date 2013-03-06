@@ -78,10 +78,12 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			}
 
 			var conns = mongo.serverConfig.allRawConnections();
-			ASSERT(Array.isArray(conns) && conns.length >= 1);
-
-			for ( var i = 0; i < conns.length; ++i) {
-				fsyncConnection(conns[i]);
+			if (conns instanceof Array && conns.length >= 1) {
+				for ( var i = 0; i < conns.length; ++i) {
+					fsyncConnection(conns[i]);
+				}
+			} else {
+				callback(new Error("not connected"));
 			}
 		}
 
@@ -134,7 +136,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 		}
 
 		function deleteProject (name, callback) {
-			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(name));
+			ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 			ASSERT(typeof callback === "function");
 
 			mongo.dropCollection(name, callback);
@@ -142,7 +144,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 		function openProject (name, callback) {
 			ASSERT(mongo !== null && typeof callback === "function");
-			ASSERT(typeof project === "string" && PROJECT_REGEXP.test(name));
+			ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 
 			var collection = null;
 

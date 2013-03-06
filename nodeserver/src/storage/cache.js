@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CONFIG) {
+define([ "util/assert" ], function (ASSERT) {
 	"use strict";
 
 	var Lock = function () {
@@ -31,7 +31,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 	var Database = function (database, options) {
 		ASSERT(typeof database === "object" && typeof options === "object");
 
-		options.size = options.size || 2000;
+		options.cache = options.cache || 2000;
 
 		var ID_NAME = database.ID_NAME;
 		var projects = {};
@@ -42,7 +42,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 
 			dlock.lock(function () {
 				if (typeof projects[name] !== "undefined") {
-					callback(null, projects[name].reopenProject());
+					projects[name].reopenProject(callback);
 					dlock.unlock();
 				} else {
 					database.openProject(name, function (err, project) {
@@ -51,7 +51,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 						} else {
 							project = wrapProject(name, project);
 							projects[name] = project;
-							callback(null, project.reopenProject());
+							project.reopenProject(callback);
 						}
 						dlock.unlock();
 					});
@@ -86,19 +86,20 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 			var backup = {};
 			var cache = {};
 			var cacheSize = 0;
+			var branches = {};
 
 			function cacheInsert (key, obj) {
 				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
 
 				cache[key] = obj;
-				if (++cacheSize >= options.size) {
+				if (++cacheSize >= options.cache) {
 					backup = cache;
 					cache = {};
 					cacheSize = 0;
 				}
 			}
 
-			var loadObject = function (key, callback) {
+			function loadObject (key, callback) {
 				ASSERT(typeof key === "string" && typeof callback === "function");
 				ASSERT(project !== null);
 
@@ -138,7 +139,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 
 				ASSERT(typeof obj === "object" && obj !== null && obj[ID_NAME] === key);
 				callback(null, obj);
-			};
+			}
 
 			function insertObject (obj, callback) {
 				ASSERT(typeof obj === "object" && obj !== null && typeof callback === "function");
@@ -209,7 +210,7 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 				}
 			}
 
-			var deleteProject = function () {
+			function deleteProject () {
 				var key;
 				for (key in missing) {
 					var callbacks = missing[key];
@@ -224,10 +225,56 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 				backup = {};
 				cache = {};
 				cacheSize = 0;
-			};
+			}
+
+			function getBranchHash (name, oldhash, callback) {
+				ASSERT(typeof name === "string" && typeof oldhash === "string" && typeof callback === "function");
+
+				var tag = name + "@" + oldhash;
+				var branch = branches[tag];
+				if (typeof branch === "undefined") {
+					branch = [ callback ];
+					branches[tag] = branch;
+
+					project.getBranchHash(name, oldhash, function (err, newhash) {
+						if (branches[tag] === branch) {
+							delete branches[tag];
+
+							var i;
+							for (i = 0; i < branch.length; i++) {
+								branch[i](err, newhash);
+							}
+						}
+					});
+				} else {
+					branch.push(callback);
+				}
+			}
+
+			function setBranchHash (name, oldhash, newhash, callback) {
+				ASSERT(typeof name === "string" && typeof oldhash === "string");
+				ASSERT(typeof newhash === "string" && typeof callback === "function");
+
+				project.setBranchHash(name, oldhash, newhash, function (err) {
+					if (!err) {
+						var prefix = name + "@", tag;
+						for (tag in branches) {
+							if (tag.substr(0, prefix.length) === prefix) {
+								var i, branch = branches[tag];
+								delete branches[tag];
+								for (i = 0; i < branch.length; i++) {
+									branch[i](null, newhash);
+								}
+							}
+						}
+					}
+
+					callback(err);
+				});
+			}
 
 			function reopenProject (callback) {
-				ASSERT(project !== null && refcount >= 0);
+				ASSERT(project !== null && refcount >= 0 && typeof callback === "function");
 
 				++refcount;
 				callback(null, {
@@ -239,8 +286,8 @@ define([ "core/assert", "core/util", "core/config" ], function (ASSERT, UTIL, CO
 					findHash: project.findHash,
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
-					getBranchHash: project.getBranchHash,
-					setBranchHash: project.setBranchHash
+					getBranchHash: getBranchHash,
+					setBranchHash: setBranchHash
 				});
 			}
 

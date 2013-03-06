@@ -78,7 +78,7 @@ requirejs([
 
             database.openProject("smoketest",function(err,p){
                 if(err){
-                    callback(err)
+                    callback(err);
                 } else {
                     project = p;
                     runningReads = numbOfParallelReads;
@@ -115,7 +115,7 @@ requirejs([
 
             database.openProject("smoketest",function(err,p){
                 if(err){
-                    callback(err)
+                    callback(err);
                 } else {
                     project = p;
                     runningReads = nusOfParallelWrites;
