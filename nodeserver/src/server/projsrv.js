@@ -227,13 +227,11 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                     _socket.sockets.clients().forEach(function (socket){
                         socket.disconnect();
                     });
-                    _socket.server.close();
                     _socket = null;
                 } else {
                     _socket.clients().forEach(function(socket){
                        socket.disconnect();
                     });
-                    _socket.server.close();
                     _socket = null;
                 }
             }

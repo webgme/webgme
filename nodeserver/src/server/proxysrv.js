@@ -80,7 +80,10 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
                                 callback(err);
                             } else {
                                 if(_projects[projectname]){
+                                    var namespace = _projects[projectname].info;
                                     _projects[projectname].project.close();
+                                    delete _socket.manager.namespaces[namespace];
+                                    delete _projects[projectname];
                                 }
                                 collection.drop();
                                 db.close();
