@@ -96,19 +96,21 @@ requirejs([ "storage/mongo", "storage/cache" ], function (Mongo, Cache) {
 					console.log("openProject", err);
 					project.getBranchNames(function (err, branches) {
 						console.log("getBranchNames", err, branches);
-						project.getBranchHash("*test", "#2", function (err, hash) {
+						project.getBranchHash("*test", "#1", function (err, hash) {
 							console.log("getBranchHash1", err, hash);
 						});
-						project.setBranchHash("*test", "#2", "#2", function (err) {
+						project.setBranchHash("*test", "#1", "#2", function (err) {
 							console.log("setBranchHash", err);
-							project.closeProject(function (err) {
-								console.log("closeProject", err);
-								database.closeDatabase(function (err) {
-									console.log("closeDatabase", err);
+							setTimeout(function () {
+								project.closeProject(function (err) {
+									console.log("closeProject", err);
+									database.closeDatabase(function (err) {
+										console.log("closeDatabase", err);
+									});
 								});
-							});
+							}, 1000);
 						});
-						project.getBranchHash("*test", "#1", function (err, hash) {
+						project.getBranchHash("*test", "#2", function (err, hash) {
 							console.log("getBranchHash2", err, hash);
 						});
 					});

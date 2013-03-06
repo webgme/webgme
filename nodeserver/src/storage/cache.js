@@ -82,11 +82,11 @@ define([ "util/assert" ], function (ASSERT) {
 		function wrapProject (name, project) {
 			var refcount = 0;
 
+			var branches = {};
 			var missing = {};
 			var backup = {};
 			var cache = {};
 			var cacheSize = 0;
-			var branches = {};
 
 			function cacheInsert (key, obj) {
 				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
@@ -178,22 +178,7 @@ define([ "util/assert" ], function (ASSERT) {
 					var p = project;
 					project = null;
 					delete projects[name];
-
-					var key, err = new Error("cache closed");
-					for (key in missing) {
-						var callbacks = missing[key];
-
-						var cb;
-						while ((cb = callbacks.pop())) {
-							cb(err);
-						}
-					}
-
-					missing = {};
-					backup = {};
-					cache = {};
-					cacheSize = 0;
-
+					deleteProject();
 					p.closeProject(callback);
 				} else if (typeof callback === "function ") {
 					callback(null);
@@ -211,16 +196,22 @@ define([ "util/assert" ], function (ASSERT) {
 			}
 
 			function deleteProject () {
-				var key;
+				var key, callbacks, cb, err = new Error("cache closed");
 				for (key in missing) {
-					var callbacks = missing[key];
-
-					var cb;
+					callbacks = missing[key];
 					while ((cb = callbacks.pop())) {
-						cb(null, null);
+						cb(err);
 					}
 				}
 
+				for (key in branches) {
+					callbacks = branches[key];
+					while ((cb = callbacks.pop())) {
+						cb(err);
+					}
+				}
+
+				branches = {};
 				missing = {};
 				backup = {};
 				cache = {};
@@ -238,11 +229,11 @@ define([ "util/assert" ], function (ASSERT) {
 
 					project.getBranchHash(name, oldhash, function (err, newhash) {
 						if (branches[tag] === branch) {
+							var cb;
 							delete branches[tag];
 
-							var i;
-							for (i = 0; i < branch.length; i++) {
-								branch[i](err, newhash);
+							while ((cb = branch.pop())) {
+								cb(err, newhash);
 							}
 						}
 					});
@@ -260,10 +251,11 @@ define([ "util/assert" ], function (ASSERT) {
 						var prefix = name + "@", tag;
 						for (tag in branches) {
 							if (tag.substr(0, prefix.length) === prefix) {
-								var i, branch = branches[tag];
+								var cb, branch = branches[tag];
 								delete branches[tag];
-								for (i = 0; i < branch.length; i++) {
-									branch[i](null, newhash);
+
+								while ((cb = branch.pop())) {
+									cb(err, newhash);
 								}
 							}
 						}
