@@ -16,6 +16,7 @@ require.config({
         //jQuery and stuff
         "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
+        "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
         "datGUI": 'lib/datGUI/dat.gui.min',
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables' + (DEBUG ? '' : '.min'),
@@ -67,6 +68,7 @@ require.config({
     },
     shim: {
         'jquery-ui': ['jquery'],
+        'jquery-ui-iPad': ['jquery','jquery-ui'],
         'bootstrap': ['jquery'],
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['jquery'],
@@ -80,13 +82,14 @@ require(
         'domReady',
         'jquery',
         'jquery-ui',
+        'jquery-ui-iPad',
         'jquery-WebGME',
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
         'js/WebGME'
     ],
-    function (domReady, jQuery, jQueryUi, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
         domReady(function () {
             webGME.start();
         });
