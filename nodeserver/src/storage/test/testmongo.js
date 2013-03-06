@@ -11,12 +11,14 @@ requirejs.config({
 	baseUrl: "../.."
 });
 
-requirejs([ "storage/mongo" ], function (Mongo) {
+requirejs([ "storage/mongo", "storage/cache" ], function (Mongo, Cache) {
 	"use strict";
 
 	function test1 () {
-		var database = new Mongo({
+		var database = new Cache(new Mongo({
 			timeout: 1000
+		}), {
+			cache: 1000
 		});
 		database.openDatabase(function (err) {
 			console.log("openDatabase", err);
@@ -48,8 +50,10 @@ requirejs([ "storage/mongo" ], function (Mongo) {
 	}
 
 	function test2 () {
-		var database = new Mongo({
+		var database = new Cache(new Mongo({
 			timeout: 1000
+		}), {
+			cache: 1000
 		});
 		database.openDatabase(function (err) {
 			console.log("openDatabase", err);
@@ -58,9 +62,9 @@ requirejs([ "storage/mongo" ], function (Mongo) {
 					console.log("openProject", err);
 					project.getBranchNames(function (err, branches) {
 						console.log("getBranchNames", err, branches);
-						project.getBranchHash("*test", "", function (err, hash) {
-							console.log("getBranchHash", err, hash);
-							project.setBranchHash("*test", "#1", "", function (err) {
+						project.getBranchHash("*test", "#3", function (err, hash) {
+							console.log("getBranchHash1", err, hash);
+							project.setBranchHash("*test", "#3", "#1", function (err) {
 								console.log("setBranchHash", err);
 								project.closeProject(function (err) {
 									console.log("closeProject", err);
@@ -70,11 +74,50 @@ requirejs([ "storage/mongo" ], function (Mongo) {
 								});
 							});
 						});
+						project.getBranchHash("*test", "#3", function (err, hash) {
+							console.log("getBranchHash2", err, hash);
+						});
 					});
 				});
 			});
 		});
 	}
 
-	test1();
+	function test3 () {
+		var database = new Cache(new Mongo({
+			timeout: 1000
+		}), {
+			cache: 1000
+		});
+		database.openDatabase(function (err) {
+			console.log("openDatabase", err);
+			database.getProjectNames(function (err, names) {
+				database.openProject("hihi", function (err, project) {
+					console.log("openProject", err);
+					project.getBranchNames(function (err, branches) {
+						console.log("getBranchNames", err, branches);
+						project.getBranchHash("*test", "#1", function (err, hash) {
+							console.log("getBranchHash1", err, hash);
+						});
+						project.setBranchHash("*test", "#1", "#2", function (err) {
+							console.log("setBranchHash", err);
+							setTimeout(function () {
+								project.closeProject(function (err) {
+									console.log("closeProject", err);
+									database.closeDatabase(function (err) {
+										console.log("closeDatabase", err);
+									});
+								});
+							}, 1000);
+						});
+						project.getBranchHash("*test", "#2", function (err, hash) {
+							console.log("getBranchHash2", err, hash);
+						});
+					});
+				});
+			});
+		});
+	}
+
+	test3();
 });

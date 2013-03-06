@@ -97,20 +97,35 @@ define(['logManager',
         }
     };
 
+    VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
+        li.loader.stop();
+        li.loader.destroy();
+        delete li.loader;
+        loaderDiv.remove();
+    };
+
 
     /**********************************************************************/
     /***************     P U B L I C     A P I             ****************/
     /**********************************************************************/
 
 
-    VisualizerPanel.prototype.add = function (menuDesc) {
+    VisualizerPanel.prototype.add = function (menuDesc, callback) {
         var li = $('<li class="center pointer"><a class="btn-env" id=""></a></li>'),
             a = li.find('> a'),
             self = this,
-            loaderDiv;
+            loaderDiv,
+            doCallBack;
+
+        doCallBack = function () {
+            if (callback) {
+                callback();
+            }
+        }
 
         if (this._visualizers[menuDesc.id]) {
             this._logger.warning("A visualizer with the ID '" + menuDesc.id + "' already exists...");
+            doCallBack();
         } else {
             li.attr("data-id", menuDesc.id);
             a.text(menuDesc.title);
@@ -131,28 +146,45 @@ define(['logManager',
                         self._logger.debug("downloaded: " + menuDesc.widgetJS + ", " + menuDesc.controlJS);
                         self._visualizers[menuDesc.id] = {"widget": widgetClass,
                             "control": controlClass};
-
                         self._removeLoader(li, loaderDiv);
+                        doCallBack();
                     },
                     function (err) {
                         //for any error store undefined in the list and the default decorator will be used on the canvas
-                        self.logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
+                        self._logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
                         a.append(' <i class="icon-warning-sign" title="Failed to download source"></i>');
                         self._removeLoader(li, loaderDiv);
+                        doCallBack();
                     });
             } else {
                 a.append(' <i class="icon-warning-sign"></i>');
 
                 this._logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing widgetJS or controlJS");
+
+                doCallBack();
             }
         }
     };
 
-    VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
-        li.loader.stop();
-        li.loader.destroy();
-        delete li.loader;
-        loaderDiv.remove();
+    VisualizerPanel.prototype.addRange = function (menuDescList, callback) {
+        var queueLen = 0,
+            len = menuDescList.length,
+            i,
+            callbackWrap;
+
+        if (callback) {
+            callbackWrap = function () {
+                queueLen -= 1;
+                if (queueLen === 0) {
+                    callback();
+                }
+            }
+        }
+
+        for (i = 0; i < len; i += 1) {
+            queueLen += 1;
+            this.add(menuDescList[i], callbackWrap);
+        }
     };
 
     VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
