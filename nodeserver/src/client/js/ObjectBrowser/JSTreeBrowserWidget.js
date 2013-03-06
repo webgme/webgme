@@ -45,6 +45,23 @@ define(['clientUtil',
         //generate unique id for control
         guid = commonUtil.guid();
 
+        /* SELECT BUTTON for tree */
+        /*var selectBtn = $("<a/>", { "class": "btn"});
+        selectBtn.text("Select");
+        containerControl.append(selectBtn);
+        selectBtn.on("click", null, function (event) {
+            var selectedID = getSelectedNodeIds();
+
+            if (selectedID.length > 0) {
+                selectedID = selectedID[0];
+            }
+
+            self.onNodeDoubleClicked(selectedID);
+
+            event.preventDefault();
+            event.stopPropagation()
+        });*/
+
         //generate control dynamically
         treeViewE = $('<div/>', {
             "id": "jstree_" + guid
