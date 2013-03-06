@@ -17,6 +17,14 @@ define(['logManager'], function (logManager) {
             }
         };
 
+        this._view.onBtnProjectDeleteClick = function (params) {
+            if (params.id) {
+                self._client.deleteProject(params.id, function () {
+                    self.displayProjects();
+                });
+            }
+        };
+
         this._view.onCreateNewProjectClick = function (projectName) {
             self._logger.debug("onCreateNewProjectClick: " + projectName);
             self._client.createProject(projectName, function () {
