@@ -78,77 +78,83 @@ define([
             //init - currently it means, we try to establish storage connection to all our saved projects
             //and create actor for all started branches...
             //if there is none, then we simply collects the projects from the server and waits for a selection from user interface...
-            var init = function () {
-                var tempproxy = io.connect(parameters.proxy, parameters.options);
-                var firstproject = null;
-                tempproxy.on('connect', function () {
-                    proxy = tempproxy;
-                    getServerProjectList(function (serverlist) {
-                        var projopened = function (err) {
-                            if (err) {
-                                console.log('project cannot be opened...');
-                                //TODO somehow we should either remove it from the list or retry later
-                            } else {
-                                console.log('connected to project');
+            var init = function(){
+                var tempproxy = io.connect(parameters.proxy,parameters.options);
+                tempproxy.on('connect',function(){
+                    if(proxy === null){
+                        //first time
+                        proxy = tempproxy;
+
+                        //now we try to open only one project, the one we like to select...
+                        getServerProjectList(function(serverlist){
+                            var firstproject = null;
+                            for (var i = 0; i < serverlist.length; i++) {
+                                if (!projectsinfo[serverlist[i]]) {
+                                    projectsinfo[serverlist[i]] = {
+                                        parameters:null,
+                                        currentbranch:null,
+                                        branches:{}
+                                    };
+                                }
                             }
-                            if (--count === 0) {
-                                //we connected to all projects so we are mostly done
-                                //select one randomly
-                                //TODO this is very rude, should change it...
-                                //TODO soon the default selection will be the no selection ;)
-                                if(parameters.nosaveddata && parameters.project && projectsinfo[parameters.project]){
-                                    self.selectProject(parameters.project);
-                                } else {
-                                    if (projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]) {
-                                        self.selectProject(projectsinfo.activeProject);
-                                    } else {
-                                        self.selectProject(firstproject);
+
+                            var deadprojects = [];
+                            for (i in projectsinfo) {
+                                if (i !== 'activeProject') {
+                                    if (serverlist.indexOf(i) === -1) {
+                                        deadprojects.push(i);
                                     }
                                 }
-                                setInterval(saveProjectsInfo, 1000);
                             }
-                        };
+                            for (i = 0; i < deadprojects.length; i++) {
+                                delete projectsinfo[deadprojects[i]];
+                            }
+                            //projectinfo is up-to-date
 
-                        //TODO we have to check the projects existing only in our info, but now we simply remove them
-                        for (var i = 0; i < serverlist.length; i++) {
-                            if (!projectsinfo[serverlist[i]]) {
-                                projectsinfo[serverlist[i]] = {
-                                    parameters:null,
-                                    currentbranch:null,
-                                    branches:{}
-                                };
-                            }
-                        }
-                        var deadprojects = [];
-                        for (i in projectsinfo) {
-                            if (i !== 'activeProject') {
-                                if (serverlist.indexOf(i) === -1) {
-                                    deadprojects.push(i);
+                            //we set the firstproject just in case
+                            for (i in projectsinfo) {
+                                if(i!=='activeProject'){
+                                    if (firstproject === null) {
+                                        firstproject = i;
+                                        break;
+                                    }
                                 }
                             }
-                        }
-                        for (i = 0; i < deadprojects.length; i++) {
-                            delete projectsinfo[deadprojects[i]];
-                        }
-                        //we have now all the projects, so we should connect to them...
-                        var count = 0;
-                        for (i in projectsinfo) {
-                            if(i!=='activeProject'){
-                                if (firstproject === null) {
-                                    firstproject = i;
+
+                            if(parameters.nosaveddata && parameters.project && projectsinfo[parameters.project]){
+                                openProject(parameters.project,function(err){
+                                    if(err){
+                                        console.log('project cannot be opened',parameters.project,err);
+                                    } else {
+                                        self.selectProject(parameters.project);
+                                    }
+                                });
+                            } else {
+                                if (projectsinfo.activeProject && projectsinfo[projectsinfo.activeProject]) {
+                                    openProject(projectsinfo.activeProject,function(err){
+                                        if(err){
+                                            console.log('project cannot be opened',projectsinfo.activeProject,err);
+                                        } else {
+                                            self.selectProject(projectsinfo.activeProject);
+                                        }
+                                    });
+                                } else {
+                                    if(firstproject){
+                                        openProject(firstproject,function(err){
+                                            if(err){
+                                                console.log('proect cannot be opened',firstproject,err);
+                                            } else {
+                                                self.selectProject(firstproject);
+                                            }
+                                        });
+                                    } else {
+                                        console.log('there is no project on this server');
+                                    }
                                 }
-                                count++;
                             }
-                        }
-                        if (count === 0) {
-                            console.log("there is no project on this server!!!");
-                        }
-                        for (i in projectsinfo) {
-                            if(i!=='activeProject'){
-                                openProject(i, projopened);
-                            }
-                        }
-                    });
+                            setInterval(saveProjectsInfo, 1000);
+                        });
+                    }
                 });
             };
             var getServerProjectList = function (callback) {
@@ -294,88 +300,108 @@ define([
 
                     activeProject = projectname;
                     var myinfo = projectsinfo[projectname];
-                    commitInfos[projectname].getBranchesNow(function (err, branches) {
-                        if (!err && branches && branches.length > 0) {
-                            for (var i = 0; i < branches.length; i++) {
-                                if (myinfo.branches[branches[i].name] === null || myinfo.branches[branches[i].name] === undefined) {
-                                    myinfo.branches[branches[i].name] = {
-                                        actor:null,
-                                        commit:branches[i].commit
-                                    };
-                                }
-                            }
-                            //at this point all branch info is filled so we can go for the master/first available or the last used one
-                            if (myinfo.currentbranch) {
-                                if (myinfo.branches[myinfo.currentbranch]) {
-                                    if (!myinfo.branches[myinfo.currentbranch].actor) {
-                                        myinfo.branches[myinfo.currentbranch].actor = new ClientProject({
-                                            storage:storages[activeProject],
-                                            master:self,
-                                            id:null,
-                                            userstamp:'todo',
-                                            commit:myinfo.branches[myinfo.currentbranch].commit,
-                                            branch:myinfo.currenbtranch,
-                                            readonly:false,
-                                            logger:logger
-                                        });
+
+                    var storageReady = function(){
+                        commitInfos[projectname].getBranchesNow(function (err, branches) {
+                            if (!err && branches && branches.length > 0) {
+                                for (var i = 0; i < branches.length; i++) {
+                                    if (myinfo.branches[branches[i].name] === null || myinfo.branches[branches[i].name] === undefined) {
+                                        myinfo.branches[branches[i].name] = {
+                                            actor:null,
+                                            commit:branches[i].commit
+                                        };
                                     }
-                                } else {
-                                    //now what the f**k???
-                                    console.log('something really fucked up');
                                 }
-                            } else {
-                                if (myinfo.branches['master']) {
-                                    if (!myinfo.branches['master'].actor) {
-                                        myinfo.currentbranch = 'master';
-                                        myinfo.branches['master'].actor = new ClientProject({
-                                            storage:storages[activeProject],
-                                            master:self,
-                                            id:null,
-                                            userstamp:'todo',
-                                            commit:myinfo.branches['master'].commit,
-                                            branch:'master',
-                                            readonly:false,
-                                            logger:logger
-                                        });
-                                    }
-                                } else {
-                                    for (i in myinfo.branches) {
-                                        myinfo.currentbranch = i;
-                                        if (!myinfo.branches[i].actor) {
-                                            myinfo.branches[i].actor = new ClientProject({
+                                //at this point all branch info is filled so we can go for the master/first available or the last used one
+                                if (myinfo.currentbranch) {
+                                    if (myinfo.branches[myinfo.currentbranch]) {
+                                        if (!myinfo.branches[myinfo.currentbranch].actor) {
+                                            myinfo.branches[myinfo.currentbranch].actor = new ClientProject({
                                                 storage:storages[activeProject],
                                                 master:self,
                                                 id:null,
                                                 userstamp:'todo',
-                                                commit:myinfo.branches[i].commit,
-                                                branch:i,
+                                                commit:myinfo.branches[myinfo.currentbranch].commit,
+                                                branch:myinfo.currenbtranch,
                                                 readonly:false,
                                                 logger:logger
                                             });
                                         }
-                                        break;
+                                    } else {
+                                        //now what the f**k???
+                                        console.log('something really fucked up');
+                                    }
+                                } else {
+                                    if (myinfo.branches['master']) {
+                                        if (!myinfo.branches['master'].actor) {
+                                            myinfo.currentbranch = 'master';
+                                            myinfo.branches['master'].actor = new ClientProject({
+                                                storage:storages[activeProject],
+                                                master:self,
+                                                id:null,
+                                                userstamp:'todo',
+                                                commit:myinfo.branches['master'].commit,
+                                                branch:'master',
+                                                readonly:false,
+                                                logger:logger
+                                            });
+                                        }
+                                    } else {
+                                        for (i in myinfo.branches) {
+                                            myinfo.currentbranch = i;
+                                            if (!myinfo.branches[i].actor) {
+                                                myinfo.branches[i].actor = new ClientProject({
+                                                    storage:storages[activeProject],
+                                                    master:self,
+                                                    id:null,
+                                                    userstamp:'todo',
+                                                    commit:myinfo.branches[i].commit,
+                                                    branch:i,
+                                                    readonly:false,
+                                                    logger:logger
+                                                });
+                                            }
+                                            break;
+                                        }
                                     }
                                 }
+                                //at this point we should selected/created our actor - so we simply activate it
+                                commitInfos[activeProject].getAllCommitsNow(function (err, commits) {
+                                    if(err) {
+                                        console.log(err);
+                                    }
+                                    else if (commits && commits.length > 0) {
+                                        activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit,function(err){
+                                            console.log('activated');
+                                        });
+                                    }
+                                });
+                            } else {
+                                //no branch for the given project, baaad
+                                console.log('cannot found any branch for the given project!!!');
                             }
-                            //at this point we should selected/created our actor - so we simply activate it
-                            commitInfos[activeProject].getAllCommitsNow(function (err, commits) {
-                            	if(err) {
-                                    console.log(err);
-                            	}
-                            	else if (commits && commits.length > 0) {
-                                    activateActor(myinfo.branches[myinfo.currentbranch].actor, myinfo.branches[myinfo.currentbranch].commit,function(err){
-                                        console.log('activated');
-                                    });
-                                }
-                            });
-                        } else {
-                            //no branch for the given project, baaad
-                            console.log('cannot found any branch for the given project!!!');
-                        }
-                    });
+                        });
+                    };
+
+                    if(storages[projectname] && commitInfos[projectname]){
+                        storageReady();
+                    } else {
+                        openProject(projectname,function(err){
+                            if(err){
+                                console.log('cannot open project');
+                                return 'cannot open project';
+                            } else {
+                                storageReady();
+                            }
+                        });
+                    }
                 } else {
-                    return "no valid project";
+                    console.log('not valid project');
+                    return "not valid project";
                 }
+            };
+            self.createProjectAsync = function(projectname,callback){
+                self.createProject(projectname,callback);
             };
             self.createProject = function (projectname, callback) {
                 callback = callback || function () {
@@ -458,10 +484,14 @@ define([
                     callback("you must use individual name!!!");
                 }
             };
+            self.deleteProjectAsync = function(projectname,callback){
+                self.deleteProject(projectname,callback);
+            };
             self.deleteProject = function (projectname, callback) {
                 callback = callback || function () {
                 };
                 //we destroy all related
+                
                 callback();
             };
             self.selectCommitAsync = function (commitid, callback) {
