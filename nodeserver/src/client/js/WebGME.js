@@ -193,9 +193,9 @@ define([  'logManager',
                                                    "widgetContainer": "mainWidget"});
 
             visArray = JSON.parse(VisualizersJSON);
-            for (i = 0; i < visArray.length; i += 1) {
-                visualizerPanel.add(visArray[i]);
-            }
+            visualizerPanel.addRange(visArray, function () {
+                visualizerPanel.setActiveVisualizer('DesignerCanvas_Model');
+            });
 
             //TESTING part
             if (DEBUG === true) {
