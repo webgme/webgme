@@ -490,9 +490,21 @@ define([
             self.deleteProject = function (projectname, callback) {
                 callback = callback || function () {
                 };
-                //we destroy all related
-                
-                callback();
+                if(proxy){
+                    proxy.emit('deleteProject',projectname,function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            delete storages[projectname];
+                            delete commitInfos[projectname];
+                            delete projectsinfo[projectname];
+
+                            callback(null);
+                        }
+                    });
+                } else {
+                    callback('there is no proxy');
+                }
             };
             self.selectCommitAsync = function (commitid, callback) {
                 callback = callback || function () {
@@ -919,7 +931,7 @@ define([
                  node.printData();
                  break;
                  }*/
-                switch (number) {
+                /*switch (number) {
                     case 1:
                         mytest.init();
                         break;
@@ -928,6 +940,13 @@ define([
                         break;
                     case 3:
                         mytest.setEventPrint(null);
+                        break;
+                }*/
+                switch (number){
+                    case 1:
+                        self.deleteProject('deltest',function(err){
+                            console.log('delete returned',err);
+                        });
                         break;
                 }
             };

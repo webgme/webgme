@@ -69,8 +69,7 @@ requirejs(['server/proxysrv'],function(PROXY){
 
         var logserver = io.of('/log');
 
-        console.log("kecso "+JSON.stringify(parameters));
-        console.log("kecso "+parameters.projects);
+        console.log('parameters',parameters);
         var proxy = PROXY({
             io        : io,
             namespace : parameters.projsrv,

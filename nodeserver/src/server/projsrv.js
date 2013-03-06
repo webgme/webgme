@@ -1,12 +1,12 @@
 define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSERT,MONGO,SHA1,IO) {
     "use strict";
-    var ProjectServer = function(options){
+    var ProjectServer = function(_proxy,options){
         ASSERT((options.io && options.namespace) || options.port);
         ASSERT(options.mongo);
         var _socket = null;
         var _mongo = MONGO(options.mongo);
-        var _self = this;
         var _selfid = null;
+        var _nonamespace = false;
         var KEY = "_id";
         var BID = "*";
         var _polls = {};
@@ -17,6 +17,7 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             _socket = options.io.of(options.namespace);
             _selfid = "[PSRV-"+options.namespace+"]";
         } else {
+            _nonamespace = true;
             _socket = IO.listen(options.port);
             _selfid = "[PSRV-"+options.port+"]";
         }
@@ -76,11 +77,13 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             if(idx > -1 ){
                 _clients.splice(idx,1);
                 if(_clients.length === 0){
-                    _mongo.close();
+                    //_mongo.close();
+                    _proxy.close(options.mongo.collection);
                 }
             }
         };
 
+        //functions for the clients
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
             addClient(socket.id);
@@ -214,6 +217,36 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                 }
             });
         });
+
+        //functions for the proxy
+        var close = function(){
+            //disconnect clients
+            if(_socket){
+                //_socket.sockets.emit('disconnect');
+                if(_nonamespace){
+                    _socket.sockets.clients().forEach(function (socket){
+                        socket.disconnect();
+                    });
+                    _socket.server.close();
+                    _socket = null;
+                } else {
+                    _socket.clients().forEach(function(socket){
+                       socket.disconnect();
+                    });
+                    _socket.server.close();
+                    _socket = null;
+                }
+            }
+
+            //close the database connection
+            if(_mongo){
+                _mongo.close();
+            }
+        };
+
+        return {
+            close : close
+        }
     };
     return ProjectServer;
 });

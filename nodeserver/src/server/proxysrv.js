@@ -2,11 +2,9 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
     "use strict";
     var ProxyServer = function(options){
         ASSERT((options.io && options.namespace) || options.port);
-        console.log("kecso "+options.projects);
-        var _socket = null;
-        var _self = this;
-        var _selfid = null;
-        var _projects = {};
+        var _socket = null,
+            _selfid = null,
+            _projects = {};
 
         var _log = options.log || function(txt){ console.log(txt);};
         var log = function(txt,socketid){
@@ -49,6 +47,7 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
             _selfid = "[PRSRV-"+options.port+"]";
         }
 
+        //functions for the clients
         _socket.on('connection',function(socket){
             log("connection arrived",socket.id);
 
@@ -69,6 +68,29 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
                 });
             });
 
+            socket.on('deleteProject',function(projectname,callback){
+                var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port), {w:1});
+                db.open(function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        db.collection(projectname,function(err,collection){
+                            if(err){
+                                db.close();
+                                callback(err);
+                            } else {
+                                if(_projects[projectname]){
+                                    _projects[projectname].project.close();
+                                }
+                                collection.drop();
+                                db.close();
+                                callback(null);
+                            }
+                        });
+                    }
+                });
+            });
+
             socket.on('getProject',function(project,callback){
                 getAvailableProjects(function(err,projects){
                     if(err){
@@ -81,7 +103,7 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
                                 callback(null,_projects[project].info);
                             } else {
                                 var projguid = "/"+CU.guid();
-                                var proj = new PROJ({
+                                var proj = new PROJ({close : close},{
                                     io        : options.io,
                                     namespace : projguid,
                                     options   : options.options,
@@ -101,6 +123,18 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
                 });
             });
         });
+
+        //functions for the projects
+         var close = function(project){
+            //this notification comes from the projectserver
+            //that it has been automatically closed (due to last client disconnection
+            _projects[project].project.close();
+            delete _projects[project];
+        };
+
+        return {
+            close : close
+        }
     };
     return ProxyServer;
 });
