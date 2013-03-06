@@ -136,7 +136,7 @@ define(['logManager',
                     },
                     function (err) {
                         //for any error store undefined in the list and the default decorator will be used on the canvas
-                        self.logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
+                        self._logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
                         a.append(' <i class="icon-warning-sign" title="Failed to download source"></i>');
                         self._removeLoader(li, loaderDiv);
                     });

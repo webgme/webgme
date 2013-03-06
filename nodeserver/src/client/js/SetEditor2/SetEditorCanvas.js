@@ -29,9 +29,8 @@ define(['logManager',
         __parent_proto__.initializeUI.apply(this, arguments);
         this.logger.debug("SetEditorCanvas.initializeUI");
 
-        this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, "SetEditor");
-
-        //META SPECIFIC parts
+        var text = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, "SetEditor");
+        text.attr({"fill": "#DEDEDE"});
     };
 
     return SetEditorCanvas;
