@@ -381,7 +381,8 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.clear = function () {
-        var i;
+        var i,
+            _parentSize;
 
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
@@ -391,6 +392,14 @@ define(['logManager',
 
         //initialize all the required collections with empty value
         this._initializeCollections();
+
+        this._actualSize = { "w": 0, "h": 0 };
+
+        _parentSize = { "w": parseInt(this.$el.parent().css("width"), 10),
+            "h": parseInt(this.$el.parent().css("height"), 10) };
+
+        //finally resize the whole content according to available space
+        this._resizeCanvas(_parentSize.w, _parentSize.h);
     };
 
     DesignerCanvas.prototype.setTitle = function (newTitle) {
