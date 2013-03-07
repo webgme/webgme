@@ -26,7 +26,8 @@ define(['clientUtil',
             customContextMenu,
             animateNode,
             focusNode,
-            lastSelection;
+            lastSelection,
+            openInVisualizer;
 
         //get logger instance for this component
         logger = logManager.create("JSTreeBrowserWidget");
@@ -44,23 +45,6 @@ define(['clientUtil',
 
         //generate unique id for control
         guid = commonUtil.guid();
-
-        /* SELECT BUTTON for tree */
-        /*var selectBtn = $("<a/>", { "class": "btn"});
-        selectBtn.text("Select");
-        containerControl.append(selectBtn);
-        selectBtn.on("click", null, function (event) {
-            var selectedID = getSelectedNodeIds();
-
-            if (selectedID.length > 0) {
-                selectedID = selectedID[0];
-            }
-
-            self.onNodeDoubleClicked(selectedID);
-
-            event.preventDefault();
-            event.stopPropagation()
-        });*/
 
         //generate control dynamically
         treeViewE = $('<div/>', {
@@ -129,6 +113,14 @@ define(['clientUtil',
             }
         };
 
+        //Called when the ContexMenu's 'Open in Visualizer' action is selected for the node
+        openInVisualizer = function (nodeId) {
+            logger.debug("OpenInVisualizer for " + nodeId);
+            if ($.isFunction(self.onNodeDoubleClicked)) {
+                self.onNodeDoubleClicked.call(self, nodeId);
+            }
+        };
+
         //Called when the user right-clicks on a node and
         //the customized context menu has to be displayed
         customContextMenu = function (node) {
@@ -140,8 +132,24 @@ define(['clientUtil',
 
                 // The default set of available items :  Rename, Create, Copy, Paste, Delete
                 items = {
+                    "toggleNode":  { // The "open/close" menu item
+                        "label": "Open",
+                        "separator_before": true,
+                        "action": function (obj) {
+                            $.jstree._reference(treeViewE).toggle_node(node);
+                        },
+                        "icon": false
+                    },
+                    "openInVisualizer": { // The "rename" menu item
+                        "label": "Open in visualizer",
+                        "action": function (obj) {
+                            openInVisualizer(obj.attr("nId"));
+                        },
+                        "icon": false
+                    },
                     "renameItem": { // The "rename" menu item
                         "label": "Rename",
+                        "separator_before": true,
                         "action": function (obj) {
                             editNode(obj.attr("nId"));
                         },
@@ -179,6 +187,14 @@ define(['clientUtil',
                         "icon": "img/delete.png"
                     }
                 };
+
+                if ($.jstree._reference(treeViewE).is_leaf(node) === false) {
+                    if($.jstree._reference(treeViewE).is_open(node)) {
+                        items["toggleNode"].label = "Close";
+                    }
+                } else {
+                    delete items["toggleNode"];
+                }
             }
 
             //return the complete action set for this node
