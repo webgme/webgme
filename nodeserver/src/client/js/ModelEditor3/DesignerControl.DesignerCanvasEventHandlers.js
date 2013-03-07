@@ -61,12 +61,12 @@ define(['logManager',
             self._onPropertyChanged(selectedObjIDs, args);
         };
 
-        this.designerCanvas.onBackgroundDroppableAccept = function (metaInfo) {
-            return self._onBackgroundDroppableAccept(metaInfo);
+        this.designerCanvas.onBackgroundDroppableAccept = function (helper) {
+            return self._onBackgroundDroppableAccept(helper);
         };
 
-        this.designerCanvas.onBackgroundDrop = function (metaInfo, position) {
-            self._onBackgroundDrop(metaInfo, position);
+        this.designerCanvas.onBackgroundDrop = function (helper, position) {
+            self._onBackgroundDrop(helper, position);
         };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
@@ -419,7 +419,8 @@ define(['logManager',
         this._client.completeTransaction();
     };
 
-    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDroppableAccept = function (metaInfo) {
+    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
+        var metaInfo = helper.data("metaInfo");
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
                 return true;
@@ -429,8 +430,9 @@ define(['logManager',
         return false;
     };
 
-    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDrop = function (metaInfo, position) {
-        var intellyPasteOpts,
+    DesignerControlDesignerCanvasEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
+        var metaInfo = helper.data("metaInfo"),
+            intellyPasteOpts,
             gmeID;
 
         if (metaInfo) {

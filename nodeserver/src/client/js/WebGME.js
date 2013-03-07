@@ -89,10 +89,13 @@ define([  'logManager',
     lastContainerWidth = 0;
     lastContainerHeight = 0;
     resizeMiddlePane = function () {
-        var cW = $("#contentContainer").width(),
-            cH = $("#contentContainer").height(),
+        var cW = $("body").width(),
+            cH = $("body").height(),
             eW = 0,
             eH = 0;
+
+        $("#contentContainer").width(cW);
+        $("#contentContainer").height(cH);
 
         if (cW !== lastContainerWidth || cH !== lastContainerHeight) {
             $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());

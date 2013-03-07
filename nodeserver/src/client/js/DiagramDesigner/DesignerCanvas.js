@@ -381,7 +381,8 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.clear = function () {
-        var i;
+        var i,
+            _parentSize;
 
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
@@ -391,6 +392,14 @@ define(['logManager',
 
         //initialize all the required collections with empty value
         this._initializeCollections();
+
+        this._actualSize = { "w": 0, "h": 0 };
+
+        _parentSize = { "w": parseInt(this.$el.parent().css("width"), 10),
+            "h": parseInt(this.$el.parent().css("height"), 10) };
+
+        //finally resize the whole content according to available space
+        this._resizeCanvas(_parentSize.w, _parentSize.h);
     };
 
     DesignerCanvas.prototype.setTitle = function (newTitle) {
@@ -880,14 +889,10 @@ define(['logManager',
     /************** ITEM CONTAINER DROPPABLE HANDLERS *************/
 
     DesignerCanvas.prototype._onBackgroundDroppableOver = function (ui) {
-        var metaInfo = ui.helper.data("metaInfo"); /*,
-            posX = ui.offset.left - this.designerCanvasBodyOffset.left,
-            posY = ui.offset.top - this.designerCanvasBodyOffset.top;*/
+        var helper = ui.helper;
 
-        if (metaInfo) {
-            if (this.onBackgroundDroppableAccept(metaInfo) === true) {
-                this._doAcceptDroppable(true);
-            }
+        if (this.onBackgroundDroppableAccept(helper) === true) {
+            this._doAcceptDroppable(true);
         }
     };
 
@@ -896,12 +901,12 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype._onBackgroundDrop = function (ui) {
-        var metaInfo = ui.helper.data("metaInfo"),
+        var helper = ui.helper,
             posX = ui.offset.left - this.designerCanvasBodyOffset.left,
             posY = ui.offset.top - this.designerCanvasBodyOffset.top;
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(metaInfo, { "x": posX, "y": posY });
+            this.onBackgroundDrop(helper, { "x": posX, "y": posY });
         }
 
         this._doAcceptDroppable(false);
@@ -917,13 +922,13 @@ define(['logManager',
         }
     };
 
-    DesignerCanvas.prototype.onBackgroundDroppableAccept = function (metaInfo) {
-        this.logger.warning("DesignerCanvas.prototype.onBackgroundDroppableAccept not overridden in controller!!! metainfo: '" + JSON.stringify(metaInfo) + "'");
+    DesignerCanvas.prototype.onBackgroundDroppableAccept = function (helper) {
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDroppableAccept not overridden in controller!!! helper: '" + JSON.stringify(helper) + "'");
         return false;
     };
 
-    DesignerCanvas.prototype.onBackgroundDrop = function (metaInfo, position) {
-        this.logger.warning("DesignerCanvas.prototype.onBackgroundDrop not overridden in controller!!! metainfo: '" + JSON.stringify(metaInfo) + "', position: '" + JSON.stringify(position) + "'");
+    DesignerCanvas.prototype.onBackgroundDrop = function (helper, position) {
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDrop not overridden in controller!!! helper: '" + JSON.stringify(helper) + "', position: '" + JSON.stringify(position) + "'");
     };
 
     /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
