@@ -89,8 +89,8 @@ define([  'logManager',
     lastContainerWidth = 0;
     lastContainerHeight = 0;
     resizeMiddlePane = function () {
-        var cW = $("#contentContainer").width(),
-            cH = $("#contentContainer").height(),
+        var cW = $("body").width(),
+            cH = $("body").height(),
             eW = 0,
             eH = 0;
 
