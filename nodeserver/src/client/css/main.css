@@ -115,6 +115,7 @@ body {
     height: 100%;
     overflow: hidden;
     padding-top: 40px;
+    position: relative;
 }
 
 #leftPane,

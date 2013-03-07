@@ -1,12 +1,10 @@
 #projectInfoContainer {
-    padding-left: 10px;
 }
 
 #projectInfoContainer > .title {
     float: left;
     display: block;
-    padding: 8px 20px 12px;
-    margin-left: -20px;
+    padding-top: 8px;
     font-size: 20px;
     font-weight: 200;
     line-height: 1;
@@ -16,8 +14,8 @@
 #projectInfoContainer > .readOnlyInfo {
     display: none;
     float: left;
-    margin-left: -15px;
-    margin-top: 11px;
+    margin-left: 5px;
+    margin-top: 10px;
     padding-right: 5px;
     font-size: 12px;
     font-weight: bold;
