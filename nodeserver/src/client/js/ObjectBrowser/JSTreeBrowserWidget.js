@@ -540,6 +540,7 @@ define(['clientUtil',
                         helperEl.children().first().remove();
                         helperEl.find("ul").remove();
                         helperEl.find(".jstree-hovered").removeClass("jstree-hovered");
+                        helperEl.find(".jstree-clicked").removeClass("jstree-clicked");
 
                         wrapper.find('ul').append(helperEl);
 
