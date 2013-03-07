@@ -94,6 +94,9 @@ define([  'logManager',
             eW = 0,
             eH = 0;
 
+        $("#contentContainer").width(cW);
+        $("#contentContainer").height(cH);
+
         if (cW !== lastContainerWidth || cH !== lastContainerHeight) {
             $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
             lastContainerWidth = cW;
