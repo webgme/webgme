@@ -307,7 +307,8 @@ define([ "util/assert" ], function (ASSERT) {
             getDatabaseStatus: getDatabaseStatus,
             getProjectNames: getProjectNames,
             openProject: openProject,
-            deleteProject: deleteProject
+            deleteProject: deleteProject,
+            ID_NAME: "_id"
         };
     }
 

@@ -24,12 +24,14 @@ requirejs([
     "storage/socketioserver",
     "storage/local",
     "storage/failsafe",
-    "storage/socketioclient"],
+    "storage/socketioclient",
+    "storage/cache"],
     function(
         SERVER,
         LOCAL,
         FS,
-        CLIENT){
+        CLIENT,
+        CACHE){
 
         var testport = 6666,
             server = null,
@@ -62,24 +64,30 @@ requirejs([
                 {_id:'#09',data:"ten"}
             ];
 
-        server = new SERVER(new LOCAL({
-            database: "smoketest",
-            timeout: 10000,
-            local: "memory"
-        }),
-            {
-                port:testport
-            });
+        server = new SERVER(
+                    new CACHE(
+                        new LOCAL({
+                                    database: "smoketest",
+                                    timeout: 10000,
+                                    local: "memory"
+                                    }),
+                        {}),
+                    {
+                        port:testport
+                    });
 
         server.open();
 
-        clientOne = new FS(new CLIENT({
-            host: 'http://localhost',
-            port: testport,
-            timeout: 60000,
-            type: 'node'
-        }),
-            {});
+        clientOne = new FS(
+                        new CACHE(
+                            new CLIENT({
+                                        host: 'http://localhost',
+                                        port: testport,
+                                        timeout: 60000,
+                                        type: 'node'
+                                        }),
+                            {}),
+                        {});
         clientTwo = new FS(new CLIENT({
             host: 'http://localhost',
             port: testport,

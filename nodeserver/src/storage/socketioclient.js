@@ -482,7 +482,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             getDatabaseStatus: getDatabaseStatus,
             getProjectNames: getProjectNames,
             deleteProject: deleteProject,
-            openProject: openProject
+            openProject: openProject,
+            ID_NAME: "_id"
         };
     }
     return Database;

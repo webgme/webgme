@@ -63,7 +63,7 @@ define([ "util/assert" ], function (ASSERT) {
 			dlock.lock(function () {
 				var n;
 				for (n in projects) {
-					projects[n].abort();
+					projects[n].abortProject();
 				}
 				projects = {};
 				database.closeDatabase(callback);
