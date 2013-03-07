@@ -6,10 +6,25 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
     		options.server = "http://" + options.server;
     	}
     	
-        var socket = null;
-        var isopen = false;
-        var availableCB = null;
-        var updatedCB = null;
+        var socket = null,
+            isopen = false,
+            availableCB = null,
+            updatedCB = null,
+            inSync = options.watcher ? options.watcher.dataInSync : function(){},
+            outSync = options.watcher ? options.watcher.dataOutSync : function(){};
+
+        var networkOut = function(){
+            if(isopen){
+                isopen = false;
+                outSync(options.projectinfo);
+            }
+        };
+        var networkOk = function(){
+            if(!isopen){
+                isopen=true;
+                inSync(options.projectinfo);
+            }
+        };
 
         var open = function (callback) {
             var tempsocket = io.connect(options.server, options.options);
@@ -25,7 +40,7 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
                         }
                         else{
                             socket = tempsocket;
-                            isopen = true;
+                            networkOk();
                             if(availableCB){
                                 availableCB();
                                 availableCB = null;
@@ -46,19 +61,19 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             });
 
             tempsocket.on('connect_failed',function(){
-                isopen = false;
+                networkOut();
             });
             tempsocket.on('disconnect',function(){
-                isopen = false;
+                networkOut();
             });
             tempsocket.on('reconnect_failed', function(){
-                isopen = false;
+                networkOut();
             });
             tempsocket.on('reconnect', function(){
-                isopen = false;
+                networkOut();
             });
             tempsocket.on('reconnecting', function(){
-                isopen = false;
+                networkOut();
             });
         };
         var opened = function () {
@@ -68,7 +83,7 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             var tempsocket = socket;
             socket = null;
             tempsocket.emit('close',function(){
-                isopen=false;
+                networkOut();
                 if(callback){
                     callback(null);
                 }

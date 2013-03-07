@@ -522,12 +522,24 @@ define([
                                         deadbranch = false;
                                         if (projectsinfo[activeProject].branches[mycommit.name]) {
                                             if (projectsinfo[activeProject].branches[mycommit.name].actor) {
-                                                if (commitid === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()) {
+                                                /*if (commitid === projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit()) {
                                                     projectsinfo[activeProject].currentbranch = mycommit.name;
                                                     activateActor(projectsinfo[activeProject].branches[mycommit.name].actor, null, callback);
                                                 } else {
                                                     createViewer(mycommit, callback);
-                                                }
+                                                }*/
+                                                commitInfos[activeProject].isFastForward(commitid,projectsinfo[activeProject].branches[mycommit.name].actor.getCurrentCommit(),function(err,good){
+                                                    if(err){
+                                                        createViewer(mycommit,callback);
+                                                    } else {
+                                                        if(good){
+                                                            projectsinfo[activeProject].currentbranch = mycommit.name;
+                                                            activateActor(projectsinfo[activeProject].branches[mycommit.name].actor, null, callback);
+                                                        } else {
+                                                            createViewer(mycommit,callback);
+                                                        }
+                                                    }
+                                                });
                                             } else {
                                                 //TODO shouldn't have to be null
                                                 if (branches[i].commit === commitid || branches[i].commit === null) {

@@ -149,8 +149,48 @@ define(['commonUtil'],function(commonUtil){
             });
         };
 
-        refreshCommitId = setInterval(refreshCommits,parameters.refreshrate);
-        refreshBranchId = setInterval(refreshBranches,parameters.refreshrate);
+        var isFastForward = function(commit,ancestor,callback){
+            var myAncestor = function(commitid,ancestorid){
+                if(commits[commitid]){
+                    var index = commits[commitid].parents.indexOf(ancestorid);
+                    var size = commits[commitid].parents.length;
+                    if(size>0){
+                        if(index>-1){
+                            return true;
+                        } else {
+                            var parentsvalue = false;
+                            for(var i=0;i<size;i++){
+                                parentsvalue = parentsvalue || myAncestor(commits[commitid].parents[i],ancestorid);
+                            }
+                            return parentsvalue;
+                        }
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            };
+
+            if(commit === ancestor){
+                callback(null,true);
+            } else {
+                getBranchesNow(function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        if(commits[commit] && commits[ancestor]){
+                            callback(null,myAncestor(commit,ancestor));
+                        } else {
+                            callback(null,false);
+                        }
+                    }
+                });
+            }
+        };
+
+        //refreshCommitId = setInterval(refreshCommits,parameters.refreshrate);
+        //refreshBranchId = setInterval(refreshBranches,parameters.refreshrate);
         //TODO not the nicest to initialize the values this way, but should work for now
         getBranchesNow();
         getAllCommitsNow();
@@ -163,7 +203,8 @@ define(['commonUtil'],function(commonUtil){
             getAllCommitsNow : getAllCommitsNow,
             getCommitDifference : getCommitDifference,
             getBranches : getBranches,
-            getBranchesNow : getBranchesNow
+            getBranchesNow : getBranchesNow,
+            isFastForward: isFastForward
         }
     };
     return ClientCommitInfo;

@@ -237,7 +237,7 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             }
 
             //close the database connection
-            if(_mongo){
+            if(_mongo && _mongo.opened()){
                 _mongo.close();
             }
         };

@@ -4,19 +4,24 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
     var ClientStorageStable = function (options) {
         ASSERT(options);
 
-        var storage = new siobase(options),
-            KEYNAME = storage.KEYNAME,
+        var storage = null,
+            KEYNAME = null,
             PENDING = "pending",
             OBJECTS = localStorage,
             inSync = options.watcher ? options.watcher.dataInSync : function(){},
             outSync = options.watcher ? options.watcher.dataOutSync : function(){},
-            syncronized = true;
+            syncronized = true,
+            baseOptions = options;
+
+        baseOptions.watcher = {dataInSync: sync, dataOutSync: goOutOfSync};
+        storage = new siobase(baseOptions);
+        KEYNAME = storage.KEYNAME;
 
 
         var goOutOfSync = function(){
             if(syncronized){
                 syncronized = false;
-                storage.whenAvailable(sync);
+                //storage.whenAvailable(sync);
                 outSync(options.projectinfo);
             }
         };
@@ -159,6 +164,11 @@ define([ 'core/assert','js/Client/ClientStorageSIO' ], function (ASSERT,siobase)
                 callback(null);
             });
         };
+
+        baseOptions.watcher = {dataInSync: sync, dataOutSync: goOutOfSync};
+        storage = new siobase(baseOptions);
+        KEYNAME = storage.KEYNAME;
+
         return {
             open         : open,
             opened       : storage.opened,

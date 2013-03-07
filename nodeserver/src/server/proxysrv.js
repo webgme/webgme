@@ -128,16 +128,15 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
         });
 
         //functions for the projects
-         var close = function(project){
+
+        var close = function(project){
             //this notification comes from the projectserver
             //that it has been automatically closed (due to last client disconnection
-            _projects[project].project.close();
-            delete _projects[project];
+            if(_projects[project]){
+                _projects[project].project.close();
+                delete _projects[project];
+            }
         };
-
-        return {
-            close : close
-        }
     };
     return ProxyServer;
 });
