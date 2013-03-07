@@ -5,9 +5,12 @@
 define(['clientUtil',
         'logManager',
         'commonUtil',
+        'js/Constants',
         'lib/jquery/jquery.hotkeys',
         'lib/jquery/jquery.jstree',
-        'css!/css/JSTreeBrowserWidget'], function (util, logManager, commonUtil) {
+        'css!/css/JSTreeBrowserWidget'], function (util, logManager, commonUtil, CONSTANTS) {
+
+    var draggable_parent_id = "contentContainer";
 
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
@@ -526,15 +529,27 @@ define(['clientUtil',
 
                 nodeEl.draggable({
                     zIndex: 100000,
+                    appendTo: $("body").find("#" + draggable_parent_id).first(),
+                    cursorAt: { left: 5, top: 5 },
                     helper: function (event) {
-                        var helperEl = nodeEl.clone();
+                        var helperEl = nodeEl.clone(),
+                            wrapper = $('<div class="jstree jstree-default"><ul class="jstree-no-dots"></ul></div>'),
+                            metaInfo;
 
                         //trim down unnecessary DOM elements from it
                         helperEl.children().first().remove();
                         helperEl.find("ul").remove();
                         helperEl.find(".jstree-hovered").removeClass("jstree-hovered");
 
+                        wrapper.find('ul').append(helperEl);
+
+                        helperEl = wrapper;
+
                         //add extra GME related drag info
+                        metaInfo = {};
+                        metaInfo[CONSTANTS.GME_ID] =  node.attr("nId");
+                        helperEl.data("metaInfo", metaInfo);
+
                         helperEl[0].GMEDragData = { "type": "simple-drag",
                                              "id": node.attr("nId")};
 
