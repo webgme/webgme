@@ -17,10 +17,14 @@ define(['logManager',
 
     var GraphVizView;
 
-    GraphVizView = function (containerElement) {
-        this._logger = logManager.create("GraphVizView_" + containerElement);
+    GraphVizView = function (params) {
+        this._logger = logManager.create("GraphVizView_" + params.containerElement.attr("id"));
 
-        this._el = $("#" + containerElement);
+        this._el = params.containerElement;
+        if (this._el.length === 0) {
+            this._logger.warning("GraphVizView's container control does not exist");
+            throw "GraphVizView's container control does not exist";
+        }
 
         this._graphVizObjects = {};
         this._pointers = {};
@@ -30,10 +34,7 @@ define(['logManager',
             "strokeColor" : "#FF7800",
             "lineType": "-" };
 
-        if (this._el.length === 0) {
-            this._logger.warning("GraphVizView's container control with id:'" + containerElement + "' could not be found");
-            return undefined;
-        }
+
 
         this._initialize();
 

@@ -25,8 +25,8 @@ define(['logManager',
         CONTAINMENT_TYPE_LINE_END = "diamond-wide-long",
         INHERITANCE_TYPE_LINE_END = "block-wide-long";
 
-    ModelEditorView = function (containerElement) {
-        this._logger = logManager.create("ModelEditorView_" + containerElement);
+    ModelEditorView = function (params) {
+        this._logger = logManager.create("ModelEditorView_" + params.containerElement.attr("id"));
 
         this._connectionPointManager = new ConnectionPointManager();
 
@@ -52,11 +52,7 @@ define(['logManager',
         this._initializeCollections();
 
         //STEP 2: initialize UI
-        this._initializeUI(containerElement);
-        if (this._el.length === 0) {
-            this._logger.error("ModelEditorView can not be created");
-            return undefined;
-        }
+        this._initializeUI(params.containerElement);
         this._logger.debug("Created");
     };
 
@@ -631,10 +627,10 @@ define(['logManager',
         var self = this;
 
         //get container first
-        this._el = $("#" + containerElement);
+        this._el = containerElement;
         if (this._el.length === 0) {
-            this._logger.warning("ModelEditorView's container control with id:'" + containerElement + "' could not be found");
-            return undefined;
+            this._logger.warning("ModelEditorView's container does not exist");
+            throw("ModelEditorView's container does not exist");
         }
 
         this._defaultSize = { "w": parseInt(this._el.parent().css("width"), 10),

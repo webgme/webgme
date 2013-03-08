@@ -11,11 +11,8 @@ define(['logManager',
         __parent_proto__ = DesignerCanvas.prototype;
 
     MetaDesignerCanvas = function (opts) {
-        var options = {};
+        var options = $.extend({}, opts);
 
-        if (typeof opts === "string") {
-            options.containerElement = opts;
-        }
         options.loggerName = options.loggerName || "MetaDesignerCanvas";
 
         __parent__.apply(this, [options]);

@@ -107,7 +107,6 @@ body {
 
 #footerBar {
     bottom: 0;
-
 }
 
 #contentContainer {
@@ -123,7 +122,6 @@ body {
     width: 200px;
     height: 100%;
     overflow: auto;
-    /*background-color: #ffff00;*/
 }
 
 #leftPane {
@@ -137,6 +135,7 @@ body {
 #middlePane {
     height: 100%;
     overflow: auto;
+    position: relative;
 }
 
 .sidePaneWidget {

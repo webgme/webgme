@@ -20,8 +20,13 @@ define(['logManager',
 
     DataGridView = function (options) {
         //set properties from options
-        this.containerElementId = typeof options === "string" ? options : options.containerElement;
-        this.logger = options.logger || logManager.create((options.loggerName || "DataGridView") + '_' + this.containerElementId);
+        this.$el = options.containerElement;
+        if (this.$el.length === 0) {
+            this.logger.error("DataGridView's container control does not exist");
+            throw ("DataGridView can not be created");
+        }
+
+        this.logger = options.logger || logManager.create((options.loggerName || "DataGridView") + '_' + this.$el.attr("id"));
 
         this._readOnlyMode = options.readOnlyMode || false;
         this.logger.warning("DataGridView.ctor _readOnlyMode is set to TRUE by default");
@@ -40,12 +45,6 @@ define(['logManager',
 
     DataGridView.prototype.initializeUI = function () {
         //get container first
-        this.$el = $("#" + this.containerElementId);
-        if (this.$el.length === 0) {
-            this.logger.warning("DataGridView's container control with id:'" + this.containerElementId + "' could not be found");
-            throw "DataGridView's container control with id:'" + this.containerElementId + "' could not be found";
-        }
-        
         this.$el.append(this.$_DOMBase);
     };
 

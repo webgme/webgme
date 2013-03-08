@@ -66,8 +66,8 @@ define([  'logManager',
         tJSTree,
         mainWidget,
         doConnect,
-        lastContainerWidth = 0,
-        lastContainerHeight = 0,
+        lastBodyWidth = 0,
+        lastBodyHeight = 0,
         resizeMiddlePane,
         mainController,
         currentNodeId = null,
@@ -86,29 +86,35 @@ define([  'logManager',
     /*
      * Compute the size of the middle pane window based on current browser size
      */
-    lastContainerWidth = 0;
-    lastContainerHeight = 0;
+    lastBodyWidth = 0;
+    lastBodyHeight = 0;
     resizeMiddlePane = function () {
-        var cW = $("body").width(),
-            cH = $("body").height(),
+        var $body = $("body"),
+            $leftPanel =  $("#leftPane"),
+            $rightPanel = $("#rightPane"),
+            $middlePanel = $("#middlePane"),
+            bodyW = $body.width(),
+            bodyH = $body.height(),
             eW = 0,
-            eH = 0;
+            eH = 0,
+            leftPanelW = $leftPanel.outerWidth(),
+            leftPanelH = $leftPanel.outerHeight(),
+            rightPanelW = $rightPanel.outerWidth(),
+            rightPanelH = $rightPanel.outerHeight();
 
-        /*$("#contentContainer").width(cW);
-        $("#contentContainer").height(cH);*/
+        if (bodyW !== lastBodyWidth || bodyH !== lastBodyHeight) {
+            $middlePanel.width(bodyW - leftPanelW - rightPanelW);
 
-        if (cW !== lastContainerWidth || cH !== lastContainerHeight) {
-            $("#middlePane").outerWidth(cW - $("#leftPane").outerWidth() - $("#rightPane").outerWidth());
-            lastContainerWidth = cW;
-            lastContainerHeight = cH;
+            lastBodyWidth = bodyW;
+            lastBodyHeight = bodyH;
 
-            eW = Math.floor($("#middlePane").width());
-            eH = Math.floor($("#middlePane").height());
-
-            $("#mainWidgetContainer").outerWidth(eW).outerHeight(eH);
+            eW = $middlePanel.width();
+            eH = $middlePanel.height();
 
             if (visualizerPanel) {
+                $middlePanel.css({"overflow": "hidden"});
                 visualizerPanel.widgetContainerSizeChanged(eW, eH);
+                $middlePanel.css({"overflow": "auto"});
             }
         }
     };
@@ -197,7 +203,7 @@ define([  'logManager',
 
             visArray = JSON.parse(VisualizersJSON);
             visualizerPanel.addRange(visArray, function () {
-                visualizerPanel.setActiveVisualizer('DesignerCanvas_Model');
+                //visualizerPanel.setActiveVisualizer('DesignerCanvas_Model');
             });
 
             //TESTING part

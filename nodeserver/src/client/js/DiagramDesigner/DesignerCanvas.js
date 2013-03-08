@@ -48,8 +48,13 @@ define(['logManager',
         var self = this;
 
         //set properties from options
-        this.containerElementId = typeof options === "string" ? options : options.containerElement;
-        this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.containerElementId);
+        this.$el = options.containerElement;
+        if (this.$el.length === 0) {
+            this.logger.error("DesignerCanvas's container control does not exist");
+            throw ("DesignerCanvas can not be created");
+        }
+
+        this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.$el.attr("id"));
 
         this._readOnlyMode = options.readOnlyMode || false;
         this.logger.warning("DesignerCanvas.ctor _readOnlyMode is set to TRUE by default");
@@ -217,7 +222,7 @@ define(['logManager',
     DesignerCanvas.prototype.destroy = function () {
         this.__loader.destroy();
         this.$el.empty();
-        this.$el.attr("style", "");
+        this.$el.removeClass("designer-canvas");
     };
 
     DesignerCanvas.prototype.initializeUI = function () {
@@ -226,16 +231,8 @@ define(['logManager',
 
         this.logger.debug("DesignerCanvas.initializeUI");
 
-        //try to get container first
-        this.$el = $("#" + this.containerElementId);
-        if (this.$el.length === 0) {
-            this.logger.error("DesignerCanvas's container control with id:'" + this.containerElementId + "' could not be found");
-            throw ("DesignerCanvas can not be created");
-        }
-
         //clear content
         this.$el.empty();
-        this.$el.attr("style", "");
 
         //add own class
         this.$el.addClass("designer-canvas");
@@ -923,12 +920,12 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.onBackgroundDroppableAccept = function (helper) {
-        this.logger.warning("DesignerCanvas.prototype.onBackgroundDroppableAccept not overridden in controller!!! helper: '" + JSON.stringify(helper) + "'");
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDroppableAccept not overridden in controller!!!");
         return false;
     };
 
     DesignerCanvas.prototype.onBackgroundDrop = function (helper, position) {
-        this.logger.warning("DesignerCanvas.prototype.onBackgroundDrop not overridden in controller!!! helper: '" + JSON.stringify(helper) + "', position: '" + JSON.stringify(position) + "'");
+        this.logger.warning("DesignerCanvas.prototype.onBackgroundDrop not overridden in controller!!! position: '" + JSON.stringify(position) + "'");
     };
 
     /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/

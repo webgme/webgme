@@ -54,7 +54,7 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
   }
 
   .designer-canvas-body {
-    position: absolute;
+    position: relative;
     overflow: auto;
 
     &.read-only {

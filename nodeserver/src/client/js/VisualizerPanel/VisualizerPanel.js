@@ -24,7 +24,15 @@ define(['logManager',
         }
 
         this._widgetContainer = params.widgetContainer;
-        if (!this._client) {
+        if (!this._widgetContainer) {
+            this.logger.error("Invalid widgetContainer in params");
+            throw "Invalid widgetContainer in params";
+        }
+
+        if (_.isString(this._widgetContainer)) {
+            this._widgetContainer = $("#" + this._widgetContainer);
+        }
+        if (this._widgetContainer.length !== 1) {
             this.logger.error("Invalid widgetContainer in params");
             throw "Invalid widgetContainer in params";
         }
@@ -73,13 +81,16 @@ define(['logManager',
                 this._activeWidget.destroy();
             }
 
+            /*clear any leftover style --> should not happen, all the widgets needs to clean up after themselves, but...*/
+            this._widgetContainer.removeAttr("style").removeAttr("class");
+
             this._activeContoller = null;
             this._activeWidget = null;
 
             if (this._visualizers[visualizer]) {
                 WidgetClass = this._visualizers[visualizer].widget;
                 if (WidgetClass) {
-                    this._activeWidget = new WidgetClass(this._widgetContainer);
+                    this._activeWidget = new WidgetClass({"containerElement": this._widgetContainer});
                 }
 
                 ControlClass = this._visualizers[visualizer].control;

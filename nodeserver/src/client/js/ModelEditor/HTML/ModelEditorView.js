@@ -21,16 +21,15 @@ define(['logManager',
 
     var ModelEditorView;
 
-    ModelEditorView = function (containerElement) {
-        this._logger = logManager.create("ModelEditorView_" + containerElement);
+    ModelEditorView = function (params) {
+        this._logger = logManager.create("ModelEditorView_" + params.containerElement.attr("id"));
 
         this._connectionPointManager = new ConnectionPointManager();
 
-        this._el = $("#" + containerElement);
-
+        this._el = params.containerElement;
         if (this._el.length === 0) {
-            this._logger.warning("ModelEditorView's container control with id:'" + containerElement + "' could not be found");
-            return undefined;
+            this._logger.warning("ModelEditorView's container control does not exist");
+            throw "ModelEditorView's container control does not exist";
         }
 
         this._initialize();

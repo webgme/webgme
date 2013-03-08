@@ -22,7 +22,7 @@
   .designer-canvas .designer-canvas-header .btn-group.no-margin {
     margin-left: 0px; }
 .designer-canvas .designer-canvas-body {
-  position: absolute;
+  position: relative;
   overflow: auto; }
   .designer-canvas .designer-canvas-body.read-only {
     background-color: #ededed; }
