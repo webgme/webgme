@@ -42,7 +42,7 @@ define([], function () {
             i;
 
         $btn = $('<a/>', {
-            "class": "btn " + params.class || "",
+            "class": "btn" + (params.class || ""),
             "href": "#",
             "title": params.title
         });
