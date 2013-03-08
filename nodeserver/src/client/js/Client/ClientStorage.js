@@ -156,12 +156,12 @@ define([
                 });
             };
 
-            var requestPoll = function(branchname,updatefunction){
+            var requestPoll = function(branchname,oldhash,updatefunction){
                 var start = TIMESTAMP();
                 var guid = "["+GUID()+"]";
-                var text = guid+"requestPoll("+branchname+")";
+                var text = guid+"requestPoll("+branchname+","+oldhash+")";
                 log(text);
-                storage.requestPoll(branchname,function(node){
+                storage.requestPoll(branchname,oldhash,function(node){
                     log(text+ETIMESTRING(start));
                     updatefunction(node);
                 });

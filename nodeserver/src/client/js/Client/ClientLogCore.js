@@ -1,9 +1,9 @@
 /*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
  *
  * Author: Tamas Kecskes
  */
-var COREVERSION = 3;
+var COREVERSION = "3";
 define(['commonUtil','core/core'+COREVERSION,'core/assert'], function (CU,CORE,ASSERT) {
     'use strict';
     var GUID = CU.guid;

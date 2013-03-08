@@ -4,7 +4,8 @@ define([
     'core/core_',
     'storage/cache',
     'storage/failsafe',
-    'storage/socketioclient'
+    'storage/socketioclient',
+    'js/NewClient/commit'
 ],
     function (
         commonUtil,
@@ -12,7 +13,8 @@ define([
         Core,
         Cache,
         Failsafe,
-        SocketIOClient
+        SocketIOClient,
+        Commit
         ) {
 
         var ClientMaster = function(){
@@ -27,39 +29,73 @@ define([
                                 ),
                                 {}
                 ),
+                _projectName = null,
                 _project = null,
+                _commit = null,
                 _inTransaction = false,
                 _core = null,
-                _previousCore = null;
+                _previousCore = null,
+                _commitObject = null,
+                _previousCommitObject = null,
+                _branch = null,
+                _previousBranch = null;
 
 
 
             //internal functions
-            var commit = function(rootHash,callback){
+            var closeOpenedProject = function(callback){
                 if(_project){
-                    var commitOjb = {
-                        _id     : '#007',
-                        root    : rootHash,
-                        parents : mycommit ? [mycommit[KEY]] : [],
-                        updates : [],
-                        time    : commonUtil.timestamp(),
-                        message : msg,
-                        name    : branch,
-                        type    : "commit"
-                    };
-                    _project.insertObject(commitOjb,callback);
+                    _project.closeProject(function(err){
+                        //TODO what if for some reason we are in transaction???
+                        _projectName = null;
+                        _project = null;
+                        _commit = null;
+                        _inTransaction = false;
+                        _core = null;
+                        _previousCore = null;
+                        _commitObject = null;
+                        _previousCommitObject = null;
+                        _branch = null;
+                        _previousBranch = null;
+                        callback(err);
+                    });
                 } else {
-                    callback('there is no project opened');
+                    _projectName = null;
+                    _project = null;
+                    _commit = null;
+                    _inTransaction = false;
+                    _core = null;
+                    _previousCore = null;
+                    _commitObject = null;
+                    _previousCommitObject = null;
+                    _branch = null;
+                    _previousBranch = null;
+                    callback(null);
                 }
-            };
 
-            var persist = function(callback){
-                //we save the current state of our projectcore
-                if(_project){
-                    _project.persist()
-                } else {
-                    callback('there is no project opened');
-                }
+            };
+            var createEmptyProject = function(project,callback){
+                var core = new Core(project,{});
+                var commit = new Commit(project);
+                var root = core.createNode();
+                core.setRegistry(root,"isConnection",false);
+                core.setRegistry(root,"position",{ "x": 0, "y": 0});
+                core.setAttribute(root,"name","ROOT");
+                core.setRegistry(root,"isMeta",false);
+
+                commit.makeCommit(core,root,null,function(err,commitHash){
+                    if(!err && commitHash){
+                        project.setBranchHash('*master',null,commitHash,function(err){
+                            if(!err){
+                                callback(null,commitHash);
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
             };
 
             //event functions to relay information between users
@@ -67,7 +103,8 @@ define([
             self.events = {
                 "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
                 "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
-                "ACTOR_CHANGED"         : "ACTOR_CHANGED"
+                "ACTOR_CHANGED"         : "ACTOR_CHANGED",
+                "PROJECT_CHANGED"       : "PROJECT_CHANGED"
             };
             self.setSelectedObjectId = function (objectId) {
                 if (objectId !== selectedObjectId) {
@@ -79,6 +116,247 @@ define([
                 self.setSelectedObjectId(null);
             };
 
+
+            //project and commit selection functions
+            self.getActiveProject = function () {
+                return _projectName;
+            };
+            self.getAvailableProjectsAsync = function (callback) {
+                _database.getProjectNames(callback);
+            };
+            self.selectProjectAsync = function (projectname,callback) {
+                //we assume that every project has a master branch and we
+                //open that...
+                if(projectname === _projectName){
+                    callback(null);
+                } else {
+                    closeOpenedProject(function(err){
+                        //TODO what can we do with the error??
+                        _database.openProject(projectname,function(err,p){
+                            if(!err && p){
+                                _projectName = projectname;
+                                _project = p;
+                                _commit = new Commit(p);
+                                _project.getBranchHash('*master',null,function(err,newhash){
+                                    if(!err && newhash){
+                                        _project.loadObject(newhash,function(err,commit){
+                                            if(!err && commit){
+                                                _commitObject = commit;
+                                                _branch = '*master';
+                                                //TODO check it more deeply
+
+                                            } else {
+                                                closeOpenedProject(function(err2){
+                                                    callback(err);
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        closeOpenedProject(function(err2){
+                                            callback(err);
+                                        });
+                                    }
+                                });
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    });
+                }
+            };
+            self.createProjectAsync = function(projectname,callback){
+                self.getAvailableProjectsAsync(function(err,names){
+                    if(!err && names){
+                        if(names.indexOf(projectname) === -1){
+                            _database.openProject(projectname,function(err,p){
+                                if(!err && p){
+                                    createEmptyProject(p,function(err,commit){
+                                        if(!err && commit){
+                                            closeOpenedProject(function(err){
+                                                //TODO what is with error???
+                                                _projectName = projectname;
+                                                _project = p;
+                                                _commit = new Commit(p);
+                                                _commitObject = commit;
+                                                _branch = '*master';
+                                            });
+                                        } else {
+                                            callback(err);
+                                        }
+                                    });
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        } else {
+                            //TODO maybe the selectProjectAsync could be called :)
+                            callback('the project already exists!');
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
+            };
+            self.deleteProjectAsync = function(projectname,callback){
+                if(projectname === _projectName){
+                    closeOpenedProject();
+                }
+                _database.deleteProject(projectname,callback);
+            };
+            self.selectCommitAsync = function (commitid, callback) {
+                //TODO
+                callback('NIE');
+            };
+
+            self.getCommitsAsync = function (callback) {
+                if(_project){
+
+                } else {
+                    callback('there is no opened project');
+                }
+            };
+            self.getCommitObj = function (commitid) {
+                if (activeProject) {
+                    return commitInfos[activeProject].getCommitObj(commitid);
+                } else {
+                    return null;
+                }
+            };
+            self.getActualCommit = function () {
+                if (activeProject && activeActor) {
+                    return activeActor.getCurrentCommit();
+                }
+                return null;
+            };
+            self.getActualBranch = function () {
+                if (activeProject && activeActor) {
+                    return activeActor.getCurrentBranch();
+                }
+                return null;
+            };
+            self.getBranchesAsync = function (callback) {
+                if (activeProject) {
+                    commitInfos[activeProject].getBranchesNow(function (err, serverbranches) {
+                        if (!err && serverbranches && serverbranches.length > 0) {
+                            var returnlist = {};
+                            for (var i = 0; i < serverbranches.length; i++) {
+                                returnlist[serverbranches[i].name] = {
+                                    name:serverbranches[i].name,
+                                    remotecommit:serverbranches[i].commit,
+                                    localcommit:null
+                                };
+                            }
+                            for (i in projectsinfo[activeProject].branches) {
+                                if (returnlist[i]) {
+                                    returnlist[i].localcommit = projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit;
+                                } else {
+                                    returnlist[i] = {
+                                        name:i,
+                                        remotecommit:null,
+                                        localcommit:projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
+                                    };
+                                }
+                            }
+                            var returnarray = [];
+                            for (i in returnlist) {
+                                returnarray.push(returnlist[i]);
+                            }
+                            callback(null, returnarray);
+                        } else {
+                            err = err || 'there is no branch';
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback('there is no active project!!!');
+                }
+            };
+            self.getRootKey = function () {
+                if (activeProject && activeActor) {
+                    return activeActor.getRootKey();
+                }
+                return null;
+            };
+            self.commitAsync = function (parameters, callback) {
+                callback = callback || function () {
+                };
+                if (activeProject) {
+                    if (parameters.branch && parameters.branch !== self.getActualBranch()) {
+                        if (!projectsinfo[activeProject].branches[parameters.branch]) {
+                            storages[activeProject].createBranch(parameters.branch, function (err) {
+                                if (err) {
+                                    callback(err);
+                                } else {
+                                    var commitkey = parameters.commit ? parameters.commit : activeActor.getCurrentCommit();
+                                    var commit = commitInfos[activeProject].getCommitObj(commitkey);
+                                    projectsinfo[activeProject].branches[parameters.branch] = {
+                                        actor:new ClientProject({
+                                            storage:storages[activeProject],
+                                            master:self,
+                                            id:null,
+                                            userstamp:'todo',
+                                            commit:commit,
+                                            branch:parameters.branch,
+                                            readonly:false,
+                                            logger:logger
+                                        }),
+                                        commit:commitkey
+                                    };
+                                    activateActor(projectsinfo[activeProject].branches[parameters.branch].actor, null, function () {
+                                        activeActor.commit('initial commit', callback);
+                                    });
+                                }
+                            });
+                        } else {
+                            callback('the branch already exists');
+                        }
+                    } else {
+                        if (activeActor) {
+                            activeActor.commit(parameters.message, callback);
+                        }
+                    }
+                }
+            };
+            self.deleteBranchAsync = function (branchname, callback) {
+                if (activeProject) {
+                    if (projectsinfo[activeProject].branches[branchname]) {
+                        //first we kill the actor if there is any on that branch
+                        if (projectsinfo[activeProject].branches[branchname].actor) {
+                            projectsinfo[activeProject].branches[branchname].actor.dismantle();
+                            projectsinfo[activeProject].branches[branchname].actor = null;
+                        }
+
+                        delete projectsinfo[activeProject].branches[branchname];
+                        if (projectsinfo[activeProject].currentbranch === branchname) {
+                            projectsinfo[activeProject].currentbranch = null;
+                        }
+                    }
+                    //whether we have info about the branch or not, we should try to delete it from the server
+                    storages[activeProject].deleteBranch(branchname, function (err) {
+                        if (err) {
+                            console.log('branch deletion failed... -' + err);
+                        }
+                        callback(err);
+                    });
+                } else {
+                    callback('there is no active branch');
+                }
+            };
+            self.remoteDeleteBranch = function (projectname, branchname) {
+                //this function is called when it turned out that some other user deleted some branch
+                if (projectsinfo[projectname]) {
+                    if (projectsinfo[projectname].branches[branchname]) {
+                        if (projectsinfo[projectname].branches[branchname].actor) {
+                            projectsinfo[projectname].branches[branchname].actor.dismantle();
+                            projectsinfo[projectname].branches[branchname].actor = null;
+                        }
+                        delete projectsinfo[projectname].branches[branchname];
+                        if (projectsinfo[projectname].currentbranch === branchname) {
+                            projectsinfo[projectname].currentbranch = null;
+                        }
+                    }
+                }
+            };
 
             //relayed project functions
             //kind of a MGA

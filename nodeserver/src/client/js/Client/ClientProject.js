@@ -14,6 +14,7 @@ define([
     var RELFROMID  = commonUtil.relidfromid;
     var RELFROMSET = commonUtil.setidtorelid;
     var COPY       = commonUtil.copy;
+
     var ClientProject = function(parameters){ //it represents one working copy of a project attached to a given branch of the project
         var self = this,
             storage = parameters.storage, //the storage of the project
@@ -56,7 +57,7 @@ define([
             var goOnlineWithCommit = function(){
                 blocked = false;
                 status = 'online';
-                storage.requestPoll(branch,projectPoll);
+                storage.requestPoll(branch,mycommit[KEY],projectPoll);
                 modifyRootOnServer("- going online -",callback);
             };
             var isPredecessorCommit = function(youngcommitid,oldcommitid,allcommits){
@@ -102,7 +103,7 @@ define([
                                                 newRootArrived(mycommit.root,function(){
                                                     blocked = false;
                                                     status = 'online';
-                                                    storage.requestPoll(branch,projectPoll);
+                                                    storage.requestPoll(branch,mycommit[KEY],projectPoll);
                                                     master.changeStatus(id,status);
                                                     callback();
                                                 });
@@ -276,7 +277,7 @@ define([
                                         foundbranch = true;
                                         status = 'online';
                                         branch = branches[i].name;
-                                        storage.requestPoll(branch,projectPoll);
+                                        storage.requestPoll(branch,mycommit[KEY],projectPoll);
                                     } else if(branches[i].localcommit === mycommit[KEY]){
                                         foundbranch = true;
                                         status = 'offline';
@@ -341,16 +342,19 @@ define([
         var projectPoll = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
-                storage.requestPoll(branch,projectPoll);
                 if(node.commit !== mycommit[KEY]){
                     //we can refresh ourselves as this must be fastforwad from our change
                     storage.load(node.commit,function(err,commitobj){
                         if(!err && commitobj){
                             mycommit = commitobj;
-                            newRootArrived(mycommit.root);
+                            newRootArrived(mycommit.root,function(){
+                                storage.requestPoll(branch,mycommit[KEY],projectPoll);
+                            });
                         }
                     });
 
+                } else {
+                    storage.requestPoll(branch,mycommit[KEY],projectPoll);
                 }
             }
             // in other cases we do not care about this poll... must be a mistake or the last poll we requested earlier

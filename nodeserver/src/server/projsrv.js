@@ -165,13 +165,22 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             });
 
             //only branches accepts polls
-            socket.on('requestPoll',function(key,callback){
+            socket.on('requestPoll',function(key,oldhash,callback){
                 console.log('polling '+key+' for '+socket.id);
                 if(_polls[key]){
                     _polls[key].push(callback);
                 } else {
                     _polls[key] = [callback];
                 }
+                _mongo.load("*#*"+key,function(err,branch){
+                    if(branch.commit !== oldhash){
+                        _mongo.load(branch.commit,function(err,commit){
+                            if(!err && commit){
+                                callback(commit);
+                            }
+                        });
+                    }
+                });
             });
 
             socket.on('createBranch',function(name,callback){

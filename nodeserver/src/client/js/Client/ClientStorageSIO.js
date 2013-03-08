@@ -201,10 +201,10 @@ define([ "core/assert", "/socket.io/socket.io.js" ], function (ASSERT) {
             }
         };
 
-        var requestPoll = function(branchname,updatedfunction){
+        var requestPoll = function(branchname,oldhash,updatedfunction){
             if(socket){
                 if(isopen){
-                    socket.emit('requestPoll',branchname,updatedfunction);
+                    socket.emit('requestPoll',branchname,oldhash,updatedfunction);
                 }
             }
         };
