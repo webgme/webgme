@@ -348,10 +348,12 @@ define(['logManager',
                 },
                 activate: function( event, ui ) {
                     var m = 0;
-                    self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2* m,
-                        "height": self.designerCanvasBodySize.height - 2 * m,
-                        "top": self.childrenContainerScroll.top + m,
-                        "left": self.childrenContainerScroll.left + m });
+                    if (self.mode === self.OPERATING_MODES.NORMAL) {
+                        self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2* m,
+                            "height": self.designerCanvasBodySize.height - 2 * m,
+                            "top": self.childrenContainerScroll.top + m,
+                            "left": self.childrenContainerScroll.left + m });
+                    }
                 },
                 deactivate: function( event, ui ) {
                     self.skinParts.$dropRegion.css({"width": "0px",
