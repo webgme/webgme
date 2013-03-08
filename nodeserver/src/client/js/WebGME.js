@@ -93,8 +93,13 @@ define([  'logManager',
             $leftPanel =  $("#leftPane"),
             $rightPanel = $("#rightPane"),
             $middlePanel = $("#middlePane"),
+            $contentContainer = $("#contentContainer"),
+            $header = $("#header"),
+            $footer = $("#footer"),
             bodyW = $body.width(),
             bodyH = $body.height(),
+            headerH = $header.height(),
+            footerH = $footer.height(),
             eW = 0,
             eH = 0,
             leftPanelW = $leftPanel.outerWidth(),
@@ -102,7 +107,11 @@ define([  'logManager',
             rightPanelW = $rightPanel.outerWidth(),
             rightPanelH = $rightPanel.outerHeight();
 
+        $contentContainer.height(bodyH - headerH - footerH);
+
         if (bodyW !== lastBodyWidth || bodyH !== lastBodyHeight) {
+            $middlePanel.css({"overflow": "hidden"});
+
             $middlePanel.width(bodyW - leftPanelW - rightPanelW);
 
             lastBodyWidth = bodyW;
@@ -112,10 +121,10 @@ define([  'logManager',
             eH = $middlePanel.height();
 
             if (visualizerPanel) {
-                $middlePanel.css({"overflow": "hidden"});
                 visualizerPanel.widgetContainerSizeChanged(eW, eH);
-                $middlePanel.css({"overflow": "auto"});
             }
+
+            $middlePanel.css({"overflow": "auto"});
         }
     };
 
@@ -212,11 +221,7 @@ define([  'logManager',
 
     return {
         start : function () {
-            doConnect(function (err) {
-                if (!err) {
-                    visualizerPanel.setActiveVisualizer("ModelEditor2");
-                }
-            });
+            doConnect(function (err) {});
         }
     };
 });

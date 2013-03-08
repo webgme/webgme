@@ -19,6 +19,11 @@
     border-radius: 0;
 }
 
+.navbar-fixed-bottom .navbar-inner {
+    height: 26px;
+    min-height: 26px;
+}
+
 /******************* tooltiplabel - BASED ON TOOLTIP BUT DOES NOT HAVE DIFFERENT Z-INDEX *****************/
 
 .tooltiplabel {
