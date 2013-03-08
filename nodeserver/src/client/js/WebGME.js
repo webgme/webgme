@@ -203,7 +203,7 @@ define([  'logManager',
 
             visArray = JSON.parse(VisualizersJSON);
             visualizerPanel.addRange(visArray, function () {
-                //visualizerPanel.setActiveVisualizer('DesignerCanvas_Model');
+                visualizerPanel.setActiveVisualizer('DesignerCanvas_Model');
             });
 
             //TESTING part
