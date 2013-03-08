@@ -116,8 +116,12 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
       }
     }
 
-    .connections {
+    .dropRegion {
+      width: 0;
+      height: 0;
       position: absolute;
+      top: 0;
+      left: 0;
     }
   }
 }
