@@ -10,8 +10,6 @@ define(['clientUtil',
         'lib/jquery/jquery.jstree',
         'css!/css/JSTreeBrowserWidget'], function (util, logManager, commonUtil, CONSTANTS) {
 
-    var draggable_parent_id = "contentContainer";
-
     var JSTreeBrowserWidget = function (containerId) {
         //save this for later use
         var self = this,
@@ -529,7 +527,7 @@ define(['clientUtil',
 
                 nodeEl.draggable({
                     zIndex: 100000,
-                    appendTo: $("body").find("#" + draggable_parent_id).first(),
+                    appendTo: $("body").find("#" + CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first(),
                     cursorAt: { left: 5, top: 5 },
                     helper: function (event) {
                         var helperEl = nodeEl.clone(),

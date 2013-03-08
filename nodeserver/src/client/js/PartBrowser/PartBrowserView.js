@@ -1,7 +1,8 @@
 "use strict";
 
 define(['logManager',
-    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager) {
+    'js/Constants',
+    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager, CONSTANTS) {
 
     var PartBrowserView,
         PART_CLASS = "part";
@@ -109,7 +110,8 @@ define(['logManager',
             cursorAt: {
                 left: 0,
                 top: 0
-            }
+            },
+            appendTo: $("body").find("#" + CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first()
         });
     };
 
