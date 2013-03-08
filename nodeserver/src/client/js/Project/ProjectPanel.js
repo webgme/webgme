@@ -171,7 +171,8 @@ define(['logManager',
             self._repoHistoryDialog.css({"display": "",
                 "width": "",
                 "margin-left": "",
-                "margin-top": ""});
+                "margin-top": "",
+                "top": ""});
             modalBody.empty();
         });
 

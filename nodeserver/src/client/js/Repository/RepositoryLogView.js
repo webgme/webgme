@@ -436,9 +436,12 @@ define(['logManager',
 
         dBody.css({"max-height": wH });
 
+        repoDialog.removeClass("fade ");
+
         repoDialog.css({"width": wW,
             "margin-left": wW / 2 * (-1),
-            "margin-top": repoDialog.height() / 2 * (-1)});
+            "margin-top": repoDialog.height() / 2 * (-1),
+            "top": "50%"});
     };
 
     RepositoryLogView.prototype._onCommitClick = function (commitEl) {
