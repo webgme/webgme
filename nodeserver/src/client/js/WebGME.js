@@ -168,20 +168,7 @@ define([  'logManager',
                 }
             });
 
-            //tDynaTree = new TreeBrowserControl(client, new DynaTreeBrowserWidget("tbDynaTree"));
             tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
-
-            //modelEditorSVG = new ModelEditorControl(client, new ModelEditorSVGWidget("modelEditorSVG"));
-            //mainWidget = new WidgetManager(client, $("#mainWidget"));
-            //modelEditorView = new ModelEditorView("mainWidget");
-            //mainWidget = new ModelEditorControl(client, modelEditorView);
-            //graphViz = new GraphVizControl(client, new GraphVizView("modelEditorSVG"));
-
-            //hide GraphViz first and hook up radio button
-
-            /*commit browser init*/
-            /*commitView = new CommitView(document.getElementById('commitbrowser'));
-             commitCtrl = new CommitCtrl(client, commitView);*/
 
             partBrowserView = new PartBrowserView("pPartBrowser");
             partBrowserController = new PartBrowserControl(proxy, partBrowserView);
