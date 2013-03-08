@@ -61,6 +61,8 @@ define(['logManager',
 
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
 
+        this._droppable = _.isBoolean(options.droppable) ? options.droppable : true;
+
         //define properties of its own
         this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
@@ -324,20 +326,41 @@ define(['logManager',
         //finally resize the whole content according to available space
         this._resizeCanvas(_parentSize.w, _parentSize.h);
 
-        //hook up drop event handler on children container
-        this._acceptDroppable = false;
-        this.skinParts.$itemsContainer.droppable({
-            over: function( event, ui ) {
-                self._onBackgroundDroppableOver(ui);
-            },
-            out: function( event, ui ) {
-                self._onBackgroundDroppableOut(ui);
-            },
-            drop: function (event, ui) {
-                self._onBackgroundDrop(ui);
-            }
-        });
+        if (this._droppable === true) {
+            //hook up drop event handler on children container
 
+            this._acceptDroppable = false;
+
+            this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
+
+            this.skinParts.$designerCanvasBody.append(this.skinParts.$dropRegion);
+
+            /* SET UP DROPPABLE DROP REGION */
+            this.skinParts.$dropRegion.droppable({
+                over: function( event, ui ) {
+                    self._onBackgroundDroppableOver(ui);
+                },
+                out: function( event, ui ) {
+                    self._onBackgroundDroppableOut(ui);
+                },
+                drop: function (event, ui) {
+                    self._onBackgroundDrop(ui);
+                },
+                activate: function( event, ui ) {
+                    var m = 0;
+                    self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2* m,
+                        "height": self.designerCanvasBodySize.height - 2 * m,
+                        "top": self.childrenContainerScroll.top + m,
+                        "left": self.childrenContainerScroll.left + m });
+                },
+                deactivate: function( event, ui ) {
+                    self.skinParts.$dropRegion.css({"width": "0px",
+                        "height": "0px",
+                        "top": "0px",
+                        "left": "0px"});
+                }
+            });
+        }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
     };
@@ -350,6 +373,9 @@ define(['logManager',
 
         this.skinParts.$designerCanvasBody.css({"width": width,
             "height": bodyHeight});
+
+        this.designerCanvasBodySize = {"width": width,
+            "height": bodyHeight};
 
         this._resizeItemContainer(width, bodyHeight);
 
@@ -912,10 +938,10 @@ define(['logManager',
     DesignerCanvas.prototype._doAcceptDroppable = function (accept) {
         if (accept === true) {
             this._acceptDroppable = true;
-            this.skinParts.$itemsContainer.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+            this.skinParts.$dropRegion.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
         } else {
             this._acceptDroppable = false;
-            this.skinParts.$itemsContainer.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+            this.skinParts.$dropRegion.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
         }
     };
 
