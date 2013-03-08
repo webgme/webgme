@@ -17,7 +17,7 @@ $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
 $designer-canvas-body-read-only-background-color: #EDEDED;
-$items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
+$items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
 
 .designer-canvas {
 
@@ -66,10 +66,6 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
 
       &:focus {
         outline: none;
-      }
-
-      &.accept-droppable {
-        background-color: $items-accept-droppable-background-color;
       }
 
       .rubberband {
@@ -122,6 +118,10 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.1);
       position: absolute;
       top: 0;
       left: 0;
+
+      &.accept-droppable {
+        background-color: $items-accept-droppable-background-color;
+      }
     }
   }
 }

@@ -938,10 +938,10 @@ define(['logManager',
     DesignerCanvas.prototype._doAcceptDroppable = function (accept) {
         if (accept === true) {
             this._acceptDroppable = true;
-            this.skinParts.$itemsContainer.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+            this.skinParts.$dropRegion.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
         } else {
             this._acceptDroppable = false;
-            this.skinParts.$itemsContainer.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
+            this.skinParts.$dropRegion.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
         }
     };
 
