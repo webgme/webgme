@@ -64,11 +64,12 @@ define(['logManager',
         this._renderAttributes();
 
         //hook up double click for node title edit
-        this._skinParts.title.dblclick(function (event) {
-            self._editNodeTitle.call(self);
-            event.stopPropagation();
-            event.preventDefault();
-        });
+        this._skinParts.title.editOnDblClick({"class": "modelTitle",
+            "onChange": function (oldValue, newValue) {
+                self._project.setAttributes(self._id, "name", newValue);
+                self._refreshChildrenContainer();
+                self._ownerComponent.decoratorUpdated();
+            }});
     };
 
     ModelWithAttributesDecorator.prototype.afterAppend = function () {
@@ -110,22 +111,6 @@ define(['logManager',
 
             this._skinParts.attributesContainer.html("<table>" + str + "</table>");
         }
-    };
-
-    ModelWithAttributesDecorator.prototype._editNodeTitle = function () {
-        var self = this,
-            alreadyEdit = this._skinParts.title.find(":input").length > 0;
-
-        if (alreadyEdit === true) {
-            return;
-        }
-
-        // Replace node with <input>
-        this._skinParts.title.editInPlace_Obsolete("modelTitle", function (newTitle) {
-            self._project.setAttributes(self._id, "name", newTitle);
-            self._refreshChildrenContainer();
-            self._ownerComponent.decoratorUpdated();
-        });
     };
 
     //in the destroy there is no need to touch the UI, it will be cleared out
