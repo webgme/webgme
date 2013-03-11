@@ -6,13 +6,6 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
             _selfid = null,
             _projects = {};
 
-        var _log = options.log || function(txt){ console.log(txt);};
-        var log = function(txt,socketid){
-            var prefix = _selfid;
-            prefix += socketid === null ? "" : "["+socketid+"]";
-            _log(prefix+txt);
-        };
-
         var getAvailableProjects = function(callback){
             var db = new MONGODB.Db(options.mongo.database, new MONGODB.Server(options.mongo.host,options.mongo.port), {w:1});
             db.open(function(err){
@@ -49,7 +42,6 @@ define([ "core/assert","common/CommonUtil","server/projsrv","mongodb","socket.io
 
         //functions for the clients
         _socket.on('connection',function(socket){
-            log("connection arrived",socket.id);
 
             socket.on('availableProjects',function(callback){
                 getAvailableProjects(callback);
