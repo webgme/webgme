@@ -43,7 +43,7 @@ define([
 
         StringWidget.superclass = WidgetBase;
 
-        clientUtil.extend(
+        _.extend(
             StringWidget.prototype,
             WidgetBase.prototype
         );
