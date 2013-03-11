@@ -161,7 +161,7 @@ define(['logManager',
             i = idList.length;
 
         while(i--) {
-            objIdList.insertUnique(this._ComponentID2GmeID[idList[i]]);
+            objIdList.pushUnique(this._ComponentID2GmeID[idList[i]]);
         }
 
         if (objIdList.length > 0) {

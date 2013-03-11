@@ -63,11 +63,13 @@ define(['logManager',
         this.skinParts.topConnRect.hide();*/
 
         //hook up double click for node title edit
-        this.skinParts.title.dblclick(function (event) {
-            self._editNodeTitle.call(self);
-            event.stopPropagation();
-            event.preventDefault();
-        });
+        this.skinParts.title.editOnDblClick({"class": "modelTitle",
+                                             "onChange": function (oldValue, newValue) {
+                                                 self.ownerComponent.beforeDecoratorUpdate();
+                                                 self.project.setAttributes(self.id, "name", newValue);
+                                                 self._refreshChildrenContainer();
+                                                 self.ownerComponent.afterDecoratorUpdate();
+                                             }});
 
         //this._updateModelComponent();
 
@@ -128,7 +130,7 @@ define(['logManager',
             updatedChildrenIds = updatedObject.getChildrenIds() || [];
 
             //Handle children deletion
-            diffChildrenIds = util.arrayMinus(oldChildrenIds, updatedChildrenIds);
+            diffChildrenIds = _.difference(oldChildrenIds, updatedChildrenIds);
 
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 if (this.ports[diffChildrenIds[i]]) {
@@ -139,7 +141,7 @@ define(['logManager',
             }
 
             //Handle children addition
-            diffChildrenIds = util.arrayMinus(updatedChildrenIds, oldChildrenIds);
+            diffChildrenIds = _.difference(updatedChildrenIds, oldChildrenIds);
             for (i = 0; i < diffChildrenIds.length; i += 1) {
                 childPort = this.project.getNode(diffChildrenIds[i]);
                 if (childPort && childPort.getAttribute(nodeAttributeNames.isPort) === true) {
@@ -183,23 +185,6 @@ define(['logManager',
 
         //let the ModelComponent know that the decorator has finished refreshing itself
         this.ownerComponent.afterDecoratorUpdate();
-    };
-
-    ModelWithPortsDecorator.prototype._editNodeTitle = function () {
-        var self = this,
-            alreadyEdit = this.skinParts.title.find(":input").length > 0;
-
-        if (alreadyEdit === true) {
-            return;
-        }
-
-        // Replace node with <input>
-        this.skinParts.title.editInPlace_Obsolete("modelTitle", function (newTitle) {
-            self.ownerComponent.beforeDecoratorUpdate();
-            self.project.setAttributes(self.id, "name", newTitle);
-            self._refreshChildrenContainer();
-            self.ownerComponent.afterDecoratorUpdate();
-        });
     };
 
     ModelWithPortsDecorator.prototype._renderPorts = function () {

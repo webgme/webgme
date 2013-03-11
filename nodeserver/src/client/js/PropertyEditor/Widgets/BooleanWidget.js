@@ -31,7 +31,7 @@ define([
 
         BooleanWidget.superclass = WidgetBase;
 
-        clientUtil.extend(
+        _.extend(
             BooleanWidget.prototype,
             WidgetBase.prototype
         );

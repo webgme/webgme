@@ -80,8 +80,7 @@ define([
 
     NumberBoxWidget.superclass = NumberWidgetBase;
 
-    clientUtil.extend(
-
+    _.extend(
         NumberBoxWidget.prototype,
         NumberWidgetBase.prototype
     );

@@ -159,7 +159,7 @@ define(['logManager',
         if (node) {
 
             //check the deleted ones
-            diff = util.arrayMinus(oldMembers, currentMembers);
+            diff = _.difference(oldMembers, currentMembers);
             len = diff.length;
             while (len--) {
                 id = diff[len];
@@ -169,11 +169,11 @@ define(['logManager',
             }
 
             //check the added ones
-            diffInserted = util.arrayMinus(currentMembers, oldMembers);
+            diffInserted = _.difference(currentMembers, oldMembers);
             len = diffInserted.length;
             while (len--) {
                 id = diffInserted[len];
-                requiredDecorators.insertUnique(this._getObjectDescriptor(id).decorator);
+                requiredDecorators.pushUnique(this._getObjectDescriptor(id).decorator);
             }
 
             //check the updated ones (decorator update, name change, etc????)
