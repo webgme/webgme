@@ -144,7 +144,7 @@ define(['logManager',
                 currentMembers = node.getMemberIds(setNames[num]) || [];
 
                 //check the deleted ones
-                diff = util.arrayMinus(oldMembers, currentMembers);
+                diff = _.difference(oldMembers, currentMembers);
                 len = diff.length;
                 while (len--) {
                     id = diff[len];
@@ -154,7 +154,7 @@ define(['logManager',
                 }
 
                 //check the added ones
-                diff = util.arrayMinus(currentMembers, oldMembers);
+                diff = _.difference(currentMembers, oldMembers);
                 len = diff.length;
                 while (len--) {
                     id = diff[len];
