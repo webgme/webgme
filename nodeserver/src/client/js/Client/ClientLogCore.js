@@ -22,7 +22,7 @@ define(['commonUtil','core/core'+COREVERSION,'core/assert'], function (CU,CORE,A
         var log = null,
             core = new CORE(options.storage);
 
-        if(options.logger){
+        /*if(options.logger){
             log = function(msg){
                 options.logger.log(TSSTRING()+"[ClientLogCore]"+msg);
             };
@@ -30,7 +30,10 @@ define(['commonUtil','core/core'+COREVERSION,'core/assert'], function (CU,CORE,A
             log = function(msg){
                 console.log(TSSTRING()+"[ClientLogCore]"+msg);
             };
-        }
+        }*/
+        log = function(msg){
+
+        };
 
         //check
         var isValidRelid = function (relid) {
