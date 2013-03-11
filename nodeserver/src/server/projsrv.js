@@ -173,12 +173,14 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                     _polls[key] = [callback];
                 }
                 _mongo.load("*#*"+key,function(err,branch){
-                    if(branch.commit !== oldhash){
-                        _mongo.load(branch.commit,function(err,commit){
-                            if(!err && commit){
-                                callback(commit);
-                            }
-                        });
+                    if(!err && branch){
+                        if(branch.commit !== oldhash){
+                            _mongo.load(branch.commit,function(err,commit){
+                                if(!err && commit){
+                                    callback(commit);
+                                }
+                            });
+                        }
                     }
                 });
             });
