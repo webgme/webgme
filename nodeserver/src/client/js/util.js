@@ -60,20 +60,6 @@ define([], function () {
         }
     });
 
-    Array.prototype.mergeUnique = function (otherArray) {
-        var i;
-
-        if (otherArray) {
-            for (i = 0; i < otherArray.length; i += 1) {
-                if (this.indexOf(otherArray[i]) === -1) {
-                    this.push(otherArray[i]);
-                }
-            }
-        }
-
-        return this;
-    };
-
     Array.prototype.insertUnique = function (val) {
         if (this.indexOf(val) === -1) {
             this.push(val);

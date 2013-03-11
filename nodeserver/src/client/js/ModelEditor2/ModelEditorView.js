@@ -392,7 +392,7 @@ define(['logManager',
         for (i in list) {
             if (list.hasOwnProperty(i)) {
                 this._displayedComponentIDs[i] = list[i];
-                this._longUpdateList.affectedConnections.mergeUnique(this._getConnectionsForModel(i));
+                this._longUpdateList.affectedConnections = _.union(this._longUpdateList.affectedConnections, this._getConnectionsForModel(i));
             }
         }
     };
@@ -405,7 +405,7 @@ define(['logManager',
         for (i in list) {
             if (list.hasOwnProperty(i)) {
                 if (this._displayedComponentIDs.hasOwnProperty(i)) {
-                    this._longUpdateList.affectedConnections.mergeUnique(this._getConnectionsForModel(i));
+                    this._longUpdateList.affectedConnections = _.union(this._longUpdateList.affectedConnections, this._getConnectionsForModel(i));
                     delete this._displayedComponentIDs[i];
                 }
             }
@@ -439,7 +439,7 @@ define(['logManager',
     };
 
     ModelEditorView.prototype._refreshScreen = function () {
-        var connectionsToUpdate = [];
+        var connectionsToUpdate;
 
         if (this._longUpdating === true) {
             return;
@@ -468,34 +468,11 @@ define(['logManager',
         // - #1) connections in the this._longUpdateList.insertedConnections
         // - #2) connections in the this._longUpdateList.updatedConnections
         // - #3) connections affected by modelComponent update / delete
-        //TODO: might not needed because the endpoint handling takes care of accounting all the affected connections
-        // - #4) connections with endpoint in this._longUpdateList.insertedModels
-        // - #5) connections with endpoint in this._longUpdateList.updatedModels
-        // - #6) connections with endpoint in this._longUpdateList.deletedModels
 
-        // #1)
-        connectionsToUpdate.mergeUnique(this._longUpdateList.insertedConnections);
-
-        // #2)
-        connectionsToUpdate.mergeUnique(this._longUpdateList.updatedConnections);
-
-        // #3)
-        connectionsToUpdate.mergeUnique(this._longUpdateList.affectedConnections);
-
-        // #4
-        /*for (i = 0; i < this._longUpdateList.insertedModels.length; i += 1) {
-            connectionsToUpdate.mergeUnique(this._getConnectionsForModel(this._longUpdateList.insertedModels[i]));
-        }*/
-
-        // #5
-        /*for (i = 0; i < this._longUpdateList.updatedModels.length; i += 1) {
-            connectionsToUpdate.mergeUnique(this._getConnectionsForModel(this._longUpdateList.updatedModels[i]));
-        }*/
-
-        // #6
-        /*for (i = 0; i < this._longUpdateList.deletedModels.length; i += 1) {
-            connectionsToUpdate.mergeUnique(this._getConnectionsForModel(this._longUpdateList.deletedModels[i]));
-        }*/
+        // #1) && #2) && #3)
+        connectionsToUpdate = _.union(this._longUpdateList.insertedConnections,
+            this._longUpdateList.updatedConnections,
+            this._longUpdateList.affectedConnections)
 
         //at this point we have all the connections that needs to be updated in 'connectionsToUpdate'
         //$(this._skinParts.svgPaper.canvas).remove();
@@ -1840,7 +1817,7 @@ define(['logManager',
         //when necessary, because in copy mode, no need to redraw the connections
         if (this._dragOptions.mode === this._dragModes.reposition) {
             for (i = 0; i < this._selectedComponentIds.length; i += 1) {
-                affectedConnections.mergeUnique(this._getConnectionsForModel(this._selectedComponentIds[i]));
+                affectedConnections = _.union(affectedConnections, this._getConnectionsForModel(this._selectedComponentIds[i]));
             }
             this._updateConnections(affectedConnections);
         }
