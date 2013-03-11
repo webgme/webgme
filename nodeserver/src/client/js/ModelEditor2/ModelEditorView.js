@@ -472,7 +472,7 @@ define(['logManager',
         // #1) && #2) && #3)
         connectionsToUpdate = _.union(this._longUpdateList.insertedConnections,
             this._longUpdateList.updatedConnections,
-            this._longUpdateList.affectedConnections)
+            this._longUpdateList.affectedConnections);
 
         //at this point we have all the connections that needs to be updated in 'connectionsToUpdate'
         //$(this._skinParts.svgPaper.canvas).remove();
