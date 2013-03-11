@@ -303,11 +303,11 @@ define(['logManager',
 
                     if (itemDecorator && itemDecorator !== "") {
                         if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
-                            decoratorsToDownload.insertUnique(itemDecorator);
+                            decoratorsToDownload.pushUnique(itemDecorator);
 
                             //TODO: hack
-                            decoratorsToDownload.insertUnique("DefaultDecorator");
-                            decoratorsToDownload.insertUnique("CircleDecorator");
+                            decoratorsToDownload.pushUnique("DefaultDecorator");
+                            decoratorsToDownload.pushUnique("CircleDecorator");
                         }
                     }
                 }
@@ -659,13 +659,13 @@ define(['logManager',
 
         for (i in this._GmeID2ComponentID) {
             if (this._GmeID2ComponentID.hasOwnProperty(i)) {
-                allGMEID.insertUnique(i);
+                allGMEID.pushUnique(i);
             }
         }
 
         for (i in this._GMEID2Subcomponent) {
             if (this._GMEID2Subcomponent.hasOwnProperty(i)) {
-                allGMEID.insertUnique(i);
+                allGMEID.pushUnique(i);
             }
         }
 

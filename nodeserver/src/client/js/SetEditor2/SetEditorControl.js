@@ -205,7 +205,7 @@ define(['logManager',
 
                     if (itemDecorator && itemDecorator !== "") {
                         if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
-                            decoratorsToDownload.insertUnique(itemDecorator);
+                            decoratorsToDownload.pushUnique(itemDecorator);
                         }
                     }
                 }

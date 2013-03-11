@@ -173,7 +173,7 @@ define(['logManager',
             len = diffInserted.length;
             while (len--) {
                 id = diffInserted[len];
-                requiredDecorators.insertUnique(this._getObjectDescriptor(id).decorator);
+                requiredDecorators.pushUnique(this._getObjectDescriptor(id).decorator);
             }
 
             //check the updated ones (decorator update, name change, etc????)

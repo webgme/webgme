@@ -4,16 +4,13 @@
  */
 
 define([], function () {
-    Array.prototype.insertUnique = function (val) {
+    Array.prototype.pushUnique = function (val) {
         if (this.indexOf(val) === -1) {
             this.push(val);
         }
 
         return this;
     };
-
-    // Shared empty constructor function to aid in prototype-chain creation.
-    var ctor = function () {};
 
     //return utility functions
     return {
@@ -48,19 +45,6 @@ define([], function () {
         },
 
         /*
-         * Returns true if the two position is inside the rectangle
-         */
-        isPositionInsideRectangle : function (position, boundingBox) {
-            var result = false;
-
-            if (boundingBox.x <= position.x && boundingBox.x2 >= position.x && boundingBox.y <= position.y && boundingBox.y2 >= position.y) {
-                result = true;
-            }
-
-            return result;
-        },
-
-        /*
          * Loads a CSS file dinamically
          */
         loadCSS : function (filePath) {
@@ -70,16 +54,6 @@ define([], function () {
             css.media	= 'all';
             css.href	= filePath;
             document.getElementsByTagName("head")[0].appendChild(css);
-        },
-
-        /*
-         * Inject a CSS dynamically into the document
-         */
-        injectCSS: function (css) {
-            var injected = document.createElement('style');
-            injected.type = 'text/css';
-            injected.innerHTML = css;
-            document.getElementsByTagName('head')[0].appendChild(injected);
         },
 
         /*

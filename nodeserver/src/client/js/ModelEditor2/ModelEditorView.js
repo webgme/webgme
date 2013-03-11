@@ -502,7 +502,7 @@ define(['logManager',
         for (i in this._displayedComponentIDs) {
             if (this._displayedComponentIDs.hasOwnProperty(i)) {
                 if (this._displayedComponentIDs[i] === componentId) {
-                    connectionEndPointIds.insertUnique(i);
+                    connectionEndPointIds.pushUnique(i);
                 }
             }
         }
@@ -837,11 +837,11 @@ define(['logManager',
         //get all the connection endpoints and update those location info
         for (i = 0; i < connectionsToUpdate.length; i += 1) {
             if (this._childComponents[connectionsToUpdate[i]]._sourceComponentId) {
-                allConnEndpoints.insertUnique(this._childComponents[connectionsToUpdate[i]]._sourceComponentId);
+                allConnEndpoints.pushUnique(this._childComponents[connectionsToUpdate[i]]._sourceComponentId);
             }
 
             if (this._childComponents[connectionsToUpdate[i]]._targetComponentId) {
-                allConnEndpoints.insertUnique(this._childComponents[connectionsToUpdate[i]]._targetComponentId);
+                allConnEndpoints.pushUnique(this._childComponents[connectionsToUpdate[i]]._targetComponentId);
             }
         }
 
