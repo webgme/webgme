@@ -12,6 +12,11 @@ define([], function () {
     //return utility functions
     return {
         /*
+         * is the application running in debug more or not
+         */
+        DEBUG: false,
+
+        /*
          * Generated a GUID
          */
         guid: function () {

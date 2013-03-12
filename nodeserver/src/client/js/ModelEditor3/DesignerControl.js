@@ -2,11 +2,13 @@
 
 define(['logManager',
     'clientUtil',
+    'commonUtil',
     'js/Constants',
     'js/NodePropertyNames',
     'js/ModelEditor3/DesignerControl.DesignerCanvasEventHandlers',
     'js/ModelEditor3/DesignerControl.DEBUG'], function (logManager,
                                                         util,
+                                                        commonUtil,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         DesignerControlDesignerCanvasEventHandlers,
@@ -65,84 +67,81 @@ define(['logManager',
 
 
 
-        /************** AUTO RENAME GME NODES *****************/
-        $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
-            self._autoRenameGMEObjects();
-        });
 
-        this.designerCanvas.addButton({ "title": "Auto rename",
-            "icon": "icon-th-list"}, $btnGroupAutoRename );
+        if (commonUtil.DEBUG) {
+            /************** AUTO RENAME GME NODES *****************/
+            $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+                self._autoRenameGMEObjects();
+            });
+            this.designerCanvas.addButton({ "title": "Auto rename",
+                "icon": "icon-th-list"}, $btnGroupAutoRename );
 
-        /************** END OF - AUTO RENAME GME NODES *****************/
+            /************** END OF - AUTO RENAME GME NODES *****************/
 
+            /************** AUTO CREATE NEW NODES *****************/
+            $btnGroupAutoCreateModel = this.designerCanvas.addButtonGroup(function (event, data) {
+                self._createGMEModels(data.num);
+            });
 
+            this.designerCanvas.addButton({ "title": "Create 1",
+                "icon": "icon-plus-sign",
+                "text": "1",
+                "data": { "num": 1 }}, $btnGroupAutoCreateModel );
 
+            this.designerCanvas.addButton({ "title": "Create 5",
+                "icon": "icon-plus-sign",
+                "text": "5",
+                "data": { "num": 5 }}, $btnGroupAutoCreateModel );
 
-        /************** AUTO CREATE NEW NODES *****************/
-        $btnGroupAutoCreateModel = this.designerCanvas.addButtonGroup(function (event, data) {
-            self._createGMEModels(data.num);
-        });
+            this.designerCanvas.addButton({ "title": "Create 10",
+                "icon": "icon-plus-sign",
+                "text": "10",
+                "data": { "num": 10 }}, $btnGroupAutoCreateModel );
 
-        this.designerCanvas.addButton({ "title": "Create 1",
-            "icon": "icon-plus-sign",
-            "text": "1",
-            "data": { "num": 1 }}, $btnGroupAutoCreateModel );
+            /************** END OF - AUTO CREATE NEW NODES *****************/
 
-        this.designerCanvas.addButton({ "title": "Create 5",
-            "icon": "icon-plus-sign",
-            "text": "5",
-            "data": { "num": 5 }}, $btnGroupAutoCreateModel );
+            /************** AUTO CREATE NEW CONNECTIONS *****************/
+            $btnGroupAutoCreateConnection = this.designerCanvas.addButtonGroup(function (event, data) {
+                self._createGMEConnections(data.num);
+            });
 
-        this.designerCanvas.addButton({ "title": "Create 10",
-            "icon": "icon-plus-sign",
-            "text": "10",
-            "data": { "num": 10 }}, $btnGroupAutoCreateModel );
+            this.designerCanvas.addButton({ "title": "Create 1 connection",
+                "icon": "icon-resize-horizontal",
+                "text": "1",
+                "data": { "num": 1 }}, $btnGroupAutoCreateConnection );
 
-        /************** END OF - AUTO CREATE NEW NODES *****************/
+            this.designerCanvas.addButton({ "title": "Create 5 connections",
+                "icon": "icon-resize-horizontal",
+                "text": "5",
+                "data": { "num": 5 }}, $btnGroupAutoCreateConnection );
 
-        /************** AUTO CREATE NEW CONNECTIONS *****************/
-        $btnGroupAutoCreateConnection = this.designerCanvas.addButtonGroup(function (event, data) {
-            self._createGMEConnections(data.num);
-        });
+            this.designerCanvas.addButton({ "title": "Create 10 connections",
+                "icon": "icon-resize-horizontal",
+                "text": "10",
+                "data": { "num": 10 }}, $btnGroupAutoCreateConnection );
 
-        this.designerCanvas.addButton({ "title": "Create 1 connection",
-            "icon": "icon-resize-horizontal",
-            "text": "1",
-            "data": { "num": 1 }}, $btnGroupAutoCreateConnection );
+            this.designerCanvas.addButton({ "title": "Create 50 connections",
+                "icon": "icon-resize-horizontal",
+                "text": "50",
+                "data": { "num": 50 }}, $btnGroupAutoCreateConnection );
 
-        this.designerCanvas.addButton({ "title": "Create 5 connections",
-            "icon": "icon-resize-horizontal",
-            "text": "5",
-            "data": { "num": 5 }}, $btnGroupAutoCreateConnection );
+            this.designerCanvas.addButton({ "title": "Create 100 connections",
+                "icon": "icon-resize-horizontal",
+                "text": "100",
+                "data": { "num": 100 }}, $btnGroupAutoCreateConnection );
 
-        this.designerCanvas.addButton({ "title": "Create 10 connections",
-            "icon": "icon-resize-horizontal",
-            "text": "10",
-            "data": { "num": 10 }}, $btnGroupAutoCreateConnection );
+            /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
-        this.designerCanvas.addButton({ "title": "Create 50 connections",
-            "icon": "icon-resize-horizontal",
-            "text": "50",
-            "data": { "num": 50 }}, $btnGroupAutoCreateConnection );
+            /************** PRINT NODE DATA *****************/
+            $btnGroupPrintNodeData = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+                self._printNodeData();
+            });
 
-        this.designerCanvas.addButton({ "title": "Create 100 connections",
-            "icon": "icon-resize-horizontal",
-            "text": "100",
-            "data": { "num": 100 }}, $btnGroupAutoCreateConnection );
+            this.designerCanvas.addButton({ "title": "Print node data",
+                "icon": "icon-share"}, $btnGroupPrintNodeData );
 
-        /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
-
-
-        /************** PRINT NODE DATA *****************/
-        $btnGroupPrintNodeData = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
-            self._printNodeData();
-        });
-
-        this.designerCanvas.addButton({ "title": "Print node data",
-            "icon": "icon-share"}, $btnGroupPrintNodeData );
-
-        /************** END OF - PRINT NODE DATA *****************/
-
+            /************** END OF - PRINT NODE DATA *****************/
+        }
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
@@ -717,7 +716,7 @@ define(['logManager',
     _.extend(DesignerControl.prototype, DesignerControlDesignerCanvasEventHandlers.prototype);
 
     //in DEBUG mode add additional content to canvas
-    if (DEBUG) {
+    if (commonUtil.DEBUG) {
         _.extend(DesignerControl.prototype, DesignerControlDEBUG.prototype);
     }
 

@@ -2,8 +2,10 @@
 
 define(['logManager',
     'loaderProgressBar',
+    'commonUtil',
     'css!VisualizerPanelCSS/VisualizerPanel'], function (logManager,
-                                    LoaderProgressBar) {
+                                    LoaderProgressBar,
+                                    commonUtil) {
 
     var VisualizerPanel;
 
@@ -96,7 +98,7 @@ define(['logManager',
                 ControlClass = this._visualizers[visualizer].control;
                 if (ControlClass) {
                     this._activeContoller = new ControlClass({"client": this._client,
-                                                              "widget": this._activeWidget});
+                        "widget": this._activeWidget});
                 }
 
                 if (this._currentNodeID) {
@@ -132,6 +134,11 @@ define(['logManager',
             if (callback) {
                 callback();
             }
+        }
+
+        if (menuDesc.DEBUG_ONLY === true && commonUtil.DEBUG !== true) {
+            doCallBack();
+            return;
         }
 
         if (this._visualizers[menuDesc.id]) {

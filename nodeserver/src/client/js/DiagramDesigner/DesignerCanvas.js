@@ -100,39 +100,40 @@ define(['logManager',
         this._documentFragment = document.createDocumentFragment();
 
         //in DEBUG mode add additional content to canvas
-        if (DEBUG) {
+        if (commonUtil.DEBUG) {
             this._addDebugModeExtensions();
         }
 
         /************** ROUTING MANAGER SELECTION **************************/
+        if (commonUtil.DEBUG) {
+            this.$btnGroupConnectionRouteManager = this.addButtonGroup(function (event, data) {
+                self._onConnectionRouteManagerChanged(data.type);
+            });
 
-        this.$btnGroupConnectionRouteManager = this.addButtonGroup(function (event, data) {
-            self._onConnectionRouteManagerChanged(data.type);
-        });
+            this.addButton({ "title": "Basic route manager",
+                "text": "RM #1",
+                "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
 
-        this.addButton({ "title": "Basic route manager",
-            "text": "RM #1",
-            "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
-
-        this.addButton({ "title": "Basic+ route manager",
-            "text": "RM #2",
-            "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
-
+            this.addButton({ "title": "Basic+ route manager",
+                "text": "RM #2",
+                "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
+        }
         /************** END OF - ROUTING MANAGER SELECTION **************************/
 
         /************** READ ONLY MODE **************************/
+        if (commonUtil.DEBUG) {
+            this.$btnGroupReadOnly = this.addButtonGroup(function (event, data) {
+                self.setReadOnlyMode(data.mode);
+            });
 
-        this.$btnGroupReadOnly = this.addButtonGroup(function (event, data) {
-            self.setReadOnlyMode(data.mode);
-        });
+            this.addButton({ "title": "READ-ONLY ON",
+                "text": "RO: ON",
+                "data": { "mode": true}}, this.$btnGroupReadOnly );
 
-        this.addButton({ "title": "READ-ONLY ON",
-            "text": "RO: ON",
-            "data": { "mode": true}}, this.$btnGroupReadOnly );
-
-        this.addButton({ "title": "READ-ONLY OFF",
-            "text": "RO: OFF",
-            "data": { "mode": false}}, this.$btnGroupReadOnly );
+            this.addButton({ "title": "READ-ONLY OFF",
+                "text": "RO: OFF",
+                "data": { "mode": false}}, this.$btnGroupReadOnly );
+        }
 
         /************** END OF - READ ONLY MODE **************************/
 
@@ -275,10 +276,12 @@ define(['logManager',
             this.skinParts.$readOnlyMode.hide();
         }
 
-        this.skinParts.$progressText = $('<div/>', {
-            "class": "inline"
-        });
-        this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressText);
+        if (commonUtil.DEBUG) {
+            this.skinParts.$progressText = $('<div/>', {
+                "class": "inline"
+            });
+            this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressText);
+        }
 
         /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
         this.skinParts.$toolBar = $('<div/>', {
@@ -295,10 +298,11 @@ define(['logManager',
             "icon": "icon-th",
             "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
-        this.addButton({ "title": "Diagonal",
-            "icon": "icon-signal",
-            "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
-
+        if (commonUtil.DEBUG) {
+            this.addButton({ "title": "Diagonal",
+                "icon": "icon-signal",
+                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
+        }
 
         /************** PROPERTIES BUTTON ***********************/
         this.skinParts.$btnGroupProperties = this.addButtonGroup(function (event, data) {
@@ -499,8 +503,9 @@ define(['logManager',
             msg += " Deleted: " + deletedLen;
 
             this.logger.debug(msg);
-
-            this.skinParts.$progressText.text(msg);
+            if (commonUtil.DEBUG) {
+                this.skinParts.$progressText.text(msg);
+            }
 
             this._refreshScreen();
         }
@@ -985,7 +990,7 @@ define(['logManager',
     _.extend(DesignerCanvas.prototype, DesignerCanvasSubcomponents.prototype);
 
     //in DEBUG mode add additional content to canvas
-    if (DEBUG) {
+    if (commonUtil.DEBUG) {
         _.extend(DesignerCanvas.prototype, DesignerCanvasDEBUG.prototype);
     }
 

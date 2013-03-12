@@ -39,7 +39,7 @@ define([  'logManager',
                                             VisualizerPanel,
                                             VisualizersJSON) {
 
-    /*if (DEBUG === true) {
+    /*if (commonUtil.DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
         logManager.excludeComponent("TreeBrowserControl");
         logManager.excludeComponent("JSTreeBrowserWidget");
@@ -201,7 +201,7 @@ define([  'logManager',
             });
 
             //TESTING part
-            if (DEBUG === true) {
+            if (commonUtil.DEBUG) {
                 $('#leftPane').append("<div class=\"sidePaneWidget\"><div class=\"header\">TESTING</div><div id=\"tetingpanel\"><input id=\"testingbtn1\" value=\"test1\" type=\"button\"><input id=\"testingbtn2\" value=\"test2\" type=\"button\"><input id=\"testingbtn3\" value=\"test3\" type=\"button\"></div></div>");
                 $('#testingbtn1').on('click', function (event) {
                     proxy.testMethod(1);
