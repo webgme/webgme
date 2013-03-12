@@ -26,6 +26,8 @@ require.config({
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": './../../common/underscore',
 
+        "WebGME": 'js/WebGME',
+
         //RaphaelJS family
         "eve": 'lib/raphael/eve',
         "raphaeljs": 'lib/raphael/raphael.amd',
@@ -73,7 +75,8 @@ require.config({
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['jquery'],
         'jquery-dataTables': ['jquery'],
-        'jquery-dataTables-bootstrapped': ['jquery-dataTables']
+        'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
+        'WebGME': ['jquery-WebGME']
     }
 });
 
@@ -87,7 +90,7 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
-        'js/WebGME'
+        'WebGME'
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
         domReady(function () {
