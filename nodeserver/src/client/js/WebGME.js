@@ -39,7 +39,7 @@ define([  'logManager',
                                             VisualizerPanel,
                                             VisualizersJSON) {
 
-    if (DEBUG === true) {
+    /*if (DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
         logManager.excludeComponent("TreeBrowserControl");
         logManager.excludeComponent("JSTreeBrowserWidget");
@@ -58,9 +58,7 @@ define([  'logManager',
 
         logManager.excludeComponent("GraphVizControl");
         logManager.excludeComponent("GraphVizObject*");
-
-
-    }
+    }*/
 
     var proxy = null,
         tJSTree,
