@@ -158,16 +158,35 @@ define(['logManager',
             self._destroyCommitPopover();
         });
 
-        this._el.on("click.iconRemove", ".icon-remove", function () {
+        this._el.on("click.iconRemove", ".icon-remove", function (event) {
             var btn = $(this),
                 branch = btn.data("branch");
 
             self.onDeleteBranchClick(branch);
+
+            event.stopPropagation();
+            event.preventDefault();
         });
 
-        this._el.on("click.item", ".item", function () {
+        this._el.on("click.item", ".item", function (event) {
             self._onCommitClick($(this));
+            event.stopPropagation();
+            event.preventDefault();
         });
+
+        this._el.on('shown', function (event) {
+            event.stopPropagation();
+        });
+
+        this._el.on('hide', function (event) {
+            event.stopPropagation();
+        });
+
+        this._el.on('hidden', function (event) {
+            event.stopPropagation();
+        });
+
+
     };
 
     RepositoryLogView.prototype._render = function () {
@@ -447,7 +466,10 @@ define(['logManager',
     RepositoryLogView.prototype._onCommitClick = function (commitEl) {
         var commitId = commitEl.data("id"),
             popoverMsg,
-            obj = this._commits[commitId];
+            obj = this._commits[commitId],
+            left = commitEl.position().left,
+            bodyW = $('body').width(),
+            placement = left < bodyW / 2 ? 'right' : 'left';
 
         if (this._lastCommitPopOver) {
             this._lastCommitPopOver.popover("destroy");
@@ -465,7 +487,8 @@ define(['logManager',
         this._lastCommitPopOver.popover({"title": obj.id + " [" + obj.counter + "]",
             "html": true,
             "content": popoverMsg,
-            "trigger": "manual" });
+            "trigger": "manual",
+            "placement": placement});
 
         this._lastCommitPopOver.popover("show");
     };

@@ -1,6 +1,7 @@
 /* make sure to update ITEM_WIDTH and ITEM_HEIGHT in RepositoryLogView.js */
 #repoDiag {
   position: relative;
+  margin-top: 150px;
   /*DISABLE OUTER BORDER WHEN FOCUSED*/ }
   #repoDiag:focus {
     outline: none; }
