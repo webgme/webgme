@@ -55,7 +55,7 @@ define([], function () {
             for (UIid in repositionDesc) {
                 if (repositionDesc.hasOwnProperty(UIid)) {
                     objId = self.componentsMapRev[UIid];
-                    if (commonUtil.DEBUG && self._debugItemIDs.indexOf(objId) !== -1) {
+                    if (commonUtil.DEBUG === true && self._debugItemIDs.indexOf(objId) !== -1) {
                         desc = self._generateObjectDescriptorDEBUG(objId);
 
                         desc.position.x = repositionDesc[UIid].x;

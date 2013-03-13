@@ -108,7 +108,7 @@ define(['logManager',
             "data": { "mode": SET_GENERAL }}, $btnGroupConnectionType );
 
         //in DEBUG mode add additional content to canvas
-        if (commonUtil.DEBUG) {
+        if (commonUtil.DEBUG === true) {
             //this._addMetaDebugModeExtensions();
         }
 
@@ -117,7 +117,7 @@ define(['logManager',
 
     _.extend(MetaDesignerControl.prototype, __parent_proto__);
     //in DEBUG mode add additional extensions
-    if (commonUtil.DEBUG) {
+    if (commonUtil.DEBUG === true) {
         _.extend(MetaDesignerControl.prototype, MetaDesignerControlDEBUG.prototype);
     }
 

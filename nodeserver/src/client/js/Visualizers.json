@@ -27,5 +27,10 @@
         "title": "GridView - Containment",
         "widgetJS" : "js/HierarchyGridView/HierarchyGridViewCanvas",
         "controlJS" : "js/HierarchyGridView/HierarchyGridViewControl",
-     "DEBUG_ONLY": true}
+     "DEBUG_ONLY": true},
+ {"id": "AspectBuilder",
+        "title": "AspectBuilder",
+        "widgetJS" : "js/AspectBuilder/AspectBuilderCanvas",
+        "controlJS" : "js/AspectBuilder/AspectBuilderControl",
+        "DEBUG_ONLY": true}
 ]

@@ -68,7 +68,7 @@ define(['logManager',
 
 
 
-        if (commonUtil.DEBUG) {
+        if (commonUtil.DEBUG === true) {
             /************** AUTO RENAME GME NODES *****************/
             $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
                 self._autoRenameGMEObjects();
@@ -716,7 +716,7 @@ define(['logManager',
     _.extend(DesignerControl.prototype, DesignerControlDesignerCanvasEventHandlers.prototype);
 
     //in DEBUG mode add additional content to canvas
-    if (commonUtil.DEBUG) {
+    if (commonUtil.DEBUG === true) {
         _.extend(DesignerControl.prototype, DesignerControlDEBUG.prototype);
     }
 
