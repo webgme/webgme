@@ -11,7 +11,7 @@ define([
 ],
     function (EventDispatcher, ClientLocalStorage, ClientStorage, ClientProject, ClientCommitInfo, ClientLog, ClientTest, commonUtil) {
         'use strict';
-        
+
         var GUID = commonUtil.guid,
             COPY = commonUtil.copy,
             //gKEY = "_id",
@@ -54,6 +54,9 @@ define([
             //notifications and requests from the actor
             self.changeStatus = function (actorid, status) {
                 //TODO we should handle this correctly
+                if(status === "nonetwork"){
+                    console.log("gotcha");
+                }
                 self.dispatchEvent(self.events.NETWORKSTATUS_CHANGED, status);
                 console.log(actorid + " is in " + status + " state");
             };
