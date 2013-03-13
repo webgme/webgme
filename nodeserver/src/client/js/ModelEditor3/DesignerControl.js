@@ -63,6 +63,8 @@ define(['logManager',
         this.designerCanvas.addButton({ "title": "Go to parent",
             "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp );
 
+        this.$btnGroupModelHierarchyUp.hide();
+
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
 

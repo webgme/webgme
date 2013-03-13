@@ -1,7 +1,8 @@
 "use strict";
 
 define(['logManager',
-        'clientUtil'], function (logManager, util) {
+        'clientUtil',
+        'commonUtil'], function (logManager, util, commonUtil) {
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -209,6 +210,10 @@ define(['logManager',
                         //set eventType to "update" and let it go and be handled by "update" event
                         eventType = "update";
                     }
+                }
+
+                if (commonUtil.DEBUG === "DEMOHACK" && objectId === 'root') {
+                    client.setSelectedObjectId(objectId);
                 }
             }
             //ENDOF : HANDLE INSERT

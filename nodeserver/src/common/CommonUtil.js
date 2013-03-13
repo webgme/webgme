@@ -14,7 +14,7 @@ define([], function () {
         /*
          * is the application running in debug more or not
          */
-        DEBUG: false,
+        DEBUG: false, // true / false / 'DEMOHACK',
 
         /*
          * Generated a GUID

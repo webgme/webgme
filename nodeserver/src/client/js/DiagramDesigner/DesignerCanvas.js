@@ -294,9 +294,11 @@ define(['logManager',
             self._itemAutoLayout(data.mode);
         });
 
-        this.addButton({ "title": "Grid layout",
-            "icon": "icon-th",
-            "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+        if (commonUtil.DEBUG !== "DEMOHACK") {
+            this.addButton({ "title": "Grid layout",
+                "icon": "icon-th",
+                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+        }
 
         if (commonUtil.DEBUG === true) {
             this.addButton({ "title": "Diagonal",
@@ -305,12 +307,14 @@ define(['logManager',
         }
 
         /************** PROPERTIES BUTTON ***********************/
-        this.skinParts.$btnGroupProperties = this.addButtonGroup(function (event, data) {
-            self._showProperties();
-        });
+        if (commonUtil.DEBUG !== "DEMOHACK") {
+            this.skinParts.$btnGroupProperties = this.addButtonGroup(function (event, data) {
+                self._showProperties();
+            });
 
-        this.addButton({ "title": "Properties",
-            "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
+            this.addButton({ "title": "Properties",
+                "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
+        }
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
