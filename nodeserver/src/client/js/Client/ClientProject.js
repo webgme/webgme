@@ -61,6 +61,8 @@ define([
                 modifyRootOnServer("- going online -",callback);
             };
             var isPredecessorCommit = function(youngcommitid,oldcommitid,allcommits){
+                //KECSO
+                return true;
                 if(youngcommitid === oldcommitid){
                     return true;
                 }

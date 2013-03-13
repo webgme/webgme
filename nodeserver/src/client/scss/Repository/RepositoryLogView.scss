@@ -9,6 +9,7 @@ $local-head-color: #3a87ad;
 
 #repoDiag {
   position: relative;
+  margin-top: 150px;
 
   /*DISABLE OUTER BORDER WHEN FOCUSED*/
   &:focus {

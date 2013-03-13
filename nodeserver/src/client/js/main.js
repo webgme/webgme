@@ -1,6 +1,6 @@
 "use strict";
 
-var DEBUG = true;
+var __WebGME__DEBUG = true;
 var _webGME_jquery_ver = '1.8.2';
 var _webGME_jqueryui_ver = '1.8.23';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
 
@@ -14,17 +14,19 @@ require.config({
         "domReady":	'lib/require/domReady',
 
         //jQuery and stuff
-        "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
-        "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
+        "jquery": 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
+        "jquery-ui": 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
         "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
         "datGUI": 'lib/datGUI/dat.gui.min',
         "jquery-WebGME": 'js/jquery.WebGME',
-        "jquery-dataTables": 'lib/jquery/jquery.dataTables' + (DEBUG ? '' : '.min'),
+        "jquery-dataTables": 'lib/jquery/jquery.dataTables' + (__WebGME__DEBUG ? '' : '.min'),
         "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
 
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": './../../common/underscore',
+
+        "WebGME": 'js/WebGME',
 
         //RaphaelJS family
         "eve": 'lib/raphael/eve',
@@ -73,7 +75,8 @@ require.config({
         'clientUtil': ['jquery'],
         'jquery-WebGME': ['jquery'],
         'jquery-dataTables': ['jquery'],
-        'jquery-dataTables-bootstrapped': ['jquery-dataTables']
+        'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
+        'WebGME': ['jquery-WebGME']
     }
 });
 
@@ -87,7 +90,7 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
-        'js/WebGME'
+        'WebGME'
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
         domReady(function () {

@@ -43,7 +43,7 @@ define([
         /* 'INHERIT' FROM WidgetBase */
         NumberWidgetBase.superclass = WidgetBase;
 
-        clientUtil.extend(
+        _.extend(
             NumberWidgetBase.prototype,
             WidgetBase.prototype
         );

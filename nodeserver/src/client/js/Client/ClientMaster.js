@@ -11,6 +11,7 @@ define([
 ],
     function (EventDispatcher, ClientLocalStorage, ClientStorage, ClientProject, ClientCommitInfo, ClientLog, ClientTest, commonUtil) {
         'use strict';
+        
         var GUID = commonUtil.guid,
             COPY = commonUtil.copy,
             //gKEY = "_id",

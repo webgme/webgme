@@ -1,6 +1,6 @@
 "use strict";
 
-var bootstrapFile = DEBUG ? 'bootstrap' : 'bootstrap.min';
+var bootstrapFile = __WebGME__DEBUG ? 'bootstrap' : 'bootstrap.min';
 
 define(
     // 'boostrap',

@@ -205,7 +205,7 @@ define(['logManager',
 
                     if (itemDecorator && itemDecorator !== "") {
                         if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
-                            decoratorsToDownload.insertUnique(itemDecorator);
+                            decoratorsToDownload.pushUnique(itemDecorator);
                         }
                     }
                 }
@@ -566,7 +566,7 @@ define(['logManager',
             currentSetMembers = nodeObj.getMemberIds(currentSet) || [];
 
             //let's see who has been deleted and remove them from the screen
-            diff = clientUtil.arrayMinus(displayedSetMembers, currentSetMembers);
+            diff = _.difference(displayedSetMembers, currentSetMembers);
             i = diff.length;
             while (i--) {
                 connId = this._GMESetRelations[gmeID][currentSet][diff[i]];
@@ -578,7 +578,7 @@ define(['logManager',
             }
 
             //let's see who is new and add them to the screen
-            diff = clientUtil.arrayMinus(currentSetMembers, displayedSetMembers);
+            diff = _.difference(currentSetMembers, displayedSetMembers);
             i = diff.length;
             if (i > 0) {
                 objDesc = {};

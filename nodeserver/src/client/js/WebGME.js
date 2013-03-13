@@ -39,7 +39,7 @@ define([  'logManager',
                                             VisualizerPanel,
                                             VisualizersJSON) {
 
-    if (DEBUG === true) {
+    /*if (commonUtil.DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
         logManager.excludeComponent("TreeBrowserControl");
         logManager.excludeComponent("JSTreeBrowserWidget");
@@ -58,9 +58,7 @@ define([  'logManager',
 
         logManager.excludeComponent("GraphVizControl");
         logManager.excludeComponent("GraphVizObject*");
-
-
-    }
+    }*/
 
     var proxy = null,
         tJSTree,
@@ -81,7 +79,10 @@ define([  'logManager',
         setEditorView,
         setEditorControl,
         visualizerPanel,
-        visArray;
+        visArray,
+        selectedObjectChanged,
+        demoHackInit,
+        onOneEvent;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -106,6 +107,16 @@ define([  'logManager',
             leftPanelH = $leftPanel.outerHeight(),
             rightPanelW = $rightPanel.outerWidth(),
             rightPanelH = $rightPanel.outerHeight();
+
+        if (commonUtil.DEBUG === "DEMOHACK") {
+            $leftPanel.width(1);
+            $rightPanel.width(1);
+            leftPanelW = 1;
+            rightPanelW = 1;
+        } else {
+            $leftPanel.attr("style", "");
+            $rightPanel.attr("style", "");
+        }
 
         $contentContainer.height(bodyH - headerH - footerH);
 
@@ -138,6 +149,22 @@ define([  'logManager',
 
     new LoggerStatus("panLoggerStatus");
 
+    selectedObjectChanged = function (__project, nodeId) {
+        currentNodeId = nodeId;
+        if (mainController) {
+            mainController.selectedObjectChanged(currentNodeId);
+        }
+        if (partBrowserController) {
+            partBrowserController.selectedObjectChanged(currentNodeId);
+        }
+        if (setEditorControl) {
+            setEditorControl.selectedObjectChanged(currentNodeId);
+        }
+        if (visualizerPanel) {
+            visualizerPanel.selectedObjectChanged(currentNodeId);
+        }
+    };
+
     doConnect = function (callback) {
 
 
@@ -157,19 +184,7 @@ define([  'logManager',
                 project : commonUtil.combinedserver.project
             });
             proxy.addEventListener(proxy.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
-                currentNodeId = nodeId;
-                if (mainController) {
-                    mainController.selectedObjectChanged(currentNodeId);
-                }
-                if (partBrowserController) {
-                    partBrowserController.selectedObjectChanged(currentNodeId);
-                }
-                if (setEditorControl) {
-                    setEditorControl.selectedObjectChanged(currentNodeId);
-                }
-                if (visualizerPanel) {
-                    visualizerPanel.selectedObjectChanged(currentNodeId);
-                }
+                selectedObjectChanged(__project, nodeId);
             });
             proxy.addEventListener(proxy.events.ACTOR_CHANGED, function () {
                 if (projectTitleView) {
@@ -203,7 +218,7 @@ define([  'logManager',
             });
 
             //TESTING part
-            if (DEBUG === true) {
+            if (commonUtil.DEBUG === true) {
                 $('#leftPane').append("<div class=\"sidePaneWidget\"><div class=\"header\">TESTING</div><div id=\"tetingpanel\"><input id=\"testingbtn1\" value=\"test1\" type=\"button\"><input id=\"testingbtn2\" value=\"test2\" type=\"button\"><input id=\"testingbtn3\" value=\"test3\" type=\"button\"></div></div>");
                 $('#testingbtn1').on('click', function (event) {
                     proxy.testMethod(1);

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 var COREVERSION = "3";
-define(['commonUtil','core/core'+COREVERSION,'core/assert'], function (CU,CORE,ASSERT) {
+define(['commonUtil','core/core'+COREVERSION,'core/assert','logManager'], function (CU,CORE,ASSERT,logManager) {
     'use strict';
     var GUID = CU.guid;
     var TSSTRING = function(){
@@ -20,19 +20,10 @@ define(['commonUtil','core/core'+COREVERSION,'core/assert'], function (CU,CORE,A
     var ClientLogCore = function (options) {
         ASSERT(options && options.storage);
         var log = null,
+            logger = logManager.create("CORE"),
             core = new CORE(options.storage);
-
-        /*if(options.logger){
-            log = function(msg){
-                options.logger.log(TSSTRING()+"[ClientLogCore]"+msg);
-            };
-        } else {
-            log = function(msg){
-                console.log(TSSTRING()+"[ClientLogCore]"+msg);
-            };
-        }*/
         log = function(msg){
-
+            logger.debug(msg);
         };
 
         //check

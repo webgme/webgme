@@ -1,6 +1,7 @@
 /************** OVEERIDE BOOTSTRAP *******************/
 .popover {
     width: auto;
+    max-width: 500px;
     khtml-user-select: all;
     -moz-user-select: all;
     -webkit-user-select: all;

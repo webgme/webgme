@@ -1,22 +1,24 @@
 var FS = require('fs');
-var LOGMANAGER = require('./../common/LogManager.js');
 var commonUtil = require('./../common/CommonUtil.js');
-LOGMANAGER.setLogLevel( LOGMANAGER.logLevels.ALL/*1*/ );
-LOGMANAGER.useColors( true );
-var logger = LOGMANAGER.create( "server" );
-//var MNGSRV = require('./mngsrv.js');
 var requirejs = require("requirejs");
 
 requirejs.config({
     nodeRequire: require,
     baseUrl: "..",
     paths: {
-        "core": "../../corejs/core"
+        "core": "../../corejs/core",
+        "logManager": "../../nodeserver/src/common/LogManager"
     }
 });
 
-requirejs(['server/proxysrv'],function(PROXY){
+requirejs(['server/proxysrv','logManager'],function(PROXY,logManager){
+    logManager.setLogLevel(logManager.logLevels.WARNING);
+    logManager.useColors(true);
     var Server = function(parameters){
+        var logger = logManager.create("combined-server");
+        var iologger = logManager.create("socket.io");
+        var iopar =  commonUtil.combinedserver.srvsocketpar;
+        iopar.logger = iopar.logger || iologger;
         var http = require('http').createServer(function(req, res){
             logger.debug("HTTP REQ - "+req.url);
 
@@ -61,14 +63,12 @@ requirejs(['server/proxysrv'],function(PROXY){
                 res.end(data);
             });
         }),
-            io = require('socket.io').listen(http,commonUtil.combinedserver.srvsocketpar);
+
+            io = require('socket.io').listen(http,iopar);
 
         //io.set('log level', 1); // reduce logging
+
         http.listen(parameters.port);
-
-
-        var logserver = io.of('/log');
-
         console.log('parameters',parameters);
         var proxy = PROXY({
             io        : io,
@@ -83,34 +83,8 @@ requirejs(['server/proxysrv'],function(PROXY){
             }
         });
 
-        logserver.on('connection',function(socket){
-            console.log("new connection to logserver!!!");
-            socket.on('log',function(msg){
-                if(parameters.logging){
-                    if(parameters.logfile && FS.appendFileSync){
-                        FS.appendFileSync("../test/"+parameters.logfile,"["+socket.id+"] "+msg+"\n","utf8");
-                    } else{
-                        console.log("["+socket.id+"] "+msg);
-                    }
-                }
-            });
-        });
 
-        var log = function(msg){
-            if(parameters.logging){
-                if(canlog){
-                    internallogconn.emit('log',msg);
-                } else {
-                    if(internallogconn === null){
-                        internallogconn = require('socket.io-client').connect('http://localhost:'+parameters.port+parameters.logsrv);
-                        internallogconn.on('connect',function(){
-                            canlog = true;
-                            log(msg);
-                        });
-                    }
-                }
-            }
-        };
+
     };
 
     var server = new Server(commonUtil.combinedserver);

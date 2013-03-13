@@ -1,8 +1,9 @@
-define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSERT,MONGO,SHA1,IO) {
+define([ "core/assert","core/mongo","core/lib/sha1","socket.io",'logManager'], function (ASSERT,MONGO,SHA1,IO,logManager) {
     "use strict";
     var ProjectServer = function(_proxy,options){
         ASSERT((options.io && options.namespace) || options.port);
         ASSERT(options.mongo);
+        var _logger = logManager.create('project - '+options.mongo.collection);
         var _socket = null;
         var _mongo = MONGO(options.mongo);
         var _selfid = null;
@@ -22,25 +23,11 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
             _selfid = "[PSRV-"+options.port+"]";
         }
 
-        var _log = options.log || function(txt){ console.log(txt);};
-        var log = function(txt,socketid){
-            var prefix = _selfid;
-            prefix += socketid === null ? "" : "["+socketid+"]";
-            _log(prefix+txt);
-        };
-
         var getBranchNameFromId = function(myid){
             //var regexp = new RegExp("^"+"\*");
             return myid.replace(/^\*/,'');
         };
 
-        var compareRoots = function(oldroot,newroot){
-            if(oldroot === null || oldroot.root === newroot.oldroot){
-                return true;
-            }
-            console.log("root matching error old:"+JSON.stringify(oldroot)+" new:"+JSON.stringify(newroot));
-            return false;
-        };
         var broadcastRoot = function(root){
             var callbacks = _polls[getBranchNameFromId(root[KEY])];
             if(callbacks){
@@ -85,7 +72,6 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
 
         //functions for the clients
         _socket.on('connection',function(socket){
-            log("connection arrived",socket.id);
             addClient(socket.id);
 
             /*mongo functions*/
@@ -113,7 +99,6 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                 _mongo.load(key,callback);
             });
             socket.on('save',function(node,callback){
-                console.log('save '+node[KEY]);
                 //check if the object is hash-based
                 var rechash = node[KEY];
                 node[KEY] = false;
@@ -123,18 +108,14 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                     _mongo.save(node,function(err){
                         if(!err){
                             if(node.type && node.type === 'commit'){
-                                console.log('save commit '+node[KEY]);
                                 _commits[node[KEY]] = node;
                             }
-                            console.log("saves "+node[KEY]);
                             callback();
                         } else {
-                            console.log("save "+node[KEY]+" "+err);
                             callback(err);
                         }
                     });
                 } else {
-                    console.log("save "+node[KEY]+" invalid hash");
                     callback('invalid hash value');
                 }
             });
@@ -166,7 +147,6 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
 
             //only branches accepts polls
             socket.on('requestPoll',function(key,oldhash,callback){
-                console.log('polling '+key+' for '+socket.id);
                 if(_polls[key]){
                     _polls[key].push(callback);
                 } else {
@@ -175,12 +155,17 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                 _mongo.load("*#*"+key,function(err,branch){
                     if(!err && branch){
                         if(branch.commit !== oldhash){
-                            _mongo.load(branch.commit,function(err,commit){
+                            callback(branch);
+                            /*_mongo.load(branch.commit,function(err,commit){
                                 if(!err && commit){
                                     callback(commit);
+                                } else {
+                                    _logger.warning('polling faulty branch\'s commit '+branch);
                                 }
-                            });
+                            });*/
                         }
+                    } else {
+                        _logger.warning('polling faulty branch '+branch);
                     }
                 });
             });
@@ -204,7 +189,6 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io"], function (ASSE
                                 _mongo.save(branch,function(err){
                                     if(!err){
                                         if(_polls[name]){
-                                            console.log('we have polls');
                                             var object = _polls[name];
                                             for(var i=0;i<object.length;i++){
                                                 if(!!(object[i] && object[i].constructor && object[i].call && object[i].apply)){

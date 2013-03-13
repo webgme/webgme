@@ -21,7 +21,7 @@ define([], function () {
                 dst = self.componentsMapRev[params.dst],
                 desc;
 
-            if (DEBUG && (self._debugItemIDs.indexOf(src) !== -1 || self._debugItemIDs.indexOf(dst) !== -1)) {
+            if (commonUtil.DEBUG && (self._debugItemIDs.indexOf(src) !== -1 || self._debugItemIDs.indexOf(dst) !== -1)) {
 
                 desc =  self._generateObjectDescriptorDEBUG(-1, DEBUG_CONNECTION_TYPE);
 

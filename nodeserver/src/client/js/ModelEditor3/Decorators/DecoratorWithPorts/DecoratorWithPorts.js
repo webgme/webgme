@@ -183,13 +183,13 @@ define(['logManager',
             addedChildren,
             removedChildren;
 
-        removedChildren = util.arrayMinus(currentChildrenIDs, newChildrenIDs);
+        removedChildren = _.difference(currentChildrenIDs, newChildrenIDs);
         len = removedChildren.length;
         while (len--) {
             this._removePort(removedChildren[len]);
         }
 
-        addedChildren = util.arrayMinus(newChildrenIDs, currentChildrenIDs);
+        addedChildren = _.difference(newChildrenIDs, currentChildrenIDs);
         len = addedChildren.length;
         while (len--) {
             this._renderPort(addedChildren[len]);

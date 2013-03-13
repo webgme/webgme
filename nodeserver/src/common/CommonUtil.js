@@ -12,35 +12,10 @@ define([], function () {
     //return utility functions
     return {
         /*
-         * Determines if the app runs in debug or release mode
+         * is the application running in debug more or not
          */
-        DEBUG : false,
+        DEBUG: false, // true / false / 'DEMOHACK',
 
-        /*
-         * Define the server to connect to
-         * Value is either IP of the host, or "self" for connecting to the host where the page loaded from
-         */
-        ServerIP : "self",
-
-        /*
-         * Port number of socket.io server
-         */
-        ServerPort : 8081,
-
-        /*
-         * Type of storage used by the server, possible values are:
-         * "test" - mean that it will open the test project file and never saves anything to that
-         * "mongodirty" - means that it will use the mongo as source of data, but it will simply left out the versioning
-         */
-        StorageType : "test",
-
-        /*
-         * location of the mongoDB server
-         */
-        MongoDBLocation : 'localhost',
-        MongoDBPort : 27017,
-
-        AutoSave : true,
         /*
          * Generated a GUID
          */
@@ -90,14 +65,7 @@ define([], function () {
         isSameArray: function(arr1,arr2){
             return $(arr1).not(arr2).length == 0 && $(arr2).not(arr1).length == 0
         },
-        standalone: {
-            ServerIP: "self",
-            ServerPort: 8081,
-            ProjectIP: "self",
-            ProjectPort: 8082,
-            ProjectName: "testp",
-            BranchName: "basic"
-        },
+
         assert : function (cond) {
             if( !cond ) {
                 var error = new Error("ASSERT failed");
@@ -168,24 +136,14 @@ define([], function () {
         validSetNames     : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor', 'General'],
         validMetaSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor'],
         validRealSetNames : ['General'],
-        hashbasedconfig: {
-            inuse          : true,
-            serverlocation : "http://localhost",
-            dataport       : 888,
-            rootport       : 999,
-            mongosrv       : "http://localhost:8081/data",
-            rootsrv        : "http://localhost:8081/root",
-            project        : "hash",
-            branch         : "test"
-        },
+
         combinedserver: {
             port            : 80,
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
-            logsrv          : "/log",
+            projsrv         : "/project",
             mongoip         : "129.59.105.239",
             mongoport       : 27017,
-            mongocollection : "harmadik", /*possible collections currently: basic,SFdemo, IFV*/
             mongodatabase   : "multi",
             mongoopt        : {
                 'auto_reconnect' : true,
@@ -194,11 +152,8 @@ define([], function () {
                     'keepAlive' : 1
                 }
             },
-            logging         : true,
-            logfile         : "comblog.log",
             cache           : true,
             faulttolerant   : true,
-            timelog         : false,
             socketiopar     : {
                 'reconnection delay' : 10,
                 'max reconnection attempts' : 50,
@@ -210,7 +165,6 @@ define([], function () {
                 'heartbeats'         : true,
                 'log level'          : 1
             },
-            projsrv         : "/project",
             nosaveddata     : true,
             project         : "dd2"
 
