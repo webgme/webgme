@@ -3,7 +3,7 @@
  *
  * Author: Tamas Kecskes
  */
-var COREVERSION = "3";
+var COREVERSION = 3;
 define(['commonUtil','core/core'+COREVERSION,'core/assert','logManager'], function (CU,CORE,ASSERT,logManager) {
     'use strict';
     var GUID = CU.guid;
