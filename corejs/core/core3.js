@@ -316,6 +316,7 @@ CoreTree, SHA1, FUTURE) {
 				}
 
 				newNode = coretree.createChild(parent);
+				coretree.setHashed(newNode, true);
 				coretree.setData(newNode, coretree.copyData(node));
 
 				var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
@@ -409,7 +410,7 @@ CoreTree, SHA1, FUTURE) {
 				// place...
 				node = coretree.createChild(parent);
 			}
-
+			coretree.setHashed(node, true);
 			coretree.setData(node, coretree.copyData(oldNode));
 
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
