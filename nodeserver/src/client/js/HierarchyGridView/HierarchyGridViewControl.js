@@ -48,6 +48,10 @@ define(['logManager',
         }
     };
 
+    HierarchyGridViewControl.prototype.destroy = function () {
+        this._client.removeUI(this._territoryId);
+    };
+
     HierarchyGridViewControl.prototype.onOneEvent = function (events) {
         var i = events ? events.length : 0,
             e;
