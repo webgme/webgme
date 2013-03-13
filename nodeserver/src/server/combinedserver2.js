@@ -12,10 +12,13 @@ requirejs.config({
 });
 
 requirejs(['server/proxysrv','logManager'],function(PROXY,logManager){
-    logManager.setLogLevel(logManager.logLevels.ALL);
+    logManager.setLogLevel(logManager.logLevels.WARNING);
     logManager.useColors(true);
     var Server = function(parameters){
         var logger = logManager.create("combined-server");
+        var iologger = logManager.create("socket.io");
+        var iopar =  commonUtil.combinedserver.srvsocketpar;
+        iopar.logger = iopar.logger || iologger;
         var http = require('http').createServer(function(req, res){
             logger.debug("HTTP REQ - "+req.url);
 
@@ -60,7 +63,8 @@ requirejs(['server/proxysrv','logManager'],function(PROXY,logManager){
                 res.end(data);
             });
         }),
-            io = require('socket.io').listen(http,commonUtil.combinedserver.srvsocketpar);
+
+            io = require('socket.io').listen(http,iopar);
 
         //io.set('log level', 1); // reduce logging
 

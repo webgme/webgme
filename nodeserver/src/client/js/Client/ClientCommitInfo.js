@@ -37,7 +37,7 @@ define(['commonUtil'],function(commonUtil){
 
         };
 
-        var refreshCommits = function(callback){
+        /*var refreshCommits = function(callback){
             callback = callback || function(){};
             storage.find({type:'commit'},function(err,findobjects){
                 if(err){
@@ -51,8 +51,35 @@ define(['commonUtil'],function(commonUtil){
                 }
                 callback(err);
             });
+        };*/
+        var refresh = function(callback){
+            callback = callback || function(){};
+            storage.load("*#*master",function(err,branch){
+                if(!err && branch){
+                    branches = {};
+                    branches[branch[KEY]] = branch;
+                    storage.load(branch.commit,function(err,commit){
+                        if(!err && commit){
+                            commits = {};
+                            commits[commit[KEY]] = commit;
+                        } else {
+                            callback(err);
+                        }
+                    });
+                    callback(null);
+                } else {
+                    callback(err);
+                }
+            });
+        };
+
+        var refreshCommits = function(callback){
+            refresh(callback);
         };
         var refreshBranches = function(callback){
+            refresh(callback);
+        };
+        /*var refreshBranches = function(callback){
             callback = callback || function(){};
             storage.find({type:'branch'},function(err,findobjects){
                 if(err){
@@ -71,7 +98,7 @@ define(['commonUtil'],function(commonUtil){
                 }
                 callback(err);
             });
-        };
+        };*/
 
         var getAllCommitsNow = function(callback){
             callback = callback || function(){};

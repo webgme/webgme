@@ -25,13 +25,15 @@ requirejs([
     "storage/local",
     "storage/failsafe",
     "storage/socketioclient",
-    "storage/cache"],
+    "storage/cache",
+    "storage/log"],
     function(
         SERVER,
         LOCAL,
         FS,
         CLIENT,
-        CACHE){
+        CACHE,
+        LOG){
 
         var testport = 6666,
             server = null,
@@ -66,11 +68,13 @@ requirejs([
 
         server = new SERVER(
                     new CACHE(
-                        new LOCAL({
-                                    database: "smoketest",
-                                    timeout: 10000,
-                                    local: "memory"
-                                    }),
+                        new LOG(
+                            new LOCAL({
+                                        database: "smoketest",
+                                        timeout: 10000,
+                                        local: "memory"
+                                        }),
+                            {}),
                         {}),
                     {
                         port:testport

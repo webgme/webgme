@@ -155,12 +155,17 @@ define([ "core/assert","core/mongo","core/lib/sha1","socket.io",'logManager'], f
                 _mongo.load("*#*"+key,function(err,branch){
                     if(!err && branch){
                         if(branch.commit !== oldhash){
-                            _mongo.load(branch.commit,function(err,commit){
+                            callback(branch);
+                            /*_mongo.load(branch.commit,function(err,commit){
                                 if(!err && commit){
                                     callback(commit);
+                                } else {
+                                    _logger.warning('polling faulty branch\'s commit '+branch);
                                 }
-                            });
+                            });*/
                         }
+                    } else {
+                        _logger.warning('polling faulty branch '+branch);
                     }
                 });
             });
