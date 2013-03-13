@@ -111,9 +111,11 @@ define(['logManager',
     };
 
     VisualizerPanel.prototype._removeLoader = function (li, loaderDiv) {
-        li.loader.stop();
-        li.loader.destroy();
-        delete li.loader;
+        if (li.loader) {
+            li.loader.stop();
+            li.loader.destroy();
+            delete li.loader;
+        }
         loaderDiv.remove();
     };
 
@@ -168,9 +170,10 @@ define(['logManager',
                         doCallBack();
                     },
                     function (err) {
+                        var msg = "Failed to download '" + err.requireModules[0] + "'";
                         //for any error store undefined in the list and the default decorator will be used on the canvas
-                        self._logger.error("Failed to download "+ menuDesc.widgetJS + " and/or " + menuDesc.controlJS + " because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'.");
-                        a.append(' <i class="icon-warning-sign" title="Failed to download source"></i>');
+                        self._logger.error(msg);
+                        a.append(' <i class="icon-warning-sign" title="' + msg + '"></i>');
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     });
