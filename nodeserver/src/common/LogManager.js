@@ -112,6 +112,10 @@ define([], function () {
         this.warning = function (msg) {
             logMessage("WARNING", msg);
         };
+        
+        this.warn = function (msg) {
+            logMessage("WARNING", msg);
+        };
 
         this.error = function (msg) {
             logMessage("ERROR", msg);
