@@ -1456,6 +1456,9 @@ define([
                     user.KEYS[newpathes[i]] = nupathes[newpathes[i]];
                 }
 
+                //we have to store the pathes before we sent out the events
+                user.PATHES = newpathes;
+                
                 //we need to postprocesses our events as they probably contain setelements where they should contain only the set owner
                 var eventstoadd = {};
                 for(i=events.length-1;i>=0;i--){
@@ -1487,9 +1490,6 @@ define([
                         }
                     }
                 }
-
-                user.PATHES = newpathes;
-
             }
         };
         var UpdateTerritory = function(user,patterns,nupathes,callback){
