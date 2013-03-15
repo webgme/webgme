@@ -68,7 +68,7 @@ define(['logManager',
 
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                this._aspectAdd(metaInfo[CONSTANTS.GME_ID], position);
+                this._addItemsToAspect(metaInfo[CONSTANTS.GME_ID], position);
             }
         }
     };
