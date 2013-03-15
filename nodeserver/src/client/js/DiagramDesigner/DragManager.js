@@ -254,6 +254,11 @@ define(['logManager'], function (logManager) {
             dY = dragPos.y - this._dragOptions.startPos.y,
             draggedItemID = helper.data(ITEMID_DATA_KEY);
 
+        //touch device fix
+        //not sure why but sometime during dragging negative coordinates are passed here
+        if (dragPos.x < 0 && dragPos.y < 0) {
+            return;
+        }
 
         if ((dX !== this._dragOptions.delta.x) || (dY !== this._dragOptions.delta.y)) {
 
