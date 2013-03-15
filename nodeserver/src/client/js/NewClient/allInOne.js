@@ -21,13 +21,12 @@ define([
 
             var self = this,
                 _database = new Failsafe(
-                                new Cache(
-                                    new SocketIOClient({
-
-                                    }),
-                                    {}
-                                ),
-                                {}
+                    new Cache(
+                        new SocketIOClient({
+                        }),
+                        {}
+                    ),
+                    {}
                 ),
                 _projectName = null,
                 _project = null,
@@ -35,6 +34,8 @@ define([
                 _inTransaction = false,
                 _core = null,
                 _previousCore = null,
+                _previousObjects = {},
+                _objects = {},
                 _commitObject = null,
                 _previousCommitObject = null,
                 _branch = null,
@@ -51,6 +52,8 @@ define([
                     _inTransaction = false;
                     _core = null;
                     _previousCore = null;
+                    _previousObjects = {};
+                    _objects = {};
                     _commitObject = null;
                     _previousCommitObject = null;
                     _branch = null;
@@ -197,78 +200,30 @@ define([
                 _database.deleteProject(projectname,callback);
             };
             self.selectCommitAsync = function (commitid, callback) {
-                //TODO
                 callback('NIE');
             };
 
             self.getCommitsAsync = function (callback) {
-                if(_project){
-
-                } else {
-                    callback('there is no opened project');
-                }
+                callback('NIE');
             };
             self.getCommitObj = function (commitid) {
-                if (activeProject) {
-                    return commitInfos[activeProject].getCommitObj(commitid);
+                callback('NIE');
+            };
+            self.getActualCommit = function () {
+                return _commitObject;
+            };
+            self.getActualBranch = function () {
+                return _branch;
+            };
+            self.getBranchesAsync = function (callback) {
+                callback('NIE');
+            };
+            self.getRootKey = function () {
+                if(_core && _objects['root']){
+                    _core.getKey(_objects['root']);
                 } else {
                     return null;
                 }
-            };
-            self.getActualCommit = function () {
-                if (activeProject && activeActor) {
-                    return activeActor.getCurrentCommit();
-                }
-                return null;
-            };
-            self.getActualBranch = function () {
-                if (activeProject && activeActor) {
-                    return activeActor.getCurrentBranch();
-                }
-                return null;
-            };
-            self.getBranchesAsync = function (callback) {
-                if (activeProject) {
-                    commitInfos[activeProject].getBranchesNow(function (err, serverbranches) {
-                        if (!err && serverbranches && serverbranches.length > 0) {
-                            var returnlist = {};
-                            for (var i = 0; i < serverbranches.length; i++) {
-                                returnlist[serverbranches[i].name] = {
-                                    name:serverbranches[i].name,
-                                    remotecommit:serverbranches[i].commit,
-                                    localcommit:null
-                                };
-                            }
-                            for (i in projectsinfo[activeProject].branches) {
-                                if (returnlist[i]) {
-                                    returnlist[i].localcommit = projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit;
-                                } else {
-                                    returnlist[i] = {
-                                        name:i,
-                                        remotecommit:null,
-                                        localcommit:projectsinfo[activeProject].branches[i].actor ? projectsinfo[activeProject].branches[i].actor.getCurrentCommit() : projectsinfo[activeProject].branches[i].commit
-                                    };
-                                }
-                            }
-                            var returnarray = [];
-                            for (i in returnlist) {
-                                returnarray.push(returnlist[i]);
-                            }
-                            callback(null, returnarray);
-                        } else {
-                            err = err || 'there is no branch';
-                            callback(err);
-                        }
-                    });
-                } else {
-                    callback('there is no active project!!!');
-                }
-            };
-            self.getRootKey = function () {
-                if (activeProject && activeActor) {
-                    return activeActor.getRootKey();
-                }
-                return null;
             };
             self.commitAsync = function (parameters, callback) {
                 callback = callback || function () {
