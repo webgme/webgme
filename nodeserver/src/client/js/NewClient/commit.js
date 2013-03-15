@@ -46,32 +46,6 @@ define([
                 callback('NIE');
             };
 
-            var newBranch = function(name,startCommitHash,updateFunction){
-                ASSERT(typeof updateFunction === 'function' && typeof name === 'string' && !_branch[name]);
-                _branch[name] = {local: startCommitHash, server: null, status: 'online'};
-                _updateFunction = updateFunction;
-            };
-
-            var selectBranch = function(name,updateFunction){
-                ASSERT(typeof updateFunction === 'function' && typeof name === 'string' && name !== _active);
-                _active = name;
-                _updateFunction = updateFunction;
-                if(!_branch[_active]){
-                    _branch[_active] = {local:null,server:null,status:'online'};
-                    branchWathcer(name);
-                } else {
-                    switch (_branch[_active].status){
-                        case online:
-                            branchWatcher(name);
-                            break;
-                        case network:
-                            reconnecting(name);
-                            break;
-                        //in case of offline branch we do not start watcher
-                    }
-                }
-            };
-
             var changeStatus = function(newstatus){
                 //we can add here the event emitting
                 _branch[_active].status = newstatus;
@@ -96,26 +70,6 @@ define([
                 });
             };
 
-            var updateBranch = function(commitHash,callback){
-                ASSERT(typeof _active === 'string' && _branch[_active]);
-
-                _branch[_active].local = commitHash;
-                switch(_branch[_active.status]){
-                    case 'online':
-                        serverUpdate(_active,callback);
-                        break;
-                    case 'network':
-                        _branch[_active].changed = true;
-                        break;
-                    default:
-                        callback(null);
-                }
-                if(_branch[_active].status === 'online'){
-                    serverUpdate(_active,callback);
-                } else {
-                    callback(null);
-                }
-            };
             var reconnecting = function(branch){
                 var back = function(){
                     if(_branch[branch].status === 'network'){
@@ -134,6 +88,7 @@ define([
                 };
                 reconnect(back);
             };
+
             var reconnect = function(callback){
                 //we get the database status, then we wait until it changes
                 var oldstatus = null;
@@ -155,6 +110,7 @@ define([
                 };
                 _project.getDatabaseStatus(oldstatus,statusArrived);
             };
+
             var branchWatcher = function(branch){
                 var repeater = function(err,newhash){
                     if(_active === branch){
@@ -188,6 +144,55 @@ define([
                     }
                 };
                 _project.getBranchHash(BRANCH_ID+branch,_branch[branch].server,repeater);
+            };
+
+            var newBranch = function(name,startCommitHash,updateFunction){
+                ASSERT(typeof updateFunction === 'function' && typeof name === 'string' && !_branch[name]);
+                _branch[name] = {local: startCommitHash, server: null, status: 'online'};
+                _updateFunction = updateFunction;
+                _active = name;
+                branchWatcher(name);
+            };
+
+            var selectBranch = function(name,updateFunction){
+                ASSERT(typeof updateFunction === 'function' && typeof name === 'string' && name !== _active);
+                _active = name;
+                _updateFunction = updateFunction;
+                if(!_branch[_active]){
+                    _branch[_active] = {local:null,server:null,status:'online'};
+                    branchWatcher(name);
+                } else {
+                    switch (_branch[_active].status){
+                        case online:
+                            branchWatcher(name);
+                            break;
+                        case network:
+                            reconnecting(name);
+                            break;
+                        //in case of offline branch we do not start watcher
+                    }
+                }
+            };
+
+            var updateBranch = function(commitHash,callback){
+                ASSERT(typeof _active === 'string' && _branch[_active]);
+
+                _branch[_active].local = commitHash;
+                switch(_branch[_active.status]){
+                    case 'online':
+                        serverUpdate(_active,callback);
+                        break;
+                    case 'network':
+                        _branch[_active].changed = true;
+                        break;
+                    default:
+                        callback(null);
+                }
+                if(_branch[_active].status === 'online'){
+                    serverUpdate(_active,callback);
+                } else {
+                    callback(null);
+                }
             };
 
             return {
