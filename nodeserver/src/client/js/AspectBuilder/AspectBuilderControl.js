@@ -25,6 +25,7 @@ define(['logManager',
         POINTER_PREFIX = 'POINTER_',
         POINTER_SOURCE = 'POINTER_SOURCE',
         POINTER_TARGET = 'POINTER_TARGET',
+        POINTER_REF = 'POINTER_REF',
 
         CONN_TYPE_HIERARCHY_PARENT = 'HIERARCHY_PARENT',
 
@@ -37,6 +38,7 @@ define(['logManager',
 
     AspectBuilderControl = function (options) {
         var self = this,
+            $btnGroupCreatePointers,
             $btnGroupPrintNodeData;
 
         this.logger = options.logger || logManager.create(options.loggerName || "AspectBuilderControl");
@@ -68,6 +70,25 @@ define(['logManager',
 
 
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
+
+        /************** CREATE POINTERS *****************/
+        $btnGroupCreatePointers = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+            self._setNewConnectionType(data.connType);
+        });
+
+        var btnCreatePointerSource = this.designerCanvas.addButton({ "title": "SOURCE pointer",
+            "selected": true,
+            "data": { "connType": POINTER_SOURCE }}, $btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerSource, POINTER_SOURCE);
+
+        var btnCreatePointerTarget = this.designerCanvas.addButton({ "title": "TARGET pointer",
+            "data": { "connType": POINTER_TARGET }}, $btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerTarget, POINTER_TARGET);
+
+        var btnCreatePointerRef = this.designerCanvas.addButton({ "title": "REF pointer",
+            "data": { "connType": POINTER_REF }}, $btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerRef, POINTER_REF);
+        /************** END OF - CREATE POINTERS *****************/
 
 
         /************** PRINT NODE DATA *****************/
@@ -1032,14 +1053,15 @@ define(['logManager',
             case CONN_TYPE_HIERARCHY_PARENT:
                 params.arrowStart = NO_END;
                 params.arrowEnd = DIAMOND_END;
+                params.color = "#333333";
                 break;
             case SET_VALIDCHILDREN:
-                params.arrowStart = DIAMOND_END;
+                params.arrowStart = OVAL_END;
                 params.arrowEnd = NO_END;
                 params.color = "#800080";
                 break;
             case SET_VALIDINHERITOR:
-                params.arrowStart = BLOCK_ARROW_END;
+                params.arrowStart = OVAL_END;
                 params.arrowEnd = NO_END;
                 params.color = "#8080FF";
                 break;
@@ -1049,12 +1071,12 @@ define(['logManager',
                 params.color = "#00FF00";
                 break;
             case SET_VALIDDESTINATION:
-                params.arrowStart = OPEN_ARROW_END;
+                params.arrowStart = OVAL_END;
                 params.arrowEnd = NO_END;
                 params.color = "#AA03C3";
                 break;
             case SET_GENERAL:
-                params.arrowStart = ARROW_END;
+                params.arrowStart = OVAL_END;
                 params.arrowEnd = NO_END;
                 params.color = "#008080";
                 break;
@@ -1069,6 +1091,22 @@ define(['logManager',
     /*     END OF --- DEFINE VISUAL STYLE FOR EACH SPECIFIC CONNECTION TYPE     */
     /****************************************************************************/
 
+    AspectBuilderControl.prototype._createButtonFace = function (btn, connType) {
+        var el = $('<div/>'),
+            paper = Raphael(el[0], 20, 20),
+            path;
+
+        el.attr({"style": "height: 20px"});
+
+        path = paper.path("M0,0, L20,20");
+
+        /*path.attr({ "arrow-start": this.designerAttributes.arrowStart,
+            "arrow-end": this.designerAttributes.arrowEnd,
+            "stroke": this.designerAttributes.color,
+            "stroke-width": this.designerAttributes.width});*/
+
+        btn.append($(el));
+    };
 
     //attach AspectBuilderControl - DesignerCanvas event handler functions
     _.extend(AspectBuilderControl.prototype, AspectBuilderControlDesignerCanvasEventHandlers.prototype);
