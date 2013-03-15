@@ -1,5 +1,3 @@
-"use strict";
-
 define(['logManager',
     'clientUtil',
     'js/Constants',
@@ -10,22 +8,32 @@ define(['logManager',
                                                         nodePropertyNames,
                                                         AspectBuilderControlDesignerCanvasEventHandlers) {
 
+    "use strict";
+
     var AspectBuilderControl,
-        DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
+        DECORATOR_PATH = "js/ModelEditor3/Decorators/",
         GME_ID = "GME_ID",
         ASPECT_BUILDER_REGISTRY_KEY = "AspectBuilder",
 
-        NOEND = "none",
+        NO_END = "none",
         ARROW_END = "classic-wide-long",
+        DIAMOND_END = "diamond-wide-long",
+        BLOCK_ARROW_END = "block-wide-long",
+        OVAL_END = "oval-wide-long",
+        OPEN_ARROW_END = "open-wide-long",
 
         POINTER_PREFIX = 'POINTER_',
         POINTER_SOURCE = 'POINTER_SOURCE',
         POINTER_TARGET = 'POINTER_TARGET',
-        SET_VALIDCHILDREN = 'ValidChildren',
-        SET_VALIDSOURCE = 'ValidSource',
-        SET_VALIDDESTINATION = 'ValidDestination',
-        SET_VALIDINHERITOR = 'ValidInheritor',
-        SET_GENERAL = 'General';
+
+        CONN_TYPE_HIERARCHY_PARENT = 'HIERARCHY_PARENT',
+
+        SET_PREFIX = 'SET_',
+        SET_VALIDCHILDREN = 'SET_VALIDCHILDREN',
+        SET_VALIDSOURCE = 'SET_VALIDSOURCE',
+        SET_VALIDDESTINATION = 'SET_VALIDDESTINATION',
+        SET_VALIDINHERITOR = 'SET_VALIDINHERITOR',
+        SET_GENERAL = 'SET_GENERAL';
 
     AspectBuilderControl = function (options) {
         var self = this,
@@ -48,11 +56,11 @@ define(['logManager',
 
         this._client = options.client;
         this._selfPatterns = {};
-        this._components = {};
-        this._GmeID2ComponentID = {};
-        this._ComponentID2GmeID = {};
         this.decoratorClasses = {};
         this.eventQueue = [];
+
+        this._emptyAspectRegistry = { "Members": [],
+            "MemberCoord": {}};
 
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "members" : [] };
@@ -68,7 +76,7 @@ define(['logManager',
         });
 
         this.designerCanvas.addButton({ "title": "Print node data",
-            "icon": "icon-share"}, $btnGroupPrintNodeData );
+            "icon": "icon-share"}, $btnGroupPrintNodeData);
         /************** END OF - PRINT NODE DATA *****************/
 
 
@@ -99,6 +107,16 @@ define(['logManager',
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
 
+        this._connectionWaitingListByDstGMEID = {};
+
+        this._connectionListBySrcGMEID = {};
+        this._connectionListByDstGMEID = {};
+        this._connectionListByType = {};
+        this._connectionListByID = {};
+
+        this._nodePointers = {};
+        this._nodeSets = {};
+
         //remove current territory patterns
         if (this.currentNodeInfo.id) {
             this._client.removeUI(this._territoryId);
@@ -106,6 +124,7 @@ define(['logManager',
 
         if (nodeId) {
             this.currentNodeInfo.id = nodeId;
+            this.currentNodeInfo.members = [];
 
             //put new node's info into territory rules
             this._selfPatterns = {};
@@ -122,81 +141,9 @@ define(['logManager',
         }
     };
 
-    AspectBuilderControl.prototype._getObjectDescriptor = function (gmeID) {
-        var cNode = this._client.getNode(gmeID),
-            nodeDescriptor,
-            pos,
-            _getNodePropertyValues,
-            _getSetMembershipInfo,
-            _getPointerInfo;
-
-        _getSetMembershipInfo = function (node) {
-            var result = {},
-                availableSets = node.getSetNames(),
-                len = availableSets.length;
-
-            while (len--) {
-                result[availableSets[len]] = node.getMemberIds(availableSets[len]);
-            }
-
-            return result;
-        };
-
-        _getPointerInfo = function (node) {
-            var result = {},
-                availablePointers = node.getPointerNames(),
-                len = availablePointers.length;
-
-            while (len--) {
-                result[availablePointers[len]] = node.getPointer(availablePointers[len]).to;
-            }
-
-            return result;
-        };
-
-        if (cNode) {
-            nodeDescriptor = {"ID": undefined,
-                    "ParentID": undefined,
-                    "Sets": undefined,
-                    "Pointers": undefined,
-                    "Registry": undefined,
-                    "decorator": "DefaultDecorator",
-                    "position": { "x": -1, "y": -1 }};
-
-            nodeDescriptor.ID = gmeID;
-            nodeDescriptor.ParentID = cNode.getParentId();
-
-            nodeDescriptor.name = cNode.getAttribute( nodePropertyNames.Attributes.name) || "";
-
-            if (gmeID === this.currentNodeInfo.id) {
-
-            } else {
-                if (this._selfRegistry) {
-                    nodeDescriptor.position = this._selfRegistry.MemberCoord[gmeID]; // || { "x": 100, "y": 100  };
-                }
-            }
-
-            nodeDescriptor.Sets = _getSetMembershipInfo(cNode);
-            nodeDescriptor.Pointers = _getPointerInfo(cNode);
-        }
-
-        return nodeDescriptor;
-    };
-
-    AspectBuilderControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {
-        if (_.isNumber(cValue)) {
-            if (_.isNaN(cValue)) {
-                return defaultValue;
-            }
-        } else {
-            return defaultValue;
-        }
-
-        //cValue is a number, simply return it
-        return cValue;
-    };
-
-    // PUBLIC METHODS
+    /**********************************************************/
+    /*                    PUBLIC METHODS                      */
+    /**********************************************************/
     AspectBuilderControl.prototype.onOneEvent = function (events) {
         var i = events ? events.length : 0;
 
@@ -204,7 +151,7 @@ define(['logManager',
 
         if (i > 0) {
             this.eventQueue.push(events);
-            this.processNextInQueue();
+            this._processNextInQueue();
         }
 
         this.designerCanvas.setAspectMemberNum(this._GMEModels.length);
@@ -212,7 +159,23 @@ define(['logManager',
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
-    AspectBuilderControl.prototype.processNextInQueue = function () {
+    //TODO: check this here...
+    //NOTE: all the UI cleanup will happen from VisualizerPanel
+    //might not be the best approach
+    AspectBuilderControl.prototype.destroy = function () {
+        this._client.removeUI(this._territoryId);
+        this.designerCanvas.clear();
+    };
+
+    /**********************************************************/
+    /*                   PRIVATE METHODS                      */
+    /**********************************************************/
+
+
+    /**********************************************************/
+    /*       EVENT AND DECORATOR DOWNLOAD HANDLING            */
+    /**********************************************************/
+    AspectBuilderControl.prototype._processNextInQueue = function () {
         var nextBatchInQueue,
             len = this.eventQueue.length,
             decoratorsToDownload = [],
@@ -300,10 +263,6 @@ define(['logManager',
 
         this.designerCanvas.beginUpdate();
 
-        this.delayedEvents = [];
-
-        this.firstRun = true;
-
         while (i--) {
             e = events[i];
             switch (e.etype) {
@@ -319,23 +278,6 @@ define(['logManager',
             }
         }
 
-        this.firstRun = false;
-
-        i = this.delayedEvents.length;
-
-        while (i--) {
-            e = this.delayedEvents[i];
-            switch (e.etype) {
-                case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    this._onLoad(e.eid, e.desc);
-                    break;
-            }
-        }
-
-
-
-        this.delayedEvents = [];
-
         this.designerCanvas.endUpdate();
 
         this.designerCanvas.hidePogressbar();
@@ -343,68 +285,94 @@ define(['logManager',
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 
         //continue processing event queue
-        this.processNextInQueue();
+        this._processNextInQueue();
     };
+    /**********************************************************/
+    /*    END OF --- EVENT AND DECORATOR DOWNLOAD HANDLING    */
+    /**********************************************************/
 
-    // PUBLIC METHODS
-    AspectBuilderControl.prototype._onLoad = function (gmeID, objD) {
-        var uiComponent,
-            i,
-            GMESrcId,
-            GMEDstId,
-            decClass,
-            objDesc,
-            sources = [],
-            destinations = [];
 
-        //component loaded
-        if (this.currentNodeInfo.id !== gmeID && this._GMEModels.indexOf(gmeID) === -1) {
-            //aspect's member has been loaded
-            if (objD && objD.position.x > -1 && objD.position.y > -1) {
-                objDesc = _.extend({}, objD);
-                this._GmeID2ComponentID[gmeID] = [];
+    /**********************************************************/
+    /*       READ IMPORTANT INFORMATION FROM A NODE           */
+    /**********************************************************/
+    AspectBuilderControl.prototype._getObjectDescriptor = function (gmeID) {
+        var cNode = this._client.getNode(gmeID),
+            nodeDescriptor,
+            _getSetMembershipInfo,
+            _getPointerInfo;
 
-                this._GMEModels.push(gmeID);
+        _getSetMembershipInfo = function (node) {
+            var result = {},
+                availableSets = node.getSetNames(),
+                len = availableSets.length;
 
-                decClass = this.decoratorClasses[objDesc.decorator];
-
-                objDesc.decoratorClass = decClass;
-                objDesc.control = this;
-                objDesc.metaInfo = {};
-                objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
-
-                uiComponent = this.designerCanvas.createDesignerItem(objDesc);
-
-                this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                this._ComponentID2GmeID[uiComponent.id] = gmeID;
-
-                this._processNodePointers(gmeID, objD);
-
-                //check all the waiting pointers (whose SRC is already displayed and waiting for the DST to show up)
-                this._processConnectionWaitingList(gmeID);
+            while (len--) {
+                result[availableSets[len]] = node.getMemberIds(availableSets[len]);
             }
-        } else {
-            //aspect has been loaded
+
+            return result;
+        };
+
+        _getPointerInfo = function (node) {
+            var result = {},
+                availablePointers = node.getPointerNames(),
+                len = availablePointers.length;
+
+            while (len--) {
+                result[availablePointers[len]] = node.getPointer(availablePointers[len]).to;
+            }
+
+            return result;
+        };
+
+        if (cNode) {
+            nodeDescriptor = {"ID": undefined,
+                "ParentID": undefined,
+                "Sets": undefined,
+                "Pointers": undefined,
+                "decorator": "DefaultDecorator",
+                "position": { "x": -1, "y": -1 }};
+
+            nodeDescriptor.ID = gmeID;
+            nodeDescriptor.ParentID = cNode.getParentId();
+
+            nodeDescriptor.name = cNode.getAttribute(nodePropertyNames.Attributes.name) || "";
+
+            if (gmeID === this.currentNodeInfo.id) {
+
+            } else {
+                if (this._selfRegistry) {
+                    nodeDescriptor.position = this._selfRegistry.MemberCoord[gmeID]; // || { "x": 100, "y": 100  };
+                }
+            }
+
+            nodeDescriptor.Sets = _getSetMembershipInfo(cNode);
+            nodeDescriptor.Pointers = _getPointerInfo(cNode);
+        }
+
+        return nodeDescriptor;
+    };
+    /**********************************************************/
+    /*  END OF --- READ IMPORTANT INFORMATION FROM A NODE     */
+    /**********************************************************/
+
+
+    /**********************************************************/
+    /*                LOAD / UPDATE / UNLOAD HANDLER          */
+    /**********************************************************/
+    AspectBuilderControl.prototype._onLoad = function (gmeID, objD) {
+        if (gmeID === this.currentNodeInfo.id) {
             this._processAspectNode();
+        } else {
+            this._processNodeLoad(gmeID, objD);
         }
     };
 
     AspectBuilderControl.prototype._onUpdate = function (gmeID, objD) {
-        var componentID,
-            len,
-            decClass,
-            objId,
-            sCompId;
-
-        //self or child updated
-        //check if the updated object is the opened node
         if (gmeID === this.currentNodeInfo.id) {
-            // - name change
             this._processAspectNode();
         } else {
-            if (objD) {
-                this._processNodeUpdate(gmeID, objD);
-            }
+            this._processNodeUpdate(gmeID, objD);
         }
     };
 
@@ -417,40 +385,25 @@ define(['logManager',
             //the opened model has been deleted....
             this.designerCanvas.setTitle("The currently opened model has been deleted (TODO)");
             this.logger.error("NOT YET IMPLEMENTED: 'The currently opened model has been deleted'");
+            throw "NOT YET IMPLEMENTED: 'The currently opened model has been deleted'";
         } else {
-            if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
-                len = this._GmeID2ComponentID[gmeID].length;
-                while (len--) {
-                    componentID = this._GmeID2ComponentID[gmeID][len];
-
-                    //remove all the associated connection(s) (both from existing connection list and waiting list)
-                    //if gmeID is destinationID, remove connection and store it's data in the waiting list
-                    //if gmeID is sourceID, remove connection and end of story
-                    this._removeAssociatedConnections(gmeID);
-
-                    this.designerCanvas.deleteComponent(componentID);
-
-                    delete this._ComponentID2GmeID[componentID];
-                }
-
-                delete this._GmeID2ComponentID[gmeID];
-
-                idx = this._GMEModels.indexOf(gmeID);
-                this._GMEModels.splice(idx,1);
-            }
+            this._processNodeUnload(gmeID);
         }
     };
+    /**********************************************************/
+    /*       END OF --- LOAD / UPDATE / UNLOAD HANDLER        */
+    /**********************************************************/
 
-    //TODO: check this here...
-    AspectBuilderControl.prototype.destroy = function () {
-        this._client.removeUI(this._territoryId);
-    };
 
+
+
+    /**********************************************************/
+    /*                CUSTOM BUTTON EVENT HANDLERS            */
+    /**********************************************************/
     AspectBuilderControl.prototype._printNodeData = function () {
         var idList = this.designerCanvas.selectionManager.selectedItemIdList,
             len = idList.length,
             node;
-
         while (len--) {
             node = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
@@ -459,19 +412,26 @@ define(['logManager',
             }
         }
     };
+    /**********************************************************/
+    /*       END OF --- CUSTOM BUTTON EVENT HANDLERs          */
+    /**********************************************************/
 
+
+    /**********************************************************/
+    /*  PROCESS ASPECT NODE TO HANDLE ADDED / REMOVED ELEMENT */
+    /**********************************************************/
     AspectBuilderControl.prototype._processAspectNode = function () {
         var aspectNode = this._client.getNode(this.currentNodeInfo.id),
-            aspectRegistry = aspectNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || { "Members": [],
-                "MemberCoord": {}},
             len,
             diff,
             objDesc,
             componentID,
             i,
-            gmeID;
+            gmeID,
+            aspectRegistry = aspectNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone(),
+            territoryChanged = false;
 
-        //update selfregistry (for node positions)
+        //update selfRegistry (for node positions)
         this._selfRegistry = aspectRegistry;
 
         //check added nodes
@@ -479,6 +439,7 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             delete this._selfPatterns[diff[len]];
+            territoryChanged = true;
         }
 
         //check removed nodes
@@ -486,6 +447,7 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             this._selfPatterns[diff[len]] = { "children": 0 };
+            territoryChanged = true;
         }
 
         //check all other nodes for position change
@@ -505,14 +467,22 @@ define(['logManager',
         //update current member list
         this.currentNodeInfo.members = aspectRegistry.Members.slice(0);
 
-
-        this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        //there was change in the territory
+        if (territoryChanged === true) {
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        }
     };
+    /*********************************************************************/
+    /*  END OF --- PROCESS ASPECT NODE TO HANDLE ADDED / REMOVED ELEMENT */
+    /*********************************************************************/
 
-    AspectBuilderControl.prototype._aspectAdd = function (gmeID, position) {
+
+    /**********************************************************/
+    /*  HANDLE OBJECT ADDITION TO ASPECT                      */
+    /**********************************************************/
+    AspectBuilderControl.prototype._addItemsToAspect = function (gmeID, position) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || { "Members": [],
-                "MemberCoord": {}};
+            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone();
 
         if (registry.Members.indexOf(gmeID) === -1) {
             registry.Members.push(gmeID);
@@ -522,11 +492,17 @@ define(['logManager',
 
         this._client.setRegistry(this.currentNodeInfo.id, ASPECT_BUILDER_REGISTRY_KEY, registry);
     };
+    /**********************************************************/
+    /*  END OF --- HANDLE OBJECT ADDITION TO ASPECT           */
+    /**********************************************************/
 
+
+    /**********************************************************/
+    /*  HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT         */
+    /**********************************************************/
     AspectBuilderControl.prototype._onDesignerItemsMove = function (repositionDesc) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || { "Members": [],
-                "MemberCoord": {}},
+            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone(),
             id,
             gmeID;
 
@@ -542,7 +518,15 @@ define(['logManager',
 
         this._client.setRegistry(this.currentNodeInfo.id, ASPECT_BUILDER_REGISTRY_KEY, registry);
     };
+    /************************************************************/
+    /* END OF --- HANDLE OBJECT REPOSITION IN THE ASPECT ASPECT */
+    /************************************************************/
 
+
+    /*************************************************************/
+    /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
+    /*************************************************************/
+    //TODO: connection deletion not yet handled
     AspectBuilderControl.prototype._onSelectionDelete = function (idList) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
             registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || { "Members": [],
@@ -562,141 +546,54 @@ define(['logManager',
 
         this._client.setRegistry(this.currentNodeInfo.id, ASPECT_BUILDER_REGISTRY_KEY, registry);
     };
+    /************************************************************************/
+    /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
+    /************************************************************************/
 
-    AspectBuilderControl.prototype._createConnection = function (gmeSrcId, gmeDstId, connType) {
-        var connDesc,
-            connComponent;
-        //need to check if the src and dst objects are displayed or not
-        //if YES, create connection
-        //if NO, store information in a waiting queue
-        //fact: gmeSrcId is available, the call is coming from there
-        if (this._GMEModels.indexOf(gmeDstId) !== -1) {
-            //destination is displayed
-            connDesc = { "srcObjId": this._GmeID2ComponentID[gmeSrcId][0],
-                         "srcSubCompId": undefined,
-                         "dstObjId": this._GmeID2ComponentID[gmeDstId][0],
-                         "dstSubCompId": undefined,
-                         "reconnectable": false
-            };
 
-            _.extend(connDesc, this._getConnTypeVisualDescriptor(POINTER_PREFIX + connType.toUpperCase()));
+    /**************************************************************************/
+    /*  HANDLE OBJECT LOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
+    /**************************************************************************/
+    AspectBuilderControl.prototype._processNodeLoad = function (gmeID, objD) {
+        var uiComponent,
+            decClass,
+            objDesc;
 
-            connComponent = this.designerCanvas.createConnection(connDesc);
+        //component loaded
+        if (this._GMEModels.indexOf(gmeID) === -1) {
+            //aspect's member has been loaded
+            if (objD && objD.position.x > -1 && objD.position.y > -1) {
+                objDesc = _.extend({}, objD);
 
-            this._saveConnection(gmeSrcId, gmeDstId, connType, connComponent.id);
-        } else {
-            //destination is not displayed, store it in a queue
-            this._saveConnectionToWaitingList(gmeSrcId, gmeDstId, connType);
-        }
-    };
+                this._GmeID2ComponentID[gmeID] = [];
+                this._GMEModels.push(gmeID);
 
-    AspectBuilderControl.prototype._saveConnectionToWaitingList =  function (gmeSrcId, gmeDstId, connType) {
-        this._connectionWaitingListByDstGMEID = this._connectionWaitingListByDstGMEID || {};
+                decClass = this.decoratorClasses[objDesc.decorator];
 
-        this._connectionWaitingListByDstGMEID[gmeDstId] = this._connectionWaitingListByDstGMEID[gmeDstId] || {};
+                objDesc.decoratorClass = decClass;
+                objDesc.control = this;
+                objDesc.metaInfo = {};
+                objDesc.metaInfo[CONSTANTS.GME_ID] = gmeID;
 
-        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] || [];
+                uiComponent = this.designerCanvas.createDesignerItem(objDesc);
 
-        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].push(connType);
-    };
+                this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                this._ComponentID2GmeID[uiComponent.id] = gmeID;
 
-    AspectBuilderControl.prototype._removeConnectionFromWaitingList =  function (gmeSrcId, gmeDstId, connType) {
-        this._connectionWaitingListByDstGMEID = this._connectionWaitingListByDstGMEID || {};
+                //process new node to display pointers / hierarchy / sets as connections
+                this._processNodePointers(gmeID, objD);
+                this._processNodeSets(gmeID, objD);
+                this._processNodeParent(gmeID, objD);
 
-        if (this._connectionWaitingListByDstGMEID.hasOwnProperty(gmeDstId)) {
-            if (this._connectionWaitingListByDstGMEID[gmeDstId].hasOwnProperty(gmeSrcId)) {
-                var idx = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].indexOf((connType));
-                if (idx !== -1) {
-                    this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].splice(idx, 1);
-                }
+                //check all the waiting pointers (whose SRC is already displayed and waiting for the DST to show up)
+                //it might be this new node
+                this._processConnectionWaitingList(gmeID);
             }
         }
     };
 
-    AspectBuilderControl.prototype._saveConnection = function (gmeSrcId, gmeDstId, connType, connComponentId) {
-        //save by SRC
-        this._connectionListBySrcGMEID = this._connectionListBySrcGMEID || {};
-        this._connectionListBySrcGMEID[gmeSrcId] = this._connectionListBySrcGMEID[gmeSrcId] || {};
-        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] || {};
-        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType] = connComponentId;
-        
-        //save by DST
-        this._connectionListByDstGMEID = this._connectionListByDstGMEID || {};
-        this._connectionListByDstGMEID[gmeDstId] = this._connectionListByDstGMEID[gmeDstId] || {};
-        this._connectionListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionListByDstGMEID[gmeDstId][gmeSrcId] || {};
-        this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType] = connComponentId;
-
-        //save by type
-        this._connectionListByType = this._connectionListByType || {};
-        this._connectionListByType[connType] = this._connectionListByType[connType] || [];
-        this._connectionListByType[connType].push(connComponentId);
-
-        //save by connectionID
-        this._connectionListByID = this._connectionListByID || {};
-        this._connectionListByID[connComponentId] = { "GMESrcId": gmeSrcId,
-                                                      "GMEDstID": gmeDstId,
-                                                      "type": connType };
-    };
-
-    AspectBuilderControl.prototype._getConnTypeVisualDescriptor = function (connType) {
-        var params = { "arrowStart" : "none",
-            "arrowEnd" : "none",
-            "width" : "1",
-            "color" :"#AAAAAA" };
-
-        switch (connType) {
-            case POINTER_SOURCE:
-                params.arrowStart = NOEND;
-                params.arrowEnd = ARROW_END;
-                params.width = 2;
-                params.color = "#FF0000";
-                break;
-            case POINTER_TARGET:
-                params.arrowStart = NOEND;
-                params.arrowEnd = ARROW_END;
-                params.width = 2;
-                params.color = "#0000FF";
-                break;
-            /*case SET_VALIDCHILDREN:
-                params.arrowStart = VALIDCHILDREN_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#FF0000";
-                break;
-            case SET_VALIDINHERITOR:
-                params.arrowStart = VALIDINHERITOR_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#0000FF";
-                break;
-            case SET_VALIDSOURCE:
-                params.arrowStart = VALIDSOURCE_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#00FF00";
-                break;
-            case SET_VALIDDESTINATION:
-                params.arrowStart = VALIDDESTINATION_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#AA03C3";
-                break;
-            case SET_GENERAL:
-                params.arrowStart = GENERAL_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#000000";
-                break;*/
-            default:
-                break;
-        }
-
-        return params;
-    };
-
     AspectBuilderControl.prototype._processConnectionWaitingList = function (gmeDstID) {
-        var it,
-            len,
+        var len,
             gmeSrcID,
             connType;
 
@@ -713,6 +610,44 @@ define(['logManager',
             }
 
             delete this._connectionWaitingListByDstGMEID[gmeDstID];
+        }
+    };
+    /**************************************************************************/
+    /*  END OF --- HANDLE OBJECT LOAD DISPLAY IT WITH ALL THE POINTERS / ...  */
+    /**************************************************************************/
+
+
+    /****************************************************************************/
+    /*  HANDLE OBJECT UNLOAD  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
+    /****************************************************************************/
+    AspectBuilderControl.prototype._processNodeUnload = function (gmeID) {
+        var componentID,
+            len,
+            idx;
+
+        if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+            len = this._GmeID2ComponentID[gmeID].length;
+            while (len--) {
+                componentID = this._GmeID2ComponentID[gmeID][len];
+
+                //remove all the associated connection(s) (both from existing connection list and waiting list)
+                //if gmeID is destinationID, remove connection and store it's data in the waiting list
+                //if gmeID is sourceID, remove connection and end of story
+                this._removeAssociatedConnections(gmeID);
+
+                this.designerCanvas.deleteComponent(componentID);
+
+                delete this._ComponentID2GmeID[componentID];
+            }
+
+            delete this._GmeID2ComponentID[gmeID];
+
+            idx = this._GMEModels.indexOf(gmeID);
+            this._GMEModels.splice(idx,1);
+
+            //keep up accounting
+            delete this._nodePointers[gmeID];
+            delete this._nodeSets[gmeID];
         }
     };
 
@@ -803,7 +738,103 @@ define(['logManager',
             delete this._connectionListByDstGMEID[gmeID];
         }
     };
+    /****************************************************************************/
+    /*                      END OF --- HANDLE OBJECT UNLOAD                     */
+    /****************************************************************************/
 
+
+    /****************************************************************************/
+    /*  CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS              */
+    /****************************************************************************/
+    AspectBuilderControl.prototype._createConnection = function (gmeSrcId, gmeDstId, connType) {
+        var connDesc,
+            connComponent;
+        //need to check if the src and dst objects are displayed or not
+        //if YES, create connection
+        //if NO, store information in a waiting queue
+        //fact: gmeSrcId is available, the call is coming from there
+        if (this._GMEModels.indexOf(gmeDstId) !== -1) {
+            //destination is displayed
+            connDesc = { "srcObjId": this._GmeID2ComponentID[gmeSrcId][0],
+                         "srcSubCompId": undefined,
+                         "dstObjId": this._GmeID2ComponentID[gmeDstId][0],
+                         "dstSubCompId": undefined,
+                         "reconnectable": false
+            };
+
+            _.extend(connDesc, this._getConnTypeVisualDescriptor(connType.toUpperCase()));
+
+            connComponent = this.designerCanvas.createConnection(connDesc);
+
+            this._saveConnection(gmeSrcId, gmeDstId, connType, connComponent.id);
+        } else {
+            //destination is not displayed, store it in a queue
+            this._saveConnectionToWaitingList(gmeSrcId, gmeDstId, connType);
+        }
+    };
+
+    AspectBuilderControl.prototype._saveConnectionToWaitingList =  function (gmeSrcId, gmeDstId, connType) {
+        this._connectionWaitingListByDstGMEID[gmeDstId] = this._connectionWaitingListByDstGMEID[gmeDstId] || {};
+
+        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] || [];
+
+        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].push(connType);
+    };
+
+    AspectBuilderControl.prototype._saveConnection = function (gmeSrcId, gmeDstId, connType, connComponentId) {
+        //save by SRC
+        this._connectionListBySrcGMEID[gmeSrcId] = this._connectionListBySrcGMEID[gmeSrcId] || {};
+        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] || {};
+        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType] = connComponentId;
+        
+        //save by DST
+        this._connectionListByDstGMEID[gmeDstId] = this._connectionListByDstGMEID[gmeDstId] || {};
+        this._connectionListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionListByDstGMEID[gmeDstId][gmeSrcId] || {};
+        this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType] = connComponentId;
+
+        //save by type
+        this._connectionListByType[connType] = this._connectionListByType[connType] || [];
+        this._connectionListByType[connType].push(connComponentId);
+
+        //save by connectionID
+        this._connectionListByID[connComponentId] = { "GMESrcId": gmeSrcId,
+                                                      "GMEDstID": gmeDstId,
+                                                      "type": connType };
+    };
+    /****************************************************************************/
+    /*  END OF --- CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS   */
+    /****************************************************************************/
+
+
+    /****************************************************************************/
+    /*  REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS                */
+    /****************************************************************************/
+    AspectBuilderControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType) {
+        var connectionID,
+            idx;
+
+        connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
+
+        this.designerCanvas.deleteComponent(connectionID);
+
+        //clean up accounting
+        delete this._connectionListByID[connectionID];
+
+        idx = this._connectionListByType[connType].indexOf(connectionID);
+        this._connectionListByType[connType].splice(idx, 1);
+
+
+        delete this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
+        delete this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType];
+    };
+    /****************************************************************************/
+    /*  END OF --- REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS     */
+    /****************************************************************************/
+
+
+    /**************************************************************************/
+    /*  HANDLE OBJECT UPDATE  --- DISPLAY IT WITH ALL THE POINTERS / SETS / ETC */
+    /**************************************************************************/
     AspectBuilderControl.prototype._processNodeUpdate = function(gmeID, objDesc) {
         var len = this._GmeID2ComponentID[gmeID].length,
             componentID,
@@ -821,8 +852,17 @@ define(['logManager',
 
         //update set relations
         this._processNodePointers(gmeID, objDesc);
-    };
 
+        this._processNodeSets(gmeID, objDesc);
+    };
+    /**************************************************************************/
+    /*                   END OF --- HANDLE OBJECT UPDATE                      */
+    /**************************************************************************/
+
+
+    /**************************************************************************/
+    /*  CREATE A CONNECTION FROM THE POINTERS OF A GME OBJECT                 */
+    /**************************************************************************/
     AspectBuilderControl.prototype._processNodePointers = function (gmeID, objD) {
         //only the pointers are relevant here
         //add / remove necessary
@@ -833,7 +873,6 @@ define(['logManager',
             diff,
             len;
 
-        this._nodePointers = this._nodePointers || {};
         this._nodePointers[gmeID] = this._nodePointers[gmeID] || {};
         for (ptrType in this._nodePointers[gmeID]) {
             if (this._nodePointers[gmeID].hasOwnProperty(ptrType)) {
@@ -854,11 +893,11 @@ define(['logManager',
             ptrType = diff[len];
             if (this._nodePointers[gmeID][ptrType] !== objD.Pointers[ptrType]) {
                 ptrTo = this._nodePointers[gmeID][ptrType];
-                this._removeConnection(gmeID, ptrTo, ptrType);
+                this._removeConnection(gmeID, ptrTo, POINTER_PREFIX + ptrType);
                 delete this._nodePointers[gmeID][ptrType];
 
                 ptrTo = objD.Pointers[ptrType];
-                this._createConnection(gmeID, ptrTo, ptrType);
+                this._createConnection(gmeID, ptrTo, POINTER_PREFIX + ptrType);
                 this._nodePointers[gmeID][ptrType] = ptrTo;
             }
         }
@@ -870,7 +909,7 @@ define(['logManager',
             ptrType = diff[len];
             ptrTo = this._nodePointers[gmeID][ptrType];
 
-            this._removeConnection(gmeID, ptrTo, ptrType);
+            this._removeConnection(gmeID, ptrTo, POINTER_PREFIX + ptrType);
             delete this._nodePointers[gmeID][ptrType];
         }
 
@@ -881,29 +920,155 @@ define(['logManager',
             ptrType = diff[len];
             ptrTo = objD.Pointers[ptrType];
 
-            this._createConnection(gmeID, ptrTo, ptrType);
+            this._createConnection(gmeID, ptrTo, POINTER_PREFIX + ptrType);
             this._nodePointers[gmeID][ptrType] = ptrTo;
         }
     };
+    /**************************************************************************/
+    /*  END OF --- CREATE A CONNECTION FROM THE POINTERS OF A GME OBJECT      */
+    /**************************************************************************/
 
-    AspectBuilderControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType) {
-        var connectionID,
+
+    /**************************************************************************/
+    /*    CREATE A CONNECTION FROM THE SET CONTAINMENT OF A GME OBJECT        */
+    /**************************************************************************/
+    AspectBuilderControl.prototype._processNodeSets = function (gmeID, objD) {
+        var cSet,
+            ptrTo,
+            allSets = [],
+            diff,
+            newMembers,
+            oldMembers,
+            len,
+            i,
             idx;
 
-        connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
+        this._nodeSets[gmeID] = this._nodeSets[gmeID] || {};
+        for (cSet in this._nodeSets[gmeID]) {
+            if (this._nodeSets[gmeID].hasOwnProperty(cSet)) {
+                allSets.push(cSet);
+            }
+        }
 
-        this.designerCanvas.deleteComponent(connectionID);
+        for (cSet in objD.Sets) {
+            if (objD.Sets.hasOwnProperty(cSet)) {
+                if (allSets.indexOf(cSet) === -1) {
+                    allSets.push(cSet);
+                }
+            }
+        }
 
-        //clean up accounting
-        delete this._connectionListByID[connectionID];
+        //iterate through the sets and check the differences
+        i = allSets.length;
+        while(i--) {
+            cSet = allSets[i];
 
-        idx = this._connectionListByType[connType].indexOf(connectionID);
-        this._connectionListByType[connType].splice(idx, 1);
+            newMembers = objD.Sets[cSet] || [];
+            oldMembers = this._nodeSets[gmeID][cSet] || [];
 
+            //deleted guys
+            diff = _.difference(oldMembers, newMembers);
+            len = diff.length;
+            while (len--) {
+                ptrTo = diff[len];
 
-        delete this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
-        delete this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType];
+                this._removeConnection(gmeID, ptrTo, SET_PREFIX + cSet);
+
+                idx = this._nodeSets[gmeID][cSet].indexOf(ptrTo);
+                this._nodeSets[gmeID][cSet].splice(idx, 1);
+            }
+
+            //compute added pointers
+            diff = _.difference(newMembers, oldMembers);
+            len = diff.length;
+            while (len--) {
+                ptrTo = diff[len];
+
+                this._createConnection(gmeID, ptrTo,  SET_PREFIX + cSet);
+
+                this._nodeSets[gmeID][cSet] = this._nodeSets[gmeID][cSet] || [];
+                this._nodeSets[gmeID][cSet].push(ptrTo);
+            }
+        }
     };
+    /***************************************************************************/
+    /* END OF --- CREATE A CONNECTION FROM THE SET CONTAINMENT OF A GME OBJECT */
+    /***************************************************************************/
+
+
+    /***************************************************************************/
+    /* CREATE A CONNECTION TO REPRESENT A CONTAINMENT BETWEEN PARENT AND CHILD */
+    /***************************************************************************/
+    AspectBuilderControl.prototype._processNodeParent = function (gmeID, objD) {
+        if (objD.ParentID) {
+            this._createConnection(gmeID, objD.ParentID, CONN_TYPE_HIERARCHY_PARENT);
+        }
+    };
+    /**************************************************************************************/
+    /* END OF --- CREATE A CONNECTION TO REPRESENT A CONTAINMENT BETWEEN PARENT AND CHILD */
+    /**************************************************************************************/
+
+
+    /****************************************************************************/
+    /*         DEFINE VISUAL STYLE FOR EACH SPECIFIC CONNECTION TYPE            */
+    /****************************************************************************/
+    AspectBuilderControl.prototype._getConnTypeVisualDescriptor = function (connType) {
+        var params = { "arrowStart" : "none",
+            "arrowEnd" : "none",
+            "width" : "2",
+            "color" :"#000000" };
+
+        switch (connType) {
+            case POINTER_SOURCE:
+                params.arrowStart = NO_END;
+                params.arrowEnd = ARROW_END;
+                params.color = "#FF0000";
+                break;
+            case POINTER_TARGET:
+                params.arrowStart = NO_END;
+                params.arrowEnd = ARROW_END;
+                params.color = "#0000FF";
+                break;
+            case CONN_TYPE_HIERARCHY_PARENT:
+                params.arrowStart = NO_END;
+                params.arrowEnd = DIAMOND_END;
+                break;
+            case SET_VALIDCHILDREN:
+                params.arrowStart = DIAMOND_END;
+                params.arrowEnd = NO_END;
+                params.color = "#800080";
+                break;
+            case SET_VALIDINHERITOR:
+                params.arrowStart = BLOCK_ARROW_END;
+                params.arrowEnd = NO_END;
+                params.color = "#8080FF";
+                break;
+            case SET_VALIDSOURCE:
+                params.arrowStart = OVAL_END;
+                params.arrowEnd = NO_END;
+                params.color = "#00FF00";
+                break;
+            case SET_VALIDDESTINATION:
+                params.arrowStart = OPEN_ARROW_END;
+                params.arrowEnd = NO_END;
+                params.color = "#AA03C3";
+                break;
+            case SET_GENERAL:
+                params.arrowStart = ARROW_END;
+                params.arrowEnd = NO_END;
+                params.color = "#008080";
+                break;
+            default:
+                break;
+        }
+
+        return params;
+    };
+
+    /****************************************************************************/
+    /*     END OF --- DEFINE VISUAL STYLE FOR EACH SPECIFIC CONNECTION TYPE     */
+    /****************************************************************************/
+
 
     //attach AspectBuilderControl - DesignerCanvas event handler functions
     _.extend(AspectBuilderControl.prototype, AspectBuilderControlDesignerCanvasEventHandlers.prototype);
