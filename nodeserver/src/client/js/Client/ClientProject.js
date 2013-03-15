@@ -341,7 +341,43 @@ define([
         var branchId = function(){
             return "*#*"+branch;
         };
-        var projectPoll = function(node){
+        
+        // ----------
+
+        var projectPoll = function(node) {
+        	serializedStart(function() {
+        		projectPollWork(node, function() {
+           			serializedDone();
+        		});
+        	});
+        };
+        
+        var projectPollWork = function(node, callback){
+            if(status === 'online'){
+                //we interested in branch info only if we think we are online
+                if(node.commit !== mycommit[KEY]){
+                    //we can refresh ourselves as this must be fastforwad from our change
+                    storage.load(node.commit,function(err,commitobj){
+                        if(!err && commitobj){
+                            mycommit = commitobj;
+                            newRootArrived(mycommit.root,function(){
+                                storage.requestPoll(branch,mycommit[KEY],projectPoll);
+                            });
+                        }
+                        callback();
+                    });
+                    return;
+                } else {
+                    storage.requestPoll(branch,mycommit[KEY],projectPoll);
+                }
+            }
+            callback();
+            // in other cases we do not care about this poll... must be a mistake or the last poll we requested earlier
+        };
+
+        // ----------
+        
+        var projectPollOld = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
                 if(node.commit !== mycommit[KEY]){
@@ -849,7 +885,7 @@ define([
                 callback();
             }
         };
-        var modifyRootOnServer = function(commitmsg, callback){
+        var modifyRootOnServerOld = function(commitmsg, callback){
             callback = callback || function(){};
             if(readonly){
                 callback('this is just a viewer!!!');
@@ -900,6 +936,104 @@ define([
                 }
             }
         };
+        
+        //---------
+
+        var serializedCalls = [];
+        var serializedRunning = false;
+        var serializedStart = function(func) {
+        	if(serializedRunning) {
+        		serializedCalls.push(func);
+        	}
+        	else {
+        		serializedRunning = true;
+        		func();
+        	}
+        };
+        
+        var serializedDone = function() {
+        	ASSERT(serializedRunning === true);
+        	
+        	if(serializedCalls.length !== 0) {
+        		var func = serializedCalls.shift();
+        		func();
+        	}
+        	else {
+        		serializedRunning = false;
+        	}
+        };
+        
+        var modifyRootOnServer = function(commitmsg, callback) {
+            callback = callback || function(){};
+        	serializedStart(function() {
+        		modifyRootOnServerWork(commitmsg, function(err) {
+        			callback(err);
+        			serializedDone();
+        		});
+        	});
+        };
+        
+        var modifyRootOnServerWork = function(commitmsg, callback){
+            if(readonly){
+                callback('this is just a viewer!!!');
+            } else if(intransaction){
+                callback('cannot change root during transaction!!!');
+            } else {
+               	var error = null, commitobj;
+               	var missing = 3;
+                	
+               	var newhash = currentCore.persist(currentNodes["root"], function(err) {
+               		error = error || err;
+               		if( --missing === 0 ) {
+               			alldone();
+               		}
+               	});
+                	
+               	newRootArrived(newhash, function(err) {
+               		error = error || err;
+               		if( --missing === 0 ) {
+               			alldone();
+               		}
+               	});
+                	
+               	commit(commitmsg, function(err, obj) {
+               		error = error || err;
+               		commitobj = obj;
+               		if( --missing === 0 ) {
+               			alldone();
+               		}
+               	});
+                	
+               	var alldone = function() {
+               		if(error) {
+               			console.log(error);
+               			if( status !== 'offline' ) {
+               				status = 'offline';
+                            master.changeStatus(id,status);
+               			} 
+               			callback(error);
+               		}
+               		else if( status === 'online' ){
+               			storage.updateBranch(branch, commitobj[KEY], function(err) {
+               				if(err) {
+                       			console.log(error);
+                       			if( status !== 'offline' ) {
+                       				status = 'offline';
+                                    master.changeStatus(id,status);
+                       			} 
+               				}
+               				else {
+                   				mycommit = commitobj;
+               				}
+                   			callback(err);
+               			});
+               		}
+               	};
+            }
+        };
+
+        //---------
+
         var rollBackModification = function(){
             currentNodes = {};
             currentCore = new LCORE(new CORE(storage),logsrv);
@@ -1585,7 +1719,7 @@ define([
             //MGAlike - set
             addMember    : addMember,
             removeMember : removeMember
-        }
+        };
     };
 
     return ClientProject;
