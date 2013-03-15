@@ -342,41 +342,6 @@ define([
             return "*#*"+branch;
         };
         
-        // ----------
-
-        var projectPoll = function(node) {
-        	serializedStart(function() {
-        		projectPollWork(node, function() {
-           			serializedDone();
-        		});
-        	});
-        };
-        
-        var projectPollWork = function(node, callback){
-            if(status === 'online'){
-                //we interested in branch info only if we think we are online
-                if(node.commit !== mycommit[KEY]){
-                    //we can refresh ourselves as this must be fastforwad from our change
-                    storage.load(node.commit,function(err,commitobj){
-                        if(!err && commitobj){
-                            mycommit = commitobj;
-                            newRootArrived(mycommit.root,function(){
-                                storage.requestPoll(branch,mycommit[KEY],projectPoll);
-                            });
-                        }
-                        callback();
-                    });
-                    return;
-                } else {
-                    storage.requestPoll(branch,mycommit[KEY],projectPoll);
-                }
-            }
-            callback();
-            // in other cases we do not care about this poll... must be a mistake or the last poll we requested earlier
-        };
-
-        // ----------
-        
         var projectPollOld = function(node){
             if(status === 'online'){
                 //we interested in branch info only if we think we are online
@@ -937,7 +902,7 @@ define([
             }
         };
         
-        //---------
+        // ----------
 
         var serializedCalls = [];
         var serializedRunning = false;
@@ -963,6 +928,42 @@ define([
         	}
         };
         
+        var projectPoll = function(node) {
+        	serializedStart(function() {
+        		projectPollWork(node, function() {
+           			serializedDone();
+        		});
+        	});
+        };
+        
+        var lastCommitHashes = [];
+        
+        var projectPollWork = function(node, callback){
+            if(status === 'online'){
+                //we interested in branch info only if we think we are online
+                if(lastCommitHashes.indexOf(node.commit) < 0){
+                    //we can refresh ourselves as this must be fastforwad from our change
+                    storage.load(node.commit,function(err,commitobj){
+                        if(!err && commitobj){
+                            mycommit = commitobj;
+                            newRootArrived(mycommit.root,function(){
+                                storage.requestPoll(branch,mycommit[KEY],projectPoll);
+                                callback();
+                            });
+                        }
+                        else {
+                            callback();
+                        }
+                    });
+                    return;
+                } else {
+                    storage.requestPoll(branch,mycommit[KEY],projectPoll);
+                }
+            }
+            callback();
+            // in other cases we do not care about this poll... must be a mistake or the last poll we requested earlier
+        };
+
         var modifyRootOnServer = function(commitmsg, callback) {
             callback = callback || function(){};
         	serializedStart(function() {
@@ -1014,9 +1015,14 @@ define([
                			callback(error);
                		}
                		else if( status === 'online' ){
+               			lastCommitHashes.push(commitobj[KEY]);
+               			if(lastCommitHashes.length > 20) {
+               				lastCommitHashes.shift();
+               			}
+               			
                			storage.updateBranch(branch, commitobj[KEY], function(err) {
                				if(err) {
-                       			console.log(error);
+                       			console.log(err);
                        			if( status !== 'offline' ) {
                        				status = 'offline';
                                     master.changeStatus(id,status);
