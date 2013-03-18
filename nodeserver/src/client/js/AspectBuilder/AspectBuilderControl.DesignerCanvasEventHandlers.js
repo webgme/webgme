@@ -26,7 +26,7 @@ define(['logManager',
         };
 
         this.designerCanvas.onCreateNewConnection = function (params) {
-            //self._onCreateNewConnection(params);
+            self._onCreateNewConnection(params);
         };
 
         this.designerCanvas.onSelectionDelete = function (idList) {
@@ -72,9 +72,6 @@ define(['logManager',
             }
         }
     };
-
-
-    
 
     return AspectBuilderControlDesignerCanvasEventHandlers;
 });

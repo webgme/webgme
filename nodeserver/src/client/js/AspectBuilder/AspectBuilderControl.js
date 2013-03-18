@@ -23,22 +23,21 @@ define(['logManager',
         OPEN_ARROW_END = "open-wide-long",
 
         POINTER_PREFIX = 'POINTER_',
-        POINTER_SOURCE = 'POINTER_SOURCE',
-        POINTER_TARGET = 'POINTER_TARGET',
-        POINTER_REF = 'POINTER_REF',
+        POINTER_SOURCE = 'POINTER_source',
+        POINTER_TARGET = 'POINTER_target',
+        POINTER_REF = 'POINTER_ref',
 
         CONN_TYPE_HIERARCHY_PARENT = 'HIERARCHY_PARENT',
 
         SET_PREFIX = 'SET_',
-        SET_VALIDCHILDREN = 'SET_VALIDCHILDREN',
-        SET_VALIDSOURCE = 'SET_VALIDSOURCE',
-        SET_VALIDDESTINATION = 'SET_VALIDDESTINATION',
-        SET_VALIDINHERITOR = 'SET_VALIDINHERITOR',
-        SET_GENERAL = 'SET_GENERAL';
+        SET_VALIDCHILDREN = 'SET_ValidChildren',
+        SET_VALIDSOURCE = 'SET_ValidSource',
+        SET_VALIDDESTINATION = 'SET_ValidDestination',
+        SET_VALIDINHERITOR = 'SET_ValidInheritor',
+        SET_GENERAL = 'SET_General';
 
     AspectBuilderControl = function (options) {
         var self = this,
-            $btnGroupCreatePointers,
             $btnGroupPrintNodeData;
 
         this.logger = options.logger || logManager.create(options.loggerName || "AspectBuilderControl");
@@ -55,6 +54,8 @@ define(['logManager',
 
         //initialize core collections and variables
         this.designerCanvas = options.widget;
+        //in pointer edit mode DRAG & COPY is not enabled
+        this.designerCanvas.enableDragCopy(false);
 
         this._client = options.client;
         this._selfPatterns = {};
@@ -72,22 +73,51 @@ define(['logManager',
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         /************** CREATE POINTERS *****************/
-        $btnGroupCreatePointers = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+        this._$btnGroupCreatePointers = this.designerCanvas.addRadioButtonGroup(function (event, data) {
             self._setNewConnectionType(data.connType);
         });
 
         var btnCreatePointerSource = this.designerCanvas.addButton({ "title": "SOURCE pointer",
             "selected": true,
-            "data": { "connType": POINTER_SOURCE }}, $btnGroupCreatePointers);
+            "data": { "connType": POINTER_SOURCE }}, this._$btnGroupCreatePointers);
         this._createButtonFace(btnCreatePointerSource, POINTER_SOURCE);
 
         var btnCreatePointerTarget = this.designerCanvas.addButton({ "title": "TARGET pointer",
-            "data": { "connType": POINTER_TARGET }}, $btnGroupCreatePointers);
+            "data": { "connType": POINTER_TARGET }}, this._$btnGroupCreatePointers);
         this._createButtonFace(btnCreatePointerTarget, POINTER_TARGET);
 
         var btnCreatePointerRef = this.designerCanvas.addButton({ "title": "REF pointer",
-            "data": { "connType": POINTER_REF }}, $btnGroupCreatePointers);
+            "data": { "connType": POINTER_REF }}, this._$btnGroupCreatePointers);
         this._createButtonFace(btnCreatePointerRef, POINTER_REF);
+        /************** END OF - CREATE POINTERS *****************/
+
+        /************** CREATE SET RELATIONS *****************/
+        this._$btnGroupCreateSetRelations = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+            self._setNewConnectionType(data.connType);
+        });
+
+        var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": "SET ValidChildren",
+            "data": { "connType": SET_VALIDCHILDREN }}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidChildren, SET_VALIDCHILDREN);
+
+        var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": "SET ValidInheritor",
+            "data": { "connType": SET_VALIDINHERITOR}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidInheritor, SET_VALIDINHERITOR);
+
+        var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": "SET ValidSource",
+            "data": { "connType": SET_VALIDSOURCE}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidSource, SET_VALIDSOURCE);
+
+        var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": "SET ValidDestination",
+            "data": { "connType": SET_VALIDDESTINATION}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidDestination, SET_VALIDDESTINATION);
+
+        var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": "SET General",
+            "data": { "connType": SET_GENERAL}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetGeneral, SET_GENERAL);
+
+
+        this._setNewConnectionType(POINTER_SOURCE);
         /************** END OF - CREATE POINTERS *****************/
 
 
@@ -783,7 +813,7 @@ define(['logManager',
                          "reconnectable": false
             };
 
-            _.extend(connDesc, this._getConnTypeVisualDescriptor(connType.toUpperCase()));
+            _.extend(connDesc, this._getConnTypeVisualDescriptor(connType));
 
             connComponent = this.designerCanvas.createConnection(connDesc);
 
@@ -1050,6 +1080,11 @@ define(['logManager',
                 params.arrowEnd = ARROW_END;
                 params.color = "#0000FF";
                 break;
+            case POINTER_REF:
+                params.arrowStart = NO_END;
+                params.arrowEnd = ARROW_END;
+                params.color = "#EFA749";
+                break;
             case CONN_TYPE_HIERARCHY_PARENT:
                 params.arrowStart = NO_END;
                 params.arrowEnd = DIAMOND_END;
@@ -1091,22 +1126,77 @@ define(['logManager',
     /*     END OF --- DEFINE VISUAL STYLE FOR EACH SPECIFIC CONNECTION TYPE     */
     /****************************************************************************/
 
+    /****************************************************************************/
+    /*        CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS            */
+    /****************************************************************************/
     AspectBuilderControl.prototype._createButtonFace = function (btn, connType) {
         var el = $('<div/>'),
-            paper = Raphael(el[0], 20, 20),
-            path;
+            path,
+            pathAttributes = this._getConnTypeVisualDescriptor(connType),
+            _btnSize = 16,
+            paper = Raphael(el[0], _btnSize, _btnSize);
 
-        el.attr({"style": "height: 20px"});
+        el.attr({"style": "height: " + _btnSize + "px"});
 
-        path = paper.path("M0,0, L20,20");
+        path = paper.path("M" + _btnSize / 2 + ",0, L" + _btnSize / 2 + "," + _btnSize);
 
-        /*path.attr({ "arrow-start": this.designerAttributes.arrowStart,
-            "arrow-end": this.designerAttributes.arrowEnd,
-            "stroke": this.designerAttributes.color,
-            "stroke-width": this.designerAttributes.width});*/
+        path.attr({ "arrow-start": pathAttributes.arrowStart,
+            "arrow-end": pathAttributes.arrowEnd,
+            "stroke": pathAttributes.color,
+            "stroke-width": pathAttributes.width});
 
         btn.append($(el));
     };
+
+    AspectBuilderControl.prototype._setNewConnectionType = function (connType) {
+        var connProps = this._getConnTypeVisualDescriptor(connType);
+
+        if (this._connType !== connType) {
+            this._connType = connType;
+
+            this.designerCanvas.connectionDrawingManager.setConnectionInDrawProperties(connProps);
+
+
+            if (this._connType === POINTER_SOURCE ||
+                this._connType === POINTER_TARGET ||
+                this._connType === POINTER_REF) {
+                this._$btnGroupCreateSetRelations.setButtonsInactive();
+            }
+
+            if (this._connType === SET_VALIDCHILDREN||
+                this._connType === SET_VALIDDESTINATION ||
+                this._connType === SET_VALIDSOURCE ||
+                this._connType === SET_VALIDINHERITOR ||
+                this._connType === SET_GENERAL) {
+                this._$btnGroupCreatePointers.setButtonsInactive();
+            }
+        }
+    };
+
+    AspectBuilderControlDesignerCanvasEventHandlers.prototype._onCreateNewConnection = function (params) {
+        var sourceId = this._ComponentID2GmeID[params.src],
+            targetId = this._ComponentID2GmeID[params.dst];
+
+        //set new POINTER info
+        if (this._connType === POINTER_SOURCE ||
+            this._connType === POINTER_TARGET ||
+            this._connType === POINTER_REF) {
+            this._client.makePointer(sourceId, this._connType.replace(POINTER_PREFIX, ''), targetId);
+        }
+
+        //set new SET membership
+        if (this._connType === SET_VALIDCHILDREN||
+            this._connType === SET_VALIDDESTINATION ||
+            this._connType === SET_VALIDSOURCE ||
+            this._connType === SET_VALIDINHERITOR ||
+            this._connType === SET_GENERAL) {
+            this._client.addMember(sourceId, targetId, this._connType.replace(SET_PREFIX, ''));
+        }
+    };
+
+    /****************************************************************************/
+    /*    END OF --- CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS     */
+    /****************************************************************************/
 
     //attach AspectBuilderControl - DesignerCanvas event handler functions
     _.extend(AspectBuilderControl.prototype, AspectBuilderControlDesignerCanvasEventHandlers.prototype);
