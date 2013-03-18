@@ -167,15 +167,7 @@ define(['logManager'], function (logManager) {
         this._connectionInDrawProps.srcEl = el;
         this._connectionInDrawProps.type = "create";
 
-        this._connectionPath = this.paper.path('M' + this._connectionDesc.x + ',' + this._connectionDesc.y + ' L' + this._connectionDesc.x2 + ',' + this._connectionDesc.y2);
-
-        this._connectionPath.attr(
-            {   "stroke-width": this._connectionPathProps.strokeWidth,
-                "stroke": this._connectionPathProps.strokeColor,
-                "stroke-dasharray": this._connectionPathProps.lineType,
-                "arrow-start": this._connectionPathProps.arrowStart,
-                "arrow-end": this._connectionPathProps.arrowEnd }
-        );
+        this._drawConnection();
 
         this.canvas.selectionManager._clearSelection();
     };
@@ -228,11 +220,26 @@ define(['logManager'], function (logManager) {
             y = this._connectionDesc.y,
             x2 = this._connectionDesc.x2,
             y2 = this._connectionDesc.y2,
-            pathDefinition;
+            pathDefinition,
+            minConnLength = 7;
+
+        if (Math.sqrt((x2 - x) * (x2 - x) + (y2 - y) * (y2 - y)) < minConnLength) {
+            return;
+        }
 
         pathDefinition = "M" + x + "," + y + "L" + x2 + "," + y2;
 
-        this._connectionPath.attr({ "path": pathDefinition});
+        if (this._connectionPath === undefined) {
+            this._connectionPath = this.paper.path(pathDefinition);
+
+            this._connectionPath.attr({   "stroke-width": this._connectionPathProps.strokeWidth,
+                "stroke": this._connectionPathProps.strokeColor,
+                "stroke-dasharray": this._connectionPathProps.lineType,
+                "arrow-start": this._connectionPathProps.arrowStart,
+                "arrow-end": this._connectionPathProps.arrowEnd });
+        } else {
+            this._connectionPath.attr({ "path": pathDefinition});
+        }
     };
 
     ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId) {
