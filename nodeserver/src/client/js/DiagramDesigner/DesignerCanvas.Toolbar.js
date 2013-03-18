@@ -34,6 +34,10 @@ define([], function () {
             clickFn.call(this, event, data);
         });
 
+        $btnGroup.setButtonsInactive = function () {
+            $btnGroup.find('.btn.active').removeClass('active');
+        }
+
         return $btnGroup;
     };
 
@@ -52,6 +56,7 @@ define([], function () {
         }
 
         if (params.selected === true) {
+            btnGroup.find('.btn.active').removeClass('active');
             $btn.addClass("active");
         }
 
