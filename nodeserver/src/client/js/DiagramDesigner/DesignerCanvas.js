@@ -355,9 +355,10 @@ define(['logManager',
                     self._onBackgroundDrop(ui);
                 },
                 activate: function( event, ui ) {
+                    var m = 0;
                     if (ui.helper) {
                         if (self.mode === self.OPERATING_MODES.NORMAL) {
-                            self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2* m,
+                            self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2 * m,
                                 "height": self.designerCanvasBodySize.height - 2 * m,
                                 "top": self.childrenContainerScroll.top + m,
                                 "left": self.childrenContainerScroll.left + m });
