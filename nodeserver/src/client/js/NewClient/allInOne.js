@@ -615,6 +615,56 @@ define([
             self.fullRefresh = function () {
                 console.log('NIE');
             };
+
+            //getNode
+            self.getNode = function(_id){
+
+                var getParentId = function(){
+                    return _core.getStringPath(_core.getParent(_nodes[_id].node));
+                };
+
+                var getId = function(){
+                    return _id;
+                };
+
+                var getChildrenIds = function(){
+                    return _core.getChildrenPaths(_nodes[_id].node);
+                };
+
+                var getBaseId = function(){
+                    return _core.getRegistry(_nodes[_id].node,"isConnection") === "true" ? 'connection' : 'object';
+                };
+
+                var getInheritorIds = function(){
+                    return [];
+                };
+
+                var getAttribute = function(name){
+                    return _core.getAttribute(_nodes[_id].node,name);
+                };
+
+                return {
+                    getParentId : getParentId,
+                    getId       : getId,
+                    getChildrenIds : getChildrenIds,
+                    getBaseId : getBaseId,
+                    getInheritorIds : getInheritorIds,
+                    getAttribute : getAttribute,
+                    getRegistry : getRegistry,
+                    getPointer : getPointer,
+                    getPointerNames : getPointerNames,
+                    getAttributeNames : getAttributeNames,
+                    getRegistryNames : getRegistryNames,
+                    //helping functions
+                    printData : printData,
+                    isSetNode : isSetNode,
+                    //META functions
+                    getValidChildrenTypes : getValidChildrenTypes,
+                    getMemberIds          : getMemberIds,
+                    getSetIds             : getSetIds,
+                    getSetNames           : getSetNames
+                }
+            };
         };
 
 
