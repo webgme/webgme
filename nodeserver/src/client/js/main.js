@@ -34,6 +34,7 @@ require.config({
 
         //WebGME custom modules
         "commonUtil": './../../common/CommonUtil',
+        "commonConstants": './../../common/Constants',
         "logManager": './../../common/LogManager',
         "eventDispatcher": './../../common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',

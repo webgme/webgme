@@ -2,11 +2,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
-    'js/AspectBuilder/AspectBuilderControl.DesignerCanvasEventHandlers'], function (logManager,
+    'js/AspectBuilder/AspectBuilderControl.DesignerCanvasEventHandlers',
+    'js/SetEditor2/SetVisualHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
-                                                        AspectBuilderControlDesignerCanvasEventHandlers) {
+                                                        AspectBuilderControlDesignerCanvasEventHandlers,
+                                                        SetVisualHelper) {
 
     "use strict";
 
@@ -23,18 +25,10 @@ define(['logManager',
         OPEN_ARROW_END = "open-wide-long",
 
         POINTER_PREFIX = 'POINTER_',
-        POINTER_SOURCE = 'POINTER_source',
-        POINTER_TARGET = 'POINTER_target',
-        POINTER_REF = 'POINTER_ref',
 
         CONN_TYPE_HIERARCHY_PARENT = 'HIERARCHY_PARENT',
 
-        SET_PREFIX = 'SET_',
-        SET_VALIDCHILDREN = 'SET_ValidChildren',
-        SET_VALIDSOURCE = 'SET_ValidSource',
-        SET_VALIDDESTINATION = 'SET_ValidDestination',
-        SET_VALIDINHERITOR = 'SET_ValidInheritor',
-        SET_GENERAL = 'SET_General';
+        SET_PREFIX = 'SET_';
 
     AspectBuilderControl = function (options) {
         var self = this,
@@ -79,16 +73,16 @@ define(['logManager',
 
         var btnCreatePointerSource = this.designerCanvas.addButton({ "title": "SOURCE pointer",
             "selected": true,
-            "data": { "connType": POINTER_SOURCE }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerSource, POINTER_SOURCE);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_SOURCE }}, this._$btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerSource, POINTER_PREFIX + CONSTANTS.POINTER_SOURCE);
 
         var btnCreatePointerTarget = this.designerCanvas.addButton({ "title": "TARGET pointer",
-            "data": { "connType": POINTER_TARGET }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerTarget, POINTER_TARGET);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_TARGET }}, this._$btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerTarget, POINTER_PREFIX + CONSTANTS.POINTER_TARGET);
 
         var btnCreatePointerRef = this.designerCanvas.addButton({ "title": "REF pointer",
-            "data": { "connType": POINTER_REF }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerRef, POINTER_REF);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_REF }}, this._$btnGroupCreatePointers);
+        this._createButtonFace(btnCreatePointerRef, POINTER_PREFIX + CONSTANTS.POINTER_REF);
         /************** END OF - CREATE POINTERS *****************/
 
         /************** CREATE SET RELATIONS *****************/
@@ -97,27 +91,27 @@ define(['logManager',
         });
 
         var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": "SET ValidChildren",
-            "data": { "connType": SET_VALIDCHILDREN }}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidChildren, SET_VALIDCHILDREN);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN }}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidChildren, SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN);
 
         var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": "SET ValidInheritor",
-            "data": { "connType": SET_VALIDINHERITOR}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidInheritor, SET_VALIDINHERITOR);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidInheritor, SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR);
 
         var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": "SET ValidSource",
-            "data": { "connType": SET_VALIDSOURCE}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidSource, SET_VALIDSOURCE);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDSOURCE}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidSource, SET_PREFIX + CONSTANTS.SET_VALIDSOURCE);
 
         var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": "SET ValidDestination",
-            "data": { "connType": SET_VALIDDESTINATION}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidDestination, SET_VALIDDESTINATION);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetValidDestination, SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION);
 
         var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": "SET General",
-            "data": { "connType": SET_GENERAL}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetGeneral, SET_GENERAL);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_GENERAL}}, this._$btnGroupCreateSetRelations);
+        this._createButtonFace(btnCreateSetGeneral, SET_PREFIX + CONSTANTS.SET_GENERAL);
 
 
-        this._setNewConnectionType(POINTER_SOURCE);
+        this._setNewConnectionType(POINTER_PREFIX + CONSTANTS.POINTER_SOURCE);
         /************** END OF - CREATE POINTERS *****************/
 
 
@@ -1069,55 +1063,36 @@ define(['logManager',
             "width" : "2",
             "color" :"#000000" };
 
-        switch (connType) {
-            case POINTER_SOURCE:
-                params.arrowStart = NO_END;
-                params.arrowEnd = ARROW_END;
-                params.color = "#FF0000";
-                break;
-            case POINTER_TARGET:
-                params.arrowStart = NO_END;
-                params.arrowEnd = ARROW_END;
-                params.color = "#0000FF";
-                break;
-            case POINTER_REF:
-                params.arrowStart = NO_END;
-                params.arrowEnd = ARROW_END;
-                params.color = "#EFA749";
-                break;
-            case CONN_TYPE_HIERARCHY_PARENT:
-                params.arrowStart = NO_END;
-                params.arrowEnd = DIAMOND_END;
-                params.color = "#333333";
-                break;
-            case SET_VALIDCHILDREN:
-                params.arrowStart = OVAL_END;
-                params.arrowEnd = NO_END;
-                params.color = "#800080";
-                break;
-            case SET_VALIDINHERITOR:
-                params.arrowStart = OVAL_END;
-                params.arrowEnd = NO_END;
-                params.color = "#8080FF";
-                break;
-            case SET_VALIDSOURCE:
-                params.arrowStart = OVAL_END;
-                params.arrowEnd = NO_END;
-                params.color = "#00FF00";
-                break;
-            case SET_VALIDDESTINATION:
-                params.arrowStart = OVAL_END;
-                params.arrowEnd = NO_END;
-                params.color = "#AA03C3";
-                break;
-            case SET_GENERAL:
-                params.arrowStart = OVAL_END;
-                params.arrowEnd = NO_END;
-                params.color = "#008080";
-                break;
-            default:
-                break;
+        if (connType.indexOf(SET_PREFIX) === 0) {
+            params = SetVisualHelper.getLineVisualDescriptor(connType.replace(SET_PREFIX, ''));
+        } else {
+            switch (connType) {
+                case POINTER_PREFIX + CONSTANTS.POINTER_SOURCE:
+                    params.arrowStart = NO_END;
+                    params.arrowEnd = ARROW_END;
+                    params.color = "#FF0000";
+                    break;
+                case POINTER_PREFIX + CONSTANTS.POINTER_TARGET:
+                    params.arrowStart = NO_END;
+                    params.arrowEnd = ARROW_END;
+                    params.color = "#0000FF";
+                    break;
+                case POINTER_PREFIX + CONSTANTS.POINTER_REF:
+                    params.arrowStart = NO_END;
+                    params.arrowEnd = ARROW_END;
+                    params.color = "#EFA749";
+                    break;
+                case CONN_TYPE_HIERARCHY_PARENT:
+                    params.arrowStart = NO_END;
+                    params.arrowEnd = DIAMOND_END;
+                    params.color = "#333333";
+                    break;
+                default:
+                    break;
+            }
         }
+
+        
 
         return params;
     };
@@ -1157,17 +1132,17 @@ define(['logManager',
             this.designerCanvas.connectionDrawingManager.setConnectionInDrawProperties(connProps);
 
 
-            if (this._connType === POINTER_SOURCE ||
-                this._connType === POINTER_TARGET ||
-                this._connType === POINTER_REF) {
+            if (this._connType === POINTER_PREFIX + CONSTANTS.POINTER_SOURCE ||
+                this._connType === POINTER_PREFIX + CONSTANTS.POINTER_TARGET ||
+                this._connType === POINTER_PREFIX + CONSTANTS.POINTER_REF) {
                 this._$btnGroupCreateSetRelations.setButtonsInactive();
             }
 
-            if (this._connType === SET_VALIDCHILDREN ||
-                this._connType === SET_VALIDDESTINATION ||
-                this._connType === SET_VALIDSOURCE ||
-                this._connType === SET_VALIDINHERITOR ||
-                this._connType === SET_GENERAL) {
+            if (this._connType === SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN ||
+                this._connType === SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION || 
+                this._connType === SET_PREFIX + CONSTANTS.SET_VALIDSOURCE ||
+                this._connType === SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR ||
+                this._connType === SET_PREFIX + CONSTANTS.SET_GENERAL) {
                 this._$btnGroupCreatePointers.setButtonsInactive();
             }
         }
@@ -1178,18 +1153,18 @@ define(['logManager',
             targetId = this._ComponentID2GmeID[params.dst];
 
         //set new POINTER info
-        if (this._connType === POINTER_SOURCE ||
-            this._connType === POINTER_TARGET ||
-            this._connType === POINTER_REF) {
+        if (this._connType === POINTER_PREFIX + CONSTANTS.POINTER_SOURCE ||
+            this._connType === POINTER_PREFIX + CONSTANTS.POINTER_TARGET ||
+            this._connType === POINTER_PREFIX + CONSTANTS.POINTER_REF) {
             this._client.makePointer(sourceId, this._connType.replace(POINTER_PREFIX, ''), targetId);
         }
 
         //set new SET membership
-        if (this._connType === SET_VALIDCHILDREN||
-            this._connType === SET_VALIDDESTINATION ||
-            this._connType === SET_VALIDSOURCE ||
-            this._connType === SET_VALIDINHERITOR ||
-            this._connType === SET_GENERAL) {
+        if (this._connType === SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN ||
+            this._connType === SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION ||
+            this._connType === SET_PREFIX + CONSTANTS.SET_VALIDSOURCE ||
+            this._connType === SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR ||
+            this._connType === SET_PREFIX + CONSTANTS.SET_GENERAL) {
             this._client.addMember(sourceId, targetId, this._connType.replace(SET_PREFIX, ''));
         }
     };
