@@ -1163,7 +1163,7 @@ define(['logManager',
                 this._$btnGroupCreateSetRelations.setButtonsInactive();
             }
 
-            if (this._connType === SET_VALIDCHILDREN||
+            if (this._connType === SET_VALIDCHILDREN ||
                 this._connType === SET_VALIDDESTINATION ||
                 this._connType === SET_VALIDSOURCE ||
                 this._connType === SET_VALIDINHERITOR ||
