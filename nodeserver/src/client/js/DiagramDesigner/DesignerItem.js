@@ -280,7 +280,9 @@ define(['logManager'], function (logManager) {
     DesignerItem.prototype.update = function (objDescriptor) {
         //check what might have changed
         //update position
-        this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
+        if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+            this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
+        }
 
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
