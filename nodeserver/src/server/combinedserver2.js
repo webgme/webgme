@@ -1,5 +1,4 @@
 var FS = require('fs');
-var commonUtil = require('./../common/CommonUtil.js');
 var requirejs = require("requirejs");
 
 requirejs.config({
@@ -7,11 +6,15 @@ requirejs.config({
     baseUrl: "..",
     paths: {
         "core": "../../corejs/core",
-        "logManager": "../../nodeserver/src/common/LogManager"
+        "logManager": "common/LogManager"
     }
 });
 
-requirejs(['server/proxysrv','logManager'],function(PROXY,logManager){
+requirejs(['server/proxysrv',
+            'logManager',
+            'common/CommonUtil'],function(PROXY,
+                                           logManager,
+                                           commonUtil){
     logManager.setLogLevel(logManager.logLevels.WARNING);
     logManager.useColors(true);
     var Server = function(parameters){

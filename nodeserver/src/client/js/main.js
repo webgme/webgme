@@ -24,7 +24,7 @@ require.config({
 
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
-        "underscore": './../../common/underscore',
+        "underscore": 'common/underscore',
 
         "WebGME": 'js/WebGME',
 
@@ -34,9 +34,8 @@ require.config({
 
         //WebGME custom modules
         "commonUtil": './../../common/CommonUtil',
-        "commonConstants": './../../common/Constants',
-        "logManager": './../../common/LogManager',
-        "eventDispatcher": './../../common/EventDispatcher',
+        "logManager": 'common/LogManager',
+        "eventDispatcher": 'common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "bezierHelper" : 'js/BezierHelper',

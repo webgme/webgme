@@ -2,9 +2,11 @@
 
 define(['logManager',
         'clientUtil',
+        'js/Constants',
         'nodeAttributeNames2',
         'nodeRegistryNames2'], function (logManager,
                                     util,
+                                    CONSTANTS,
                                     nodeAttributeNames,
                                     nodeRegistryNames) {
 
@@ -40,9 +42,9 @@ define(['logManager',
             if (self._editModeMeta === true) {
                 //connDesc.type has special meaning: inheritance, containment, etc
                 if (connDesc.type === "inheritance") {
-                    setName = 'ValidInheritor';
+                    setName = CONSTANTS.SET_VALIDINHERITOR;
                 } else if (connDesc.type === "containment") {
-                    setName = 'ValidChildren';
+                    setName = CONSTANTS.SET_VALIDCHILDREN;
                 }
                 if (setName !== "") {
                     self._client.addMember(connDesc.sourceId, connDesc.targetId, setName);
@@ -111,9 +113,9 @@ define(['logManager',
                         if (deleteParams[i].hasOwnProperty("connectionType")) {
                             setName = "";
                             if (deleteParams[i].connectionType === "inheritance") {
-                                setName = 'ValidInheritor';
+                                setName = CONSTANTS.SET_VALIDINHERITOR;
                             } else if (deleteParams[i].connectionType === "containment") {
-                                setName = 'ValidChildren';
+                                setName = CONSTANTS.SET_VALIDCHILDREN;
                             }
 
                             if (setName !== "") {
@@ -429,8 +431,8 @@ define(['logManager',
 
                 objDescriptor.decorator = nodeObj.getRegistry(nodeRegistryNames.decorator) || "SimpleModelDecorator";
 
-                objDescriptor.validChildren = nodeObj.getMemberIds('ValidChildren');
-                objDescriptor.validInheritor = nodeObj.getMemberIds('ValidInheritor');
+                objDescriptor.validChildren = nodeObj.getMemberIds(CONSTANTS.SET_VALIDCHILDREN);
+                objDescriptor.validInheritor = nodeObj.getMemberIds(CONSTANTS.SET_VALIDINHERITOR);
             }
         }
 

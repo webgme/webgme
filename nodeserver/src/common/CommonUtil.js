@@ -6,7 +6,7 @@ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
 }
 
-define([], function () {
+define(['common/Constants'], function (CONSTANTS) {
 
     var minimalSetId = "2200000000";
     //return utility functions
@@ -83,16 +83,16 @@ define([], function () {
         minsetid : minimalSetId,
         setidtorelid : function(setid){
             switch(setid){
-                case "ValidChildren":
+                case CONSTANTS.SET_VALIDCHILDREN:
                     return "2200000001";
                     break;
-                case "ValidSource":
+                case CONSTANTS.SET_VALIDSOURCE:
                     return "2200000002";
                     break;
-                case "ValidDestination":
+                case CONSTANTS.SET_VALIDDESTINATION:
                     return "2200000003";
                     break;
-                case "ValidInheritor":
+                case CONSTANTS.SET_VALIDINHERITOR:
                     return "2200000004";
                     break;
                 default:
@@ -103,19 +103,19 @@ define([], function () {
         relidtosetid : function(relid){
             switch(relid){
                 case "2200000001":
-                    return "ValidChildren";
+                    return CONSTANTS.SET_VALIDCHILDREN;
                     break;
                 case "2200000002":
-                    return "ValidSource";
+                    return CONSTANTS.SET_VALIDSOURCE;
                     break;
                 case "2200000003":
-                    return "ValidDestination";
+                    return CONSTANTS.SET_VALIDDESTINATION;
                     break;
                 case "2200000004":
-                    return "ValidInheritor";
+                    return CONSTANTS.SET_VALIDINHERITOR;
                     break;
                 case "2200000000":
-                    return "General";
+                    return CONSTANTS.SET_GENERAL;
                     break;
             }
         },
@@ -133,9 +133,9 @@ define([], function () {
                 return id.substr(ind+1);
             }
         },
-        validSetNames     : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor', 'General'],
-        validMetaSetNames : ['ValidChildren', 'ValidSource', 'ValidDestination','ValidInheritor'],
-        validRealSetNames : ['General'],
+        validSetNames     : [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_GENERAL],
+        validMetaSetNames : [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR],
+        validRealSetNames : [CONSTANTS.SET_GENERAL],
 
         combinedserver: {
             port            : 80,
