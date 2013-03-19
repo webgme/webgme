@@ -578,18 +578,40 @@ define(['logManager',
                 "MemberCoord": {}},
             len = idList.length,
             gmeID,
-            idx;
+            idx,
+            connDesc;
+
+        this._client.startTransaction();
 
         while (len--) {
             gmeID = this._ComponentID2GmeID[idList[len]];
             idx = registry.Members.indexOf(gmeID);
             if ( idx !== -1) {
+                //connected entity is a box --> GME object
                 registry.Members.splice(idx, 1);
                 delete registry.MemberCoord[gmeID];
+            } else if (this._connectionListByID.hasOwnProperty(idList[len])) {
+                connDesc = this._connectionListByID[idList[len]];
+
+                if (connDesc.type === CONN_TYPE_HIERARCHY_PARENT) {
+                    this.logger.debug('Hierarchycal Parent-Child relationship can not be deleted here...');
+                } else {
+                    if (connDesc.type.indexOf(POINTER_PREFIX) === 0) {
+                        //deleted connection is a POINTER
+                        this.logger.debug("Deleting Pointer '" + connDesc.type + "' from GMEObject :'" + connDesc.GMESrcId + "'");
+                        this._client.delPointer(connDesc.GMESrcId, connDesc.type.replace(POINTER_PREFIX, ''));
+                    } else if (connDesc.type.indexOf(SET_PREFIX) === 0) {
+                        //deleted connection is a SET member relationship
+                        this.logger.debug("Deleting SET membership owner:'" + connDesc.GMESrcId + "' member: '" + connDesc.GMEDstID + "', set:'" + connDesc.type + "'");
+                        this._client.removeMember(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.type.replace(SET_PREFIX, ''));
+                    }
+                }
             }
         }
 
         this._client.setRegistry(this.currentNodeInfo.id, ASPECT_BUILDER_REGISTRY_KEY, registry);
+
+        this._client.completeTransaction();
     };
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
