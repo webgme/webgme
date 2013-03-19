@@ -1,27 +1,21 @@
 "use strict";
 /*
- * STRING CONSTANT DEFINITIONS USED IN CLIENT JAVASCRIPT
+ * STRING CONSTANT DEFINITIONS USED IN CLIENT JAVASCRIPT (INHERITS ALL THE CONSTANST FROM COMMON/CONSTANST.JS)
  */
 
-define([], function () {
+define(['underscore', 'commonConstants'], function (underscore, COMMON_CONSTANTS) {
 
-    //return string constants
-    return {
+    //define client-only string constants
+    var clientContants = {};
+
+    //copy over all the constanst form common/constants.js
+    _.extend(clientContants, COMMON_CONSTANTS, {
         /*
-         * TERRITORY EVENTS
-         */
-        TERRITORY_EVENT_LOAD : "load",
-        TERRITORY_EVENT_UPDATE : "update",
-        TERRITORY_EVENT_UNLOAD : "unload",
-
-        /*
-         * GME_ID: wherever a GME object ID needs to be present
-         */
-        GME_ID: "GME_ID",
-
-        /*/
          * DOM element ID to use for all-over-the-screen-draggable-parent
          */
-        ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID : "contentContainer"
-    };
+        ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID : 'contentContainer'
+    });
+
+
+    return clientContants;
 });

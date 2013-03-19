@@ -17,7 +17,7 @@ define(['logManager',
 
         __parent__.apply(this, [options]);
 
-        this.logger.debug("MetaDesignerCanvas ctor");
+        this.logger.debug("ModelDesignerCanvas ctor");
     };
 
     _.extend(ModelDesignerCanvas.prototype, DesignerCanvas.prototype);

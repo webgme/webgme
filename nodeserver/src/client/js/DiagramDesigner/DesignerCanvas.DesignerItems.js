@@ -44,12 +44,14 @@ define(['js/DiagramDesigner/DesignerItem'], function (DesignerItem) {
             this.logger.debug("Updating model component with parameters: " + objDescriptor);
 
             //adjust its position to this canvas
-            alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
+            if (objDescriptor.position && _.isNumber(objDescriptor.position.x) && _.isNumber(objDescriptor.position.y)) {
+                alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y);
 
-            objDescriptor.position.x = alignedPosition.x;
-            objDescriptor.position.y = alignedPosition.y;
+                objDescriptor.position.x = alignedPosition.x;
+                objDescriptor.position.y = alignedPosition.y;
 
-            this._checkPositionOverlap(componentId, objDescriptor);
+                this._checkPositionOverlap(componentId, objDescriptor);
+            }
 
             //add to accounting queues for performance optimization
             this._updatedDesignerItemIDs.push(componentId);
