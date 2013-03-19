@@ -17,7 +17,7 @@ define(['logManager',
 
         __parent__.apply(this, [options]);
 
-        this.logger.debug("MetaDesignerCanvas ctor");
+        this.logger.debug("AspectBuilderCanvas ctor");
     };
 
     _.extend(AspectBuilderCanvas.prototype, DesignerCanvas.prototype);
