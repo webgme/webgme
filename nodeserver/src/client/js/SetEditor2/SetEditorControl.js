@@ -6,26 +6,17 @@ define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
     'js/SetEditor2/SetEditorControl.DesignerCanvasEventHandlers',
+    'js/SetEditor2/SetVisualHelper',
     'css!SetEditor2CSS/SetEditorControl'], function (logManager,
                                                      clientUtil,
                                                      commonUtil,
                                                      CONSTANTS,
                                                      nodePropertyNames,
-                                                     SetEditorControlDesignerCanvasEventHandlers) {
+                                                     SetEditorControlDesignerCanvasEventHandlers,
+                                                     SetVisualHelper) {
 
     var SetEditorControl,
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
-        VALIDCHILDREN_TYPE_LINE_END = "diamond-wide-long",
-        VALIDINHERITOR_TYPE_LINE_END = "block-wide-long",
-        VALIDSOURCE_TYPE_LINE_END = "oval-wide-long",
-        VALIDDESTINATION_TYPE_LINE_END = "open-wide-long",
-        GENERAL_TYPE_LINE_END = "classic-wide-long",
-        NOEND = "none",
-        SET_VALIDCHILDREN = 'ValidChildren',
-        SET_VALIDSOURCE = 'ValidSource',
-        SET_VALIDDESTINATION = 'ValidDestination',
-        SET_VALIDINHERITOR = 'ValidInheritor',
-        SET_GENERAL = 'General',
         DECORATOR_CLASS = "DefaultDecorator";
 
 
@@ -83,26 +74,26 @@ define(['logManager',
             self._setMetaConnectionType(data.mode);
         });
 
-        this.designerCanvas.addButton({ "title": SET_VALIDCHILDREN,
+        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDCHILDREN,
             "icon": "icon-meta-containment",
             "selected": true,
-            "data": { "mode": SET_VALIDCHILDREN }}, $btnGroupConnectionType );
+            "data": { "mode": CONSTANTS.SET_VALIDCHILDREN }}, $btnGroupConnectionType );
 
-        this.designerCanvas.addButton({ "title": SET_VALIDINHERITOR,
+        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDINHERITOR,
             "icon": "icon-meta-inheritance",
-            "data": { "mode": SET_VALIDINHERITOR }}, $btnGroupConnectionType );
+            "data": { "mode": CONSTANTS.SET_VALIDINHERITOR }}, $btnGroupConnectionType );
 
-        this.designerCanvas.addButton({ "title": SET_VALIDSOURCE,
+        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDSOURCE,
             "icon": "icon-meta-set_validsource",
-            "data": { "mode": SET_VALIDSOURCE }}, $btnGroupConnectionType );
+            "data": { "mode": CONSTANTS.SET_VALIDSOURCE }}, $btnGroupConnectionType );
 
-        this.designerCanvas.addButton({ "title": SET_VALIDDESTINATION,
+        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDDESTINATION,
             "icon": "icon-meta-set_validdestination",
-            "data": { "mode": SET_VALIDDESTINATION }}, $btnGroupConnectionType );
+            "data": { "mode": CONSTANTS.SET_VALIDDESTINATION }}, $btnGroupConnectionType );
 
-        this.designerCanvas.addButton({ "title": SET_GENERAL,
+        this.designerCanvas.addButton({ "title": CONSTANTS.SET_GENERAL,
             "icon": "icon-meta-set_general",
-            "data": { "mode": SET_GENERAL }}, $btnGroupConnectionType );
+            "data": { "mode": CONSTANTS.SET_GENERAL }}, $btnGroupConnectionType );
 
         /************** SET TYPE SELECTOR BUTTONS *******************************/
 
@@ -114,7 +105,7 @@ define(['logManager',
 
 
         //by default select 'children' set type connection
-        this._setMetaConnectionType(SET_VALIDCHILDREN);
+        this._setMetaConnectionType(CONSTANTS.SET_VALIDCHILDREN);
 
         this.logger.debug("SetEditorControl ctor");
     };
@@ -481,54 +472,10 @@ define(['logManager',
             metaInfo = {"type": mode };
             this.designerCanvas.connectionDrawingManager.setMetaInfo(metaInfo);
 
-            params = this._getModeVisualDescriptor(mode);
+            params = SetVisualHelper.getLineVisualDescriptor(mode);
 
             this.designerCanvas.connectionDrawingManager.setConnectionInDrawProperties(params);
         }
-    };
-
-    SetEditorControl.prototype._getModeVisualDescriptor = function (mode) {
-        var params = { "arrowStart" : "none",
-                        "arrowEnd" : "none",
-                        "width" : "1",
-                        "color" :"#AAAAAA" };
-
-        switch (mode) {
-            case SET_VALIDCHILDREN:
-                params.arrowStart = VALIDCHILDREN_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#FF0000";
-                break;
-            case SET_VALIDINHERITOR:
-                params.arrowStart = VALIDINHERITOR_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#0000FF";
-                break;
-            case SET_VALIDSOURCE:
-                params.arrowStart = VALIDSOURCE_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#00FF00";
-                break;
-            case SET_VALIDDESTINATION:
-                params.arrowStart = VALIDDESTINATION_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#AA03C3";
-                break;
-            case SET_GENERAL:
-                params.arrowStart = GENERAL_TYPE_LINE_END;
-                params.arrowEnd = NOEND;
-                params.width = 2;
-                params.color = "#000000";
-                break;
-            default:
-                break;
-        }
-
-        return params;
     };
 
     SetEditorControl.prototype._onModelHierarchyUp = function () {
@@ -541,7 +488,7 @@ define(['logManager',
         var nodeObj = this._client.getNode(gmeID),
             objDesc,
             i,
-            sets = [SET_VALIDINHERITOR, SET_VALIDCHILDREN, SET_VALIDDESTINATION, SET_VALIDSOURCE, SET_GENERAL],
+            sets = [CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_GENERAL],
             setlen = sets.length,
             displayedSetMembers,
             currentSetMembers,
@@ -587,7 +534,7 @@ define(['logManager',
                 objDesc.srcSubCompId = undefined;
                 objDesc.reconnectable = false;
 
-                _.extend(objDesc, this._getModeVisualDescriptor(currentSet));
+                _.extend(objDesc, SetVisualHelper.getLineVisualDescriptor(currentSet));
 
                 while (i--) {
                     if (this._GmeID2ComponentID.hasOwnProperty(diff[i]) &&
