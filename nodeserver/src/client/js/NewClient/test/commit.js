@@ -66,7 +66,10 @@ requirejs([
         
         var commitOneUpdated = function(newhash,callback){
         	console.log('na ez mar dofi');
-        }
+        };
+        var commitTwoUpdated = function(newhash,callback){
+            console.log('na ez mar dofi');
+        };
         client.openDatabase(function(err){
         	if(err){
         		throw err;
@@ -79,6 +82,7 @@ requirejs([
         				commitOne = new COMMIT(projectOne);
         				commitTwo = new COMMIT(projectOne);
         				commitOne.newBranch('smoke','#1',commitOneUpdated);
+                        commitTwo.selectBranch('smoke',commitTwoUpdated);
         				commitOne.updateBranch('#2',function(err){
         					console.log('ez meg igazan dofi');
         				});

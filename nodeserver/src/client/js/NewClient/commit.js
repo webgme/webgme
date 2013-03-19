@@ -10,25 +10,25 @@ define([
 
         var commit = function(_project){
 
-            var _branch = {}, //bname : {local : hash, server : hash, changed : true/false, status : online/offline/network}
+            var _branch = {}, //bname : {local : hash, server : hash, status : online/offline/network}
                 _active = null,
-                _updateFunction = function(){};
+                _updateFunction = function(){},
+                _statusFunction = function(){};
 
-            var makeCommit = function(core,rootObject,parentCommit,callback){
-                ASSERT(typeof core === 'object' && typeof callback === 'function' && typeof rootObject === 'object');
-                var rootHash = core.persist(rootObject);
-                if(!rootHash){
-                    rootHash = core.getKey(rootObject);
-                }
+            var makeCommit = function(hash,parentCommit,branch,parents,msg,callback){
+                callback = callback || function(){};
+                branch = branch || _active;
+                parents = parents || [_branch[branch].local];
+                msg = msg || "n/a";
 
                 var commitObj = {
-                    _id     : null,
-                    root    : rootHash,
-                    parents : parentCommit ? [parentCommit._id] : [],
-                    updates : ['TODO'],
+                    _id     : "",
+                    root    : hash,
+                    parents : parents,
+                    updater : ['TODO'],
                     time    : commonUtil.timestamp(),
-                    message : "TODO",
-                    name    : "TODO",
+                    message : msg,
+                    name    : branch,
                     type    : "commit"
                 };
 
@@ -49,6 +49,7 @@ define([
             var changeStatus = function(newstatus){
                 //we can add here the event emitting
                 _branch[_active].status = newstatus;
+                _statusFunction(newstatus);
             };
 
             var serverUpdate = function(branch,callback){
@@ -148,7 +149,7 @@ define([
 
             var newBranch = function(name,startCommitHash,updateFunction){
                 ASSERT(typeof updateFunction === 'function' && typeof name === 'string' && !_branch[name]);
-                _branch[name] = {local: startCommitHash, server: null, status: 'online'};
+                _branch[name] = {local: startCommitHash, server: "", status: 'online'};
                 _updateFunction = updateFunction;
                 _active = name;
                 branchWatcher(name);
@@ -159,17 +160,28 @@ define([
                 _active = name;
                 _updateFunction = updateFunction;
                 if(!_branch[_active]){
-                    _branch[_active] = {local:null,server:null,status:'online'};
+                    _branch[_active] = {local:"",server:"",status:'online'};
                     branchWatcher(name);
                 } else {
                     switch (_branch[_active].status){
                         case online:
-                            branchWatcher(name);
-                            break;
                         case network:
-                            reconnecting(name);
+                            if(_branch[_active].local !== ""){
+                                _updateFunction(_branch[_active].local,function(){
+                                    branchWatcher(name);
+                                });
+                            } else {
+                                branchWatcher(name);
+                            }
                             break;
-                        //in case of offline branch we do not start watcher
+                        default:
+                            //in case of offline branch we just load our last hash
+                            if(_branch[_active].local !== ""){
+                                _updateFunction(_branch[_active].local,function(){
+                                    //TODO do we need to start watching???
+                                });
+                            }
+                            break;
                     }
                 }
             };
@@ -178,16 +190,6 @@ define([
                 ASSERT(typeof _active === 'string' && _branch[_active]);
 
                 _branch[_active].local = commitHash;
-                switch(_branch[_active.status]){
-                    case 'online':
-                        serverUpdate(_active,callback);
-                        break;
-                    case 'network':
-                        _branch[_active].changed = true;
-                        break;
-                    default:
-                        callback(null);
-                }
                 if(_branch[_active].status === 'online'){
                     serverUpdate(_active,callback);
                 } else {
@@ -195,13 +197,65 @@ define([
                 }
             };
 
-            return {
-                makeCommit     : makeCommit,
-                makeMerge      : makeMerge,
-                newBranch      : newBranch,
-                selectBranch   : selectBranch,
-                updateBranch   : updateBranch
+            var clearLocalBranch = function(name,callback){
+                if(name !== _active){
+                    if(_branch[name]){
+                        _branch[name].local = _branch[name].server;
+                        _branch[name].status = 'online';
+                    }
+                    callback(null);
+                } else {
+                    switch (_branch[name].status){
+                        case 'offline':
+                            //we change our local commit so we should load it
+                            _branch[name].local = _branch[name].server;
+                            _branch[name].status = 'online';
+                            _updateFunction(_branch[name].local,function(){
+                                callback(null);
+                            });
+                            break;
+                        case 'network':
+                            //as we already watch for reconnection we just simply remove the local commit info
+                            _branch[name].local = _branch[name].server;
+                            break;
+                        default:
+                            //nothing to do
+                            callback(null);
+                            break;
+                    }
+                }
+            };
 
+            var deleteBranch = function(name,callback){
+                ASSERT(name !== _active);
+                _project.getBranchHash(name,"",function(err,newhash){
+                    if(!err && newhash){
+                        _project.setBranchHash(name,newhash,"",function(err){
+                            if(!err){
+                                delete _branch[name];
+                            }
+
+                            callback(err);
+                        });
+                    } else {
+                        callback('cannot get latest state of branch');
+                    }
+                });
+            };
+
+            var setStatusFunc = function(func){
+                _updateFunction = func;
+            };
+
+            return {
+                makeCommit       : makeCommit,
+                makeMerge        : makeMerge,
+                newBranch        : newBranch,
+                selectBranch     : selectBranch,
+                updateBranch     : updateBranch,
+                clearLocalBranch : clearLocalBranch,
+                deleteBranch     : deleteBranch,
+                setStatusFunc    : setStatusFunc
             }
         };
         return commit;

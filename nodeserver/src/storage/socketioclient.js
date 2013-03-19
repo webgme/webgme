@@ -48,7 +48,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
             callbacks = {};
             for(i=0;i<myCallbacks.length;i++){
-                callbacks[i].cb(ERROR_DISCONNECTED);
+                myCallbacks[i].cb(ERROR_DISCONNECTED);
             }
         }
 

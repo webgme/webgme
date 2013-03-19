@@ -1,22 +1,27 @@
 define([
+    'util/asset',
     'commonUtil',
     'eventDispatcher',
     'core/core_',
+    'core2/setcore',
     'storage/cache',
     'storage/failsafe',
     'storage/socketioclient',
-    'js/NewClient/commit'
+    'js/NewClient/commit',
 ],
     function (
+        ASSERT,
         commonUtil,
         EventDispatcher,
         Core,
+        SetCore,
         Cache,
         Failsafe,
         SocketIOClient,
         Commit
         ) {
 
+        var GUID = commonUtil.guid;
         var ClientMaster = function(){
 
             var self = this,
@@ -33,17 +38,47 @@ define([
                 _commit = null,
                 _inTransaction = false,
                 _core = null,
-                _previousCore = null,
-                _previousObjects = {},
-                _objects = {},
+                _nodes = {},
                 _commitObject = null,
-                _previousCommitObject = null,
+                _patterns = {},
                 _branch = null,
-                _previousBranch = null;
+                _status = null,
+                _users = {}; //uid:{type:not used, UI:ui, PATTERNS:{}, PATHES:[], KEYS:{}, ONEEVENT:true/false, SENDEVENTS:true/false};
 
+            //serializer for the functions they need it
+            var serializedCalls = [],
+                serializedRunning = false;
+            var serializedStart = function(func) {
+                if(serializedRunning) {
+                    serializedCalls.push(func);
+                }
+                else {
+                    serializedRunning = true;
+                    func();
+                }
+            };
+            var serializedDone = function() {
+                ASSERT(serializedRunning === true);
+
+                if(serializedCalls.length !== 0) {
+                    var func = serializedCalls.shift();
+                    func();
+                }
+                else {
+                    serializedRunning = false;
+                }
+            };
 
 
             //internal functions
+            var cleanUsers = function(){
+                for(var i in _users){
+                    _users[i].PATTERNS = {};
+                    _users[i].PATHES = [];
+                    _users[i].KEYS = {};
+                    _users[i].SENDEVENTS = true;
+                }
+            };
             var closeOpenedProject = function(callback){
                 var returning = function(e){
                     _projectName = null;
@@ -51,13 +86,11 @@ define([
                     _commit = null;
                     _inTransaction = false;
                     _core = null;
-                    _previousCore = null;
-                    _previousObjects = {};
-                    _objects = {};
+                    _nodes = {};
                     _commitObject = null;
-                    _previousCommitObject = null;
+                    _patterns = {};
                     _branch = null;
-                    _previousBranch = null;
+                    _status = null;
                     callback(e);
                 };
                 if(_project){
@@ -70,7 +103,7 @@ define([
                 }
             };
             var createEmptyProject = function(project,callback){
-                var core = new Core(project,{});
+                var core = new SetCore(new Core(project,{}));
                 var commit = new Commit(project);
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
@@ -92,6 +125,240 @@ define([
                     }
                 });
             };
+            var saveRoot = function(msg,callback){
+                callback = callback || function(){};
+                serializedStart(function() {
+                    saveRootWork(msg, function(err) {
+                        callback(err);
+                        serializedDone();
+                    });
+                });
+            };
+            var saveRootWork = function(msg,callback){
+                msg = msg || "- automated commit message -";
+
+                if(_project && _commit && _core){
+                    var error = null,
+                        missing = 2,
+                        commitHash = null;
+
+                    var newRootHash = _core.persist(_nodes['root'],function(err){
+                        error = error || err;
+                        if(--missing === 0){
+                            allDone();
+                        }
+                    });
+                    _commit.makeCommit(newRootHash,null,_branch,null,msg,function(err,cHash){
+                        error = error || err;
+                        commitHash = cHash;
+                        if(--missing === 0){
+                            allDone();
+                        }
+                    });
+
+                    var allDone = function(){
+                        if(!error){
+                            _commit.updateBranch(commitHash,function(err){
+                                callback(err);
+                            });
+                        } else {
+                            callback(error);
+                        }
+                    };
+
+                } else {
+                    callback('no active project');
+                }
+            };
+
+            var branchUpdated = function(){
+
+            };
+
+            var loadChildrenPattern = function(patternid,level,pathessofar,callback){
+                var childcount = 0;
+                var myerr = null;
+                var childcallback = function(err){
+                    if(err){
+                        console.log('childcallback '+err);
+                        myerr = err;
+                    }
+                    if(--childcount === 0){
+                        callback(myerr);
+                    }
+                };
+                if(level < 1 ){
+                    callback(null);
+                } else {
+                    currentCore.loadChildren(currentNodes[patternid],function(err,children){
+                        if(!err && children){
+                            if(children.length>0){
+                                var realchildids = [];
+                                for(var i=0;i<children.length;i++){
+                                    var childid = addNodeToPathes(pathessofar,children[i]);
+                                    if(!ISSET(RELFROMID(childid))){
+                                        realchildids.push(childid);
+                                    }
+                                }
+                                childcount = realchildids.length;
+                                if(childcount > 0 ){
+                                    for(i=0;i<realchildids.length;i++){
+                                        loadChildrenPattern(realchildids[i],level-1,pathessofar,childcallback);
+                                    }
+
+                                } else {
+                                    callback(err);
+                                }
+                            } else {
+                                callback(err);
+                            }
+                        } else {
+                            callback(err);
+                        }
+                    });
+                }
+            };
+
+            var addNode = function(core,nodesSoFar,node,callback){
+                nodesSoFar[core.getStringPath(node)] = {node:node,hash:core.getSingleNodeHash(node)};
+                core.loadSets(node,function(err,sets){
+                    if(!err && sets && sets.length>0){
+                        var  missing = 0;
+                        var error = null;
+                        var alldone = function(){
+                            callback(error);
+                        };
+
+                        var loadset = funciton(node,callback){
+                            core.loadChildren(node,function(err,children){
+                                error = error || err;
+                                if(!err && children && children.length>0){
+                                    for(var i=0;i<children.length;i++){
+                                        nodesSoFar[core.getStringPath(children[i])] = {node:children[i],hash:core.getSingleNodeHash(children[i])};
+                                        core.loadPointer(children[i],'member',function(err,member){
+                                            error = error || err;
+                                            if(!err && member){
+                                                nodesSoFar[core.getStringPath(member)] = {node:member,hash:core.getSingleNodeHash(member)};
+                                                if(--missing === 0){
+                                                    alldone();
+                                                }
+                                            } else {
+                                                if(--missing === 0){
+                                                    alldone();
+                                                }
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    missing -= core.getChildrenNumber(node);
+                                    if(missing === 0){
+                                        alldone();
+                                    }
+                                }
+                            });
+                        };
+
+                        for(var i=0;sets.length;i++){
+                            missing += core.getChildrenNumber(sets[i]);
+                        }
+                        for(i=0;i<sets.length;i++){
+                            nodesSoFar[core.getStringPath(sets[i])] = {node:sets[i],hash:core.getSingleNodeHash(sets[i])};
+                            loadset(sets[i]);
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
+            };
+
+            //this is just a first brute implementation it needs serious optimization!!!
+            var loadPattern = function(core,id,pattern,nodesSoFar,callback){
+                callback = callback || function(){};
+                ASSERT(typeof core === 'object' && typeof pattern === 'object' && typeof nodesSoFar === 'object');
+
+                core.loadByPath(nodesSoFar['root'],id,function(err,node){
+                    if(!err && node){
+                        addNode(core,nodesSoFar,node,function(err){
+                            if(!err){
+                                //currently we only have children type pattern, so we try to simplify the function
+                                if(!pattern.children || pattern.children === 0){
+                                    //we are done with this pattern
+                                    callback(null);
+                                } else {
+                                    var childrenIds = core.getChildrenPaths(node);
+                                    var subPattern = pattern;
+                                    subPattern.children--;
+                                    var missing = childrenIds.length;
+                                    var error = null;
+                                    var subLoadComplete = function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            callback(null);
+                                        }
+                                    };
+                                    for(var i=0;i<childrenIds.length;i++){
+                                        loadPattern(core,childrenIds[i],subPattern,nodesSoFar,subLoadComplete);
+                                    }
+                                }
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
+            };
+
+            var loadRoot = function(rootHash,callback){
+                ASSERT(_project && _commit);
+                var core = new SetCore(new Core(_project));
+                var nodes = {};
+                core.loadRoot(rootHash,function(err,root){
+                    if(!err){
+                        var missing = 0,
+                            error = null;
+                        for(var i in _users){
+                            for(var j in _users[i].PATTERNS){
+                                missing++;
+                            }
+                        }
+                        for(i in _users){
+                            for(j in _users[i].PATTERNS){
+                                loadPattern(core,j,_users.PATTERNS[j],nodes,function(err){
+                                    error = error || err;
+                                    if(--missing === 0){
+                                        allLoaded();
+                                    }
+                                });
+                            }
+                        }
+
+                        var allLoaded = function(){
+                            if(!error){
+                                _core = core;
+                                _nodes = nodes;
+                                for(var i in _users){
+                                    userEvents(i);
+                                }
+                                callback(null);
+                            } else {
+                                callback(error);
+                            }
+                        };
+                    } else {
+                        callback(err);
+                    }
+                });
+            };
+
+            var statusUpdated = function(newstatus){
+                if(_status !== newstatus){
+                    _status = newstatus;
+                    self.dispatchEvent(self.events.NETWORKSTATUS_CHANGED,newstatus);
+                }
+            };
+
 
             //event functions to relay information between users
             $.extend(self, new EventDispatcher());
@@ -114,6 +381,7 @@ define([
 
 
             //project and commit selection functions
+            //branch manipulating commit and merge
             self.getActiveProject = function () {
                 return _projectName;
             };
@@ -216,93 +484,27 @@ define([
                 return _branch;
             };
             self.getBranchesAsync = function (callback) {
-                callback('NIE');
+                if(_project){
+                    _project.getBranchNames(callback);
+                } else {
+                    callback('no selected project');
+                }
             };
             self.getRootKey = function () {
-                if(_core && _objects['root']){
-                    _core.getKey(_objects['root']);
+                if(_core && _nodes['root']){
+                    _core.getKey(_nodes['root']);
                 } else {
                     return null;
                 }
             };
             self.commitAsync = function (parameters, callback) {
-                callback = callback || function () {
-                };
-                if (activeProject) {
-                    if (parameters.branch && parameters.branch !== self.getActualBranch()) {
-                        if (!projectsinfo[activeProject].branches[parameters.branch]) {
-                            storages[activeProject].createBranch(parameters.branch, function (err) {
-                                if (err) {
-                                    callback(err);
-                                } else {
-                                    var commitkey = parameters.commit ? parameters.commit : activeActor.getCurrentCommit();
-                                    var commit = commitInfos[activeProject].getCommitObj(commitkey);
-                                    projectsinfo[activeProject].branches[parameters.branch] = {
-                                        actor:new ClientProject({
-                                            storage:storages[activeProject],
-                                            master:self,
-                                            id:null,
-                                            userstamp:'todo',
-                                            commit:commit,
-                                            branch:parameters.branch,
-                                            readonly:false,
-                                            logger:logger
-                                        }),
-                                        commit:commitkey
-                                    };
-                                    activateActor(projectsinfo[activeProject].branches[parameters.branch].actor, null, function () {
-                                        activeActor.commit('initial commit', callback);
-                                    });
-                                }
-                            });
-                        } else {
-                            callback('the branch already exists');
-                        }
-                    } else {
-                        if (activeActor) {
-                            activeActor.commit(parameters.message, callback);
-                        }
-                    }
-                }
+                callback('NIE');
             };
             self.deleteBranchAsync = function (branchname, callback) {
-                if (activeProject) {
-                    if (projectsinfo[activeProject].branches[branchname]) {
-                        //first we kill the actor if there is any on that branch
-                        if (projectsinfo[activeProject].branches[branchname].actor) {
-                            projectsinfo[activeProject].branches[branchname].actor.dismantle();
-                            projectsinfo[activeProject].branches[branchname].actor = null;
-                        }
-
-                        delete projectsinfo[activeProject].branches[branchname];
-                        if (projectsinfo[activeProject].currentbranch === branchname) {
-                            projectsinfo[activeProject].currentbranch = null;
-                        }
-                    }
-                    //whether we have info about the branch or not, we should try to delete it from the server
-                    storages[activeProject].deleteBranch(branchname, function (err) {
-                        if (err) {
-                            console.log('branch deletion failed... -' + err);
-                        }
-                        callback(err);
-                    });
+                if(_commit){
+                    _commit.deleteBranch(branchname,callback);
                 } else {
-                    callback('there is no active branch');
-                }
-            };
-            self.remoteDeleteBranch = function (projectname, branchname) {
-                //this function is called when it turned out that some other user deleted some branch
-                if (projectsinfo[projectname]) {
-                    if (projectsinfo[projectname].branches[branchname]) {
-                        if (projectsinfo[projectname].branches[branchname].actor) {
-                            projectsinfo[projectname].branches[branchname].actor.dismantle();
-                            projectsinfo[projectname].branches[branchname].actor = null;
-                        }
-                        delete projectsinfo[projectname].branches[branchname];
-                        if (projectsinfo[projectname].currentbranch === branchname) {
-                            projectsinfo[projectname].currentbranch = null;
-                        }
-                    }
+                    callback('there is no active project');
                 }
             };
 
@@ -391,11 +593,30 @@ define([
                     activeActor.removeMember(path, memberpath, setid);
                 }
             };
+
+            //territory functions
+            self.addUI = function (ui, oneevent, guid) {
+                guid = guid || GUID();
+                users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHES:[], KEYS:{}, ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
+                return guid;
+            };
+            self.removeUI = function (guid) {
+                delete users[guid];
+            };
+            self.disableEventToUI = function (guid) {
+                console.log('NIE');
+            };
+            self.enableEventToUI = function (guid) {
+                console.log('NIE');
+            };
+            self.updateTerritory = function (guid, patterns) {
+
+            };
+            self.fullRefresh = function () {
+                console.log('NIE');
+            };
         };
 
-        var ClientProject = function(){
-
-        };
 
         var SETTOREL = commonUtil.setidtorelid;
         var RELTOSET = commonUtil.relidtosetid;
