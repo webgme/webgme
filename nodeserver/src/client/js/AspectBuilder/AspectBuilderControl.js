@@ -1105,22 +1105,7 @@ define(['logManager',
     /*        CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS            */
     /****************************************************************************/
     AspectBuilderControl.prototype._createButtonFace = function (btn, connType) {
-        var el = $('<div/>'),
-            path,
-            pathAttributes = this._getConnTypeVisualDescriptor(connType),
-            _btnSize = 16,
-            paper = Raphael(el[0], _btnSize, _btnSize);
-
-        el.attr({"style": "height: " + _btnSize + "px"});
-
-        path = paper.path("M" + _btnSize / 2 + ",0, L" + _btnSize / 2 + "," + _btnSize);
-
-        path.attr({ "arrow-start": pathAttributes.arrowStart,
-            "arrow-end": pathAttributes.arrowEnd,
-            "stroke": pathAttributes.color,
-            "stroke-width": pathAttributes.width});
-
-        btn.append($(el));
+        btn.append(SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(connType) ));
     };
 
     AspectBuilderControl.prototype._setNewConnectionType = function (connType) {

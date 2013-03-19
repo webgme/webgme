@@ -47,6 +47,23 @@ define(['js/Constants'], function (CONSTANTS) {
             }
 
             return params;
+        },
+
+        createButtonIcon : function (btnSize, pathParams) {
+            var el = $('<div/>'),
+                path,
+                paper = Raphael(el[0], btnSize, btnSize);
+
+            el.attr({"style": "height: " + btnSize + "px"});
+
+            path = paper.path("M" + btnSize / 2 + ",0, L" + btnSize / 2 + "," + btnSize);
+
+            path.attr({ "arrow-start": pathParams.arrowStart,
+                "arrow-end": pathParams.arrowEnd,
+                "stroke": pathParams.color,
+                "stroke-width": pathParams.width});
+
+            return el;
         }
     }
 });

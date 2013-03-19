@@ -74,26 +74,26 @@ define(['logManager',
             self._setMetaConnectionType(data.mode);
         });
 
-        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDCHILDREN,
-            "icon": "icon-meta-containment",
+        var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDCHILDREN,
             "selected": true,
             "data": { "mode": CONSTANTS.SET_VALIDCHILDREN }}, $btnGroupConnectionType );
+        this._createButtonFace(btnCreateSetValidChildren, CONSTANTS.SET_VALIDCHILDREN);
 
-        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDINHERITOR,
-            "icon": "icon-meta-inheritance",
+        var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDINHERITOR,
             "data": { "mode": CONSTANTS.SET_VALIDINHERITOR }}, $btnGroupConnectionType );
+        this._createButtonFace(btnCreateSetValidInheritor, CONSTANTS.SET_VALIDINHERITOR);
 
-        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDSOURCE,
-            "icon": "icon-meta-set_validsource",
+        var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDSOURCE,
             "data": { "mode": CONSTANTS.SET_VALIDSOURCE }}, $btnGroupConnectionType );
+        this._createButtonFace(btnCreateSetValidSource, CONSTANTS.SET_VALIDSOURCE);
 
-        this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDDESTINATION,
-            "icon": "icon-meta-set_validdestination",
+        var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDDESTINATION,
             "data": { "mode": CONSTANTS.SET_VALIDDESTINATION }}, $btnGroupConnectionType );
+        this._createButtonFace(btnCreateSetValidDestination, CONSTANTS.SET_VALIDDESTINATION);
 
-        this.designerCanvas.addButton({ "title": CONSTANTS.SET_GENERAL,
-            "icon": "icon-meta-set_general",
+        var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": CONSTANTS.SET_GENERAL,
             "data": { "mode": CONSTANTS.SET_GENERAL }}, $btnGroupConnectionType );
+        this._createButtonFace(btnCreateSetGeneral, CONSTANTS.SET_GENERAL);
 
         /************** SET TYPE SELECTOR BUTTONS *******************************/
 
@@ -462,6 +462,10 @@ define(['logManager',
             }
 
         }
+    };
+
+    SetEditorControl.prototype._createButtonFace = function (btn, connType) {
+        btn.append(SetVisualHelper.createButtonIcon(16, SetVisualHelper.getLineVisualDescriptor(connType)));
     };
 
     SetEditorControl.prototype._setMetaConnectionType = function (mode) {
