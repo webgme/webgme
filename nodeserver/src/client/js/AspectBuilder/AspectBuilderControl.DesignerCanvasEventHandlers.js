@@ -41,14 +41,12 @@ define(['logManager',
             self._onBackgroundDrop(helper, position);
         };
 
+        this.designerCanvas.onCheckChanged = function (value, isChecked) {
+            self._onConnectionTypeFilterCheckChanged(value, isChecked);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
-
-    AspectBuilderControlDesignerCanvasEventHandlers.prototype._onCreateNewConnection = function (params) {
-
-    };
-
-
 
     AspectBuilderControlDesignerCanvasEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
         var metaInfo = helper.data("metaInfo");
