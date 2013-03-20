@@ -43,7 +43,7 @@ define([
                 _patterns = {},
                 _branch = null,
                 _status = null,
-                _users = {}; //uid:{type:not used, UI:ui, PATTERNS:{}, PATHES:[], KEYS:{}, ONEEVENT:true/false, SENDEVENTS:true/false};
+                _users = {}; //uid:{type:not used, UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:true/false, SENDEVENTS:true/false};
 
             //serializer for the functions they need it
             var serializedCalls = [],
@@ -74,8 +74,7 @@ define([
             var cleanUsers = function(){
                 for(var i in _users){
                     _users[i].PATTERNS = {};
-                    _users[i].PATHES = [];
-                    _users[i].KEYS = {};
+                    _users[i].PATHS = {};
                     _users[i].SENDEVENTS = true;
                 }
             };
@@ -175,47 +174,68 @@ define([
 
             };
 
-            var loadChildrenPattern = function(patternid,level,pathessofar,callback){
-                var childcount = 0;
-                var myerr = null;
-                var childcallback = function(err){
-                    if(err){
-                        console.log('childcallback '+err);
-                        myerr = err;
-                    }
-                    if(--childcount === 0){
-                        callback(myerr);
-                    }
-                };
-                if(level < 1 ){
-                    callback(null);
-                } else {
-                    currentCore.loadChildren(currentNodes[patternid],function(err,children){
-                        if(!err && children){
-                            if(children.length>0){
-                                var realchildids = [];
-                                for(var i=0;i<children.length;i++){
-                                    var childid = addNodeToPathes(pathessofar,children[i]);
-                                    if(!ISSET(RELFROMID(childid))){
-                                        realchildids.push(childid);
-                                    }
-                                }
-                                childcount = realchildids.length;
-                                if(childcount > 0 ){
-                                    for(i=0;i<realchildids.length;i++){
-                                        loadChildrenPattern(realchildids[i],level-1,pathessofar,childcallback);
-                                    }
-
-                                } else {
-                                    callback(err);
-                                }
-                            } else {
-                                callback(err);
-                            }
-                        } else {
-                            callback(err);
+            var getModifiedNodes = function(newerNodes){
+                var modifiedNodes = [];
+                for(var i in _nodes){
+                    if(newerNodes[i]){
+                        if(newerNodes[i].hash !== _nodes[i].hash){
+                            modifiedNodes.push(i);
                         }
-                    });
+                    }
+                }
+                return modifiedNodes;
+            };
+
+            //this is just a first brute implementation it needs serious optimization!!!
+            var patternToPaths = function(patternId,pattern,pathsSoFar){
+                pathsSoFar[patternId] = true;
+                if(pattern.children && pattern.children > 0){
+                    var children = _core.getChildrenPaths(_nodes[patternId].node);
+                    var subPattern = pattern;
+                    subPattern.children--;
+                    for(var i=0;i<children.length;i++){
+                        patternToPaths(children[i],subPattern,pathsSoFar);
+                    }
+                }
+            };
+            var userEvents = function(userId,modifiedNodes){
+                var newPaths = {};
+                for(var i in _users[userId].PATTERNS){
+                    patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
+                }
+
+                var events = [];
+                //deleted items
+                for(i in _users[userId].PATHS[i]){
+                    if(!newPaths[i]){
+                        events.push({etype:'unload',eid:i});
+                    }
+                }
+
+                //added items
+                for(i in newPaths){
+                    if(!_users[userId].PATHS[i]){
+                        events.push({etype:'load',eid:i});
+                    }
+                }
+
+                //updated items
+                for(i=0;i<modifiedNodes.length;i++){
+                    if(newPaths[modifiedNodes[i]]){
+                        events.push({etype:'update',eid:modifiedNodes[i]});
+                    }
+                }
+
+                _users[userId].PATHS = newPaths;
+
+                if(events.length>0){
+                    if(_users[userId].ONEEVENT){
+                        _users[userId].UI.onOneEvent(events);
+                    } else {
+                        for(i=0;i<events.length;i++){
+                            _users[userId].UI.onEvent(events[i].etype,events[i].eid);
+                        }
+                    }
                 }
             };
 
@@ -323,23 +343,29 @@ define([
                                 missing++;
                             }
                         }
-                        for(i in _users){
-                            for(j in _users[i].PATTERNS){
-                                loadPattern(core,j,_users.PATTERNS[j],nodes,function(err){
-                                    error = error || err;
-                                    if(--missing === 0){
-                                        allLoaded();
-                                    }
-                                });
+                        if(missing > 0){
+                            for(i in _users){
+                                for(j in _users[i].PATTERNS){
+                                    loadPattern(core,j,_users.PATTERNS[j],nodes,function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            allLoaded();
+                                        }
+                                    });
+                                }
                             }
+                        } else {
+                            allLoaded();
                         }
+
 
                         var allLoaded = function(){
                             if(!error){
                                 _core = core;
+                                var modifiedPaths = getModifiedNodes(nodes);
                                 _nodes = nodes;
                                 for(var i in _users){
-                                    userEvents(i);
+                                    userEvents(i,modifiedPaths);
                                 }
                                 callback(null);
                             } else {
@@ -597,7 +623,7 @@ define([
             //territory functions
             self.addUI = function (ui, oneevent, guid) {
                 guid = guid || GUID();
-                users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHES:[], KEYS:{}, ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
+                users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
                 return guid;
             };
             self.removeUI = function (guid) {
@@ -611,7 +637,33 @@ define([
             };
             self.updateTerritory = function (guid, patterns) {
 
+                //this has to be optimized
+                var missing = 0;
+                var error = null;
+                for(var i in patterns){
+                    missing++;
+                }
+                if(missing>0){
+                    for(var i in patterns){
+                        loadPattern(_core,i,patterns[i],_nodes,function(err){
+                            error = error || err;
+                            if(--missing === 0){
+                                allDone();
+                            }
+                        });
+                    }
+                } else {
+                    allDone();
+                }
+
+                var allDone = function(){
+                    _users[guid].PATTERNS = patterns;
+                    if(!error){
+                        userEvents(guid,[]);
+                    }
+                }
             };
+            
             self.fullRefresh = function () {
                 console.log('NIE');
             };
@@ -643,6 +695,60 @@ define([
                     return _core.getAttribute(_nodes[_id].node,name);
                 };
 
+                var getRegistry = function(name){
+                    return _core.getRegistry(_nodes[_id].node,name);
+                };
+
+                var getPointer = function(name){
+                    return _core.getPointer(_nodes[_id].node,name);
+                };
+
+                var getPointerNames = function(){
+                    return _core.getPointerNames(_nodes[_id].node);
+                };
+
+                var getAttributeNames = function(){
+                    return _core.getAttributeNames(_nodes[_id].node);
+                };
+
+                var getRegistryNames = function(){
+                    return _core.getRegistryNames(_nodes[_id].node);
+                };
+
+                //SET
+                var getMemberIds = function(setid){
+                    setid = commonUtil.setidtorelid(setid);
+                    var memberids = [];
+                    var index = _core.getSetRelids(_nodes[_id].node).indexOf(setid);
+                    if(index > -1){
+                        var setpath = _core.getSetPaths(_nodes[_id].node)[index];
+                        if(_nodes[setpath].node){
+                            var members = _core.getChildrenPaths(_nodes[setpath].node);
+                            for(var i=0;i<members.length;i++){
+                                if(_nodes[members[i]].node){
+                                    memberids.push(_core.getPointer(_nodes[members[i]].node,'member'));
+                                }
+                            }
+                        }
+                    }
+
+                    return memberids;
+                };
+                var getSetNames = function(){
+                    var setids = _core.getSetRelids(_nodes[_id]);
+                    for(var i=0;i<setids.length;i++){
+                        setids[i] = commonUtil.relidtosetid(setids[i])
+                    }
+                    return setids;
+                };
+                var getSetIds = function(){
+                    return _core.getSetPaths(_nodes[_id]);
+                };
+                //META
+                var getValidChildrenTypes = function(){
+                    return getMemberIds('ValidChildren');
+                };
+
                 return {
                     getParentId : getParentId,
                     getId       : getId,
@@ -655,9 +761,7 @@ define([
                     getPointerNames : getPointerNames,
                     getAttributeNames : getAttributeNames,
                     getRegistryNames : getRegistryNames,
-                    //helping functions
-                    printData : printData,
-                    isSetNode : isSetNode,
+
                     //META functions
                     getValidChildrenTypes : getValidChildrenTypes,
                     getMemberIds          : getMemberIds,
@@ -665,156 +769,6 @@ define([
                     getSetNames           : getSetNames
                 }
             };
-        };
-
-
-        var SETTOREL = commonUtil.setidtorelid;
-        var RELTOSET = commonUtil.relidtosetid;
-        var ISSET = commonUtil.issetrelid;
-        var ClientNode = function(parameters){
-            var self = this,
-                node = parameters.node,
-                core = parameters.core,
-                actor = parameters.actor,
-                ownpath = core.getStringPath(node);
-
-            var getParentId = function(){
-                var parent = core.getParent(node);
-                if(parent){
-                    var parentpath = core.getStringPath(parent);
-                    if(parentpath === ""){
-                        parentpath = "root";
-                    }
-                    return parentpath;
-                } else {
-                    return null;
-                }
-            };
-            var getId = function(){
-                return getClientNodePath(node);
-            };
-            var getChildrenIds = function(){
-                var childrenin = core.getChildrenPaths(node);
-                var childrenrelids = core.getChildrenRelids(node);
-                var childrenout = [];
-                for(var i=0;i<childrenin.length;i++){
-                    if(!ISSET(childrenrelids[i])){
-                        childrenout.push(childrenin[i]);
-                    }
-                }
-                return childrenout;
-            };
-            var getBaseId = function(){
-                if(core.getRegistry(node,"isConnection") === true){
-                    return "connection";
-                } else {
-                    return "object";
-                }
-            };
-            var getInheritorIds = function(){
-                return null;
-            };
-            var getAttribute = function(name){
-                return core.getAttribute(node,name);
-            };
-            var getRegistry = function(name){
-                return core.getRegistry(node,name);
-            };
-            var getPointer = function(name){
-                return {to:core.getPointerPath(node,name),from:[]};
-            };
-            var getPointerNames = function(){
-                return core.getPointerNames(node);
-            };
-            var getAttributeNames = function(){
-                return core.getAttributeNames(node);
-            };
-            var getRegistryNames = function(){
-                return core.getRegistryNames(node);
-            };
-
-            var getClientNodePath = function(){
-                var path = ownpath;
-                if(path === ""){
-                    path = "root";
-                }
-                return path;
-            };
-
-            //SET
-            var getMemberIds = function(setid){
-                setid = SETTOREL(setid);
-                return actor.getMemberIds(getClientNodePath(),setid);
-            };
-            var getSetNames = function(){
-                var childrenin = core.getChildrenRelids(node);
-                var childrenout = [];
-                for(var i=0;i<childrenin.length;i++){
-                    if(ISSET(childrenin[i])){
-                        var setid = RELTOSET(childrenin[i]);
-                        if(setid){
-                            childrenout.push(setid);
-                        }
-                    }
-                }
-                return childrenout;
-            };
-            var getSetIds = function(){
-                var childrenin = core.getChildrenPaths(node);
-                var childrenrelids = core.getChildrenRelids(node);
-                var childrenout = [];
-                for(var i=0;i<childrenin.length;i++){
-                    if(ISSET(childrenrelids[i])){
-                        childrenout.push(childrenin[i]);
-                    }
-                }
-                return childrenout;
-            };
-            //META
-            var getValidChildrenTypes = function(){
-                return getMemberIds('ValidChildren');
-            };
-
-            var printData = function(){
-                //TODO it goes to console now...
-                console.log("###node###"+ownpath);
-                var mynode = {};
-                mynode.node = node;
-                var mysets = getSetIds();
-                mynode.sets = {};
-                for(var i=0;i<mysets.length;i++){
-                    mynode.sets[mysets[i]] = getMemberIds(mysets[i]);
-                }
-                console.dir(mynode);
-
-            };
-
-            var isSetNode = function(){
-                var relid = core.getRelid(node);
-                return ISSET(relid);
-            };
-
-            return {
-                getParentId : getParentId,
-                getId       : getId,
-                getChildrenIds : getChildrenIds,
-                getBaseId : getBaseId,
-                getInheritorIds : getInheritorIds,
-                getAttribute : getAttribute,
-                getRegistry : getRegistry,
-                getPointer : getPointer,
-                getPointerNames : getPointerNames,
-                getAttributeNames : getAttributeNames,
-                getRegistryNames : getRegistryNames,
-                //helping functions
-                printData : printData,
-                isSetNode : isSetNode,
-                //META functions
-                getValidChildrenTypes : getValidChildrenTypes,
-                getMemberIds          : getMemberIds,
-                getSetIds             : getSetIds,
-                getSetNames           : getSetNames,
-            }
         };
 
         return ClientMaster;

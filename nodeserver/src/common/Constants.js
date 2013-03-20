@@ -37,6 +37,6 @@ define([], function () {
          SET_VALIDSOURCE : 'ValidSource',
          SET_VALIDDESTINATION : 'ValidDestination',
          SET_VALIDINHERITOR : 'ValidInheritor',
-         SET_GENERAL : 'General',
+         SET_GENERAL : 'General'
     };
 });

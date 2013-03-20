@@ -842,7 +842,7 @@ CoreTree, SHA1, FUTURE) {
 			deletePointer: deletePointer,
 			setPointer: setPointer,
 			getCollectionNames: getCollectionNames,
-			getCollectionPaths: getCollectionPaths,
+            getCollectionPaths: getCollectionPaths,
 			loadCollection: FUTURE.unadapt(loadCollection),
 
 			getSingleNodeHash: getSingleNodeHash,
