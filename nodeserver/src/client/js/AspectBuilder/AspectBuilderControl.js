@@ -56,8 +56,8 @@ define(['logManager',
         this.decoratorClasses = {};
         this.eventQueue = [];
 
-        this._emptyAspectRegistry = { "Members": [],
-            "MemberCoord": {}};
+        this._filteredOutConnTypes = [];
+        this._filteredOutConnectionDescriptors = {};
 
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "members" : [] };
@@ -73,16 +73,16 @@ define(['logManager',
 
         var btnCreatePointerSource = this.designerCanvas.addButton({ "title": "SOURCE pointer",
             "selected": true,
-            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_SOURCE }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerSource, POINTER_PREFIX + CONSTANTS.POINTER_SOURCE);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_SOURCE },
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_SOURCE))}, this._$btnGroupCreatePointers);
 
         var btnCreatePointerTarget = this.designerCanvas.addButton({ "title": "TARGET pointer",
-            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_TARGET }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerTarget, POINTER_PREFIX + CONSTANTS.POINTER_TARGET);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_TARGET },
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_TARGET))}, this._$btnGroupCreatePointers);
 
         var btnCreatePointerRef = this.designerCanvas.addButton({ "title": "REF pointer",
-            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_REF }}, this._$btnGroupCreatePointers);
-        this._createButtonFace(btnCreatePointerRef, POINTER_PREFIX + CONSTANTS.POINTER_REF);
+            "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_REF },
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_REF))}, this._$btnGroupCreatePointers);
         /************** END OF - CREATE POINTERS *****************/
 
         /************** CREATE SET RELATIONS *****************/
@@ -91,25 +91,24 @@ define(['logManager',
         });
 
         var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": "SET ValidChildren",
-            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN }}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidChildren, SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN },
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN))}, this._$btnGroupCreateSetRelations);
 
         var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": "SET ValidInheritor",
-            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidInheritor, SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR},
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR))}, this._$btnGroupCreateSetRelations);
 
         var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": "SET ValidSource",
-            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDSOURCE}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidSource, SET_PREFIX + CONSTANTS.SET_VALIDSOURCE);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDSOURCE},
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDSOURCE))}, this._$btnGroupCreateSetRelations);
 
         var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": "SET ValidDestination",
-            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetValidDestination, SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION);
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION},
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION))}, this._$btnGroupCreateSetRelations);
 
         var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": "SET General",
-            "data": { "connType": SET_PREFIX + CONSTANTS.SET_GENERAL}}, this._$btnGroupCreateSetRelations);
-        this._createButtonFace(btnCreateSetGeneral, SET_PREFIX + CONSTANTS.SET_GENERAL);
-
+            "data": { "connType": SET_PREFIX + CONSTANTS.SET_GENERAL},
+            "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_GENERAL))}, this._$btnGroupCreateSetRelations);
 
         this._setNewConnectionType(POINTER_PREFIX + CONSTANTS.POINTER_SOURCE);
         /************** END OF - CREATE POINTERS *****************/
@@ -127,7 +126,7 @@ define(['logManager',
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
-
+        this._initFilterPanel();
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDesignerCanvasEventHandlers();
@@ -136,7 +135,8 @@ define(['logManager',
     };
 
     AspectBuilderControl.prototype.selectedObjectChanged = function (nodeId) {
-        var desc = this._getObjectDescriptor(nodeId);
+        var desc = this._getObjectDescriptor(nodeId),
+            len;
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
@@ -161,6 +161,12 @@ define(['logManager',
 
         this._nodePointers = {};
         this._nodeSets = {};
+
+        this._filteredOutConnectionDescriptors = {};
+        len = this._filteredOutConnTypes.length;
+        while (len--) {
+            this._filteredOutConnectionDescriptors[this._filteredOutConnTypes[len]] = [];
+        }
 
         //remove current territory patterns
         if (this.currentNodeInfo.id) {
@@ -216,6 +222,10 @@ define(['logManager',
     /*                   PRIVATE METHODS                      */
     /**********************************************************/
 
+    AspectBuilderControl.prototype._emptyAspectRegistry = function () {
+        return { "Members": [],
+            "MemberCoord": {}};
+    };
 
     /**********************************************************/
     /*       EVENT AND DECORATOR DOWNLOAD HANDLING            */
@@ -473,7 +483,7 @@ define(['logManager',
             componentID,
             i,
             gmeID,
-            aspectRegistry = aspectNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone(),
+            aspectRegistry = aspectNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             territoryChanged = false;
 
         //update selfRegistry (for node positions)
@@ -527,7 +537,7 @@ define(['logManager',
     /**********************************************************/
     AspectBuilderControl.prototype._addItemsToAspect = function (gmeID, position) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone();
+            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry();
 
         if (registry.Members.indexOf(gmeID) === -1) {
             registry.Members.push(gmeID);
@@ -547,7 +557,7 @@ define(['logManager',
     /**********************************************************/
     AspectBuilderControl.prototype._onDesignerItemsMove = function (repositionDesc) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry.clone(),
+            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             id,
             gmeID;
 
@@ -804,6 +814,26 @@ define(['logManager',
             //final cleanup in _connectionListByDstGMEID
             delete this._connectionListByDstGMEID[gmeID];
         }
+
+        //checked filtered out connections
+        //#5 - gmeID is the source of the filtered out connection --- remove info as it is, no need for it
+        //#6 - gmeID is the destination of the connection --- save info to the waiting list
+        for (connType in this._filteredOutConnectionDescriptors) {
+            if (this._filteredOutConnectionDescriptors.hasOwnProperty(connType)) {
+                it = this._filteredOutConnectionDescriptors[connType].length;
+                while (it--) {
+                    gmeSrcId = this._filteredOutConnectionDescriptors[connType][it][0];
+                    gmeDstId = this._filteredOutConnectionDescriptors[connType][it][1];
+
+                    if (gmeID === gmeDstId) {
+                        //save to waiting list
+                        this._saveConnectionToWaitingList(gmeSrcId, gmeID, connType);
+                    }
+
+                    this._filteredOutConnectionDescriptors[connType].splice(it, 1);
+                }
+            }
+        }
     };
     /****************************************************************************/
     /*                      END OF --- HANDLE OBJECT UNLOAD                     */
@@ -822,18 +852,27 @@ define(['logManager',
         //fact: gmeSrcId is available, the call is coming from there
         if (this._GMEModels.indexOf(gmeDstId) !== -1) {
             //destination is displayed
-            connDesc = { "srcObjId": this._GmeID2ComponentID[gmeSrcId][0],
-                         "srcSubCompId": undefined,
-                         "dstObjId": this._GmeID2ComponentID[gmeDstId][0],
-                         "dstSubCompId": undefined,
-                         "reconnectable": false
-            };
 
-            _.extend(connDesc, this._getConnTypeVisualDescriptor(connType));
+            if (this._filteredOutConnTypes.indexOf(connType) === -1) {
+                //connection type is not filtered out    
+                connDesc = { "srcObjId": this._GmeID2ComponentID[gmeSrcId][0],
+                             "srcSubCompId": undefined,
+                             "dstObjId": this._GmeID2ComponentID[gmeDstId][0],
+                             "dstSubCompId": undefined,
+                             "reconnectable": false
+                };
 
-            connComponent = this.designerCanvas.createConnection(connDesc);
+                _.extend(connDesc, this._getConnTypeVisualDescriptor(connType));
 
-            this._saveConnection(gmeSrcId, gmeDstId, connType, connComponent.id);
+                connComponent = this.designerCanvas.createConnection(connDesc);
+
+                this._saveConnection(gmeSrcId, gmeDstId, connType, connComponent.id);
+            } else {
+                //connection type is filtered out
+                this._filteredOutConnectionDescriptors[connType].push([gmeSrcId,gmeDstId]);
+            }
+
+            
         } else {
             //destination is not displayed, store it in a queue
             this._saveConnectionToWaitingList(gmeSrcId, gmeDstId, connType);
@@ -1114,8 +1153,6 @@ define(['logManager',
             }
         }
 
-        
-
         return params;
     };
 
@@ -1126,9 +1163,6 @@ define(['logManager',
     /****************************************************************************/
     /*        CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS            */
     /****************************************************************************/
-    AspectBuilderControl.prototype._createButtonFace = function (btn, connType) {
-        btn.append(SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(connType) ));
-    };
 
     AspectBuilderControl.prototype._setNewConnectionType = function (connType) {
         var connProps = this._getConnTypeVisualDescriptor(connType);
@@ -1155,7 +1189,7 @@ define(['logManager',
         }
     };
 
-    AspectBuilderControlDesignerCanvasEventHandlers.prototype._onCreateNewConnection = function (params) {
+    AspectBuilderControl.prototype._onCreateNewConnection = function (params) {
         var sourceId = this._ComponentID2GmeID[params.src],
             targetId = this._ComponentID2GmeID[params.dst];
 
@@ -1178,6 +1212,104 @@ define(['logManager',
 
     /****************************************************************************/
     /*    END OF --- CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS     */
+    /****************************************************************************/
+
+
+    /****************************************************************************/
+    /*                  POINTER FILTER PANEL AND EVENT HANDLERS                 */
+    /****************************************************************************/
+    AspectBuilderControl.prototype._initFilterPanel = function () {
+        var filterIcon;
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(CONN_TYPE_HIERARCHY_PARENT));
+        this.designerCanvas.addFilterItem('Hierarchy containment', CONN_TYPE_HIERARCHY_PARENT, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_SOURCE));
+        this.designerCanvas.addFilterItem('Pointer Source', POINTER_PREFIX + CONSTANTS.POINTER_SOURCE, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_TARGET));
+        this.designerCanvas.addFilterItem('Pointer Target', POINTER_PREFIX + CONSTANTS.POINTER_TARGET, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_REF));
+        this.designerCanvas.addFilterItem('Pointer Ref', POINTER_PREFIX + CONSTANTS.POINTER_REF, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN));
+        this.designerCanvas.addFilterItem('Set ValidChildren', SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDSOURCE));
+        this.designerCanvas.addFilterItem('Set ValidSource', SET_PREFIX + CONSTANTS.SET_VALIDSOURCE, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION));
+        this.designerCanvas.addFilterItem('Set ValidDestination', SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR));
+        this.designerCanvas.addFilterItem('Set ValidInheritor', SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR, filterIcon);
+
+        filterIcon = SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_GENERAL));
+        this.designerCanvas.addFilterItem('Set General', SET_PREFIX + CONSTANTS.SET_GENERAL, filterIcon);
+
+        
+    };
+
+    AspectBuilderControl.prototype._onConnectionTypeFilterCheckChanged = function (value, isChecked) {
+        var idx;
+
+        if (isChecked === true) {
+            //type should be enabled
+            idx = this._filteredOutConnTypes.indexOf(value);
+            this._filteredOutConnTypes.splice(idx, 1);
+            this._unfilterConnType(value);
+        } else {
+            this._filteredOutConnTypes.push(value);
+            this._filterConnType(value);
+        }
+    };
+
+    AspectBuilderControl.prototype._filterConnType = function (connType) {
+        var len = this._connectionListByType && this._connectionListByType.hasOwnProperty(connType) ? this._connectionListByType[connType].length : 0,
+            connComponentId,
+            gmeSrcId,
+            gmeDstId;
+
+        this._filteredOutConnectionDescriptors[connType] = [];
+
+        this.designerCanvas.beginUpdate();
+
+        while (len--) {
+            connComponentId = this._connectionListByType[connType][len];
+
+            gmeSrcId = this._connectionListByID[connComponentId].GMESrcId;
+            gmeDstId = this._connectionListByID[connComponentId].GMEDstID;
+
+            this._filteredOutConnectionDescriptors[connType].push([gmeSrcId,gmeDstId]);
+
+            this._removeConnection(gmeSrcId, gmeDstId, connType);
+        }
+
+        this.designerCanvas.endUpdate();
+    };
+
+    AspectBuilderControl.prototype._unfilterConnType = function (connType) {
+        var len = this._filteredOutConnectionDescriptors && this._filteredOutConnectionDescriptors.hasOwnProperty(connType) ? this._filteredOutConnectionDescriptors[connType].length : 0,
+            gmeSrcId,
+            gmeDstId;
+
+        this.designerCanvas.beginUpdate();
+
+        while (len--) {
+            gmeSrcId = this._filteredOutConnectionDescriptors[connType][len][0];
+            gmeDstId = this._filteredOutConnectionDescriptors[connType][len][1];
+
+            this._createConnection(gmeSrcId, gmeDstId, connType);
+        }
+
+        delete this._filteredOutConnectionDescriptors[connType];
+
+        this.designerCanvas.endUpdate();
+    };
+
+    /****************************************************************************/
+    /*          END OF --- POINTER FILTER PANEL AND EVENT HANDLERS              */
     /****************************************************************************/
 
     //attach AspectBuilderControl - DesignerCanvas event handler functions

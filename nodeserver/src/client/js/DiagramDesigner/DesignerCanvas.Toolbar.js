@@ -61,7 +61,11 @@ define([], function () {
         }
 
         if (params.icon) {
-            $btn.append($('<i class="' + params.icon + '"></i>'));
+            if (typeof params.icon === 'string') {
+                $btn.append($('<i class="' + params.icon + '"></i>'));    
+            } else {
+                $btn.append(params.icon);
+            }
         }
 
         if (params.text) {
