@@ -141,7 +141,8 @@ define(['logManager',
                     this.logger.debug("Redrawing connection with ID: '" + this.id + "'");
                     this.skinParts.path.attr({ "path": pathDef});
                     if (this.skinParts.pathShadow) {
-                        this.skinParts.pathShadow.attr({ "path": pathDef});
+                        //this.skinParts.pathShadow.attr({ "path": pathDef});
+                        this._updatePathShadow(segPoints);
                     }
                 } else {
                     this.logger.debug("Drawing connection with ID: '" + this.id + "'");
@@ -156,7 +157,7 @@ define(['logManager',
                         "stroke-width": this.designerAttributes.width});
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
-                        this._createPathShadow(pathDef);
+                        this._createPathShadow(segPoints);
                     }
                 }
             }
@@ -252,11 +253,13 @@ define(['logManager',
         }
     };
 
-    ConnectionComponent.prototype._createPathShadow = function (pathDef) {
+    ConnectionComponent.prototype._createPathShadow = function (segPoints) {
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
-            this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path(pathDef);
+            this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path("M0,0 L1,1");
             /*$(this.skinParts.pathShadow.node).attr("id", /*PATH_SHADOW_ID_PREFIX + this.id);*/
+
+            this._updatePathShadow(segPoints);
 
             $(this.skinParts.pathShadow.node).attr({"id": PATH_SHADOW_ID_PREFIX + this.id,
                 "class": DESIGNER_CONNECTION_CLASS});
@@ -265,8 +268,74 @@ define(['logManager',
                 "stroke-width": this.designerAttributes.shadowWidth,
                 "opacity": this.designerAttributes.shadowOpacity,
                 "arrow-start": this.designerAttributes.arrowStart,
-                "arrow-end": this.designerAttributes.arrowEnd});
+                "arrow-end": this.designerAttributes.arrowEnd,
+                "arrow-dx-stroke-width-fix": this.designerAttributes.width });
         }
+    };
+
+    ConnectionComponent.prototype._updatePathShadow = function (points) {
+        var p,
+            pathDef = [],
+            len,
+            i,
+            dx,
+            dy,
+            w = parseInt(this.designerAttributes.width, 10),
+            sW = parseInt(this.designerAttributes.shadowWidth, 10),
+            fixRatio = sW + sW / w,
+            rx,
+            ry;
+
+        if (this.designerAttributes.arrowStart !== CONNECTION_DEFAULT_END) {
+            len = points.length;
+            dx = points[1].x - points[0].x;
+            dy = points[1].y - points[0].y;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                ry = dy / Math.abs(dx);
+                rx = dx / Math.abs(dx);
+            } else {
+                rx = dx / Math.abs(dy);
+                ry = dy / Math.abs(dy);
+            }
+
+            points[0].x -= rx * fixRatio;
+            points[0].y -= ry * fixRatio;
+        }
+
+        if (this.designerAttributes.arrowEnd !== CONNECTION_DEFAULT_END) {
+            len = points.length;
+            dx = points[len - 1].x - points[len - 2].x;
+            dy = points[len - 1].y - points[len - 2].y;
+
+            if (Math.abs(dx) > Math.abs(dy)) {
+                ry = dy / Math.abs(dx);
+                rx = dx / Math.abs(dx);
+            } else {
+                rx = dx / Math.abs(dy);
+                ry = dy / Math.abs(dy);
+            }
+
+            points[len - 1].x += rx * fixRatio;
+            points[len - 1].y += ry * fixRatio;
+        }
+
+        i = len = points.length;
+
+        p = points[0];
+        pathDef.push("M" + p.x + "," + p.y);
+
+        //fix the counter to start from the second point in the list
+        len--;
+        i--;
+        while (i--) {
+            p = points[len - i];
+            pathDef.push("L" + p.x + "," + p.y);
+        }
+
+        pathDef = pathDef.join(" ");
+
+        this.skinParts.pathShadow.attr({ "path": pathDef});
     };
 
     ConnectionComponent.prototype._removePath = function () {
