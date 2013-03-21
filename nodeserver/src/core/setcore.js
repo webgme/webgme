@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "core/assert"], function (ASSERT) {
+define([ "util/assert"], function (ASSERT) {
     "use strict";
 
     // ----------------- SetCore -----------------
@@ -15,13 +15,15 @@ define([ "core/assert"], function (ASSERT) {
     var SetCore = function (_innerCore) {
 
         var root = null;
+        var rootPath = "";
+        var visibleRootPath = "root";
 
         var loadRoot = function(hash,callback){
             _innerCore.loadRoot(hash,function(err,node){
                 if(!err && node){
                     root = node;
                 }
-                callback(err);
+                callback(err,node);
             });
         };
 
@@ -30,15 +32,26 @@ define([ "core/assert"], function (ASSERT) {
         };
 
         var getRoot = function(){
+            ASSERT(typeof root === 'object');
             return root;
         };
 
         var getStringPath = function(node){
-            return _innerCore.getStringPath(node,root);
+            var path = _innerCore.getStringPath(node,root);
+            if(path === rootPath){
+                return visibleRootPath;
+            } else {
+                return path;
+            }
         };
 
         var loadByPath = function(path,callback){
-            _innerCore.loadByPath(root,path,callback);
+            ASSERT(typeof root === 'object');
+            if(path === visibleRootPath){
+                callback(null,root);
+            } else {
+                _innerCore.loadByPath(root,path,callback);
+            }
         };
 
         var getChildrenRelids = function(node){

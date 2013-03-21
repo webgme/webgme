@@ -1,6 +1,6 @@
 define([
-    'core/assert',
-    'core/lib/sha1',
+    'util/assert',
+    'util/sha1',
     'common/CommonUtil'],
     function(ASSERT,SHA1,commonUtil){
         'use strict';

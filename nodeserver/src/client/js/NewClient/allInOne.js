@@ -1,9 +1,9 @@
 define([
-    'util/asset',
+    'util/assert',
     'commonUtil',
     'eventDispatcher',
-    'core/core_',
-    'core2/setcore',
+    'core/core',
+    'core/setcore',
     'storage/cache',
     'storage/failsafe',
     'storage/socketioclient',
@@ -22,6 +22,13 @@ define([
         ) {
 
         var GUID = commonUtil.guid;
+        var COPY = function(object){
+            if(object){
+                return JSON.parse(JSON.stringify(object));
+            }
+            return null;
+        };
+
         var ClientMaster = function(){
 
             var self = this,
@@ -43,6 +50,7 @@ define([
                 _patterns = {},
                 _branch = null,
                 _status = null,
+                _clipboard = [],
                 _users = {}; //uid:{type:not used, UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:true/false, SENDEVENTS:true/false};
 
             //serializer for the functions they need it
@@ -70,6 +78,21 @@ define([
             };
 
 
+            var initialize = function(){
+                _database.openDatabase(function(){
+                    console.log('kecso1');
+                    _database.openProject('storage',function(err,p){
+                        console.log('kecso2',err);
+                        _project = p;
+                        _commit = new Commit(_project);
+                        _inTransaction = false;
+                        _nodes={};
+                        _commit.setStatusFunc(statusUpdated);
+                        _commit.selectBranch('master',branchUpdated);
+                    });
+                });
+            };
+
             //internal functions
             var cleanUsers = function(){
                 for(var i in _users){
@@ -90,6 +113,7 @@ define([
                     _patterns = {};
                     _branch = null;
                     _status = null;
+                    _clipboard = [];
                     callback(e);
                 };
                 if(_project){
@@ -141,7 +165,7 @@ define([
                         missing = 2,
                         commitHash = null;
 
-                    var newRootHash = _core.persist(_nodes['root'],function(err){
+                    var newRootHash = _core.persist(function(err){
                         error = error || err;
                         if(--missing === 0){
                             allDone();
@@ -170,8 +194,19 @@ define([
                 }
             };
 
-            var branchUpdated = function(){
-
+            var branchUpdated = function(newhash,callback){
+                console.log('kecso3');
+                _project.loadObject(newhash,function(err,cObj){
+                    if(!err && cObj){
+                        console.log('kecso4');
+                        loadRoot(cObj.root,function(err){
+                            console.log('kecso5',err);
+                            callback();
+                        });
+                    } else {
+                        callback();
+                    }
+                });
             };
 
             var getModifiedNodes = function(newerNodes){
@@ -191,7 +226,7 @@ define([
                 pathsSoFar[patternId] = true;
                 if(pattern.children && pattern.children > 0){
                     var children = _core.getChildrenPaths(_nodes[patternId].node);
-                    var subPattern = pattern;
+                    var subPattern = COPY(pattern);
                     subPattern.children--;
                     for(var i=0;i<children.length;i++){
                         patternToPaths(children[i],subPattern,pathsSoFar);
@@ -240,7 +275,8 @@ define([
             };
 
             var addNode = function(core,nodesSoFar,node,callback){
-                nodesSoFar[core.getStringPath(node)] = {node:node,hash:core.getSingleNodeHash(node)};
+                var path = core.getStringPath(node);
+                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node)};
                 core.loadSets(node,function(err,sets){
                     if(!err && sets && sets.length>0){
                         var  missing = 0;
@@ -249,7 +285,7 @@ define([
                             callback(error);
                         };
 
-                        var loadset = funciton(node,callback){
+                        var loadset = function(node,callback){
                             core.loadChildren(node,function(err,children){
                                 error = error || err;
                                 if(!err && children && children.length>0){
@@ -296,7 +332,7 @@ define([
                 callback = callback || function(){};
                 ASSERT(typeof core === 'object' && typeof pattern === 'object' && typeof nodesSoFar === 'object');
 
-                core.loadByPath(nodesSoFar['root'],id,function(err,node){
+                core.loadByPath(id,function(err,node){
                     if(!err && node){
                         addNode(core,nodesSoFar,node,function(err){
                             if(!err){
@@ -306,18 +342,23 @@ define([
                                     callback(null);
                                 } else {
                                     var childrenIds = core.getChildrenPaths(node);
-                                    var subPattern = pattern;
+                                    var subPattern = COPY(pattern);
                                     subPattern.children--;
                                     var missing = childrenIds.length;
                                     var error = null;
                                     var subLoadComplete = function(err){
+                                        console.log('kecso',missing);
                                         error = error || err;
                                         if(--missing === 0){
-                                            callback(null);
+                                            callback(error);
                                         }
                                     };
                                     for(var i=0;i<childrenIds.length;i++){
                                         loadPattern(core,childrenIds[i],subPattern,nodesSoFar,subLoadComplete);
+                                    }
+                                    if(missing === 0){
+                                        missing = 1;
+                                        subLoadComplete(null);
                                     }
                                 }
                             } else {
@@ -344,16 +385,23 @@ define([
                             }
                         }
                         if(missing > 0){
-                            for(i in _users){
-                                for(j in _users[i].PATTERNS){
-                                    loadPattern(core,j,_users.PATTERNS[j],nodes,function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            allLoaded();
+                            addNode(core,nodes,root,function(err){
+                                error == error || err;
+                                if(!err){
+                                    for(i in _users){
+                                        for(j in _users[i].PATTERNS){
+                                            loadPattern(core,j,_users[i].PATTERNS[j],nodes,function(err){
+                                                error = error || err;
+                                                if(--missing === 0){
+                                                    allLoaded();
+                                                }
+                                            });
                                         }
-                                    });
+                                    }
+                                } else {
+                                    allLoaded();
                                 }
-                            }
+                            });
                         } else {
                             allLoaded();
                         }
@@ -387,6 +435,7 @@ define([
 
 
             //event functions to relay information between users
+            var _selectedObjectId = null;
             $.extend(self, new EventDispatcher());
             self.events = {
                 "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
@@ -396,9 +445,9 @@ define([
                 "PROJECT_OPENED"        : "PROJECT_OPENED"
             };
             self.setSelectedObjectId = function (objectId) {
-                if (objectId !== selectedObjectId) {
-                    selectedObjectId = objectId;
-                    self.dispatchEvent(self.events.SELECTEDOBJECT_CHANGED, selectedObjectId);
+                if (objectId !== _selectedObjectId) {
+                    _selectedObjectId = objectId;
+                    self.dispatchEvent(self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
                 }
             };
             self.clearSelectedObjectId = function () {
@@ -517,8 +566,8 @@ define([
                 }
             };
             self.getRootKey = function () {
-                if(_core && _nodes['root']){
-                    _core.getKey(_nodes['root']);
+                if(_core){
+                    _core.getKey(_core.getRoot());
                 } else {
                     return null;
                 }
@@ -536,65 +585,108 @@ define([
 
             //relayed project functions
             //kind of a MGA
+            var copyNodes = function(nodePaths,parentPath,callback){
+
+            };
+
             self.startTransaction = function () {
-                if (_project) {
+                if (_core) {
                     _inTransaction = true;
                 }
             };
             self.completeTransaction = function () {
-                if (_project) {
+                if (_core) {
                     _inTransaction = false;
-
+                    saveRoot('completeTransaction()');
                 }
             };
             self.setAttributes = function (path, name, value) {
-                if (_project) {
-                    _project.setAttributes(path, name, value);
+                if (_core && _nodes[path]) {
+                    _core.setAttributes(_nodes[path], name, value);
+                    saveRoot('setAttributes('+path+','+'name'+','+value+')');
                 }
             };
             self.setRegistry = function (path, name, value) {
-                if (_project) {
-                    _project.setRegistry(path, name, value);
+                if (_core && _nodes[path].node) {
+                    _core.setRegistry(_nodes[path].node, name, value);
+                    saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
             };
             self.copyNodes = function (ids) {
-                if (_project) {
-                    _project.copyNodes(ids);
+                if (_core) {
+                    _clipboard = ids;
                 }
             };
             self.pasteNodes = function (parentpath) {
-                if (_project) {
-                    _project.pasteNodes(parentpath);
+                var checkClipboard = function(){
+                    var result = true;
+                    for(var i=0;i<_clipboard.length;i++){
+                        result = result && (typeof _nodes[_clipboard[i]].node === 'object');
+                    }
+                    return result;
+                };
+
+                if(_core && checkClipboard()){
+                    var paths = COPY(_clipboard);
+                    copyNodes(paths,parentpath,function(err,copyarray){
+                        if(!err){
+                            saveRoot('pasteNodes('+parentpath+','+paths+')');
+                        }
+                    });
                 }
             };
             self.deleteNode = function (path) {
-                if (_project) {
-                    _project.deleteNode(path);
+                if(_core && _nodes[path]){
+                    _core.deleteNode(_nodes[path]);
+                    saveRoot('deleteNode('+path+')');
                 }
             };
-            self.delMoreNodes = function (pathes) {
-                if (_project) {
-                    _project.delMoreNodes(pathes);
+            self.delMoreNodes = function (paths) {
+                if(_core){
+                    for(var i=0;i<paths.length;i++){
+                        if(_core[paths[i]]){
+                            _core.deleteNode(_nodes[paths[i]]);
+                        }
+                    }
+                    saveRoot('delMoreNodes('+paths+')');
                 }
             };
             self.createChild = function (parameters) {
-                if (_project) {
-                    _project.createChild(parameters);
+                if(_core){
+                    if(parameters.parentId && _nodes[parameters.parentId]){
+                        baseId = parameters.baseId || "object";
+                        child = currentCore.createNode(currentNodes[parameters.parentId]);
+                        if(baseId === "connection"){
+                            currentCore.setRegistry(child,"isConnection",true);
+                            currentCore.setAttribute(child,"name","defaultConn");
+                        } else {
+                            currentCore.setRegistry(child,"isConnection",false);
+                            currentCore.setAttribute(child,"name", parameters.name || "defaultObj");
+
+                            if (parameters.position) {
+                                currentCore.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
+                            } else {
+                                currentCore.setRegistry(child,"position", { "x": 100, "y": 100});
+                            }
+                        }
+                        currentCore.setAttribute(child,"isPort",true);
+                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getStringPath(child)+')');
+                    }
                 }
             };
             self.createSubType = function (parent, base) {
-                if (activeActor) {
-                    activeActor.createSubType(parent.base);
-                }
+                console.log('NIE');
             };
             self.makePointer = function (id, name, to) {
-                if (activeActor) {
-                    activeActor.makePointer(id, name, to);
+                if(_core && typeof _nodes[id].node === 'object' && typeof _nodes[to].node === 'object' ){
+                    _core.setPointer(_nodes[id].node,name,_nodes[to].node);
+                    saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             };
             self.delPointer = function (path, name) {
-                if (activeActor) {
-                    activeActor.delPointer(path, name);
+                if(_core && typeof _nodes[path].node === 'object'){
+                    _core.setPointer(_nodes[path].node,name);
+                    saveRoot('delPointer('+path+','+name+')');
                 }
             };
             self.makeConnection = function (parameters) {
@@ -623,7 +715,7 @@ define([
             //territory functions
             self.addUI = function (ui, oneevent, guid) {
                 guid = guid || GUID();
-                users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
+                _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
                 return guid;
             };
             self.removeUI = function (guid) {
@@ -636,34 +728,38 @@ define([
                 console.log('NIE');
             };
             self.updateTerritory = function (guid, patterns) {
+                if(_project && _commit){
 
-                //this has to be optimized
-                var missing = 0;
-                var error = null;
-                for(var i in patterns){
-                    missing++;
-                }
-                if(missing>0){
+                    //this has to be optimized
+                    var missing = 0;
+                    var error = null;
+                    var allDone = function(){
+                        _users[guid].PATTERNS = patterns;
+                        if(!error){
+                            userEvents(guid,[]);
+                        }
+                    };
                     for(var i in patterns){
-                        loadPattern(_core,i,patterns[i],_nodes,function(err){
-                            error = error || err;
-                            if(--missing === 0){
-                                allDone();
-                            }
-                        });
+                        missing++;
+                    }
+                    if(missing>0){
+                        for(var i in patterns){
+                            loadPattern(_core,i,patterns[i],_nodes,function(err){
+                                error = error || err;
+                                if(--missing === 0){
+                                    allDone();
+                                }
+                            });
+                        }
+                    } else {
+                        allDone();
                     }
                 } else {
-                    allDone();
-                }
-
-                var allDone = function(){
+                    //we should update the patterns, but that is all
                     _users[guid].PATTERNS = patterns;
-                    if(!error){
-                        userEvents(guid,[]);
-                    }
                 }
             };
-            
+
             self.fullRefresh = function () {
                 console.log('NIE');
             };
@@ -696,7 +792,11 @@ define([
                 };
 
                 var getRegistry = function(name){
-                    return _core.getRegistry(_nodes[_id].node,name);
+                    /*var retval = */ return _core.getRegistry(_nodes[_id].node,name);
+                    /*if(!retval){
+                        console.log('kecso',retval);
+                    }
+                    return retval;*/
                 };
 
                 var getPointer = function(name){
@@ -769,6 +869,10 @@ define([
                     getSetNames           : getSetNames
                 }
             };
+
+
+            //START
+            initialize();
         };
 
         return ClientMaster;
