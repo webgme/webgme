@@ -23,7 +23,9 @@ define(['./raphael.core'], function (R) {
         separator = /[, ]+/,
         eve = R.eve,
         E = "",
-        S = " ";
+        S = " ",
+        svgIDPrefix = "RaphaelSVG_",
+        svgCounter = 0;
     var xlink = "http://www.w3.org/1999/xlink",
         markers = {
             block: "M5,0 0,2.5 5,5z",
@@ -206,15 +208,23 @@ define(['./raphael.core'], function (R) {
                 o._.arrows = {};
             }
             if (type != "none") {
-                /*var pathId = "raphael-marker-" + type,
-                    markerId = "raphael-marker-" + se + type + w + h;*/
-                // makes markerCounter obsolete, no refactoring done yet:
                 //QUICK AND DIRTY FIX FOR ARROW-END COLOR ISSUES
-                //FYI: https://github.com/jberryman/raphael/commit/cc8ef70a6785d33bd0135ac920802c1b3a729c3e
-                var randSuffix = Math.random().toString(36).substring(7),
-                    pathId = "raphael-marker-" + type,
-                    markerId = "raphael-marker-" + se + type + w + h + randSuffix;
-                if (!R._g.doc.getElementById(pathId)) {
+                //CREATE THE MARKER PER SVG LOCALLY WITH UNIQUE ID PER TYPE + COLOR + SVG
+                var svgId = p.canvas.getAttribute('id'),
+                    pathId = "raphael-marker-" + type + "-" + svgId,
+                    colorId = R.getRGB(attrs.stroke),
+                    markerId = "raphael-marker-" + se + type + "-" + svgId + "-" + w + h + colorId,
+                    pDefsTags = p.defs.getElementsByTagName('path'),
+                    pDefsTagsLen = pDefsTags.length,
+                    found;
+                found = false;
+                while (pDefsTagsLen--) {
+                    if (pDefsTags[pDefsTagsLen].getAttribute('id') === pathId) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found === false) {
                     p.defs.appendChild($($("path"), {
                         "stroke-linecap": "round",
                         d: markers[type],
@@ -224,8 +234,17 @@ define(['./raphael.core'], function (R) {
                 } else {
                     markerCounter[pathId]++;
                 }
-                var marker = R._g.doc.getElementById(markerId),
+                var marker,
                     use;
+
+                pDefsTags = p.defs.getElementsByTagName('marker');
+                pDefsTagsLen = pDefsTags.length;
+                while (pDefsTagsLen--) {
+                    if (pDefsTags[pDefsTagsLen].getAttribute('id') === markerId) {
+                        marker = pDefsTags[pDefsTagsLen];
+                        break;
+                    }
+                }
                 if (!marker) {
                     marker = $($("marker"), {
                         id: markerId,
@@ -248,7 +267,7 @@ define(['./raphael.core'], function (R) {
                     use = marker.getElementsByTagName("use")[0];
                 }
                 $(use, attr);
-                var delta = dx /** (type != "diamond" && type != "oval");*/
+                var delta = dx ; //adjust line from and to so that the ending arrow will 'end' at the original coordinate
                 if (isEnd) {
                     from = o._.arrows.startdx * stroke || 0;
                     to = R.getTotalLength(attrs.path) - delta * stroke;
@@ -1228,7 +1247,7 @@ define(['./raphael.core'], function (R) {
         if (!container) {
             throw new Error("SVG container not found.");
         }
-        var cnvs = $("svg"),
+        var cnvs = $("svg", {"id": svgIDPrefix + svgCounter++}),
             css = "overflow:hidden;",
             isFloating;
         x = x || 0;
