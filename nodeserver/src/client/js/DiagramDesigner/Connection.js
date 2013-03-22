@@ -61,6 +61,54 @@ define(['logManager',
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
         this.designerAttributes.shadowColor = objDescriptor.shadowColor || CONNECTION_SHADOW_DEFAULT_COLOR;
         this.designerAttributes.lineType = objDescriptor.lineType || CONNECTION_DEFAULT_LINE_TYPE;
+
+        this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowWidth, this.designerAttributes.width, false);
+        this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowWidth, this.designerAttributes.width, true);
+    };
+
+    ConnectionComponent.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
+        var raphaelMarkerW = 3, //original RaphaelJS source settings
+            raphaelMarkerH = 3,
+            refX,
+            values = arrowType.toLowerCase().split("-"),
+            type = "classic",
+            i = values.length;
+
+        while (i--) {
+            switch (values[i]) {
+                case "block":
+                case "classic":
+                case "oval":
+                case "diamond":
+                case "open":
+                case "none":
+                    type = values[i];
+                    break;
+                case "wide": raphaelMarkerH = 5; break;
+                case "narrow": raphaelMarkerH = 2; break;
+                case "long": raphaelMarkerW = 5; break;
+                case "short": raphaelMarkerW = 2; break;
+            }
+        }
+
+        if (type === "none") {
+            return 0;
+        }
+
+        //if there is correction in RaphaelJS source, it is not needed
+        /*if (type === "diamond" || type === "oval") {
+         return 0;
+         }*/
+
+        if (type == "open") {
+            raphaelMarkerW += 2;
+            raphaelMarkerH += 2;
+            refX = isEnd ? 4 : 1;
+        } else {
+            refX = raphaelMarkerW / 2;
+        }
+
+        return refX * (size - refSize);
     };
 
     ConnectionComponent.prototype.getConnectionProps = function () {
@@ -111,6 +159,8 @@ define(['logManager',
         if (validPath) {
             //there is at least 2 points given, good to draw
 
+            this._pathPoints = points;
+
             p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
 
@@ -141,8 +191,7 @@ define(['logManager',
                     this.logger.debug("Redrawing connection with ID: '" + this.id + "'");
                     this.skinParts.path.attr({ "path": pathDef});
                     if (this.skinParts.pathShadow) {
-                        //this.skinParts.pathShadow.attr({ "path": pathDef});
-                        this._updatePathShadow(segPoints);
+                        this._updatePathShadow(this._pathPoints);
                     }
                 } else {
                     this.logger.debug("Drawing connection with ID: '" + this.id + "'");
@@ -157,7 +206,7 @@ define(['logManager',
                         "stroke-width": this.designerAttributes.width});
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
-                        this._createPathShadow(segPoints);
+                        this._createPathShadow(this._pathPoints);
                     }
                 }
             }
@@ -170,10 +219,16 @@ define(['logManager',
     };
 
     ConnectionComponent.prototype.getBoundingBox = function () {
-        var bBox;
+        var bBox,
+            strokeWidthAdjust;
 
-        if (this.skinParts.path) {
+        //NOTE: getBBox will give back the bounding box of the original path without stroke-width and marker-ending information included
+        if (this.skinParts.pathShadow) {
+            bBox = this.skinParts.pathShadow.getBBox();
+            strokeWidthAdjust = this.designerAttributes.shadowWidth;
+        } else if (this.skinParts.path) {
             bBox = this.skinParts.path.getBBox();
+            strokeWidthAdjust = this.designerAttributes.width;
         } else {
             bBox = { "x": 0,
                 "y": 0,
@@ -186,11 +241,20 @@ define(['logManager',
         //when te line is vertical or horizontal, its dimension information needs to be tweaked
         //otherwise height or width will be 0, no good for selection matching
         if (bBox.height === 0 && bBox.width !== 0) {
-            bBox.height = 1;
-            bBox.y2 += 1;
+            bBox.height = strokeWidthAdjust;
+            bBox.y -= strokeWidthAdjust / 2;
+            bBox.y2 += strokeWidthAdjust / 2;
         } else if (bBox.height !== 0 && bBox.width === 0) {
-            bBox.width = 1;
-            bBox.x2 += 1;
+            bBox.width = strokeWidthAdjust;
+            bBox.x -= strokeWidthAdjust / 2;
+            bBox.x2 += strokeWidthAdjust / 2;
+        } else if (bBox.height !== 0 && bBox.width !== 0) {
+            /*bBox.height += strokeWidthAdjust;
+            bBox.width += strokeWidthAdjust;
+            bBox.x -= strokeWidthAdjust / 2;
+            bBox.x2 += strokeWidthAdjust / 2;
+            bBox.y -= strokeWidthAdjust / 2;
+            bBox.y2 += strokeWidthAdjust / 2;*/
         }
 
         return bBox;
@@ -240,7 +304,7 @@ define(['logManager',
     };
 
     ConnectionComponent.prototype._highlightPath = function () {
-        this._createPathShadow(this.pathDef);
+        this._createPathShadow(this._pathPoints);
 
         this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
     };
@@ -257,7 +321,6 @@ define(['logManager',
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
             this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path("M0,0 L1,1");
-            /*$(this.skinParts.pathShadow.node).attr("id", /*PATH_SHADOW_ID_PREFIX + this.id);*/
 
             this._updatePathShadow(segPoints);
 
@@ -273,51 +336,48 @@ define(['logManager',
         }
     };
 
-    ConnectionComponent.prototype._updatePathShadow = function (points) {
-        var p,
-            pathDef = [],
-            len,
+    ConnectionComponent.prototype._updatePathShadow = function (segPoints) {
+        var points = [],
             i,
+            len,
+            p,
+            pathDef = [],
             dx,
             dy,
-            w = parseInt(this.designerAttributes.width, 10),
-            sW = parseInt(this.designerAttributes.shadowWidth, 10),
-            fixRatio = sW + sW / w,
-            rx,
-            ry;
+            dX,
+            dY,
+            dZ;
+
+        //copy over coordinates to prevent them from overwriting
+        len = segPoints.length;
+        for (i = 0; i < len; i += 1) {
+            points.push({"x": segPoints[i].x, "y": segPoints[i].y});
+        }
 
         if (this.designerAttributes.arrowStart !== CONNECTION_DEFAULT_END) {
-            len = points.length;
-            dx = points[1].x - points[0].x;
-            dy = points[1].y - points[0].y;
+            dX = points[1].x - points[0].x;
+            dY = points[1].y - points[0].y;
+            dZ = Math.sqrt(dX * dX + dY * dY);
 
-            if (Math.abs(dx) > Math.abs(dy)) {
-                ry = dy / Math.abs(dx);
-                rx = dx / Math.abs(dx);
-            } else {
-                rx = dx / Math.abs(dy);
-                ry = dy / Math.abs(dy);
-            }
+            dx = this.designerAttributes.shadowArrowStartAdjust * dX / dZ;
+            dy = this.designerAttributes.shadowArrowStartAdjust * dY / dZ;
 
-            points[0].x -= rx * fixRatio;
-            points[0].y -= ry * fixRatio;
+            points[0].x -= dx;
+            points[0].y -= dy;
         }
 
         if (this.designerAttributes.arrowEnd !== CONNECTION_DEFAULT_END) {
             len = points.length;
-            dx = points[len - 1].x - points[len - 2].x;
-            dy = points[len - 1].y - points[len - 2].y;
 
-            if (Math.abs(dx) > Math.abs(dy)) {
-                ry = dy / Math.abs(dx);
-                rx = dx / Math.abs(dx);
-            } else {
-                rx = dx / Math.abs(dy);
-                ry = dy / Math.abs(dy);
-            }
+            dX = points[len - 1].x - points[len - 2].x;
+            dY = points[len - 1].y - points[len - 2].y;
+            dZ = Math.sqrt(dX * dX + dY * dY);
 
-            points[len - 1].x += rx * fixRatio;
-            points[len - 1].y += ry * fixRatio;
+            dx = this.designerAttributes.shadowArrowEndAdjust * dX / dZ;
+            dy = this.designerAttributes.shadowArrowEndAdjust * dY / dZ;
+
+            points[len - 1].x += dx;
+            points[len - 1].y += dy;
         }
 
         i = len = points.length;
