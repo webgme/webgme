@@ -165,20 +165,6 @@ define([
                         missing = 2,
                         commitHash = null;
 
-                    var newRootHash = _core.persist(function(err){
-                        error = error || err;
-                        if(--missing === 0){
-                            allDone();
-                        }
-                    });
-                    _commit.makeCommit(newRootHash,null,_branch,null,msg,function(err,cHash){
-                        error = error || err;
-                        commitHash = cHash;
-                        if(--missing === 0){
-                            allDone();
-                        }
-                    });
-
                     var allDone = function(){
                         if(!error){
                             _commit.updateBranch(commitHash,function(err){
@@ -188,6 +174,21 @@ define([
                             callback(error);
                         }
                     };
+
+                    var newRootHash = _core.persist(function(err){
+                        error = error || err;
+                        if(--missing === 0){
+                            allDone();
+                        }
+                    });
+
+                    _commit.makeCommit(newRootHash,null,_branch,null,msg,function(err,cHash){
+                        error = error || err;
+                        commitHash = cHash;
+                        if(--missing === 0){
+                            allDone();
+                        }
+                    });
 
                 } else {
                     callback('no active project');
@@ -274,6 +275,9 @@ define([
                 }
             };
 
+            var storeNode = function(node){
+                _nodes[_core.getStringPath(node)] = {node:node,hash:""};
+            };
             var addNode = function(core,nodesSoFar,node,callback){
                 var path = core.getStringPath(node);
                 nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node)};
@@ -379,6 +383,20 @@ define([
                     if(!err){
                         var missing = 0,
                             error = null;
+                        var allLoaded = function(){
+                            if(!error){
+                                _core = core;
+                                var modifiedPaths = getModifiedNodes(nodes);
+                                _nodes = nodes;
+                                for(var i in _users){
+                                    userEvents(i,modifiedPaths);
+                                }
+                                callback(null);
+                            } else {
+                                callback(error);
+                            }
+                        };
+
                         for(var i in _users){
                             for(var j in _users[i].PATTERNS){
                                 missing++;
@@ -405,21 +423,6 @@ define([
                         } else {
                             allLoaded();
                         }
-
-
-                        var allLoaded = function(){
-                            if(!error){
-                                _core = core;
-                                var modifiedPaths = getModifiedNodes(nodes);
-                                _nodes = nodes;
-                                for(var i in _users){
-                                    userEvents(i,modifiedPaths);
-                                }
-                                callback(null);
-                            } else {
-                                callback(error);
-                            }
-                        };
                     } else {
                         callback(err);
                     }
@@ -588,6 +591,60 @@ define([
             var copyNodes = function(nodePaths,parentPath,callback){
 
             };
+            var nuIntellyPaste = function(parameters){
+                if(blocked){
+                    return;
+                }
+                var pathestocopy = [],
+                    simplepaste = true;
+                if(parameters.parentId && currentNodes[parameters.parentId]){
+                    for(var i in parameters){
+                        if(parameters.hasOwnProperty(i) && i !== "parentId"){
+                            pathestocopy.push(i);
+                            simplepaste = false;
+                        }
+                    }
+                    if(simplepaste){
+                        pathestocopy = clipboard || [];
+                    }
+
+                    if(pathestocopy.length < 1){
+                    } else if(pathestocopy.length === 1){
+                        var newnode = currentCore.copyNode(currentNodes[pathestocopy[0]],currentNodes[parameters.parentId]);
+                        storeNode(newnode);
+                        if(parameters.hasOwnProperty(pathestocopy[0])){
+                            for(var j in parameters[pathestocopy[0]].attributes){
+                                currentCore.setAttribute(newnode,j,parameters[pathestocopy[0]].attributes[j]);
+                            }
+                            for(j in parameters[pathestocopy[0]].registry){
+                                currentCore.setRegistry(newnode,j,parameters[pathestocopy[0]].registry[j]);
+                            }
+                        }
+                        modifyRootOnServer();
+                    } else {
+                        nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
+                            if(err){
+                                rollBackModification();
+                            }
+                            else{
+                                for(var i in copyarr){
+                                    if(copyarr.hasOwnProperty(i) && parameters.hasOwnProperty(i)){
+                                        for(var j in parameters[i].attributes){
+                                            currentCore.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
+                                        }
+                                        for(j in parameters[i].registry){
+                                            currentCore.setRegistry(copyarr[i],j,parameters[i].registry[j]);
+                                        }
+                                    }
+                                }
+                                modifyRootOnServer();
+                            }
+                        });
+                    }
+                } else {
+                    console.log('wrong parameters in intelligent paste operation - denied -');
+                }
+            };
 
             self.startTransaction = function () {
                 if (_core) {
@@ -601,13 +658,13 @@ define([
                 }
             };
             self.setAttributes = function (path, name, value) {
-                if (_core && _nodes[path]) {
-                    _core.setAttributes(_nodes[path], name, value);
-                    saveRoot('setAttributes('+path+','+'name'+','+value+')');
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setAttribute(_nodes[path].node, name, value);
+                    saveRoot('setAttribute('+path+','+'name'+','+value+')');
                 }
             };
             self.setRegistry = function (path, name, value) {
-                if (_core && _nodes[path].node) {
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
@@ -636,16 +693,16 @@ define([
                 }
             };
             self.deleteNode = function (path) {
-                if(_core && _nodes[path]){
-                    _core.deleteNode(_nodes[path]);
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.deleteNode(_nodes[path].node);
                     saveRoot('deleteNode('+path+')');
                 }
             };
             self.delMoreNodes = function (paths) {
                 if(_core){
                     for(var i=0;i<paths.length;i++){
-                        if(_core[paths[i]]){
-                            _core.deleteNode(_nodes[paths[i]]);
+                        if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
+                            _core.deleteNode(_nodes[paths[i]].node);
                         }
                     }
                     saveRoot('delMoreNodes('+paths+')');
@@ -653,23 +710,25 @@ define([
             };
             self.createChild = function (parameters) {
                 if(_core){
-                    if(parameters.parentId && _nodes[parameters.parentId]){
-                        baseId = parameters.baseId || "object";
-                        child = currentCore.createNode(currentNodes[parameters.parentId]);
+                    if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                        var baseId = parameters.baseId || "object";
+                        var child = _core.createNode(_nodes[parameters.parentId].node);
                         if(baseId === "connection"){
-                            currentCore.setRegistry(child,"isConnection",true);
-                            currentCore.setAttribute(child,"name","defaultConn");
+                            _core.setRegistry(child,"isConnection",true);
+                            _core.setAttribute(child,"name","defaultConn");
                         } else {
-                            currentCore.setRegistry(child,"isConnection",false);
-                            currentCore.setAttribute(child,"name", parameters.name || "defaultObj");
+                            _core.setRegistry(child,"isConnection",false);
+                            _core.setAttribute(child,"name", parameters.name || "defaultObj");
 
                             if (parameters.position) {
-                                currentCore.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
+                                _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
                             } else {
-                                currentCore.setRegistry(child,"position", { "x": 100, "y": 100});
+                                _core.setRegistry(child,"position", { "x": 100, "y": 100});
                             }
                         }
-                        currentCore.setAttribute(child,"isPort",true);
+                        _core.setAttribute(child,"isPort",true);
+
+                        storeNode(child);
                         saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getStringPath(child)+')');
                     }
                 }
@@ -678,26 +737,38 @@ define([
                 console.log('NIE');
             };
             self.makePointer = function (id, name, to) {
-                if(_core && typeof _nodes[id].node === 'object' && typeof _nodes[to].node === 'object' ){
+                if(_core && _nodes[id] && _nodes[to] && typeof _nodes[id].node === 'object' && typeof _nodes[to].node === 'object' ){
                     _core.setPointer(_nodes[id].node,name,_nodes[to].node);
                     saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             };
             self.delPointer = function (path, name) {
-                if(_core && typeof _nodes[path].node === 'object'){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name);
                     saveRoot('delPointer('+path+','+name+')');
                 }
             };
             self.makeConnection = function (parameters) {
-                if (activeActor) {
-                    activeActor.makeConnection(parameters);
+                if(parameters.parentId && parameters.sourceId && parameters.targetId){
+                    if(_core &&
+                        _nodes[parameters.parentId] &&
+                        _nodes[parameters.sourceId] &&
+                        _nodes[parameters.parentId] &&
+                        typeof _nodes[parameters.parentId].node === 'object' &&
+                        typeof _nodes[parameters.sourceId].node === 'object' &&
+                        typeof _nodes[parameters.targetId].node === 'object'){
+                        var connection = _core.createNode(_nodes[parameters.parentId].node);
+                        _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
+                        _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
+                        _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
+                        _core.setRegistry(connection,"isConnection",true);
+                        storeNode(connection);
+                        saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
+                    }
                 }
             };
             self.intellyPaste = function (parameters) {
-                if (activeActor) {
-                    activeActor.intellyPaste(parameters);
-                }
+                copyNodes(parameters);
             };
 
             //MGAlike - set functions
@@ -719,7 +790,7 @@ define([
                 return guid;
             };
             self.removeUI = function (guid) {
-                delete users[guid];
+                delete _users[guid];
             };
             self.disableEventToUI = function (guid) {
                 console.log('NIE');
@@ -780,7 +851,7 @@ define([
                 };
 
                 var getBaseId = function(){
-                    return _core.getRegistry(_nodes[_id].node,"isConnection") === "true" ? 'connection' : 'object';
+                    return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
                 };
 
                 var getInheritorIds = function(){
@@ -792,15 +863,11 @@ define([
                 };
 
                 var getRegistry = function(name){
-                    /*var retval = */ return _core.getRegistry(_nodes[_id].node,name);
-                    /*if(!retval){
-                        console.log('kecso',retval);
-                    }
-                    return retval;*/
+                    return _core.getRegistry(_nodes[_id].node,name);
                 };
 
                 var getPointer = function(name){
-                    return _core.getPointer(_nodes[_id].node,name);
+                    return _core.getPointerPath(_nodes[_id].node,name);
                 };
 
                 var getPointerNames = function(){
@@ -835,14 +902,14 @@ define([
                     return memberids;
                 };
                 var getSetNames = function(){
-                    var setids = _core.getSetRelids(_nodes[_id]);
+                    var setids = _core.getSetRelids(_nodes[_id].node);
                     for(var i=0;i<setids.length;i++){
                         setids[i] = commonUtil.relidtosetid(setids[i])
                     }
                     return setids;
                 };
                 var getSetIds = function(){
-                    return _core.getSetPaths(_nodes[_id]);
+                    return _core.getSetPaths(_nodes[_id].node);
                 };
                 //META
                 var getValidChildrenTypes = function(){

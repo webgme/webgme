@@ -161,6 +161,7 @@ define([
                 _updateFunction = updateFunction;
                 if(!_branch[_active]){
                     _branch[_active] = {local:"",server:"",status:'online'};
+                    changeStatus('online');
                     branchWatcher(name);
                 } else {
                     switch (_branch[_active].status){
@@ -209,7 +210,7 @@ define([
                         case 'offline':
                             //we change our local commit so we should load it
                             _branch[name].local = _branch[name].server;
-                            _branch[name].status = 'online';
+                            changeStatus('online');
                             _updateFunction(_branch[name].local,function(){
                                 callback(null);
                             });
@@ -244,7 +245,10 @@ define([
             };
 
             var setStatusFunc = function(func){
-                _updateFunction = func;
+                _statusFunction = func;
+                if(_branch[_active]){
+                    _statusFunction(_branch[_active].status);
+                }
             };
 
             return {
