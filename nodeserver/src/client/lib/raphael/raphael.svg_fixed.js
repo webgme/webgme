@@ -267,6 +267,7 @@ define(['./raphael.core'], function (R) {
                     use = marker.getElementsByTagName("use")[0];
                 }
                 $(use, attr);
+                //var delta = dx * (type != "diamond" && type != "oval");   //ORIGINAL RaphaleJS version --> change so that it automatically fits the edge of the arrow-end to the real end of line
                 var delta = dx ; //adjust line from and to so that the ending arrow will 'end' at the original coordinate
                 if (isEnd) {
                     from = o._.arrows.startdx * stroke || 0;
