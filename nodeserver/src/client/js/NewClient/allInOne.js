@@ -318,7 +318,7 @@ define([
                             });
                         };
 
-                        for(var i=0;sets.length;i++){
+                        for(var i=0;i<sets.length;i++){
                             missing += core.getChildrenNumber(sets[i]);
                         }
                         for(i=0;i<sets.length;i++){
@@ -589,60 +589,62 @@ define([
             //relayed project functions
             //kind of a MGA
             var copyNodes = function(nodePaths,parentPath,callback){
-
-            };
-            var nuIntellyPaste = function(parameters){
-                if(blocked){
-                    return;
-                }
-                var pathestocopy = [],
-                    simplepaste = true;
-                if(parameters.parentId && currentNodes[parameters.parentId]){
-                    for(var i in parameters){
-                        if(parameters.hasOwnProperty(i) && i !== "parentId"){
-                            pathestocopy.push(i);
-                            simplepaste = false;
-                        }
+                var checkPaths = function(){
+                    var result = true;
+                    for(var i=0;i<nodePaths.length;i++){
+                        result = result && (_nodes[nodePaths[i]] && typeof _nodes[nodePaths[i]].node === 'object');
                     }
-                    if(simplepaste){
-                        pathestocopy = clipboard || [];
+                    return result;
+                };
+
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object' && checkPaths()){
+                    var helpArray = {},
+                        subPathArray = {},
+                        parent = _nodes[parentPath].node,
+                        returnArray = {};
+
+                    //creating the 'from' object
+                    var tempFrom = _core.createNode(parent);
+                    //and moving every node under it
+                    for(var i=0;i<nodePaths.length;i++){
+                        helpArray[nodePaths[i]] = {};
+                        helpArray[nodePaths[i]].origparent = _core.getParent(_nodes[nodePaths[i]].node);
+                        helpArray[nodePaths[i]].tempnode = _core.moveNode(_nodes[nodePaths[i]].node,tempFrom);
+                        subPathArray[_core.getRelid(helpArray[nodePaths[i]].tempnode)] = nodePaths[i];
+                        delete _nodes[nodePaths[i]];
                     }
 
-                    if(pathestocopy.length < 1){
-                    } else if(pathestocopy.length === 1){
-                        var newnode = currentCore.copyNode(currentNodes[pathestocopy[0]],currentNodes[parameters.parentId]);
-                        storeNode(newnode);
-                        if(parameters.hasOwnProperty(pathestocopy[0])){
-                            for(var j in parameters[pathestocopy[0]].attributes){
-                                currentCore.setAttribute(newnode,j,parameters[pathestocopy[0]].attributes[j]);
-                            }
-                            for(j in parameters[pathestocopy[0]].registry){
-                                currentCore.setRegistry(newnode,j,parameters[pathestocopy[0]].registry[j]);
-                            }
-                        }
-                        modifyRootOnServer();
-                    } else {
-                        nuCopy(pathestocopy,parameters.parentId,function(err,copyarr){
-                            if(err){
-                                rollBackModification();
-                            }
-                            else{
-                                for(var i in copyarr){
-                                    if(copyarr.hasOwnProperty(i) && parameters.hasOwnProperty(i)){
-                                        for(var j in parameters[i].attributes){
-                                            currentCore.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
-                                        }
-                                        for(j in parameters[i].registry){
-                                            currentCore.setRegistry(copyarr[i],j,parameters[i].registry[j]);
-                                        }
-                                    }
+                    //do the copy
+                    var tempTo = _core.copyNode(tempFrom,parent);
+
+                    //moving back the temporary source
+                    for(var i=0;i<nodePaths.length;i++){
+                        helpArray[nodePaths[i]].node = _core.moveNode(helpArray[nodePaths[i]].tempnode,helpArray[nodePaths[i]].origparent);
+                        storeNode(helpArray[nodePaths[i]].node);
+                    }
+
+                    //gathering the destination nodes
+                    _core.loadChildren(tempTo,function(err,children){
+                        if(!err && children && children.length>0){
+                            for(i=0;i<children.length;i++){
+                                if(subPathArray[_core.getRelid(children[i])]){
+                                    var newNode = currentCore.moveNode(children[i],parent);
+                                    storeNode(newNode);
+                                    returnArray[subPathArray[_core.getRelid(children[i])]] = newNode;
+                                } else {
+                                    console.log('635 - should never happen!!!');
                                 }
-                                modifyRootOnServer();
                             }
-                        });
-                    }
-                } else {
-                    console.log('wrong parameters in intelligent paste operation - denied -');
+                            _core.deleteNode(tempFrom);
+                            _core.deleteNode(tempTo);
+                            callback(null,returnArray);
+                        } else {
+                            //clean up the mess and return
+                            _core.deleteNode(tempFrom);
+                            _core.deleteNode(tempTo);
+                            callback(err,{});
+                        }
+                    });
                 }
             };
 
@@ -768,19 +770,92 @@ define([
                 }
             };
             self.intellyPaste = function (parameters) {
-                copyNodes(parameters);
+                var pathestocopy = [],
+                    simplepaste = true;
+                if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i in parameters){
+                        if(i !== "parentId"){
+                            pathestocopy.push(i);
+                            simplepaste = false;
+                        }
+                    }
+                    if(simplepaste){
+                        pathestocopy = clipboard || [];
+                    }
+
+                    if(pathestocopy.length < 1){
+                    } else if(pathestocopy.length === 1){
+                        var newNode = _core.copyNode(_nodes[pathestocopy[0]].node,_nodes[parameters.parentId].node);
+                        storeNode(newNode);
+                        if(parameters[pathestocopy[0]]){
+                            for(var j in parameters[pathestocopy[0]].attributes){
+                                _core.setAttribute(newNode,j,parameters[pathestocopy[0]].attributes[j]);
+                            }
+                            for(j in parameters[pathestocopy[0]].registry){
+                                _core.setRegistry(newNode,j,parameters[pathestocopy[0]].registry[j]);
+                            }
+                        }
+                        saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
+                    } else {
+                        copyNodes(pathestocopy,parameters.parentId,function(err,copyarr){
+                            if(err){
+                                //rollBackModification();
+                            }
+                            else{
+                                for(var i in copyarr){
+                                    if(parameters[i]){
+                                        for(var j in parameters[i].attributes){
+                                            _core.setAttribute(copyarr[i],j,parameters[i].attributes[j]);
+                                        }
+                                        for(j in parameters[i].registry){
+                                            _core.setRegistry(copyarr[i],j,parameters[i].registry[j]);
+                                        }
+                                    }
+                                }
+                                saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
+                            }
+                        });
+                    }
+                } else {
+                    console.log('wrong parameters in intelligent paste operation - denied -');
+                }
             };
 
             //MGAlike - set functions
             self.addMember = function (path, memberpath, setid) {
-                if (activeActor) {
-                    activeActor.addMember(path, memberpath, setid);
+                if(_nodes[path] &&
+                    _nodes[memberpath] &&
+                    typeof _nodes[path].node === 'object' &&
+                    typeof _nodes[memberpath].node === 'object'){
+                    var setPath = _core.getSetPath(_nodes[path].node,setid);
+                    if(setPath === null){
+                        //we need to create the set first
+                        var id = _core.getSetRelid(setid);
+                        var setNode = _core.createNode(_nodes[path].node,id);
+                        storeNode(setNode);
+                        setPath = _core.getStringPath(setNode);
+                    }
+
+                    if(_nodes[setPath] && typeof _nodes[setPath].node === 'object'){
+                        //let's check if the path already in the set
+                        var members = _core.getChildrenPaths(_nodes[setPath].node);
+                        var memberPaths =[];
+                        for(var i=0;i<members.length;i++){
+                            if(_nodes[members[i]] && typeof _nodes[memebrs[i]].node === 'object'){
+                                memberPaths.push(_core.getPointerPath(_nodes[members[i]].node,'member'));
+                            }
+                        }
+                        if(memberPaths.indexOf(memberpath) === -1){
+                            var newMember = _core.createNode(_nodes[setPath].node);
+                            storeNode(newMember);
+                            _core.setPointer(newMember,'member',_nodes[memberpath].node);
+                            saveRoot('addMember('+path+','+memberpath+','+setid+')');
+                        }
+                    }
                 }
             };
             self.removeMember = function (path, memberpath, setid) {
-                if (activeActor) {
-                    activeActor.removeMember(path, memberpath, setid);
-                }
+
             };
 
             //territory functions
@@ -884,22 +959,19 @@ define([
 
                 //SET
                 var getMemberIds = function(setid){
-                    setid = commonUtil.setidtorelid(setid);
-                    var memberids = [];
-                    var index = _core.getSetRelids(_nodes[_id].node).indexOf(setid);
-                    if(index > -1){
-                        var setpath = _core.getSetPaths(_nodes[_id].node)[index];
-                        if(_nodes[setpath].node){
-                            var members = _core.getChildrenPaths(_nodes[setpath].node);
-                            for(var i=0;i<members.length;i++){
-                                if(_nodes[members[i]].node){
-                                    memberids.push(_core.getPointer(_nodes[members[i]].node,'member'));
-                                }
+                    var setPath = _core.getSetPath(_nodes[_id].node,setid);
+                    if(setPath && _nodes[setPath] && typeof _nodes[setPath].node === 'object'){
+                        var members = _core.getChildrenPaths(_nodes[setPath].node);
+                        var memberIds = [];
+                        for(var i=0;i<members.length;i++){
+                            if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
+                                memberIds.push(_core.getPointer(_nodes[members[i]].node,'member'));
                             }
                         }
+                        return memberIds;
+                    } else {
+                        return [];
                     }
-
-                    return memberids;
                 };
                 var getSetNames = function(){
                     var setids = _core.getSetRelids(_nodes[_id].node);
