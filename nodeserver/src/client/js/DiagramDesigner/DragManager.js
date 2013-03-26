@@ -314,6 +314,14 @@ define(['logManager'], function (logManager) {
 
             newPositions[id] = {};
 
+            //check if the item has moved by someone else since dragging started
+            if (this.canvas.items[id].positionX !== this._dragOptions.originalPositions[id].x + this._dragOptions.delta.x ||
+                this.canvas.items[id].positionY !== this._dragOptions.originalPositions[id].y + this._dragOptions.delta.y) {
+                //moved outsied of dragging, update original position info
+                this._dragOptions.originalPositions[id].x = this.canvas.items[id].positionX;
+                this._dragOptions.originalPositions[id].y = this.canvas.items[id].positionY;
+            }
+
             posX = this._dragOptions.originalPositions[id].x + dX;
 
             posY = this._dragOptions.originalPositions[id].y + dY;
