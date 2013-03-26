@@ -51,6 +51,8 @@ define([
                 _branch = null,
                 _status = null,
                 _clipboard = [],
+                _msg = null,
+                _recentRoots = [],
                 _users = {}; //uid:{type:not used, UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:true/false, SENDEVENTS:true/false};
 
             //serializer for the functions they need it
@@ -71,8 +73,7 @@ define([
                 if(serializedCalls.length !== 0) {
                     var func = serializedCalls.shift();
                     func();
-                }
-                else {
+                } else {
                     serializedRunning = false;
                 }
             };
@@ -80,10 +81,9 @@ define([
 
             var initialize = function(){
                 _database.openDatabase(function(){
-                    console.log('kecso1');
                     _database.openProject('storage',function(err,p){
-                        console.log('kecso2',err);
                         _project = p;
+                        _projectName = 'storage';
                         _commit = new Commit(_project);
                         _inTransaction = false;
                         _nodes={};
@@ -102,6 +102,7 @@ define([
                 }
             };
             var closeOpenedProject = function(callback){
+                callback = callback || function(){};
                 var returning = function(e){
                     _projectName = null;
                     _project = null;
@@ -114,6 +115,8 @@ define([
                     _branch = null;
                     _status = null;
                     _clipboard = [];
+                    _msg = null;
+                    _recentRoots = [];
                     callback(e);
                 };
                 if(_project){
@@ -133,12 +136,18 @@ define([
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
-
-                commit.makeCommit(core,root,null,function(err,commitHash){
-                    if(!err && commitHash){
-                        project.setBranchHash('*master',null,commitHash,function(err){
-                            if(!err){
-                                callback(null,commitHash);
+                var rootHash = core.persist(function(err){
+                    if(!err){
+                        commit.makeCommit(rootHash,'master',[],'project creation',function(err,commitHash){
+                            //TODO this should be in some proper way
+                            if(!err && commitHash){
+                                project.setBranchHash('*master',"",commitHash,function(err){
+                                    if(!err){
+                                        callback(null,commitHash);
+                                    } else {
+                                        callback(err);
+                                    }
+                                });
                             } else {
                                 callback(err);
                             }
@@ -148,17 +157,52 @@ define([
                     }
                 });
             };
+
+            //serializer for the saveRoot function
+            var serializedSaveRootCalls = [],
+                serializedSaveRootRunning = false;
+            var serializedSaveRootStart = function(func) {
+                if(serializedSaveRootRunning) {
+                    serializedSaveRootCalls.push(func);
+                }
+                else {
+                    serializedSaveRootRunning = true;
+                    func();
+                }
+            };
+            var serializedSaveRootDone = function() {
+                ASSERT(serializedSaveRootRunning === true);
+
+                if(serializedSaveRootCalls.length !== 0) {
+                    var func = serializedSaveRootCalls.shift();
+                    func();
+                } else {
+                    serializedSaveRootRunning = false;
+                }
+            };
             var saveRoot = function(msg,callback){
                 callback = callback || function(){};
-                serializedStart(function() {
-                    saveRootWork(msg, function(err) {
-                        callback(err);
-                        serializedDone();
+                if(!_inTransaction){
+                    serializedSaveRootStart(function() {
+                        saveRootWork(msg, function(err) {
+                            callback(err);
+                            serializedSaveRootDone();
+                        });
                     });
-                });
+                } else {
+                    if(msg){
+                        _msg = _msg+'\n'+msg;
+                    }
+                }
+
             };
             var saveRootWork = function(msg,callback){
+                callback = callback || function(){};
                 msg = msg || "- automated commit message -";
+                if(_msg){
+                    msg = _msg+'\n'+msg;
+                    _msg = null;
+                }
 
                 if(_project && _commit && _core){
                     var error = null,
@@ -167,14 +211,17 @@ define([
 
                     var allDone = function(){
                         if(!error){
-                            _commit.updateBranch(commitHash,function(err){
-                                callback(err);
+                            loadRoot(newRootHash,function(err){
+                                _commit.updateBranch(commitHash,function(err){
+                                    callback(err);
+                                });
                             });
                         } else {
                             callback(error);
                         }
                     };
 
+                    var oldRootHash = _core.getKey(_core.getRoot());
                     var newRootHash = _core.persist(function(err){
                         error = error || err;
                         if(--missing === 0){
@@ -182,26 +229,52 @@ define([
                         }
                     });
 
-                    _commit.makeCommit(newRootHash,null,_branch,null,msg,function(err,cHash){
+                    _commit.makeCommit(newRootHash,_branch,null,msg,function(err,cHash){
                         error = error || err;
                         commitHash = cHash;
                         if(--missing === 0){
                             allDone();
                         }
                     });
-
                 } else {
                     callback('no active project');
                 }
             };
 
-            var branchUpdated = function(newhash,callback){
-                console.log('kecso3');
+            //serializer for the branchUpdated function
+            var serializedBranchUpdatedCalls = [],
+                serializedBranchUpdatedRunning = false;
+            var serializedBranchUpdatedStart = function(func) {
+                if(serializedBranchUpdatedRunning) {
+                    serializedBranchUpdatedCalls.push(func);
+                }
+                else {
+                    serializedBranchUpdatedRunning = true;
+                    func();
+                }
+            };
+            var serializedBranchUpdatedDone = function() {
+                ASSERT(serializedBranchUpdatedRunning === true);
+
+                if(serializedBranchUpdatedCalls.length !== 0) {
+                    var func = serializedBranchUpdatedCalls.shift();
+                    func();
+                } else {
+                    serializedBranchUpdatedRunning = false;
+                }
+            };
+            var branchUpdated = function(newhash,callback) {
+                serializedBranchUpdatedStart(function() {
+                    branchUpdatedWork(newhash, function() {
+                        callback();
+                        serializedBranchUpdatedDone();
+                    });
+                });
+            };
+            var branchUpdatedWork = function(newhash,callback){
                 _project.loadObject(newhash,function(err,cObj){
                     if(!err && cObj){
-                        console.log('kecso4');
                         loadRoot(cObj.root,function(err){
-                            console.log('kecso5',err);
                             callback();
                         });
                     } else {
@@ -214,7 +287,7 @@ define([
                 var modifiedNodes = [];
                 for(var i in _nodes){
                     if(newerNodes[i]){
-                        if(newerNodes[i].hash !== _nodes[i].hash){
+                        if(newerNodes[i].hash !== _nodes[i].hash && _nodes[i].hash !== ""){
                             modifiedNodes.push(i);
                         }
                     }
@@ -224,13 +297,15 @@ define([
 
             //this is just a first brute implementation it needs serious optimization!!!
             var patternToPaths = function(patternId,pattern,pathsSoFar){
-                pathsSoFar[patternId] = true;
-                if(pattern.children && pattern.children > 0){
-                    var children = _core.getChildrenPaths(_nodes[patternId].node);
-                    var subPattern = COPY(pattern);
-                    subPattern.children--;
-                    for(var i=0;i<children.length;i++){
-                        patternToPaths(children[i],subPattern,pathsSoFar);
+                if(_nodes[patternId]){
+                    pathsSoFar[patternId] = true;
+                    if(pattern.children && pattern.children > 0){
+                        var children = _core.getChildrenPaths(_nodes[patternId].node);
+                        var subPattern = COPY(pattern);
+                        subPattern.children--;
+                        for(var i=0;i<children.length;i++){
+                            patternToPaths(children[i],subPattern,pathsSoFar);
+                        }
                     }
                 }
             };
@@ -242,7 +317,7 @@ define([
 
                 var events = [];
                 //deleted items
-                for(i in _users[userId].PATHS[i]){
+                for(i in _users[userId].PATHS){
                     if(!newPaths[i]){
                         events.push({etype:'unload',eid:i});
                     }
@@ -351,7 +426,6 @@ define([
                                     var missing = childrenIds.length;
                                     var error = null;
                                     var subLoadComplete = function(err){
-                                        console.log('kecso',missing);
                                         error = error || err;
                                         if(--missing === 0){
                                             callback(error);
@@ -375,58 +449,96 @@ define([
                 });
             };
 
-            var loadRoot = function(rootHash,callback){
-                ASSERT(_project && _commit);
-                var core = new SetCore(new Core(_project));
-                var nodes = {};
-                core.loadRoot(rootHash,function(err,root){
-                    if(!err){
-                        var missing = 0,
-                            error = null;
-                        var allLoaded = function(){
-                            if(!error){
-                                _core = core;
-                                var modifiedPaths = getModifiedNodes(nodes);
-                                _nodes = nodes;
-                                for(var i in _users){
-                                    userEvents(i,modifiedPaths);
-                                }
-                                callback(null);
-                            } else {
-                                callback(error);
-                            }
-                        };
+            //serializer for the loadRoot function
+            var serializedLoadRootCalls = [],
+                serializedLoadRootRunning = false;
+            var serializedLoadRootStart = function(func) {
+                if(serializedLoadRootRunning) {
+                    serializedLoadRootCalls.push(func);
+                }
+                else {
+                    serializedLoadRootRunning = true;
+                    func();
+                }
+            };
+            var serializedLoadRootDone = function() {
+                ASSERT(serializedLoadRootRunning === true);
 
-                        for(var i in _users){
-                            for(var j in _users[i].PATTERNS){
-                                missing++;
-                            }
-                        }
-                        if(missing > 0){
-                            addNode(core,nodes,root,function(err){
-                                error == error || err;
-                                if(!err){
-                                    for(i in _users){
-                                        for(j in _users[i].PATTERNS){
-                                            loadPattern(core,j,_users[i].PATTERNS[j],nodes,function(err){
-                                                error = error || err;
-                                                if(--missing === 0){
-                                                    allLoaded();
-                                                }
-                                            });
-                                        }
-                                    }
-                                } else {
-                                    allLoaded();
-                                }
-                            });
-                        } else {
-                            allLoaded();
-                        }
-                    } else {
-                        callback(err);
-                    }
+                if(serializedLoadRootCalls.length !== 0) {
+                    var func = serializedLoadRootCalls.shift();
+                    func();
+                } else {
+                    serializedLoadRootRunning = false;
+                }
+            };
+            var loadRoot = function(rootHash,callback){
+                callback = callback || function(){};
+                serializedLoadRootStart(function() {
+                    loadRootWork(rootHash, function() {
+                        callback();
+                        serializedLoadRootDone();
+                    });
                 });
+            };
+            var loadRootWork = function(rootHash,callback){
+                ASSERT(_project && _commit);
+                if(_recentRoots.indexOf(rootHash) === -1){
+                    if(_recentRoots.unshift(rootHash) > 10){
+                        _recentRoots.pop();
+                    }
+                    var core = new SetCore(new Core(_project));
+                    var nodes = {};
+                    core.loadRoot(rootHash,function(err,root){
+                        if(!err){
+                            var missing = 0,
+                                error = null;
+                            var allLoaded = function(){
+                                if(!error){
+                                    _core = core;
+                                    var modifiedPaths = getModifiedNodes(nodes);
+                                    _nodes = nodes;
+                                    for(var i in _users){
+                                        userEvents(i,modifiedPaths);
+                                    }
+                                    callback(null);
+                                } else {
+                                    callback(error);
+                                }
+                            };
+
+                            for(var i in _users){
+                                for(var j in _users[i].PATTERNS){
+                                    missing++;
+                                }
+                            }
+                            if(missing > 0){
+                                addNode(core,nodes,root,function(err){
+                                    error == error || err;
+                                    if(!err){
+                                        for(i in _users){
+                                            for(j in _users[i].PATTERNS){
+                                                loadPattern(core,j,_users[i].PATTERNS[j],nodes,function(err){
+                                                    error = error || err;
+                                                    if(--missing === 0){
+                                                        allLoaded();
+                                                    }
+                                                });
+                                            }
+                                        }
+                                    } else {
+                                        allLoaded();
+                                    }
+                                });
+                            } else {
+                                allLoaded();
+                            }
+                        } else {
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(null);
+                }
             };
 
             var statusUpdated = function(newstatus){
@@ -476,29 +588,14 @@ define([
                         //TODO what can we do with the error??
                         _database.openProject(projectname,function(err,p){
                             if(!err && p){
-                                _projectName = projectname;
                                 _project = p;
-                                _commit = new Commit(p);
-                                _project.getBranchHash('*master',null,function(err,newhash){
-                                    if(!err && newhash){
-                                        _project.loadObject(newhash,function(err,commit){
-                                            if(!err && commit){
-                                                _commitObject = commit;
-                                                _branch = '*master';
-                                                //TODO check it more deeply
-
-                                            } else {
-                                                closeOpenedProject(function(err2){
-                                                    callback(err);
-                                                });
-                                            }
-                                        });
-                                    } else {
-                                        closeOpenedProject(function(err2){
-                                            callback(err);
-                                        });
-                                    }
-                                });
+                                _projectName = projectname;
+                                _commit = new Commit(_project);
+                                _inTransaction = false;
+                                _nodes={};
+                                _commit.setStatusFunc(statusUpdated);
+                                _commit.selectBranch('master',branchUpdated);
+                                callback(null);
                             } else {
                                 callback(err);
                             }
@@ -514,14 +611,7 @@ define([
                                 if(!err && p){
                                     createEmptyProject(p,function(err,commit){
                                         if(!err && commit){
-                                            closeOpenedProject(function(err){
-                                                //TODO what is with error???
-                                                _projectName = projectname;
-                                                _project = p;
-                                                _commit = new Commit(p);
-                                                _commitObject = commit;
-                                                _branch = '*master';
-                                            });
+                                            callback(null);
                                         } else {
                                             callback(err);
                                         }
@@ -628,7 +718,7 @@ define([
                         if(!err && children && children.length>0){
                             for(i=0;i<children.length;i++){
                                 if(subPathArray[_core.getRelid(children[i])]){
-                                    var newNode = currentCore.moveNode(children[i],parent);
+                                    var newNode = _core.moveNode(children[i],parent);
                                     storeNode(newNode);
                                     returnArray[subPathArray[_core.getRelid(children[i])]] = newNode;
                                 } else {
@@ -654,8 +744,8 @@ define([
                 }
             };
             self.completeTransaction = function () {
+                _inTransaction = false;
                 if (_core) {
-                    _inTransaction = false;
                     saveRoot('completeTransaction()');
                 }
             };
@@ -942,7 +1032,8 @@ define([
                 };
 
                 var getPointer = function(name){
-                    return _core.getPointerPath(_nodes[_id].node,name);
+                    //return _core.getPointerPath(_nodes[_id].node,name);
+                    return {to:_core.getPointerPath(_nodes[_id].node,name),from:[]};
                 };
 
                 var getPointerNames = function(){
@@ -987,6 +1078,8 @@ define([
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
                 };
+
+                ASSERT(_nodes[_id]);
 
                 return {
                     getParentId : getParentId,

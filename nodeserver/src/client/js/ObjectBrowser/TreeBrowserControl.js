@@ -38,7 +38,7 @@ define(['logManager',
                 "state" : stateLoading };
 
             //add the root to the query
-            selfPatterns = { "root": { "children": 1} };
+            selfPatterns = { "root": { "children": 2} };
             client.updateTerritory(selfId, selfPatterns);
         };
 
@@ -99,7 +99,7 @@ define(['logManager',
             }
 
             //need to expand the territory
-            selfPatterns[nodeId] = { "children": 1};
+            selfPatterns[nodeId] = { "children": 2};
             client.updateTerritory(selfId, selfPatterns);
         };
 

@@ -17,7 +17,7 @@ requirejs([ "util/assert","storage/socketioserver","storage/mongo" ],function(AS
     var server = new SERVER(new STORAGE({
         host: "localhost",
         port: 27017,
-        database: "template",
+        database: "multi",
         timeout: 10000
     }),{port:888});
 

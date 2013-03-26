@@ -7,6 +7,7 @@ define([
 
         var BRANCH_ID = "*";
         var ERROR_DISCONNECTED = 'The socket.io is disconnected';
+        var ERROR_TIMEOUT = "no valid response arrived in time";
 
         var commit = function(_project){
 
@@ -15,7 +16,7 @@ define([
                 _updateFunction = function(){},
                 _statusFunction = function(){};
 
-            var makeCommit = function(hash,parentCommit,branch,parents,msg,callback){
+            var makeCommit = function(hash,branch,parents,msg,callback){
                 callback = callback || function(){};
                 branch = branch || _active;
                 parents = parents || [_branch[branch].local];
@@ -136,6 +137,8 @@ define([
                             if(err === ERROR_DISCONNECTED){
                                 changeStatus(branch,'network');
                                 reconnecting(branch);
+                            } else if(err === ERROR_TIMEOUT){
+                                _project.getBranchHash(BRANCH_ID+branch,_branch[branch].server,repeater);
                             } else {
                                 changeStatus(branch,'offline');
                             }

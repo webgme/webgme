@@ -28,6 +28,14 @@ define([ "util/assert"], function (ASSERT) {
             });
         };
 
+        var createNode = function(parent){
+            var node = _innerCore.createNode(parent);
+            if(root === null && !parent){
+                root = node;
+            }
+            return node;
+        };
+
         var persist = function(callback){
             return _innerCore.persist(root,callback);
         };
@@ -213,7 +221,7 @@ define([ "util/assert"], function (ASSERT) {
             loadSet : _innerCore.loadChild,
 
             // modify
-            createNode: _innerCore.createNode,
+            createNode: createNode,
             deleteNode: _innerCore.deleteNode,
             copyNode: _innerCore.copyNode,
             moveNode: _innerCore.moveNode,
