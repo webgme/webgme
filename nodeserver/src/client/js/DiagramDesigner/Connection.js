@@ -10,9 +10,10 @@ define(['logManager',
         CONNECTION_DRAGGABLE_END_CLASS = "connectionDraggableEnd",
         CONNECTION_DEFAULT_WIDTH = 2,
         CONNECTION_DEFAULT_COLOR = "#000000",
-        CONNECTION_DEFAULT_END = "none",
+        CONNECTION_NO_END = "none",
+        CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
-        CONNECTION_SHADOW_DEFAULT_WIDTH = 3,
+        CONNECTION_SHADOW_DEFAULT_WIDTH = 4,
         CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
         CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
         CONNECTION_DEFAULT_LINE_TYPE = "L";
@@ -111,6 +112,53 @@ define(['logManager',
         return refX * (size - refSize);
     };
 
+    ConnectionComponent.prototype._raphaelArrowSizeToRefSize = function (arrowType, refSize, isEnd) {
+        var raphaelMarkerW = 3, //original RaphaelJS source settings
+            raphaelMarkerH = 3,
+            values = arrowType.toLowerCase().split("-"),
+            type = "classic",
+            i = values.length,
+            refX,
+            refY;
+
+        while (i--) {
+            switch (values[i]) {
+                case "block":
+                case "classic":
+                case "oval":
+                case "diamond":
+                case "open":
+                case "none":
+                    type = values[i];
+                    break;
+                case "wide": raphaelMarkerH = 5; break;
+                case "narrow": raphaelMarkerH = 2; break;
+                case "long": raphaelMarkerW = 5; break;
+                case "short": raphaelMarkerW = 2; break;
+            }
+        }
+
+        if (type === "none") {
+            return 0;
+        }
+
+        if (type == "open") {
+            raphaelMarkerW += 2;
+            raphaelMarkerH += 2;
+            refX = isEnd ? 4 : 1;
+            refX = raphaelMarkerW / 2;
+        } else {
+            refX = raphaelMarkerW / 2;
+        }
+
+        refY = raphaelMarkerH / 2;
+
+        return { "w": refSize * raphaelMarkerW,
+                 "h": refSize * raphaelMarkerH,
+                 "refX": refX * refSize,
+                 "refY": refY * refSize };
+    };
+
     ConnectionComponent.prototype.getConnectionProps = function () {
         var objDescriptor = {};
 
@@ -147,7 +195,7 @@ define(['logManager',
             }
         }
 
-        this.startCoordinates = { "x": -1,
+        this.sourceCoordinates = { "x": -1,
                                   "y": -1};
 
         this.endCoordinates = { "x": -1,
@@ -165,8 +213,8 @@ define(['logManager',
             pathDef.push("M" + p.x + "," + p.y);
 
             //store source coordinate
-            this.sourceCoordinates = { "x":p.x,
-                                        "y":p.y };
+            this.sourceCoordinates.x = p.x;
+            this.sourceCoordinates.y = p.y;
 
             //fix the counter to start from the second point in the list
             len--;
@@ -177,8 +225,8 @@ define(['logManager',
             }
 
             //save endpoint coordinates
-            this.endCoordinates = { "x": p.x,
-                                    "y": p.y };
+            this.endCoordinates.x = p.x;
+            this.endCoordinates.y = p.y;
 
             pathDef = pathDef.join(" ");
 
@@ -186,6 +234,9 @@ define(['logManager',
             //this way the redraw does not need to happen
             if (this.pathDef !== pathDef) {
                 this.pathDef = pathDef;
+
+                //calculate the steep of the curve at the beginning/end of path
+                this._calculatePathStartEndAngle();
 
                 if (this.skinParts.path) {
                     this.logger.debug("Redrawing connection with ID: '" + this.id + "'");
@@ -210,7 +261,6 @@ define(['logManager',
                     }
                 }
             }
-
         } else {
             this.pathDef = null;
             this._removePath();
@@ -220,17 +270,24 @@ define(['logManager',
 
     ConnectionComponent.prototype.getBoundingBox = function () {
         var bBox,
-            strokeWidthAdjust;
+            strokeWidthAdjust,
+            dx,
+            dy,
+            shadowAdjust,
+            endMarkerBBox,
+            bBoxPath;
 
         //NOTE: getBBox will give back the bounding box of the original path without stroke-width and marker-ending information included
         if (this.skinParts.pathShadow) {
-            bBox = this.skinParts.pathShadow.getBBox();
+            bBoxPath = this.skinParts.pathShadow.getBBox();
             strokeWidthAdjust = this.designerAttributes.shadowWidth;
+            shadowAdjust = this.designerAttributes.shadowArrowEndAdjust;
         } else if (this.skinParts.path) {
-            bBox = this.skinParts.path.getBBox();
+            bBoxPath = this.skinParts.path.getBBox();
             strokeWidthAdjust = this.designerAttributes.width;
+            shadowAdjust = 0;
         } else {
-            bBox = { "x": 0,
+            bBoxPath = { "x": 0,
                 "y": 0,
                 "x2": 0,
                 "y2": 0,
@@ -238,7 +295,61 @@ define(['logManager',
                 "height": 0 };
         }
 
-        //when te line is vertical or horizontal, its dimension information needs to be tweaked
+        //get a copy of bBoxPath
+        //bBoxPath should not be touched because RaphaelJS reuses it unless the path is not redrawn
+        bBox = { "x": bBoxPath.x,
+            "y": bBoxPath.y,
+            "x2": bBoxPath.x2,
+            "y2": bBoxPath.y2,
+            "width": bBoxPath.width,
+            "height": bBoxPath.height };
+
+        //calculate the marker-end size
+        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+            var bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowStart, strokeWidthAdjust, this._pathStartAngle, false);
+
+            dx = shadowAdjust * Math.cos(this._pathStartAngle) ;
+            dy = shadowAdjust * Math.sin(this._pathStartAngle) ;
+
+            endMarkerBBox = { "x": this.sourceCoordinates.x - dx,
+                "y": this.sourceCoordinates.y - dy,
+                "x2": this.sourceCoordinates.x - dx,
+                "y2": this.sourceCoordinates.y - dy};
+
+
+            var len = bPoints.length;
+            while (len--) {
+                endMarkerBBox.x = Math.min(endMarkerBBox.x, this.sourceCoordinates.x - dx - bPoints[len].x);
+                endMarkerBBox.y = Math.min(endMarkerBBox.y, this.sourceCoordinates.y - dy - bPoints[len].y);
+
+                endMarkerBBox.x2 = Math.max(endMarkerBBox.x2, this.sourceCoordinates.x - dx - bPoints[len].x);
+                endMarkerBBox.y2 = Math.max(endMarkerBBox.y2, this.sourceCoordinates.y - dy - bPoints[len].y);
+            }
+        }
+
+        if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
+            var bPoints = this._getRaphaelArrowEndBoundingPoints(this.designerAttributes.arrowEnd, strokeWidthAdjust, this._pathEndAngle, true);
+
+            dx = shadowAdjust * Math.cos(this._pathEndAngle) ;
+            dy = shadowAdjust * Math.sin(this._pathEndAngle) ;
+
+            endMarkerBBox = endMarkerBBox || { "x": this.endCoordinates.x + dx,
+                             "y": this.endCoordinates.y + dy,
+                             "x2": this.endCoordinates.x + dx,
+                             "y2": this.endCoordinates.y + dy};
+
+
+            var len = bPoints.length;
+            while (len--) {
+                endMarkerBBox.x = Math.min(endMarkerBBox.x, this.endCoordinates.x + dx + bPoints[len].x);
+                endMarkerBBox.y = Math.min(endMarkerBBox.y, this.endCoordinates.y + dy + bPoints[len].y);
+
+                endMarkerBBox.x2 = Math.max(endMarkerBBox.x2, this.endCoordinates.x + dx + bPoints[len].x);
+                endMarkerBBox.y2 = Math.max(endMarkerBBox.y2, this.endCoordinates.y + dy + bPoints[len].y);
+            }
+        }
+
+        //when the line is vertical or horizontal, its dimension information needs to be tweaked
         //otherwise height or width will be 0, no good for selection matching
         if (bBox.height === 0 && bBox.width !== 0) {
             bBox.height = strokeWidthAdjust;
@@ -249,15 +360,117 @@ define(['logManager',
             bBox.x -= strokeWidthAdjust / 2;
             bBox.x2 += strokeWidthAdjust / 2;
         } else if (bBox.height !== 0 && bBox.width !== 0) {
-            /*bBox.height += strokeWidthAdjust;
-            bBox.width += strokeWidthAdjust;
-            bBox.x -= strokeWidthAdjust / 2;
-            bBox.x2 += strokeWidthAdjust / 2;
-            bBox.y -= strokeWidthAdjust / 2;
-            bBox.y2 += strokeWidthAdjust / 2;*/
+            //check if sourceCoordinates and endCoordinates are closer are
+            // TopLeft - TopRight - BottomLeft - BottomRight
+            if (Math.abs(bBox.x - this.sourceCoordinates.x) < Math.abs(bBox.x - this.endCoordinates.x)) {
+                //source is on the left
+                bBox.x -= Math.abs(Math.cos(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
+                //target is on the right
+                bBox.x2 +=  Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+            } else {
+                //target is on the left
+                bBox.x -=Math.abs(Math.cos(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+                //source is on the right
+                bBox.x2 += Math.abs(Math.cos(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
+            }
+
+            if (Math.abs(bBox.y - this.sourceCoordinates.y) < Math.abs(bBox.y - this.endCoordinates.y)) {
+                //source is on the top
+                bBox.y -= Math.abs(Math.sin(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
+                //target is on the bottom
+                bBox.y2 += Math.abs(Math.sin(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+            } else {
+                //target is on the top
+                bBox.y -= Math.abs(Math.sin(Math.PI / 2 - this._pathEndAngle) * strokeWidthAdjust / 2);
+                //source is on the bottom
+                bBox.y2 += Math.abs(Math.sin(Math.PI / 2 - this._pathStartAngle) * strokeWidthAdjust / 2);
+            }
+
+            bBox.width = bBox.x2 - bBox.x;
+            bBox.height = bBox.y2 - bBox.y;
         }
 
+        //figure out the outermost bounding box for the path itself and the endmarkers
+        endMarkerBBox = endMarkerBBox || bBox;
+        bBox.x = Math.min(bBox.x, endMarkerBBox.x);
+        bBox.y = Math.min(bBox.y, endMarkerBBox.y);
+        bBox.x2 = Math.max(bBox.x2, endMarkerBBox.x2);
+        bBox.y2 = Math.max(bBox.y2, endMarkerBBox.y2);
+        bBox.width = bBox.x2 - bBox.x;
+        bBox.height = bBox.y2 - bBox.y;
+
         return bBox;
+    };
+
+    ConnectionComponent.prototype._getRaphaelArrowEndBoundingPoints = function (arrowType, arrowSize, angle, isEnd) {
+        var bPoints = [],
+            arrowEndSize,
+            w,
+            gamma,
+            topLeft = { "x": 0,
+                        "y": 0},
+            topRight = { "x": 0,
+                        "y": 0},
+            bottomLeft = { "x": 0,
+                "y": 0},
+            bottomRight = { "x": 0,
+                "y": 0},
+            ref = { "x": 0,
+                "y": 0},
+            values = arrowType.toLowerCase().split("-"),
+            type = "classic",
+            i = values.length;
+
+        while (i--) {
+            switch (values[i]) {
+                case "block":
+                case "classic":
+                case "oval":
+                case "diamond":
+                case "open":
+                case "none":
+                    type = values[i];
+                    break;
+            }
+        }
+
+        arrowEndSize = this._raphaelArrowSizeToRefSize(arrowType, arrowSize, isEnd);
+        w = Math.sqrt(arrowEndSize.w / 2 * arrowEndSize.w / 2 + arrowEndSize.h / 2 * arrowEndSize.h / 2);
+        gamma = Math.atan(arrowEndSize.h / arrowEndSize.w );
+
+        bottomRight.x = Math.cos(angle + gamma) * w;
+        bottomRight.y = Math.sin(angle + gamma) * w;
+        topRight.x = Math.cos(angle - gamma) * w;
+        topRight.y = Math.sin(angle - gamma) * w;
+        bottomLeft.x = Math.cos(angle - gamma + Math.PI) * w;
+        bottomLeft.y = Math.sin(angle - gamma + Math.PI) * w;
+        topLeft.x = Math.cos(angle + gamma + Math.PI) * w;
+        topLeft.y = Math.sin(angle + gamma + Math.PI) * w;
+        ref.x = Math.cos(angle) * arrowEndSize.refX;
+        ref.y = Math.sin(angle) * arrowEndSize.refY;
+
+        switch (type) {
+            case "classic":
+            case "block":
+                bPoints.push( {"x": - ref.x + topLeft.x, "y": - ref.y + topLeft.y});
+                bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x)) / 2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y)) /2 });
+                bPoints.push( {"x": - ref.x + bottomLeft.x, "y": - ref.y + bottomLeft.y});
+                break;
+            case "diamond":
+                bPoints.push( {"x": ((- ref.x + topLeft.x) + (- ref.x + topRight.x))/2, "y": ((- ref.y + topLeft.y) + (- ref.y + topRight.y))/2});
+                bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y))/2});
+                bPoints.push( {"x": ((- ref.x + bottomLeft.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + bottomLeft.y) + (- ref.y + bottomRight.y))/2});
+                bPoints.push( {"x": ((- ref.x + bottomLeft.x) + (- ref.x + topLeft.x))/2, "y": ((- ref.y + bottomLeft.y) + (- ref.y + topLeft.y))/2});
+                break;
+            default:
+                bPoints.push( {"x": - ref.x + topLeft.x, "y": - ref.y + topLeft.y});
+                bPoints.push( {"x": - ref.x + topRight.x, "y": - ref.y + topRight.y});
+                bPoints.push( {"x": - ref.x + bottomRight.x, "y": - ref.y + bottomRight.y});
+                bPoints.push( {"x": - ref.x + bottomLeft.x, "y": - ref.y + bottomLeft.y});
+                break;
+        }
+
+        return bPoints;
     };
 
     ConnectionComponent.prototype.destroy = function () {
@@ -317,6 +530,40 @@ define(['logManager',
         }
     };
 
+    ConnectionComponent.prototype._calculatePathStartEndAngle = function () {
+        var dX,
+            dY,
+            len;
+
+        //calculate the steep for the first section
+        dX = this._pathPoints[1].x - this._pathPoints[0].x;
+        dY = this._pathPoints[1].y - this._pathPoints[0].y;
+
+        if (dX === 0 && dY !== 0) {
+            this._pathStartAngle = Math.PI / 2 * Math.abs(dY) / dY ;
+        } else {
+            this._pathStartAngle = Math.atan(dY / dX);
+            if (dX < 0) {
+                this._pathStartAngle += Math.PI;
+            }
+        }
+
+        //calculate the steep for the last section
+        len = this._pathPoints.length;
+
+        dX = this._pathPoints[len - 1].x - this._pathPoints[len - 2].x;
+        dY = this._pathPoints[len - 1].y - this._pathPoints[len - 2].y;
+
+        if (dX === 0 && dY !== 0) {
+            this._pathEndAngle = Math.PI / 2 * Math.abs(dY) / dY;
+        } else {
+            this._pathEndAngle = Math.atan(dY / dX );
+            if (dX < 0) {
+                this._pathEndAngle += Math.PI;
+            }
+        }
+    };
+
     ConnectionComponent.prototype._createPathShadow = function (segPoints) {
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
@@ -343,10 +590,7 @@ define(['logManager',
             p,
             pathDef = [],
             dx,
-            dy,
-            dX,
-            dY,
-            dZ;
+            dy;
 
         //copy over coordinates to prevent them from overwriting
         len = segPoints.length;
@@ -354,27 +598,17 @@ define(['logManager',
             points.push({"x": segPoints[i].x, "y": segPoints[i].y});
         }
 
-        if (this.designerAttributes.arrowStart !== CONNECTION_DEFAULT_END) {
-            dX = points[1].x - points[0].x;
-            dY = points[1].y - points[0].y;
-            dZ = Math.sqrt(dX * dX + dY * dY);
-
-            dx = this.designerAttributes.shadowArrowStartAdjust * dX / dZ;
-            dy = this.designerAttributes.shadowArrowStartAdjust * dY / dZ;
+        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+            dx = this.designerAttributes.shadowArrowStartAdjust * Math.cos(this._pathStartAngle);
+            dy = this.designerAttributes.shadowArrowStartAdjust * Math.sin(this._pathStartAngle) ;
 
             points[0].x -= dx;
             points[0].y -= dy;
         }
 
-        if (this.designerAttributes.arrowEnd !== CONNECTION_DEFAULT_END) {
-            len = points.length;
-
-            dX = points[len - 1].x - points[len - 2].x;
-            dY = points[len - 1].y - points[len - 2].y;
-            dZ = Math.sqrt(dX * dX + dY * dY);
-
-            dx = this.designerAttributes.shadowArrowEndAdjust * dX / dZ;
-            dy = this.designerAttributes.shadowArrowEndAdjust * dY / dZ;
+        if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
+            dx = this.designerAttributes.shadowArrowEndAdjust * Math.cos(this._pathEndAngle) ;
+            dy = this.designerAttributes.shadowArrowEndAdjust * Math.sin(this._pathEndAngle) ;
 
             points[len - 1].x += dx;
             points[len - 1].y += dy;

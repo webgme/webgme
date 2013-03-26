@@ -191,7 +191,14 @@ define(['logManager',
                 "y2": params.y2 },
             itemsInSelection = [],
             selectionContainsBBox,
-            items = this.canvas.items;
+            items = this.canvas.items,
+            minRubberBandSize = 10;
+
+        if (rbBBox.x2 - rbBBox.x < minRubberBandSize ||
+            rbBBox.y2 - rbBBox.y < minRubberBandSize) {
+            //selection area is too small, don't bother with it
+            return;
+        }
 
         this.logger.debug("Select children by rubber band: [" + rbBBox.x + "," + rbBBox.y + "], [" + rbBBox.x2 + "," + rbBBox.y2 + "]");
 
