@@ -11,6 +11,7 @@ define([ "util/assert"], function (ASSERT) {
 
     // this layer is to simplify the calls for the client a bit ;)
     var VALIDSETIDS = ["2200000000","2200000001","2200000002","2200000003","2200000004"];
+    var VALIDSETNAMES = ['General','ValidChildren','ValidSource','ValidDestination','ValidInheritor'];
 
     var SetCore = function (_innerCore) {
 
@@ -133,27 +134,47 @@ define([ "util/assert"], function (ASSERT) {
         };
 
         var getChildrenNumber = function(node){
-            var allrelids = _innerCore.getChildrenRelids(node);
-            var relids = [];
-            for(var i=0;i<allrelids.length;i++){
-                if(VALIDSETIDS.indexOf(allrelids[i]) === -1){
-                    relids.push(allrelids[i]);
-                }
-            }
-
-            return relids.length;
+            var relIds = getChildrenRelids(node);
+            return relIds.length;
         };
 
         var getSetsNumber = function(node){
-            var allrelids = _innerCore.getChildrenRelids(node);
-            var relids = [];
-            for(var i=0;i<allrelids.length;i++){
-                if(VALIDSETIDS.indexOf(allrelids[i]) > -1){
-                    relids.push(allrelids[i]);
-                }
+            var relIds = getSetRelids(node);
+            return relIds.length;
+        };
+
+        var getSetPath = function(node,nameOrRelId){
+            var index = VALIDSETNAMES.indexOf(nameOrRelId);
+            if(index === -1){
+                index = VALIDSETIDS.indexOf(nameOrRelId);
             }
 
-            return relids.length;
+            if(index === -1){
+                return null;
+            } else {
+                var relid = VALIDSETIDS[index];
+                var relids = getSetRelids(node);
+                var paths = getSetPaths(node);
+                index = relids.indexOf(relid);
+                if(index === -1){
+                    return null;
+                } else {
+                    return paths[index];
+                }
+            }
+        };
+
+        var getSetRelid = function(nameOrRelId){
+            var index = VALIDSETNAMES.indexOf(nameOrRelId);
+            if(index === -1){
+                index = VALIDSETIDS.indexOf(nameOrRelId);
+            }
+
+            if(index === -1){
+                return VALIDSETIDS[0];
+            } else {
+                return VALIDSETIDS[index];
+            }
         };
 
         return {
@@ -183,7 +204,9 @@ define([ "util/assert"], function (ASSERT) {
             loadChildren: loadChildren,
 
             // sets
+            getSetRelid: getSetRelid,
             getSetRelids: getSetRelids,
+            getSetPath: getSetPath,
             getSetPaths: getSetPaths,
             getSetsNumber: getSetsNumber,
             loadSets : loadSets,

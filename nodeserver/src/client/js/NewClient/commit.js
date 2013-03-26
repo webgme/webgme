@@ -46,10 +46,12 @@ define([
                 callback('NIE');
             };
 
-            var changeStatus = function(newstatus){
+            var changeStatus = function(branch,newstatus){
                 //we can add here the event emitting
-                _branch[_active].status = newstatus;
-                _statusFunction(newstatus);
+                _branch[branch].status = newstatus;
+                if(branch === _active){
+                    _statusFunction(newstatus);
+                }
             };
 
             var serverUpdate = function(branch,callback){
@@ -161,7 +163,7 @@ define([
                 _updateFunction = updateFunction;
                 if(!_branch[_active]){
                     _branch[_active] = {local:"",server:"",status:'online'};
-                    changeStatus('online');
+                    changeStatus(_active,'online');
                     branchWatcher(name);
                 } else {
                     switch (_branch[_active].status){
@@ -210,7 +212,7 @@ define([
                         case 'offline':
                             //we change our local commit so we should load it
                             _branch[name].local = _branch[name].server;
-                            changeStatus('online');
+                            changeStatus(name,'online');
                             _updateFunction(_branch[name].local,function(){
                                 callback(null);
                             });
