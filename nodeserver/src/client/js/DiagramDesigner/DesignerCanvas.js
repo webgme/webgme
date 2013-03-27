@@ -526,7 +526,8 @@ define(['logManager',
             redrawnConnectionIDs,
             doRenderGetLayout,
             doRenderSetLayout,
-            items = this.items;
+            items = this.items,
+            affectedItems = [];
 
         this.logger.debug("_refreshScreen START");
 
@@ -582,8 +583,16 @@ define(['logManager',
         //      - endpoint remove
         //      - endpoint updated
         //TODO: fix this, but right now we call refresh on all of the connections
-        connectionIDsToUpdate = this.connectionIds.slice(0);
+        affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs, this._deletedDesignerItemIDs);
+
+        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(affectedItems).concat(this._insertedConnectionIDs, this._updatedConnectionIDs);
+        connectionIDsToUpdate = _.uniq(connectionIDsToUpdate);
+
+        this.logger.warning('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        this.logger.warning('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
 
@@ -696,8 +705,13 @@ define(['logManager',
             redrawnConnectionIDs;
 
         //TODO: refresh only the connections that are really needed
-        connectionIDsToUpdate = this.connectionIds.slice(0);
+        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
+        
+        this.logger.warning('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        this.logger.warning('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
     };
@@ -834,7 +848,7 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds || []) ;
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
@@ -968,6 +982,41 @@ define(['logManager',
     };
 
     /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
+
+    
+    /********** GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ********/
+
+    DesignerCanvas.prototype._getAssociatedConnectionsForItems = function (itemIdList) {
+        var connList = [],
+            len = itemIdList.length;
+
+        while (len--) {
+            connList = connList.concat(this._getConnectionsForItem(itemIdList[len]));
+        }
+
+        connList = _.uniq(connList);
+
+        return connList;
+    };
+
+    DesignerCanvas.prototype._getConnectionsForItem = function (itemId) {
+        var connList = [],
+            subCompId;
+
+        //get all the item's connection and all its subcomponents' connections
+        for (subCompId in this.connectionIDbyEndID[itemId]) {
+            if (this.connectionIDbyEndID[itemId].hasOwnProperty(subCompId)) {
+                connList = connList.concat(this.connectionIDbyEndID[itemId][subCompId]);
+            }
+        }
+
+        connList = _.uniq(connList);
+        
+        return connList;
+    };
+
+    /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
+
 
     /************** WAITPROGRESS *********************/
     DesignerCanvas.prototype.showPogressbar = function () {

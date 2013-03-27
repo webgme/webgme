@@ -21,8 +21,17 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManagerBasic.prototype.initialize = function () {
     };
 
-    ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
+    ConnectionRouteManagerBasic.prototype.redrawConnections = function (reqIdList) {
+        var idList,
+            i;
+
+        this.logger.debug('Redraw connection request: ' + reqIdList.length);
+
+        //NOTE: here it is not enought to update the connections the canvas asked for
+        //because updating one connections's endpoint (connection area switch) can cause
+        //other connections to be redrawn that was originallz not requested to do so
+        idList = this.canvas.connectionIds.slice(0);
+        i = idList.length;
 
         this.endpointConnectionAreaInfo = {};
         this.endpointConnectionAreaConnectionInfo = {};
