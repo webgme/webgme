@@ -419,6 +419,8 @@ define(['logManager',
         var i,
             _parentSize;
 
+        this.selectionManager.clear(); 
+
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
                 this.items[i].destroy();
@@ -616,7 +618,9 @@ define(['logManager',
         this._deletedDesignerItemIDs = [];
         this._deletedConnectionIDs = [];
 
-        this.selectionManager.showSelectionOutline();
+        if (this.mode === this.OPERATING_MODES.NORMAL) {
+            this.selectionManager.showSelectionOutline();    
+        }
 
         this._refreshProperties(this.selectionManager.selectedItemIdList);
 
