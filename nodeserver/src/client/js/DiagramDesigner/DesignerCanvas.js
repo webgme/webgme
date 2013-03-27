@@ -590,11 +590,11 @@ define(['logManager',
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(affectedItems).concat(this._insertedConnectionIDs, this._updatedConnectionIDs);
         connectionIDsToUpdate = _.uniq(connectionIDsToUpdate);
 
-        this.logger.warning('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
 
-        this.logger.warning('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
+        this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
 
@@ -711,11 +711,11 @@ define(['logManager',
         //TODO: refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
         
-        this.logger.warning('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
 
-        this.logger.warning('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
+        this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
     };
