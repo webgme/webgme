@@ -448,8 +448,18 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.deleteComponent = function (componentId) {
-        //TODO: fix --> if there is dragging and the item-to-be-deleted is part of the current selection
+        //TODO: fix --> if connectiondraw is in progress and the source of the in-drawn-connection is deleted, cancel the draw
 
+        //let the selection manager know about item deletion
+        //NOTE: it is handled in _refreshScreen()
+
+        //if there is dragging and let the dragmanager know about the deletion
+        if (this.mode === this.OPERATING_MODES.MOVE_ITEMS ||
+            this.mode === this.OPERATING_MODES.COPY_ITEMS) {
+            this.dragManager.componentDelete(componentId);
+        }
+
+        //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
             this.deleteDesignerItem(componentId);
         } else if (this.connectionIds.indexOf(componentId) !== -1) {
