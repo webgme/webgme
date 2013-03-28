@@ -321,9 +321,7 @@ define(['logManager'], function (logManager) {
     ConnectionDrawingManager.prototype._attachConnectionDraggableEndHandler = function (srcParams, dstParams, connParams) {
         var self = this,
             srcEl = srcParams.el,
-            srcCoord = srcParams.coord,
             dstEl = dstParams.el,
-            dstCoord = dstParams.coord,
             connID = connParams.id,
             connProps = connParams.props;
 
@@ -348,9 +346,7 @@ define(['logManager'], function (logManager) {
                 event.stopPropagation();
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
                     el.addClass(ACCEPT_CLASS);
-                    self._connectionRedrawProps = { "srcCoord": srcCoord,
-                                                    "dstCoord": dstCoord,
-                                                    "srcDragged": true,
+                    self._connectionRedrawProps = { "srcDragged": true,
                                                     "connId": connID,
                                                     "connProps": connProps };
                     self._startConnectionRedraw(event);
@@ -381,11 +377,9 @@ define(['logManager'], function (logManager) {
                 event.stopPropagation();
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
                     el.addClass(ACCEPT_CLASS);
-                    self._connectionRedrawProps = { "srcCoord": srcCoord,
-                        "dstCoord": dstCoord,
-                        "srcDragged": false,
-                        "connId": connID,
-                        "connProps": connProps };
+                    self._connectionRedrawProps = { "srcDragged": false,
+                                                    "connId": connID,
+                                                    "connProps": connProps };
                     self._startConnectionRedraw(event);
                 }
             },

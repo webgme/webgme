@@ -673,11 +673,9 @@ define(['logManager',
             this.canvas.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
 
 
-            var srcParams = { "el": this.skinParts.srcDragPoint,
-                              "coord": this.sourceCoordinates };
+            var srcParams = { "el": this.skinParts.srcDragPoint };
 
-            var dstParams = { "el": this.skinParts.dstDragPoint,
-                "coord": this.endCoordinates };
+            var dstParams = { "el": this.skinParts.dstDragPoint };
 
             var connParams = { "id": this.id,
                 "props": this.getConnectionProps() };
