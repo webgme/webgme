@@ -2,10 +2,10 @@
 
 define(['logManager'], function (logManager) {
 
-    var ConnectionRouteManagerBasic,
+    var ConnectionRouteManager2,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
 
-    ConnectionRouteManagerBasic = function (options) {
+    ConnectionRouteManager2 = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
 
         this.canvas = options ? options.canvas : null;
@@ -18,11 +18,20 @@ define(['logManager'], function (logManager) {
         this.logger.debug("ConnectionRouteManagerBasic ctor finished");
     };
 
-    ConnectionRouteManagerBasic.prototype.initialize = function () {
+    ConnectionRouteManager2.prototype.initialize = function () {
     };
 
-    ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
+    ConnectionRouteManager2.prototype.redrawConnections = function (reqIdList) {
+        var idList,
+            i;
+
+        this.logger.debug('Redraw connection request: ' + reqIdList.length);
+
+        //NOTE: here it is not enought to update the connections the canvas asked for
+        //because updating one connections's endpoint (connection area switch) can cause
+        //other connections to be redrawn that was originallz not requested to do so
+        idList = this.canvas.connectionIds.slice(0);
+        i = idList.length;
 
         this.endpointConnectionAreaInfo = {};
         this.endpointConnectionAreaConnectionInfo = {};
@@ -48,7 +57,7 @@ define(['logManager'], function (logManager) {
         return idList;
     };
 
-    ConnectionRouteManagerBasic.prototype._updateEndpointInfo = function (idList) {
+    ConnectionRouteManager2.prototype._updateEndpointInfo = function (idList) {
         var i = idList.length,
             connId,
             canvas = this.canvas,
@@ -70,7 +79,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.canvas,
@@ -99,7 +108,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._calculateClosestEndpoints = function (connectionId) {
+    ConnectionRouteManager2.prototype._calculateClosestEndpoints = function (connectionId) {
         var canvas = this.canvas,
             srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
@@ -153,7 +162,7 @@ define(['logManager'], function (logManager) {
 
 
 
-    ConnectionRouteManagerBasic.prototype._updateConnectionCoordinates = function (connectionId) {
+    ConnectionRouteManager2.prototype._updateConnectionCoordinates = function (connectionId) {
         var canvas = this.canvas,
             srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
@@ -244,7 +253,7 @@ define(['logManager'], function (logManager) {
         canvas.items[connectionId].setConnectionRenderData(connectionPathPoints);
     };
 
-    ConnectionRouteManagerBasic.prototype._getConnectorDelta = function (coordDesc) {
+    ConnectionRouteManager2.prototype._getConnectorDelta = function (coordDesc) {
         var dx = 0,
             dy = 0;
 
@@ -269,7 +278,7 @@ define(['logManager'], function (logManager) {
     };
 
     //figure out the shortest side to choose between the two
-    ConnectionRouteManagerBasic.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
+    ConnectionRouteManager2.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
         var i,
             j,
             dx,
@@ -317,5 +326,5 @@ define(['logManager'], function (logManager) {
         return [srcP, tgtP];
     };
 
-    return ConnectionRouteManagerBasic;
+    return ConnectionRouteManager2;
 });

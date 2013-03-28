@@ -242,6 +242,10 @@ define(['logManager',
 
     /*********************** END OF - RUBBERBAND SELECTION *************************************/
 
+    SelectionManager.prototype.clear = function () {
+        this._clearSelection();
+    };
+
     SelectionManager.prototype._clearSelection = function () {
         var i = this.selectedItemIdList.length,
             itemId,
@@ -556,7 +560,7 @@ define(['logManager',
     };
 
     SelectionManager.prototype.readOnlyMode = function (readOnly) {
-        this.showSelectionOutline()
+        this.showSelectionOutline();
     };
 
     return SelectionManager;

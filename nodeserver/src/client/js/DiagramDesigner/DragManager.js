@@ -360,6 +360,73 @@ define(['logManager'], function (logManager) {
         this.canvas.designerItemsCopy(copyDesc);
     };
 
+    /***************** COMPONENT DELETED FROM CANVAS *****************/
+
+    DragManager.prototype.componentDelete = function (componentId) {
+        var idx,
+            copiedComponentId;
+
+        if (this._dragOptions) {
+            if (this._dragOptions.draggedItemID === componentId) {
+                //the item that has been actually dragged has been deleted
+                this.logger.warning('The currently dragged item is being deleted: ' + componentId);
+
+                //cancel the draggin
+                this._cancelDrag(componentId);
+
+                //as of now, drop everything :))
+            } 
+
+
+            //handle COPY / MOVE mode
+            switch(this._dragOptions.mode) {
+                case this.DRAGMODE_MOVE:
+                    if (this._dragOptions.allDraggedItemIDs.indexOf(componentId) !== -1) {
+                        //one of the dragged items has been deleted
+                        this.logger.warning('One of the currently moved items is being deleted: ' + componentId);
+
+                        //remove the component's information from the drag list
+                        delete this._dragOptions.originalPositions[componentId];
+
+                        idx = this._dragOptions.allDraggedItemIDs.indexOf(componentId);
+                        this._dragOptions.allDraggedItemIDs.splice(idx, 1);
+                    }
+                    break;
+                case this.DRAGMODE_COPY:
+                    if (this._dragOptions.copyData.hasOwnProperty(componentId)) {
+                        //one of the dragged items has been deleted
+                        this.logger.warning('One of the currently copied items is being deleted: ' + componentId);
+
+                        copiedComponentId = this._dragOptions.copyData[componentId].copiedItemId ||
+                                            this._dragOptions.copyData[componentId].copiedConnectionId;
+
+                        //clean up
+                        delete this._dragOptions.copyData[componentId];
+
+                        idx = this._dragOptions.allDraggedItemIDs.indexOf(copiedComponentId);
+                        if (idx !== -1) {
+                            this._dragOptions.allDraggedItemIDs.splice(idx, 1);
+                        }
+                        delete this._dragOptions.originalPositions[copiedComponentId];
+
+                        this.canvas.deleteComponent(copiedComponentId);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            
+        }
+    };
+
+    DragManager.prototype._cancelDrag = function (itemId) {
+        var el = this.canvas.items[itemId].$el;
+
+        el.trigger('mouseup');
+    };
+
+    /************** END OF - COMPONENT DELETED FROM CANVAS ***********/
+
 
     return DragManager;
 });

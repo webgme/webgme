@@ -419,6 +419,8 @@ define(['logManager',
         var i,
             _parentSize;
 
+        this.selectionManager.clear(); 
+
         for (i in this.items) {
             if (this.items.hasOwnProperty(i)) {
                 this.items[i].destroy();
@@ -446,8 +448,18 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.deleteComponent = function (componentId) {
-        //TODO: fix --> if there is dragging and the item-to-be-deleted is part of the current selection
+        //TODO: fix --> if connectiondraw is in progress and the source of the in-drawn-connection is deleted, cancel the draw
 
+        //let the selection manager know about item deletion
+        //NOTE: it is handled in _refreshScreen()
+
+        //if there is dragging and let the dragmanager know about the deletion
+        if (this.mode === this.OPERATING_MODES.MOVE_ITEMS ||
+            this.mode === this.OPERATING_MODES.COPY_ITEMS) {
+            this.dragManager.componentDelete(componentId);
+        }
+
+        //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
             this.deleteDesignerItem(componentId);
         } else if (this.connectionIds.indexOf(componentId) !== -1) {
@@ -526,7 +538,8 @@ define(['logManager',
             redrawnConnectionIDs,
             doRenderGetLayout,
             doRenderSetLayout,
-            items = this.items;
+            items = this.items,
+            affectedItems = [];
 
         this.logger.debug("_refreshScreen START");
 
@@ -582,8 +595,16 @@ define(['logManager',
         //      - endpoint remove
         //      - endpoint updated
         //TODO: fix this, but right now we call refresh on all of the connections
-        connectionIDsToUpdate = this.connectionIds.slice(0);
+        affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs, this._deletedDesignerItemIDs);
+
+        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(affectedItems).concat(this._insertedConnectionIDs, this._updatedConnectionIDs);
+        connectionIDsToUpdate = _.uniq(connectionIDsToUpdate);
+
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
 
@@ -607,7 +628,9 @@ define(['logManager',
         this._deletedDesignerItemIDs = [];
         this._deletedConnectionIDs = [];
 
-        this.selectionManager.showSelectionOutline();
+        if (this.mode === this.OPERATING_MODES.NORMAL) {
+            this.selectionManager.showSelectionOutline();    
+        }
 
         this._refreshProperties(this.selectionManager.selectedItemIdList);
 
@@ -696,8 +719,13 @@ define(['logManager',
             redrawnConnectionIDs;
 
         //TODO: refresh only the connections that are really needed
-        connectionIDsToUpdate = this.connectionIds.slice(0);
+        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
+        
+        this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
+
         redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+
+        this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
     };
@@ -834,7 +862,7 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds || []) ;
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
@@ -968,6 +996,41 @@ define(['logManager',
     };
 
     /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
+
+    
+    /********** GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ********/
+
+    DesignerCanvas.prototype._getAssociatedConnectionsForItems = function (itemIdList) {
+        var connList = [],
+            len = itemIdList.length;
+
+        while (len--) {
+            connList = connList.concat(this._getConnectionsForItem(itemIdList[len]));
+        }
+
+        connList = _.uniq(connList);
+
+        return connList;
+    };
+
+    DesignerCanvas.prototype._getConnectionsForItem = function (itemId) {
+        var connList = [],
+            subCompId;
+
+        //get all the item's connection and all its subcomponents' connections
+        for (subCompId in this.connectionIDbyEndID[itemId]) {
+            if (this.connectionIDbyEndID[itemId].hasOwnProperty(subCompId)) {
+                connList = connList.concat(this.connectionIDbyEndID[itemId][subCompId]);
+            }
+        }
+
+        connList = _.uniq(connList);
+        
+        return connList;
+    };
+
+    /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
+
 
     /************** WAITPROGRESS *********************/
     DesignerCanvas.prototype.showPogressbar = function () {

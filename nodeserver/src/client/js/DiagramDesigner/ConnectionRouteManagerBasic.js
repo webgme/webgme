@@ -24,6 +24,8 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
         var i = idList.length;
 
+        this.logger.debug('Redraw connection request: ' + idList.length);
+
         //1 - update all the connection endpoint connectable area information
         this._updateEndpointInfo(idList);
 
