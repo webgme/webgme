@@ -459,6 +459,12 @@ define(['logManager',
             this.dragManager.componentDelete(componentId);
         }
 
+        //if there is connection draw or redraw, let the connection manager know about the deletion
+        if (this.mode === this.OPERATING_MODES.CREATE_CONNECTION ||
+            this.mode === this.OPERATING_MODES.RECONNECT_CONNECTION) {
+            this.connectionDrawingManager.componentDelete(componentId);
+        }
+
         //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
             this.deleteDesignerItem(componentId);

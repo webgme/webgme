@@ -91,7 +91,7 @@ define(['logManager'], function (logManager) {
                     event.stopPropagation();
                     if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
                         el.addClass(ACCEPT_CLASS);
-                        self._startConnectionDraw(el, objId, sCompId);
+                        self._startConnectionDraw(el, objId, sCompId, event);
                     }
                 },
                 stop: function (event) {
@@ -127,7 +127,7 @@ define(['logManager'], function (logManager) {
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.CREATE_CONNECTION ||
                     self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
                     self._detachConnectionEndPointHandler(droppableEl);
-                    self._connectionEndDrop(objId, sCompId);
+                    self._connectionEndDrop(objId, sCompId, event);
                 }
             });
 
@@ -135,29 +135,20 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionDrawingManager.prototype._startConnectionDraw = function (el, objId, sCompId) {
-        var itemBBox;
-
-        itemBBox = { "x": el.offset().left,
-                "y": el.offset().top,
-                "width": el.outerWidth(),
-                "height": el.outerHeight()};
-
-        itemBBox.x -= this.canvas.designerCanvasBodyOffset.left;
-        itemBBox.y -= this.canvas.designerCanvasBodyOffset.top;
-
-        itemBBox.x += this.canvas.childrenContainerScroll.left;
-        itemBBox.y += this.canvas.childrenContainerScroll.top;
+    ConnectionDrawingManager.prototype._startConnectionDraw = function (el, objId, sCompId, event) {
+        var mousePos = this.canvas.getAdjustedMousePos(event),
+            srcCoord;
 
         this.canvas.beginMode(this.canvas.OPERATING_MODES.CREATE_CONNECTION);
 
         this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
 
         this._connectionInDraw = true;
-        this._connectionDesc = { "x": itemBBox.x + itemBBox.width / 2,
-                                 "y": itemBBox.y + itemBBox.height / 2,
-                                 "x2": itemBBox.x + itemBBox.width / 2,
-                                 "y2": itemBBox.y + itemBBox.height / 2 };
+
+        this._connectionDesc = { "x": 0,
+                                 "y": 0,
+                                 "x2": 0,
+                                 "y2": 0 };
 
         this._connectionInDrawProps = {};
 
@@ -167,37 +158,46 @@ define(['logManager'], function (logManager) {
         this._connectionInDrawProps.srcEl = el;
         this._connectionInDrawProps.type = "create";
 
+        srcCoord = this._getClosestConnectionPointCoordinates(objId, sCompId, mousePos.mX, mousePos.mY);
+        this._connectionDesc.x = srcCoord.x;
+        this._connectionDesc.y = srcCoord.y;
+        this._connectionDesc.x2 = mousePos.mX;
+        this._connectionDesc.y2 = mousePos.mY;
+
         this._drawConnection();
 
         this.canvas.selectionManager._clearSelection();
     };
 
     ConnectionDrawingManager.prototype._onMouseMove = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event);
-
+        var mousePos = this.canvas.getAdjustedMousePos(event),
+            srcCoord = this._getClosestConnectionPointCoordinates(this._connectionInDrawProps.src, this._connectionInDrawProps.sCompId, mousePos.mX, mousePos.mY);
+  
         if (this._connectionInDraw === true) {
-            if (this._connectionInDrawProps.type === "reconnect") {
-                if (this._connectionRedrawProps.srcDragged === true) {
-                    this._connectionDesc.x = mousePos.mX;
-                    this._connectionDesc.y = mousePos.mY;
-                } else {
-                    this._connectionDesc.x2 = mousePos.mX;
-                    this._connectionDesc.y2 = mousePos.mY;
-                }
-            } else {
-                this._connectionDesc.x2 = mousePos.mX;
-                this._connectionDesc.y2 = mousePos.mY;
-            }
+            
+            this._connectionDesc.x = srcCoord.x;
+            this._connectionDesc.y = srcCoord.y;
+
+            this._connectionDesc.x2 = mousePos.mX;
+            this._connectionDesc.y2 = mousePos.mY;
+
             this._drawConnection();
         }
     };
 
     ConnectionDrawingManager.prototype._endConnectionDraw = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event);
+        var mousePos = event ? this.canvas.getAdjustedMousePos(event) : undefined,
+            srcCoord;
 
-        if (this._connectionInDraw === true) {
+        if (this._connectionInDraw === true && mousePos) {
+            srcCoord = this._getClosestConnectionPointCoordinates(this._connectionInDrawProps.src, this._connectionInDrawProps.sCompId, mousePos.mX, mousePos.mY);
+
+            this._connectionDesc.x = srcCoord.x;
+            this._connectionDesc.y = srcCoord.y;
+
             this._connectionDesc.x2 = mousePos.mX;
             this._connectionDesc.y2 = mousePos.mY;
+
             this._drawConnection();
         }
 
@@ -242,20 +242,61 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId) {
+    ConnectionDrawingManager.prototype._getClosestConnectionPointCoordinates = function (objId, sCompId, mX, mY) {
+        var item = this.canvas.items[objId],
+            result,
+            connPoints,
+            len,
+            delta,
+            d1,
+            x,
+            y;
+
+        if (item) {
+            connPoints = item.getConnectionAreas(sCompId) || [];
+
+            len = connPoints.length;
+            result = { 'x': item.positionX + connPoints[len-1].x + connPoints[len-1].w / 2,
+                       'y': item.positionY + connPoints[len-1].y + connPoints[len-1].h / 2};
+            delta = Math.sqrt((result.x - mX) * (result.x - mX) + (result.y - mY) * (result.y - mY));
+
+            len -= 1;
+
+            while (len--) {
+                x = item.positionX + connPoints[len].x + connPoints[len].w / 2;
+                y = item.positionY + connPoints[len].y + connPoints[len].h / 2;
+                d1 = Math.sqrt((x - mX) * (x - mX) + (y - mY) * (y - mY));
+                if ( d1 < delta) {
+                    delta = d1;
+                    result = {'x': x,
+                                'y': y};
+                }
+            }
+        }
+
+        return result;
+    };
+
+    ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId, event) {
         this.logger.debug("Connection end dropped on item: '" + endPointId + "', sCompId: '" + sCompId + "'");
 
         if (this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION) {
-            this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
-                "srcSubCompId": this._connectionInDrawProps.sCompId,
-                "dst": endPointId,
-                "dstSubCompId": sCompId,
-                "metaInfo": this._metaInfo });
+            if (this._connectionInDrawProps && this._connectionInDrawProps.src) {
+                this.canvas.createNewConnection({ "src": this._connectionInDrawProps.src,
+                        "srcSubCompId": this._connectionInDrawProps.sCompId,
+                        "dst": endPointId,
+                        "dstSubCompId": sCompId,
+                        "metaInfo": this._metaInfo });
+            }
         } else if (this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
-            this.canvas.modifyConnectionEnd({ "id": this._connectionRedrawProps.connId,
-                "endPoint": this._connectionRedrawProps.srcDragged === true ? "SOURCE" : "END",
-                "endId": endPointId,
-                "endSubCompId": sCompId });
+            if (this._connectionRedrawProps && this._connectionRedrawProps.connId) {
+                this.canvas.modifyConnectionEnd({ "id": this._connectionRedrawProps.connId,
+                    "endPoint": this._connectionRedrawProps.srcDragged === true ? "SOURCE" : "END",
+                    "endId": endPointId,
+                    "endSubCompId": sCompId });
+                //TODO:not yet sure why it is needed here, it should be called because of the draggable end
+                this._endConnectionRedraw(event);
+            }
         }
     };
 
@@ -312,7 +353,7 @@ define(['logManager'], function (logManager) {
                                                     "srcDragged": true,
                                                     "connId": connID,
                                                     "connProps": connProps };
-                    self._startConnectionRedraw();
+                    self._startConnectionRedraw(event);
                 }
             },
             stop: function (event) {
@@ -325,7 +366,7 @@ define(['logManager'], function (logManager) {
             },
             drag: function (event) {
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
-                    self._onMouseMove(event);
+                    self._onConnectionRedrawMouseMove(event);
                 }
             }
         });
@@ -345,7 +386,7 @@ define(['logManager'], function (logManager) {
                         "srcDragged": false,
                         "connId": connID,
                         "connProps": connProps };
-                    self._startConnectionRedraw();
+                    self._startConnectionRedraw(event);
                 }
             },
             stop: function (event) {
@@ -358,27 +399,33 @@ define(['logManager'], function (logManager) {
             },
             drag: function (event) {
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
-                    self._onMouseMove(event);
+                    self._onConnectionRedrawMouseMove(event);
                 }
             }
         });
 
     };
 
-    ConnectionDrawingManager.prototype._startConnectionRedraw = function () {
+    ConnectionDrawingManager.prototype._startConnectionRedraw = function (event) {
+        var mousePos = this.canvas.getAdjustedMousePos(event);
+
         this.canvas.beginMode(this.canvas.OPERATING_MODES.RECONNECT_CONNECTION);
 
         this.logger.debug("Start connection redrawing, connection: '" + this._connectionRedrawProps.connId + "', props: '" + JSON.stringify(this._connectionRedrawProps) + "'");
 
         this._connectionInDraw = true;
-        this._connectionDesc = { "x": this._connectionRedrawProps.srcCoord.x,
-            "y": this._connectionRedrawProps.srcCoord.y,
-            "x2": this._connectionRedrawProps.dstCoord.x,
-            "y2": this._connectionRedrawProps.dstCoord.y };
+
+        this._connectionDesc = { "x": 0,
+                                 "y": 0,
+                                 "x2": 0,
+                                 "y2": 0 };
 
         this._connectionInDrawProps = {};
 
+
         this._connectionInDrawProps.type = "reconnect";
+
+        this._setConnectionRedrawCoordinates(mousePos);        
 
         this._connectionPath = this.paper.path('M' + this._connectionDesc.x + ',' + this._connectionDesc.y + ' L' + this._connectionDesc.x2 + ',' + this._connectionDesc.y2);
 
@@ -393,17 +440,56 @@ define(['logManager'], function (logManager) {
         this.canvas.selectionManager.hideSelectionOutline();
     };
 
+    ConnectionDrawingManager.prototype._setConnectionRedrawCoordinates = function (mousePos) {
+        var connID = this._connectionRedrawProps.connId,
+            coord;
+
+        if (connID) {
+            if (this._connectionRedrawProps.srcDragged === true ) {
+                //source end of the connection is dragged
+                if (this.canvas.connectionEndIDs[connID]) {
+                    var dstObjId = this.canvas.connectionEndIDs[connID].dstObjId;
+                    var dstSubCompId = this.canvas.connectionEndIDs[connID].dstSubCompId;
+
+                    coord = this._getClosestConnectionPointCoordinates(dstObjId, dstSubCompId, mousePos.mX, mousePos.mY);
+
+                    this._connectionDesc.x = mousePos.mX; 
+                    this._connectionDesc.y = mousePos.mY;
+                    this._connectionDesc.x2 = coord.x;
+                    this._connectionDesc.y2 = coord.y;
+                }                
+            } else {
+                //target end of the connection is dragged
+                if (this.canvas.connectionEndIDs[connID]) {
+                    var srcObjId = this.canvas.connectionEndIDs[connID].srcObjId;
+                    var srcSubCompId = this.canvas.connectionEndIDs[connID].srcSubCompId;
+
+                    coord = this._getClosestConnectionPointCoordinates(srcObjId, srcSubCompId, mousePos.mX, mousePos.mY);
+
+                    this._connectionDesc.x2 = mousePos.mX; 
+                    this._connectionDesc.y2 = mousePos.mY;
+                    this._connectionDesc.x = coord.x;
+                    this._connectionDesc.y = coord.y;
+                }                
+            }
+        }
+    };
+
+    ConnectionDrawingManager.prototype._onConnectionRedrawMouseMove = function (event) {
+        var mousePos = this.canvas.getAdjustedMousePos(event);
+  
+        if (this._connectionInDraw === true) {
+            this._setConnectionRedrawCoordinates(mousePos);    
+
+            this._drawConnection();
+        }
+    };
+
     ConnectionDrawingManager.prototype._endConnectionRedraw = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event);
 
         if (this._connectionInDraw === true) {
-            if (this._connectionRedrawProps.srcDragged === true) {
-                this._connectionDesc.x = mousePos.mX;
-                this._connectionDesc.y = mousePos.mY;
-            } else {
-                this._connectionDesc.x2 = mousePos.mX;
-                this._connectionDesc.y2 = mousePos.mY;
-            }
+            this._setConnectionRedrawCoordinates(mousePos);
 
             this._drawConnection();
         }
@@ -426,6 +512,51 @@ define(['logManager'], function (logManager) {
     };
 
     /********************* END OF - CONNECTION RECONNECT *********************************/
+
+
+    /***************** COMPONENT DELETED FROM CANVAS *****************/
+
+    ConnectionDrawingManager.prototype.componentDelete = function (objID, sCompID) {
+        var cancelDraw = false,
+            el;
+
+        if (this._connectionInDrawProps) {
+            if (!sCompID) {
+                //sCompID is undefined --> component with objID is being deleted from canvas
+                if (this._connectionInDrawProps.src === objID) {
+                    //connection is being drawn from this component
+                    cancelDraw = true;
+                    this.logger.warning('Connection source "' + objID + '" is being deleted. Connection creation canceled.');
+                }
+            } else {
+                //sCompID has a value
+                //this specific subcomponent from the component with objID is being removed
+                if (this._connectionInDrawProps.src === objID &&
+                    this._connectionInDrawProps.sCompId === sCompID) {
+                    //connection is being drawn from this component's this subcompoentn
+                    cancelDraw = true;
+                    this.logger.warning('Connection source "' + objID + '"/"' + sCompID + '" is being deleted. Connection creation canceled.');
+                }
+            }
+
+            if (cancelDraw === true) {
+                el = this._connectionInDrawProps.srcEl;
+                
+                this._connectionInDraw = false;
+                this._endConnectionDraw();
+
+                //clear connection descriptor --> this way the connection end drop will not accidentally happen when 
+                //mouseup happens
+                this._connectionInDrawProps = {};
+                //imitate mouseup
+                el.trigger('mouseup');
+
+                
+            }
+        }
+    };
+
+    /************** END OF - COMPONENT DELETED FROM CANVAS ***********/
 
     ConnectionDrawingManager.prototype.readOnlyMode = function (readOnly) {
     };

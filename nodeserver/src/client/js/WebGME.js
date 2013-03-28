@@ -60,6 +60,15 @@ define([  'logManager',
         logManager.excludeComponent("GraphVizObject*");
     }*/
 
+    logManager.excludeComponent("CORE");
+    logManager.excludeComponent('TreeBrowserControl');
+    logManager.excludeComponent("Client");
+    logManager.excludeComponent('PartBrowserControl');
+    logManager.excludeComponent('SetEditorControl');
+    logManager.excludeComponent('JSTreeBrowserWidget');
+    
+
+
     var proxy = null,
         tJSTree,
         mainWidget,

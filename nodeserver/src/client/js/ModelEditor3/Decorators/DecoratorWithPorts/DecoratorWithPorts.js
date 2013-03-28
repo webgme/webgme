@@ -216,12 +216,12 @@ define(['logManager',
         var idx = this._portIDs.indexOf(portId);
 
         if (idx !== -1) {
-            this._ports[portId].destroy();
-            delete this._ports[portId];
-            this._portIDs.splice(idx,1);
             if (this.hostDesignerItem) {
                 this.hostDesignerItem.unregisterSubcomponent(portId);
             }
+            this._ports[portId].destroy();
+            delete this._ports[portId];
+            this._portIDs.splice(idx,1);
         }
     };
 
