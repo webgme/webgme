@@ -43,7 +43,7 @@ define([ "core/assert", "mongodb", "core/config" ], function (ASSERT, MONGODB, C
 		};
 
 		var opened = function () {
-			return collection !== null;
+			return collection !== null && collection !== undefined;
 		};
 
 		var close = function (callback) {
