@@ -660,9 +660,6 @@ define(['logManager',
 
             this.canvas.skinParts.$itemsContainer.append(this.skinParts.srcDragPoint);
 
-            /*opts = { "el": this._skinParts.srcDragPoint,
-                "connId": this._guid,
-                "endType": "source"};*/
 
             this.skinParts.dstDragPoint = this.skinParts.dstDragPoint || $('<div/>', {
                 "id": "dstDragPoint_" + this.id,
@@ -675,11 +672,10 @@ define(['logManager',
 
             this.canvas.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
 
-            var srcParams = { "el": this.skinParts.srcDragPoint,
-                              "coord": this.sourceCoordinates };
 
-            var dstParams = { "el": this.skinParts.dstDragPoint,
-                "coord": this.endCoordinates };
+            var srcParams = { "el": this.skinParts.srcDragPoint };
+
+            var dstParams = { "el": this.skinParts.dstDragPoint };
 
             var connParams = { "id": this.id,
                 "props": this.getConnectionProps() };
@@ -690,11 +686,13 @@ define(['logManager',
 
     ConnectionComponent.prototype.hideConnectors = function () {
         if (this.skinParts.srcDragPoint) {
+            this.skinParts.srcDragPoint.empty();
             this.skinParts.srcDragPoint.remove();
             this.skinParts.srcDragPoint = null;
         }
 
         if (this.skinParts.dstDragPoint) {
+            this.skinParts.dstDragPoint.empty();
             this.skinParts.dstDragPoint.remove();
             this.skinParts.dstDragPoint = null;
         }
