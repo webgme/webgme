@@ -86,6 +86,8 @@ define(['logManager',
             height = this.skinParts.$arrowCanvas[0].height;
 
         //by default return the bounding box edges midpoints
+        //NOTE: it returns the connection point regardless of being asked for
+        //its own connection ports or some of the subcomponent's connection ports
 
         //top left
         result.push( {"id": "0",
