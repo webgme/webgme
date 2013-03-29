@@ -87,23 +87,27 @@ define(['logManager'], function (logManager) {
             designerItem;
 
         if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
-            designerItem = canvas.items[objId];
-            res = designerItem.getConnectionAreas(subCompId) || [];
-
             this.endpointConnectionAreaInfo[longid] = [];
             this.endpointConnectionAreaConnectionInfo[longid] = {};
 
-            j = res.length;
-            while (j--) {
-                this.endpointConnectionAreaInfo[longid][res[j].id] = {"x": res[j].x + designerItem.positionX,
-                    "y": res[j].y + designerItem.positionY,
-                    "w": res[j].w,
-                    "h": res[j].h,
-                    "orientation": res[j].orientation,
-                    "len": res[j].len || 0,
-                    "id": res[j].id};
+            if (subCompId === undefined ||
+                (subCompId !== undefined && this.canvas._itemSubcomponentsMap[objId] && this.canvas._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
-                this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
+                designerItem = canvas.items[objId];
+                res = designerItem.getConnectionAreas(subCompId) || [];
+
+                j = res.length;
+                while (j--) {
+                    this.endpointConnectionAreaInfo[longid][res[j].id] = {"x": res[j].x + designerItem.positionX,
+                        "y": res[j].y + designerItem.positionY,
+                        "w": res[j].w,
+                        "h": res[j].h,
+                        "orientation": res[j].orientation,
+                        "len": res[j].len || 0,
+                        "id": res[j].id};
+
+                    this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
+                }
             }
         }
     };
@@ -171,8 +175,8 @@ define(['logManager'], function (logManager) {
             sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
             tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
             segmentPoints = canvas.items[connectionId].segmentPoints,
-            sourceConnectionPoint = this.connectionEndPoints[connectionId].source,
-            targetConnectionPoint = this.connectionEndPoints[connectionId].target,
+            sourceConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].source : undefined,
+            targetConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].target : undefined,
             sourceCoordinates = null,
             targetCoordinates = null,
             connectionPathPoints = [],

@@ -72,20 +72,24 @@ define(['logManager'], function (logManager) {
             designerItem;
 
         if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
-            designerItem = canvas.items[objId];
-            res = designerItem.getConnectionAreas(subCompId) || [];
 
             this.endpointConnectionAreaInfo[longid] = [];
 
-            j = res.length;
-            while (j--) {
-                this.endpointConnectionAreaInfo[longid].push({"x": res[j].x + res[j].w / 2 + designerItem.positionX,
-                    "y": res[j].y + res[j].h / 2 + designerItem.positionY});
+            if (subCompId === undefined ||
+               (subCompId !== undefined && this.canvas._itemSubcomponentsMap[objId] && this.canvas._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
+
+                designerItem = canvas.items[objId];
+                res = designerItem.getConnectionAreas(subCompId) || [];
+
+                j = res.length;
+                while (j--) {
+                    this.endpointConnectionAreaInfo[longid].push({"x": res[j].x + res[j].w / 2 + designerItem.positionX,
+                        "y": res[j].y + res[j].h / 2 + designerItem.positionY});
+                }
+
             }
         }
     };
-
-
 
     ConnectionRouteManagerBasic.prototype._updateConnectionCoordinates = function (connectionId) {
         var canvas = this.canvas,
