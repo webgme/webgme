@@ -342,10 +342,12 @@ define(['logManager'], function (logManager) {
 
     /************ SUBCOMPONENT HANDLING *****************/
     DesignerItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
+        this.logger.debug("registerSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
         this.canvas.registerSubcomponent(this.id, subComponentId, metaInfo);
     };
 
     DesignerItem.prototype.unregisterSubcomponent = function (subComponentId) {
+        this.logger.debug("unregisterSubcomponent - ID: '" + this.id + "', SubComponentID: '" + subComponentId + "'");
         this.canvas.unregisterSubcomponent(this.id, subComponentId);
     };
 
