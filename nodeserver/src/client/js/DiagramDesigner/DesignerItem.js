@@ -329,6 +329,10 @@ define(['logManager'], function (logManager) {
         if (positionChanged) {
             this.$el.css({"left": this.positionX,
                 "top": this.positionY });
+
+            this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
+                                                                                 "x": this.positionX,
+                                                                                 "y": this.positionY});
         }
     };
 

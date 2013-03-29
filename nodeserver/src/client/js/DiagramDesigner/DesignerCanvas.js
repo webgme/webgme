@@ -17,6 +17,7 @@ define(['logManager',
     'js/DiagramDesigner/ConnectionRouteManagerBasic',
     'js/DiagramDesigner/ConnectionRouteManager2',
     'js/DiagramDesigner/ConnectionDrawingManager',
+    'js/DiagramDesigner/DesignerCanvas.EventDispatcher',
     'js/PropertyEditor/PropertyListView',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
@@ -35,6 +36,7 @@ define(['logManager',
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionRouteManager2,
                                                       ConnectionDrawingManager,
+                                                      DesignerCanvasEventDispatcher,
                                                       PropertyListView) {
 
     var DesignerCanvas,
@@ -58,6 +60,8 @@ define(['logManager',
 
         this._readOnlyMode = options.readOnlyMode || false;
         this.logger.warning("DesignerCanvas.ctor _readOnlyMode is set to TRUE by default");
+
+        this._addEventDispatcherExtensions();
 
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
 
@@ -1063,6 +1067,7 @@ define(['logManager',
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasToolbar.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasSubcomponents.prototype);
+    _.extend(DesignerCanvas.prototype, DesignerCanvasEventDispatcher.prototype);
 
     //in DEBUG mode add additional content to canvas
     if (commonUtil.DEBUG === true) {

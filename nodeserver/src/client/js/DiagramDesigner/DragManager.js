@@ -28,10 +28,16 @@ define(['logManager'], function (logManager) {
     DragManager.prototype.DRAGMODE_MOVE = "move";
 
     DragManager.prototype.initialize = function () {
+        var self = this;
+
         this._dragModes = {};
 
         this._dragModes[this.DRAGMODE_COPY] = true;
         this._dragModes[this.DRAGMODE_MOVE] = true;
+
+        this.canvas.addEventListener(this.canvas.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
+            self._canvasItemPositionChanged(event);
+        });
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -308,19 +314,13 @@ define(['logManager'], function (logManager) {
             posY,
             newPositions = {};
 
+        this._movingDraggedComponents = true;
+
         //move all the dragged items
         while(i--) {
             id = this._dragOptions.allDraggedItemIDs[i];
 
             newPositions[id] = {};
-
-            //check if the item has moved by someone else since dragging started
-            if (this.canvas.items[id].positionX !== this._dragOptions.originalPositions[id].x + this._dragOptions.delta.x ||
-                this.canvas.items[id].positionY !== this._dragOptions.originalPositions[id].y + this._dragOptions.delta.y) {
-                //moved outsied of dragging, update original position info
-                this._dragOptions.originalPositions[id].x = this.canvas.items[id].positionX;
-                this._dragOptions.originalPositions[id].y = this.canvas.items[id].positionY;
-            }
 
             posX = this._dragOptions.originalPositions[id].x + dX;
 
@@ -330,6 +330,8 @@ define(['logManager'], function (logManager) {
 
             newPositions[id] = { "x": posX, "y": posY };
         }
+
+        this._movingDraggedComponents = false;
 
         return newPositions;
     };
@@ -426,6 +428,34 @@ define(['logManager'], function (logManager) {
     };
 
     /************** END OF - COMPONENT DELETED FROM CANVAS ***********/
+
+
+    /************** EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
+    DragManager.prototype._canvasItemPositionChanged = function (event) {
+        var id = event.ID,
+            pX = event.x,
+            pY = event.y;
+
+        if (this._movingDraggedComponents === true) {
+            return;
+        }
+
+        if (this._dragOptions && this._dragOptions.allDraggedItemIDs && this._dragOptions.allDraggedItemIDs.indexOf(id) !== -1) {
+            if (pX !== this._dragOptions.originalPositions[id].x + this._dragOptions.delta.x ||
+                pY !== this._dragOptions.originalPositions[id].y + this._dragOptions.delta.y) {
+                //moved outside of dragging, update original position info
+                this._dragOptions.originalPositions[id].x = pX;
+                this._dragOptions.originalPositions[id].y = pY;
+
+                pX = this._dragOptions.originalPositions[id].x + this._dragOptions.delta.x;
+
+                pY = this._dragOptions.originalPositions[id].y + this._dragOptions.delta.y;
+
+                this.canvas.items[id].moveTo(pX, pY);
+            }
+        }
+    };
+    /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
 
 
     return DragManager;
