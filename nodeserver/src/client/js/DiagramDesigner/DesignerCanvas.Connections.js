@@ -1,9 +1,10 @@
 "use strict";
 
-define(['js/DiagramDesigner/Connection'], function (Connection) {
+define(['js/DiagramDesigner/Connection',
+        'js/DiagramDesigner/Constants'], function (Connection,
+                                                   DesignerCanvasConstants) {
 
-    var DesignerCanvas,
-        SELF = "__SELF__";
+    var DesignerCanvas;
 
     DesignerCanvas = function () {
 
@@ -34,12 +35,12 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
                                               "dstSubCompId": targetSubcomponentId};
 
 
-        var ssubId = sourceSubcomponentId || SELF;
+        var ssubId = sourceSubcomponentId || DesignerCanvasConstants.SELF;
         this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || {};
         this.connectionIDbyEndID[sourceId][ssubId] = this.connectionIDbyEndID[sourceId][ssubId] || [];
         this.connectionIDbyEndID[sourceId][ssubId].push(connectionId);
 
-        ssubId = targetSubcomponentId || SELF;
+        ssubId = targetSubcomponentId || DesignerCanvasConstants.SELF;
         this.connectionIDbyEndID[targetId] = this.connectionIDbyEndID[targetId] || {};
         this.connectionIDbyEndID[targetId][ssubId] = this.connectionIDbyEndID[targetId][ssubId] || [];
         this.connectionIDbyEndID[targetId][ssubId].push(connectionId);
@@ -106,7 +107,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
         //remove connection from source list
         objId = this.connectionEndIDs[id].srcObjId;
-        subComponentId = this.connectionEndIDs[id].srcSubCompId || SELF;
+        subComponentId = this.connectionEndIDs[id].srcSubCompId || DesignerCanvasConstants.SELF;
         idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
         if (idx !== -1) {
             this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
@@ -114,7 +115,7 @@ define(['js/DiagramDesigner/Connection'], function (Connection) {
 
         //remove connection from target list
         objId = this.connectionEndIDs[id].dstObjId;
-        subComponentId = this.connectionEndIDs[id].dstSubCompId || SELF;
+        subComponentId = this.connectionEndIDs[id].dstSubCompId || DesignerCanvasConstants.SELF;
         idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
         if (idx !== -1) {
             this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
