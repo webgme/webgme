@@ -4,7 +4,7 @@ Sample README for WebGme
 Prerequisites:
 --------------
 
-#1) You will need Node.js to run the server, get it from http:\\nodejs.org
+#1) You will need Node.js to run the server, get it from [http:\\nodejs.org](http:\\nodejs.org)
 
 #2) You will need to install the following packages for Node.js:
 - requirejs
