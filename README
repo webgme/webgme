@@ -1,1 +1,20 @@
 Sample README for WebGme
+
+
+Prerequisites:
+--------------
+
+#1) You will need Node.js to run the server, get it from http:\\nodejs.org
+
+#2) You will need to install the following packages for Node.js:
+- requirejs
+- mongodb
+- socket.io
+
+
+In your webgme\nodeserver folder simply let the node package manager install them for you
+
+npm install requirejs
+npm install mongodb
+npm install socket.io
+
