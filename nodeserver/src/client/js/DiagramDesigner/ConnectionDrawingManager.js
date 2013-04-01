@@ -577,6 +577,38 @@ define(['logManager'], function (logManager) {
             this._connectionDesc.y = srcCoord.y;
 
             this._drawConnection();
+        } else if (this._connectionRedrawProps && this._connectionRedrawProps.connId) {
+            //connection redraw is happening
+            var connID = this._connectionRedrawProps.connId;
+            var fixEndObjId;
+            var fixEndSubCompId;
+            if (this._connectionRedrawProps.srcDragged === true ) {
+                //source end of the connection is dragged
+                if (this.canvas.connectionEndIDs[connID]) {
+                    fixEndObjId = this.canvas.connectionEndIDs[connID].dstObjId;
+                    fixEndSubCompId = this.canvas.connectionEndIDs[connID].dstSubCompId;
+
+                    srcCoord = this._getClosestConnectionPointCoordinates(fixEndObjId, fixEndSubCompId, this._connectionDesc.x, this._connectionDesc.y);
+
+                    this._connectionDesc.x2 = srcCoord.x;
+                    this._connectionDesc.y2 = srcCoord.y;
+
+                    this._drawConnection();
+                }
+            } else {
+                //target end of the connection is dragged
+                if (this.canvas.connectionEndIDs[connID]) {
+                    fixEndObjId = this.canvas.connectionEndIDs[connID].srcObjId;
+                    fixEndSubCompId = this.canvas.connectionEndIDs[connID].srcSubCompId;
+
+                    srcCoord = this._getClosestConnectionPointCoordinates(fixEndObjId, fixEndSubCompId, this._connectionDesc.x2, this._connectionDesc.y2);
+
+                    this._connectionDesc.x = srcCoord.x;
+                    this._connectionDesc.y = srcCoord.y;
+
+                    this._drawConnection();
+                }
+            }
         }
     };
     /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
