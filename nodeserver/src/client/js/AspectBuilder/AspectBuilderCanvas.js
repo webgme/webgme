@@ -28,7 +28,7 @@ define(['logManager',
         this.logger.debug("AspectBuilderCanvas.initializeUI");
 
         this._num = 0;
-        this._backGroundText();
+        this._aspectBuilderCanvasBackGroundText();
 
         this._initializeFilterPanel();
     };
@@ -36,10 +36,10 @@ define(['logManager',
     AspectBuilderCanvas.prototype._resizeItemContainer =  function (width, height) {
         __parent_proto__._resizeItemContainer.apply(this, arguments);
 
-        this._backGroundText();
+        this._aspectBuilderCanvasBackGroundText();
     };
 
-    AspectBuilderCanvas.prototype._backGroundText = function () {
+    AspectBuilderCanvas.prototype._aspectBuilderCanvasBackGroundText = function () {
         var text;
 
         if (this._num === 0) {
@@ -48,21 +48,14 @@ define(['logManager',
             text = "Your aspect contains: " + this._num + " elements";
         }
 
-        if (this._bgText) {
-            this._bgText.attr({"x": this._actualSize.w / 2,
-                "y": this._actualSize.h / 2,
-                "text": text});
-        } else {
-            this._bgText = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, text);
-            this._bgText.attr({"fill": "#DEDEDE",
-                               "font-size": "55"});
-        }
+        this.setBackgroundText(text, {"color": "#DEDEDE",
+                                                "font-size": "40"});
     };
 
     AspectBuilderCanvas.prototype.setAspectMemberNum = function (num) {
         if (this._num !== num) {
             this._num = num;
-            this._backGroundText();
+            this._aspectBuilderCanvasBackGroundText();
         }
     };
 

@@ -1053,6 +1053,48 @@ define(['logManager',
 
     /************** END OF - WAITPROGRESS *********************/
 
+
+    /*************       BACKGROUND TEXT      *****************/
+
+    DesignerCanvas.prototype.setBackgroundText = function (text, params) {
+        var svgParams = {},
+            setSvgAttrFromParams;
+
+        if (!this._backGroundText ) {
+            if (!text) {
+                this.logger.error("Invalid parameter 'text' for method 'setBackgroundText'");
+            } else {
+                this._backGroundText = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, text);    
+            }
+        } else {
+            svgParams.text = text;
+            svgParams.x = this._actualSize.w / 2;
+            svgParams.y = this._actualSize.h / 2;
+        }
+
+        if (this._backGroundText) {
+
+            setSvgAttrFromParams = function (attrs) {
+                var len = attrs.length;
+                while (len--) {
+                    if (params.hasOwnProperty(attrs[len][0])) {
+                        svgParams[attrs[len][1]] = params[attrs[len][0]];
+                    }
+                }
+            };
+
+            if (params) {
+                setSvgAttrFromParams([['color', 'fill'],
+                                 ['font-size', 'font-size']]);
+            }
+            
+            this._backGroundText.attr(svgParams);
+        }
+    };
+
+    /*************   END OF - BACKGROUND TEXT      *****************/
+
+
     /************** API REGARDING TO MANAGERS ***********************/
 
     DesignerCanvas.prototype.enableDragCopy = function (enabled) {

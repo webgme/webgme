@@ -22,12 +22,22 @@ define(['logManager',
 
     _.extend(SetEditorCanvas.prototype, DesignerCanvas.prototype);
 
-    SetEditorCanvas.prototype.initializeUI = function () {
+    SetEditorCanvas.prototype.initializeUI = function (containerElement) {
         __parent_proto__.initializeUI.apply(this, arguments);
         this.logger.debug("SetEditorCanvas.initializeUI");
 
-        var text = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, "SetEditor");
-        text.attr({"fill": "#DEDEDE"});
+        this._setEditorBackGroundText();
+    };
+
+    SetEditorCanvas.prototype._resizeItemContainer =  function (width, height) {
+        __parent_proto__._resizeItemContainer.apply(this, arguments);
+
+        this._setEditorBackGroundText();
+    };
+
+    SetEditorCanvas.prototype._setEditorBackGroundText = function () {
+        this.setBackgroundText("SetEditor", {"color": "#DEDEDE",
+                                                "font-size": ""});
     };
 
     return SetEditorCanvas;
