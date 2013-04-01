@@ -33,7 +33,7 @@ define(['logManager'], function (logManager) {
 
     Port.prototype._DOMPortBase = $('<div  id="__ID__" class="port" data-id="__ID__"></div>');
     Port.prototype._DOMTitleWrapper = $('<div class="title-wrapper"><span class="title">__NAME__</span></div>');
-    Port.prototype._DOMDot = $('<span class="dot" data-id="__ID__" data-or="E20"></span>');
+    Port.prototype._DOMDot = $('<span class="dot"></span>');
     Port.prototype._DOMConnector = $('<div class="connector"></div>');
 
     Port.prototype._DOMBaseLeftTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone()).append(Port.prototype._DOMTitleWrapper.clone());
@@ -86,7 +86,23 @@ define(['logManager'], function (logManager) {
 
         if (this.orientation !== or) {
             this.orientation = or;
-            this._initialize();
+            if (!this.$el) {
+                this._initialize();
+            } else {
+                //port's DOM has to be reformatted
+
+                //detach elements and re-append them in a different place
+                this.$connectors.detach();
+                this.$portDot.detach();
+
+                if (this.orientation === "E") {
+                    //now it has EAST orientation
+                    this.$el.append(this.$portDot).append(this.$connectors);
+                } else {
+                    //now it has WEST orientation
+                    this.$el.prepend(this.$connectors).prepend(this.$portDot);
+                }
+            }
         }
     };
 
