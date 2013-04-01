@@ -231,7 +231,8 @@ define(['logManager',
             portContainer = this.skinParts.$portsContainerLeft,
             portPosition = portNode.getRegistry(nodePropertyNames.Registry.position) || { "x": 0, "y": 0 },
             portToAppendBefore = null,
-            i;
+            i,
+            changed;
 
         //check if the port should be on the left or right-side
         if (portPosition.x > 300) {
@@ -239,7 +240,7 @@ define(['logManager',
             portContainer = this.skinParts.$portsContainerRight;
         }
 
-        this._ports[portId].updateOrPos(portOrientation, portPosition);
+        changed = this._ports[portId].updateOrPos(portOrientation, portPosition);
 
         //find its correct position
         for (i in this._ports) {
@@ -266,6 +267,14 @@ define(['logManager',
             portContainer.append(this._ports[portId].$el);
         } else {
             this._ports[portId].$el.insertBefore(this._ports[portToAppendBefore].$el);
+        }
+
+        if (this.renderedInPartBrowser === false) {
+            if (changed === true) {
+                this.calculateDimension();
+                this.hostDesignerItem.canvas.dispatchEvent(this.hostDesignerItem.canvas.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, {"ItemID": this.hostDesignerItem.id,
+                    "SubComponentID": portId});
+            }
         }
     };
 

@@ -81,11 +81,23 @@ define(['logManager'], function (logManager) {
     };
 
     Port.prototype.updateOrPos = function (or, pos) {
-        this.position.x = pos.x;
-        this.position.y = pos.y;
+        var changed = false;
+
+        if (this.position.x !== pos.x) {
+            this.position.x = pos.x;
+            changed = true;
+        }
+
+        if (this.position.y !== pos.y) {
+            this.position.y = pos.y;
+            changed = true;
+        }
+
 
         if (this.orientation !== or) {
             this.orientation = or;
+            changed = true;
+
             if (!this.$el) {
                 this._initialize();
             } else {
@@ -104,6 +116,8 @@ define(['logManager'], function (logManager) {
                 }
             }
         }
+
+        return changed;
     };
 
     Port.prototype.destroy = function () {

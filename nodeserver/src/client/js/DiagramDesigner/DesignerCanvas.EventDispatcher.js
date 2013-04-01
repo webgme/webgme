@@ -12,7 +12,8 @@ define(['eventDispatcher'], function (EventDispatcher) {
         $.extend(this, new EventDispatcher());
 
         this.events = {
-            "ITEM_POSITION_CHANGED": "ITEM_POSITION_CHANGED"
+            "ITEM_POSITION_CHANGED": "ITEM_POSITION_CHANGED", //{ ID, x, y}
+            "ITEM_SUBCOMPONENT_POSITION_CHANGED": "ITEM_SUBCOMPONENT_POSITION_CHANGED" // {ItemID, SubComponentID}
         };
     };
 

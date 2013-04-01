@@ -44,6 +44,10 @@ define(['logManager'], function (logManager) {
         this.canvas.addEventListener(this.canvas.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
             self._canvasItemPositionChanged(event);
         });
+
+        this.canvas.addEventListener(this.canvas.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, function (_canvas, event) {
+            self._canvasItemPositionChanged(event);
+        });
     };
 
     ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId, sCompId) {
@@ -560,9 +564,8 @@ define(['logManager'], function (logManager) {
 
     /************** EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
     ConnectionDrawingManager.prototype._canvasItemPositionChanged = function (event) {
-        var id = event.ID,
-            pX = event.x,
-            pY = event.y,
+        var id = event.ID || event.ItemID,
+            subComponentID = event.SubComponentID,
             srcCoord;
 
         if (this._connectionInDraw === false) {
