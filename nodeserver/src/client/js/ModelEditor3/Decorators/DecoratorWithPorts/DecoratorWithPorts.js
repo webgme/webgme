@@ -308,9 +308,10 @@ define(['logManager',
         if ((this._ports[portId].position.x !== portPosition.x) ||
             (this._ports[portId].position.y !== portPosition.y)) {
 
-            //remove from current position
-            this._ports[portId].$el.remove();
+            //detach from DOM
+            this._ports[portId].$el.detach();
 
+            //reattach
             this._addPortToContainer(portNode);
         }
     };
