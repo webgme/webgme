@@ -421,11 +421,11 @@ define(['logManager',
         //self or child updated
         //check if the updated object is the opened node
         if (gmeID === this.currentNodeInfo.id) {
-            //the updated object is the parent whose children are displayed here
-            //the interest about the parent is:
-            // - name change
-            this.designerCanvas.setTitle("!!!OBJECT has been deleted, not HANDLED CORRECTLY :(!!!!");
-            this.logger.error("!!!OBJECT has been deleted, not HANDLED CORRECTLY :(!!!!");
+            //the unloaded object is the parent whose children are displayed here
+            this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
+            this.designerCanvas.clear();
+            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
+                                                                                                     'color': '#000000'});
         } else {
             //get all the set-relation representation for this guy
             //remove all the connections associated with it

@@ -438,9 +438,10 @@ define(['logManager',
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
-            this.designerCanvas.setTitle("The currently opened model has been deleted (TODO)");
-            this.logger.error("NOT YET IMPLEMENTED: 'The currently opened model has been deleted'");
-            throw "NOT YET IMPLEMENTED: 'The currently opened model has been deleted'";
+            this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
+            this.designerCanvas.clear();
+            this.designerCanvas.setBackgroundText('The currently opened aspect has been deleted...', {'font-size': 30,
+                                                                                                     'color': '#000000'});
         } else {
             this._processNodeUnload(gmeID);
         }

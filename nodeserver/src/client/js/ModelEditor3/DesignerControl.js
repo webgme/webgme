@@ -217,42 +217,44 @@ define(['logManager',
             objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.parentId = nodeObj.getParentId();
 
-            //fill the descriptor based on its type
-            if (nodeObj.getBaseId() === "connection") {
-                objDescriptor.kind = "CONNECTION";
-                objDescriptor.source = nodeObj.getPointer("source").to;
-                objDescriptor.target = nodeObj.getPointer("target").to;
-                if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
-                    objDescriptor.arrowEnd = "block";
-                }
-                objDescriptor.lineType =  nodeObj.getRegistry(nodePropertyNames.Registry.lineType) || "L";
-                objDescriptor.segmentPoints = nodeObj.getRegistry(nodePropertyNames.Registry.segmentPoints);
-            } else {
-                objDescriptor.kind = "MODEL";
-                pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
-
-                objDescriptor.position = { "x": pos.x, "y": pos.y};
-
-                if (objDescriptor.position.hasOwnProperty("x")) {
-                    objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, 0);
+            if (nodeId !== this.currentNodeInfo.id) {
+                //fill the descriptor based on its type
+                if (nodeObj.getBaseId() === "connection") {
+                    objDescriptor.kind = "CONNECTION";
+                    objDescriptor.source = nodeObj.getPointer("source").to;
+                    objDescriptor.target = nodeObj.getPointer("target").to;
+                    if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
+                        objDescriptor.arrowEnd = "block";
+                    }
+                    objDescriptor.lineType =  nodeObj.getRegistry(nodePropertyNames.Registry.lineType) || "L";
+                    objDescriptor.segmentPoints = nodeObj.getRegistry(nodePropertyNames.Registry.segmentPoints);
                 } else {
-                    objDescriptor.position.x = 0;
-                }
+                    objDescriptor.kind = "MODEL";
+                    pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
 
-                if (objDescriptor.position.hasOwnProperty("y")) {
-                    objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, 0);
-                } else {
-                    objDescriptor.position.y = 0;
-                }
+                    objDescriptor.position = { "x": pos.x, "y": pos.y};
 
-                objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
-                if (objDescriptor.decorator !== "DefaultDecorator" &&
-                    objDescriptor.decorator !== "CircleDecorator" &&
-                    objDescriptor.decorator !== "DecoratorWithPorts") {
-                    objDescriptor.decorator = "DecoratorWithPorts";
+                    if (objDescriptor.position.hasOwnProperty("x")) {
+                        objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, 0);
+                    } else {
+                        objDescriptor.position.x = 0;
+                    }
+
+                    if (objDescriptor.position.hasOwnProperty("y")) {
+                        objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, 0);
+                    } else {
+                        objDescriptor.position.y = 0;
+                    }
+
+                    objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
+                    if (objDescriptor.decorator !== "DefaultDecorator" &&
+                        objDescriptor.decorator !== "CircleDecorator" &&
+                        objDescriptor.decorator !== "DecoratorWithPorts") {
+                        objDescriptor.decorator = "DecoratorWithPorts";
+                    }
+                    /*objDescriptor.decorator = "DefaultDecorator";*/
                 }
-                /*objDescriptor.decorator = "DefaultDecorator";*/
-            }
+            }            
         }
 
         return objDescriptor;
@@ -595,8 +597,10 @@ define(['logManager',
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
-            this.designerCanvas.setTitle("The currently opened model has been deleted (TODO)");
-            this.logger.error("NOT YET IMPLEMENTED: 'The currently opened model has been deleted'");
+            this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
+            this.designerCanvas.clear();
+            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
+                                                                                                     'color': '#000000'});
         } else {
             if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                 len = this._GmeID2ComponentID[gmeID].length;
