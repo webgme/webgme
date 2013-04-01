@@ -791,6 +791,7 @@ CoreTree, SHA1, FUTURE) {
 
 			// root
 			getKey: coretree.getHash,
+			isEmpty: coretree.isEmpty,
 			loadRoot: FUTURE.unadapt(coretree.loadRoot),
 
 			persist: function (node, callback) {

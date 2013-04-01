@@ -403,6 +403,9 @@ FUTURE, CONFIG) {
 			if( typeof node.data !== "object" || node.data === null ) {
 				return false;
 			}
+			else if( node.data === EMPTY_DATA ) {
+				return true;
+			}
 
 			return __isEmptyData(node.data);
 		};
