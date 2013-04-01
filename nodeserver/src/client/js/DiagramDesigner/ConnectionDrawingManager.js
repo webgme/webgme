@@ -28,6 +28,8 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionDrawingManager.prototype.initialize = function () {
+        var self = this;
+
         this._connectionInDraw = false;
         this.paper = this.canvas.skinParts.SVGPaper;
 
@@ -38,6 +40,10 @@ define(['logManager'], function (logManager) {
             "lineType": "-",
             "arrowStart": "none",
             "arrowEnd": "none" };
+
+        this.canvas.addEventListener(this.canvas.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
+            self._canvasItemPositionChanged(event);
+        });
     };
 
     ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId, sCompId) {
@@ -551,6 +557,29 @@ define(['logManager'], function (logManager) {
     };
 
     /************** END OF - COMPONENT DELETED FROM CANVAS ***********/
+
+    /************** EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
+    ConnectionDrawingManager.prototype._canvasItemPositionChanged = function (event) {
+        var id = event.ID,
+            pX = event.x,
+            pY = event.y,
+            srcCoord;
+
+        if (this._connectionInDraw === false) {
+            return;
+        }
+
+        if (this._connectionInDrawProps && this._connectionInDrawProps.src === id) {
+            //the item the connection is being drawn from has been repositioned
+            srcCoord = this._getClosestConnectionPointCoordinates(this._connectionInDrawProps.src, this._connectionInDrawProps.sCompId, this._connectionDesc.x2, this._connectionDesc.y2);
+
+            this._connectionDesc.x = srcCoord.x;
+            this._connectionDesc.y = srcCoord.y;
+
+            this._drawConnection();
+        }
+    };
+    /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
 
     ConnectionDrawingManager.prototype.readOnlyMode = function (readOnly) {
     };
