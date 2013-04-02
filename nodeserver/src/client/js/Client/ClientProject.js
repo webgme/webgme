@@ -1352,6 +1352,7 @@ define([
                 }
             };
             if(currentNodes[patternid]){
+                addNodeToPathes(pathessofar,currentNodes[patternid]);
                 patternRootLoaded();
             } else {
                 currentCore.loadByPath(currentNodes["root"],patternid,function(err,node){
