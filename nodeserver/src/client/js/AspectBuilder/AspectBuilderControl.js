@@ -173,10 +173,10 @@ define(['logManager',
             this._client.removeUI(this._territoryId);
         }
 
-        if (nodeId) {
-            this.currentNodeInfo.id = nodeId;
-            this.currentNodeInfo.members = [];
+        this.currentNodeInfo.id = nodeId;
+        this.currentNodeInfo.members = [];
 
+        if (nodeId) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
@@ -204,8 +204,6 @@ define(['logManager',
             this.eventQueue.push(events);
             this._processNextInQueue();
         }
-
-        this.designerCanvas.setAspectMemberNum(this._GMEModels.length);
 
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
@@ -335,6 +333,10 @@ define(['logManager',
 
         this.designerCanvas.endUpdate();
 
+        if (this.currentNodeInfo.id) {
+            this.designerCanvas.setAspectMemberNum(this._GMEModels.length);
+        }
+
         this.designerCanvas.hidePogressbar();
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
@@ -439,7 +441,7 @@ define(['logManager',
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.designerCanvas.clear();
+            this.selectedObjectChanged(undefined);
             this.designerCanvas.setBackgroundText('The currently opened aspect has been deleted...', {'font-size': 30,
                                                                                                      'color': '#000000'});
         } else {

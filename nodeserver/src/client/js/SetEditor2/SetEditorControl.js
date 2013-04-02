@@ -135,8 +135,13 @@ define(['logManager',
             this._client.removeUI(this._territoryId);
         }
 
+        this.currentNodeInfo.id = nodeId;
+        this.currentNodeInfo.parentId = undefined;
+
         if (nodeId) {
-            this.currentNodeInfo.id = nodeId;
+            this.designerCanvas.setBackgroundText("SetEditor", {"color": "#DEDEDE",
+                "font-size": "10px"});
+
             this.currentNodeInfo.parentId = desc.parentId;
 
             if (this.currentNodeInfo.parentId) {
@@ -157,6 +162,9 @@ define(['logManager',
             this._territoryId = this._client.addUI(this, true);
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
+        } else {
+            this.designerCanvas.setBackgroundText("No object to display", {"color": "#DEDEDE",
+                "font-size": "30px"});
         }
     };
 
@@ -423,7 +431,7 @@ define(['logManager',
         if (gmeID === this.currentNodeInfo.id) {
             //the unloaded object is the parent whose children are displayed here
             this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.designerCanvas.clear();
+            this.selectedObjectChanged(undefined);
             this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
                                                                                                      'color': '#000000'});
         } else {
