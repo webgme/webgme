@@ -33,12 +33,6 @@ define(['logManager',
         this._initializeFilterPanel();
     };
 
-    AspectBuilderCanvas.prototype._resizeItemContainer =  function (width, height) {
-        __parent_proto__._resizeItemContainer.apply(this, arguments);
-
-        this._aspectBuilderCanvasBackGroundText();
-    };
-
     AspectBuilderCanvas.prototype._aspectBuilderCanvasBackGroundText = function () {
         var text;
 
