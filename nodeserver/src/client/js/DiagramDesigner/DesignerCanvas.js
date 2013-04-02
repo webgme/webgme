@@ -159,9 +159,9 @@ define(['logManager',
         this.connectionIDbyEndID = {};
 
         this._updating = false;
-        this._insertedDesignerItemIDs = null;
-        this._updatedDesignerItemIDs = null;
-        this._deletedDesignerItemIDs = null;
+        this._insertedDesignerItemIDs = [];
+        this._updatedDesignerItemIDs = [];
+        this._deletedDesignerItemIDs = [];
 
         this._itemSubcomponentsMap = {};
     };
@@ -591,6 +591,7 @@ define(['logManager',
                 cItem.renderSetLayoutInfo();
             }
         };
+        
         doRenderSetLayout(this._insertedDesignerItemIDs);
         doRenderSetLayout(this._updatedDesignerItemIDs);
 

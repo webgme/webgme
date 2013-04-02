@@ -39,6 +39,10 @@ define(['commonUtil','core/core'+COREVERSION,'core/assert','logManager'], functi
             log("isValidNode("+core.getKey(node)+")");
             return core.isValidNode(node);
         };
+        var isEmpty = function(node){
+            log("isEmpty("+core.getKey(node)+")");
+            return core.isEmpty(node);
+        };
 
         //root
         var getKey = function (node) {
@@ -254,6 +258,7 @@ define(['commonUtil','core/core'+COREVERSION,'core/assert','logManager'], functi
             isValidNode: isValidNode,
             isValidRelid: isValidRelid,
             isValidPath: isValidPath,
+            isEmpty: isEmpty,
 
             // root
             getKey: getKey,

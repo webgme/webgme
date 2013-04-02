@@ -1355,9 +1355,11 @@ define([
                 patternRootLoaded();
             } else {
                 currentCore.loadByPath(currentNodes["root"],patternid,function(err,node){
-                    if(!err && node){
+                    if(!err && node && !currentCore.isEmpty(node)){
                         addNodeToPathes(pathessofar,node);
                         patternRootLoaded();
+                    } else {
+                        callback(err);
                     }
                 });
             }
@@ -1557,13 +1559,15 @@ define([
             user.PATTERNS = COPY(patterns);
             if(user.SENDEVENTS){
                 for(var i in user.PATTERNS){
-                    INSERTARR(newpathes,i);
-                    var patternode = getNode(i);
-                    //check the type of patterns and then put the needed pathes to the array
-                    if(patterns[i].children && patterns[i].children>0){
-                        addChildrenPathes(patterns[i].children,i);
+                    if(currentNodes[i]){
+                        INSERTARR(newpathes,i);
+                        var patternode = getNode(i);
+                        //check the type of patterns and then put the needed pathes to the array
+                        if(patterns[i].children && patterns[i].children>0){
+                            addChildrenPathes(patterns[i].children,i);
+                        }
+                        addSetPathes(i,patterns[i].sets);
                     }
-                    addSetPathes(i,patterns[i].sets);
                 }
                 //adding all the sets to the checked pathes
                 var temparray = [];
