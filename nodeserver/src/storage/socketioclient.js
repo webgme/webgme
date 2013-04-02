@@ -21,6 +21,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             reconnect = false,
             getDbStatusCallbacks = {},
             callbacks = {},
+            getBranchHashCallbacks = {},
             IO = null,
             projects = {},
             references = {},
@@ -52,8 +53,16 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
         }
 
+        function reSendGetBranches(){
+            //this function should be called after reconnecting
+            for(var i in getBranchHashCallbacks){
+                projects[getBranchHashCallbacks[i].project].getBranchHash(i,getBranchHashCallbacks[i].oldhash,getBranchHashCallbacks[i].cb);
+            }
+        }
+
         function callbackTimeout(guid){
-            var cb = null;
+            var cb = null,
+                oldhash = "";
             if(callbacks[guid]){
                 cb = callbacks[guid].cb;
                 delete callbacks[guid];
@@ -62,6 +71,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 cb = getDbStatusCallbacks[guid].cb;
                 delete getDbStatusCallbacks[guid];
                 cb(null,status);
+            } else if(getBranchHashCallbacks[guid]){
+                cb = getBranchHashCallbacks[guid].cb;
+                oldhash = getBranchHashCallbacks[guid].oldhash;
+                delete getBranchHashCallbacks[guid];
+                cb(null,oldhash);
             }
         }
 
@@ -142,6 +156,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                 if(!err && newstatus){
                                     status = newstatus;
                                     clearDbCallbacks();
+                                    reSendGetBranches();
                                 }
                             });
                         }
@@ -442,19 +457,25 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
             function getBranchHash(branch,oldhash,callback){
                 ASSERT(typeof callback === 'function');
+                var guid = GUID();
+                if(getBranchHashCallbacks[branch]){
+                    //internal hack for recalling
+                    guid = branch;
+                    branch = getBranchHashCallbacks[guid].branch;
+                } else {
+                    getBranchHashCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid),branch:branch,oldhash:oldhash,project:project};
+                }
+
                 if(socketConnected){
-                    var guid = GUID();
-                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
                     socket.emit('getBranchHash',project,branch,oldhash,function(err,newhash){
-                        if(callbacks[guid]){
-                            clearTimeout(callbacks[guid].to);
-                            delete callbacks[guid];
+                        if(getBranchHashCallbacks[guid]){
+                            clearTimeout(getBranchHashCallbacks[guid].to);
+                            delete getBranchHashCallbacks[guid];
                             callback(err,newhash);
                         }
                     });
-                } else {
-                    callback(ERROR_DISCONNECTED);
                 }
+
             }
 
             function setBranchHash(branch,oldhash,newhash,callback){
