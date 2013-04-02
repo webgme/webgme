@@ -5,7 +5,7 @@ define(['logManager',
     'commonUtil',
     'js/Constants',
     'js/DiagramDesigner/SelectionManager',
-    'js/DiagramDesigner/DragManager',
+    'js/DiagramDesigner/DragManager.Native',
     'raphaeljs',
     'loaderCircles',
     'js/DiagramDesigner/DesignerCanvas.OperatingModes',
@@ -93,7 +93,7 @@ define(['logManager',
         }
 
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
-        this.dragManager.initialize();
+        this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         this.connectionRouteManager = options.connectionRouteManager || new ConnectionRouteManagerBasic({"canvas": this});
         this.connectionRouteManager.initialize();
@@ -732,7 +732,11 @@ define(['logManager',
     /************************** DRAG ITEM ***************************/
     DesignerCanvas.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
-        this.items[draggedItemId].hideConnectors();
+
+        var len = allDraggedItemIDs.length;
+        while (len--) {
+            this.items[allDraggedItemIDs[len]].hideConnectors();
+        }
     };
 
     DesignerCanvas.prototype.onDesignerItemDrag = function (draggedItemId, allDraggedItemIDs) {
@@ -740,7 +744,7 @@ define(['logManager',
             connectionIDsToUpdate,
             redrawnConnectionIDs;
 
-        //TODO: refresh only the connections that are really needed
+        //refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
