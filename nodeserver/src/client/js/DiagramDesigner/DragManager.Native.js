@@ -39,25 +39,11 @@ define(['logManager',
             self._canvasItemPositionChanged(event);
         });
 
-        /*this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
-         self._onItemMouseDown(event);
-         });*/
-
-        this.$el.on('mousedown.DragManager', null,  function (event) {
-            var t = $(event.target);
-            while (t[0] !== self.$el[0]) {
-                if (t.hasClass(DESIGNER_ITEM_CLASS)) {
-                    self._onItemMouseDown(event);
-                    break;
-                } else {
-                    t = t.parent();
-                }
-            }
-            event.stopPropagation();
+        this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
+            self._onItemMouseDown(event);
         });
 
-        this.__dragScroll = new DragScroll(this.$el.parent());
-
+        this._dragScroll = new DragScroll(this.$el.parent());
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -369,7 +355,7 @@ define(['logManager',
     /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
 
 
-    DragManager.prototype._onItemMouseDown = function (event, itemId) {
+    DragManager.prototype._onItemMouseDown = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event),
             self = this,
             leftButton = event.which === 1,
@@ -401,7 +387,7 @@ define(['logManager',
 
                 this._onDraggableStart(event);
 
-                this.__dragScroll.start();
+                this._dragScroll.start();
             }
 
             event.stopPropagation();
