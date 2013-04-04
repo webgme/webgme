@@ -254,7 +254,7 @@ define([ "util/assert" ], function (ASSERT) {
                 }
                 hash = (hash && hash.hash) || "";
                 if(hash !== oldhash){
-                    callback(null,hash);
+                    callback(null,hash,null);
                 } else {
                     setTimeout(function(){
                         hash = storage.getItem(database+SEPARATOR+project+SEPARATOR+branch);
@@ -262,7 +262,7 @@ define([ "util/assert" ], function (ASSERT) {
                             hash = JSON.parse(hash);
                         }
                         hash = (hash && hash.hash) || "";
-                        callback(null,hash);
+                        callback(null,hash,null);
                     },options.timeout);
                 }
             }

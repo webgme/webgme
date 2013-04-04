@@ -75,7 +75,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 cb = getBranchHashCallbacks[guid].cb;
                 oldhash = getBranchHashCallbacks[guid].oldhash;
                 delete getBranchHashCallbacks[guid];
-                cb(null,oldhash);
+                cb(ERROR_TIMEOUT,null,null);
             }
         }
 
@@ -467,11 +467,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 }
 
                 if(socketConnected){
-                    socket.emit('getBranchHash',project,branch,oldhash,function(err,newhash){
+                    socket.emit('getBranchHash',project,branch,oldhash,function(err,newhash,forkedhash){
                         if(getBranchHashCallbacks[guid]){
                             clearTimeout(getBranchHashCallbacks[guid].to);
                             delete getBranchHashCallbacks[guid];
-                            callback(err,newhash);
+                            callback(err,newhash,forkedhash);
                         }
                     });
                 }

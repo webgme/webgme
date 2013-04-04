@@ -227,13 +227,13 @@ define([ "util/assert" ], function (ASSERT) {
 					branch = [ callback ];
 					branches[tag] = branch;
 
-					project.getBranchHash(name, oldhash, function (err, newhash) {
+					project.getBranchHash(name, oldhash, function (err, newhash, forkedhash) {
 						if (branches[tag] === branch) {
 							var cb;
 							delete branches[tag];
 
 							while ((cb = branch.pop())) {
-								cb(err, newhash);
+								cb(err, newhash, forkedhash);
 							}
 						}
 					});

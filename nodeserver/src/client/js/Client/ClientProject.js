@@ -1524,6 +1524,10 @@ define([
             return true;
         };
         var UpdateUser = function(user,patterns,nupathes){
+            if(!user){
+                return;
+            }
+
             var newpathes = [];
             var events = [];
             var addChildrenPathes = function(level,path){

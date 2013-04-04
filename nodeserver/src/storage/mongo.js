@@ -261,9 +261,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 					} else {
 						var newhash = (obj && obj.hash) || "";
 						if (oldhash !== newhash) {
-							callback(null, newhash);
+							callback(null, newhash, null);
 						} else {
-							setTimeout(callback, options.timeout, null, newhash);
+							setTimeout(callback, options.timeout, null, newhash, null);
 						}
 					}
 				});
