@@ -1,6 +1,8 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'js/DiagramDesigner/DragScroll'], function (logManager,
+                                                    DragScroll) {
 
     var DragManager,
         MOVE_CURSOR = "move",
@@ -40,6 +42,8 @@ define(['logManager'], function (logManager) {
         this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
             self._onItemMouseDown(event);
         });
+
+        this._dragScroll = new DragScroll(this.$el.parent());
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -351,7 +355,7 @@ define(['logManager'], function (logManager) {
     /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
 
 
-    DragManager.prototype._onItemMouseDown = function (event, itemId) {
+    DragManager.prototype._onItemMouseDown = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event),
             self = this,
             leftButton = event.which === 1,
@@ -382,6 +386,8 @@ define(['logManager'], function (logManager) {
                     "dY": 0};
 
                 this._onDraggableStart(event);
+
+                this._dragScroll.start();
             }
 
             event.stopPropagation();
@@ -439,9 +445,9 @@ define(['logManager'], function (logManager) {
 
                     this.canvas.onDesignerItemDrag(undefined, this._dragOptions.allDraggedItemIDs);
                 }
+            } else {
+                this.logger.warning("Something wrong here...DragManager.prototype._onBackgroundMouseMove");
             }
-        } else {
-            this.logger.warning("Something wrong here...DragManager.prototype._onBackgroundMouseMove");
         }
     };
 

@@ -1,6 +1,8 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'js/DiagramDesigner/DragScroll'], function (logManager,
+                                                    DragScroll) {
 
     var ConnectionDrawingManager,
         EVENTPOSTFIX = 'ConnectionDrawingManager',
@@ -48,6 +50,8 @@ define(['logManager'], function (logManager) {
         this.canvas.addEventListener(this.canvas.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, function (_canvas, event) {
             self._canvasItemPositionChanged(event);
         });
+
+        this._dragScroll = new DragScroll(this.canvas.skinParts.$designerCanvasBody);
     };
 
     ConnectionDrawingManager.prototype.attachConnectable = function (elements, objId, sCompId) {
@@ -102,6 +106,7 @@ define(['logManager'], function (logManager) {
                     if (self.canvas.mode === self.canvas.OPERATING_MODES.NORMAL) {
                         el.addClass(ACCEPT_CLASS);
                         self._startConnectionDraw(el, objId, sCompId, event);
+                        self._dragScroll.start();
                     }
                 },
                 stop: function (event) {
@@ -360,6 +365,7 @@ define(['logManager'], function (logManager) {
                                                     "connId": connID,
                                                     "connProps": connProps };
                     self._startConnectionRedraw(event);
+                    self._dragScroll.start();
                 }
             },
             stop: function (event) {
@@ -391,6 +397,7 @@ define(['logManager'], function (logManager) {
                                                     "connId": connID,
                                                     "connProps": connProps };
                     self._startConnectionRedraw(event);
+                    self._dragScroll.start();
                 }
             },
             stop: function (event) {

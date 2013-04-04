@@ -54,6 +54,20 @@ define(['logManager',
             //hook up mousedown on background
             $el.on('mousedown.SelectionManager', function (event) {
                 self._onBackgroundMouseDown(event);
+                /*var t = $(event.target),
+                    childCapture = false;
+                while (t[0] !== $el[0]) {
+                    if (t.hasClass(DESIGNER_ITEM_CLASS)) {
+                        childCapture = true;
+                        break;
+                    } else {
+                        t = t.parent();
+                    }
+                }
+                if (childCapture === false) {
+                    self._onBackgroundMouseDown(event);
+                }
+                event.stopPropagation();*/
             });
         }
     };
