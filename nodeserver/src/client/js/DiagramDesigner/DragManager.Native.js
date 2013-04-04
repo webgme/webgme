@@ -1,6 +1,8 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'js/DiagramDesigner/DragScroll'], function (logManager,
+                                                    DragScroll) {
 
     var DragManager,
         MOVE_CURSOR = "move",
@@ -37,9 +39,25 @@ define(['logManager'], function (logManager) {
             self._canvasItemPositionChanged(event);
         });
 
-        this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
-            self._onItemMouseDown(event);
+        /*this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
+         self._onItemMouseDown(event);
+         });*/
+
+        this.$el.on('mousedown.DragManager', null,  function (event) {
+            var t = $(event.target);
+            while (t[0] !== self.$el[0]) {
+                if (t.hasClass(DESIGNER_ITEM_CLASS)) {
+                    self._onItemMouseDown(event);
+                    break;
+                } else {
+                    t = t.parent();
+                }
+            }
+            event.stopPropagation();
         });
+
+        this.__dragScroll = new DragScroll(this.$el.parent());
+
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -382,6 +400,8 @@ define(['logManager'], function (logManager) {
                     "dY": 0};
 
                 this._onDraggableStart(event);
+
+                this.__dragScroll.start();
             }
 
             event.stopPropagation();
@@ -439,9 +459,9 @@ define(['logManager'], function (logManager) {
 
                     this.canvas.onDesignerItemDrag(undefined, this._dragOptions.allDraggedItemIDs);
                 }
+            } else {
+                this.logger.warning("Something wrong here...DragManager.prototype._onBackgroundMouseMove");
             }
-        } else {
-            this.logger.warning("Something wrong here...DragManager.prototype._onBackgroundMouseMove");
         }
     };
 
