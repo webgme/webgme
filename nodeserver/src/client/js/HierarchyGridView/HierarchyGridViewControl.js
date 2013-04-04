@@ -42,6 +42,10 @@ define(['logManager',
 
             this._displayedParts = {};
 
+            var desc = this._discoverNode(nodeId);
+            var title = (desc.Attributes && desc.Attributes.name ? desc.Attributes.name + " " : "N/A ") + "(" + desc.ID + ")";
+            this._myHierarchyGridView.setTitle(title);
+
             this._territoryId = this._client.addUI(this, true);
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);

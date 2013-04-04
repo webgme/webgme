@@ -3,9 +3,11 @@
 define(['logManager',
     'loaderProgressBar',
     'commonUtil',
+    'js/WidgetBase/WidgetBase',
     'css!VisualizerPanelCSS/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
-                                    commonUtil) {
+                                    commonUtil,
+                                    WidgetBase) {
 
     var VisualizerPanel;
 
@@ -92,7 +94,9 @@ define(['logManager',
             if (this._visualizers[visualizer]) {
                 WidgetClass = this._visualizers[visualizer].widget;
                 if (WidgetClass) {
-                    this._activeWidget = new WidgetClass({"containerElement": this._widgetContainer});
+                    var opts = {};
+                    opts[WidgetBase.OPTIONS.CONTAINER_ELEMENT] = this._widgetContainer;
+                    this._activeWidget = new WidgetClass(opts);
                 }
 
                 ControlClass = this._visualizers[visualizer].control;

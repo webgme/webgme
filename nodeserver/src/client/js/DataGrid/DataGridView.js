@@ -1,11 +1,13 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
+define(['clientUtil',
+    'js/WidgetBase/WidgetBaseWithHeader',
+    'js/Constants',
     'text!js/DataGrid/DataGridViewTemplate.html',
     'text!js/DataGrid/DataTableTemplate.html',
-    'css!DataGridCSS/DataGridView.css'], function (logManager,
-                                                          util,
+    'css!DataGridCSS/DataGridView.css'], function (util,
+                                                   WidgetBaseWithHeader,
+                                                          CONSTANTS,
                                                           dataGridViewTemplate,
                                                           dataTableTemplate) {
 
@@ -16,36 +18,56 @@ define(['logManager',
         ROW_COMMAND_DELETE = "delete",
         ROW_COMMAND_EDIT = "edit",
         ROW_COMMAND_DELETE_TITLE = "Delete row",
-        ROW_COMMAND_EDIT_TITLE = "Edit row";
+        ROW_COMMAND_EDIT_TITLE = "Edit row",
+        __parent__ = WidgetBaseWithHeader,
+        __parent_proto__ = __parent__.prototype;
 
     DataGridView = function (options) {
         //set properties from options
-        this.$el = options.containerElement;
-        if (this.$el.length === 0) {
-            this.logger.error("DataGridView's container control does not exist");
-            throw ("DataGridView can not be created");
-        }
+        options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "DataGridView";
+        //options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] = WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE_OPTIONS.MINI;
 
-        this.logger = options.logger || logManager.create((options.loggerName || "DataGridView") + '_' + this.$el.attr("id"));
-
-        this._readOnlyMode = options.readOnlyMode || false;
-        this.logger.warning("DataGridView.ctor _readOnlyMode is set to TRUE by default");
+        //call parent's constructor
+        __parent__.apply(this, [options]);
 
         //initialize UI
         this.initializeUI();
 
+        //set instance specific variables
         this._groupColumns = true;
         this._rowDelete = true;
         this._rowEdit = true;
 
         this.clear();
 
-        this.logger.debug("DesignerCanvas ctor finished");
+        this.logger.debug("DataGridView ctor finished");
     };
+    //inherit from WidgetBase
+    DataGridView.OPTIONS = _.extend(WidgetBaseWithHeader.OPTIONS,
+        {});
+    _.extend(DataGridView.prototype, __parent__.prototype);
 
     DataGridView.prototype.initializeUI = function () {
+        var self = this;
+
         //get container first
         this.$el.append(this.$_DOMBase);
+
+        //add extra visual piece
+        this.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+
+        });
+
+
+        this.toolBar.addButton({ "title": "Grid layout",
+            "icon": "icon-th",
+            "data": { "mode": "grid" }}, this.$btnGroupItemAutoOptions );
+
+
+        this.toolBar.addButton({ "title": "Diagonal",
+            "icon": "icon-signal",
+            "data": { "mode": "diagonal" }}, this.$btnGroupItemAutoOptions );
+
     };
 
     DataGridView.prototype.$_DOMBase = $(dataGridViewTemplate);
@@ -70,7 +92,7 @@ define(['logManager',
     };
 
     DataGridView.prototype.destroy = function () {
-        this.clear();
+        __parent_proto__.destroy.call(this);
     };
 
     DataGridView.prototype._initializeTable = function (columns) {

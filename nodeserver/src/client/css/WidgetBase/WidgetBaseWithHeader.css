@@ -1,0 +1,21 @@
+.widget-base-wh {
+  box-sizing: border-box; }
+  .widget-base-wh .widget-header {
+    padding: 5px;
+    height: 30px;
+    background-color: #efefef;
+    overflow: hidden;
+    white-space: nowrap; }
+    .widget-base-wh .widget-header .widget-header-title {
+      font-size: 20px;
+      font-weight: bold;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 10px; }
+    .widget-base-wh .widget-header .widget-header-toolbar .btn-group {
+      margin-left: 10px; }
+    .widget-base-wh .widget-header .widget-header-toolbar .btn-group.no-margin {
+      margin-left: 0px; }
+  .widget-base-wh .widget-body {
+    position: relative;
+    overflow: auto; }
