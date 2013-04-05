@@ -59,9 +59,7 @@ define(['clientUtil',
         });
 
         //add DROPDOWN MENU to toolbar for column hide/show
-        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "title": "Column visibility",
-            "text": "Column visibility",
-            "icon": "icon-eye-open"});
+        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Column visibility" });
     };
 
     DataGridView.prototype.$_DOMBase = $(dataGridViewTemplate);
