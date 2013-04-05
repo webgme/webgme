@@ -18,7 +18,6 @@ define([], function () {
 
         this.$el.append($btnGroup);
 
-
         if (clickFn) {
             $btnGroup.on("click", ".btn", function (event) {
                 clickFn.call(this, event, $(this).data());
@@ -115,6 +114,32 @@ define([], function () {
     };
 
     /***************** END OF - BUTTON ****************************/
+
+
+    /***************** TOGGLE-BUTTON GROUP ****************************/
+
+    WidgetToolbar.prototype.addToggleButton = function (params, btnGroup) {
+        var oClickFn = params.clickFn,
+            toggleClickFn,
+            btn;
+
+        toggleClickFn = function (event, data) {
+            $(this).toggleClass('active');
+            $(this).toggleClass('btn-primary');
+            if (oClickFn) {
+                oClickFn.call(this, event, data, $(this).hasClass('active'));
+            }
+        };
+
+        params.clickFn = toggleClickFn;
+        btn = this._createButton(params);
+
+        btnGroup.append(btn);
+
+        return btn;
+    };
+
+    /***************** END OF - TOGGLE-BUTTON GROUP ****************************/
 
 
     /***************** TEXTBOX ****************************/
