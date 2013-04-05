@@ -12,10 +12,16 @@
       display: inline-block;
       margin-right: 10px;
       margin-left: 10px; }
-    .widget-base-wh .widget-header .widget-header-toolbar .btn-group {
+    .widget-base-wh .widget-header .widget-header-toolbar .toolbar-group {
       margin-left: 10px; }
-    .widget-base-wh .widget-header .widget-header-toolbar .btn-group.no-margin {
-      margin-left: 0px; }
+    .widget-base-wh .widget-header .widget-header-toolbar select,
+    .widget-base-wh .widget-header .widget-header-toolbar textarea,
+    .widget-base-wh .widget-header .widget-header-toolbar input,
+    .widget-base-wh .widget-header .widget-header-toolbar .uneditable-input {
+      margin-bottom: 0px; }
+    .widget-base-wh .widget-header .widget-header-toolbar .input-append,
+    .widget-base-wh .widget-header .widget-header-toolbar .input-prepend {
+      margin-bottom: 0px; }
   .widget-base-wh .widget-body {
     position: relative;
     overflow: auto; }

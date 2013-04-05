@@ -11,7 +11,7 @@ define([], function () {
 
     WidgetToolbar.prototype.addButtonGroup = function (clickFn) {
         var $btnGroup = $('<div/>', {
-            "class": "btn-group inline"
+            "class": "btn-group inline toolbar-group"
         });
 
         this.$el.append($btnGroup);
@@ -90,6 +90,53 @@ define([], function () {
         btnGroup.append($btn);
 
         return $btn;
+    };
+
+    WidgetToolbar.prototype.addTextBox = function (params, textChangedFn) {
+        var $txtGroup = $('<div/>', {
+                "class": "input-prepend inline toolbar-group"
+            }),
+            $label,
+            $textBox = $('<input/>', {
+                "class": "input-medium",
+                "type" :"text"
+            });
+
+        if (params && params.label) {
+            $label = $('<span/>', {"class":"add-on"});
+            $label.text(params.label + ": ");
+        }
+
+        if ($label) {
+            $txtGroup.append($label);
+        }
+
+        $txtGroup.append($textBox);
+
+        this.$el.append($txtGroup);
+
+        if (textChangedFn) {
+            var oldVal;
+            $textBox.on('keyup.WidgetToolbar', function(e) {
+                var val = $(this).val();
+
+                if (val !== oldVal) {
+                    textChangedFn.call(this, oldVal, val);
+                    oldVal = val;
+                }
+            } );
+        }
+
+        $textBox.on('keypress.WidgetToolbar', function(e) {
+                /* Prevent form submission */
+                if ( e.keyCode == 13 )
+                {
+                    return false;
+                }
+            }
+        );
+
+        return $textBox;
     };
 
     return WidgetToolbar;
