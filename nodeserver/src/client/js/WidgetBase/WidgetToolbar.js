@@ -9,12 +9,15 @@ define([], function () {
         this._size = size;
     };
 
+    /***************** BUTTON GROUP ****************************/
+
     WidgetToolbar.prototype.addButtonGroup = function (clickFn) {
         var $btnGroup = $('<div/>', {
-            "class": "btn-group inline"
+            "class": "btn-group inline toolbar-group"
         });
 
         this.$el.append($btnGroup);
+
 
         if (clickFn) {
             $btnGroup.on("click", ".btn", function (event) {
@@ -26,6 +29,11 @@ define([], function () {
 
         return $btnGroup;
     };
+
+    /***************** END OF - BUTTON GROUP ****************************/
+
+
+    /***************** RADIO-BUTTON GROUP ****************************/
 
     WidgetToolbar.prototype.addRadioButtonGroup = function (clickFn) {
         var $btnGroup;
@@ -43,7 +51,12 @@ define([], function () {
         return $btnGroup;
     };
 
-    WidgetToolbar.prototype.addButton = function (params, btnGroup) {
+    /***************** END OF - RADIO-BUTTON GROUP ****************************/
+
+
+    /***************** BUTTON ****************************/
+
+    WidgetToolbar.prototype._createButton = function (params) {
         var $btn,
             i,
             btnClass = "btn ";
@@ -76,6 +89,9 @@ define([], function () {
         }
 
         if (params.text) {
+            if (params.icon) {
+                $btn.append(' ');
+            }
             $btn.append(params.text);
         }
 
@@ -87,10 +103,156 @@ define([], function () {
             });
         }
 
+        return $btn;
+    };
+
+    WidgetToolbar.prototype.addButton = function (params, btnGroup) {
+        var $btn = this._createButton(params);
+
         btnGroup.append($btn);
 
         return $btn;
     };
+
+    /***************** END OF - BUTTON ****************************/
+
+
+    /***************** TEXTBOX ****************************/
+
+    WidgetToolbar.prototype.addTextBox = function (params, textChangedFn) {
+        var $txtGroup = $('<div/>', {
+                "class": "input-prepend inline toolbar-group"
+            }),
+            $label,
+            $textBox = $('<input/>', {
+                "class": "input-medium",
+                "type" :"text"
+            });
+
+        if (params && params.label) {
+            $label = $('<span/>', {"class":"add-on"});
+            $label.text(params.label + ": ");
+        }
+
+        if ($label) {
+            $txtGroup.append($label);
+        }
+
+        $txtGroup.append($textBox);
+
+        this.$el.append($txtGroup);
+
+        if (textChangedFn) {
+            var oldVal;
+            $textBox.on('keyup.WidgetToolbar', function(/*e*/) {
+                var val = $(this).val();
+
+                if (val !== oldVal) {
+                    textChangedFn.call(this, oldVal, val);
+                    oldVal = val;
+                }
+            } );
+        }
+
+        $textBox.on('keypress.WidgetToolbar', function(e) {
+                /* Prevent form submission */
+                if ( e.keyCode == 13 )
+                {
+                    return false;
+                }
+            }
+        );
+
+        return $textBox;
+    };
+
+    /***************** END OF - TEXTBOX ****************************/
+
+
+    /***************** DROPDOWN MENU ****************************/
+
+    WidgetToolbar.prototype.addDropDownMenu = function (params) {
+        var $ddMenu = this.addButtonGroup(),
+            $btn = this.addButton(params, $ddMenu),
+            $caret = $('<span class="caret"></span>');/*,
+            $menuUl = $('<ul class="dropdown-menu"></ul>');*/
+
+        $btn.append(' ').append($caret);
+
+        $btn.addClass("dropdown-toggle");
+        $btn.attr('data-toggle', "dropdown");
+
+        /*$ddMenu.append($menuUl);*/
+
+        $ddMenu.clear = function () {
+            $ddMenu.find('ul').first().empty();
+        };
+
+        return $ddMenu;
+    };
+
+    WidgetToolbar.prototype._addItemToParentMenu = function (menuItem, parentMenu) {
+        var ul = parentMenu.find('ul').first();
+
+        if (ul.length === 0) {
+            ul = $('<ul class="dropdown-menu"></ul>');
+            parentMenu.append(ul);
+        }
+
+        ul.append(menuItem);
+    };
+
+    WidgetToolbar.prototype.addMenuItemDivider = function (parentMenu) {
+        var divider = $('<li class="divider"></li>');
+
+        this._addItemToParentMenu(divider, parentMenu);
+    };
+
+    WidgetToolbar.prototype.addButtonMenuItem = function (params, parentMenu) {
+        var btn = this._createButton(params),
+            li = $('<li></li>');
+
+        li.append(btn.removeClass("btn"));
+
+        this._addItemToParentMenu(li, parentMenu);
+    };
+
+    WidgetToolbar.prototype.addCheckBoxMenuItem = function (params, parentMenu) {
+        var chkLi = $('<li></li>'),
+            a = $('<a href="#"></a>'),
+            chkField = $('<div class="toggle-switch on pull-right"></div>');
+
+        if (params.text) {
+            a.append(params.text);
+        }
+
+        a.append(chkField);
+        chkLi.append(a);
+
+        if (params.data) {
+            chkLi.data(params.data);
+        }
+
+        chkLi.on('click', null, function (event) {
+            var checkBox = $(this),
+                data = checkBox.data(),
+                f = checkBox.find('.toggle-switch').first();
+
+            f.toggleClass('on');
+
+            if (params.checkChangedFn) {
+                params.checkChangedFn.call(this, data, f.hasClass('on'));
+            }
+
+            event.stopPropagation();
+        });
+
+        this._addItemToParentMenu(chkLi, parentMenu);
+
+        return chkLi;
+    };
+
+    /***************** END OF - DROPDOWN MENU ****************************/
 
     return WidgetToolbar;
 });

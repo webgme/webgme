@@ -53,21 +53,15 @@ define(['clientUtil',
         //get container first
         this.$el.append(this.$_DOMBase);
 
-        //add extra visual piece
-        this.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-
+        //add FILTER box to toolbar
+        this.$filterBox = this.toolBar.addTextBox({"label": "Filter"}, function (oldVal, newVal) {
+            self._filterDataTable(newVal);
         });
 
-
-        this.toolBar.addButton({ "title": "Grid layout",
-            "icon": "icon-th",
-            "data": { "mode": "grid" }}, this.$btnGroupItemAutoOptions );
-
-
-        this.toolBar.addButton({ "title": "Diagonal",
-            "icon": "icon-signal",
-            "data": { "mode": "diagonal" }}, this.$btnGroupItemAutoOptions );
-
+        //add DROPDOWN MENU to toolbar for column hide/show
+        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "title": "Column visibility",
+            "text": "Column visibility",
+            "icon": "icon-eye-open"});
     };
 
     DataGridView.prototype.$_DOMBase = $(dataGridViewTemplate);
@@ -89,6 +83,8 @@ define(['clientUtil',
             this.$table.remove();
             this.$table = undefined;
         }
+
+        this.$ddColumnVisibility.clear();
     };
 
     DataGridView.prototype.destroy = function () {
@@ -159,6 +155,7 @@ define(['clientUtil',
                     self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
                 },
             "aoColumns": _columns,
+            "sDom": "lrtip",
             "aaSorting": [[defaultSortCol,'asc']]});
 
         /* IN PLACE EDIT ON CELL DOUBLECLICK */
@@ -183,6 +180,8 @@ define(['clientUtil',
                 event.preventDefault();
             });
         }
+
+        this.createColumnShowHideControl(_columns, this._groupColumns, actionButtonsEnabled == true);
     };
 
     DataGridView.prototype._buildGroupedHeader = function (columns) {
@@ -715,6 +714,50 @@ define(['clientUtil',
         }
     };
 
+    DataGridView.prototype._filterDataTable = function (text) {
+        if (this._oTable) {
+            this._oTable.fnFilter(text);
+        }
+    };
+
+
+    /******************* CREATE COLUMN SHOW/HIDE UI CONTROL *******************/
+
+    DataGridView.prototype._createColumnShowHideControlInToolBar = function (columns, isColumnsGrouped, isActionButtonsEnabled) {
+        var i,
+            len = columns.length,
+            self = this;
+
+        //clear dropdown menu
+        this.$ddColumnVisibility.clear();
+        for (i = isActionButtonsEnabled ? 1 : 0; i < len; i+= 1) {
+
+            if (this.dataMemberID !== columns[i]["mData"]) {
+                this.toolBar.addCheckBoxMenuItem({"text": columns[i]["mData"],
+                    "data": { "idx": i },
+                    "checkChangedFn": function (data, isChecked) {
+                        self.setColumnVisibility(data.idx, isChecked);
+                    }}, this.$ddColumnVisibility);
+            }
+        }
+    };
+
+    /************** END OF --- CREATE COLUMN SHOW/HIDE UI CONTROL *************/
+
+    DataGridView.prototype.toggleColumnVisibility = function (index) {
+        if (this._oTable) {
+            var bVis = this._oTable.fnSettings().aoColumns[index].bVisible;
+            this.showColumn(index, !bVis);
+        }
+    };
+
+    DataGridView.prototype.setColumnVisibility = function (index, visible) {
+        //var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
+        if (this._oTable) {
+            this._oTable.fnSetColumnVis(index, visible);
+        }
+    };
+
     /************** PUBLIC API OVERRIDABLES **************************/
 
     DataGridView.prototype.onCellEdit = function (params) {
@@ -731,6 +774,10 @@ define(['clientUtil',
 
     DataGridView.prototype.onRowEdit = function (id, oData, nData) {
         this.logger.warning("onRowEdit is not overridden... ID:'" + id + "'\r\noldData:" + JSON.stringify(oData) + ",\r\nnewData: " + JSON.stringify(nData));
+    };
+
+    DataGridView.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsEnabled) {
+        this._createColumnShowHideControlInToolBar(columns, isColumnsGrouped, isActionButtonsEnabled);
     };
 
     return DataGridView;
