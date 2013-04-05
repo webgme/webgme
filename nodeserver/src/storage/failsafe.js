@@ -106,6 +106,10 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             _database.openProject(projectName,function(err,proj){
                 if(!err && proj){
                     project = proj;
+                    if(!pendingStorage[projectName]){
+                        pendingStorage[projectName]={};
+                        pendingStorage[projectName][BRANCH_OBJ_ID] = {};
+                    }
                     callback(null,{
                         fsyncDatabase: project.fsyncDatabase,
                         getDatabaseStatus: project.getDatabaseStatus,
@@ -367,7 +371,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             getProjectNames: getProjectNames,
             getDatabaseStatus: _database.getDatabaseStatus,
             openProject: openProject,
-            deleteProject: deleteProject
+            deleteProject: deleteProject,
+            ID_NAME: _database.ID_NAME
         };
     }
 
