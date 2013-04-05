@@ -54,10 +54,9 @@ define(['clientUtil',
         this.$el.append(this.$_DOMBase);
 
         //add extra visual piece
-        this.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+        /*this.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
 
         });
-
 
         this.toolBar.addButton({ "title": "Grid layout",
             "icon": "icon-th",
@@ -66,8 +65,12 @@ define(['clientUtil',
 
         this.toolBar.addButton({ "title": "Diagonal",
             "icon": "icon-signal",
-            "data": { "mode": "diagonal" }}, this.$btnGroupItemAutoOptions );
+            "data": { "mode": "diagonal" }}, this.$btnGroupItemAutoOptions );*/
 
+
+        this.$filterBox = this.toolBar.addTextBox({"label": "Filter"}, function (oldVal, newVal) {
+            self._filterDataTable(newVal);
+        });
     };
 
     DataGridView.prototype.$_DOMBase = $(dataGridViewTemplate);
@@ -159,6 +162,7 @@ define(['clientUtil',
                     self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
                 },
             "aoColumns": _columns,
+            "sDom": "lrtip",
             "aaSorting": [[defaultSortCol,'asc']]});
 
         /* IN PLACE EDIT ON CELL DOUBLECLICK */
@@ -712,6 +716,12 @@ define(['clientUtil',
             this._saveData(object[k], a.join('.'), value);
         } else {
             object[k] = value;
+        }
+    };
+
+    DataGridView.prototype._filterDataTable = function (text) {
+        if (this._oTable) {
+            this._oTable.fnFilter(text);
         }
     };
 
