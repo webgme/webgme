@@ -38,6 +38,8 @@ define(['clientUtil',
         this._rowDelete = true;
         this._rowEdit = true;
 
+        this._displayCommonColumnsOnly = false;
+
         this.clear();
 
         this.logger.debug("DataGridView ctor finished");
@@ -60,6 +62,15 @@ define(['clientUtil',
 
         //add DROPDOWN MENU to toolbar for column hide/show
         this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Column visibility" });
+
+        //toggle button for show common/all fields
+        var toggleButtonGroup = this.toolBar.addButtonGroup();
+
+        this.$toggleButtonAllColumns = this.toolBar.addToggleButton(
+            {"text": "Show common columns only",
+              "clickFn": function (event, data, isPressed) {
+                  self.displayCommonColumnsOnly(isPressed);
+            }}, toggleButtonGroup);
     };
 
     DataGridView.prototype.$_DOMBase = $(dataGridViewTemplate);
@@ -742,6 +753,9 @@ define(['clientUtil',
 
     /************** END OF --- CREATE COLUMN SHOW/HIDE UI CONTROL *************/
 
+
+    /************* PUBLIC API / COLUMN VISIBILITY ***********************/
+
     DataGridView.prototype.toggleColumnVisibility = function (index) {
         if (this._oTable) {
             var bVis = this._oTable.fnSettings().aoColumns[index].bVisible;
@@ -755,6 +769,18 @@ define(['clientUtil',
             this._oTable.fnSetColumnVis(index, visible);
         }
     };
+
+    /************* END OF --- PUBLIC API / COLUMN VISIBILITY ***********************/
+
+
+    /****************** PUBLIC API / COMMON COLUMNS ONLY *************************/
+
+    DataGridView.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
+        this.logger.warning("displayCommonColumnsOnly: " + commonColumnOnly);
+        this._displayCommonColumnsOnly = commonColumnOnly;
+    };
+
+    /****************** END OF --- PUBLIC API / COMMON COLUMNS ONLY *************************/
 
     /************** PUBLIC API OVERRIDABLES **************************/
 
