@@ -84,6 +84,10 @@ define(['js/WidgetBase/WidgetBase',
                 "class" : "inline widget-header-toolbar"
             });
             this.$widgetHeader.append(this.$widgetHeaderToolBar);
+
+            /*this.$widgetHeader.css({'overflow-y': 'visible',
+                                    'overflow-x': 'hidden'});*/
+
             this.toolBar = new WidgetToolbar(this.$widgetHeaderToolBar, options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE]);
         }
     };

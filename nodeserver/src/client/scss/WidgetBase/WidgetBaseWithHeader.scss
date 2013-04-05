@@ -7,7 +7,8 @@ $widget-header-background-color: #EFEFEF;
     padding: 5px;
     height: 30px;
     background-color: $widget-header-background-color;
-    overflow: hidden;
+    /*overflow: visible;
+    overflow-x: hidden;*/
     white-space: nowrap;
 
     .widget-header-title {
@@ -33,6 +34,12 @@ $widget-header-background-color: #EFEFEF;
       .input-append,
       .input-prepend {
         margin-bottom: 0px;
+      }
+
+      li {
+        .toggle-switch {
+          margin-left: 10px;
+        }
       }
     }
   }

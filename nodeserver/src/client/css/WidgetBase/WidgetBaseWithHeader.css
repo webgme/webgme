@@ -4,7 +4,8 @@
     padding: 5px;
     height: 30px;
     background-color: #efefef;
-    overflow: hidden;
+    /*overflow: visible;
+    overflow-x: hidden;*/
     white-space: nowrap; }
     .widget-base-wh .widget-header .widget-header-title {
       font-size: 20px;
@@ -22,6 +23,8 @@
     .widget-base-wh .widget-header .widget-header-toolbar .input-append,
     .widget-base-wh .widget-header .widget-header-toolbar .input-prepend {
       margin-bottom: 0px; }
+    .widget-base-wh .widget-header .widget-header-toolbar li .toggle-switch {
+      margin-left: 10px; }
   .widget-base-wh .widget-body {
     position: relative;
     overflow: auto; }
