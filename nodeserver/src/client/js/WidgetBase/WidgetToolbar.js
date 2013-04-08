@@ -243,7 +243,7 @@ define([], function () {
     };
 
     WidgetToolbar.prototype.addCheckBoxMenuItem = function (params, parentMenu) {
-        var chkLi = $('<li></li>'),
+        var chkLi = $('<li/>', {'class': 'chkbox'}),
             a = $('<a href="#"></a>'),
             chkField = $('<div class="toggle-switch on pull-right"></div>');
 
@@ -263,16 +263,33 @@ define([], function () {
                 data = checkBox.data(),
                 f = checkBox.find('.toggle-switch').first();
 
-            f.toggleClass('on');
+            if (!checkBox.hasClass('disabled')) {
+                f.toggleClass('on');
 
-            if (params.checkChangedFn) {
-                params.checkChangedFn.call(this, data, f.hasClass('on'));
+                if (params.checkChangedFn) {
+                    params.checkChangedFn.call(this, data, f.hasClass('on'));
+                }
             }
 
             event.stopPropagation();
         });
 
         this._addItemToParentMenu(chkLi, parentMenu);
+
+        chkLi.setEnabled = function (enabled) {
+            if (enabled) {
+                chkLi.removeClass('disabled');
+            } else {
+                chkLi.addClass('disabled');
+            }
+        };
+
+        chkLi.setChecked = function (checked) {
+            chkField.removeClass('on');
+            if (checked) {
+                chkField.addClass('on');
+            }
+        };
 
         return chkLi;
     };
