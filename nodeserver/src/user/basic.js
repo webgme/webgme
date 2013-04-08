@@ -95,7 +95,7 @@ define([
                             if(_recentCommits.indexOf(newhash) === -1){
 
                                 addCommit(newhash);
-                                _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                                //_commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
 
                                 //TODO here we have to start with a syncronous root object load...
                                 _project.loadObject(newhash,function(err,commitObj){
@@ -117,6 +117,8 @@ define([
                                     _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, 'forked');
                                 }
                             }
+
+                            _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         } else {
                             _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         }
@@ -488,7 +490,7 @@ define([
             }
 
             //MGA
-            function copyNodes(nodePaths,parentPath,callback){
+            function copyMoreNodes(nodePaths,parentPath,callback){
                 var checkPaths = function(){
                     var result = true;
                     for(var i=0;i<nodePaths.length;i++){
@@ -592,7 +594,7 @@ define([
 
                 if(_core && checkClipboard()){
                     var paths = COPY(_clipboard);
-                    copyNodes(paths,parentpath,function(err,copyarray){
+                    copyMoreNodes(paths,parentpath,function(err,copyarray){
                         if(!err){
                             saveRoot('pasteNodes('+parentpath+','+paths+')');
                         }
@@ -706,7 +708,7 @@ define([
                         }
                         saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
                     } else {
-                        copyNodes(pathestocopy,parameters.parentId,function(err,copyarr){
+                        copyMoreNodes(pathestocopy,parameters.parentId,function(err,copyarr){
                             if(err){
                                 //rollBackModification();
                             }
