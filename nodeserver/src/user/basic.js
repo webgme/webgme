@@ -129,6 +129,31 @@ define([
                 _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
             }
 
+            function networkWatcher(){
+                var status = "";
+                var outstatus = '';
+                var dbStatusUpdated = function(err,newstatus){
+                    if(!err && newstatus && status !== newstatus){
+                        status = newstatus;
+                        //TODO we should remove this mapping
+                        switch (status){
+                            case 'connected':
+                                outstatus = 'online';
+                                break;
+                            case "socket.io is disconnected":
+                                outstatus = 'nonetwork';
+                                break;
+                            default:
+                                outstatus = 'offline';
+                                break;
+                        }
+                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, outstatus);
+                    }
+                    _database.getDatabaseStatus(status,dbStatusUpdated);
+                };
+                _database.getDatabaseStatus('',dbStatusUpdated);
+            }
+
             //internal functions
             function cleanUsers(){
                 for(var i in _users){
@@ -918,6 +943,7 @@ define([
             //initialization
             function initialize(){
                 _database.openDatabase(function(){
+                    networkWatcher();
                     _database.openProject('storage',function(err,p){
                         _project = p;
                         _projectName = 'storage';
