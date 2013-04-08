@@ -154,15 +154,16 @@ define(['clientUtil',
         _columns = _editorColumns.concat(columns);
 
         this._oTable = this.$table.dataTable( {
-             "bPaginate": false,
-             "bLengthChange": false,
-             "bFilter": true,
-             "bAutoWidth": false,
-             "bDestroy": true,
-             "bRetrieve": false,
-                "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
-                    self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
-                },
+            "bPaginate": false,
+            "bLengthChange": false,
+            "bSortClasses": false,
+            "bFilter": true,
+            "bAutoWidth": false,
+            "bDestroy": true,
+            "bRetrieve": false,
+            "fnRowCallback": function( nRow, aData, iDisplayIndex, iDisplayIndexFull ) {
+                self._fnRowCallback(nRow, aData, iDisplayIndex, iDisplayIndexFull);
+            },
             "aoColumns": _columns,
             "sDom": "lrtip",
             "aaSorting": [[defaultSortCol,'asc']]});
@@ -500,12 +501,14 @@ define(['clientUtil',
 
         while (len--) {
             aPos = this._oTable.fnGetPosition( nRow.cells[len] );
-            d = this._oTable.fnGetData( aPos[0], aPos[2] );
-            $td = $(nRow.cells[len]);
-            if (d === DEFAULT_NON_EXISTING_VALUE) {
-                $td.addClass(UNDEFINED_VALUE_CLASS);
-            } else {
-                $td.removeClass(UNDEFINED_VALUE_CLASS);
+            if (aPos[2] && aPos[2] !== -1) {
+                d = this._oTable.fnGetData( aPos[0], aPos[2] );
+                $td = $(nRow.cells[len]);
+                if (d === DEFAULT_NON_EXISTING_VALUE) {
+                    $td.addClass(UNDEFINED_VALUE_CLASS);
+                } else {
+                    $td.removeClass(UNDEFINED_VALUE_CLASS);
+                }
             }
         }
     };
@@ -726,6 +729,13 @@ define(['clientUtil',
     DataGridView.prototype._filterDataTable = function (text) {
         if (this._oTable) {
             this._oTable.fnFilter(text);
+            this._prevFilter = text;
+        }
+    };
+
+    DataGridView.prototype._refilterDataTable = function () {
+        if (this._prevFilter && this._prevFilter !== "") {
+            this._filterDataTable(this._prevFilter);
         }
     };
 
@@ -746,6 +756,7 @@ define(['clientUtil',
                     "data": { "idx": i },
                     "checkChangedFn": function (data, isChecked) {
                         self.setColumnVisibility(data.idx, isChecked);
+                        self._refilterDataTable();
                     }}, this.$ddColumnVisibility);
             }
         }
@@ -766,7 +777,10 @@ define(['clientUtil',
     DataGridView.prototype.setColumnVisibility = function (index, visible) {
         //var bVis = oTable.fnSettings().aoColumns[iCol].bVisible;
         if (this._oTable) {
-            this._oTable.fnSetColumnVis(index, visible);
+            //disable 'searchable' for the non visible columns
+            this._oTable.fnSettings().aoColumns[index].bSearchable = visible;
+            //DO NOT REDRAW the table
+            this._oTable.fnSetColumnVis(index, visible, false);
         }
     };
 
