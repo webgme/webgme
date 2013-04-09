@@ -162,7 +162,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     for(i=0;i<objects.length;i++){
                         savingObject(objects[i],objectProcessed);
                     }
-                    if(object.length === 0){
+                    if(objects.length === 0){
                         callback();
                     }
                 } else {

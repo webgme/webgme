@@ -56,7 +56,11 @@ define([
                 _networkStatus = null,
                 _clipboard = [],
                 _msg = "",
-                _recentCommits = [];
+                _recentCommits = [],
+                _viewer = false,
+                _loadCore = null,
+                _loadNodes = {},
+                _loadError = 0;
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
@@ -74,7 +78,6 @@ define([
                     _self.dispatchEvent(_self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
                 }
             }
-
             function clearSelectedObjectId() {
                 _self.setSelectedObjectId(null);
             }
@@ -100,7 +103,7 @@ define([
                                 //TODO here we have to start with a syncronous root object load...
                                 _project.loadObject(newhash,function(err,commitObj){
                                     if(!err && commitObj){
-                                        loadRoot(commitObj.root);
+                                        loading(commitObj.root);
                                     }
                                 });
                             }
@@ -118,9 +121,9 @@ define([
                                 }
                             }
 
-                            _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                            return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         } else {
-                            _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                            return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         }
                     }
                 };
@@ -149,7 +152,7 @@ define([
                         }
                         _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, outstatus);
                     }
-                    _database.getDatabaseStatus(status,dbStatusUpdated);
+                    return _database.getDatabaseStatus(status,dbStatusUpdated);
                 };
                 _database.getDatabaseStatus('',dbStatusUpdated);
             }
@@ -179,6 +182,11 @@ define([
                     _clipboard = [];
                     _msg = "";
                     _recentRoots = [];
+                    _viewer = false;
+                    _loadCore = null;
+                    _loadNodes = {};
+                    _loadError = 0;
+
                     callback(e);
                 };
                 if(_project){
@@ -228,10 +236,14 @@ define([
                             patternToPaths(children[i],subPattern,pathsSoFar);
                         }
                     }
+                } else{
+                    _loadError++;
                 }
+
             }
             function userEvents(userId,modifiedNodes){
                 var newPaths = {};
+                var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
                     patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
                 }
@@ -261,6 +273,9 @@ define([
                 _users[userId].PATHS = newPaths;
 
                 if(events.length>0){
+                    if(_loadError > startErrorLevel){
+                        events.push({etype:'incomplete',eid:null});
+                    }
                     if(_users[userId].ONEEVENT){
                         _users[userId].UI.onOneEvent(events);
                     } else {
@@ -367,27 +382,22 @@ define([
                     }
                 });
             }
-            function loadRoot(newRootHash){
+            function loadRoot(newRootHash,callback){
                 //TODO here we should first do the immediate event calculating
                 // then if not every object reachable we should start the normal loading
                 ASSERT(_project);
-                var core = new SetCore(new Core(_project)),
-                    nodes = {};
-                core.loadRoot(newRootHash,function(err,root){
+                _loadCore = new SetCore(new Core(_project));
+                _loadNodes = {};
+                _loadError = 0;
+                _loadCore.loadRoot(newRootHash,function(err,root){
                     if(!err){
                         var missing = 0,
                             error = null;
                         var allLoaded = function(){
                             if(!error){
-                                _core = core;
-                                var modifiedPaths = getModifiedNodes(nodes);
-                                _nodes = nodes;
-                                for(var i in _users){
-                                    userEvents(i,modifiedPaths);
-                                }
-                                //callback(null);
+                                callback(null);
                             } else {
-                                //callback(error);
+                                callback(error);
                             }
                         };
 
@@ -397,12 +407,12 @@ define([
                             }
                         }
                         if(missing > 0){
-                            addNode(core,nodes,root,function(err){
+                            addNode(_loadCore,_loadNodes,root,function(err){
                                 error == error || err;
                                 if(!err){
                                     for(i in _users){
                                         for(j in _users[i].PATTERNS){
-                                            loadPattern(core,j,_users[i].PATTERNS[j],nodes,function(err){
+                                            loadPattern(_loadCore,j,_users[i].PATTERNS[j],_loadNodes,function(err){
                                                 error = error || err;
                                                 if(--missing === 0){
                                                     allLoaded();
@@ -418,8 +428,52 @@ define([
                             allLoaded();
                         }
                     } else {
+                        callback(err);
                     }
                 });
+            }
+            function loading(newRootHash,callback){
+                var incomplete = false;
+                var modifiedPaths = {};
+                var missing = 2;
+                var finalEvents = function(){
+                    if(_loadError > 0){
+                        //we assume that our immediate load was only partial
+                        _core = _loadCore;
+                        _loadCore = null;
+                        modifiedPaths = getModifiedNodes(_loadNodes);
+                        _nodes = _loadNodes;
+                        _loadNodes = {};
+                        for(var i in _users){
+                            userEvents(i,modifiedPaths);
+                        }
+                        _loadError = 0;
+                    }
+                };
+
+                loadRoot(newRootHash,function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        if(--missing === 0){
+                            finalEvents();
+                        }
+                    }
+                });
+                //here we try to make an immediate event building
+                _core = _loadCore;
+                modifiedPaths = getModifiedNodes(_loadNodes);
+                for(var i in _loadNodes){
+                    _nodes[i] = _loadNodes[i];
+                }
+
+                for(i in _users){
+                    userEvents(i,modifiedPaths);
+                }
+
+                if(--missing === 0){
+                    finalEvents();
+                }
             }
 
             function saveRoot(msg,callback){
@@ -433,7 +487,7 @@ define([
                     _commit.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
                        //TODO now what??? - could we screw up?
                     });
-                    loadRoot(newRootHash);
+                    loading(newRootHash);
                 }
             }
 
@@ -514,6 +568,28 @@ define([
                 _database.deleteProject(projectname,callback);
             }
 
+            function viewCommitAsync(commitHash, callback){
+                //we not close the opened project, just clear the branch
+                //and load the given commit
+                var oldbranch = _branch;
+                _branch = null;
+                /*
+                _recentCommits = [];
+                _clipboard = [];
+                _commit = null;
+                _core = null;
+                _selectedObjectId = null;
+                _forked = false;
+                _nodes = {};
+                _inTransaction = false;
+                _msg = "";
+                _viewer = true;
+                */
+
+                _project.loadObject(commitHash,function(err,commitObj){
+
+                });
+            }
             //MGA
             function copyMoreNodes(nodePaths,parentPath,callback){
                 var checkPaths = function(){
@@ -917,27 +993,32 @@ define([
                     return getMemberIds('ValidChildren');
                 };
 
-                ASSERT(_nodes[_id]);
+                //ASSERT(_nodes[_id]);
 
-                return {
-                    getParentId : getParentId,
-                    getId       : getId,
-                    getChildrenIds : getChildrenIds,
-                    getBaseId : getBaseId,
-                    getInheritorIds : getInheritorIds,
-                    getAttribute : getAttribute,
-                    getRegistry : getRegistry,
-                    getPointer : getPointer,
-                    getPointerNames : getPointerNames,
-                    getAttributeNames : getAttributeNames,
-                    getRegistryNames : getRegistryNames,
+                if(_nodes[_id]){
+                    return {
+                        getParentId : getParentId,
+                        getId       : getId,
+                        getChildrenIds : getChildrenIds,
+                        getBaseId : getBaseId,
+                        getInheritorIds : getInheritorIds,
+                        getAttribute : getAttribute,
+                        getRegistry : getRegistry,
+                        getPointer : getPointer,
+                        getPointerNames : getPointerNames,
+                        getAttributeNames : getAttributeNames,
+                        getRegistryNames : getRegistryNames,
 
-                    //META functions
-                    getValidChildrenTypes : getValidChildrenTypes,
-                    getMemberIds          : getMemberIds,
-                    getSetIds             : getSetIds,
-                    getSetNames           : getSetNames
+                        //META functions
+                        getValidChildrenTypes : getValidChildrenTypes,
+                        getMemberIds          : getMemberIds,
+                        getSetIds             : getSetIds,
+                        getSetNames           : getSetNames
+                    }
                 }
+
+                return null;
+
             }
 
             //initialization

@@ -11,7 +11,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         ASSERT(typeof options === "object");
 
         options.host = options.host || "http://localhost";
-        options.port = options.port || 888;
+        options.port = options.port || 80;
         options.type = options.type || "browser";
         options.timeout = options.timeout || 10000;
 
@@ -219,27 +219,29 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
         function getDatabaseStatus (oldstatus,callback) {
             ASSERT(typeof callback === 'function');
-            if(status !== oldstatus || status === STATUS_NETWORK_DISCONNECTED){
+            if(status !== oldstatus){
                 callback(null,status);
             } else {
                 var guid = GUID();
                 getDbStatusCallbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                socket.emit('getDatabaseStatus',oldstatus,function(err,newstatus){
-                    if(!err && newstatus){
-                        status = newstatus;
-                    }
-                    if(callbacks[guid]){
-                        clearTimeout(getDbStatusCallbacks[guid].to);
-                        delete getDbStatusCallbacks[guid];
-                        commonErrorCheck(err,function(err2,needRedo){
-                            if(needRedo){
-                                getDatabaseStatus(oldstatus,callback);
-                            } else {
-                                callback(err2,newstatus);
-                            }
-                        });
-                    }
-                });
+                if(status !== STATUS_NETWORK_DISCONNECTED){
+                    socket.emit('getDatabaseStatus',oldstatus,function(err,newstatus){
+                        if(!err && newstatus){
+                            status = newstatus;
+                        }
+                        if(callbacks[guid]){
+                            clearTimeout(getDbStatusCallbacks[guid].to);
+                            delete getDbStatusCallbacks[guid];
+                            commonErrorCheck(err,function(err2,needRedo){
+                                if(needRedo){
+                                    getDatabaseStatus(oldstatus,callback);
+                                } else {
+                                    callback(err2,newstatus);
+                                }
+                            });
+                        }
+                    });
+                }
             }
         }
 
@@ -501,7 +503,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 if(socketConnected){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('getCommits',project,before,funciton(err,commits){
+                    socket.emit('getCommits',project,before,function(err,commits){
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];

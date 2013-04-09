@@ -59,7 +59,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         }
 
         function open(){
-            _socket = IO.listen(options.port);
+            _socket = IO.listen(options.combined ? options.combined : options.port);
 
             _socket.on('connection',function(socket){
                 socket.on('openDatabase', function(callback){
