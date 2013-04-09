@@ -23,10 +23,8 @@
     .widget-base-wh .widget-header .widget-header-toolbar .input-append,
     .widget-base-wh .widget-header .widget-header-toolbar .input-prepend {
       margin-bottom: 0px; }
-    .widget-base-wh .widget-header .widget-header-toolbar li.chkbox .toggle-switch {
+    .widget-base-wh .widget-header .widget-header-toolbar li div.iCheckBox {
       margin-left: 10px; }
-    .widget-base-wh .widget-header .widget-header-toolbar li.chkbox.disabled .toggle-switch {
-      opacity: 0.3; }
   .widget-base-wh .widget-body {
     position: relative;
     overflow: auto; }

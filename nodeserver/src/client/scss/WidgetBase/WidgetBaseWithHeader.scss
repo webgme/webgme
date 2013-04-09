@@ -36,15 +36,9 @@ $widget-header-background-color: #EFEFEF;
         margin-bottom: 0px;
       }
 
-      li.chkbox {
-        .toggle-switch {
+      li {
+        div.iCheckBox {
           margin-left: 10px;
-        }
-
-        &.disabled {
-          .toggle-switch {
-            opacity: 0.3;
-          }
         }
       }
     }
