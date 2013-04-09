@@ -1,6 +1,6 @@
 "use strict";
 
-define([], function () {
+define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     var WidgetToolbar;
 
@@ -245,34 +245,31 @@ define([], function () {
     WidgetToolbar.prototype.addCheckBoxMenuItem = function (params, parentMenu) {
         var chkLi = $('<li/>', {'class': 'chkbox'}),
             a = $('<a href="#"></a>'),
-            chkField = $('<div class="toggle-switch on pull-right"></div>');
+            onCheckChanged,
+            chkFieldEpx;
+
+        onCheckChanged = function (checked) {
+            var data = chkLi.data();
+
+            if (params.checkChangedFn) {
+                params.checkChangedFn.call(this, data, checked);
+            }
+        };
+
+        chkFieldEpx = new iCheckBox({"checkChangedFn": onCheckChanged});
+
+        chkFieldEpx.el.addClass('pull-right');
 
         if (params.text) {
             a.append(params.text);
         }
 
-        a.append(chkField);
+        a.append(chkFieldEpx.el);
         chkLi.append(a);
 
         if (params.data) {
             chkLi.data(params.data);
         }
-
-        chkLi.on('click', null, function (event) {
-            var checkBox = $(this),
-                data = checkBox.data(),
-                f = checkBox.find('.toggle-switch').first();
-
-            if (!checkBox.hasClass('disabled')) {
-                f.toggleClass('on');
-
-                if (params.checkChangedFn) {
-                    params.checkChangedFn.call(this, data, f.hasClass('on'));
-                }
-            }
-
-            event.stopPropagation();
-        });
 
         this._addItemToParentMenu(chkLi, parentMenu);
 
@@ -282,13 +279,12 @@ define([], function () {
             } else {
                 chkLi.addClass('disabled');
             }
+
+            chkFieldEpx.setEnabled(enabled);
         };
 
         chkLi.setChecked = function (checked) {
-            chkField.removeClass('on');
-            if (checked) {
-                chkField.addClass('on');
-            }
+            chkFieldEpx.setChecked(checked);
         };
 
         return chkLi;
