@@ -36,9 +36,15 @@ $widget-header-background-color: #EFEFEF;
         margin-bottom: 0px;
       }
 
-      li {
+      li.chkbox {
         .toggle-switch {
           margin-left: 10px;
+        }
+
+        &.disabled {
+          .toggle-switch {
+            opacity: 0.3;
+          }
         }
       }
     }

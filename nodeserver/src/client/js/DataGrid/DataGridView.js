@@ -78,9 +78,11 @@ define(['clientUtil',
     DataGridView.prototype.$_dataTableBase = $(dataTableTemplate);
 
     DataGridView.prototype.clear = function () {
+        this._isClearing = true;
         this.dataMemberID = DEFAULT_DATAMEMBER_ID;
         this._columns = [];
         this._dataMap = {};
+        this._commonColumns = [];
 
         if (this._oTable) {
             this._oTable.fnClearTable();
@@ -94,6 +96,7 @@ define(['clientUtil',
         }
 
         this.$ddColumnVisibility.clear();
+        this._isClearing = false;
     };
 
     DataGridView.prototype.destroy = function () {
@@ -107,8 +110,11 @@ define(['clientUtil',
             maxRowSpan = 1,
             tHeadFirstRow,
             defaultSortCol = 0,
-            actionButtonsEnabled = false,
             actionBtnColContent = "";
+
+        this._isInitializing = true;
+
+        this._actionButtonsInFirstColumn = false;
 
         this.$table = this.$_dataTableBase.clone();
         this.$el.append(this.$table);
@@ -122,7 +128,7 @@ define(['clientUtil',
         //check if any action is enabled for the rows
         if (this._rowEdit === true) {
             actionBtnColContent = '<i class="icon-edit pointer rowCommandBtn" data-action="' + ROW_COMMAND_EDIT + '" title="' + ROW_COMMAND_EDIT_TITLE + '"></i>';
-            actionButtonsEnabled = true;
+            this._actionButtonsInFirstColumn = true;
         }
 
         if (this._rowDelete === true) {
@@ -130,11 +136,11 @@ define(['clientUtil',
                 actionBtnColContent += " ";
             }
             actionBtnColContent += '<i class="icon-trash pointer rowCommandBtn" data-action="' + ROW_COMMAND_DELETE  + '" title="' + ROW_COMMAND_DELETE_TITLE + '">';
-            actionButtonsEnabled = true;
+            this._actionButtonsInFirstColumn = true;
         }
 
         //if there is any action enabled
-        if (actionButtonsEnabled === true) {
+        if (this._actionButtonsInFirstColumn === true) {
             //extend header with an extra column for the action buttons
             tHeadFirstRow = $(this.$table.find("> thead > tr")[0]);
             tHeadFirstRow.prepend('<th rowspan="' + maxRowSpan + '"></th>');
@@ -166,7 +172,10 @@ define(['clientUtil',
             },
             "aoColumns": _columns,
             "sDom": "lrtip",
-            "aaSorting": [[defaultSortCol,'asc']]});
+            "aaSorting": [[defaultSortCol,'asc']],
+            "fnDrawCallback": function( oSettings  ) {
+                self._fnDrawCallback(oSettings);
+            }});
 
         /* IN PLACE EDIT ON CELL DOUBLECLICK */
         /*this.$table.on('dblclick', 'td', function (event) {
@@ -177,7 +186,7 @@ define(['clientUtil',
             event.preventDefault();
         });*/
 
-        if (actionButtonsEnabled === true) {
+        if (this._actionButtonsInFirstColumn === true) {
             this.$table.on('click', '.rowCommandBtn', function (event) {
                 var btn = $(this),
                     command = btn.attr("data-action"),
@@ -191,7 +200,8 @@ define(['clientUtil',
             });
         }
 
-        this.createColumnShowHideControl(_columns, this._groupColumns, actionButtonsEnabled == true);
+        this.createColumnShowHideControl(_columns, this._groupColumns, this._actionButtonsInFirstColumn === true);
+        this._isInitializing = false;
     };
 
     DataGridView.prototype._buildGroupedHeader = function (columns) {
@@ -415,7 +425,8 @@ define(['clientUtil',
             flattenedObj,
             prop,
             n,
-            i;
+i,
+            idx;
 
         while (len--) {
             flattenedObj = util.flattenObject( objects[len]);
@@ -435,9 +446,25 @@ define(['clientUtil',
         columnNames = columnNames.sort();
         len = columnNames.length;
         
-        //if dataMemberID is set and is present in the columns
+ //if dataMemberID is set and is present in the columns
         //let it be the first column
         if (this.dataMemberID && this.dataMemberID !== "") {
+            idx = columnNames.indexOf(this.dataMemberID);
+            if (idx !== -1) {
+                columnNames.splice(idx,1);
+            }
+            columnNames.splice(0,0,this.dataMemberID);
+        }
+
+        for (i = 0; i < len; i += 1) {
+            n = columnNames[i];
+
+            this._addColumnDef(columns[n].title, columns[n].data, true);
+        }
+        
+        //if dataMemberID is set and is present in the columns
+        //let it be the first column
+        /*if (this.dataMemberID && this.dataMemberID !== "") {
             if (columnNames.indexOf(this.dataMemberID) !== -1) {
                 this._addColumnDef(this.dataMemberID, this.dataMemberID, false);
             }
@@ -448,7 +475,7 @@ define(['clientUtil',
             if (this.dataMemberID !== n) {
                 this._addColumnDef(columns[n].title, columns[n].data, true);
             }
-        }
+        }*/
 
         this.onColumnsAutoDetected(this._columns);
 
@@ -742,22 +769,23 @@ define(['clientUtil',
 
     /******************* CREATE COLUMN SHOW/HIDE UI CONTROL *******************/
 
-    DataGridView.prototype._createColumnShowHideControlInToolBar = function (columns, isColumnsGrouped, isActionButtonsEnabled) {
+    DataGridView.prototype._createColumnShowHideControlInToolBar = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {
         var i,
             len = columns.length,
             self = this;
 
         //clear dropdown menu
         this.$ddColumnVisibility.clear();
-        for (i = isActionButtonsEnabled ? 1 : 0; i < len; i+= 1) {
+        this._columnVisibilityCheckboxList = [];
+        for (i = isActionButtonsInFirstColumn ? 1 : 0; i < len; i+= 1) {
 
             if (this.dataMemberID !== columns[i]["mData"]) {
-                this.toolBar.addCheckBoxMenuItem({"text": columns[i]["mData"],
+                this._columnVisibilityCheckboxList.push(this.toolBar.addCheckBoxMenuItem({"text": columns[i]["mData"],
                     "data": { "idx": i },
                     "checkChangedFn": function (data, isChecked) {
                         self.setColumnVisibility(data.idx, isChecked);
                         self._refilterDataTable();
-                    }}, this.$ddColumnVisibility);
+                    }}, this.$ddColumnVisibility));
             }
         }
     };
@@ -792,9 +820,168 @@ define(['clientUtil',
     DataGridView.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
         this.logger.warning("displayCommonColumnsOnly: " + commonColumnOnly);
         this._displayCommonColumnsOnly = commonColumnOnly;
+        this._applyCommonColumnFilter();
     };
 
     /****************** END OF --- PUBLIC API / COMMON COLUMNS ONLY *************************/
+
+    DataGridView.prototype._fnDrawCallback = function (oSettings) {
+        //no interest when currently clearing or initializing the DataTable
+        //this.logger.error('_fnDrawCallback');
+        if (this._isInitializing === true || this._isClearing === true || this._isApplyingCommonColumnFilter === true) {
+            return;
+        }
+
+        this.logger.warning('_fnDrawCallback');
+        this._applyCommonColumnFilter();
+    };
+
+    DataGridView.prototype._enableColumnFilterCheckBox = function (index, enabled) {
+        if (this._actionButtonsInFirstColumn) {
+            index -= 1;
+        }
+
+        if (this.dataMemberID && this.dataMemberID !== "") {
+            index -= 1;
+        }
+
+        if (index >= 0) {
+            this._columnVisibilityCheckboxList[index].setEnabled(enabled);
+        }
+    };
+
+    DataGridView.prototype._setCheckedColumnFilterCheckBox = function (index, enabled) {
+        if (this._actionButtonsInFirstColumn) {
+            index -= 1;
+        }
+
+        if (this.dataMemberID && this.dataMemberID !== "") {
+            index -= 1;
+        }
+
+        if (index >= 0) {
+            this._columnVisibilityCheckboxList[index].setChecked(enabled);
+        }
+    };
+
+
+
+    DataGridView.prototype._applyCommonColumnFilter = function () {
+        var displayedData,
+            displayedRows,
+            len,
+            flattenedObj,
+            idx,
+            prop,
+            columnCount = {},
+            maxColumnCount = 0,
+            i,
+            aoColumns,
+            getColumnIndexInDataTable,
+            cColumns = [],
+            diff;
+
+        this.logger.warning('_applyCommonColumnFilter');
+        this._isApplyingCommonColumnFilter = true;
+
+        if (this._oTable) {
+            aoColumns = this._oTable.fnSettings().aoColumns;
+
+            if (this._displayCommonColumnsOnly === true) {
+                displayedData = this._oTable._('tr', {"filter": "applied"});
+                /*displayedRows = this._oTable.$('tr', {"filter": "applied"});*/
+
+                len = displayedData.length;
+
+                //flatten the data and get the count the columns that are present in each object
+                while (len--) {
+                    flattenedObj = util.flattenObject( displayedData[len]);
+
+                    for (prop in flattenedObj) {
+                        if (flattenedObj.hasOwnProperty(prop) && flattenedObj[prop] !== DEFAULT_NON_EXISTING_VALUE) {
+
+                            columnCount[prop] = columnCount[prop] || 0;
+                            columnCount[prop] += 1;
+
+                            if (columnCount[prop] > maxColumnCount) {
+                                maxColumnCount = columnCount[prop];
+                            }
+                        }
+                    }
+                }
+
+                //where columnCount[column] < maxColumnCount that column is not COMMON amongst the displayed data
+                getColumnIndexInDataTable = function (colData) {
+                    var colLen = aoColumns.length,
+                        result = -1;
+
+                    while (colLen--) {
+                        if (aoColumns[colLen].mData === colData) {
+                            result = colLen;
+                            break;
+                        }
+                    }
+
+                    return result;
+                };
+
+                /*get the index of the common columns*/
+                for (i in columnCount) {
+                    if (columnCount.hasOwnProperty(i)) {
+                        if (columnCount[i] === maxColumnCount) {
+                            cColumns.push(getColumnIndexInDataTable(i));
+                        }
+                    }
+                }
+
+                if (this._commonColumns.length === 0) {
+                    len = aoColumns.length;
+                    while (len--) {
+                        if (this._actionButtonsInFirstColumn === false ||
+                            (this._actionButtonsInFirstColumn === true && len !== 0)) {
+                            this.setColumnVisibility(len, false);
+
+                            this._enableColumnFilterCheckBox(len, false);
+                            this._setCheckedColumnFilterCheckBox(len, false);
+                        }
+                    }
+                }
+
+                //new common columns have not been 'common' before
+                diff = _.difference(cColumns, this._commonColumns);
+                len = diff.length;
+                while (len--) {
+                    this.setColumnVisibility(diff[len], true);
+                    this._setCheckedColumnFilterCheckBox(diff[len], true);
+
+                }
+
+                //removed common columns --> not any more common
+                diff = _.difference(this._commonColumns, cColumns);
+                len = diff.length;
+                while (len--) {
+                    this.setColumnVisibility(diff[len], false);
+                    this._setCheckedColumnFilterCheckBox(diff[len], false);
+
+                }
+
+                this._commonColumns = cColumns;
+            } else {
+                //re-enable all columns that were filtered out because of not being common
+                if (this._commonColumns.length !== 0) {
+                    len = aoColumns.length;
+                    while (len--) {
+                        this.setColumnVisibility(len, true);
+                        this._enableColumnFilterCheckBox(len, true);
+                        this._setCheckedColumnFilterCheckBox(len, true);
+                    }
+                    this._commonColumns = [];
+                }
+            }
+        }
+
+        this._isApplyingCommonColumnFilter = false;
+    };
 
     /************** PUBLIC API OVERRIDABLES **************************/
 
@@ -814,8 +1001,8 @@ define(['clientUtil',
         this.logger.warning("onRowEdit is not overridden... ID:'" + id + "'\r\noldData:" + JSON.stringify(oData) + ",\r\nnewData: " + JSON.stringify(nData));
     };
 
-    DataGridView.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsEnabled) {
-        this._createColumnShowHideControlInToolBar(columns, isColumnsGrouped, isActionButtonsEnabled);
+    DataGridView.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {
+        this._createColumnShowHideControlInToolBar(columns, isColumnsGrouped, isActionButtonsInFirstColumn);
     };
 
     return DataGridView;
