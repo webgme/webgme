@@ -22,10 +22,11 @@ div.iCheckBox {
   div.iCheckBox .txt {
     width: 31.4px;
     height: 18px;
+    line-height: 18px;
     display: inline-block;
     position: absolute;
     left: 28.6px;
-    font-size: 10px;
+    font-size: 9px;
     font-weight: bold;
     text-align: center;
     color: #797979;

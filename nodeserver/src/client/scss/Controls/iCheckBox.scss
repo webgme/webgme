@@ -44,10 +44,11 @@ div.iCheckBox {
   .txt {
     width: $width - $switch-width - 2 * $switch-border-width;
     height: $height;
+    line-height: $height;
     display: inline-block;
     position: absolute;
     left: $switch-width + 2 * $switch-border-width;
-    font-size: 10px;
+    font-size: $height / 2;
     font-weight: bold;
     text-align: center;
     color: $unchecked-text-color;
