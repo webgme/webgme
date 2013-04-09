@@ -232,9 +232,11 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             function getBranchNames(callback){
                 project.getBranchNames(function(err,names){
                     //we need the locally stored names either way
-                    var locals = [];
+                    var locals = {};
                     for(var i in pendingStorage[projectName][BRANCH_OBJ_ID]){
-                        locals.push(i);
+                        if(pendingStorage[projectName][BRANCH_OBJ_ID][i].local.length > 0){
+                            locals[i] = pendingStorage[projectName][BRANCH_OBJ_ID][i].local[0];
+                        }
                     }
 
                     if(err){
@@ -245,9 +247,9 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback(null,locals);
                         }
                     } else {
-                        for(i=0;i<names.length;i++){
-                            if(locals.indexOf(names[i]) === -1){
-                                locals.push(names[i]);
+                        for(i in names){
+                            if(!locals[i]){
+                                locals[i] = names[i];
                             }
                         }
                         callback(err,locals);

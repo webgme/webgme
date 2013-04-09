@@ -8,6 +8,18 @@ define([
 
         function commit(_project,_options){
 
+            function getBranchNames(callback){
+                _project.getBranchNames(function(err,rawnames){
+                    if(!err && rawnames){
+                        for(var i in rawnames){
+                            rawnames[i.replace(BRANCH_ID,'')] = rawnames[i];
+                            delete rawnames[i];
+                        }
+                    }
+                    callback(err,rawnames);
+                });
+            }
+
             function getBranchHash(branch,oldhash,callback){
                 var branchId = BRANCH_ID+branch;
                 _project.getBranchHash(branchId,oldhash,callback);
@@ -43,7 +55,7 @@ define([
 
             return {
                 commit: makeCommit,
-                getBranchNames: _project.getBranchNames,
+                getBranchNames: getBranchNames,
                 getBranchHash: getBranchHash,
                 setBranchHash: setBranchHash
             }

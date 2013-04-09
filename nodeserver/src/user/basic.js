@@ -177,7 +177,6 @@ define([
                     _nodes = {};
                     //_commitObject = null;
                     _patterns = {};
-                    _branch = null;
                     _networkStatus = null;
                     _clipboard = [];
                     _msg = "";
@@ -189,13 +188,14 @@ define([
 
                     callback(e);
                 };
+                _branch = null;
                 if(_project){
                     _project.closeProject(function(err){
                         //TODO what if for some reason we are in transaction???
                         returning(err);
                     });
                 } else {
-                    returning(e);
+                    returning(null);
                 }
             }
 
@@ -509,17 +509,21 @@ define([
                         //TODO what can we do with the error??
                         _database.openProject(projectname,function(err,p){
                             if(!err && p){
-                                p.getBranchNames(function(err,names){
-                                    if(!err && names && names.length > 0){
+                                var commit = new Commit(p);
+                                commit.getBranchNames(function(err,names){
+                                    if(!err && names){
                                         _project = p;
                                         _projectName = projectname;
-                                        _commit = new Commit(_project);
+                                        _commit = commit;
                                         _inTransaction = false;
                                         _nodes={};
-                                        if(names.indexOf('master') !== -1){
+                                        if(names['master']){
                                             branchWatcher('master');
                                         } else {
-                                            branchWatcher(names[0]);
+                                            for(var i in names){
+                                                branchWatcher(names[i]);
+                                                break;
+                                            }
                                         }
                                         callback(null);
                                     } else {
