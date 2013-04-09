@@ -120,7 +120,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         dumpObjects: project.dumpObjects,
                         getBranchNames: getBranchNames,
                         getBranchHash: getBranchHash,
-                        setBranchHash: setBranchHash
+                        setBranchHash: setBranchHash,
+                        getCommits: project.getCommits
                     });
                 } else {
                     callback(err,project);

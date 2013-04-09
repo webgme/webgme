@@ -215,6 +215,15 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                         }
                     });
                 });
+                socket.on('getCommits',function(projectName,before,callback){
+                    checkProject(socket.id,projectName,function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _projects[projectName].getCommits(before,callback);
+                        }
+                    });
+                });
 
                 socket.on('disconnect',function(){
                     var todelete = [];

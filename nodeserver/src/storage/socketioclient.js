@@ -299,7 +299,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                     dumpObjects: dumpObjects,
                                     getBranchNames: getBranchNames,
                                     getBranchHash: getBranchHash,
-                                    setBranchHash: setBranchHash
+                                    setBranchHash: setBranchHash,
+                                    getCommits: getCommits
                                 };
                                 callback(null,projects[project]);
                             }
@@ -488,6 +489,23 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];
                             callback(err);
+                        }
+                    });
+                } else {
+                    callback(ERROR_DISCONNECTED);
+                }
+            }
+
+            function getCommits(before,callback){
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('getCommits',project,before,funciton(err,commits){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err,commits);
                         }
                     });
                 } else {

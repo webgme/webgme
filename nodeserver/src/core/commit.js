@@ -1,8 +1,7 @@
 define([
     'util/assert',
-    'util/sha1',
-    'common/CommonUtil'],
-    function(ASSERT,SHA1,commonUtil){
+    'util/sha1'],
+    function(ASSERT,SHA1){
         'use strict';
 
         var BRANCH_ID = "*";
@@ -29,7 +28,7 @@ define([
                     root    : roothash,
                     parents : parents,
                     updater : ['TODO'],
-                    time    : commonUtil.timestamp(),
+                    time    : (new Date()).getTime(),
                     message : msg,
                     name    : branch,
                     type    : "commit"

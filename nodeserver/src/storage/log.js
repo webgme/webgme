@@ -64,7 +64,8 @@ define([ "util/assert"], function (ASSERT) {
                         dumpObjects: dumpObjects,
                         getBranchNames: getBranchNames,
                         getBranchHash: getBranchHash,
-                        setBranchHash: setBranchHash
+                        setBranchHash: setBranchHash,
+                        getCommits: getCommits
                     });
                 } else {
                     callback(err,proj);
@@ -114,6 +115,11 @@ define([ "util/assert"], function (ASSERT) {
             function setBranchHash(branch,oldhash,newhash,callback){
                 logger.debug(projectName+'.setBranchHash('+branch+','+oldhash+','+newhash+')');
                 project.setBranchHash(branch,oldhash,newhash,callback);
+            }
+
+            function getCommits(before,callback){
+                logger.debug(projectName+'.getCommits('+before+')');
+                project.getCommits(before,callback);
             }
 
         }

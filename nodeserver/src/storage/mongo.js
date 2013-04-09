@@ -163,7 +163,8 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						dumpObjects: dumpObjects,
 						getBranchNames: getBranchNames,
 						getBranchHash: getBranchHash,
-						setBranchHash: setBranchHash
+						setBranchHash: setBranchHash,
+						getCommits: getCommits
 					});
 				}
 			});
@@ -313,6 +314,18 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						}
 						callback(err);
 					});
+				}
+			}
+
+			function getCommits(before,callback){
+				//TODO we should think whether this needs options or not
+				ASSERT(typeof callback === 'funciton');
+
+				var now = (new Date()).getTime();
+				if(before>0 && before<=now){
+					collection.find({type:'commit',time:{$lte:before}}).limit(1000).sort({$natural:-1}).toArray(callback);
+				} else {
+					callback(new Error('invalid time limit'));
 				}
 			}
 		}

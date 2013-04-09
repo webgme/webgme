@@ -279,7 +279,8 @@ define([ "util/assert" ], function (ASSERT) {
 					dumpObjects: project.dumpObjects,
 					getBranchNames: project.getBranchNames,
 					getBranchHash: getBranchHash,
-					setBranchHash: setBranchHash
+					setBranchHash: setBranchHash,
+					getCommits: project.getCommits
 				});
 			}
 
