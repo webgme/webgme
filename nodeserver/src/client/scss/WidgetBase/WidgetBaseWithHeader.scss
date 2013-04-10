@@ -1,5 +1,8 @@
 $widget-header-background-color: #EFEFEF;
 
+$widget-body-background-color: #FFFFFF;
+$widget-body-background-color-read-only: #FBFBFB;
+
 .widget-base-wh {
   box-sizing: border-box;
 
@@ -10,6 +13,10 @@ $widget-header-background-color: #EFEFEF;
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap;
+
+    .ro-icon {
+      display: none;
+    }
 
     .widget-header-title {
       font-size: 20px;
@@ -47,5 +54,18 @@ $widget-header-background-color: #EFEFEF;
   .widget-body {
     position: relative;
     overflow: auto;
+    background-color: $widget-body-background-color;
+  }
+
+  &.read-only {
+    .widget-header {
+      .ro-icon {
+        display: inline-block;
+      }
+    }
+
+    .widget-body {
+      background-color: $widget-body-background-color-read-only;
+    }
   }
 }

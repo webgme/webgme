@@ -1,2 +1,5 @@
 .dataTable td.undefined-value {
   background-color: #f5e1e1 !important; }
+
+.read-only .dataTable .rowCommandBtn {
+  opacity: 0.5; }

@@ -40,8 +40,14 @@ define(['js/WidgetBase/WidgetBase',
         this._resize(newWidth, newHeight);
     };
 
+    WidgetBaseWithHeader.prototype.onReadOnlyChanged = function (isReadOnly) {
+        this._onReadOnlyChanged(isReadOnly);
+    };
+
     /* CUSTOM MEMBERS */
     WidgetBaseWithHeader.prototype.initUI = function (options) {
+        var self = this;
+
         //save original $el to $_el
         if (this.$_el === undefined) {
             this.$_el = this.$el;
@@ -67,6 +73,13 @@ define(['js/WidgetBase/WidgetBase',
         this.$_el.append(this.$widgetBody);
 
         //create additional visual pieces
+        //READ-ONLY indicator in header
+        this.$widgetHeaderReadOnlyIndicator = $('<div/>', {
+            "class" : "ro-icon",
+            "title" : "READ-ONLY mode ON"
+        });
+        this.$widgetHeaderReadOnlyIndicator.append($('<i class="icon-lock"></i>'));
+        this.$widgetHeader.append(this.$widgetHeaderReadOnlyIndicator);
 
         //TITLE IN HEADER BAR
         if (options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] === true) {
@@ -89,6 +102,19 @@ define(['js/WidgetBase/WidgetBase',
                                     'overflow-x': 'hidden'});*/
 
             this.toolBar = new WidgetToolbar(this.$widgetHeaderToolBar, options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE]);
+
+            //add default buttons
+            //#1 Read-Only button in DEBUG mode
+            if (__WebGME__DEBUG === true) {
+                var readOnlyButtonGroup = this.toolBar.addButtonGroup();
+
+                this.$readOnlyBtn = this.toolBar.addToggleButton(
+                    {"icon": "icon-lock",
+                     "title": "Turn read-only mode ON/OFF",
+                        "clickFn": function (event, data, isPressed) {
+                            self.setReadOnly(isPressed);
+                        }}, readOnlyButtonGroup);
+            }
         }
     };
 
@@ -108,6 +134,14 @@ define(['js/WidgetBase/WidgetBase',
         this.$_el.width(parentW).height(parentH);
         this.$widgetHeader.width(parentW - widgetHeaderPaddingLeft - widgetHeaderPaddingRight);
         this.$widgetBody.width(parentW).height(parentH - widgetHeaderHeight);
+    };
+
+    WidgetBaseWithHeader.prototype._onReadOnlyChanged = function (isReadOnly) {
+        if (isReadOnly === true) {
+            this.$_el.addClass(WidgetBase.READ_ONLY_CLASS);
+        } else {
+            this.$_el.removeClass(WidgetBase.READ_ONLY_CLASS);
+        }
     };
 
     return WidgetBaseWithHeader;

@@ -192,7 +192,7 @@ define(['clientUtil',
                     command = btn.attr("data-action"),
                     td = btn.parent()[0];
 
-                if (!self._readOnlyMode) {
+                if (self.isReadOnly() !== true) {
                     self._onRowCommand(command, td);
                 }
                 event.stopPropagation();
@@ -980,6 +980,15 @@ i,
         }
 
         this._isApplyingCommonColumnFilter = false;
+    };
+
+    /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
+    DataGridView.prototype.onReadOnlyChanged = function (isReadOnly) {
+        //if already editing rows --> cancel edit mode
+        this.$el.find('.editCancel').trigger('click');
+
+        //apply parent's onReadOnlyChanged
+        __parent_proto__.onReadOnlyChanged.call(this, isReadOnly);
     };
 
     /************** PUBLIC API OVERRIDABLES **************************/

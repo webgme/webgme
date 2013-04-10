@@ -1,7 +1,20 @@
 $dataTable-cell-undefined-value-background-color: #F5E1E1;
+$row-command-btn-read-only-opacity: 0.5;
 
 .dataTable {
   td.undefined-value {
     background-color: $dataTable-cell-undefined-value-background-color !important;
+  }
+
+  .rowCommandBtn {
+
+  }
+}
+
+.read-only {
+  .dataTable {
+    .rowCommandBtn {
+      opacity: $row-command-btn-read-only-opacity;
+    }
   }
 }

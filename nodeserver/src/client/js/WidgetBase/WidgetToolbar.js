@@ -125,7 +125,6 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
         toggleClickFn = function (event, data) {
             $(this).toggleClass('active');
-            $(this).toggleClass('btn-primary');
             if (oClickFn) {
                 oClickFn.call(this, event, data, $(this).hasClass('active'));
             }
