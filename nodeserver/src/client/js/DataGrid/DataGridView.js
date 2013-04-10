@@ -192,7 +192,7 @@ define(['clientUtil',
                     command = btn.attr("data-action"),
                     td = btn.parent()[0];
 
-                if (!self._readOnlyMode) {
+                if (self.isReadOnly() !== true) {
                     self._onRowCommand(command, td);
                 }
                 event.stopPropagation();
