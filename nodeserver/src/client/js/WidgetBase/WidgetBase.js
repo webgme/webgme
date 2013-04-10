@@ -50,7 +50,7 @@ define(['jquery',
         }
     };
 
-    WidgetBase.prototype.getReadOnly = function () {
+    WidgetBase.prototype.isReadOnly = function () {
         return this._isReadOnly;
     };
 
