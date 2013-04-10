@@ -4,8 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/lib/sha1", "core/future", "core/config" ], function (ASSERT, SHA1,
-FUTURE, CONFIG) {
+define([ "core/assert", "core/lib/sha1", "core/future", "core/config" ], function (ASSERT, SHA1, FUTURE, CONFIG) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -21,13 +20,13 @@ FUTURE, CONFIG) {
 		do {
 			relid = Math.floor(Math.random() * MAX_RELID);
 			// relid = relid.toString();
-		} while( data[relid] !== undefined );
+		} while (data[relid] !== undefined);
 
 		return "" + relid;
 	};
 
 	// make relids deterministic
-	if( true ) {
+	if (true) {
 		var nextRelid = 0;
 		createRelid = function (data) {
 			ASSERT(data && typeof data === "object");
@@ -35,7 +34,7 @@ FUTURE, CONFIG) {
 			var relid;
 			do {
 				relid = (nextRelid += -1);
-			} while( data[relid] !== undefined );
+			} while (data[relid] !== undefined);
 
 			return "" + relid;
 		};
@@ -69,7 +68,7 @@ FUTURE, CONFIG) {
 
 		var getLevel = function (node) {
 			var level = 0;
-			while( node.parent !== null ) {
+			while (node.parent !== null) {
 				++level;
 				node = node.parent;
 			}
@@ -77,19 +76,19 @@ FUTURE, CONFIG) {
 		};
 
 		var getRoot = function (node) {
-			while( node.parent !== null ) {
+			while (node.parent !== null) {
 				node = node.parent;
 			}
 			return node;
 		};
 
 		var getPath = function (node, base) {
-			if( node === null ) {
+			if (node === null) {
 				return null;
 			}
 
 			var path = "";
-			while( node.relid !== null && node !== base ) {
+			while (node.relid !== null && node !== base) {
 				path = "/" + node.relid + path;
 				node = node.parent;
 			}
@@ -130,7 +129,7 @@ FUTURE, CONFIG) {
 			node.children = null;
 			node.age = MAX_AGE;
 
-			for( var i = 0; i < children.length; ++i ) {
+			for ( var i = 0; i < children.length; ++i) {
 				__detachChildren(children[i]);
 			}
 		};
@@ -139,22 +138,21 @@ FUTURE, CONFIG) {
 			ASSERT(nodes instanceof Array);
 
 			var i = nodes.length;
-			while( --i >= 0 ) {
+			while (--i >= 0) {
 				var node = nodes[i];
 
 				ASSERT(node.age < MAX_AGE);
-				if( ++node.age >= MAX_AGE ) {
+				if (++node.age >= MAX_AGE) {
 					nodes.splice(i, 1);
 					__detachChildren(node);
-				}
-				else {
+				} else {
 					__ageNodes(node.children);
 				}
 			}
 		};
 
 		var __ageRoots = function () {
-			if( ++ticks >= MAX_TICKS ) {
+			if (++ticks >= MAX_TICKS) {
 				ticks = 0;
 				__ageNodes(roots);
 			}
@@ -163,9 +161,9 @@ FUTURE, CONFIG) {
 		var __getChildNode = function (children, relid) {
 			ASSERT(children instanceof Array && typeof relid === "string");
 
-			for( var i = 0; i < children.length; ++i ) {
+			for ( var i = 0; i < children.length; ++i) {
 				var child = children[i];
-				if( child.relid === relid ) {
+				if (child.relid === relid) {
 					child.age = 0;
 					return child;
 				}
@@ -177,11 +175,10 @@ FUTURE, CONFIG) {
 		var __getChildData = function (data, relid) {
 			ASSERT(typeof relid === "string");
 
-			if( typeof data === "object" && data !== null ) {
+			if (typeof data === "object" && data !== null) {
 				data = data[relid];
 				return typeof data === "undefined" ? EMPTY_DATA : data;
-			}
-			else {
+			} else {
 				return null;
 			}
 		};
@@ -192,14 +189,14 @@ FUTURE, CONFIG) {
 
 			var parent;
 
-			if( node.children === null ) {
+			if (node.children === null) {
 				ASSERT(node.age === MAX_AGE);
 
-				if( node.parent !== null ) {
+				if (node.parent !== null) {
 					parent = normalize(node.parent);
 
 					var temp = __getChildNode(parent.children, node.relid);
-					if( temp !== null ) {
+					if (temp !== null) {
 						// TODO: make the current node close to the returned one
 
 						// console.log("normalize end1",
@@ -207,31 +204,28 @@ FUTURE, CONFIG) {
 						return temp;
 					}
 
-					ASSERT(node.parent.children === null
-					|| __getChildNode(node.parent.children, node.relid) === null);
+					ASSERT(node.parent.children === null || __getChildNode(node.parent.children, node.relid) === null);
 					ASSERT(__getChildNode(parent.children, node.relid) === null);
 
 					node.parent = parent;
 					parent.children.push(node);
 
 					temp = __getChildData(parent.data, node.relid);
-					if( !isValidHash(temp) || temp !== __getChildData(node.data, HASH_ID) ) {
+					if (!isValidHash(temp) || temp !== __getChildData(node.data, HASH_ID)) {
 						node.data = temp;
 					}
-				}
-				else {
+				} else {
 					roots.push(node);
 				}
 
 				node.age = 0;
 				node.children = [];
-			}
-			else if( node.age !== 0 ) {
+			} else if (node.age !== 0) {
 				parent = node;
 				do {
 					parent.age = 0;
 					parent = parent.parent;
-				} while( parent !== null && parent.age !== 0 );
+				} while (parent !== null && parent.age !== 0);
 			}
 
 			// console.log("normalize end2", printNode(getRoot(node)));
@@ -250,17 +244,17 @@ FUTURE, CONFIG) {
 			do {
 				a.push(first);
 				first = first.parent;
-			} while( first !== null );
+			} while (first !== null);
 
 			var b = [];
 			do {
 				b.push(second);
 				second = second.parent;
-			} while( second !== null );
+			} while (second !== null);
 
 			var i = a.length - 1;
 			var j = b.length - 1;
-			while( i !== 0 && j !== 0 && a[i - 1] === b[j - 1] ) {
+			while (i !== 0 && j !== 0 && a[i - 1] === b[j - 1]) {
 				--i;
 				--j;
 			}
@@ -276,12 +270,12 @@ FUTURE, CONFIG) {
 			ancestor = normalize(ancestor);
 
 			do {
-				if( node === ancestor ) {
+				if (node === ancestor) {
 					return true;
 				}
 
 				node = node.parent;
-			} while( node !== null );
+			} while (node !== null);
 
 			return false;
 		};
@@ -309,7 +303,7 @@ FUTURE, CONFIG) {
 			node = normalize(node);
 
 			var child = __getChildNode(node.children, relid);
-			if( child !== null ) {
+			if (child !== null) {
 				return child;
 			}
 
@@ -329,7 +323,7 @@ FUTURE, CONFIG) {
 		var createChild = function (node) {
 			node = normalize(node);
 
-			if( typeof node.data !== "object" || node.data === null ) {
+			if (typeof node.data !== "object" || node.data === null) {
 				throw new Error("invalid node data");
 			}
 
@@ -357,13 +351,13 @@ FUTURE, CONFIG) {
 			base = typeof base === "undefined" ? null : normalize(base.parent);
 
 			var path = [];
-			while( head.parent !== base ) {
+			while (head.parent !== base) {
 				path.push(head.relid);
 				head = head.parent;
 			}
 
 			var i = path.length;
-			while( --i >= 0 ) {
+			while (--i >= 0) {
 				node = getChild(node, path[i]);
 			}
 
@@ -375,7 +369,7 @@ FUTURE, CONFIG) {
 
 			path = path.split("/");
 
-			for( var i = 1; i < path.length; ++i ) {
+			for ( var i = 1; i < path.length; ++i) {
 				node = getChild(node, path[i]);
 			}
 
@@ -400,10 +394,9 @@ FUTURE, CONFIG) {
 
 		var isEmpty = function (node) {
 			node = normalize(node);
-			if( typeof node.data !== "object" || node.data === null ) {
+			if (typeof node.data !== "object" || node.data === null) {
 				return false;
-			}
-			else if( node.data === EMPTY_DATA ) {
+			} else if (node.data === EMPTY_DATA) {
 				return true;
 			}
 
@@ -411,16 +404,14 @@ FUTURE, CONFIG) {
 		};
 
 		var __isEmptyData = function (data) {
-			for( var keys in data ) {
+			for ( var keys in data) {
 				return false;
 			}
 			return true;
 		};
 
 		var __areEquivalent = function (data1, data2) {
-			return data1 === data2
-			|| (typeof data1 === "string" && data1 === __getChildData(data2, HASH_ID))
-			|| (__isEmptyData(data1) && __isEmptyData(data2));
+			return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, HASH_ID)) || (__isEmptyData(data1) && __isEmptyData(data2));
 		};
 
 		var mutateCount = 0;
@@ -430,25 +421,24 @@ FUTURE, CONFIG) {
 			node = normalize(node);
 			var data = node.data;
 
-			if( typeof data !== "object" || data === null ) {
+			if (typeof data !== "object" || data === null) {
 				return false;
-			}
-			else if( data._mutable === true ) {
+			} else if (data._mutable === true) {
 				return true;
 			}
 
 			// TODO: infinite cycle if MAX_MUTATE is smaller than depth!
-			if( autopersist && ++mutateCount > MAX_MUTATE ) {
+			if (autopersist && ++mutateCount > MAX_MUTATE) {
 				mutateCount = 0;
 
-				for( var i = 0; i < roots.length; ++i ) {
-					if( __isMutableData(roots[i].data) ) {
+				for ( var i = 0; i < roots.length; ++i) {
+					if (__isMutableData(roots[i].data)) {
 						__saveData(roots[i].data);
 					}
 				}
 			}
 
-			if( node.parent !== null && !mutate(node.parent) ) {
+			if (node.parent !== null && !mutate(node.parent)) {
 				// this should never happen
 				return false;
 			}
@@ -457,17 +447,17 @@ FUTURE, CONFIG) {
 				_mutable: true
 			};
 
-			for( var key in data ) {
+			for ( var key in data) {
 				copy[key] = data[key];
 			}
 
 			ASSERT(copy._mutable === true);
 
-			if( typeof data[HASH_ID] === "string" ) {
+			if (typeof data[HASH_ID] === "string") {
 				copy[HASH_ID] = "";
 			}
 
-			if( node.parent !== null ) {
+			if (node.parent !== null) {
 				ASSERT(__areEquivalent(__getChildData(node.parent.data, node.relid), node.data));
 				node.parent.data[node.relid] = copy;
 			}
@@ -484,11 +474,11 @@ FUTURE, CONFIG) {
 		};
 
 		var __reloadChildrenData = function (node) {
-			for( var i = 0; i < node.children.length; ++i ) {
+			for ( var i = 0; i < node.children.length; ++i) {
 				var child = node.children[i];
 
 				var data = __getChildData(node.data, child.relid);
-				if( !isValidHash(data) || data !== __getChildData(child.data, HASH_ID) ) {
+				if (!isValidHash(data) || data !== __getChildData(child.data, HASH_ID)) {
 					child.data = data;
 					__reloadChildrenData(child);
 				}
@@ -499,8 +489,8 @@ FUTURE, CONFIG) {
 			ASSERT(data !== null && typeof data !== "undefined");
 
 			node = normalize(node);
-			if( node.parent !== null ) {
-				if( !mutate(node.parent) ) {
+			if (node.parent !== null) {
+				if (!mutate(node.parent)) {
 					throw new Error("incorrect node data");
 				}
 
@@ -514,8 +504,8 @@ FUTURE, CONFIG) {
 		var deleteData = function (node) {
 			node = normalize(node);
 
-			if( node.parent !== null ) {
-				if( !mutate(node.parent) ) {
+			if (node.parent !== null) {
+				if (!mutate(node.parent)) {
 					throw new Error("incorrect node data");
 				}
 
@@ -533,7 +523,7 @@ FUTURE, CONFIG) {
 		var copyData = function (node) {
 			node = normalize(node);
 
-			if( typeof node.data !== "object" || node.data === null ) {
+			if (typeof node.data !== "object" || node.data === null) {
 				return node.data;
 			}
 
@@ -547,7 +537,7 @@ FUTURE, CONFIG) {
 			var data;
 			node = normalize(node);
 
-			if( typeof node.data === "object" && node.data !== null ) {
+			if (typeof node.data === "object" && node.data !== null) {
 				data = node.data[name];
 			}
 
@@ -560,14 +550,14 @@ FUTURE, CONFIG) {
 			ASSERT(!__isMutableData(data) && data !== null && data !== undefined);
 
 			node = normalize(node);
-			if( !mutate(node) ) {
+			if (!mutate(node)) {
 				throw new Error("incorrect node data");
 			}
 
 			node.data[name] = data;
 
 			var child = __getChildNode(node.children, name);
-			if( child !== null ) {
+			if (child !== null) {
 				child.data = data;
 				__reloadChildrenData(child);
 			}
@@ -577,14 +567,14 @@ FUTURE, CONFIG) {
 			ASSERT(typeof name === "string" && name !== HASH_ID);
 
 			node = normalize(node);
-			if( !mutate(node) ) {
+			if (!mutate(node)) {
 				throw new Error("incorrect node data");
 			}
 
 			delete node.data[name];
 
 			var child = __getChildNode(node.children, name);
-			if( child !== null ) {
+			if (child !== null) {
 				child.data = EMPTY_DATA;
 				__reloadChildrenData(child);
 			}
@@ -601,19 +591,19 @@ FUTURE, CONFIG) {
 			node = normalize(node);
 			predicate = predicate || noUnderscore;
 
-			if( typeof node.data !== "object" || node.data === null ) {
+			if (typeof node.data !== "object" || node.data === null) {
 				return null;
 			}
 
 			var keys = Object.keys(node.data);
 
 			var i = keys.length;
-			while( --i >= 0 && !predicate(keys[i]) ) {
+			while (--i >= 0 && !predicate(keys[i])) {
 				keys.pop();
 			}
 
-			while( --i >= 0 ) {
-				if( !predicate(keys[i]) ) {
+			while (--i >= 0) {
+				if (!predicate(keys[i])) {
 					keys[i] = keys.pop();
 				}
 			}
@@ -624,13 +614,13 @@ FUTURE, CONFIG) {
 		// ------- persistence
 
 		var getHash = function (node) {
-			if( node === null ) {
+			if (node === null) {
 				return null;
 			}
 
 			var hash;
 			node = normalize(node);
-			if( typeof node.data === "object" && node.data !== null ) {
+			if (typeof node.data === "object" && node.data !== null) {
 				hash = node.data[HASH_ID];
 			}
 
@@ -640,22 +630,20 @@ FUTURE, CONFIG) {
 
 		var isHashed = function (node) {
 			node = normalize(node);
-			return typeof node.data === "object" && node.data !== null
-			&& typeof node.data[HASH_ID] === "string";
+			return typeof node.data === "object" && node.data !== null && typeof node.data[HASH_ID] === "string";
 		};
 
 		var setHashed = function (node, hashed) {
 			ASSERT(typeof hashed === "boolean");
 
 			node = normalize(node);
-			if( !mutate(node) ) {
+			if (!mutate(node)) {
 				throw new Error("incorrect node data");
 			}
 
-			if( hashed ) {
+			if (hashed) {
 				node.data[HASH_ID] = "";
-			}
-			else {
+			} else {
 				delete node.data[HASH_ID];
 			}
 
@@ -669,30 +657,28 @@ FUTURE, CONFIG) {
 			var done = EMPTY_DATA;
 			delete data._mutable;
 
-			for( var relid in data ) {
+			for ( var relid in data) {
 				var child = data[relid];
-				if( __isMutableData(child) ) {
+				if (__isMutableData(child)) {
 					var sub = __saveData(child);
-					if( sub === EMPTY_DATA ) {
+					if (sub === EMPTY_DATA) {
 						delete data[relid];
-					}
-					else {
+					} else {
 						done = FUTURE.join(done, sub);
-						if( typeof child[HASH_ID] === "string" ) {
+						if (typeof child[HASH_ID] === "string") {
 							data[relid] = child[HASH_ID];
 						}
 					}
-				}
-				else {
+				} else {
 					done = undefined;
 				}
 			}
 
-			if( done !== EMPTY_DATA ) {
+			if (done !== EMPTY_DATA) {
 				var hash = data[HASH_ID];
 				ASSERT(hash === "" || typeof key === "undefined");
 
-				if( hash === "" ) {
+				if (hash === "") {
 					hash = "#" + SHA1(JSON.stringify(data));
 					data[HASH_ID] = hash;
 
@@ -706,7 +692,7 @@ FUTURE, CONFIG) {
 		var persist = function (node) {
 			node = normalize(node);
 
-			if( !__isMutableData(node.data) ) {
+			if (!__isMutableData(node.data)) {
 				return false;
 			}
 
@@ -745,12 +731,11 @@ FUTURE, CONFIG) {
 
 			node = getChild(node, relid);
 
-			if( isValidHash(node.data) ) {
+			if (isValidHash(node.data)) {
 				// TODO: this is a hack, we should avoid loading it multiple
 				// times
 				return FUTURE.call(node, __storageLoad(node.data), __loadChild2);
-			}
-			else {
+			} else {
 				return typeof node.data === "object" && node.data !== null ? node : null;
 			}
 		};
@@ -759,13 +744,12 @@ FUTURE, CONFIG) {
 			node = normalize(node);
 
 			// TODO: this is a hack, we should avoid loading it multiple times
-			if( isValidHash(node.data) ) {
+			if (isValidHash(node.data)) {
 				ASSERT(node.data === newdata[HASH_ID]);
 
 				node.data = newdata;
 				__reloadChildrenData(node);
-			}
-			else {
+			} else {
 				// TODO: if this bites you, use the Cache
 				ASSERT(node.data === newdata);
 			}
@@ -782,7 +766,7 @@ FUTURE, CONFIG) {
 		};
 
 		var __loadDescendantByPath2 = function (node, path, index) {
-			if( node === null || index === path.length ) {
+			if (node === null || index === path.length) {
 				return node;
 			}
 
@@ -796,18 +780,17 @@ FUTURE, CONFIG) {
 			var str = "{";
 			str += "age:" + node.age;
 
-			if( typeof node.relid === "string" ) {
+			if (typeof node.relid === "string") {
 				str += ", relid: \"" + node.relid + "\"";
 			}
 
 			str += ", children:";
-			if( node.children === null ) {
+			if (node.children === null) {
 				str += "null";
-			}
-			else {
+			} else {
 				str += "[";
-				for( var i = 0; i < node.children.length; ++i ) {
-					if( i !== 0 ) {
+				for ( var i = 0; i < node.children.length; ++i) {
+					if (i !== 0) {
 						str += ", ";
 					}
 					str += printNode(node.children[i]);
@@ -820,7 +803,7 @@ FUTURE, CONFIG) {
 		};
 
 		var __test = function (text, cond) {
-			if( !cond ) {
+			if (!cond) {
 				throw new Error(text);
 			}
 		};
@@ -837,19 +820,16 @@ FUTURE, CONFIG) {
 				__test("age", node.age >= 0 && node.age <= MAX_AGE);
 				__test("children", node.children === null || node.children instanceof Array);
 				__test("children 2", (node.age === MAX_AGE) === (node.children === null));
-				__test("data", typeof node.data === "object" || typeof node.data === "string"
-				|| typeof node.data === "number");
+				__test("data", typeof node.data === "object" || typeof node.data === "string" || typeof node.data === "number");
 
-				if( node.parent !== null ) {
+				if (node.parent !== null) {
 					__test("age 2", node.age >= node.parent.age);
-					__test("mutable", !__isMutableData(node.data)
-					|| __isMutableData(node.parent.data));
+					__test("mutable", !__isMutableData(node.data) || __isMutableData(node.parent.data));
 				}
 
 				return true;
-			}
-			catch(error) {
-//				console.log("Wrong node", error.stack);
+			} catch (error) {
+				//				console.log("Wrong node", error.stack);
 				return false;
 			}
 		};

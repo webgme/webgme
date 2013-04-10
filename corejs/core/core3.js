@@ -4,8 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/assert", "core/coretree", "core/lib/sha1", "core/future" ], function (ASSERT,
-CoreTree, SHA1, FUTURE) {
+define([ "core/assert", "core/coretree", "core/lib/sha1", "core/future" ], function (ASSERT, CoreTree, SHA1, FUTURE) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -29,7 +28,7 @@ CoreTree, SHA1, FUTURE) {
 		ASSERT(typeof data === "object");
 
 		var s;
-		for( s in data ) {
+		for (s in data) {
 			return false;
 		}
 
@@ -52,7 +51,7 @@ CoreTree, SHA1, FUTURE) {
 			second = coretree.splitPath(second);
 
 			var common = [];
-			for( var i = 0; first[i] === second[i] && i < first.length; ++i ) {
+			for ( var i = 0; first[i] === second[i] && i < first.length; ++i) {
 				common.push(first[i]);
 			}
 
@@ -71,8 +70,8 @@ CoreTree, SHA1, FUTURE) {
 			node = coretree.getChild(node, ATTRIBUTES);
 			var keys = coretree.getKeys(node);
 			var i = keys.length;
-			while( --i >= 0 ) {
-				if( keys[i].charAt(0) === "" ) {
+			while (--i >= 0) {
+				if (keys[i].charAt(0) === "") {
 					console.log("***** This happens?");
 					keys.splice(i, 1);
 				}
@@ -87,8 +86,8 @@ CoreTree, SHA1, FUTURE) {
 			node = coretree.getChild(node, REGISTRY);
 			var keys = coretree.getKeys(node);
 			var i = keys.length;
-			while( --i >= 0 ) {
-				if( keys[i].charAt(0) === "" ) {
+			while (--i >= 0) {
+				if (keys[i].charAt(0) === "") {
 					console.log("***** This happens?");
 					keys.splice(i, 1);
 				}
@@ -133,7 +132,7 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("insert", overlays.parent.data.atr.name, source, name, target);
-			
+
 			var node = coretree.getChild(overlays, source);
 
 			ASSERT(coretree.getProperty(node, name) === undefined);
@@ -143,13 +142,12 @@ CoreTree, SHA1, FUTURE) {
 			name = name + COLLSUFFIX;
 
 			var array = coretree.getProperty(node, name);
-			if( array ) {
+			if (array) {
 				ASSERT(array.indexOf(source) < 0);
 
 				array = array.slice(0);
 				array.push(source);
-			}
-			else {
+			} else {
 				array = [ source ];
 			}
 
@@ -162,7 +160,7 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(getCommonPathPrefixData(source, target).common === "");
 
 			// console.log("remove", overlays.parent.data.atr.name, source, name, target);
-			
+
 			var node = coretree.getChild(overlays, source);
 			ASSERT(node && coretree.getProperty(node, name) === target);
 			coretree.deleteProperty(node, name);
@@ -175,12 +173,11 @@ CoreTree, SHA1, FUTURE) {
 			var array = coretree.getProperty(node, name);
 			ASSERT(Array.isArray(array) && array.length >= 1);
 
-			if( array.length === 1 ) {
+			if (array.length === 1) {
 				ASSERT(array[0] === source);
 
 				coretree.deleteProperty(node, name);
-			}
-			else {
+			} else {
 				var index = array.indexOf(source);
 				ASSERT(index >= 0);
 
@@ -197,27 +194,26 @@ CoreTree, SHA1, FUTURE) {
 			var prefix2 = prefix + "/";
 			var list = [];
 			var paths = coretree.getKeys(overlays);
-			
-			for( var i = 0; i < paths.length; ++i ) {
+
+			for ( var i = 0; i < paths.length; ++i) {
 				var path = paths[i];
-				if( path === prefix || path.substr(0, prefix2.length) === prefix2 ) {
+				if (path === prefix || path.substr(0, prefix2.length) === prefix2) {
 					var node = coretree.getChild(overlays, path);
 					var names = coretree.getKeys(node);
-					for( var j = 0; j < names.length; ++j ) {
+					for ( var j = 0; j < names.length; ++j) {
 						var name = names[j];
-						if( isPointerName(name) ) {
+						if (isPointerName(name)) {
 							list.push({
 								s: path,
 								n: name,
 								t: coretree.getProperty(node, name),
 								p: true
 							});
-						}
-						else {
+						} else {
 							var array = coretree.getProperty(node, name);
 							ASSERT(Array.isArray(array));
 							name = name.slice(0, -COLLSUFFIX.length);
-							for( var k = 0; k < array.length; ++k ) {
+							for ( var k = 0; k < array.length; ++k) {
 								list.push({
 									s: array[k],
 									n: name,
@@ -239,16 +235,14 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(!parent || isValidNode(parent));
 
 			var node;
-			if( parent ) {
-				if( relid ) {
+			if (parent) {
+				if (relid) {
 					node = coretree.getChild(parent, relid);
-				}
-				else {
+				} else {
 					node = coretree.createChild(parent);
 				}
 				coretree.setHashed(node, true);
-			}
-			else {
+			} else {
 				node = coretree.createRoot();
 			}
 
@@ -265,7 +259,7 @@ CoreTree, SHA1, FUTURE) {
 			};
 			var prefix = "";
 
-			while( node ) {
+			while (node) {
 				var overlays = coretree.getChild(node, OVERLAYS);
 				var rels = coretree.getProperty(overlays, prefix);
 				data[prefix] = rels;
@@ -286,11 +280,11 @@ CoreTree, SHA1, FUTURE) {
 
 			coretree.deleteProperty(parent, coretree.getRelid(node));
 
-			while( parent ) {
+			while (parent) {
 				var overlays = coretree.getChild(parent, OVERLAYS);
 
 				var list = overlayQuery(overlays, prefix);
-				for( var i = 0; i < list.length; ++i ) {
+				for ( var i = 0; i < list.length; ++i) {
 					var entry = list[i];
 					overlayRemove(overlays, entry.s, entry.n, entry.t);
 				}
@@ -307,11 +301,11 @@ CoreTree, SHA1, FUTURE) {
 			node = coretree.normalize(node);
 			var newNode;
 
-			if( parent ) {
+			if (parent) {
 				var ancestor = coretree.getAncestor(node, parent);
 
 				// cannot copy inside of itself
-				if( ancestor === node ) {
+				if (ancestor === node) {
 					return null;
 				}
 
@@ -326,48 +320,42 @@ CoreTree, SHA1, FUTURE) {
 				var baseOldPath = "/" + coretree.getRelid(node);
 				var aboveAncestor = 1;
 
-				while( base ) {
+				while (base) {
 					var baseOverlays = coretree.getChild(base, OVERLAYS);
 					var list = overlayQuery(baseOverlays, baseOldPath);
 
 					aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
-					var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor)
-					: coretree.getPath(ancestor, base);
+					var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
-					for( var i = 0; i < list.length; ++i ) {
+					for ( var i = 0; i < list.length; ++i) {
 						var entry = list[i];
 
-						if( entry.p ) {
+						if (entry.p) {
 							ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
-							ASSERT(entry.s === baseOldPath
-							|| entry.s.charAt(baseOldPath.length) === "/");
+							ASSERT(entry.s === baseOldPath || entry.s.charAt(baseOldPath.length) === "/");
 
 							var source, target, overlays;
 
-							if( aboveAncestor > 0 ) {
+							if (aboveAncestor > 0) {
 								source = ancestorNewPath + entry.s.substr(baseOldPath.length);
 								target = coretree.joinPaths(relativePath, entry.t);
 								overlays = ancestorOverlays;
-							}
-							else if( aboveAncestor === 0 ) {
+							} else if (aboveAncestor === 0) {
 								var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 								overlays = newNode;
-								while( data.firstLength-- > 0 ) {
+								while (data.firstLength-- > 0) {
 									overlays = coretree.getParent(overlays);
 								}
 								overlays = coretree.getChild(overlays, OVERLAYS);
 
-								source = coretree.joinPaths(data.first, entry.s
-								.substr(baseOldPath.length));
+								source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
 								target = data.second;
-							}
-							else {
+							} else {
 								ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
 
-								source = relativePath + ancestorNewPath
-								+ entry.s.substr(baseOldPath.length);
+								source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);
 								target = entry.t;
 								overlays = baseOverlays;
 							}
@@ -379,8 +367,7 @@ CoreTree, SHA1, FUTURE) {
 					baseOldPath = "/" + coretree.getRelid(base) + baseOldPath;
 					base = coretree.getParent(base);
 				}
-			}
-			else {
+			} else {
 				newNode = coretree.createRoot();
 				coretree.setData(newNode, coretree.copyData(node));
 			}
@@ -395,7 +382,7 @@ CoreTree, SHA1, FUTURE) {
 			var ancestor = coretree.getAncestor(node, parent);
 
 			// cannot move inside of itself
-			if( ancestor === node ) {
+			if (ancestor === node) {
 				return null;
 			}
 
@@ -405,7 +392,7 @@ CoreTree, SHA1, FUTURE) {
 
 			var oldNode = node;
 			node = coretree.getChild(parent, coretree.getRelid(oldNode));
-			if( !coretree.isEmpty(node) ) {
+			if (!coretree.isEmpty(node)) {
 				// we have to change the relid of the node, to fit into its new
 				// place...
 				node = coretree.createChild(parent);
@@ -416,22 +403,21 @@ CoreTree, SHA1, FUTURE) {
 			var ancestorOverlays = coretree.getChild(ancestor, OVERLAYS);
 			var ancestorNewPath = coretree.getPath(node, ancestor);
 
-			while( base ) {
+			while (base) {
 				var baseOverlays = coretree.getChild(base, OVERLAYS);
 				var list = overlayQuery(baseOverlays, baseOldPath);
 
 				aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
 
-				var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree
-				.getPath(ancestor, base);
+				var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
-				for( var i = 0; i < list.length; ++i ) {
+				for ( var i = 0; i < list.length; ++i) {
 					var entry = list[i];
 
 					overlayRemove(baseOverlays, entry.s, entry.n, entry.t);
 
 					var tmp;
-					if( !entry.p ) {
+					if (!entry.p) {
 						tmp = entry.s;
 						entry.s = entry.t;
 						entry.t = tmp;
@@ -442,34 +428,30 @@ CoreTree, SHA1, FUTURE) {
 
 					var source, target, overlays;
 
-					if( aboveAncestor > 0 ) {
+					if (aboveAncestor > 0) {
 						source = ancestorNewPath + entry.s.substr(baseOldPath.length);
 						target = coretree.joinPaths(relativePath, entry.t);
 						overlays = ancestorOverlays;
-					}
-					else if( aboveAncestor === 0 ) {
+					} else if (aboveAncestor === 0) {
 						var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
 						overlays = node;
-						while( data.firstLength-- > 0 ) {
+						while (data.firstLength-- > 0) {
 							overlays = coretree.getParent(overlays);
 						}
 						overlays = coretree.getChild(overlays, OVERLAYS);
 
-						source = coretree.joinPaths(data.first, entry.s
-						.substr(baseOldPath.length));
+						source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
 						target = data.second;
-					}
-					else {
+					} else {
 						ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
 
-						source = relativePath + ancestorNewPath
-						+ entry.s.substr(baseOldPath.length);
+						source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);
 						target = entry.t;
 						overlays = baseOverlays;
 					}
 
-					if( !entry.p ) {
+					if (!entry.p) {
 						tmp = entry.s;
 						entry.s = entry.t;
 						entry.t = tmp;
@@ -488,7 +470,7 @@ CoreTree, SHA1, FUTURE) {
 			}
 
 			deleteNode(oldNode);
-			
+
 			return node;
 		};
 
@@ -502,7 +484,7 @@ CoreTree, SHA1, FUTURE) {
 			var path = coretree.getPath(node);
 
 			var relids = getChildrenRelids(node);
-			for( var i = 0; i < relids.length; ++i ) {
+			for ( var i = 0; i < relids.length; ++i) {
 				relids[i] = path + "/" + relids[i];
 			}
 
@@ -513,7 +495,7 @@ CoreTree, SHA1, FUTURE) {
 			ASSERT(isValidNode(node));
 
 			var children = coretree.getKeys(node, isValidRelid);
-			for( var i = 0; i < children.length; ++i ) {
+			for ( var i = 0; i < children.length; ++i) {
 				children[i] = coretree.loadChild(node, children[i]);
 			}
 
@@ -528,10 +510,10 @@ CoreTree, SHA1, FUTURE) {
 
 			do {
 				var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), source);
-				if( child ) {
-					for( var name in child ) {
+				if (child) {
+					for ( var name in child) {
 						ASSERT(names.indexOf(name) === -1);
-						if( isPointerName(name) ) {
+						if (isPointerName(name)) {
 							names.push(name);
 						}
 					}
@@ -539,7 +521,7 @@ CoreTree, SHA1, FUTURE) {
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return names;
 		};
@@ -555,18 +537,18 @@ CoreTree, SHA1, FUTURE) {
 				ASSERT(child);
 
 				child = coretree.getChild(child, source);
-				if( child ) {
+				if (child) {
 					target = coretree.getProperty(child, name);
-					if( target !== undefined ) {
+					if (target !== undefined) {
 						break;
 					}
 				}
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
-			if( target !== undefined ) {
+			if (target !== undefined) {
 				ASSERT(node);
 				target = coretree.joinPaths(coretree.getPath(node), target);
 			}
@@ -584,13 +566,13 @@ CoreTree, SHA1, FUTURE) {
 				ASSERT(child);
 
 				child = coretree.getChild(child, source);
-				if( child && coretree.getProperty(child, name) !== undefined ) {
+				if (child && coretree.getProperty(child, name) !== undefined) {
 					return true;
 				}
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return false;
 		};
@@ -606,18 +588,18 @@ CoreTree, SHA1, FUTURE) {
 				ASSERT(child);
 
 				child = coretree.getChild(child, source);
-				if( child ) {
+				if (child) {
 					target = coretree.getProperty(child, name);
-					if( target !== undefined ) {
+					if (target !== undefined) {
 						break;
 					}
 				}
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
-			if( target !== undefined ) {
+			if (target !== undefined) {
 				ASSERT(node);
 				target = coretree.joinPaths(coretree.getPath(node), target);
 			}
@@ -636,22 +618,21 @@ CoreTree, SHA1, FUTURE) {
 				ASSERT(child);
 
 				child = coretree.getChild(child, source);
-				if( child ) {
+				if (child) {
 					target = coretree.getProperty(child, name);
-					if( target !== undefined ) {
+					if (target !== undefined) {
 						break;
 					}
 				}
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
-			if( target !== undefined ) {
+			if (target !== undefined) {
 				ASSERT(typeof target === "string" && node);
 				return coretree.loadByPath(node, target);
-			}
-			else {
+			} else {
 				return null;
 			}
 		};
@@ -664,11 +645,11 @@ CoreTree, SHA1, FUTURE) {
 
 			do {
 				var child = coretree.getProperty(coretree.getChild(node, OVERLAYS), target);
-				if( child ) {
-					for( var name in child ) {
-						if( !isPointerName(name) ) {
+				if (child) {
+					for ( var name in child) {
+						if (!isPointerName(name)) {
 							name = name.slice(0, -COLLSUFFIX.length);
-							if( names.indexOf(name) < 0 ) {
+							if (names.indexOf(name) < 0) {
 								names.push(name);
 							}
 						}
@@ -677,7 +658,7 @@ CoreTree, SHA1, FUTURE) {
 
 				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return names;
 		};
@@ -694,12 +675,12 @@ CoreTree, SHA1, FUTURE) {
 				var child = coretree.getChild(node, OVERLAYS);
 
 				child = coretree.getChild(child, target);
-				if( child ) {
+				if (child) {
 					var sources = coretree.getProperty(child, name);
-					if( sources ) {
+					if (sources) {
 						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
-						for( var i = 0; i < sources.length; ++i ) {
+						for ( var i = 0; i < sources.length; ++i) {
 							collection.push(coretree.loadByPath(node, sources[i]));
 						}
 					}
@@ -707,7 +688,7 @@ CoreTree, SHA1, FUTURE) {
 
 				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return FUTURE.array(collection);
 		};
@@ -724,14 +705,14 @@ CoreTree, SHA1, FUTURE) {
 				var child = coretree.getChild(node, OVERLAYS);
 
 				child = coretree.getChild(child, target);
-				if( child ) {
+				if (child) {
 					var sources = coretree.getProperty(child, name);
-					if( sources ) {
+					if (sources) {
 						ASSERT(Array.isArray(sources) && sources.length >= 1);
 
 						var prefix = coretree.getPath(node);
 
-						for( var i = 0; i < sources.length; ++i ) {
+						for ( var i = 0; i < sources.length; ++i) {
 							result.push(coretree.joinPaths(prefix, sources[i]));
 						}
 					}
@@ -739,7 +720,7 @@ CoreTree, SHA1, FUTURE) {
 
 				target = "/" + coretree.getRelid(node) + target;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return result;
 		};
@@ -754,25 +735,24 @@ CoreTree, SHA1, FUTURE) {
 				ASSERT(overlays);
 
 				var target = coretree.getProperty(coretree.getChild(overlays, source), name);
-				if( target !== undefined ) {
+				if (target !== undefined) {
 					overlayRemove(overlays, source, name, target);
 					return true;
 				}
 
 				source = "/" + coretree.getRelid(node) + source;
 				node = coretree.getParent(node);
-			} while( node );
+			} while (node);
 
 			return false;
 		};
 
 		var setPointer = function (node, name, target) {
-			ASSERT(isValidNode(node) && typeof name === "string"
-			&& (!target || isValidNode(target)));
+			ASSERT(isValidNode(node) && typeof name === "string" && (!target || isValidNode(target)));
 
 			deletePointer(node, name);
 
-			if( target ) {
+			if (target) {
 				var ancestor = coretree.getAncestor(node, target);
 
 				var overlays = coretree.getChild(ancestor, OVERLAYS);
@@ -843,7 +823,7 @@ CoreTree, SHA1, FUTURE) {
 			deletePointer: deletePointer,
 			setPointer: setPointer,
 			getCollectionNames: getCollectionNames,
-            getCollectionPaths: getCollectionPaths,
+			getCollectionPaths: getCollectionPaths,
 			loadCollection: FUTURE.unadapt(loadCollection),
 
 			getSingleNodeHash: getSingleNodeHash,
