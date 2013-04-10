@@ -818,8 +818,8 @@ i,
     /****************** PUBLIC API / COMMON COLUMNS ONLY *************************/
 
     DataGridView.prototype.displayCommonColumnsOnly = function (commonColumnOnly) {
-        this.logger.warning("displayCommonColumnsOnly: " + commonColumnOnly);
-        this._displayCommonColumnsOnly = commonColumnOnly;
+        this._displayCommonColumnsOnly = commonColumnOnly === true ? true : false;
+        this.logger.debug("setting displayCommonColumnsOnly to: " + this._displayCommonColumnsOnly);
         this._applyCommonColumnFilter();
     };
 
@@ -827,12 +827,11 @@ i,
 
     DataGridView.prototype._fnDrawCallback = function (oSettings) {
         //no interest when currently clearing or initializing the DataTable
-        //this.logger.error('_fnDrawCallback');
+        //or when redraw happens because of applying CommonColumnFilter
         if (this._isInitializing === true || this._isClearing === true || this._isApplyingCommonColumnFilter === true) {
             return;
         }
 
-        this.logger.warning('_fnDrawCallback');
         this._applyCommonColumnFilter();
     };
 
@@ -881,7 +880,7 @@ i,
             cColumns = [],
             diff;
 
-        this.logger.warning('_applyCommonColumnFilter');
+        this.logger.debug('_applyCommonColumnFilter called');
         this._isApplyingCommonColumnFilter = true;
 
         if (this._oTable) {
