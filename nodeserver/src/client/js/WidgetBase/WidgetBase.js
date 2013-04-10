@@ -38,12 +38,15 @@ define(['jquery',
     WidgetBase.OPTIONS = { "CONTAINER_ELEMENT" : "containerElement",
         "LOGGER_INSTANCE_NAME": "LOGGER_INSTANCE_NAME" };
 
+    WidgetBase.READ_ONLY_CLASS = 'read-only';
+
 
     /************ SET READ-ONLY MODE *************/
     WidgetBase.prototype.setReadOnly = function (isReadOnly) {
         if (this._isReadOnly !== isReadOnly) {
             this._isReadOnly = isReadOnly;
-            this._onReadOnlyChanged(this._isReadOnly);
+            this.logger.debug("ReadOnly mode changed to '" + isReadOnly + "'");
+            this.onReadOnlyChanged(this._isReadOnly);
         }
     };
 
@@ -51,13 +54,13 @@ define(['jquery',
         return this._isReadOnly;
     };
 
-    WidgetBase.prototype._onReadOnlyChanged = function (isReadOnly) {
-        this.logger.debug("ReadOnly mode changed to '" + isReadOnly + "'");
-        this.onReadOnlyChanged(this._isReadOnly);
-    };
-
+    /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     WidgetBase.prototype.onReadOnlyChanged = function (isReadOnly) {
-        this.logger.warning("onReadOnlyChanged (isReadOnly) not overridden...");
+        if (isReadOnly === true) {
+            this.$el.addClass(READ_ONLY_CLASS);
+        } else {
+            this.$el.removeClass(READ_ONLY_CLASS);
+        }
     };
     /***** END OF --- SET READ-ONLY MODE *********/
 

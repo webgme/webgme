@@ -7,6 +7,8 @@
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap; }
+    .widget-base-wh .widget-header .ro-icon {
+      display: none; }
     .widget-base-wh .widget-header .widget-header-title {
       font-size: 20px;
       font-weight: bold;
@@ -27,4 +29,9 @@
       margin-left: 10px; }
   .widget-base-wh .widget-body {
     position: relative;
-    overflow: auto; }
+    overflow: auto;
+    background-color: white; }
+  .widget-base-wh.read-only .widget-header .ro-icon {
+    display: inline-block; }
+  .widget-base-wh.read-only .widget-body {
+    background-color: #fbfbfb; }
