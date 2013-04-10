@@ -267,7 +267,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     project.getBranchHash(branch,oldhash,callback);
                 } else {
                     //served locally
-                    ASSERT(branchObj.local[0] && branchObj.local[0] != "");
+                    ASSERT(branchObj.local[0] && branchObj.local[0] !== "");
                     if(branchObj.local[0] === oldhash){
                         setTimeout(function(){
                             callback(null,oldhash,branchObj.fork);
@@ -324,7 +324,6 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         callback(null);
                         project.setBranchHash(branch,oldhash,newhash,returnFunction);
                         return;
-                        break;
                     case 'ahead':
                         ASSERT(branchObj.local.length > 0);
                         if(oldhash === branchObj.local[0]){
@@ -335,7 +334,6 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback('old hash mismatch');
                         }
                         return;
-                        break;
                     case 'disconnected':
                         ASSERT(branchObj.local.length > 0);
                         if(oldhash === branchObj.local[0]){
@@ -345,7 +343,6 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback('old hash mismatch');
                         }
                         return;
-                        break;
                     default: //'forked'
                         ASSERT(branchObj.local.length > 0 && branchObj.fork);
                         if(oldhash === branchObj.local[0]){
@@ -362,7 +359,6 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback('old hash mismatch');
                         }
                         return;
-                        break;
                 }
             }
         }
