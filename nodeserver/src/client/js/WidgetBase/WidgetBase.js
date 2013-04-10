@@ -43,7 +43,7 @@ define(['jquery',
     WidgetBase.prototype.setReadOnly = function (isReadOnly) {
         if (this._isReadOnly !== isReadOnly) {
             this._isReadOnly = isReadOnly;
-            this.onReadOnlyChange(this._isReadOnly);
+            this._onReadOnlyChanged(this._isReadOnly);
         }
     };
 
@@ -51,8 +51,13 @@ define(['jquery',
         return this._isReadOnly;
     };
 
-    WidgetBase.prototype.onReadOnlyChange = function (isReadOnly) {
+    WidgetBase.prototype._onReadOnlyChanged = function (isReadOnly) {
         this.logger.debug("ReadOnly mode changed to '" + isReadOnly + "'");
+        this.onReadOnlyChanged(this._isReadOnly);
+    };
+
+    WidgetBase.prototype.onReadOnlyChanged = function (isReadOnly) {
+        this.logger.warning("onReadOnlyChanged (isReadOnly) not overridden...");
     };
     /***** END OF --- SET READ-ONLY MODE *********/
 
