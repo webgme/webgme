@@ -982,6 +982,15 @@ i,
         this._isApplyingCommonColumnFilter = false;
     };
 
+    /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
+    DataGridView.prototype.onReadOnlyChanged = function (isReadOnly) {
+        //if already editing rows --> cancel edit mode
+        this.$el.find('.editCancel').trigger('click');
+
+        //apply parent's onReadOnlyChanged
+        __parent_proto__.onReadOnlyChanged.call(this, isReadOnly);
+    };
+
     /************** PUBLIC API OVERRIDABLES **************************/
 
     DataGridView.prototype.onCellEdit = function (params) {
