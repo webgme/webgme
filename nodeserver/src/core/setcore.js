@@ -28,8 +28,8 @@ define([ "util/assert"], function (ASSERT) {
             });
         };
 
-        var createNode = function(parent){
-            var node = _innerCore.createNode(parent);
+        var createNode = function(parent,relid){
+            var node = _innerCore.createNode(parent,relid);
             if(root === null && !parent){
                 root = node;
             }

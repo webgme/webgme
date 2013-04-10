@@ -38,7 +38,10 @@ define([
                 _database = new Cache(
                     new Failsafe(
                         new SocketIOClient(
-                            {}
+                            {
+                                host:commonUtil.combinedserver.host,
+                                port:commonUtil.combinedserver.port
+                            }
                         ),{}
                     ),{}
                 ),
@@ -79,7 +82,7 @@ define([
                 }
             }
             function clearSelectedObjectId() {
-                _self.setSelectedObjectId(null);
+                setSelectedObjectId(null);
             }
 
             function addCommit(commitHash){
@@ -160,15 +163,33 @@ define([
             //internal functions
             function cleanUsers(){
                 for(var i in _users){
+                    var events = [];
+                    for(var j in _users[i].PATHS){
+                        events.push({etype:'unload',eid:j});
+                    }
+                    // TODO events.push({etype:'complete',eid:null});
+
+                    if(_users[i].ONEEVENT){
+                        _users[i].UI.onOneEvent(events);
+                    } else {
+                        for(j=0;j<events.length;j++){
+                            _users[i].UI.onEvent(events[j].etype,events[j].eid);
+                        }
+                    }
                     _users[i].PATTERNS = {};
                     _users[i].PATHS = {};
                     _users[i].SENDEVENTS = true;
+
+                    if(_users[i].UI.reLaunch){
+                        _users[i].UI.reLaunch();
+                    }
                 }
             }
 
             function closeOpenedProject(callback){
                 callback = callback || function(){};
                 var returning = function(e){
+                    clearSelectedObjectId();
                     _projectName = null;
                     _project = null;
                     _commit = null;
@@ -180,11 +201,12 @@ define([
                     _networkStatus = null;
                     _clipboard = [];
                     _msg = "";
-                    _recentRoots = [];
+                    _recentCommits = [];
                     _viewer = false;
                     _loadCore = null;
                     _loadNodes = {};
                     _loadError = 0;
+                    cleanUsers();
 
                     callback(e);
                 };
@@ -274,7 +296,9 @@ define([
 
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
-                        events.push({etype:'incomplete',eid:null});
+                        // TODO events.push({etype:'incomplete',eid:null});
+                    } else {
+                        // TODO events.push({etype:'complete',eid:null});
                     }
                     if(_users[userId].ONEEVENT){
                         _users[userId].UI.onOneEvent(events);
@@ -343,7 +367,7 @@ define([
             //this is just a first brute implementation it needs serious optimization!!!
             function loadPattern(core,id,pattern,nodesSoFar,callback){
                 callback = callback || function(){};
-                ASSERT(typeof core === 'object' && typeof pattern === 'object' && typeof nodesSoFar === 'object');
+                ASSERT(core && typeof core === 'object' && typeof pattern === 'object' && typeof nodesSoFar === 'object');
 
                 core.loadByPath(id,function(err,node){
                     if(!err && node){
@@ -872,12 +896,42 @@ define([
             }
 
             function removeMember(path, memberpath, setid) {
+                if(_nodes[path] &&
+                    _nodes[memberpath] &&
+                    typeof _nodes[path].node === 'object' &&
+                    typeof _nodes[memberpath].node === 'object'){
+                    var setPath = _core.getSetPath(_nodes[path].node,setid);
+                    if(setPath !== null){
+                        if(_nodes[setPath] && typeof _nodes[setPath].node === 'object'){
+                            //let's check if the path is in the set
+                            var members = _core.getChildrenPaths(_nodes[setPath].node);
+                            var memberPaths =[];
+                            var memberHash = {};
+                            for(var i=0;i<members.length;i++){
+                                if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
+                                    memberPaths.unshift(_core.getPointerPath(_nodes[members[i]].node,'member'));
+                                    memberHash[memberPaths[0]] = members[i];
+                                }
+                            }
+                            if(memberPaths.indexOf(memberpath) !== -1){
+                                _core.deleteNode(_nodes[memberHash[memberpath]].node);
+
+                                if(members.length === 1){
+                                    //this was the only element in the set so we can delete the set itself
+                                    _core.deleteNode(_nodes[setPath].node);
+                                }
+
+                                saveRoot('removeMember('+path+','+memberpath+','+setid+')');
+                            }
+                        }
+                    }
+                }
             }
 
             //territory functions
             function addUI(ui, oneevent, guid) {
                 guid = guid || GUID();
-                _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:[], ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
+                _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:{}, ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
                 return guid;
             }
 
@@ -974,7 +1028,7 @@ define([
                         var memberIds = [];
                         for(var i=0;i<members.length;i++){
                             if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
-                                memberIds.push(_core.getPointer(_nodes[members[i]].node,'member'));
+                                memberIds.push(_core.getPointerPath(_nodes[members[i]].node,'member'));
                             }
                         }
                         return memberIds;
@@ -1029,14 +1083,24 @@ define([
             function initialize(){
                 _database.openDatabase(function(){
                     networkWatcher();
-                    _database.openProject('storage',function(err,p){
-                        _project = p;
-                        _projectName = 'storage';
-                        _commit = new Commit(_project,{});
-                        _inTransaction = false;
-                        _forked = false;
-                        _nodes={};
-                        branchWatcher('master');
+                    _database.getProjectNames(function(err,names){
+                        var projectname = null;
+                        if(commonUtil.combinedserver.project && names.indexOf(commonUtil.combinedserver.project) !== -1){
+                            projectname = commonUtil.combinedserver.project;
+                        } else {
+                            projectname = names[0];
+                        }
+                        if(!err && names && names.length>0){
+                            _database.openProject(projectname,function(err,p){
+                                _project = p;
+                                _projectName = 'storage';
+                                _commit = new Commit(_project,{});
+                                _inTransaction = false;
+                                _forked = false;
+                                _nodes={};
+                                branchWatcher('master');
+                            });
+                        }
                     });
                 });
             }
