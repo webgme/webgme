@@ -3,11 +3,13 @@
 define(['clientUtil',
     'js/WidgetBase/WidgetBaseWithHeader',
     'js/Constants',
+    'js/DataGrid/DataGridView.Droppable',
     'text!js/DataGrid/DataGridViewTemplate.html',
     'text!js/DataGrid/DataTableTemplate.html',
     'css!DataGridCSS/DataGridView.css'], function (util,
                                                    WidgetBaseWithHeader,
                                                           CONSTANTS,
+                                                          DataGridViewDroppable,
                                                           dataGridViewTemplate,
                                                           dataTableTemplate) {
 
@@ -37,6 +39,7 @@ define(['clientUtil',
         this._groupColumns = true;
         this._rowDelete = true;
         this._rowEdit = true;
+        this._droppable = true;
 
         this._displayCommonColumnsOnly = false;
 
@@ -48,6 +51,9 @@ define(['clientUtil',
     DataGridView.OPTIONS = _.extend(WidgetBaseWithHeader.OPTIONS,
         {});
     _.extend(DataGridView.prototype, __parent__.prototype);
+
+    //implement DataGridViewDroppable as well
+    _.extend(DataGridView.prototype, DataGridViewDroppable.prototype);
 
     DataGridView.prototype.initializeUI = function () {
         var self = this;
@@ -90,6 +96,7 @@ define(['clientUtil',
         }
 
         if (this.$table) {
+            this._detachDroppable(this.$table);
             this.$table.empty();
             this.$table.remove();
             this.$table = undefined;
@@ -201,6 +208,9 @@ define(['clientUtil',
         }
 
         this.createColumnShowHideControl(_columns, this._groupColumns, this._actionButtonsInFirstColumn === true);
+
+        this._attachDroppable(this.$el, this.$table);
+
         this._isInitializing = false;
     };
 
@@ -739,6 +749,35 @@ i,
         }
     };
 
+    DataGridView.prototype._extractOriginalData = function (data) {
+        var result = {},
+            i,
+            len,
+            j;
+
+        for (i in data) {
+            if (data.hasOwnProperty(i)) {
+                if (_.isObject(data[i])) {
+                    if (_.isArray(data[i]) ) {
+                        result[i] = [];
+                        len = data[i].length;
+                        for (j = 0; j < len; j += 1) {
+                            result[i].push(data[i][j]);
+                        }
+                    } else {
+                        result[i] = this._extractOriginalData(data[i]);
+                    }
+                } else {
+                    if (data[i] !== DEFAULT_NON_EXISTING_VALUE) {
+                        result[i] = data[i];
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
     DataGridView.prototype._saveData = function (object, data, value) {
         var a = data.split('.'),
             k = a[0];
@@ -981,6 +1020,8 @@ i,
 
         this._isApplyingCommonColumnFilter = false;
     };
+
+    /******* END OF --- CALCULATE ROW HEIGHT AND COLUMN WIDTHS ****************/
 
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     DataGridView.prototype.onReadOnlyChanged = function (isReadOnly) {

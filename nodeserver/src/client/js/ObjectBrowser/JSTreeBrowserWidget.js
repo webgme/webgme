@@ -528,7 +528,7 @@ define(['clientUtil',
                 nodeEl.draggable({
                     zIndex: 100000,
                     appendTo: $("body").find("#" + CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first(),
-                    cursorAt: { left: 0, top: 5 },
+                    cursorAt: { left: 0, top: -2 },
                     helper: function (event) {
                         var helperEl = nodeEl.clone(),
                             wrapper = $('<div class="jstree jstree-default"><ul class="jstree-no-dots"></ul></div>'),
