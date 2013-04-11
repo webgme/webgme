@@ -78,7 +78,7 @@ requirejs(['logManager',
             database: commonUtil.combinedserver.mongodatabase
         }),{}),{combined:http});
 
-        // storage.open();
+        storage.open();
     };
 
     var server = new Combined(commonUtil.combinedserver);
