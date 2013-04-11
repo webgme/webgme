@@ -191,7 +191,6 @@ define([
                 var returning = function(e){
                     clearSelectedObjectId();
                     _projectName = null;
-                    _project = null;
                     _commit = null;
                     _inTransaction = false;
                     _core = null;
@@ -212,7 +211,9 @@ define([
                 };
                 _branch = null;
                 if(_project){
-                    _project.closeProject(function(err){
+                    var project = _project;
+                    _project = null;
+                    project.closeProject(function(err){
                         //TODO what if for some reason we are in transaction???
                         returning(err);
                     });

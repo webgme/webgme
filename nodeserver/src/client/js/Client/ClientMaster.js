@@ -292,6 +292,13 @@ define([
             self.getAvailableProjects = function () {
                 return getLocalProjectList();
             };
+            self.getAvailableProjectsAsync = function (callback) {
+                callback(null,getLocalProjectList());
+            };
+            self.selectProjectAsync = function(projectname,callback){
+                self.selectProject(projectname);
+                callback(null);
+            };
             self.selectProject = function (projectname) {
                 if (getLocalProjectList().indexOf(projectname) !== -1) {
                     if (activeProject) {

@@ -40,7 +40,7 @@ define(['logManager'], function (logManager) {
             li,
             item;
 
-        this._initializeUI();
+        this._ul.empty();
 
         for (it = 0; it < len; it += 1) {
             item = this._items[this._orderedItemIds[it]];
