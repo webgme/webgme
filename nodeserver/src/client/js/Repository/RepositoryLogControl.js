@@ -67,7 +67,7 @@ define(['logManager'], function (logManager) {
             self = this;
 
         commitsLoaded = function (err, data) {
-            self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data ? data.length : "null");
+            self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data == true ? data.length : "null");
 
             if (err) {
                 self._logger.error(err);
@@ -115,10 +115,10 @@ define(['logManager'], function (logManager) {
         this._view.clear();
         this._view.displayProgress();
 
-        commitGetter(commitsLoaded);
+        commitGetter(null,commitsLoaded);
     };
 
-    RepositoryLogControl.prototype._getFakeCommitsAsync = function (callback) {
+    RepositoryLogControl.prototype._getFakeCommitsAsync = function (extra,callback) {
         var result = [],
             num = 16,
             c = num,

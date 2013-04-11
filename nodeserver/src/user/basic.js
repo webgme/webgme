@@ -458,6 +458,7 @@ define([
                 });
             }
             function loading(newRootHash,callback){
+                callback = callback || function(){};
                 var incomplete = false;
                 var modifiedPaths = {};
                 var missing = 2;
@@ -474,6 +475,7 @@ define([
                         }
                         _loadError = 0;
                     }
+                    callback(null);
                 };
 
                 loadRoot(newRootHash,function(err){
@@ -502,17 +504,21 @@ define([
             }
 
             function saveRoot(msg,callback){
-                _msg +="\n"+msg;
-                if(!_inTransaction){
-                    ASSERT(_project && _commit && _core && _branch);
-                    var newRootHash = _core.persist(function(err){});
-                    var newCommitHash = _commit.commit(_branch,_recentCommits[0],newRootHash,_msg);
-                    _msg = "";
-                    addCommit(newCommitHash);
-                    _commit.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
-                       //TODO now what??? - could we screw up?
-                    });
-                    loading(newRootHash);
+                if(!_viewer){
+                    _msg +="\n"+msg;
+                    if(!_inTransaction){
+                        ASSERT(_project && _commit && _core && _branch);
+                        var newRootHash = _core.persist(function(err){});
+                        var newCommitHash = _commit.commit(_branch,[_recentCommits[0]],newRootHash,_msg);
+                        _msg = "";
+                        addCommit(newCommitHash);
+                        _commit.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
+                            //TODO now what??? - could we screw up?
+                        });
+                        loading(newRootHash);
+                    }
+                } else {
+                    _msg="";
                 }
             }
 
@@ -597,28 +603,77 @@ define([
                 _database.deleteProject(projectname,callback);
             }
 
-            function viewCommitAsync(commitHash, callback){
-                //we not close the opened project, just clear the branch
-                //and load the given commit
-                var oldbranch = _branch;
-                _branch = null;
-                /*
-                _recentCommits = [];
-                _clipboard = [];
-                _commit = null;
-                _core = null;
-                _selectedObjectId = null;
-                _forked = false;
-                _nodes = {};
-                _inTransaction = false;
-                _msg = "";
-                _viewer = true;
-                */
+            //branching functionality
+            function getBranchesAsync(callback){
+                _commit.getBranchNames(function(err,names){
+                    if(!err && names){
+                        var missing = 0;
+                        var branchArray = [];
+                        var error = null;
+                        var getBranchValues = function(name){
+                            _commit.getBranchHash(name,'',function(err,newhash,forked){
+                                if(!err && newhash){
+                                    var element = {name:name,localcommit:newhash,remotecommit:newhash};
+                                    if(forked){
+                                        element.remotecommit = forked;
+                                    }
+                                    branchArray.push(element);
+                                } else {
+                                    error = error || err;
+                                }
 
-                _project.loadObject(commitHash,function(err,commitObj){
+                                if(--missing === 0){
+                                    callback(error,branchArray);
+                                }
+                            });
+                        };
 
+                        for(var i in names){
+                            missing++;
+                        }
+                        if(missing > 0){
+                            for(i in names){
+                                getBranchValues(i);
+                            }
+                        } else {
+                            callback(null,branchArray);
+                        }
+                    } else {
+                        callback(err);
+                    }
                 });
             }
+            function viewerCommit(hash,callback){
+                //no project change
+                //we stop watching branch
+                //we create the core
+                //we use the existing territories
+                //we set viewer mode, so there will be no modification allowed to send to server...
+                _branch = null;
+                _viewer = true;
+                _recentCommits = [hash];
+                _project.loadObject(hash,function(err,commitObj){
+                    if(!err && commitObj){
+                        loading(commitObj.root,function(err){
+                            callback(err);
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
+            }
+            function selectCommitAsync(hash,callback){
+                //this should proxy to branch selection and viewer functions
+                viewerCommit(hash,callback);
+            }
+            function getCommitsAsync(before,callback){
+                before = before || (new Date()).getTime();
+                _project.getCommits(before,callback);
+            }
+            function getActualCommit(){
+                return _recentCommits[0];
+            }
+
             //MGA
             function copyMoreNodes(nodePaths,parentPath,callback){
                 var checkPaths = function(){
@@ -679,40 +734,34 @@ define([
                     });
                 }
             }
-
             function startTransaction() {
                 if (_core) {
                     _inTransaction = true;
                 }
             }
-
             function completeTransaction() {
                 _inTransaction = false;
                 if (_core) {
                     saveRoot('completeTransaction()');
                 }
             }
-
             function setAttributes(path, name, value) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setAttribute(_nodes[path].node, name, value);
                     saveRoot('setAttribute('+path+','+'name'+','+value+')');
                 }
             }
-
             function setRegistry(path, name, value) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
             }
-
             function copyNodes(ids) {
                 if (_core) {
                     _clipboard = ids;
                 }
             }
-
             function pasteNodes(parentpath) {
                 var checkClipboard = function(){
                     var result = true;
@@ -731,14 +780,12 @@ define([
                     });
                 }
             }
-
             function deleteNode(path) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
                     saveRoot('deleteNode('+path+')');
                 }
             }
-
             function delMoreNodes(paths) {
                 if(_core){
                     for(var i=0;i<paths.length;i++){
@@ -749,7 +796,6 @@ define([
                     saveRoot('delMoreNodes('+paths+')');
                 }
             }
-
             function createChild(parameters) {
                 if(_core){
                     if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
@@ -775,21 +821,18 @@ define([
                     }
                 }
             }
-
             function makePointer(id, name, to) {
                 if(_core && _nodes[id] && _nodes[to] && typeof _nodes[id].node === 'object' && typeof _nodes[to].node === 'object' ){
                     _core.setPointer(_nodes[id].node,name,_nodes[to].node);
                     saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             }
-
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name);
                     saveRoot('delPointer('+path+','+name+')');
                 }
             }
-
             function makeConnection(parameters) {
                 if(parameters.parentId && parameters.sourceId && parameters.targetId){
                     if(_core &&
@@ -809,7 +852,6 @@ define([
                     }
                 }
             }
-
             function intellyPaste(parameters) {
                 var pathestocopy = [],
                     simplepaste = true;
@@ -861,7 +903,6 @@ define([
                     console.log('wrong parameters in intelligent paste operation - denied -');
                 }
             }
-
             //MGAlike - set functions
             function addMember(path, memberpath, setid) {
                 if(_nodes[path] &&
@@ -895,7 +936,6 @@ define([
                     }
                 }
             }
-
             function removeMember(path, memberpath, setid) {
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
@@ -935,11 +975,9 @@ define([
                 _users[guid] = {type:'notused', UI:ui, PATTERNS:{}, PATHS:{}, ONEEVENT:oneevent ? true : false, SENDEVENTS:true};
                 return guid;
             }
-
             function removeUI(guid) {
                 delete _users[guid];
             }
-
             function updateTerritory(guid, patterns) {
                 if(_project && _commit){
 
@@ -1130,6 +1168,10 @@ define([
                 selectProjectAsync: selectProjectAsync,
                 createProjectAsync: createProjectAsync,
                 deleteProjectAsync: deleteProjectAsync,
+                getBranchesAsync: getBranchesAsync,
+                selectCommitAsync: selectCommitAsync,
+                getCommitsAsync: getCommitsAsync,
+                getActualCommit: getActualCommit,
 
 
                 //MGA

@@ -319,7 +319,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 			function getCommits(before,callback){
 				//TODO we should think whether this needs options or not
-				ASSERT(typeof callback === 'funciton');
+				ASSERT(typeof callback === 'function');
 
 				var now = (new Date()).getTime();
 				if(before>0 && before<=now){
