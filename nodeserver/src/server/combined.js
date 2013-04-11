@@ -73,11 +73,9 @@ requirejs(['logManager',
         }).listen(80);
 
         var storage = new Server(new Cache(new Mongo({
-            host: "129.59.105.239",
-            port: 27017,
-            database: "multi",
-            timeout: 10000,
-            local: "memory"
+            host: commonUtil.combinedserver.mongoip,
+            port: commonUtil.combinedserver.mongoport,
+            database: commonUtil.combinedserver.mongodatabase
         }),{}),{combined:http});
 
         storage.open();

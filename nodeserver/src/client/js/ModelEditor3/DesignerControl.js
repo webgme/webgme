@@ -538,6 +538,12 @@ define(['logManager',
                             }
                         }
                     }
+                } else {
+                    //supposed to be the grandchild of the currently open node
+                    //--> load of port
+                    if(this._GMEModels.indexOf(objD.parentId) !== -1){
+                        this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
+                    }
                 }
             }
         }

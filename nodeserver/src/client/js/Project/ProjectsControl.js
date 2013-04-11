@@ -13,13 +13,15 @@ define(['logManager'], function (logManager) {
         //override view event handlers
         this._view.onBtnProjectOpenClick = function (params) {
             if (params.id) {
-                self._client.selectProject(params.id);
+                self._client.selectProjectAsync(params.id,function(){
+                    self.displayProjects();
+                });
             }
         };
 
         this._view.onBtnProjectDeleteClick = function (params) {
             if (params.id) {
-                self._client.deleteProject(params.id, function () {
+                self._client.deleteProjectAsync(params.id, function () {
                     self.displayProjects();
                 });
             }
@@ -27,38 +29,34 @@ define(['logManager'], function (logManager) {
 
         this._view.onCreateNewProjectClick = function (projectName) {
             self._logger.debug("onCreateNewProjectClick: " + projectName);
-            self._client.createProject(projectName, function () {
+            self._client.createProjectAsync(projectName, function () {
                 self.displayProjects();
             });
         };
 
         this._logger = logManager.create("ProjectsControl");
         this._logger.debug("Created");
+
+        ProjectsControl.prototype.displayProjects = function () {
+            self._client.getAvailableProjectsAsync(function(err,projectNames){
+                var availableProjects = projectNames || [];
+                availableProjects = availableProjects.sort();
+                var len = availableProjects.length,
+                    i = len,
+                    activeProjectId = self._client.getActiveProject();
+                self._view.clearItems();
+                while (i--) {
+                    self._view.addItem({"id": availableProjects[len - i - 1],
+                        "name":  availableProjects[len - i - 1],
+                        "actual": activeProjectId === availableProjects[len - i - 1]});
+                }
+                self._view.render();
+            });
+
+        };
     };
 
-    ProjectsControl.prototype.displayProjects = function () {
-        var availableProjects = this._client.getAvailableProjects().sort(),
-            len = availableProjects.length,
-            i = len,
-            activeProjectId = this._client.getActiveProject();
 
-        this._view.clearItems();
-
-        while (i--) {
-            this._view.addItem({"id": availableProjects[len - i - 1],
-                "name":  availableProjects[len - i - 1],
-                "actual": activeProjectId === availableProjects[len - i - 1]});
-        }
-
-        //add some fake
-        /*for (i = 0; i < 5; i += 1) {
-            this._view.addItem({"id": i.toString(),
-                "name":  "Fake #" + i,
-                "actual": false });
-        }*/
-
-        this._view.render();
-    };
 
     return ProjectsControl;
 });

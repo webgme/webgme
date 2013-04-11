@@ -1028,7 +1028,12 @@ define([
                         var memberIds = [];
                         for(var i=0;i<members.length;i++){
                             if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
-                                memberIds.push(_core.getPointerPath(_nodes[members[i]].node,'member'));
+                                var path = _core.getPointerPath(_nodes[members[i]].node,'member');
+                                if(path){
+                                    memberIds.push(path);
+                                } else {
+
+                                }
                             }
                         }
                         return memberIds;

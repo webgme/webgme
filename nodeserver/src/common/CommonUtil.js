@@ -138,13 +138,20 @@ define(['common/Constants'], function (CONSTANTS) {
         validRealSetNames : [CONSTANTS.SET_GENERAL],
 
         combinedserver: {
+            //used by the client currently
+            host            : 'http://localhost',
             port            : 80,
-            mongosrv        : "/datamongo",
-            rootsrv         : "/root",
-            projsrv         : "/project",
+            project         : "storage",
+
+            //used by the server
             mongoip         : "129.59.105.239",
             mongoport       : 27017,
             mongodatabase   : "multi",
+
+            mongosrv        : "/datamongo",
+            rootsrv         : "/root",
+            projsrv         : "/project",
+
             mongoopt        : {
                 'auto_reconnect' : true,
                 'poolSize'       : 5,
@@ -166,7 +173,6 @@ define(['common/Constants'], function (CONSTANTS) {
                 'log level'          : 1
             },
             nosaveddata     : true,
-            project         : "dd2"
 
         }
 
