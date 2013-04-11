@@ -70,7 +70,7 @@ requirejs(['logManager',
                 }
                 res.end(data);
             });
-        }).listen(80);
+        }).listen(commonUtil.combinedserver.port);
 
         var storage = new Server(new Cache(new Mongo({
             host: commonUtil.combinedserver.mongoip,
@@ -78,7 +78,7 @@ requirejs(['logManager',
             database: commonUtil.combinedserver.mongodatabase
         }),{}),{combined:http});
 
-        storage.open();
+        // storage.open();
     };
 
     var server = new Combined(commonUtil.combinedserver);
