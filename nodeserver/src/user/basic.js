@@ -132,6 +132,7 @@ define([
                 };
 
                 _branch = branch;
+                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
                 _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
             }
 
@@ -206,6 +207,7 @@ define([
                     _loadNodes = {};
                     _loadError = 0;
                     cleanUsers();
+                    _self.dispatchEvent(_self.events.PROJECT_CLOSED);
 
                     callback(e);
                 };
@@ -545,6 +547,7 @@ define([
                                     if(!err && names){
                                         _project = p;
                                         _projectName = projectname;
+                                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
                                         _commit = commit;
                                         _inTransaction = false;
                                         _nodes={};
@@ -672,6 +675,9 @@ define([
             }
             function getActualCommit(){
                 return _recentCommits[0];
+            }
+            function getActualBranch(){
+                return _branch;
             }
 
             //MGA
@@ -1137,7 +1143,8 @@ define([
                         if(!err && names && names.length>0){
                             _database.openProject(projectname,function(err,p){
                                 _project = p;
-                                _projectName = 'storage';
+                                _projectName = projectname;
+                                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
                                 _commit = new Commit(_project,{});
                                 _inTransaction = false;
                                 _forked = false;
@@ -1172,6 +1179,8 @@ define([
                 selectCommitAsync: selectCommitAsync,
                 getCommitsAsync: getCommitsAsync,
                 getActualCommit: getActualCommit,
+                getActualBranch: getActualBranch,
+                isReadOnly: function(){ return _viewer;},//TODO should be removed
 
 
                 //MGA

@@ -4,8 +4,6 @@
 define([  'logManager',
     'commonUtil',
     'clientUtil',
-    //'js/cli3nt',
-    //'js/Client/ClientMaster',
     'user/basic',
     'js/ObjectBrowser/TreeBrowserControl',
     'js/ObjectBrowser/JSTreeBrowserWidget',
@@ -23,7 +21,6 @@ define([  'logManager',
     'text!js/Visualizers.json'], function (logManager,
                                             commonUtil,
                                             util,
-                                            //Client,
                                             Core,
                                             TreeBrowserControl,
                                             JSTreeBrowserWidget,
@@ -196,7 +193,12 @@ define([  'logManager',
             proxy.addEventListener(proxy.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
                 selectedObjectChanged(__project, nodeId);
             });
-            proxy.addEventListener(proxy.events.ACTOR_CHANGED, function () {
+            proxy.addEventListener(proxy.events.PROJECT_OPENED, function (name) {
+                if (projectTitleView) {
+                    projectTitleView.refresh(proxy);
+                }
+            });
+            proxy.addEventListener(proxy.events.PROJECT_CLOSED, function () {
                 if (projectTitleView) {
                     projectTitleView.refresh(proxy);
                 }
