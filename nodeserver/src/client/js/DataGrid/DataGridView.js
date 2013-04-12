@@ -534,12 +534,14 @@ i,
         var len = nRow.cells.length,
             d,
             $td,
-            aPos;
+            aPos,
+            aoColumn = this._oTable.fnSettings().aoColumns;
 
         while (len--) {
             aPos = this._oTable.fnGetPosition( nRow.cells[len] );
             if (aPos[2] && aPos[2] !== -1) {
-                d = this._oTable.fnGetData( aPos[0], aPos[2] );
+                //d = this._oTable.fnGetData( aPos[0], aPos[2] );
+                d = this._fetchData(aData, aoColumn[len].mData);
                 $td = $(nRow.cells[len]);
                 if (d === DEFAULT_NON_EXISTING_VALUE) {
                     $td.addClass(UNDEFINED_VALUE_CLASS);
