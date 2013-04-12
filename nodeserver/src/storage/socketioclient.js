@@ -498,12 +498,12 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 }
             }
 
-            function getCommits(before,callback){
+            function getCommits(before,number,callback){
                 ASSERT(typeof callback === 'function');
                 if(socketConnected){
                     var guid = GUID();
                     callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
-                    socket.emit('getCommits',project,before,function(err,commits){
+                    socket.emit('getCommits',project,before,number,function(err,commits){
                         if(callbacks[guid]){
                             clearTimeout(callbacks[guid].to);
                             delete callbacks[guid];

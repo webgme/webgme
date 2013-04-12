@@ -63,7 +63,8 @@ define([
                 _viewer = false,
                 _loadCore = null,
                 _loadNodes = {},
-                _loadError = 0;
+                _loadError = 0,
+                _commitCache = null;
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
@@ -132,7 +133,7 @@ define([
                 };
 
                 _branch = branch;
-                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);//TODO new event should be added here
                 _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
             }
 
@@ -159,6 +160,112 @@ define([
                     return _database.getDatabaseStatus(status,dbStatusUpdated);
                 };
                 _database.getDatabaseStatus('',dbStatusUpdated);
+            }
+
+            function commitCache(){
+                var _cache = {},
+                    _timeOrder = [],
+                    _timeHash = {}
+                function clearCache(){
+                    _cache = {};
+                    _timeOrder = [];
+                }
+                function addCommit(commitObject){
+                    if(_cache[commitObject._id]){
+                        //already in the cache we do not have to do anything
+                        return;
+                    } else {
+                        _cache[commitObject._id] = commitObject;
+                        var index = 0;
+                        while(index < _timeOrder.length && _cache[_timeOrder[index]].time>commitObject.time){
+                            index++;
+                        }
+                        _timeOrder.splice(index,0,commitObject._id);
+                    }
+                    return;
+                }
+
+                function getNCommitsFrom(commitHash,number,callback){
+                    var fillCache = function(time,number,callback){
+                        _project.getCommits(time,number,function(err,commits){
+                            if(!err && commits){
+                                for(var i=0;i<commits.length;i++){
+                                    addCommit(commits[i]);
+                                }
+                                callback(null);
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    };
+                    var returnNCommitsFromHash= function(hash,num,cb){
+                        //now we should have all the commits in place
+                        var index = hash === null ? 0 : _timeOrder.indexOf(hash),
+                            commits = [];
+                        if(index > -1){
+                            while(commits.length < num && index < _timeOrder.length ){
+                                commits.push(_cache[_timeOrder[index]]);
+                                index++;
+                            }
+                            cb(null,commits);
+                        } else {
+                            cb('cannot found starting commit');
+                        }
+                    };
+                    var cacheFilled = function(err){
+                      if(err){
+                          callback(err);
+                      } else {
+                          returnNCommitsFromHash(commitHash,number,callback);
+                      }
+                    };
+
+
+
+                    if(commitHash){
+                        if(_cache[commitHash]){
+                            //we can be lucky :)
+                            var index = _timeOrder.indexOf(commitHash);
+                            if(_timeOrder.length>index+number){
+                                //we are lucky
+                                cacheFilled(null);
+                            } else {
+                                //not that lucky
+                                fillCache(_cache[_timeOrder[_timeOrder.length-1]].time,number-(_timeOrder.length-index),cacheFilled);
+                            }
+                        } else {
+                            //we are not lucky enough so we have to download the commit
+                            _project.loadObject(commitHash,function(err,commitObject){
+                                if(!err && commitObject){
+                                    addCommit(commitObject);
+                                    fillCache(commitObject.time,number,cacheFilled);
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        }
+                    } else {
+                        //initial call
+                        fillCache((new Date()).getTime(),number,cacheFilled);
+                    }
+                }
+
+                return {
+                    getNCommitsFrom: getNCommitsFrom,
+                    clearCache: clearCache
+                }
+            }
+
+            function openingProject(name){
+                //we already done every opening related stuff
+                //so these are the last ones (eventing and stuff)
+                _projectName = name;
+                if(_commitCache){
+                    _commitCache.clearCache();
+                } else {
+                    _commitCache = commitCache();
+                }
+                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
             }
 
             //internal functions
@@ -546,8 +653,7 @@ define([
                                 commit.getBranchNames(function(err,names){
                                     if(!err && names){
                                         _project = p;
-                                        _projectName = projectname;
-                                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+                                        openingProject(projectname);
                                         _commit = commit;
                                         _inTransaction = false;
                                         _nodes={};
@@ -669,15 +775,32 @@ define([
                 //this should proxy to branch selection and viewer functions
                 viewerCommit(hash,callback);
             }
-            function getCommitsAsync(before,callback){
-                before = before || (new Date()).getTime();
-                _project.getCommits(before,callback);
+            function getCommitsAsync(commitHash,number,callback){
+                ASSERT(_commitCache);
+                _commitCache.getNCommitsFrom(commitHash,number,callback);
             }
             function getActualCommit(){
                 return _recentCommits[0];
             }
             function getActualBranch(){
                 return _branch;
+            }
+            function createBranchAsync(branchName,commitHash,callback){
+                //it doesn't changes anything, just creates the new branch
+                _commit.setBranchHash(branchName,'',commitHash,callback);
+            }
+            function deleteBranchAsync(branchName,callback){
+                _commit.getBranchHash(branchName,'',function(err,newhash,forkedhash){
+                    if(!err && newhash){
+                        if(forkedhash){
+                            _commit.setBranchHash(branchName,newhash,forkedhash,callback);
+                        } else {
+                            _commit.setBranchHash(branchName,newhash,'',callback);
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
             }
 
             //MGA
@@ -1000,7 +1123,7 @@ define([
                         missing++;
                     }
                     if(missing>0){
-                        for(var i in patterns){
+                        for(i in patterns){
                             loadPattern(_core,i,patterns[i],_nodes,function(err){
                                 error = error || err;
                                 if(--missing === 0){
@@ -1143,8 +1266,7 @@ define([
                         if(!err && names && names.length>0){
                             _database.openProject(projectname,function(err,p){
                                 _project = p;
-                                _projectName = projectname;
-                                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+                                openingProject(projectname);
                                 _commit = new Commit(_project,{});
                                 _inTransaction = false;
                                 _forked = false;
@@ -1180,6 +1302,8 @@ define([
                 getCommitsAsync: getCommitsAsync,
                 getActualCommit: getActualCommit,
                 getActualBranch: getActualBranch,
+                createBranchAsync: createBranchAsync,
+                deleteBranchAsync: deleteBranchAsync,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
 
 

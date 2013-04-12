@@ -139,7 +139,7 @@ define(['common/Constants'], function (CONSTANTS) {
 
         combinedserver: {
             //used by the client currently
-            host            : 'http://localhost',
+            host            : 'http://kecskes.isis.vanderbilt.edu',
             port            : 80,
             project         : "storage",
 

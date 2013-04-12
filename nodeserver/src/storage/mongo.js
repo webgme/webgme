@@ -317,13 +317,13 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				}
 			}
 
-			function getCommits(before,callback){
+			function getCommits(before,number,callback){
 				//TODO we should think whether this needs options or not
 				ASSERT(typeof callback === 'function');
 
 				var now = (new Date()).getTime();
 				if(before>0 && before<=now){
-					collection.find({type:'commit',time:{$lte:before}}).limit(1000).sort({$natural:-1}).toArray(callback);
+					collection.find({type:'commit',time:{$lte:before}}).limit(number).sort({$natural:-1}).toArray(callback);
 				} else {
 					callback(new Error('invalid time limit'));
 				}
