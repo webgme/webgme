@@ -215,12 +215,12 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                         }
                     });
                 });
-                socket.on('getCommits',function(projectName,before,callback){
+                socket.on('getCommits',function(projectName,before,number,callback){
                     checkProject(socket.id,projectName,function(err){
                         if(err){
                             callback(err);
                         } else {
-                            _projects[projectName].getCommits(before,callback);
+                            _projects[projectName].getCommits(before,number,callback);
                         }
                     });
                 });

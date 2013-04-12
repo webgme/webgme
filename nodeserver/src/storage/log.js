@@ -117,8 +117,8 @@ define([ "util/assert"], function (ASSERT) {
                 project.setBranchHash(branch,oldhash,newhash,callback);
             }
 
-            function getCommits(before,callback){
-                logger.debug(projectName+'.getCommits('+before+')');
+            function getCommits(before,number,callback){
+                logger.debug(projectName+'.getCommits('+before+','+number+')');
                 project.getCommits(before,callback);
             }
 

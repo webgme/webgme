@@ -38,14 +38,16 @@ define(['logManager'], function (logManager) {
         this._view.onCreateBranchFromCommit = function (params) {
             self._view.clear();
             self._view.displayProgress();
-            self._client.commitAsync({"commit": params.commitId,
-                                        "branch": params.name }, function (err) {
-                                                                    if (err) {
-                                                                        self._logger.error(err);
-                                                                    } else {
-                                                                        self._updateHistory();
-                                                                    }
-                                                                });
+            self._client.createBranchAsync(
+                params.name,
+                params.commitId,
+                function (err) {
+                    if (err) {
+                        self._logger.error(err);
+                    } else {
+                        self._updateHistory();
+                    }
+                });
         };
 
         this._logger = logManager.create("RepositoryLogControl");
@@ -97,7 +99,7 @@ define(['logManager'], function (logManager) {
                 i = commits.length;
                 while (i--) {
                     com = commits[i];
-
+/*
                     self._view.addCommit({"id": com._id,
                         "branch": com.name,
                         "message": com.message,
@@ -106,7 +108,31 @@ define(['logManager'], function (logManager) {
                         "actual": com._id === currentCommitId,
                         "isLocalHead": branches[com.name] ? branches[com.name].localHead === com._id : false,
                         "isRemoteHead": branches[com.name] ? branches[com.name].remoteHead === com._id : false});
-                }
+*/
+                    var commitObject = {"id": com._id,
+                        "branch": com.name,
+                        "message": com.message,
+                        "parents": com.parents,
+                        "timestamp": com.time,
+                        "actual": com._id === currentCommitId,
+                        "isLocalHead": false,
+                        "isRemoteHead": false};
+                    for(var j in branches){
+                        if(com._id === branches[j].localHead){
+                            commitObject.isLocalHead = true;
+                            if(commitObject.branch !== j){
+                                commitObject.branch = j;
+                            }
+                        }
+                        if(com._id === branches[j].remoteHead){
+                            commitObject.isRemoteHead = true;
+                            if(commitObject.branch !== j){
+                                commitObject.branch = j;
+                            }
+                        }
+                    }
+                    self._view.addCommit(commitObject);
+            }
 
                 self._view.render();
             }
@@ -115,10 +141,10 @@ define(['logManager'], function (logManager) {
         this._view.clear();
         this._view.displayProgress();
 
-        commitGetter(null,commitsLoaded);
+        commitGetter(null,10,commitsLoaded);
     };
 
-    RepositoryLogControl.prototype._getFakeCommitsAsync = function (extra,callback) {
+    RepositoryLogControl.prototype._getFakeCommitsAsync = function (extra,extra2,callback) {
         var result = [],
             num = 16,
             c = num,
