@@ -323,7 +323,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 				var now = (new Date()).getTime();
 				if(before>0 && before<=now){
-					collection.find({type:'commit',time:{$lte:before}}).limit(number).sort({$natural:-1}).toArray(callback);
+					collection.find({type:'commit',time:{$lt:before}}).limit(number).sort({$natural:-1}).toArray(callback);
 				} else {
 					callback(new Error('invalid time limit'));
 				}

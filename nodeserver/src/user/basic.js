@@ -236,7 +236,7 @@ define([
                                 cacheFilled(null);
                             } else {
                                 //not that lucky
-                                fillCache(_cache[_timeOrder[_timeOrder.length-1]].time,number-(_timeOrder.length-index),cacheFilled);
+                                fillCache(_cache[_timeOrder[_timeOrder.length-1]].time,number-(_timeOrder.length-(index+1)),cacheFilled);
                             }
                         } else {
                             //we are not lucky enough so we have to download the commit
@@ -782,7 +782,11 @@ define([
             }
             function getCommitsAsync(commitHash,number,callback){
                 ASSERT(_commitCache);
+                if(commitHash === undefined){
+                    commitHash = null;
+                }
                 _commitCache.getNCommitsFrom(commitHash,number,callback);
+
             }
             function getActualCommit(){
                 return _recentCommits[0];
