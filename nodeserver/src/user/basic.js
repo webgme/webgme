@@ -200,9 +200,14 @@ define([
                     };
                     var returnNCommitsFromHash= function(hash,num,cb){
                         //now we should have all the commits in place
-                        var index = hash === null ? 0 : _timeOrder.indexOf(hash),
+                        var index = _timeOrder.indexOf(hash),
                             commits = [];
-                        if(index > -1){
+                        if(index > -1 || hash === null){
+                            if(hash === null){
+                                index = 0;
+                            } else {
+                                index++;
+                            }
                             while(commits.length < num && index < _timeOrder.length ){
                                 commits.push(_cache[_timeOrder[index]]);
                                 index++;
