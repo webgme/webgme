@@ -1,17 +1,23 @@
 "use strict";
 
 define(['logManager',
+        'loaderCircles',
         'text!./CommitDetails.html',
-        'text!./CommitHeadLabel.html',
         'raphaeljs',
         'css!RepositoryCSS/RepositoryLogView'], function (logManager,
-                                                          commitDetailsTemplate,
-                                                          commitHeadLabelTemplate) {
+                                                          LoaderCircles,
+                                                          commitDetailsTemplate) {
 
     var RepositoryLogView,
+        MASTER_BRANCH_NAME = 'master',
+        REPOSITORY_LOG_VIEW_CLASS = 'repositoryLogView',
+        SHOW_MORE_BUTTON_TEXT = "Show more...",
+        LOCAL_HEADER = 'local',
+        REMOTE_HEADER = 'remote',
+        SHOW_MORE_COMMIT_NUM = 5,
+        COMMIT_DATA = 'commitData',
         X_DELTA = 20,
         Y_DELTA = 25,
-        BRANCH_X_DELTA = 20,
         CONTENT_WIDTH = 1,
         CONTENT_HEIGHT = 1,
         ITEM_WIDTH = 8,     //RepositoryLogView.css - #repoDiag .item
@@ -23,21 +29,19 @@ define(['logManager',
     RepositoryLogView = function (container) {
         this._el = container;
 
-        this._commits = {};
-        this._orderedCommitIds = [];
+        this.clear();
 
         this._logger = logManager.create("RepositoryLogView");
         this._logger.debug("Created");
     };
 
-    RepositoryLogView.prototype.addCommit = function (obj) {
-        this._commits[obj.id] = obj;
-        this._insertIntoOrderedListByKey(obj.id, "timestamp", this._orderedCommitIds, this._commits);
-    };
-
     RepositoryLogView.prototype.clear = function () {
-        this._commits = {};
+        this._commits = [];
+        this._branches = [];
         this._orderedCommitIds = [];
+        this._y = 0;
+        this._trackEnds = [];
+        this._renderIndex = -1;
 
         //clear UI content
         this._el.empty();
@@ -49,17 +53,54 @@ define(['logManager',
         this._el.parent().css({"width": "",
             "margin-left": "",
             "margin-top": ""});
+
+        this._initializeUI();
     };
 
-    RepositoryLogView.prototype.displayProgress = function () {
-        this._el.html($('<div class="progress-big"></div>'));
+    RepositoryLogView.prototype.addBranch = function (obj) {
+        if (obj.name.toLowerCase() === MASTER_BRANCH_NAME) {
+            this._branches.splice(0, 0, obj);
+        } else {
+            this._branches.push(obj);
+        }
+    };
+
+    RepositoryLogView.prototype.addCommit = function (obj) {
+        var idx = this._orderedCommitIds.push(obj.id) - 1;
+
+        this._commits.push({"x": -1,
+                            "y": -1,
+                            "id": obj.id,
+                            "commitData": obj,
+                            "ui": undefined,
+                            "labels": undefined});
+
+        this._calculatePositionForCommit(idx);
+    };
+
+    RepositoryLogView.prototype.showPogressbar = function () {
+        this._btnShowMore.hide();
+        this._loader.start();
+    };
+
+    RepositoryLogView.prototype.hidePogressbar = function () {
+        this._loader.stop();
+        this._btnShowMore.show();
     };
 
     RepositoryLogView.prototype.render = function () {
         this._render();
     };
 
+    RepositoryLogView.prototype.allCommitsDisplayed = function () {
+        this._allCommitsDisplayed();
+    };
+
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
+
+    RepositoryLogView.prototype.onShowMoreClick = function (num) {
+        this._logger.warning("onShowMoreClick is not overridden in Controller...num: '" + num + "'");
+    };
 
     RepositoryLogView.prototype.onLoadCommit = function (params) {
         this._logger.warning("onLoadCommit is not overridden in Controller...params: '" + JSON.stringify(params) + "'");
@@ -75,101 +116,101 @@ define(['logManager',
 
     /******************* PRIVATE API *****************************/
 
-    RepositoryLogView.prototype._insertIntoOrderedListByKey = function (objId, key, orderedList, objList) {
-        var i = orderedList.length,
-            len = i,
-            inserted = false;
-
-        //array is empty, just simply store it
-        if (i === 0) {
-            orderedList.push(objId);
-        } else {
-            while (--i >= 0) {
-                if (objList[objId][key] > objList[orderedList[i]][key]) {
-                    if (i + 1 === len) {
-                        orderedList.push(objId);
-                    } else {
-                        orderedList.splice(i + 1, 0, objId);
-                    }
-                    inserted = true;
-                    break;
-                }
-            }
-            if (inserted === false) {
-                orderedList.splice(0, 0, objId);
-            }
-        }
-    };
-
     RepositoryLogView.prototype._initializeUI = function () {
         var self = this;
 
         this._el.empty();
 
-        //initialize all containers
-        this._renderCache = {};
-        this._skinParts = {};
+        this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
 
-        //generate HTML container
-        this._skinParts.htmlContainer = $('<div/>', {
-            "class" : "repoDiag",
-            "id": "repoDiag",
+        //initialize all containers
+
+        //generate COMMITS container
+        this._commitsContainer = $('<div/>', {
+            "class" : "commits",
+            "id": "commits",
             "tabindex": 0
         });
 
-        this._el.append(this._skinParts.htmlContainer);
+        this._el.append(this._commitsContainer);
 
-        this._skinParts.svgPaper = Raphael(this._skinParts.htmlContainer.attr("id"));
-        this._skinParts.svgPaper.canvas.style.pointerEvents = "visiblePainted";
-        this._skinParts.svgPaper.setSize("100%", "100px");
+        this._svgPaper = Raphael(this._commitsContainer.attr("id"));
+        this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
+        this._svgPaper.setSize("100%", "1px");
 
-        this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
-            var btn = $(this),
-                commitId = btn.data("commitid");
-
-            self.onLoadCommit({"id": commitId});
+        //generate container for 'show more' button and progress bar
+        this._showMoreContainer = $('<div/>', {
+            "class" : "show-more"
         });
 
-        this._el.on("click.btnCreateBranch", ".btnCreateBranch", function () {
-            var btn = $(this),
-                commitId = btn.data("commitid"),
-                textInput = $("#appendedInputButton"),
-                textVal = textInput.val().toLowerCase();
+        this._el.append(this._showMoreContainer);
 
-            if (textVal !== "" && self._branchNames.indexOf(textVal) === -1 ) {
-                self.onCreateBranchFromCommit({"commitId": commitId,
-                                                "name": textVal});
-            }
+        this._loader = new LoaderCircles({"containerElement": this._showMoreContainer});
+        this._loader.setSize(30);
+
+        //show more button
+        this._btnShowMore = $('<a/>', {
+            "class": "btn",
+            "href": "#"
         });
 
-        this._el.on("keyup", "#appendedInputButton", function () {
-            var textInput = $(this),
-                textVal = textInput.val().toLowerCase(),
-                parentControlGroup = textInput.parent();
+        this._btnShowMore.append(SHOW_MORE_BUTTON_TEXT);
 
-            if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
-                parentControlGroup.addClass("error");
-            } else {
-                parentControlGroup.removeClass("error");
-            }
-        });
+        this._showMoreContainer.append(this._btnShowMore);
 
-        this._el.on("click.btnCloseCommitDetails", ".btnCloseCommitDetails", function () {
-            self._destroyCommitPopover();
-        });
+        /*this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
+         var btn = $(this),
+         commitId = btn.data("commitid");
 
-        this._el.on("click.iconRemove", ".icon-remove", function (event) {
-            var btn = $(this),
-                branch = btn.data("branch");
+         self.onLoadCommit({"id": commitId});
+         });
 
-            self.onDeleteBranchClick(branch);
+         this._el.on("click.btnCreateBranch", ".btnCreateBranch", function () {
+         var btn = $(this),
+         commitId = btn.data("commitid"),
+         textInput = $("#appendedInputButton"),
+         textVal = textInput.val().toLowerCase();
 
-            event.stopPropagation();
-            event.preventDefault();
-        });
+         if (textVal !== "" && self._branchNames.indexOf(textVal) === -1 ) {
+         self.onCreateBranchFromCommit({"commitId": commitId,
+         "name": textVal});
+         }
+         });
 
-        this._el.on("click.item", ".item", function (event) {
-            self._onCommitClick($(this));
+         this._el.on("keyup", "#appendedInputButton", function () {
+         var textInput = $(this),
+         textVal = textInput.val().toLowerCase(),
+         parentControlGroup = textInput.parent();
+
+         if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
+         parentControlGroup.addClass("error");
+         } else {
+         parentControlGroup.removeClass("error");
+         }
+         });
+
+         this._el.on("click.btnCloseCommitDetails", ".btnCloseCommitDetails", function () {
+         self._destroyCommitPopover();
+         });
+
+         this._el.on("click.iconRemove", ".icon-remove", function (event) {
+         var btn = $(this),
+         branch = btn.data("branch");
+
+         self.onDeleteBranchClick(branch);
+
+         event.stopPropagation();
+         event.preventDefault();
+         });
+
+         this._el.on("click.item", ".item", function (event) {
+         self._onCommitClick($(this));
+         event.stopPropagation();
+         event.preventDefault();
+         });*/
+
+        this._btnShowMore.on('click', null, function (event) {
+            self.onShowMoreClick(SHOW_MORE_COMMIT_NUM);
             event.stopPropagation();
             event.preventDefault();
         });
@@ -185,168 +226,145 @@ define(['logManager',
         this._el.on('hidden', function (event) {
             event.stopPropagation();
         });
-
-
     };
 
+
+    RepositoryLogView.prototype._calculatePositionForCommit = function (cIndex) {
+        var trackLen = this._trackEnds.length,
+            cCommit = this._commits[cIndex],
+            trackEndCommit,
+            i,
+            foundTrack = false,
+            cIdx;
+
+        //check which trackBottom's parent is this guy
+        for (i = 0; i < trackLen; i += 1) {
+            cIdx = this._orderedCommitIds.indexOf(this._trackEnds[i]);
+            trackEndCommit = this._commits[cIdx];
+            if (trackEndCommit[COMMIT_DATA].parents.indexOf(cCommit.id) !== -1) {
+                foundTrack = true;
+                break;
+            }
+        }
+
+        //vertically it is sure to be next
+        cCommit.y = this._y;
+        this._y += Y_DELTA;
+
+        //horizontally it goes to the same 'column' as the found trackEnd
+        if (foundTrack === true) {
+            cCommit.x = trackEndCommit.x;
+            this._trackEnds[i] = cCommit.id;
+        } else {
+            //no fitting track-end found, start a new track for it
+            this._trackEnds.push(cCommit.id);
+            cCommit.x = (this._trackEnds.length - 1) * X_DELTA;
+        }
+
+        this._logger.warning("commitID: " + cCommit.id + ", X: " + cCommit.x + ", Y: " + cCommit.y);
+    };
+
+
     RepositoryLogView.prototype._render = function () {
-        var i,
-            len = this._orderedCommitIds.length,
-            parentsLen,
-            commitRenderData = {},
-            branchOffsets = {},
-            inBranchLanes = {},
-            endItems = [],
-            x = 0,
-            y = Y_DELTA * (len - 1),
-            obj,
-            objParent,
-            cBranch,
-            cBranchOffset,
-            li,
-            logMsg,
-            branchCount = 0,
-            inBranchLaneCount = 0,
-            endItemParentObjectIdx;
+        //render commits from this._renderIndex + 1 --> lastItem
+        var len = this._commits.length,
+            cCommit,
+            idx = this._renderIndex === -1 ? 0 : this._renderIndex,
+            itemObj,
+            i,
+            pIdx,
+            j;
 
-        //calculate X,Y coordinates for each commit object
-        for (i = 0; i < len; i += 1) {
-            obj = this._commits[this._orderedCommitIds[i]];
+        //draw the commit points
+        for (i = idx ; i < len; i += 1) {
+            cCommit = this._commits[i];
+            itemObj= cCommit.ui = this._createItem({"x": cCommit.x,
+                "y": cCommit.y,
+                "counter": i,
+                "id": cCommit.id,
+                "parents": cCommit[COMMIT_DATA].parents,
+                "actual": cCommit[COMMIT_DATA].actual,
+                "branch": cCommit[COMMIT_DATA].branch,
+                "isLocalHead": cCommit[COMMIT_DATA].isLocalHead,
+                "isRemoteHead": cCommit[COMMIT_DATA].isRemoteHead});
+        }
 
-            if (i === 0) {
-                //very first item
-                branchOffsets[obj.branch] = 0;
-                inBranchLanes[obj.branch] = 1;
-                branchCount = 1;
-                inBranchLaneCount = 1;
-                commitRenderData[obj.id] = { "x": x, "y": y };
-            } else {
-                //let's see how many parents this obj has
-                if (obj.parents.length > 1) {
-                    //multiple parents
-                    //find the one that has the lowest shift value
-                    objParent = this._commits[obj.parents[0]];
-                    cBranchOffset = branchOffsets[objParent.branch] + commitRenderData[objParent.id].x;
-                    parentsLen = obj.parents.length;
-                    for (li = 1; li < parentsLen; li += 1) {
-                        if (branchOffsets[this._commits[obj.parents[li]].branch] + commitRenderData[this._commits[obj.parents[li]].id].x < cBranchOffset) {
-                            objParent = this._commits[obj.parents[li]];
-                            cBranchOffset = branchOffsets[objParent.branch] + commitRenderData[objParent.id].x;
-                        }
-                    }
+        this._renderIndex = i;
 
-                    commitRenderData[obj.id] = { "x": commitRenderData[objParent.id].x, "y": y };
-                } else {
-                    //only one parent
-                    //we need to see if this obj needs to be shifted from the parent or stays in the same lane
-                    //shift #1: its parent is not directly in front of it in the list
-                    //shift #2: its "branch" is different than it's parent's "branch"
+        //draw the connections
+        for (i = 0 ; i < len; i += 1) {
+            cCommit = this._commits[i];
 
-                    //check the guy's parent to see if we need to shift is somehow
-                    objParent = this._commits[obj.parents[0]];
-
-                    //might be under a different "branch"
-                    //test for shift #2
-                    if (objParent.branch !== obj.branch) {
-                        branchOffsets[obj.branch] = branchCount * BRANCH_X_DELTA + inBranchLaneCount * X_DELTA;
-                        commitRenderData[obj.id] = { "x": 0, "y": y };
-                        branchCount += 1;
-                        inBranchLanes[obj.branch] = 0;
-
-                        logMsg = "(" + i + ")  NEW BRANCH FOR: " + obj.id;
-                        logMsg += "\n\tBranch: " + obj.branch;
-                        logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
-                        this._logger.debug(logMsg);
-                    } else {
-                        //under the same "branch", but still might need to be shifted in that branch
-                        //test for shift #1
-                        endItemParentObjectIdx = endItems.indexOf(objParent.id);
-                        if (endItemParentObjectIdx > -1) {
-                            //all good, stays in the same lane
-                            commitRenderData[obj.id] = { "x": commitRenderData[objParent.id].x, "y": y };
-                            endItems.splice(endItemParentObjectIdx, 1);
-                        } else {
-                            //parent's lane is already taken and parent is not the direct previous item
-                            commitRenderData[obj.id] = { "x": (inBranchLanes[obj.branch] + 1) * X_DELTA, "y": y };
-
-                            //rebase all other branches by one lane
-                            cBranch = obj.branch;
-                            cBranchOffset = branchOffsets[obj.branch];
-                            for (li in branchOffsets) {
-                                if (branchOffsets.hasOwnProperty(li)) {
-                                    if (li !== cBranch && cBranchOffset <= branchOffsets[li]) {
-                                        branchOffsets[li] += X_DELTA;
-                                    }
-                                }
-                            }
-
-                            inBranchLaneCount += 1;
-                            inBranchLanes[obj.branch] += 1;
-
-                            logMsg = "(" + i + ")  LANE SHIFT IN BRANCH FOR: " + obj.id;
-                            logMsg += "\n\tBranch: " + obj.branch;
-                            logMsg += "\n\tobjParent.id: " + objParent.id;
-                            logMsg += "\n\tbranchOffsets: " + JSON.stringify(branchOffsets);
-                            this._logger.debug(logMsg);
-                        }
+            //draw lines to parents
+            if (cCommit[COMMIT_DATA].parents && cCommit[COMMIT_DATA].parents.length > 0) {
+                for (j = 0; j < cCommit[COMMIT_DATA].parents.length; j += 1) {
+                    pIdx = this._orderedCommitIds.indexOf(cCommit[COMMIT_DATA].parents[j]);
+                    if (pIdx >= idx) {
+                        this._drawLine(this._commits[pIdx], cCommit);
                     }
                 }
             }
-
-            y -= Y_DELTA;
-            endItems.push(obj.id);
-        }
-
-        //collect all the branch names for new branch creation name conflict check
-        this._branchNames = [];
-        for (i in branchOffsets) {
-            if (branchOffsets.hasOwnProperty(i)) {
-                this._branchNames.push(i);
-            }
-        }
-
-        //we have the X,Y coordinates for each commit object
-        //start building UI
-        this._initializeUI();
-
-        len = this._orderedCommitIds.length;
-        for (i = 0; i < len; i += 1) {
-            obj = this._commits[this._orderedCommitIds[i]];
-            obj.counter = i;
-
-            x =  commitRenderData[obj.id].x + branchOffsets[obj.branch];
-            y = commitRenderData[obj.id].y;
-
-            //log creation of commit UI data
-            logMsg = "(" + i + ")  " + obj.id;
-            logMsg += "\n\ttimestamp: " + obj.timestamp;
-            logMsg += "\n\tBranch: " + obj.branch;
-            logMsg += obj.message ? "\n\t" + obj.message : "";
-            logMsg += "\n\tx:" + x + " , y: " + y;
-            this._logger.debug(logMsg);
-
-            this._createItem({"x": x,
-                "y": y,
-                "counter": i,
-                "id": obj.id,
-                "parents": obj.parents,
-                "actual": obj.actual,
-                "branch": obj.branch,
-                "isLocalHead": obj.isLocalHead,
-                "isRemoteHead": obj.isRemoteHead});
         }
 
         this._resizeDialog(CONTENT_WIDTH, CONTENT_HEIGHT);
+
+        this._applyHeaderLabels();
     };
 
+
+    RepositoryLogView.prototype._applyHeaderLabels = function () {
+        var len = this._branches.length,
+            idx;
+
+        while (len--) {
+            if (this._branches[len].remoteHeadUI !== true) {
+                idx = this._orderedCommitIds.indexOf(this._branches[len].remoteHead);
+                if ( idx !== -1 ) {
+                    this._applyHeaderLabel(this._commits[idx], this._branches[len].name, REMOTE_HEADER);
+                    this._branches[len].remoteHeadUI = true;
+                }
+            }
+
+            if (this._branches[len].localHeadUI !== true) {
+                idx = this._orderedCommitIds.indexOf(this._branches[len].localHead);
+                if ( idx !== -1 ) {
+                    this._applyHeaderLabel(this._commits[idx], this._branches[len].name, LOCAL_HEADER);
+                    this._branches[len].localHeadUI = true;
+                }
+            }
+        }
+    };
+
+
+    RepositoryLogView.prototype._applyHeaderLabel = function (commit, branchName, headerType) {
+        var headMarkerEl = commit.labels,
+            label = $('<div class="tooltiplabel right"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">' + branchName + '<i data-branch="' + branchName + '" class="icon-remove icon-white" title="Delete branch"></i></div></div>');
+
+        if (headMarkerEl === undefined) {
+            commit.labels = $('<div class="commitHeadWrapper"></div>');
+            headMarkerEl = commit.labels;
+
+            headMarkerEl.css({"top": commit.y + HEADMARKER_Y_SHIFT,
+                "left": commit.x + HEADMARKER_X_SHIFT});
+
+            this._commitsContainer.append(headMarkerEl);
+        }
+
+        if (headerType === REMOTE_HEADER) {
+            label.addClass('remote-head');
+        } else {
+            label.addClass('local-head');
+        }
+
+        headMarkerEl.append(label);
+    };
+
+
     RepositoryLogView.prototype._createItem = function (params) {
-        var i,
-            itemObj,
-            headMarkerEl;
+        var itemObj;
 
         itemObj =  $('<div/>', {
             "class" : "item",
-            "id": params.id.replace("#", "").replace("*", ""),
             "data-id": params.id,
             "data-b": params.branch
         });
@@ -358,52 +376,14 @@ define(['logManager',
             itemObj.addClass("actual");
         }
 
-        if (params.isLocalHead) {
-            itemObj.addClass("local-head");
-        }
-
-        if (params.isRemoteHead) {
-            itemObj.addClass("remote-head");
-        }
-
-        this._skinParts.htmlContainer.append(itemObj);
-
-        this._renderCache[params.id] = {"x": params.x,
-            "y": params.y };
+        this._commitsContainer.append(itemObj);
 
         CONTENT_WIDTH = Math.max(CONTENT_WIDTH,  params.x + ITEM_WIDTH);
         CONTENT_HEIGHT = Math.max(CONTENT_HEIGHT,  params.y + ITEM_HEIGHT);
 
-        //draw lines to parents
-        if (params.parents && params.parents.length > 0) {
-            for (i = 0; i < params.parents.length; i += 1) {
-                this._drawLine(this._renderCache[params.parents[i]], this._renderCache[params.id]);
-            }
-        }
-
-        if (params.isRemoteHead || params.isLocalHead) {
-            headMarkerEl = $(_.template(commitHeadLabelTemplate, {"branch": params.branch}));
-
-            if (params.isRemoteHead) {
-                if (params.branch.toLowerCase() === "master") {
-                    headMarkerEl.find(".tooltiplabel-inner > i").remove();
-                }
-            } else {
-                headMarkerEl.find(".remote-head").remove();
-            }
-
-            if (params.isLocalHead === false) {
-                headMarkerEl.find(".local-head").remove();
-            }
-
-            headMarkerEl.css({"top": params.y + HEADMARKER_Y_SHIFT,
-                "left": params.x + HEADMARKER_X_SHIFT});
-
-            this._skinParts.htmlContainer.append(headMarkerEl);
-        }
-
         return itemObj;
     };
+
 
     RepositoryLogView.prototype._drawLine = function (srcDesc, dstDesc) {
         var pathDef,
@@ -435,8 +415,9 @@ define(['logManager',
             }
         }
 
-        this._skinParts.svgPaper.path(pathDef.join(","));
+        this._svgPaper.path(pathDef.join(","));
     };
+
 
     RepositoryLogView.prototype._resizeDialog = function (contentWidth, contentHeight) {
         var WINDOW_PADDING = 30,
@@ -447,7 +428,7 @@ define(['logManager',
             repoDialog = $(".repoHistoryDialog"),
             dBody = repoDialog.find(".modal-body");
 
-        this._skinParts.svgPaper.setSize(contentWidth, contentHeight);
+        this._svgPaper.setSize(contentWidth, contentHeight);
 
         //make it almost "full screen"
         wW = wW - 2 * WINDOW_PADDING;
@@ -462,6 +443,21 @@ define(['logManager',
             "margin-top": repoDialog.height() / 2 * (-1),
             "top": "50%"});
     };
+
+
+    RepositoryLogView.prototype._allCommitsDisplayed = function () {
+        this._btnShowMore.hide();
+
+        this._btnShowMore.off('click');
+
+        this._loader.destroy();
+
+        //generate container for 'show more' button and progress bar
+        this._showMoreContainer.empty();
+        this._showMoreContainer.remove();
+        this._showMoreContainer = undefined;
+    };
+
 
     RepositoryLogView.prototype._onCommitClick = function (commitEl) {
         var commitId = commitEl.data("id"),
@@ -493,12 +489,14 @@ define(['logManager',
         this._lastCommitPopOver.popover("show");
     };
 
+
     RepositoryLogView.prototype._destroyCommitPopover = function () {
         if (this._lastCommitPopOver) {
             this._lastCommitPopOver.popover("destroy");
             this._lastCommitPopOver = null;
         }
     };
+
 
     return RepositoryLogView;
 });

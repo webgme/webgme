@@ -2,13 +2,16 @@
 
 define(['logManager'], function (logManager) {
 
-    var RepositoryLogControl;
+    var RepositoryLogControl,
+        DEFAULT_COMMIT_NUM = 10;
 
     RepositoryLogControl = function (myClient, myView) {
         var self = this;
 
         this._client = myClient;
         this._view = myView;
+
+        this._lastCommitID = null;
 
         //override view event handlers
         this._view.onLoadCommit = function (params) {
@@ -50,25 +53,30 @@ define(['logManager'], function (logManager) {
                 });
         };
 
+        this._view.onShowMoreClick = function (num) {
+            self._updateHistory(num);
+        };
+
         this._logger = logManager.create("RepositoryLogControl");
         this._logger.debug("Created");
     };
 
     RepositoryLogControl.prototype.generateHistory = function () {
-        this._updateHistory(false);
+        this._updateHistory(DEFAULT_COMMIT_NUM);
     };
 
-    RepositoryLogControl.prototype._updateHistory = function (useFake) {
+    RepositoryLogControl.prototype._updateHistory = function (num) {
         var currentCommitId = this._client.getActualCommit(),
             commits = null,
-            commitGetter = useFake ? this._getFakeCommitsAsync : this._client.getCommitsAsync,
-            branches = {},
             com,
             commitsLoaded,
             branchesLoaded,
             self = this;
 
         commitsLoaded = function (err, data) {
+            var i,
+                cLen;
+
             self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data == true ? data.length : "null");
 
             if (err) {
@@ -76,7 +84,36 @@ define(['logManager'], function (logManager) {
             } else {
                 commits = data.concat([]);
 
-                self._client.getBranchesAsync(branchesLoaded);
+                cLen = commits.length;
+                if (cLen > 0) {
+                    for (i = 0; i < cLen; i += 1) {
+                        com = commits[i];
+
+                        if (self._lastCommitID !== com._id) {
+
+                            var commitObject = {"id": com._id,
+                                "branch": com.name,
+                                "message": com.message,
+                                "parents": com.parents,
+                                "timestamp": com.time,
+                                "actual": com._id === currentCommitId};
+
+                            self._view.addCommit(commitObject);
+                        }
+                    }
+
+                    //store last CommitID we received
+                    self._lastCommitID = commits[i - 1]._id;
+
+                    //render added commits
+                    self._view.render();
+                }
+
+                self._view.hidePogressbar();
+
+                if (cLen < num) {
+                    self._view.allCommitsDisplayed();
+                }
             }
         };
 
@@ -88,103 +125,26 @@ define(['logManager'], function (logManager) {
             if (err) {
                 self._logger.error(err);
             } else {
+                //set view's branch info
                 i = data.length;
 
                 while (i--) {
-                    branches[data[i].name] = {"name": data[i].name,
+                    self._view.addBranch({"name": data[i].name,
                         "localHead":  data[i].localcommit,
-                        "remoteHead":  data[i].remotecommit};
+                        "remoteHead":  data[i].remotecommit});
                 }
 
-                i = commits.length;
-                while (i--) {
-                    com = commits[i];
-/*
-                    self._view.addCommit({"id": com._id,
-                        "branch": com.name,
-                        "message": com.message,
-                        "parents": com.parents,
-                        "timestamp": com.time,
-                        "actual": com._id === currentCommitId,
-                        "isLocalHead": branches[com.name] ? branches[com.name].localHead === com._id : false,
-                        "isRemoteHead": branches[com.name] ? branches[com.name].remoteHead === com._id : false});
-*/
-                    var commitObject = {"id": com._id,
-                        "branch": com.name,
-                        "message": com.message,
-                        "parents": com.parents,
-                        "timestamp": com.time,
-                        "actual": com._id === currentCommitId,
-                        "isLocalHead": false,
-                        "isRemoteHead": false};
-                    for(var j in branches){
-                        if(com._id === branches[j].localHead){
-                            commitObject.isLocalHead = true;
-                            if(commitObject.branch !== j){
-                                commitObject.branch = j;
-                            }
-                        }
-                        if(com._id === branches[j].remoteHead){
-                            commitObject.isRemoteHead = true;
-                            if(commitObject.branch !== j){
-                                commitObject.branch = j;
-                            }
-                        }
-                    }
-                    self._view.addCommit(commitObject);
-            }
-
-                self._view.render();
+                //get first set of commits
+                self._client.getCommitsAsync(self._lastCommitID,num,commitsLoaded);
             }
         };
 
-        this._view.clear();
-        this._view.displayProgress();
+        this._view.showPogressbar();
 
-        commitGetter(null,10,commitsLoaded);
-    };
-
-    RepositoryLogControl.prototype._getFakeCommitsAsync = function (extra,extra2,callback) {
-        var result = [],
-            num = 16,
-            c = num,
-            commit,
-            branches = ["master", "b1", "b2"];
-
-        while (c--) {
-            commit = {};
-            commit._id = num - c - 1 + "";
-            //branch name
-            commit.name = branches[0];
-            commit.message = "Message " + commit._id;
-            commit.timestamp = new Date();
-            commit.parents = [];
-
-            //regular parents in line
-            if (commit._id > 0) {
-                commit.parents.push(commit._id - 1);
-            }
-
-            result.push(commit);
-        }
-
-        //create
-        result[3].parents = ["1"];
-        result[5].parents = ["2", "4"];
-
-        result[8].parents = ["1"];
-
-
-        result[9].parents = ["6"];
-
-
-        result[10].parents = ["8"];
-        result[11].parents = ["9", "7"];
-
-        result[12].parents = ["10", "11"];
-
-        if (callback) {
-            callback(null, result);
+        if (this._lastCommitID) {
+            this._client.getCommitsAsync(this._lastCommitID,num,commitsLoaded);
+        } else {
+            this._client.getBranchesAsync(branchesLoaded);
         }
     };
 

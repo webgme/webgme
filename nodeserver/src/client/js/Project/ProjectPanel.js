@@ -155,7 +155,7 @@ define(['logManager',
             modalBody = this._repoHistoryDialog.find('> .modal-body'),
             self = this;
 
-        modalBody.html('<div class="progress-big"></div>');
+        /*modalBody.html('<div class="progress-big"></div>');*/
 
         this._repoHistoryDialog.on('shown', function () {
                 repoHistoryLogView = new RepositoryLogView(modalBody);

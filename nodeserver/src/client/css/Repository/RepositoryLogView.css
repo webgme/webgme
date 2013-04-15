@@ -1,11 +1,11 @@
 /* make sure to update ITEM_WIDTH and ITEM_HEIGHT in RepositoryLogView.js */
-#repoDiag {
+.repositoryLogView .commits {
   position: relative;
-  margin-top: 150px;
+  /*margin-top: 150px;*/
   /*DISABLE OUTER BORDER WHEN FOCUSED*/ }
-  #repoDiag:focus {
+  .repositoryLogView .commits:focus {
     outline: none; }
-  #repoDiag .item {
+  .repositoryLogView .commits .item {
     width: 8px;
     height: 8px;
     background-color: black;
@@ -20,33 +20,41 @@
     cursor: pointer;
     box-sizing: border-box;
     border-radius: 5px; }
-    #repoDiag .item.merge {
+    .repositoryLogView .commits .item.merge {
       border-radius: 0 !important; }
-    #repoDiag .item.actual {
+    .repositoryLogView .commits .item.actual {
       background-color: #ff7800; }
-    #repoDiag .item:hover {
+    .repositoryLogView .commits .item:hover {
       width: 12px;
       height: 12px;
       margin-left: -2px;
       margin-top: -2px;
       border-radius: 7px; }
-  #repoDiag .tooltiplabel.local-head,
-  #repoDiag .tooltiplabel.remote-head {
+  .repositoryLogView .commits .tooltiplabel.local-head,
+  .repositoryLogView .commits .tooltiplabel.remote-head {
     opacity: 1.0;
     margin-left: 0px;
     display: inline-block;
     position: relative; }
-  #repoDiag .remote-head .tooltiplabel-arrow {
+  .repositoryLogView .commits .remote-head .tooltiplabel-arrow {
     border-right-color: #b94a48 !important; }
-  #repoDiag .remote-head .tooltiplabel-inner {
+  .repositoryLogView .commits .remote-head .tooltiplabel-inner {
     background-color: #b94a48; }
-    #repoDiag .remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
+    .repositoryLogView .commits .remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
       cursor: pointer;
       background-image: url("../../img/glyphicons-halflings.png"); }
-  #repoDiag .local-head .tooltiplabel-arrow {
+  .repositoryLogView .commits .local-head .tooltiplabel-arrow {
     border-right-color: #3a87ad !important; }
-  #repoDiag .local-head .tooltiplabel-inner {
+  .repositoryLogView .commits .local-head .tooltiplabel-inner {
     background-color: #3a87ad; }
-  #repoDiag .commitHeadWrapper {
+  .repositoryLogView .commits .commitHeadWrapper {
     position: absolute;
     white-space: nowrap; }
+.repositoryLogView .show-more {
+  height: 36px;
+  line-height: 36px;
+  background-color: white;
+  position: relative;
+  border-bottom: 1px solid #3a87ad;
+  border-top: 1px solid #3a87ad;
+  text-align: center; }

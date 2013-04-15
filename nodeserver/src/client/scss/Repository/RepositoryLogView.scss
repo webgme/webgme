@@ -7,85 +7,103 @@ $item-hover-radius: 7px;
 $remote-head-color: #b94a48;
 $local-head-color: #3a87ad;
 
-#repoDiag {
-  position: relative;
-  margin-top: 150px;
+$show-more-panel-background-color: #FFFFFF;
+$show-more-panel-height: 36px;
+$show-more-panel-border: 1px solid #3a87ad;
 
-  /*DISABLE OUTER BORDER WHEN FOCUSED*/
-  &:focus {
-    outline: none;
-  }
-
-  .item {
-    width: $item-size;
-    height: $item-size;
-    background-color: $item-background-color;
-    vertical-align: middle;
-    text-align: center;
-    font-family: Helvetica, Arial;
-    pointer-events:all;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    position: absolute;
-    cursor: pointer;
-    box-sizing: border-box;
-    border-radius: $item-radius;
-
-    &.merge {
-      border-radius: 0 !important;
-    }
-
-    &.actual {
-      background-color: $item-actual-background-color;
-    }
-
-    &:hover {
-      width: $item-hover-size;
-      height: $item-hover-size;
-      margin-left: ($item-size - $item-hover-size) / 2;
-      margin-top: ($item-size - $item-hover-size) / 2;
-      border-radius: $item-hover-radius;
-    }
-  }
-
-  .tooltiplabel.local-head,
-  .tooltiplabel.remote-head {
-    opacity: 1.0;
-    margin-left: 0px;
-    display: inline-block;
+.repositoryLogView {
+  .commits {
     position: relative;
-  }
+    /*margin-top: 150px;*/
 
-  .remote-head {
-    .tooltiplabel-arrow {
-      border-right-color: $remote-head-color !important;
+    /*DISABLE OUTER BORDER WHEN FOCUSED*/
+    &:focus {
+      outline: none;
     }
 
-    .tooltiplabel-inner {
-      background-color: $remote-head-color;
+    .item {
+      width: $item-size;
+      height: $item-size;
+      background-color: $item-background-color;
+      vertical-align: middle;
+      text-align: center;
+      font-family: Helvetica, Arial;
+      pointer-events:all;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      position: absolute;
+      cursor: pointer;
+      box-sizing: border-box;
+      border-radius: $item-radius;
 
-      > [class*="icon-white"]:hover {
-        cursor: pointer;
-        background-image: url("../../img/glyphicons-halflings.png");
+      &.merge {
+        border-radius: 0 !important;
+      }
+
+      &.actual {
+        background-color: $item-actual-background-color;
+      }
+
+      &:hover {
+        width: $item-hover-size;
+        height: $item-hover-size;
+        margin-left: ($item-size - $item-hover-size) / 2;
+        margin-top: ($item-size - $item-hover-size) / 2;
+        border-radius: $item-hover-radius;
       }
     }
-  }
 
-  .local-head {
-    .tooltiplabel-arrow {
-      border-right-color: $local-head-color !important;
+    .tooltiplabel.local-head,
+    .tooltiplabel.remote-head {
+      opacity: 1.0;
+      margin-left: 0px;
+      display: inline-block;
+      position: relative;
     }
 
-    .tooltiplabel-inner {
-      background-color: $local-head-color;
+    .remote-head {
+      .tooltiplabel-arrow {
+        border-right-color: $remote-head-color !important;
+      }
+
+      .tooltiplabel-inner {
+        background-color: $remote-head-color;
+
+        > [class*="icon-white"]:hover {
+          cursor: pointer;
+          background-image: url("../../img/glyphicons-halflings.png");
+        }
+      }
+    }
+
+    .local-head {
+      .tooltiplabel-arrow {
+        border-right-color: $local-head-color !important;
+      }
+
+      .tooltiplabel-inner {
+        background-color: $local-head-color;
+      }
+    }
+
+    .commitHeadWrapper {
+      position: absolute;
+      white-space: nowrap;
     }
   }
 
-  .commitHeadWrapper {
-    position: absolute;
-    white-space: nowrap;
+  .show-more {
+    height: $show-more-panel-height;
+    line-height: $show-more-panel-height;
+    background-color: $show-more-panel-background-color;
+    position: relative;
+    border-bottom: $show-more-panel-border;
+    border-top: $show-more-panel-border;
+    text-align: center;
   }
 }
+
+
 
 
