@@ -93,9 +93,10 @@ define([
                 }
             }
 
-            function branchWatcher(branch) {
+            function branchWatcher(branch,callback) {
                 ASSERT(_project && _commit);
-                _recentCommits = [""];
+                callback = callback || function(){};
+                var myCallback = null;
                 var branchHashUpdated = function(err,newhash,forked){
                     if(branch === _branch){
                         if(!err && newhash){
@@ -110,6 +111,12 @@ define([
                                         loading(commitObj.root);
                                     }
                                 });
+                            }
+
+                            if(callback){
+                                myCallback = callback;
+                                callback = null;
+                                myCallback();
                             }
 
                             //checking the change of forked status
@@ -127,12 +134,24 @@ define([
 
                             return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         } else {
+                            if(callback){
+                                myCallback = callback;
+                                callback = null;
+                                myCallback();
+                            }
                             return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                        }
+                    } else {
+                        if(callback){
+                            myCallback = callback;
+                            callback = null;
+                            myCallback();
                         }
                     }
                 };
 
                 _branch = branch;
+                _recentCommits = [""];
                 _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);//TODO new event should be added here
                 _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
             }
@@ -207,6 +226,7 @@ define([
                                 index = 0;
                             } else {
                                 index++;
+
                             }
                             while(commits.length < num && index < _timeOrder.length ){
                                 commits.push(_cache[_timeOrder[index]]);
@@ -780,13 +800,15 @@ define([
                 //this should proxy to branch selection and viewer functions
                 viewerCommit(hash,callback);
             }
+            function selectBranchAsync(branch,callback){
+                branchWatcher(branch,callback);
+            }
             function getCommitsAsync(commitHash,number,callback){
                 ASSERT(_commitCache);
                 if(commitHash === undefined){
                     commitHash = null;
                 }
                 _commitCache.getNCommitsFrom(commitHash,number,callback);
-
             }
             function getActualCommit(){
                 return _recentCommits[0];
