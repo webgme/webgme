@@ -155,15 +155,13 @@ define(['logManager',
             modalBody = this._repoHistoryDialog.find('> .modal-body'),
             self = this;
 
-        /*modalBody.html('<div class="progress-big"></div>');*/
-
-        this._repoHistoryDialog.on('shown', function () {
-                repoHistoryLogView = new RepositoryLogView(modalBody);
-                repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
-                repoHistoryController.generateHistory();
+        this._repoHistoryDialog.on('shown', function (event) {
+            repoHistoryLogView = new RepositoryLogView(modalBody);
+            repoHistoryController = new RepositoryLogControl(client, repoHistoryLogView);
+            repoHistoryLogView.loadMoreCommits();
         });
 
-        this._repoHistoryDialog.on('hidden', function () {
+        this._repoHistoryDialog.on('hidden', function (event) {
             self._repoHistoryDialog.off('shown');
             self._repoHistoryDialog.off('hidden');
             self._repoHistoryDialog.off('hide');
@@ -173,11 +171,10 @@ define(['logManager',
                 "margin-left": "",
                 "margin-top": "",
                 "top": ""});
-            modalBody.empty();
         });
 
-        this._repoHistoryDialog.on('hide', function () {
-            repoHistoryLogView.clear();
+        this._repoHistoryDialog.on('hide', function (event) {
+            repoHistoryLogView.destroy();
         });
 
         this._repoHistoryDialog.modal();

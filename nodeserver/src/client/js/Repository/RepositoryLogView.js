@@ -14,8 +14,10 @@ define(['logManager',
         SHOW_MORE_BUTTON_TEXT = "Show more...",
         LOCAL_HEADER = 'local',
         REMOTE_HEADER = 'remote',
-        SHOW_MORE_COMMIT_NUM = 5,
+        COMMIT_PACKAGE_COUNT = 5,
         COMMIT_DATA = 'commitData',
+        COMMIT_ITEM_CLASS = 'item',
+        COMMIT_LABEL_WRAPPER = 'commitLabelWrapper',
         X_DELTA = 20,
         Y_DELTA = 25,
         CONTENT_WIDTH = 1,
@@ -24,12 +26,15 @@ define(['logManager',
         ITEM_HEIGHT = 8,    //RepositoryLogView.css - #repoDiag .item
         LINE_CORNER_SIZE = 5,
         HEADMARKER_Y_SHIFT = -11,
-        HEADMARKER_X_SHIFT = 10;
+        HEADMARKER_X_SHIFT = 10,
+        NON_EXISTING_PARENT_LINE_FILL_COLOR = '#000000',
+        NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1';
 
     RepositoryLogView = function (container) {
         this._el = container;
 
         this.clear();
+        this._initializeUI();
 
         this._logger = logManager.create("RepositoryLogView");
         this._logger.debug("Created");
@@ -43,6 +48,11 @@ define(['logManager',
         this._trackEnds = [];
         this._renderIndex = -1;
 
+        this._width = CONTENT_WIDTH;
+        this._height = CONTENT_HEIGHT;
+
+        this._nonExistingParentPaths = [];
+
         //clear UI content
         this._el.empty();
 
@@ -52,9 +62,13 @@ define(['logManager',
 
         this._el.parent().css({"width": "",
             "margin-left": "",
-            "margin-top": ""});
+            "margin-top": "",
+            "top": ""});
+    };
 
-        this._initializeUI();
+    RepositoryLogView.prototype.destroy = function () {
+        this.clear();
+        this._el.removeClass(REPOSITORY_LOG_VIEW_CLASS);
     };
 
     RepositoryLogView.prototype.addBranch = function (obj) {
@@ -92,14 +106,18 @@ define(['logManager',
         this._render();
     };
 
-    RepositoryLogView.prototype.allCommitsDisplayed = function () {
-        this._allCommitsDisplayed();
+    RepositoryLogView.prototype.noMoreCommitsToDisplay = function () {
+        this._noMoreCommitsToDisplay();
+    };
+    
+    RepositoryLogView.prototype.loadMoreCommits = function () {
+        this.onLoadMoreCommits(COMMIT_PACKAGE_COUNT);
     };
 
     /******************* PUBLIC API TO BE OVERRIDDEN IN THE CONTROLLER **********************/
 
-    RepositoryLogView.prototype.onShowMoreClick = function (num) {
-        this._logger.warning("onShowMoreClick is not overridden in Controller...num: '" + num + "'");
+    RepositoryLogView.prototype.onLoadMoreCommits = function (num) {
+        this._logger.warning("onLoadMoreCommits is not overridden in Controller...num: '" + num + "'");
     };
 
     RepositoryLogView.prototype.onLoadCommit = function (params) {
@@ -137,6 +155,9 @@ define(['logManager',
         this._svgPaper = Raphael(this._commitsContainer.attr("id"));
         this._svgPaper.canvas.style.pointerEvents = "visiblePainted";
         this._svgPaper.setSize("100%", "1px");
+        $(this._svgPaper.canvas).css({"top": "0"});
+
+        this._generateSVGGradientDefinition();
 
         //generate container for 'show more' button and progress bar
         this._showMoreContainer = $('<div/>', {
@@ -150,7 +171,7 @@ define(['logManager',
 
         //show more button
         this._btnShowMore = $('<a/>', {
-            "class": "btn",
+            "class": "",
             "href": "#"
         });
 
@@ -201,30 +222,18 @@ define(['logManager',
 
          event.stopPropagation();
          event.preventDefault();
-         });
-
-         this._el.on("click.item", ".item", function (event) {
-         self._onCommitClick($(this));
-         event.stopPropagation();
-         event.preventDefault();
          });*/
 
-        this._btnShowMore.on('click', null, function (event) {
-            self.onShowMoreClick(SHOW_MORE_COMMIT_NUM);
+         this._el.on("click." + COMMIT_ITEM_CLASS, "." + COMMIT_ITEM_CLASS, function (event) {
+            self._onCommitClick($(this));
             event.stopPropagation();
             event.preventDefault();
-        });
+         });
 
-        this._el.on('shown', function (event) {
+        this._btnShowMore.on('click', null, function (event) {
+            self.loadMoreCommits();
             event.stopPropagation();
-        });
-
-        this._el.on('hide', function (event) {
-            event.stopPropagation();
-        });
-
-        this._el.on('hidden', function (event) {
-            event.stopPropagation();
+            event.preventDefault();
         });
     };
 
@@ -235,7 +244,8 @@ define(['logManager',
             trackEndCommit,
             i,
             foundTrack = false,
-            cIdx;
+            cIdx,
+            masterRemoteHeadCommit = false;
 
         //check which trackBottom's parent is this guy
         for (i = 0; i < trackLen; i += 1) {
@@ -257,11 +267,29 @@ define(['logManager',
             this._trackEnds[i] = cCommit.id;
         } else {
             //no fitting track-end found, start a new track for it
-            this._trackEnds.push(cCommit.id);
-            cCommit.x = (this._trackEnds.length - 1) * X_DELTA;
+            if (this._branches && this._branches.length > 0) {
+                if (this._branches[0].name === MASTER_BRANCH_NAME && this._branches[0].remoteHead === cCommit.id) {
+                    masterRemoteHeadCommit = true;
+                }
+            }
+            if (masterRemoteHeadCommit === true) {
+                //insert this guy to be the first track from the left
+                this._trackEnds.splice(0, 0, cCommit.id);
+                cCommit.x = 0;
+
+                //shift all the already existing commits by one to the right
+                i = this._commits.length - 1;
+                while (i--) {
+                    this._commits[i].x += X_DELTA;
+                }
+                this._renderIndex = -1;
+            } else {
+                this._trackEnds.push(cCommit.id);
+                cCommit.x = (this._trackEnds.length - 1) * X_DELTA;
+            }
         }
 
-        this._logger.warning("commitID: " + cCommit.id + ", X: " + cCommit.x + ", Y: " + cCommit.y);
+        //this._logger.debug("commitID: " + cCommit.id + ", X: " + cCommit.x + ", Y: " + cCommit.y);
     };
 
 
@@ -270,15 +298,27 @@ define(['logManager',
         var len = this._commits.length,
             cCommit,
             idx = this._renderIndex === -1 ? 0 : this._renderIndex,
-            itemObj,
             i,
             pIdx,
-            j;
+            j,
+            hasVisibleParent;
+
+        //render from the beginning
+        //clear commit container
+        if (this._renderIndex === -1) {
+            this._commitsContainer.find('.' + COMMIT_ITEM_CLASS).remove();
+            this._svgPaper.clear();
+
+            this._removeHeaderLabels();
+        }
 
         //draw the commit points
         for (i = idx ; i < len; i += 1) {
             cCommit = this._commits[i];
-            itemObj= cCommit.ui = this._createItem({"x": cCommit.x,
+            if (cCommit.ui) {
+                cCommit.ui.remove();
+            }
+            cCommit.ui = this._createItem({"x": cCommit.x,
                 "y": cCommit.y,
                 "counter": i,
                 "id": cCommit.id,
@@ -291,26 +331,60 @@ define(['logManager',
 
         this._renderIndex = i;
 
+        this._resizeDialog(this._width, this._height);
+
+        //remove all nonexsiting parent connections
+        i = this._nonExistingParentPaths.length;
+        while (i--) {
+            this._nonExistingParentPaths[i].remove();
+        }
+        this._nonExistingParentPaths = [];
+
         //draw the connections
         for (i = 0 ; i < len; i += 1) {
             cCommit = this._commits[i];
 
             //draw lines to parents
             if (cCommit[COMMIT_DATA].parents && cCommit[COMMIT_DATA].parents.length > 0) {
+                hasVisibleParent = false;
                 for (j = 0; j < cCommit[COMMIT_DATA].parents.length; j += 1) {
                     pIdx = this._orderedCommitIds.indexOf(cCommit[COMMIT_DATA].parents[j]);
                     if (pIdx >= idx) {
                         this._drawLine(this._commits[pIdx], cCommit);
                     }
+
+                    hasVisibleParent = pIdx !== -1;
+                }
+
+                if (hasVisibleParent === false) {
+                    //has no visible parent
+                    //ie no line connecting to this guy, just floats in the air
+                    //draw a line to the bottom of the page with a lighter color
+                    this._drawLine(undefined, cCommit);
                 }
             }
         }
 
-        this._resizeDialog(CONTENT_WIDTH, CONTENT_HEIGHT);
-
         this._applyHeaderLabels();
     };
 
+    RepositoryLogView.prototype._removeHeaderLabels = function () {
+        var i = this._branches.length;
+
+        this._commitsContainer.find('.' + COMMIT_LABEL_WRAPPER).remove();
+        while (i--) {
+            this._branches[i].remoteHeadUI = false;
+            this._branches[i].localHeadUI = false;
+        }
+
+        i = this._commits.length;
+        while (i--) {
+            if (this._commits[i].labels) {
+                this._commits[i].labels.remove();
+                this._commits[i].labels = undefined;
+            }
+        }
+    };
 
     RepositoryLogView.prototype._applyHeaderLabels = function () {
         var len = this._branches.length,
@@ -341,7 +415,7 @@ define(['logManager',
             label = $('<div class="tooltiplabel right"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">' + branchName + '<i data-branch="' + branchName + '" class="icon-remove icon-white" title="Delete branch"></i></div></div>');
 
         if (headMarkerEl === undefined) {
-            commit.labels = $('<div class="commitHeadWrapper"></div>');
+            commit.labels = $('<div class="' + COMMIT_LABEL_WRAPPER + '"></div>');
             headMarkerEl = commit.labels;
 
             headMarkerEl.css({"top": commit.y + HEADMARKER_Y_SHIFT,
@@ -364,7 +438,7 @@ define(['logManager',
         var itemObj;
 
         itemObj =  $('<div/>', {
-            "class" : "item",
+            "class" : COMMIT_ITEM_CLASS,
             "data-id": params.id,
             "data-b": params.branch
         });
@@ -378,8 +452,8 @@ define(['logManager',
 
         this._commitsContainer.append(itemObj);
 
-        CONTENT_WIDTH = Math.max(CONTENT_WIDTH,  params.x + ITEM_WIDTH);
-        CONTENT_HEIGHT = Math.max(CONTENT_HEIGHT,  params.y + ITEM_HEIGHT);
+        this._width = Math.max(this._width,  params.x + ITEM_WIDTH);
+        this._height = Math.max(this._height,  params.y + ITEM_HEIGHT);
 
         return itemObj;
     };
@@ -387,16 +461,20 @@ define(['logManager',
 
     RepositoryLogView.prototype._drawLine = function (srcDesc, dstDesc) {
         var pathDef,
-            x = srcDesc.x + ITEM_WIDTH / 2,
-            y = srcDesc.y + ITEM_HEIGHT / 2,
+            nonVisibleSource = srcDesc === undefined,
+            x = nonVisibleSource ? dstDesc.x + ITEM_WIDTH / 2 : srcDesc.x + ITEM_WIDTH / 2,
+            y = nonVisibleSource ? this._height : srcDesc.y + ITEM_HEIGHT / 2,
             x2 = dstDesc.x + ITEM_WIDTH / 2,
             y2 = dstDesc.y + ITEM_HEIGHT / 2,
-            dX = x2 - x;
+            dX = x2 - x,
+            path;
 
         if (dX === 0) {
             //vertical line
-            y = srcDesc.y - 1;
-            y2 = dstDesc.y + ITEM_HEIGHT + 3;
+            if (nonVisibleSource === false) {
+                y = srcDesc.y - 2;
+            }
+            y2 = dstDesc.y + ITEM_HEIGHT + 2;
             pathDef = ["M", x, y, "L", x2, y2 ];
         } else {
             //multiple segment line
@@ -415,7 +493,17 @@ define(['logManager',
             }
         }
 
-        this._svgPaper.path(pathDef.join(","));
+
+        if (nonVisibleSource === true) {
+            //inject fake initial "move to" --> Gradient will be applied
+            pathDef.splice(0, 0, "M", -1, -1);
+            path = this._svgPaper.path(pathDef.join(","));
+            path.attr({"stroke": NON_EXISTING_PARENT_LINE_FILL_COLOR});
+            path.node.setAttribute("stroke", "url(#" + NON_EXISTING_PARENT_LINE_GRADIENT_NAME + ")");
+            this._nonExistingParentPaths.push(path);
+        } else {
+            this._svgPaper.path(pathDef.join(","));
+        }
     };
 
 
@@ -429,6 +517,7 @@ define(['logManager',
             dBody = repoDialog.find(".modal-body");
 
         this._svgPaper.setSize(contentWidth, contentHeight);
+        this._generateSVGGradientDefinition();
 
         //make it almost "full screen"
         wW = wW - 2 * WINDOW_PADDING;
@@ -436,7 +525,7 @@ define(['logManager',
 
         dBody.css({"max-height": wH });
 
-        repoDialog.removeClass("fade ");
+        repoDialog.removeClass("fade");
 
         repoDialog.css({"width": wW,
             "margin-left": wW / 2 * (-1),
@@ -445,7 +534,7 @@ define(['logManager',
     };
 
 
-    RepositoryLogView.prototype._allCommitsDisplayed = function () {
+    RepositoryLogView.prototype._noMoreCommitsToDisplay = function () {
         this._btnShowMore.hide();
 
         this._btnShowMore.off('click');
@@ -462,8 +551,8 @@ define(['logManager',
     RepositoryLogView.prototype._onCommitClick = function (commitEl) {
         var commitId = commitEl.data("id"),
             popoverMsg,
-            obj = this._commits[commitId],
-            left = commitEl.position().left,
+            cCommit = this._commits[this._orderedCommitIds.indexOf(commitId)],
+            left = cCommit.x,
             bodyW = $('body').width(),
             placement = left < bodyW / 2 ? 'right' : 'left';
 
@@ -472,15 +561,15 @@ define(['logManager',
         }
 
         popoverMsg = _.template(commitDetailsTemplate,
-            {"timestamp": new Date(parseInt(obj.timestamp, 10)),
-                "branch": obj.branch,
-                "message": obj.message || "N/A",
+            {"timestamp": new Date(parseInt(cCommit[COMMIT_DATA].timestamp, 10)),
+                "branch": cCommit[COMMIT_DATA].branch,
+                "message": cCommit[COMMIT_DATA].message || "N/A",
                 "commitid": commitId});
 
 
         this._lastCommitPopOver = commitEl;
 
-        this._lastCommitPopOver.popover({"title": obj.id + " [" + obj.counter + "]",
+        this._lastCommitPopOver.popover({"title": cCommit.id + " [" + cCommit[COMMIT_DATA].counter + "]",
             "html": true,
             "content": popoverMsg,
             "trigger": "manual",
@@ -494,6 +583,40 @@ define(['logManager',
         if (this._lastCommitPopOver) {
             this._lastCommitPopOver.popover("destroy");
             this._lastCommitPopOver = null;
+        }
+    };
+
+    RepositoryLogView.prototype._generateSVGGradientDefinition = function () {
+        if (!this._svgPaper.canvas.getElementById(NON_EXISTING_PARENT_LINE_GRADIENT_NAME)) {
+            //generate gradient color dinamically into SVG
+            var defs = document.createElementNS("http://www.w3.org/2000/svg", 'defs');
+            var linearGradient = document.createElementNS("http://www.w3.org/2000/svg", 'linearGradient');
+            linearGradient.setAttribute("x1", "0%");
+            linearGradient.setAttribute("x2", "0%");
+            linearGradient.setAttribute("y1", "0%");
+            linearGradient.setAttribute("y2", "100%");
+            linearGradient.setAttribute("id", NON_EXISTING_PARENT_LINE_GRADIENT_NAME);
+
+
+            var stop0 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
+            stop0.setAttribute("offset", "0%");
+            stop0.setAttribute("style", "stop-color: " + NON_EXISTING_PARENT_LINE_FILL_COLOR);
+
+            var stop1 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
+            stop1.setAttribute("offset", "90%");
+            stop1.setAttribute("style", "stop-color: " + NON_EXISTING_PARENT_LINE_FILL_COLOR);
+
+            var stop2 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
+            stop2.setAttribute("offset", "100%");
+            stop2.setAttribute("style", "stop-color: #FFFFFF");
+
+            linearGradient.appendChild(stop0);
+            linearGradient.appendChild(stop1);
+            linearGradient.appendChild(stop2);
+
+            defs.appendChild(linearGradient);
+
+            this._svgPaper.canvas.appendChild(defs);
         }
     };
 
