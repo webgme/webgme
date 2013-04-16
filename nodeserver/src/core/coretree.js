@@ -40,6 +40,8 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 	}
 
+	var rootCounter = 0;
+
 	return function (storage, options) {
 		var MAX_AGE = (options && options.maxage) || CONFIG.coretree.maxage;
 		var MAX_TICKS = (options && options.maxticks) || CONFIG.coretree.maxticks;
@@ -164,6 +166,8 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 			for ( var i = 0; i < children.length; ++i) {
 				var child = children[i];
 				if (child.relid === relid) {
+					ASSERT(child.parent.age === 0);
+
 					child.age = 0;
 					return child;
 				}
@@ -288,7 +292,9 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				children: [],
 				data: {
 					_mutable: true
-				}
+				},
+				rootid: ++rootCounter,
+				empty: EMPTY_DATA
 			};
 			root.data[HASH_ID] = "";
 			roots.push(root);
@@ -718,7 +724,9 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				relid: null,
 				age: 0,
 				children: [],
-				data: data
+				data: data,
+				rootid: ++rootCounter,
+				empty: EMPTY_DATA
 			};
 			roots.push(root);
 
@@ -808,9 +816,20 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 			}
 		};
 
-		var isValidNode = function (node) {
-			// console.log(printNode(getRoot(node)));
+		var checkValidTree = function (node) {
+			if (isValidNode(node)) {
+				if (node.children instanceof Array) {
+					for ( var i = 0; i < node.children.length; ++i) {
+						checkValidTree(node.children[i]);
+					}
+				}
+			}
+		};
 
+		// disable checking for now
+		var checkValidTreeRunning = true;
+		
+		var isValidNode = function (node) {
 			try {
 				__test("object", typeof node === "object" && node !== null);
 				__test("object 2", node.hasOwnProperty("parent") && node.hasOwnProperty("relid"));
@@ -821,15 +840,22 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				__test("children", node.children === null || node.children instanceof Array);
 				__test("children 2", (node.age === MAX_AGE) === (node.children === null));
 				__test("data", typeof node.data === "object" || typeof node.data === "string" || typeof node.data === "number");
+//				__test("coreid", getRoot(node).empty === EMPTY_DATA);
 
 				if (node.parent !== null) {
 					__test("age 2", node.age >= node.parent.age);
 					__test("mutable", !__isMutableData(node.data) || __isMutableData(node.parent.data));
 				}
 
+				if (!checkValidTreeRunning) {
+					checkValidTreeRunning = true;
+					checkValidTree(getRoot(node));
+					checkValidTreeRunning = false;
+				}
+
 				return true;
 			} catch (error) {
-				//				console.log("Wrong node", error.stack);
+				console.log("Wrong node", error.stack);
 				return false;
 			}
 		};

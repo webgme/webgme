@@ -4,15 +4,13 @@
  * Author: Miklos Maroti
  */
 
-define(
-[ "core/config" ],
-function (CONFIG) {
+define([ "core/config" ], function (CONFIG) {
 	"use strict";
 
 	var maxDepth = CONFIG.future.maxDepth || 5;
 
 	var ASSERT = function (cond) {
-		if( !cond ) {
+		if (!cond) {
 			var error = new Error("future assertion failed");
 			console.log(error.stack);
 			throw error;
@@ -32,13 +30,12 @@ function (CONFIG) {
 	var setValue = function (future, value) {
 		ASSERT(future instanceof Future && future.value === UNRESOLVED);
 
-		if( value instanceof Future ) {
+		if (value instanceof Future) {
 			setListener(value, setValue, future);
-		}
-		else {
+		} else {
 			future.value = value;
 
-			if( future.listener !== null ) {
+			if (future.listener !== null) {
 				future.listener(future.param, value);
 			}
 		}
@@ -51,7 +48,7 @@ function (CONFIG) {
 		future.listener = listener;
 		future.param = param;
 
-		if( future.value !== UNRESOLVED ) {
+		if (future.value !== UNRESOLVED) {
 			listener(param, future);
 		}
 	};
@@ -61,11 +58,10 @@ function (CONFIG) {
 	};
 
 	var getValue = function (value) {
-		if( value instanceof Future ) {
-			if( value.value instanceof Error ) {
+		if (value instanceof Future) {
+			if (value.value instanceof Error) {
 				throw value.value;
-			}
-			else if( value.value !== UNRESOLVED ) {
+			} else if (value.value !== UNRESOLVED) {
 				return value.value;
 			}
 		}
@@ -82,10 +78,9 @@ function (CONFIG) {
 			var future = new Future();
 
 			args[args.length++] = function adaptCallback (error, value) {
-				if( error ) {
+				if (error) {
 					value = error instanceof Error ? error : new Error(error);
-				}
-				else {
+				} else {
 					ASSERT(!(value instanceof Error));
 				}
 				setValue(future, value);
@@ -97,68 +92,32 @@ function (CONFIG) {
 		};
 	};
 
-	var returnCallback = function (callback, value) {
-		if( value instanceof Error ) {
-			callback(value);
-		}
-		else {
-			callback(null, value);
-		}
-	};
-
-	var calldepth = 0;
-	var returnValue = function (callback, value) {
-		ASSERT(!(value instanceof Error));
-
-		if( isUnresolved(value) ) {
-			setListener(value, returnCallback, callback);
-		}
-		else if( calldepth < maxDepth ) {
-			++calldepth;
-			try {
-				callback(null, value);
-			}
-			catch(error) {
-				--calldepth;
-				throw error;
-			}
-			--calldepth;
-		}
-		else {
-			setTimeout(callback, 0, null, value);
-		}
-	};
-
 	var unadapt = function (func) {
 		ASSERT(typeof func === "function");
 
-		if( func.length === 0 ) {
+		if (func.length === 0) {
 			return function unadapt0 (callback) {
 				var value;
 				try {
 					value = func.call(this);
-				}
-				catch(error) {
+				} catch (error) {
 					callback(error);
 					return;
 				}
-				returnValue(callback, value);
+				then(value, callback);
 			};
-		}
-		else if( func.length === 1 ) {
+		} else if (func.length === 1) {
 			return function unadapt1 (arg, callback) {
 				var value;
 				try {
 					value = func.call(this, arg);
-				}
-				catch(error) {
+				} catch (error) {
 					callback(error);
 					return;
 				}
-				returnValue(callback, value);
+				then(value, callback);
 			};
-		}
-		else {
+		} else {
 			return function unadaptx () {
 				var args = arguments;
 
@@ -168,12 +127,11 @@ function (CONFIG) {
 				var value;
 				try {
 					value = func.apply(this, args);
-				}
-				catch(error) {
+				} catch (error) {
 					callback(error);
 					return;
 				}
-				returnValue(callback, value);
+				then(value, callback);
 			};
 		}
 	};
@@ -202,26 +160,24 @@ function (CONFIG) {
 	Func.prototype = Future.prototype;
 
 	var setArgument = function (future, value) {
-		if( !(value instanceof Error) ) {
+		if (!(value instanceof Error)) {
 			try {
 				var args = future.args;
 				args[future.index] = value;
 
-				while( ++future.index < args.length ) {
+				while (++future.index < args.length) {
 					value = args[future.index];
-					if( isUnresolved(value) ) {
+					if (isUnresolved(value)) {
 						setListener(value, setArgument, future);
 						return;
-					}
-					else {
+					} else {
 						args[future.index] = getValue(value);
 					}
 				}
 
 				value = future.func.apply(future.that, args);
 				ASSERT(!(value instanceof Error));
-			}
-			catch(error) {
+			} catch (error) {
 				value = error instanceof Error ? error : new Error(error);
 			}
 		}
@@ -235,11 +191,10 @@ function (CONFIG) {
 		var func = args[--args.length];
 		ASSERT(typeof func === "function");
 
-		for( var i = 0; i < args.length; ++i ) {
-			if( isUnresolved(args[i]) ) {
+		for ( var i = 0; i < args.length; ++i) {
+			if (isUnresolved(args[i])) {
 				return new Func(func, this, args, i);
-			}
-			else {
+			} else {
 				args[i] = getValue(args[i]);
 			}
 		}
@@ -261,36 +216,31 @@ function (CONFIG) {
 	Join.prototype = Object.create(Future.prototype);
 
 	var setJoinand = function (future, value) {
-		if( value instanceof Error ) {
+		if (value instanceof Error) {
 			setValue(future, value);
-		}
-		else if( --future.missing <= 0 ) {
+		} else if (--future.missing <= 0) {
 			setValue(future, undefined);
 		}
 	};
 
 	var join = function (first, second) {
-		if( getValue(first) instanceof Future ) {
-			if( getValue(second) instanceof Future ) {
-				if( first instanceof Join ) {
+		if (getValue(first) instanceof Future) {
+			if (getValue(second) instanceof Future) {
+				if (first instanceof Join) {
 					first.missing += 1;
 					setListener(second, setJoinand, first);
 					return first;
-				}
-				else if( second instanceof Join ) {
+				} else if (second instanceof Join) {
 					second.missing += 1;
 					setListener(first, setJoinand, second);
 					return second;
-				}
-				else {
+				} else {
 					return new Join(first, second);
 				}
-			}
-			else {
+			} else {
 				return first;
 			}
-		}
-		else {
+		} else {
 			return getValue(second);
 		}
 	};
@@ -310,11 +260,10 @@ function (CONFIG) {
 
 	var hideValue = function (future, value) {
 		try {
-			if( value instanceof Error ) {
+			if (value instanceof Error) {
 				value = future.handler(value);
 			}
-		}
-		catch(error) {
+		} catch (error) {
 			value = error instanceof Error ? error : new Error(error);
 		}
 
@@ -326,17 +275,15 @@ function (CONFIG) {
 	};
 
 	var hide = function (future, handler) {
-		if( typeof handler !== "function" ) {
+		if (typeof handler !== "function") {
 			handler = printStack;
 		}
 
-		if( isUnresolved(future) ) {
+		if (isUnresolved(future)) {
 			return new Hide(future, handler);
-		}
-		else if( future.value instanceof Error ) {
+		} else if (future.value instanceof Error) {
 			return handler(future.value);
-		}
-		else {
+		} else {
 			return getValue(future);
 		}
 	};
@@ -357,25 +304,23 @@ function (CONFIG) {
 	Arr.prototype = Future.prototype;
 
 	var setMember = function (future, value) {
-		if( !(value instanceof Error) ) {
+		if (!(value instanceof Error)) {
 			try {
 				var array = future.array;
 				array[future.index] = value;
 
-				while( ++future.index < array.length ) {
+				while (++future.index < array.length) {
 					value = array[future.index];
-					if( isUnresolved(value) ) {
+					if (isUnresolved(value)) {
 						setListener(value, setMember, future);
 						return;
-					}
-					else {
+					} else {
 						array[future.index] = getValue(value);
 					}
 				}
 
 				value = array;
-			}
-			catch(error) {
+			} catch (error) {
 				value = error instanceof Error ? error : new Error(error);
 			}
 		}
@@ -386,13 +331,51 @@ function (CONFIG) {
 	var array = function (array) {
 		ASSERT(array instanceof Array);
 
-		for( var i = 0; i < array.length; ++i ) {
-			if( isUnresolved(array[i]) ) {
+		for ( var i = 0; i < array.length; ++i) {
+			if (isUnresolved(array[i])) {
 				return new Arr(array, i);
 			}
 		}
 
 		return array;
+	};
+
+	// ------- then -------
+
+	var thenHandler = function (callback, value) {
+		if (value instanceof Error) {
+			callback(value);
+		} else {
+			callback(null, value);
+		}
+	};
+
+	var calldepth = 0;
+	var then = function (future, callback) {
+		var error = null, value;
+
+		if (!(future instanceof Future)) {
+			value = future;
+		} else if (future.value === UNRESOLVED) {
+			setListener(future, thenHandler, callback);
+			return;
+		} else if (future.value instanceof Error) {
+			error = future.value;
+		} else {
+			value = future.value;
+		}
+
+		if (calldepth < maxDepth) {
+			++calldepth;
+			try {
+				callback(error, value);
+			} catch (err) {
+				console.log("unhandled error from callback", err);
+			}
+			--calldepth;
+		} else {
+			setTimeout(callback, 0, error, value);
+		}
 	};
 
 	// -------
@@ -404,6 +387,7 @@ function (CONFIG) {
 		call: call,
 		array: array,
 		join: join,
-		hide: hide
+		hide: hide,
+		then: then
 	};
 });
