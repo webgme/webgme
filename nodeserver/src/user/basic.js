@@ -624,6 +624,7 @@ define([
                 //here we try to make an immediate event building
                 _core = _loadCore;
                 modifiedPaths = getModifiedNodes(_loadNodes);
+                _nodes = {};
                 for(var i in _loadNodes){
                     _nodes[i] = _loadNodes[i];
                 }
