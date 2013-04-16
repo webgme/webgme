@@ -28,7 +28,9 @@ define(['logManager',
         HEADMARKER_Y_SHIFT = -11,
         HEADMARKER_X_SHIFT = 10,
         NON_EXISTING_PARENT_LINE_FILL_COLOR = '#000000',
-        NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1';
+        NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1',
+        LABEL_CLASS_LOCAL_HEAD = 'local-head',
+        LABEL_CLASS_REMOTE_HEAD = 'remote-head';
 
     RepositoryLogView = function (container) {
         this._el = container;
@@ -43,6 +45,7 @@ define(['logManager',
     RepositoryLogView.prototype.clear = function () {
         this._commits = [];
         this._branches = [];
+        this._branchNames = [];
         this._orderedCommitIds = [];
         this._y = 0;
         this._trackEnds = [];
@@ -74,8 +77,10 @@ define(['logManager',
     RepositoryLogView.prototype.addBranch = function (obj) {
         if (obj.name.toLowerCase() === MASTER_BRANCH_NAME) {
             this._branches.splice(0, 0, obj);
+            this._branchNames.splice(0, 0, obj.name);
         } else {
             this._branches.push(obj);
+            this._branchNames.push(obj.name);
         }
     };
 
@@ -179,50 +184,69 @@ define(['logManager',
 
         this._showMoreContainer.append(this._btnShowMore);
 
-        /*this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
-         var btn = $(this),
-         commitId = btn.data("commitid");
+        this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
+            var btn = $(this),
+            commitId = btn.data("commitid");
 
-         self.onLoadCommit({"id": commitId});
-         });
+            self.onLoadCommit({"id": commitId});
+        });
 
-         this._el.on("click.btnCreateBranch", ".btnCreateBranch", function () {
-         var btn = $(this),
-         commitId = btn.data("commitid"),
-         textInput = $("#appendedInputButton"),
-         textVal = textInput.val().toLowerCase();
+        this._el.on("click.btnCreateBranch", ".btnCreateBranch", function () {
+             var btn = $(this),
+             commitId = btn.data("commitid"),
+             textInput = $("#appendedInputButton"),
+             textVal = textInput.val().toLowerCase();
 
-         if (textVal !== "" && self._branchNames.indexOf(textVal) === -1 ) {
-         self.onCreateBranchFromCommit({"commitId": commitId,
-         "name": textVal});
-         }
-         });
+             if (textVal !== "" && self._branchNames.indexOf(textVal) === -1 ) {
+                 self.onCreateBranchFromCommit({"commitId": commitId,
+                    "name": textVal});
+             }
+        });
 
-         this._el.on("keyup", "#appendedInputButton", function () {
-         var textInput = $(this),
-         textVal = textInput.val().toLowerCase(),
-         parentControlGroup = textInput.parent();
+        this._el.on("keyup", "#appendedInputButton", function () {
+             var textInput = $(this),
+             textVal = textInput.val().toLowerCase(),
+             parentControlGroup = textInput.parent();
 
-         if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
-         parentControlGroup.addClass("error");
-         } else {
-         parentControlGroup.removeClass("error");
-         }
-         });
+             if (textVal === "" || self._branchNames.indexOf(textVal) !== -1 ) {
+                parentControlGroup.addClass("error");
+             } else {
+                parentControlGroup.removeClass("error");
+             }
+        });
 
-         this._el.on("click.btnCloseCommitDetails", ".btnCloseCommitDetails", function () {
-         self._destroyCommitPopover();
-         });
+        /********* 'CLOSE BUTTON' event handler on commit details dialog *************/
+        this._el.off("click.btnCloseCommitDetails", ".btnCloseCommitDetails");
+        this._el.on("click.btnCloseCommitDetails", ".btnCloseCommitDetails", function () {
+            self._destroyCommitPopover();
+        });
+
+        /********* prevent commit details dialog's event from bubbling *************/
+        this._el.off('shown', '.' + COMMIT_ITEM_CLASS);
+        this._el.on('shown', '.' + COMMIT_ITEM_CLASS, function (event) {
+            event.stopPropagation();
+        });
+
+        this._el.off('hide', '.' + COMMIT_ITEM_CLASS);
+        this._el.on('hide', '.' + COMMIT_ITEM_CLASS, function (event) {
+            event.stopPropagation();
+        });
+
+        this._el.off('hidden', '.' + COMMIT_ITEM_CLASS);
+        this._el.on('hidden', '.' + COMMIT_ITEM_CLASS, function (event) {
+            event.stopPropagation();
+        });
 
          this._el.on("click.iconRemove", ".icon-remove", function (event) {
-         var btn = $(this),
-         branch = btn.data("branch");
+             var btn = $(this),
+                branch = btn.data("branch"),
+                branchType = btn.parent().parent().hasClass(LABEL_CLASS_LOCAL_HEAD) ? LABEL_CLASS_LOCAL_HEAD : LABEL_CLASS_REMOTE_HEAD;
 
-         self.onDeleteBranchClick(branch);
+             self.onDeleteBranchClick(branch, branchType);
 
-         event.stopPropagation();
-         event.preventDefault();
-         });*/
+             event.stopPropagation();
+             event.preventDefault();
+         });
 
          this._el.on("click." + COMMIT_ITEM_CLASS, "." + COMMIT_ITEM_CLASS, function (event) {
             self._onCommitClick($(this));
@@ -231,6 +255,7 @@ define(['logManager',
          });
 
         this._btnShowMore.on('click', null, function (event) {
+            self._destroyCommitPopover();
             self.loadMoreCommits();
             event.stopPropagation();
             event.preventDefault();
@@ -425,9 +450,13 @@ define(['logManager',
         }
 
         if (headerType === REMOTE_HEADER) {
-            label.addClass('remote-head');
+            label.addClass(LABEL_CLASS_REMOTE_HEAD);
+
+            if (branchName === MASTER_BRANCH_NAME) {
+                label.find('.icon-remove').remove();
+            }
         } else {
-            label.addClass('local-head');
+            label.addClass(LABEL_CLASS_LOCAL_HEAD);
         }
 
         headMarkerEl.append(label);
@@ -554,11 +583,10 @@ define(['logManager',
             cCommit = this._commits[this._orderedCommitIds.indexOf(commitId)],
             left = cCommit.x,
             bodyW = $('body').width(),
-            placement = left < bodyW / 2 ? 'right' : 'left';
+            placement = left < bodyW / 2 ? 'right' : 'left',
+            self = this;
 
-        if (this._lastCommitPopOver) {
-            this._lastCommitPopOver.popover("destroy");
-        }
+        this._destroyCommitPopover();
 
         popoverMsg = _.template(commitDetailsTemplate,
             {"timestamp": new Date(parseInt(cCommit[COMMIT_DATA].timestamp, 10)),

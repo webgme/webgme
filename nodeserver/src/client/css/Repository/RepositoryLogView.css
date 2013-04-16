@@ -30,31 +30,33 @@
       margin-left: -2px;
       margin-top: -2px;
       border-radius: 7px; }
-  .repositoryLogView .commits .tooltiplabel.local-head,
-  .repositoryLogView .commits .tooltiplabel.remote-head {
+  .repositoryLogView .commits .commitLabelWrapper {
+    position: absolute;
+    white-space: nowrap; }
+  .repositoryLogView .commits .tooltiplabel {
     opacity: 1.0;
     margin-left: 0px;
     display: inline-block;
     position: relative; }
-  .repositoryLogView .commits .remote-head .tooltiplabel-arrow {
-    border-right-color: #b94a48 !important; }
-  .repositoryLogView .commits .remote-head .tooltiplabel-inner {
-    background-color: #b94a48; }
-    .repositoryLogView .commits .remote-head .tooltiplabel-inner > [class*="icon-white"]:hover {
+    .repositoryLogView .commits .tooltiplabel [class*="icon-white"]:hover {
       cursor: pointer;
       background-image: url("../../img/glyphicons-halflings.png"); }
-  .repositoryLogView .commits .local-head .tooltiplabel-arrow {
-    border-right-color: #3a87ad !important; }
-  .repositoryLogView .commits .local-head .tooltiplabel-inner {
-    background-color: #3a87ad; }
-  .repositoryLogView .commits .commitHeadWrapper {
-    position: absolute;
-    white-space: nowrap; }
+    .repositoryLogView .commits .tooltiplabel.remote-head .tooltiplabel-arrow {
+      border-right-color: #b94a48; }
+    .repositoryLogView .commits .tooltiplabel.remote-head .tooltiplabel-inner {
+      background-color: #b94a48; }
+    .repositoryLogView .commits .tooltiplabel.local-head .tooltiplabel-arrow {
+      border-right-color: #3a87ad; }
+    .repositoryLogView .commits .tooltiplabel.local-head .tooltiplabel-inner {
+      background-color: #3a87ad; }
 .repositoryLogView .show-more {
   height: 36px;
   line-height: 36px;
-  background-color: white;
+  background-color: #f7f7f7;
   position: relative;
   border-bottom: 1px solid #3a87ad;
   border-top: 1px solid #3a87ad;
-  text-align: center; }
+  text-align: center;
+  margin-top: 15px; }
+  .repositoryLogView .show-more a:hover {
+    text-decoration: none; }

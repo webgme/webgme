@@ -7,7 +7,7 @@ $item-hover-radius: 7px;
 $remote-head-color: #b94a48;
 $local-head-color: #3a87ad;
 
-$show-more-panel-background-color: #FFFFFF;
+$show-more-panel-background-color: #F7F7F7;
 $show-more-panel-height: 36px;
 $show-more-panel-border: 1px solid #3a87ad;
 
@@ -54,42 +54,41 @@ $show-more-panel-border: 1px solid #3a87ad;
       }
     }
 
-    .tooltiplabel.local-head,
-    .tooltiplabel.remote-head {
+    .commitLabelWrapper {
+      position: absolute;
+      white-space: nowrap;
+    }
+
+    .tooltiplabel {
       opacity: 1.0;
       margin-left: 0px;
       display: inline-block;
       position: relative;
-    }
 
-    .remote-head {
-      .tooltiplabel-arrow {
-        border-right-color: $remote-head-color !important;
+      [class*="icon-white"]:hover {
+        cursor: pointer;
+        background-image: url("../../img/glyphicons-halflings.png");
       }
 
-      .tooltiplabel-inner {
-        background-color: $remote-head-color;
+      &.remote-head {
+        .tooltiplabel-arrow {
+          border-right-color: $remote-head-color;
+        }
 
-        > [class*="icon-white"]:hover {
-          cursor: pointer;
-          background-image: url("../../img/glyphicons-halflings.png");
+        .tooltiplabel-inner {
+          background-color: $remote-head-color;
         }
       }
-    }
 
-    .local-head {
-      .tooltiplabel-arrow {
-        border-right-color: $local-head-color !important;
+      &.local-head {
+        .tooltiplabel-arrow {
+          border-right-color: $local-head-color;
+        }
+
+        .tooltiplabel-inner {
+          background-color: $local-head-color;
+        }
       }
-
-      .tooltiplabel-inner {
-        background-color: $local-head-color;
-      }
-    }
-
-    .commitHeadWrapper {
-      position: absolute;
-      white-space: nowrap;
     }
   }
 
@@ -101,6 +100,11 @@ $show-more-panel-border: 1px solid #3a87ad;
     border-bottom: $show-more-panel-border;
     border-top: $show-more-panel-border;
     text-align: center;
+    margin-top: 15px;
+
+    a:hover {
+      text-decoration: none;
+    }
   }
 }
 

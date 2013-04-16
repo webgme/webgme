@@ -2,8 +2,7 @@
 
 define(['logManager'], function (logManager) {
 
-    var RepositoryLogControl,
-        DEFAULT_COMMIT_NUM = 10;
+    var RepositoryLogControl;
 
     RepositoryLogControl = function (myClient, myView) {
         var self = this;
@@ -16,31 +15,31 @@ define(['logManager'], function (logManager) {
         //override view event handlers
         this._view.onLoadCommit = function (params) {
             self._view.clear();
-            self._view.displayProgress();
+            self._view.showPogressbar();
             self._client.selectCommitAsync(params.id, function (err) {
                 if (err) {
                     self._logger.error(err);
                 } else {
-                    self._updateHistory();
+                    //self._updateHistory();
                 }
             });
         };
 
-        this._view.onDeleteBranchClick = function (branch) {
+        this._view.onDeleteBranchClick = function (branch, branchType) {
             self._view.clear();
-            self._view.displayProgress();
+            self._view.showPogressbar();
             self._client.deleteBranchAsync(branch, function (err) {
                 if (err) {
                     self._logger.error(err);
                 } else {
-                    self._updateHistory();
+                    //self._updateHistory();
                 }
             });
         };
 
         this._view.onCreateBranchFromCommit = function (params) {
             self._view.clear();
-            self._view.displayProgress();
+            self._view.showPogressbar();
             self._client.createBranchAsync(
                 params.name,
                 params.commitId,
@@ -48,24 +47,20 @@ define(['logManager'], function (logManager) {
                     if (err) {
                         self._logger.error(err);
                     } else {
-                        self._updateHistory();
+                        //self._updateHistory();
                     }
                 });
         };
 
-        this._view.onShowMoreClick = function (num) {
-            self._updateHistory(num);
+        this._view.onLoadMoreCommits = function (num) {
+            self._loadMoreCommits(num);
         };
 
         this._logger = logManager.create("RepositoryLogControl");
         this._logger.debug("Created");
     };
 
-    RepositoryLogControl.prototype.generateHistory = function () {
-        this._updateHistory(DEFAULT_COMMIT_NUM);
-    };
-
-    RepositoryLogControl.prototype._updateHistory = function (num) {
+    RepositoryLogControl.prototype._loadMoreCommits = function (num) {
         var currentCommitId = this._client.getActualCommit(),
             commits = null,
             com,
@@ -80,7 +75,11 @@ define(['logManager'], function (logManager) {
             self._logger.debug("commitsLoaded, err: '" + err + "', data: " + data == true ? data.length : "null");
 
             if (err) {
-                self._logger.error(err);
+                if (_.isEmpty(err)) {
+                    self._logger.error('the mysterious error returned by "getCommitsAsync"');
+                } else {
+                    self._logger.error(err);
+                }
             } else {
                 commits = data.concat([]);
 
@@ -112,7 +111,7 @@ define(['logManager'], function (logManager) {
                 self._view.hidePogressbar();
 
                 if (cLen < num) {
-                    self._view.allCommitsDisplayed();
+                    self._view.noMoreCommitsToDisplay();
                 }
             }
         };
