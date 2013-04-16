@@ -41,7 +41,24 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 
 		var coretree = new CoreTree(storage, options);
 
-		var isValidNode = coretree.isValidNode;
+		var __test = function (text, cond) {
+			if (!cond) {
+				throw new Error(text);
+			}
+		};
+
+		var isValidNode = function (node) {
+			try {
+				__test("coretree", coretree.isValidNode(node));
+				__test("isobject", coretree.isObject(node));
+
+				return true;
+			} catch (error) {
+				console.log("Wrong node", error.stack);
+				return false;
+			}
+		};
+
 		var isValidPath = coretree.isValidPath;
 
 		var getCommonPathPrefixData = function (first, second) {
@@ -777,10 +794,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			persist: function (node, callback) {
 				var finished = coretree.persist(node);
 
-				FUTURE.call(finished, function () {
-					// TODO: we need to do something with error
-					callback(null);
-				});
+				FUTURE.then(finished, callback);
 
 				return coretree.getHash(node);
 			},
@@ -794,9 +808,51 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			getRelid: coretree.getRelid,
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
-			loadChild: FUTURE.unadapt(coretree.loadChild),
-			loadByPath: FUTURE.unadapt(coretree.loadByPath),
-			loadChildren: FUTURE.unadapt(loadChildren),
+
+			loadChildx: FUTURE.unadapt(coretree.loadChild),
+			loadChild: function (node, relid, callback) {
+				ASSERT(isValidNode(node));
+				var future = coretree.loadChild(node, relid);
+				FUTURE.then(future, function (err, child) {
+					if (err) {
+						callback(err);
+					} else {
+						ASSERT(isValidNode(child));
+						callback(null, child);
+					}
+				});
+			},
+
+			loadByPathx: FUTURE.unadapt(coretree.loadByPath),
+			loadByPath: function (node, path, callback) {
+				ASSERT(isValidNode(node));
+				var future = coretree.loadByPath(node, path);
+				FUTURE.then(future, function (err, child) {
+					if (err) {
+						callback(err);
+					} else {
+						ASSERT(isValidNode(child));
+						callback(null, child);
+					}
+				});
+			},
+
+			loadChildrenx: FUTURE.unadapt(loadChildren),
+			loadChildren: function (node, callback) {
+				ASSERT(isValidNode(node));
+				var future = loadChildren(node);
+				FUTURE.then(future, function (err, children) {
+					if (err) {
+						callback(err);
+					} else {
+						ASSERT(children instanceof Array);
+						for ( var i = 0; i < children.length; ++i) {
+							ASSERT(isValidNode(children[i]));
+						}
+						callback(null, children);
+					}
+				});
+			},
 
 			// modify
 			createNode: createNode,

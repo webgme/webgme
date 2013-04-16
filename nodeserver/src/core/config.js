@@ -36,7 +36,7 @@ define(function () {
 		},
 
 		future: {
-			maxDepth: 5
+			maxDepth: 10
 		},
 		
 		coretree: {
