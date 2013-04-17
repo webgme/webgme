@@ -45,7 +45,7 @@ define([ "util/assert"], function (ASSERT) {
         }
 
         function getDatabaseStatus(oldstatus,callback){
-            logger.debug('getDatabasestatus('+oldstatus+")");
+            logger.debug('getDatabaseStatus('+oldstatus+")");
             _database.getDatabaseStatus(oldstatus,callback);
         }
 
@@ -119,7 +119,7 @@ define([ "util/assert"], function (ASSERT) {
 
             function getCommits(before,number,callback){
                 logger.debug(projectName+'.getCommits('+before+','+number+')');
-                project.getCommits(before,callback);
+                project.getCommits(before,number,callback);
             }
 
         }

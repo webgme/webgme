@@ -64,6 +64,9 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 'websocket'
                 ]
             });
+            if(options.logger){
+                _socket.set('logger',options.logger);
+            }
 
 
             _socket.on('connection',function(socket){

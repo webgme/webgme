@@ -61,7 +61,6 @@ define([
                 _msg = "",
                 _recentCommits = [],
                 _viewer = false,
-                _loadCore = null,
                 _loadNodes = {},
                 _loadError = 0,
                 _commitCache = null;
@@ -71,6 +70,7 @@ define([
                 "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
                 "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
+                "BRANCH_CHANGED"        : "BRANCH_CHANGED",
                 "ACTOR_CHANGED"         : "ACTOR_CHANGED",
                 "PROJECT_CLOSED"        : "PROJECT_CLOSED",
                 "PROJECT_OPENED"        : "PROJECT_OPENED"
@@ -281,16 +281,35 @@ define([
                 }
             }
 
-            function openingProject(name){
-                //we already done every opening related stuff
-                //so these are the last ones (eventing and stuff)
-                _projectName = name;
-                if(_commitCache){
-                    _commitCache.clearCache();
-                } else {
-                    _commitCache = commitCache();
-                }
-                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+            function openProject(name,callback){
+                ASSERT(_database);
+                _database.openProject(name,function(err,p){
+                    if(!err &&  p){
+                        _project = p;
+                        _projectName = name;
+                        _inTransaction = false;
+                        _forked = false;
+                        _nodes = {};
+                        _core = new SetCore(new Core(_project));
+                        _commit = new Commit(_project,{});
+                        if(_commitCache){
+                            _commitCache.clearCache();
+                        } else {
+                            _commitCache = commitCache();
+                        }
+                        branchWatcher('master',function(err){
+                            if(!err){
+                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
+                                callback(null);
+                            } else {
+                                callback(err);
+                            }
+                        });
+                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+                    } else {
+                        callback(err);
+                    }
+                });
             }
 
             //internal functions
@@ -335,7 +354,6 @@ define([
                     _msg = "";
                     _recentCommits = [];
                     _viewer = false;
-                    _loadCore = null;
                     _loadNodes = {};
                     _loadError = 0;
                     cleanUsers();
@@ -545,10 +563,9 @@ define([
                 //TODO here we should first do the immediate event calculating
                 // then if not every object reachable we should start the normal loading
                 ASSERT(_project);
-                _loadCore = new SetCore(new Core(_project));
                 _loadNodes = {};
                 _loadError = 0;
-                _loadCore.loadRoot(newRootHash,function(err,root){
+                _core.loadRoot(newRootHash,function(err,root){
                     if(!err){
                         var missing = 0,
                             error = null;
@@ -566,12 +583,12 @@ define([
                             }
                         }
                         if(missing > 0){
-                            addNode(_loadCore,_loadNodes,root,function(err){
+                            addNode(_core,_loadNodes,root,function(err){
                                 error == error || err;
                                 if(!err){
                                     for(i in _users){
                                         for(j in _users[i].PATTERNS){
-                                            loadPattern(_loadCore,j,_users[i].PATTERNS[j],_loadNodes,function(err){
+                                            loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
                                                 error = error || err;
                                                 if(--missing === 0){
                                                     allLoaded();
@@ -599,8 +616,6 @@ define([
                 var finalEvents = function(){
                     if(_loadError > 0){
                         //we assume that our immediate load was only partial
-                        _core = _loadCore;
-                        _loadCore = null;
                         modifiedPaths = getModifiedNodes(_loadNodes);
                         _nodes = _loadNodes;
                         _loadNodes = {};
@@ -622,7 +637,6 @@ define([
                     }
                 });
                 //here we try to make an immediate event building
-                _core = _loadCore;
                 modifiedPaths = getModifiedNodes(_loadNodes);
                 _nodes = {};
                 for(var i in _loadNodes){
@@ -673,33 +687,7 @@ define([
                 } else {
                     closeOpenedProject(function(err){
                         //TODO what can we do with the error??
-                        _database.openProject(projectname,function(err,p){
-                            if(!err && p){
-                                var commit = new Commit(p);
-                                commit.getBranchNames(function(err,names){
-                                    if(!err && names){
-                                        _project = p;
-                                        openingProject(projectname);
-                                        _commit = commit;
-                                        _inTransaction = false;
-                                        _nodes={};
-                                        if(names['master']){
-                                            branchWatcher('master');
-                                        } else {
-                                            for(var i in names){
-                                                branchWatcher(names[i]);
-                                                break;
-                                            }
-                                        }
-                                        callback(null);
-                                    } else {
-                                        callback(err);
-                                    }
-                                });
-                            } else {
-                                callback(err);
-                            }
-                        });
+                        openProject(projectname,callback);
                     });
                 }
             }
@@ -1296,14 +1284,10 @@ define([
                             projectname = names[0];
                         }
                         if(!err && names && names.length>0){
-                            _database.openProject(projectname,function(err,p){
-                                _project = p;
-                                openingProject(projectname);
-                                _commit = new Commit(_project,{});
-                                _inTransaction = false;
-                                _forked = false;
-                                _nodes={};
-                                branchWatcher('master');
+                            openProject(projectname,function(err){
+                                if(err){
+                                    console.log(err);
+                                }
                             });
                         }
                     });

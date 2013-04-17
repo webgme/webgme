@@ -17,13 +17,16 @@ requirejs(['logManager',
     'common/CommonUtil',
     'storage/socketioserver',
     'storage/cache',
-    'storage/mongo'],function(
+    'storage/mongo',
+    'storage/log'],function(
     logManager,
     commonUtil,
     Server,
     Cache,
-    Mongo){
-    logManager.setLogLevel(logManager.logLevels.WARNING);
+    Mongo,
+    Log){
+    var logLevel = commonUtil.combinedserver.loglevel || logManager.logLevels.WARNING;
+    logManager.setLogLevel(logLevel);
     logManager.useColors(true);
     var Combined = function(parameters){
         var logger = logManager.create("combined-server");
@@ -72,11 +75,11 @@ requirejs(['logManager',
             });
         }).listen(commonUtil.combinedserver.port);
 
-        var storage = new Server(new Cache(new Mongo({
+        var storage = new Server(new Log(new Cache(new Mongo({
             host: commonUtil.combinedserver.mongoip,
             port: commonUtil.combinedserver.mongoport,
             database: commonUtil.combinedserver.mongodatabase
-        }),{}),{combined:http});
+        }),{}),{log:logManager.create('combined-server-storage')}),{combined:http,logger:iologger});
 
         storage.open();
     };

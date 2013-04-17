@@ -141,9 +141,10 @@ define(['common/Constants'], function (CONSTANTS) {
             //used by the client currently
             host            : 'http://kecskes.isis.vanderbilt.edu',
             port            : 80,
-            project         : "storage",
+            project         : "test",
 
             //used by the server
+            loglevel        : 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
             mongoip         : "129.59.105.239",
             mongoport       : 27017,
             mongodatabase   : "multi",
