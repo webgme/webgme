@@ -11,10 +11,12 @@ $show-more-panel-background-color: #F7F7F7;
 $show-more-panel-height: 36px;
 $show-more-panel-border: 1px solid #3a87ad;
 
+$table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
+
 .repositoryLogView {
   .commits {
     position: relative;
-    /*margin-top: 150px;*/
+    margin-top: 19px; //FOR TABLE LAYOUT POSITION MATCH
 
     /*DISABLE OUTER BORDER WHEN FOCUSED*/
     &:focus {
@@ -104,6 +106,51 @@ $show-more-panel-border: 1px solid #3a87ad;
 
     a:hover {
       text-decoration: none;
+    }
+  }
+
+  /********* TABLE LAYOUT STYLES ************/
+  table {
+    position: absolute;
+    top: 0px;
+    left: 15px;
+
+    tr {
+      height: $table-row-height;
+    }
+
+    th,
+    td {
+      padding: 0px;
+      line-height: 12px;
+      font-size: 12px;
+      white-space: nowrap;
+      vertical-align: middle;
+
+      .label {
+        margin-right: 2px;
+        font-size: 11px;
+        font-weight: normal;
+        height: 15px;
+      }
+
+      > .btn {
+        margin-left: 2px;
+        margin-right: 2px;
+      }
+
+      .control-group {
+        margin-bottom: 0px;
+      }
+    }
+
+    td:first-child {
+      border-top: 1px solid transparent;
+    }
+
+    &.table-hover tbody tr:hover > td,
+    &.table-hover tbody tr:hover > th {
+      background-color: rgba(245, 245, 245, 0.5);
     }
   }
 }

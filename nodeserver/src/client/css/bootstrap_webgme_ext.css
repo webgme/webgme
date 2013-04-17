@@ -210,3 +210,10 @@ input[type="submit"].btn.btn-micro {
     cursor: pointer;
 }
 
+/************ INPUT ****************/
+input.input-mini {
+    height: 12px;
+    line-height: 12px;
+    font-size: 12px;
+}
+
