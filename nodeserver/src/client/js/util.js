@@ -60,6 +60,19 @@ define([], function () {
             discover(obj, "");
 
             return result;
+        },
+
+        formattedDate: function (date) {
+            var result = '';
+
+            //toISOString --> 2013-04-17T19:40:00.574Z
+            //toUTCString --> Wed, 17 Apr 2013 19:40:15 GMT
+
+            if (_.isDate(date)) {
+                result = date.toUTCString();
+            }
+
+            return result;
         }
     }
 });
