@@ -293,8 +293,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				data: {
 					_mutable: true
 				},
-				rootid: ++rootCounter,
-				empty: EMPTY_DATA
+				rootid: ++rootCounter
 			};
 			root.data[HASH_ID] = "";
 			roots.push(root);
@@ -725,8 +724,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				age: 0,
 				children: [],
 				data: data,
-				rootid: ++rootCounter,
-				empty: EMPTY_DATA
+				rootid: ++rootCounter
 			};
 			roots.push(root);
 
@@ -840,7 +838,6 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				__test("children", node.children === null || node.children instanceof Array);
 				__test("children 2", (node.age === MAX_AGE) === (node.children === null));
 				__test("data", typeof node.data === "object" || typeof node.data === "string" || typeof node.data === "number");
-//				__test("coreid", getRoot(node).empty === EMPTY_DATA);
 
 				if (node.parent !== null) {
 					__test("age 2", node.age >= node.parent.age);
