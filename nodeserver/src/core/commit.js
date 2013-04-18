@@ -58,8 +58,7 @@ define([
                 getBranchNames: getBranchNames,
                 getBranchHash: getBranchHash,
                 setBranchHash: setBranchHash
-            }
-
+            };
         }
         return commit;
     });
