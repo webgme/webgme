@@ -1,6 +1,8 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'js/Controls/DropDownList'], function (logManager,
+                                               DropDownList) {
 
     var BranchManagerView;
 
@@ -17,12 +19,15 @@ define(['logManager'], function (logManager) {
         this._logger.warning("onSelectBranch is not overridden in Controller...params: '" + branchName + "'");
     };
 
+    BranchManagerView.prototype.onDropDownMenuOpen = function () {
+        this._logger.warning("onDropDownMenuOpen is not overridden in Controller...params");
+    };
+
     BranchManagerView.prototype._DOMBase = $('<div class="btn-group dropup"><button class="btn btn-micro"></button><button class="btn btn-micro dropdown-toggle" data-toggle="dropdown"><span class="caret"></span></button><ul class="dropdown-menu pull-right"></ul></div>');
 
     BranchManagerView.prototype._initializeUI = function (containerId) {
         var self = this,
-            err,
-            dropUpMenu = this._DOMBase.clone();
+            err;
 
         //get container first
         this._el = $("#" + containerId);
@@ -32,31 +37,36 @@ define(['logManager'], function (logManager) {
             throw err;
         }
 
-        this._el.empty().append(dropUpMenu);
+        this._el.empty().append();
 
-        this._btnBranch = dropUpMenu.find('.btn').first();
-        this._dropDownUL = dropUpMenu.find('ul.dropdown-menu').first();
+        this._dropUpMenu = new DropDownList({"dropUp": true,
+                                             "pullRight": true,
+                                             "size": "micro",
+                                             "sort": true,
+                                             "icon": "icon-random"});
 
-        this._dropDownUL.on('click', 'li', function (/*event*/) {
-            var val = $(this).data("val");
+        this._dropUpMenu.selectedValueChanged = function (val) {
             self.onSelectBranch(val);
-        });
+        };
+
+        this._dropUpMenu.dropDownMenuOpen = function () {
+            self.onDropDownMenuOpen();
+        };
+
+        this._el.append(this._dropUpMenu.getEl());
     };
 
     BranchManagerView.prototype.addBranch = function (name) {
-        var li = $('<li data-val="' + name +'"><a tabindex="-1" href="#">' + name + '</a></li>');
-
-        this._dropDownUL.append(li);
-
-        return li;
+        this._dropUpMenu.addItem({"text": name,
+                            "value": name});
     };
 
     BranchManagerView.prototype.clear = function () {
-        this._dropDownUL.empty();
+        this._dropUpMenu.clear();
     };
 
-    BranchManagerView.prototype.setSelectedBRanchName = function (branchName) {
-        this._btnBranch.text('BRANCH: ' + branchName);
+    BranchManagerView.prototype.setSelectedBranch = function (branchName) {
+        this._dropUpMenu.setSelectedValue(branchName);
     };
 
     return BranchManagerView;

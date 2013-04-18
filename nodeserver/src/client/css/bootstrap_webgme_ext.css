@@ -114,13 +114,19 @@
 /******************* MICRO BUTTON DEFINITION *******************/
 
 .btn-micro {
-    padding: 2px 6px;
-    font-size: 11px;
-    line-height: 9px; /* 17px;*/
+    padding: 0 6px;
+    font-size: 10.5px;
+    line-height: 14px;
 }
 
-.nowrap {
-    white-space: nowrap;
+.btn-micro .caret{
+    margin-top: 5px;
+}
+
+.btn-micro [class^="icon-"],
+.btn-micro [class*=" icon-"] {
+    margin-top: 0px;
+    margin-right: 1px;
 }
 
 button.btn.btn-micro,
@@ -130,7 +136,7 @@ input[type="submit"].btn.btn-micro {
 }
 
 .btn-group > .btn-micro {
-    font-size: 11px;
+    font-size: 10.5px;
 }
 
 .btn-group > .btn-micro + .dropdown-toggle {
@@ -140,11 +146,7 @@ input[type="submit"].btn.btn-micro {
     padding-left: 5px;
 }
 
-.btn-micro .caret {
-    margin-top: 3px; /*6px;*/
-}
-
-.btn-micro .tooltiplabel,
+.btn-micro .label,
 .btn-micro .badge {
     top: 0;
 }

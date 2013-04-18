@@ -16,11 +16,16 @@ define(['logManager'], function (logManager) {
         });
         this._client.addEventListener(this._client.events.PROJECT_CLOSED, function () {
             self._view.clear();
-            self._view.setSelectedBRanchName('NO OPEN PROJECT');
+            self._view.setSelectedBranch('NO OPEN PROJECT');
         });
 
         this._view.onSelectBranch = function (branchName) {
             self._selectBranch(branchName);
+        };
+
+        this._view.onDropDownMenuOpen = function () {
+            self._updateBranchList();
+            self._updateCurrentBranchInfo();
         };
 
         this._logger = logManager.create("BranchManagerControl");
@@ -47,6 +52,8 @@ define(['logManager'], function (logManager) {
                 while (i--) {
                     self._view.addBranch(data[i].name);
                 }
+
+                self._updateCurrentBranchInfo();
             }
         };
 
@@ -56,7 +63,7 @@ define(['logManager'], function (logManager) {
     BranchManagerControl.prototype._updateCurrentBranchInfo = function () {
         var branch = this._client.getActualBranch();
 
-        this._view.setSelectedBRanchName(branch);
+        this._view.setSelectedBranch(branch);
     };
 
     BranchManagerControl.prototype._selectBranch = function (branchName) {
