@@ -1,6 +1,7 @@
 define([
     'util/assert',
     'commonUtil',
+    'user/constants',
     'eventDispatcher',
     'core/core',
     'core/setcore',
@@ -12,6 +13,7 @@ define([
     function (
         ASSERT,
         commonUtil,
+        Constants,
         EventDispatcher,
         Core,
         SetCore,
@@ -67,13 +69,13 @@ define([
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
-                "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
-                "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
-                "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
-                "BRANCH_CHANGED"        : "BRANCH_CHANGED",
-                "ACTOR_CHANGED"         : "ACTOR_CHANGED",
-                "PROJECT_CLOSED"        : "PROJECT_CLOSED",
-                "PROJECT_OPENED"        : "PROJECT_OPENED"
+                "SELECTEDOBJECT_CHANGED": Constants.USER_EVENT_SELECTEDOBJECT_CHANGED,
+                "NETWORKSTATUS_CHANGED" : Constants.USER_EVENT_NETWORKSTATUS_CHANGED,
+                "BRANCHSTATUS_CHANGED"  : Constants.USER_EVENT_BRANCHSTATUS_CHANGED,
+                "BRANCH_CHANGED"        : Constants.USER_EVENT_BRANCH_CHANGED,
+                "ACTOR_CHANGED"         : Constants.USER_EVENET_ACTOR_CHANGED,
+                "PROJECT_CLOSED"        : Constants.USER_EVENT_PROJECT_CLOSED,
+                "PROJECT_OPENED"        : Constants.USER_EVENT_PROJECT_OPENED
             };
 
             function setSelectedObjectId(objectId) {
