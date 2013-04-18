@@ -462,8 +462,15 @@ define([
                     }
                 }
             }
-            function storeNode(node){
-                _nodes[_core.getStringPath(node)] = {node:node,hash:""};
+            function storeNode(node,basic){
+                basic = basic || true;
+                var path = _core.getStringPath(node);
+                if(_nodes[path]){
+                    //TODO we try to avoid this
+                } else {
+                    _nodes[path] = {node:node,hash:"",incomplete:true,basic:basic};
+                }
+                return path;
             }
             function addNode(core,nodesSoFar,node,callback){
                 var path = core.getStringPath(node);
@@ -517,6 +524,168 @@ define([
                     }
                 });
             }
+            function completeNode(core,nodesSoFar,node,callback){
+                if(core.getSetsNumber(node)>0){
+                    core.loadSets(node,function(err,sets){
+                        if(!err && sets ){
+                            var missing = sets.legnth;
+                            var error = null;
+                            var path = null;
+                            for(var i=0;i<sets.length;i++){
+                                path = core.getStringPath(sets[i]);
+                                if(!nodesSoFar[path]){
+                                    nodesSoFar[path] = {node:sets[i],hash:core.getSingleNodeHash(sets[i]),incomplete:false,basic:false};
+                                }
+                                if(core.getChildrenNumber(sets[i])>0){
+                                    core.loadChildren(sets[i],function(err,children){
+                                        error = error || err;
+                                        if(!err){
+                                            for(var j=0;j<children.length;j++){
+                                                path = core.getStringPath(children[j]);
+                                                if(!nodesSoFar[path]){
+                                                    nodesSoFar[path] = {node:children[j],hash:core.getSingleNodeHash(children[j]),incomplete:false,basic:false};
+                                                }
+                                            }
+                                        }
+
+                                        if(--missing === 0){
+                                            nodesSoFar[core.getStringPath(node)].incomplete = false;
+                                            callback(error);
+                                        }
+                                    });
+                                } else {
+                                    if(--missing === 0){
+                                        nodesSoFar[core.getStringPath(node)].incomplete = false;
+                                        callback(error);
+                                    }
+                                }
+                            }
+                        } else {
+                            callback(err);
+                        }
+                    });
+                } else {
+                    nodesSoFar[core.getStringPath(node)].incomplete = false;
+                    callback(null);
+                }
+            }
+            function loadChildrenPattern(core,nodesSoFar,node,level,callback){
+                var path = core.getStringPath(node);
+                if(!nodesSoFar[path]){
+                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
+                }
+                if(level>0){
+                    if(core.getChildrenNumber(nodesSoFar[path].node)>0){
+                        core.loadChildren(nodesSoFar[path].node,function(err,children){
+                            if(!err && children){
+                                var missing = children.length;
+                                var error = null;
+                                for(var i=0;i<children.length;i++){
+                                    loadChildrenPattern(core,nodesSoFar,children[i],level-1,function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            callback(error);
+                                        }
+                                    });
+                                }
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    } else {
+                        callback(null);
+                    }
+                } else {
+                    callback(null);
+                }
+            }
+            function loadPattern2(core,id,pattern,nodesSoFar,callback){
+                var base = null;
+                var baseLoaded = function(){
+                       if(pattern.children && pattern.children>0){
+                           var level = pattern.children;
+                           loadChildrenPattern(core,nodesSoFar,base,level,callback);
+                       } else {
+                           callback(null);
+                       }
+                };
+
+                if(nodesSoFar[id]){
+                    base = nodesSoFar[id].node;
+                    baseLoaded();
+                } else {
+                    core.loadByPath(id,function(err,node){
+                        if(!err && node){
+                            base = node;
+                            baseLoaded();
+                        } else {
+                            callback(err);
+                        }
+                    });
+                }
+            }
+            function loadRoot(newRootHash,callback){
+                _loadNodes = {};
+                _loadError = 0;
+                _core.loadRoot(newRootHash,function(err,root){
+                    if(!err){
+                        var missing = 0,
+                            error = null;
+                        _loadNodes[_core.getStringPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
+                        var completeNodes = function(){
+                            var incompletes = [];
+                            for(var i in _loadNodes){
+                                if(_loadNodes[i].incomplete){
+                                    incompletes.push(_loadNodes[i].node);
+                                }
+                            }
+                            var missing = incompletes.length;
+                            if(missing>0){
+                                var error = null;
+                                for(i=0;i<incompletes.length;i++){
+                                    completeNode(_core,_loadNodes,incompletes[i],function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            callback(error);
+                                        }
+                                    })
+                                }
+                            } else {
+                                callback(null);
+                            }
+                        };
+                        var allLoaded = function(){
+                            if(!error){
+                                completeNodes();
+                            } else {
+                                callback(error);
+                            }
+                        };
+
+                        for(var i in _users){
+                            for(var j in _users[i].PATTERNS){
+                                missing++;
+                            }
+                        }
+                        if(missing > 0){
+                            for(i in _users){
+                                for(j in _users[i].PATTERNS){
+                                    loadPattern2(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            allLoaded();
+                                        }
+                                    });
+                                }
+                            }
+                        } else {
+                            allLoaded();
+                        }
+                    } else {
+                        callback(err);
+                    }
+                });
+            }
             //this is just a first brute implementation it needs serious optimization!!!
             function loadPattern(core,id,pattern,nodesSoFar,callback){
                 callback = callback || function(){};
@@ -559,7 +728,7 @@ define([
                     }
                 });
             }
-            function loadRoot(newRootHash,callback){
+            function _loadRoot(newRootHash,callback){
                 //TODO here we should first do the immediate event calculating
                 // then if not every object reachable we should start the normal loading
                 ASSERT(_project);
@@ -651,6 +820,7 @@ define([
                     finalEvents();
                 }
             }
+
 
             function saveRoot(msg,callback){
                 if(!_viewer){

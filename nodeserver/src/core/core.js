@@ -478,7 +478,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 						target = tmp;
 					}
 
-					console.log(source, target);
+					//console.log(source, target);
 					overlayInsert(overlays, source, entry.n, target);
 				}
 
