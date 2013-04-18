@@ -1320,6 +1320,7 @@ define([
                 getActualBranch: getActualBranch,
                 createBranchAsync: createBranchAsync,
                 deleteBranchAsync: deleteBranchAsync,
+                selectBranchAsync: selectBranchAsync,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
 
 
