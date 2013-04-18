@@ -17,6 +17,8 @@ define([  'logManager',
     'js/SetEditor/SetEditorView',
     'js/SetEditor/SetEditorControl',
     'js/LoggerStatus/LoggerStatus',
+    'js/Repository/BranchManagerControl',
+    'js/Repository/BranchManagerView',
     'js/VisualizerPanel/VisualizerPanel',
     'text!js/Visualizers.json'], function (logManager,
                                             commonUtil,
@@ -34,6 +36,8 @@ define([  'logManager',
                                             SetEditorView,
                                             SetEditorControl,
                                             LoggerStatus,
+                                            BranchManagerControl,
+                                            BranchManagerView,
                                             VisualizerPanel,
                                             VisualizersJSON) {
 
@@ -89,7 +93,9 @@ define([  'logManager',
         visArray,
         selectedObjectChanged,
         demoHackInit,
-        onOneEvent;
+        onOneEvent,
+        branchManagerView,
+        branchManagerControl;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -217,6 +223,9 @@ define([  'logManager',
 
             networkStatusView = new NetworkStatusView("panNetworkStatus");
             networkStatusControl = new NetworkStatusControl(proxy, networkStatusView);
+
+            branchManagerView = new BranchManagerView("panBranchManager");
+            branchManagerControl = new BranchManagerControl(proxy, branchManagerView);
 
             projectTitleView = new ProjectTitleView("projectInfoContainer");
 
