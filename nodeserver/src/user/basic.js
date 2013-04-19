@@ -95,6 +95,19 @@ define([
             function clearSelectedObjectId() {
                 setSelectedObjectId(null);
             }
+            function connect(){
+                //this is when the user force to go online on network level
+                //TODO implement :) - but how, there is no such function on the storage's API
+            }
+
+            //branch handling functions
+            function goOffline(){
+                //TODO stop watching the branch changes
+            }
+            function goOnline(){
+                //TODO we should try to update the branch with our latest commit
+                //and 'restart' listening to branch changes
+            }
 
             function addCommit(commitHash){
                 _recentCommits.unshift(commitHash);
@@ -133,12 +146,12 @@ define([
                             if(_forked){
                                 if(!forked){
                                     _forked = false;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, 'online');
+                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
                                 }
                             } else {
                                 if(forked){
                                     _forked = true;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, 'forked');
+                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.FORKED);
                                 }
                             }
 
@@ -160,10 +173,16 @@ define([
                     }
                 };
 
-                _branch = branch;
-                _recentCommits = [""];
-                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);//TODO new event should be added here
-                _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                if(_branch !== branch){
+                    _branch = branch;
+                    _recentCommits = [""];
+                    _self.dispatchEvent(_self.events.BRANCH_CHANGED,_branch);
+                    _forked = false;
+                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
+                    _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                } else {
+                    callback(null);
+                }
             }
 
             function networkWatcher(){
@@ -1426,7 +1445,7 @@ define([
 
                 //ASSERT(_nodes[_id]);
 
-                if(_nodes[_id] && _nodes[_id].incomplete === false){
+                if(_nodes[_id] /*&& _nodes[_id].incomplete === false*/){
                     return {
                         getParentId : getParentId,
                         getId       : getId,
@@ -1488,6 +1507,7 @@ define([
                 dispatchEvent: _self.dispatchEvent,
                 setSelectedObjectId: setSelectedObjectId,
                 clearSelectedObjectId: clearSelectedObjectId,
+                connect: connect,
 
                 //projects, branch, etc.
                 getActiveProject: getActiveProject,
@@ -1503,6 +1523,8 @@ define([
                 createBranchAsync: createBranchAsync,
                 deleteBranchAsync: deleteBranchAsync,
                 selectBranchAsync: selectBranchAsync,
+                goOffline: goOffline,
+                goOnline: goOnline,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
 
 

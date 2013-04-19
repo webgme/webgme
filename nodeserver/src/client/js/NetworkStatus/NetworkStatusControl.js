@@ -11,35 +11,47 @@ define(['logManager'], function (logManager) {
         this._view = myView;
 
         //override view event handlers
-        this._view.onNetworkStatusButtonClicked = function (newState) {
-            switch (newState) {
-            case "go_online":
+        this._view.onNetworkStatusButtonClicked = function (val) {
+            if (val === 'go_online') {
                 self._client.goOnline();
-                break;
-            case "go_offline":
+            } else if (val === 'go_offline') {
                 self._client.goOffline();
-                break;
+            }
+        };
+
+        this._view.onBranchStatusButtonClicked = function (val) {
+            if (val === 'connect') {
+                self._client.connect();
             }
         };
 
         this._client.addEventListener(this._client.events.NETWORKSTATUS_CHANGED, function (__project, state) {
             switch (state) {
-            case "offline":
-                self._view.stateChanged("offline");
-                break;
-            case "online":
-                self._view.stateChanged("online");
-                break;
-            case "nonetwork":
-                self._view.stateChanged("nonetwork");
-                break;
+                case self._client.networkStates.CONNECTED:
+                    self._view.networkStateChanged(self._view.NETWORK_STATES.CONNECTED);
+                    break;
+                case self._client.networkStates.DISCONNECTED:
+                    self._view.networkStateChanged(self._view.NETWORK_STATES.DISCONNECTED);
+                    break;
+            }
+        });
+
+        this._client.addEventListener(this._client.events.BRANCHSTATUS_CHANGED, function (__project, state) {
+            switch (state) {
+                case self._client.branchStates.SYNC:
+                    self._view.branchStateChanged(self._view.BRANCH_STATES.INSYNC);
+                    break;
+                case self._client.branchStates.FORKED:
+                    self._view.branchStateChanged(self._view.BRANCH_STATES.FORKED);
+                    break;
+                case self._client.branchStates.OFFLINE:
+                    self._view.branchStateChanged(self._view.BRANCH_STATES.OFFLINE);
+                    break;
             }
         });
 
         this._logger = logManager.create("NetworkStatusControl");
         this._logger.debug("Created");
-
-
     };
 
     return NetworkStatusControl;

@@ -37,7 +37,7 @@ define(['logManager',
             throw err;
         }
 
-        this._el.empty().append();
+        this._el.empty();
 
         this._dropUpMenu = new DropDownList({"dropUp": true,
                                              "pullRight": true,
