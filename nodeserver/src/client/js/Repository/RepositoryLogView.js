@@ -27,13 +27,10 @@ define(['logManager',
         ITEM_WIDTH = 8,     //RepositoryLogView.css - $item-size
         ITEM_HEIGHT = 8,    //RepositoryLogView.css - $item-size
         LINE_CORNER_SIZE = 5,
-        HEADMARKER_Y_SHIFT = -11,
-        HEADMARKER_X_SHIFT = 10,
         NON_EXISTING_PARENT_LINE_FILL_COLOR = '#000000',
         NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1',
         LABEL_CLASS_LOCAL_HEAD = 'local-head',
         LABEL_CLASS_REMOTE_HEAD = 'remote-head',
-        TABLE_LAYOUT = true,
         CREATE_BRANCH_EDIT_CONTROL_CLASS = 'create-branch-from-commit';
 
     RepositoryLogView = function (container) {
@@ -188,20 +185,21 @@ define(['logManager',
 
         this._showMoreContainer.append(this._btnShowMore);
 
-        if (TABLE_LAYOUT === true) {
-            /*table layout*/
-            this._table = $('<table/>', {"class": "table table-hover"});
-            this._tHead = $('<thead/>');
-            this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
-            this._tBody = $('<tbody/>');
+        /*table layout*/
+        this._table = $('<table/>', {"class": "table table-hover"});
+        this._tHead = $('<thead/>');
+        this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
+        this._tBody = $('<tbody/>');
 
-            this._table.append(this._tHead).append(this._tBody);
+        this._table.append(this._tHead).append(this._tBody);
 
-            this._tableCellActionsIndex = 1;
-            this._tableCellMessageIndex = 3;
+        this._tableCellActionsIndex = 1;
+        this._tableCellCommitIDIndex = 2;
+        this._tableCellMessageIndex = 3;
+        this._tableCellUserIndex = 4;
+        this._tableCellTimeStampIndex = 5;
 
-            this._el.append(this._table);
-        }
+        this._el.append(this._table);
 
         this._el.on("click.btnLoadCommit", ".btnLoadCommit", function () {
             var btn = $(this),
@@ -360,10 +358,7 @@ define(['logManager',
             this._svgPaper.clear();
 
             this._removeHeaderLabels();
-
-            if (this._tBody) {
-                this._tBody.empty();
-            }
+            this._tBody.empty();
         }
 
         //draw the commit points
@@ -433,14 +428,6 @@ define(['logManager',
             this._branches[i].remoteHeadUI = false;
             this._branches[i].localHeadUI = false;
         }
-
-        i = this._commits.length;
-        while (i--) {
-            if (this._commits[i].labels) {
-                this._commits[i].labels.remove();
-                this._commits[i].labels = undefined;
-            }
-        }
     };
 
     RepositoryLogView.prototype._applyHeaderLabels = function () {
@@ -466,47 +453,39 @@ define(['logManager',
         }
     };
 
+    RepositoryLogView.prototype._labelDOMBase = $('<span class="label"><i data-branch="" class="icon-remove icon-white" title="Delete branch"></i></span>');
 
     RepositoryLogView.prototype._applyHeaderLabel = function (commit, branchName, headerType) {
-        var headMarkerEl = commit.labels,
-            remoteLocalPostFix =  ' @ ' + (headerType === REMOTE_HEADER ? 'remote' : 'local'),
-            label = $('<div class="tooltiplabel right"><div class="tooltiplabel-arrow"></div><div class="tooltiplabel-inner">' + branchName + remoteLocalPostFix + '<i data-branch="' + branchName + '" class="icon-remove icon-white" title="Delete branch"></i></div></div>'),
-            label2 = $('<span class="label">' + branchName + remoteLocalPostFix + '<i data-branch="' + branchName + '" class="icon-remove icon-white" title="Delete branch"></i></span>');
+        var remoteLocalPostFix =  ' @ ' + (headerType === REMOTE_HEADER ? 'remote' : 'local'),
+            label = this._labelDOMBase.clone(),
+            td;
 
-        if (headMarkerEl === undefined) {
-            commit.labels = $('<div class="' + COMMIT_LABEL_WRAPPER + '"></div>');
-            headMarkerEl = commit.labels;
-
-            headMarkerEl.css({"top": commit.y + HEADMARKER_Y_SHIFT,
-                "left": commit.x + HEADMARKER_X_SHIFT});
-
-            this._commitsContainer.append(headMarkerEl);
-        }
+        label.prepend(branchName + remoteLocalPostFix);
+        label.find('i').attr("data-branch",branchName);
 
         if (headerType === REMOTE_HEADER) {
-            label.addClass(LABEL_CLASS_REMOTE_HEAD);
-            label2.addClass('label-important');
+            label.addClass('label-important');
 
             if (branchName === MASTER_BRANCH_NAME) {
                 label.find('.icon-remove').remove();
-                label2.find('.icon-remove').remove();
             }
         } else {
-            label.addClass(LABEL_CLASS_LOCAL_HEAD);
-            label2.addClass('label-info');
+            label.addClass('label-info');
         }
 
-        if (this._tBody) {
-            var td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
-            td.insertBefore(label2[0], td.childNodes[0]);
-        } else {
-            headMarkerEl.append(label);
-        }
+        td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
+        td.insertBefore(label[0], td.childNodes[0]);
     };
+
+    RepositoryLogView.prototype._trDOMBase = $('<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
+    RepositoryLogView.prototype._createBranhcBtnDOMBase = $('<a class="btn btn-mini btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="icon-edit"></i></a>');
+    RepositoryLogView.prototype._switchToCommitBtnDOMBase = $('<a class="btn btn-mini btnLoadCommit" href="#" title="Switch to this commit"><i class="icon-share"></i></a>');
 
 
     RepositoryLogView.prototype._createItem = function (params) {
-        var itemObj;
+        var itemObj,
+            tr,
+            btn;
 
         itemObj =  $('<div/>', {
             "class" : COMMIT_ITEM_CLASS,
@@ -526,21 +505,27 @@ define(['logManager',
         this._width = Math.max(this._width,  params.x + ITEM_WIDTH);
         this._height = Math.max(this._height,  params.y + ITEM_HEIGHT);
 
-        if (this._tBody) {
-            var tr = $('<tr><td></td><td></td><td>' + params.id + '</td><td>' + params.message + '</td><td>' + (params.user || '') + '</td><td>' + util.formattedDate(new Date(parseInt(params.timestamp, 10))) + '</td></tr>');
-            //generate 'Create branch from here' button
-            var btn = $('<a class="btn btn-mini btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="icon-edit"></i></a>');
+        //generate table row for this guy
+        tr = this._trDOMBase.clone();
+
+        //fill the data into the columns
+        $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
+        $(tr[0].cells[this._tableCellMessageIndex]).append(params.message);
+        $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
+        $(tr[0].cells[this._tableCellTimeStampIndex]).append( util.formattedDate(new Date(parseInt(params.timestamp, 10))));
+
+        //generate 'Create branch from here' button
+        btn = this._createBranhcBtnDOMBase.clone();
+        btn.data("commitid", params.id);
+        tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
+        if (params.actual !== true) {
+            //generate 'switch to this commit' button
+            btn = this._switchToCommitBtnDOMBase.clone();
             btn.data("commitid", params.id);
             tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
-            if (params.actual !== true) {
-                //generate 'switch to this commit' button
-                btn = $('<a class="btn btn-mini btnLoadCommit" href="#" title="Switch to this commit"><i class="icon-share"></i></a>');
-                btn.data("commitid", params.id);
-                tr[0].cells[this._tableCellActionsIndex].appendChild(btn[0]);
-            }
-
-            this._tBody.append(tr);
         }
+
+        this._tBody.append(tr);
 
         return itemObj;
     };
@@ -601,16 +586,15 @@ define(['logManager',
             wH = $(window).height(),
             wW = $(window).width(),
             repoDialog = $(".repoHistoryDialog"),
-            dBody = repoDialog.find(".modal-body");
+            dBody = repoDialog.find(".modal-body"),
+            th;
 
         this._svgPaper.setSize(contentWidth, contentHeight);
         this._generateSVGGradientDefinition();
 
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
-        if (this._tHead) {
-            var th = $(this._tHead.children()[0].cells[0]);
-            th.css("width", contentWidth);
-        }
+        th = $(this._tHead.children()[0].cells[0]);
+        th.css("width", contentWidth);
 
         //make it almost "full screen"
         wW = wW - 2 * WINDOW_PADDING;
