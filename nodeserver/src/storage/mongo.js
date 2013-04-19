@@ -70,7 +70,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				}, {
 					connection: conn
 				}, function (err, res) {
-					error = error || err || res[0].err;
+					// ignoring the last error, just forcing all commands through
+					error = error || err;
+
 					if (++synced === conns.length) {
 						callback(error);
 					}
@@ -188,7 +190,22 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				ASSERT(object !== null && typeof object === "object");
 				ASSERT(typeof object._id === "string" && HASH_REGEXP.test(object._id));
 
-				collection.insert(object, callback);
+				collection.insert(object, function (err) {
+					// manually check duplicate keys
+					if (err && err.code === 11000) {
+						collection.findOne({
+							_id: object._id
+						}, function (err2, data) {
+							if (!err2 && JSON.stringify(object) === JSON.stringify(data)) {
+								callback(null);
+							} else {
+								callback(err);
+							}
+						});
+					} else {
+						callback(err);
+					}
+				});
 			}
 
 			function findHash (beginning, callback) {
@@ -317,11 +334,18 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 				}
 			}
 
-			function getCommits(before,number,callback){
+			function getCommits (before, number, callback) {
 				//TODO we should think whether this needs options or not
 				ASSERT(typeof callback === 'function');
 
-                collection.find({type:'commit',time:{$lt:before}}).limit(number).sort({$natural:-1}).toArray(callback);
+				collection.find({
+					type: 'commit',
+					time: {
+						$lt: before
+					}
+				}).limit(number).sort({
+					$natural: -1
+				}).toArray(callback);
 			}
 		}
 

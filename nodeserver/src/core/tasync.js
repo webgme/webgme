@@ -33,7 +33,7 @@
 
 	Future.prototype.register = function (target) {
 		assert(this.state === STATE_LISTEN);
-		assert(typeof target === "object" && target != null);
+		assert(typeof target === "object" && target !== null);
 
 		this.value.push(target);
 	};
@@ -123,7 +123,9 @@
 	};
 
 	var array = function (array) {
-		assert(array instanceof Array);
+		if (!(array instanceof Array)) {
+			throw new Error("array argument is expected");
+		}
 
 		var index;
 		for (index = 0; index < array.length; ++index) {
@@ -271,7 +273,11 @@
 	};
 
 	var apply = function apply_trace_end (func, args, that) {
-		assert(typeof func === "function" && args instanceof Array);
+		if (typeof func !== "function") {
+			throw new Error("function argument is expected");
+		} else if (!(args instanceof Array)) {
+			throw new Error("array argument is expected");
+		}
 
 		var index = args.length;
 		while (--index >= 0) {
@@ -307,7 +313,9 @@
 	};
 
 	function then (value, func, that) {
-		assert(typeof func === "function");
+		if (typeof func !== "function") {
+			throw new Error("function argument is expected");
+		}
 
 		if (value instanceof Future) {
 			if (value.state === STATE_LISTEN) {
@@ -328,7 +336,9 @@
 	// ------- Adapt -------
 
 	function adapt (func) {
-		assert(typeof func === "function");
+		if (typeof func !== "function") {
+			throw new Error("function argument is expected");
+		}
 
 		if (typeof func.tasync_adapted === "undefined") {
 			func.tasync_adapted = function () {
@@ -376,7 +386,9 @@
 	};
 
 	function unadapt (func) {
-		assert(typeof func === "function");
+		if (typeof func !== "function") {
+			throw new Error("function argument is expected");
+		}
 
 		if (typeof func.tasync_unadapted === "undefined") {
 			func.tasync_unadapted = function () {
@@ -527,7 +539,11 @@
 
 	// TODO: prevent recursion, otheriwise throttle will not work
 	function throttle (func, limit) {
-		assert(typeof func === "function" && typeof limit === "number");
+		if (typeof func !== "function") {
+			throw new Error("function argument is expected");
+		} else if (typeof limit !== "number") {
+			throw new Error("number argument is expected");
+		}
 
 		var listener = new ThrottleListener(limit);
 

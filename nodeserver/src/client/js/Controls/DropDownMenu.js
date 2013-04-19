@@ -36,6 +36,8 @@ define(['jquery'], function () {
     DropDownMenu.prototype._initialize = function (params) {
         var self = this;
 
+        this._sorted = false;
+
         //create control UI
         this._el = this._DOMBase.clone();
 

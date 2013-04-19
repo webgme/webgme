@@ -209,6 +209,11 @@ define([  'logManager',
                     projectTitleView.refresh(proxy);
                 }
             });
+            proxy.addEventListener(proxy.events.BRANCH_CHANGED, function () {
+                if (projectTitleView) {
+                    projectTitleView.refresh(proxy);
+                }
+            });
 
             tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
 
