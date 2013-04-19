@@ -1445,7 +1445,7 @@ define([
 
                 //ASSERT(_nodes[_id]);
 
-                if(_nodes[_id] && _nodes[_id].incomplete === false){
+                if(_nodes[_id] /*&& _nodes[_id].incomplete === false*/){
                     return {
                         getParentId : getParentId,
                         getId       : getId,
