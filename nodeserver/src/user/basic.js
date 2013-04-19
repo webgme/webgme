@@ -73,9 +73,17 @@ define([
                 "NETWORKSTATUS_CHANGED" : Constants.USER_EVENT_NETWORKSTATUS_CHANGED,
                 "BRANCHSTATUS_CHANGED"  : Constants.USER_EVENT_BRANCHSTATUS_CHANGED,
                 "BRANCH_CHANGED"        : Constants.USER_EVENT_BRANCH_CHANGED,
-                "ACTOR_CHANGED"         : Constants.USER_EVENET_ACTOR_CHANGED,
                 "PROJECT_CLOSED"        : Constants.USER_EVENT_PROJECT_CLOSED,
                 "PROJECT_OPENED"        : Constants.USER_EVENT_PROJECT_OPENED
+            };
+            _self.networkStates = {
+                'CONNECTED' :"connected",
+                'DISCONNECTED' : "socket.io is disconnected"
+            };
+            _self.branchStates = {
+                'SYNC'    : 'inSync',
+                'FORKED'  : 'forked',
+                'OFFLINE' : 'offline'
             };
 
             function setSelectedObjectId(objectId) {
@@ -165,7 +173,7 @@ define([
                     if(!err && newstatus && status !== newstatus){
                         status = newstatus;
                         //TODO we should remove this mapping
-                        switch (status){
+                        /*switch (status){
                             case 'connected':
                                 outstatus = 'online';
                                 break;
@@ -175,8 +183,8 @@ define([
                             default:
                                 outstatus = 'offline';
                                 break;
-                        }
-                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, outstatus);
+                        }*/
+                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, status);
                     }
                     return _database.getDatabaseStatus(status,dbStatusUpdated);
                 };
@@ -1418,7 +1426,7 @@ define([
 
                 //ASSERT(_nodes[_id]);
 
-                if(_nodes[_id]){
+                if(_nodes[_id] && _nodes[_id].incomplete === false){
                     return {
                         getParentId : getParentId,
                         getId       : getId,
@@ -1470,6 +1478,8 @@ define([
             return {
                 //eventer
                 events: _self.events,
+                networkSates: _self.networkSates,
+                branchStates: _self.branchStates,
                 _eventList: _self._eventList,
                 _getEvent: _self._getEvent,
                 addEventListener: _self.addEventListener,
