@@ -146,12 +146,12 @@ define([
                             if(_forked){
                                 if(!forked){
                                     _forked = false;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, 'online');
+                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
                                 }
                             } else {
                                 if(forked){
                                     _forked = true;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, 'forked');
+                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.FORKED);
                                 }
                             }
 
@@ -173,10 +173,16 @@ define([
                     }
                 };
 
-                _branch = branch;
-                _recentCommits = [""];
-                _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);//TODO new event should be added here
-                _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                if(_branch !=== branch){
+                    _branch = branch;
+                    _recentCommits = [""];
+                    _self.dispatchEvent(_self.events.BRANCH_CHANGED,_branch);
+                    _forked = false;
+                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
+                    _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                } else {
+                    callback(null);
+                }
             }
 
             function networkWatcher(){
