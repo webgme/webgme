@@ -53,7 +53,7 @@ define([
                 _core = null,
                 _selectedObjectId = null,
                 _branch = null,
-                _forked = false,
+                _branchState = null,
                 _nodes = {},
                 _inTransaction = false,
                 _users = {},
@@ -65,7 +65,8 @@ define([
                 _viewer = false,
                 _loadNodes = {},
                 _loadError = 0,
-                _commitCache = null;
+                _commitCache = null,
+                _offline = false;
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
@@ -95,6 +96,12 @@ define([
             function clearSelectedObjectId() {
                 setSelectedObjectId(null);
             }
+            function changeBranchState(newstate){
+                if(_branchState !== newstate){
+                    _branchState = newstate;
+                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED,_branchState);
+                }
+            }
             function connect(){
                 //this is when the user force to go online on network level
                 //TODO implement :) - but how, there is no such function on the storage's API
@@ -103,10 +110,15 @@ define([
             //branch handling functions
             function goOffline(){
                 //TODO stop watching the branch changes
+                _offline = true;
+                changeBranchState(_self.branchStates.OFFLINE);
             }
             function goOnline(){
                 //TODO we should try to update the branch with our latest commit
                 //and 'restart' listening to branch changes
+                if(_offline){
+                    branchWatcher(_branch);
+                }
             }
 
             function addCommit(commitHash){
@@ -121,7 +133,7 @@ define([
                 callback = callback || function(){};
                 var myCallback = null;
                 var branchHashUpdated = function(err,newhash,forked){
-                    if(branch === _branch){
+                    if(branch === _branch && !_offline){
                         if(!err && newhash){
                             if(_recentCommits.indexOf(newhash) === -1){
 
@@ -142,16 +154,14 @@ define([
                                 myCallback();
                             }
 
-                            //checking the change of forked status
-                            if(_forked){
-                                if(!forked){
-                                    _forked = false;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
-                                }
+                            //branch status update
+                            if(_offline){
+                                changeBranchState(_self.branchStates.OFFLINE);
                             } else {
                                 if(forked){
-                                    _forked = true;
-                                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.FORKED);
+                                    changeBranchState(_self.branchStates.FORKED);
+                                } else {
+                                    changeBranchState(_self.branchStates.SYNC);
                                 }
                             }
 
@@ -175,13 +185,21 @@ define([
 
                 if(_branch !== branch){
                     _branch = branch;
+                    _viewer = false;
+                    _offline = false;
                     _recentCommits = [""];
                     _self.dispatchEvent(_self.events.BRANCH_CHANGED,_branch);
-                    _forked = false;
-                    _self.dispatchEvent(_self.events.BRANCHSTATUS_CHANGED, _self.branchStates.SYNC);
+                    changeBranchState(_self.branchStates.SYNC);
                     _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                 } else {
-                    callback(null);
+                    if(_offline){
+                        _viewer = false;
+                        _offline = false;
+                        changeBranchState(_self.branchStates.SYNC);
+                        _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                    } else {
+                        callback(null);
+                    }
                 }
             }
 
@@ -317,7 +335,6 @@ define([
                         _project = p;
                         _projectName = name;
                         _inTransaction = false;
-                        _forked = false;
                         _nodes = {};
                         _core = new SetCore(new Core(_project));
                         _commit = new Commit(_project,{});
@@ -385,6 +402,7 @@ define([
                     _viewer = false;
                     _loadNodes = {};
                     _loadError = 0;
+                    _offline = false;
                     cleanUsers();
                     _self.dispatchEvent(_self.events.PROJECT_CLOSED);
 
@@ -852,6 +870,7 @@ define([
 
 
             function saveRoot(msg,callback){
+                callback = callback || function(){};
                 if(!_viewer){
                     _msg +="\n"+msg;
                     if(!_inTransaction){
@@ -862,6 +881,7 @@ define([
                         addCommit(newCommitHash);
                         _commit.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
                             //TODO now what??? - could we screw up?
+                            callback(err);
                         });
                         loading(newRootHash);
                     }
