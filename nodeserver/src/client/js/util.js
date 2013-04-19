@@ -62,14 +62,49 @@ define([], function () {
             return result;
         },
 
-        formattedDate: function (date) {
-            var result = '';
+        formattedDate: function (date, format) {
+            var result = '',
+                currentDate = new Date(),
+                delta;
+
+            format = format || 'UTC';
 
             //toISOString --> 2013-04-17T19:40:00.574Z
             //toUTCString --> Wed, 17 Apr 2013 19:40:15 GMT
 
             if (_.isDate(date)) {
-                result = date.toUTCString();
+                if (format === 'UTC') {
+                    result = date.toUTCString();
+                } else if (format === 'elapsed') {
+                    delta = (currentDate - date) / 1000;    //elapsed time in seconds
+
+                    if (delta < 60) {
+                        result = Math.round(delta) + ' seconds ago';
+                    } else {
+                        delta = delta / 60;
+                        if (delta < 60) {
+                            result = Math.round(delta) + ' minutes ago';
+                        } else {
+                            delta = delta / 60;
+                            if (delta < 24) {
+                                result = Math.round(delta) + ' hours ago';
+                            } else {
+                                delta = delta / 24;
+                                if (delta < 30) {
+                                    result = Math.round(delta) + ' days ago';
+                                } else {
+                                    delta = delta / 30;
+                                    if (delta < 12) {
+                                        result = Math.round(delta) + ' months ago';
+                                    } else {
+                                        delta = delta / 12;
+                                        result = Math.round(delta) + ' years ago';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             return result;

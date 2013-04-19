@@ -512,7 +512,7 @@ define(['logManager',
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
         $(tr[0].cells[this._tableCellMessageIndex]).append(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
-        $(tr[0].cells[this._tableCellTimeStampIndex]).append( util.formattedDate(new Date(parseInt(params.timestamp, 10))));
+        $(tr[0].cells[this._tableCellTimeStampIndex]).append( util.formattedDate(new Date(parseInt(params.timestamp, 10)), 'elapsed'));
 
         //generate 'Create branch from here' button
         btn = this._createBranhcBtnDOMBase.clone();
