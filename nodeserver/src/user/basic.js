@@ -173,7 +173,7 @@ define([
                     }
                 };
 
-                if(_branch !=== branch){
+                if(_branch !== branch){
                     _branch = branch;
                     _recentCommits = [""];
                     _self.dispatchEvent(_self.events.BRANCH_CHANGED,_branch);
