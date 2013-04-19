@@ -12,16 +12,16 @@ define(['logManager'], function (logManager) {
 
         //override view event handlers
         this._view.onNetworkStatusButtonClicked = function (val) {
-            if (val === 'go_online') {
-                self._client.goOnline();
-            } else if (val === 'go_offline') {
-                self._client.goOffline();
+            if (val === 'connect') {
+                self._client.connect();
             }
         };
 
         this._view.onBranchStatusButtonClicked = function (val) {
-            if (val === 'connect') {
-                self._client.connect();
+            if (val === 'go_online') {
+                self._client.goOnline();
+            } else if (val === 'go_offline') {
+                self._client.goOffline();
             }
         };
 
