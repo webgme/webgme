@@ -1478,7 +1478,7 @@ define([
             return {
                 //eventer
                 events: _self.events,
-                networkSates: _self.networkSates,
+                networkStates: _self.networkStates,
                 branchStates: _self.branchStates,
                 _eventList: _self._eventList,
                 _getEvent: _self._getEvent,
