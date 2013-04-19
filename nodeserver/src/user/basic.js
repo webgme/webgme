@@ -95,6 +95,19 @@ define([
             function clearSelectedObjectId() {
                 setSelectedObjectId(null);
             }
+            function connect(){
+                //this is when the user force to go online on network level
+                //TODO implement :) - but how, there is no such function on the storage's API
+            }
+
+            //branch handling functions
+            function goOffline(){
+                //TODO stop watching the branch changes
+            }
+            function goOnline(){
+                //TODO we should try to update the branch with our latest commit
+                //and 'restart' listening to branch changes
+            }
 
             function addCommit(commitHash){
                 _recentCommits.unshift(commitHash);
@@ -1488,6 +1501,7 @@ define([
                 dispatchEvent: _self.dispatchEvent,
                 setSelectedObjectId: setSelectedObjectId,
                 clearSelectedObjectId: clearSelectedObjectId,
+                connect: connect,
 
                 //projects, branch, etc.
                 getActiveProject: getActiveProject,
@@ -1503,6 +1517,8 @@ define([
                 createBranchAsync: createBranchAsync,
                 deleteBranchAsync: deleteBranchAsync,
                 selectBranchAsync: selectBranchAsync,
+                goOffline: goOffline,
+                goOnline: goOnline,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
 
 
