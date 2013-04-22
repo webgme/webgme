@@ -37,17 +37,17 @@ requirejs([ "util/assert", "core/coretree", "storage/mongo", "core/tasync", "cor
 
 		var done = TASYNC.adapt(FUTURE.unadapt(coretree.persist))(r1);
 
-		return TASYNC.apply(function () {
+		return TASYNC.call(function () {
 			b1 = coretree.getChild(r1, "b");
 			c1 = coretree.getChild(r1, "c");
 
 			console.log(coretree.getKeys(r1));
 
 			done = TASYNC.adapt(FUTURE.unadapt(coretree.loadRoot))(coretree.getHash(r1));
-			return TASYNC.apply(function (node) {
+			return TASYNC.call(function (node) {
 				console.log(node);
-			}, [ done ]);
-		}, [ done ]);
+			}, done);
+		}, done);
 	}
 
 	// ------- setup
@@ -60,28 +60,28 @@ requirejs([ "util/assert", "core/coretree", "storage/mongo", "core/tasync", "cor
 		console.log("opening database");
 		var done = TASYNC.adapt(database.openDatabase)();
 
-		done = TASYNC.apply(function () {
+		done = TASYNC.call(function () {
 			console.log("opening project");
 			return TASYNC.adapt(database.openProject)("test");
-		}, [ done ]);
+		}, done);
 
 		var project;
-		done = TASYNC.apply(function (p) {
+		done = TASYNC.call(function (p) {
 			console.log("testing");
 			project = p;
 			var coretree = new CoreTree(project, {});
 			return test(coretree);
-		}, [ done ]);
+		}, done);
 
-		done = TASYNC.apply(function () {
+		done = TASYNC.call(function () {
 			console.log("closing project");
 			return TASYNC.adapt(project.closeProject)();
-		}, [ done ]);
+		}, done);
 
-		done = TASYNC.apply(function () {
+		done = TASYNC.call(function () {
 			console.log("closing database");
 			return TASYNC.adapt(database.closeDatabase)();
-		}, [ done ]);
+		}, done);
 
 		TASYNC.then(done, function (err) {
 			if (err) {

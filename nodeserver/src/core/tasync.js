@@ -82,16 +82,16 @@
 
 	// ------- Array -------
 
-	var ArrayFuture = function (array, index) {
+	var FutureArray = function (array, index) {
 		Future.call(this);
 
 		this.array = array;
 		this.index = index;
 	};
 
-	ArrayFuture.prototype = Object.create(Future.prototype);
+	FutureArray.prototype = Object.create(Future.prototype);
 
-	ArrayFuture.prototype.onResolved = function (value) {
+	FutureArray.prototype.onResolved = function (value) {
 		assert(this.state === STATE_LISTEN);
 
 		var array = this.array;
@@ -117,7 +117,7 @@
 		this.resolve(array);
 	};
 
-	ArrayFuture.prototype.onRejected = function (error) {
+	FutureArray.prototype.onRejected = function (error) {
 		this.array = null;
 		this.reject(error);
 	};
@@ -134,7 +134,7 @@
 				if (value.state === STATE_RESOLVED) {
 					array[index] = value.value;
 				} else if (value.state === STATE_LISTEN) {
-					var future = new ArrayFuture(array, index);
+					var future = new FutureArray(array, index);
 					value.register(future);
 					return future;
 				} else {
@@ -155,7 +155,7 @@
 
 	var FRAME = ROOT;
 
-	function ApplyFuture (func, that, args, index) {
+	function FutureApply (func, that, args, index) {
 		Future.call(this);
 
 		this.caller = FRAME;
@@ -172,9 +172,9 @@
 		this.index = index;
 	}
 
-	ApplyFuture.prototype = Object.create(Future.prototype);
+	FutureApply.prototype = Object.create(Future.prototype);
 
-	ApplyFuture.prototype.getPath = function () {
+	FutureApply.prototype.getPath = function () {
 		var future = this.caller, path = [ this.position ];
 
 		while (future !== ROOT) {
@@ -208,12 +208,29 @@
 		return trace.substring(start, end);
 	}
 
-	ApplyFuture.prototype.onRejected = function (error) {
+	function createError (error, future) {
+		if (!(error instanceof Error)) {
+			error = new Error(error);
+		}
+
+		if (TASYNC_TRACE_ENABLE) {
+			error.trace = getSlice(error.stack);
+			do {
+				error.trace += "*** callback ***\n";
+				error.trace += getSlice(future.trace.stack);
+				future = future.caller;
+			} while (future !== ROOT);
+		}
+
+		return error;
+	}
+
+	FutureApply.prototype.onRejected = function (error) {
 		this.args = null;
 		this.reject(error);
 	};
 
-	ApplyFuture.prototype.onResolved = function apply_on_resolved_trace_start (value) {
+	FutureApply.prototype.onResolved = function apply_on_resolved_trace_start (value) {
 		assert(this.state === STATE_LISTEN);
 
 		var args = this.args;
@@ -244,19 +261,7 @@
 		} catch (error) {
 			FRAME = ROOT;
 
-			value = error instanceof Error ? error : new Error(error);
-
-			if (TASYNC_TRACE_ENABLE) {
-				value.trace = getSlice(value.stack);
-				var future = this;
-				do {
-					value.trace += "*** callback ***\n";
-					value.trace += getSlice(future.trace.stack);
-					future = future.caller;
-				} while (future !== ROOT);
-			}
-
-			this.reject(value);
+			this.reject(createError(error, this));
 			return;
 		}
 
@@ -284,7 +289,7 @@
 			var value = args[index];
 			if (value instanceof Future) {
 				if (value.state === STATE_LISTEN) {
-					var future = new ApplyFuture(func, that, args, index);
+					var future = new FutureApply(func, that, args, index);
 					value.register(future);
 					return future;
 				} else if (value.state === STATE_RESOLVED) {
@@ -299,15 +304,110 @@
 		return func.apply(that, args);
 	};
 
-	// ------- Then -------
+	// ------- Call -------
 
-	function ThenFuture (func, that, value) {
-		ApplyFuture.call(this, func, that, [ null, value ], 1);
+	function FutureCall (args, index) {
+		Future.call(this);
+
+		this.caller = FRAME;
+		this.position = ++FRAME.subframes;
+		this.subframes = 0;
+
+		if (TASYNC_TRACE_ENABLE) {
+			this.trace = new Error();
+		}
+
+		this.args = args;
+		this.index = index;
 	}
 
-	ThenFuture.prototype = Object.create(ApplyFuture.prototype);
+	FutureCall.prototype = Object.create(Future.prototype);
 
-	ThenFuture.prototype.onRejected = function (error) {
+	FutureCall.prototype.getPath = FutureApply.prototype.getPath;
+	FutureCall.prototype.onRejected = FutureApply.prototype.onRejected;
+
+	var FUNCTION_CALL = Function.call;
+
+	FutureCall.prototype.onResolved = function call_on_resolved_trace_start (value) {
+		assert(this.state === STATE_LISTEN);
+
+		var args = this.args;
+		args[this.index] = value;
+
+		while (--this.index >= 0) {
+			value = args[this.index];
+			if (value instanceof Future) {
+				if (value.state === STATE_RESOLVED) {
+					args[this.index] = value.value;
+				} else if (value.state === STATE_LISTEN) {
+					value.register(this);
+					return;
+				} else {
+					assert(value.state === STATE_REJECTED);
+					this.reject(value.value);
+					return;
+				}
+			}
+		}
+
+		assert(FRAME === ROOT);
+		FRAME = this;
+
+		this.args = null;
+		try {
+			var func = args[0];
+			args[0] = null;
+			value = FUNCTION_CALL.apply(func, args);
+		} catch (error) {
+			FRAME = ROOT;
+
+			this.reject(createError(error, this));
+			return;
+		}
+
+		FRAME = ROOT;
+
+		if (value instanceof Future) {
+			assert(value.state === STATE_LISTEN);
+
+			this.onResolved = this.resolve;
+			value.register(this);
+		} else {
+			this.resolve(value);
+		}
+	};
+
+	var call = function call_trace_end () {
+		var index = arguments.length;
+		while (--index >= 0) {
+			var value = arguments[index];
+			if (value instanceof Future) {
+				if (value.state === STATE_LISTEN) {
+					var future = new FutureCall(arguments, index);
+					value.register(future);
+					return future;
+				} else if (value.state === STATE_RESOLVED) {
+					arguments[index] = value.value;
+				} else {
+					assert(value.state === STATE_REJECTED);
+					return value;
+				}
+			}
+		}
+
+		var func = arguments[0];
+		return FUNCTION_CALL.apply(func, arguments);
+	};
+
+	// ------- Then -------
+
+	function FutureThen (func, that, value) {
+		FutureApply.call(this, func, that, [ null, value ], 1);
+	}
+
+	FutureThen.prototype = Object.create(FutureApply.prototype);
+
+	FutureThen.prototype.onRejected = function (error) {
 		this.args[0] = error;
 		this.onResolved(null);
 	};
@@ -319,7 +419,7 @@
 
 		if (value instanceof Future) {
 			if (value.state === STATE_LISTEN) {
-				var future = new ThenFuture(func, that, value);
+				var future = new FutureThen(func, that, value);
 				value.register(future);
 				return future;
 			} else if (value.state instanceof STATE_RESOLVED) {
@@ -423,7 +523,7 @@
 
 	// ------- Throttle -------
 
-	function ThrottleFuture (func, that, args) {
+	function FutureThrottle (func, that, args) {
 		Future.call(this);
 
 		this.func = func;
@@ -436,9 +536,9 @@
 		this.path = this.getPath();
 	}
 
-	ThrottleFuture.prototype = Object.create(Future.prototype);
+	FutureThrottle.prototype = Object.create(Future.prototype);
 
-	ThrottleFuture.prototype.execute = function () {
+	FutureThrottle.prototype.execute = function () {
 		var value;
 		try {
 			assert(FRAME === ROOT);
@@ -462,11 +562,11 @@
 		}
 	};
 
-	ThrottleFuture.prototype.getPath = ApplyFuture.prototype.getPath;
-	ThrottleFuture.prototype.onResolved = Future.prototype.resolve;
-	ThrottleFuture.prototype.onRejected = Future.prototype.reject;
+	FutureThrottle.prototype.getPath = FutureApply.prototype.getPath;
+	FutureThrottle.prototype.onResolved = Future.prototype.resolve;
+	FutureThrottle.prototype.onRejected = Future.prototype.reject;
 
-	ThrottleFuture.prototype.compare = function (second) {
+	FutureThrottle.prototype.compare = function (second) {
 		var first = this.path;
 		second = second.path;
 
@@ -517,7 +617,7 @@
 
 			return value;
 		} else {
-			var future = new ThrottleFuture(func, that, args);
+			var future = new FutureThrottle(func, that, args);
 			priorityQueueInsert(this.queue, future);
 
 			return future;
@@ -554,16 +654,16 @@
 
 	// ------- Join -------
 
-	function JoinFuture (first) {
+	function FutureJoin (first) {
 		Future.call(this);
 
 		this.first = first;
 		this.missing = first instanceof Future && first.state === STATE_LISTEN ? 1 : 0;
 	}
 
-	JoinFuture.prototype = Object.create(Future.prototype);
+	FutureJoin.prototype = Object.create(Future.prototype);
 
-	JoinFuture.prototype.onResolved = function (value) {
+	FutureJoin.prototype.onResolved = function (value) {
 		if (--this.missing === 0) {
 			assert(this.state !== STATE_RESOLVED);
 
@@ -579,7 +679,7 @@
 		}
 	};
 
-	JoinFuture.prototype.onRejected = function (error) {
+	FutureJoin.prototype.onRejected = function (error) {
 		if (this.state === STATE_LISTEN) {
 			this.reject(error);
 		}
@@ -598,8 +698,8 @@
 			return first;
 		}
 
-		if (!(first instanceof JoinFuture)) {
-			first = new JoinFuture(first);
+		if (!(first instanceof FutureJoin)) {
+			first = new FutureJoin(first);
 		}
 
 		first.missing += 1;
@@ -615,6 +715,7 @@
 		delay: delay,
 		array: array,
 		apply: apply,
+		call: call,
 		then: then,
 		adapt: adapt,
 		unadapt: unadapt,
