@@ -143,7 +143,7 @@ define(['logManager',
         //initialize all containers
 
         /*table layout*/
-        this._table = $('<table/>', {"class": "table table-hover"});
+        this._table = $('<table/>', {"class": "table table-hover user-select-on"});
         this._tHead = $('<thead/>');
         this._tHead.append($('<tr><th>Graph</th><th>Actions</th><th>Commit</th><th>Message</th><th>User</th><th>Time</th></tr>'));
         this._tBody = $('<tbody/>');
@@ -429,7 +429,8 @@ define(['logManager',
     RepositoryLogView.prototype._createItem = function (params) {
         var itemObj,
             tr,
-            btn;
+            btn,
+            firstRow = this._tBody.children().length === 0;
 
         itemObj =  $('<div/>', {
             "class" : COMMIT_CLASS,
@@ -453,6 +454,11 @@ define(['logManager',
         tr = this._trDOMBase.clone();
 
         //fill the data into the columns
+        if (firstRow === true) {
+            this._graphPlaceHolder = $('<div/>');
+            $(tr[0].cells[0]).append(this._graphPlaceHolder);
+        }
+
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
         $(tr[0].cells[this._tableCellMessageIndex]).append(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
@@ -571,14 +577,13 @@ define(['logManager',
             wW = $(window).width(),
             repoDialog = $(".repoHistoryDialog"),
             dBody = repoDialog.find(".modal-body"),
-            th;
+            tWidth;
 
         this._svgPaper.setSize(contentWidth, contentHeight);
         this._generateSVGGradientDefinition();
 
         //set the correct with for the 'Graph' column in the table to fit the drawn graph
-        th = $(this._tHead.children()[0].cells[0]);
-        th.css("width", contentWidth);
+        this._graphPlaceHolder.css("width", contentWidth);
 
         //make it almost "full screen"
         wW = wW - 2 * WINDOW_PADDING;
@@ -592,6 +597,9 @@ define(['logManager',
             "margin-left": wW / 2 * (-1),
             "margin-top": repoDialog.height() / 2 * (-1),
             "top": "50%"});
+
+        tWidth = this._table.width();
+        this._showMoreContainer.css("width", tWidth);
     };
 
 

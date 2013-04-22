@@ -57,7 +57,6 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
     height: $show-more-panel-height;
     line-height: $show-more-panel-height;
     background-color: $show-more-panel-background-color;
-    position: relative;
     border-bottom: $show-more-panel-border;
     border-top: $show-more-panel-border;
     text-align: center;
@@ -77,6 +76,7 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
     th,
     td {
       padding: 0px;
+      padding-right: 5px;
       line-height: 12px;
       font-size: 12px;
       white-space: nowrap;

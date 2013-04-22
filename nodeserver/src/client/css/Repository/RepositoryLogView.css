@@ -36,7 +36,6 @@
     height: 36px;
     line-height: 36px;
     background-color: #f7f7f7;
-    position: relative;
     border-bottom: 1px solid #3a87ad;
     border-top: 1px solid #3a87ad;
     text-align: center;
@@ -48,6 +47,7 @@
   .repositoryLogView table th,
   .repositoryLogView table td {
     padding: 0px;
+    padding-right: 5px;
     line-height: 12px;
     font-size: 12px;
     white-space: nowrap;
