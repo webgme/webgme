@@ -1,13 +1,16 @@
-/* make sure to update ITEM_WIDTH and ITEM_HEIGHT in RepositoryLogView.js */
+/* make sure to update commit_WIDTH and commit_HEIGHT in RepositoryLogView.js */
 .repositoryLogView {
   /********* TABLE LAYOUT STYLES ************/ }
   .repositoryLogView .commits {
-    position: relative;
-    margin-top: 19px;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    top: 48.5px;
+    left: 15px;
     /*DISABLE OUTER BORDER WHEN FOCUSED*/ }
     .repositoryLogView .commits:focus {
       outline: none; }
-    .repositoryLogView .commits .item {
+    .repositoryLogView .commits .commit {
       width: 8px;
       height: 8px;
       background-color: black;
@@ -22,35 +25,13 @@
       cursor: pointer;
       box-sizing: border-box;
       border-radius: 5px; }
-      .repositoryLogView .commits .item.merge {
+      .repositoryLogView .commits .commit.merge {
         border-radius: 0 !important; }
-      .repositoryLogView .commits .item.actual {
-        background-color: #ff7800; }
-      .repositoryLogView .commits .item:hover {
-        width: 12px;
-        height: 12px;
-        margin-left: -2px;
-        margin-top: -2px;
-        border-radius: 7px; }
-    .repositoryLogView .commits .commitLabelWrapper {
-      position: absolute;
-      white-space: nowrap; }
-    .repositoryLogView .commits .tooltiplabel {
-      opacity: 1.0;
-      margin-left: 0px;
-      display: inline-block;
-      position: relative; }
-      .repositoryLogView .commits .tooltiplabel [class*="icon-white"]:hover {
-        cursor: pointer;
-        background-image: url("../../img/glyphicons-halflings.png"); }
-      .repositoryLogView .commits .tooltiplabel.remote-head .tooltiplabel-arrow {
-        border-right-color: #b94a48; }
-      .repositoryLogView .commits .tooltiplabel.remote-head .tooltiplabel-inner {
-        background-color: #b94a48; }
-      .repositoryLogView .commits .tooltiplabel.local-head .tooltiplabel-arrow {
-        border-right-color: #3a87ad; }
-      .repositoryLogView .commits .tooltiplabel.local-head .tooltiplabel-inner {
-        background-color: #3a87ad; }
+      .repositoryLogView .commits .commit.actual {
+        background-color: #ff7800;
+        -moz-box-shadow: 0 0 10px 3px #ff7800;
+        -webkit-box-shadow: 0 0 10px 3px #ff7800;
+        box-shadow: 0 0 10px 3px #ff7800; }
   .repositoryLogView .show-more {
     height: 36px;
     line-height: 36px;
@@ -62,33 +43,38 @@
     margin-top: 15px; }
     .repositoryLogView .show-more a:hover {
       text-decoration: none; }
-  .repositoryLogView table {
-    position: absolute;
-    top: 0px;
-    left: 15px; }
-    .repositoryLogView table tr {
-      height: 25px; }
-    .repositoryLogView table th,
-    .repositoryLogView table td {
-      padding: 0px;
-      line-height: 12px;
-      font-size: 12px;
-      white-space: nowrap;
-      vertical-align: middle; }
-      .repositoryLogView table th .label,
-      .repositoryLogView table td .label {
-        margin-right: 2px;
+  .repositoryLogView table tr {
+    height: 25px; }
+  .repositoryLogView table th,
+  .repositoryLogView table td {
+    padding: 0px;
+    line-height: 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    vertical-align: middle; }
+    .repositoryLogView table th .branch-label,
+    .repositoryLogView table td .branch-label {
+      margin-right: 2px; }
+      .repositoryLogView table th .branch-label [class*="icon-"],
+      .repositoryLogView table td .branch-label [class*="icon-"] {
+        margin-left: 2px; }
+      .repositoryLogView table th .branch-label [class*="icon-white"]:hover,
+      .repositoryLogView table td .branch-label [class*="icon-white"]:hover {
+        cursor: pointer;
+        background-image: url("../../img/glyphicons-halflings.png"); }
+      .repositoryLogView table th .branch-label.label,
+      .repositoryLogView table td .branch-label.label {
         font-size: 11px;
         font-weight: normal;
         height: 15px; }
-      .repositoryLogView table th > .btn,
-      .repositoryLogView table td > .btn {
-        margin-left: 2px;
-        margin-right: 2px; }
-      .repositoryLogView table th .control-group,
-      .repositoryLogView table td .control-group {
-        margin-bottom: 0px; }
-    .repositoryLogView table td:first-child {
-      border-top: 1px solid transparent; }
-    .repositoryLogView table.table-hover tbody tr:hover > td, .repositoryLogView table.table-hover tbody tr:hover > th {
-      background-color: rgba(245, 245, 245, 0.5); }
+    .repositoryLogView table th > .btn,
+    .repositoryLogView table td > .btn {
+      margin-left: 2px;
+      margin-right: 2px; }
+    .repositoryLogView table th .control-group,
+    .repositoryLogView table td .control-group {
+      margin-bottom: 0px; }
+  .repositoryLogView table td:first-child {
+    border-top: 1px solid transparent; }
+  .repositoryLogView table.table-hover tbody tr:hover > td, .repositoryLogView table.table-hover tbody tr:hover > th {
+    background-color: rgba(245, 245, 245, 0.5); }

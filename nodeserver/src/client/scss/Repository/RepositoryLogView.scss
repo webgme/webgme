@@ -1,11 +1,8 @@
-$item-background-color: #000000;
-$item-actual-background-color: #FF7800;
-$item-size: 8px; /* make sure to update ITEM_WIDTH and ITEM_HEIGHT in RepositoryLogView.js */
-$item-radius: 5px;
-$item-hover-size: 12px;
-$item-hover-radius: 7px;
-$remote-head-color: #b94a48;
-$local-head-color: #3a87ad;
+$commit-background-color: #000000;
+$commit-actual-background-color: #FF7800;
+$commit-size: 8px; /* make sure to update commit_WIDTH and commit_HEIGHT in RepositoryLogView.js */
+$commit-radius: 5px;
+$commit-actual-box-shadow: 0 0 10px 3px $commit-actual-background-color;
 
 $show-more-panel-background-color: #F7F7F7;
 $show-more-panel-height: 36px;
@@ -15,18 +12,22 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
 
 .repositoryLogView {
   .commits {
-    position: relative;
-    margin-top: 19px; //FOR TABLE LAYOUT POSITION MATCH
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    top: 15 /*modal dialog padding*/ + $table-row-height + ($table-row-height - $commit-size)/2; //TO MATCH PERFECT POSITIONING ABOVE TABLE LAYOUT'S FIRST COLUMN
+    left: 15px;
+
 
     /*DISABLE OUTER BORDER WHEN FOCUSED*/
     &:focus {
       outline: none;
     }
 
-    .item {
-      width: $item-size;
-      height: $item-size;
-      background-color: $item-background-color;
+    .commit {
+      width: $commit-size;
+      height: $commit-size;
+      background-color: $commit-background-color;
       vertical-align: middle;
       text-align: center;
       font-family: Helvetica, Arial;
@@ -37,59 +38,17 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
       position: absolute;
       cursor: pointer;
       box-sizing: border-box;
-      border-radius: $item-radius;
+      border-radius: $commit-radius;
 
       &.merge {
         border-radius: 0 !important;
       }
 
       &.actual {
-        background-color: $item-actual-background-color;
-      }
-
-      &:hover {
-        width: $item-hover-size;
-        height: $item-hover-size;
-        margin-left: ($item-size - $item-hover-size) / 2;
-        margin-top: ($item-size - $item-hover-size) / 2;
-        border-radius: $item-hover-radius;
-      }
-    }
-
-    .commitLabelWrapper {
-      position: absolute;
-      white-space: nowrap;
-    }
-
-    .tooltiplabel {
-      opacity: 1.0;
-      margin-left: 0px;
-      display: inline-block;
-      position: relative;
-
-      [class*="icon-white"]:hover {
-        cursor: pointer;
-        background-image: url("../../img/glyphicons-halflings.png");
-      }
-
-      &.remote-head {
-        .tooltiplabel-arrow {
-          border-right-color: $remote-head-color;
-        }
-
-        .tooltiplabel-inner {
-          background-color: $remote-head-color;
-        }
-      }
-
-      &.local-head {
-        .tooltiplabel-arrow {
-          border-right-color: $local-head-color;
-        }
-
-        .tooltiplabel-inner {
-          background-color: $local-head-color;
-        }
+        background-color: $commit-actual-background-color;
+        -moz-box-shadow:  $commit-actual-box-shadow;
+        -webkit-box-shadow: $commit-actual-box-shadow;
+        box-shadow: $commit-actual-box-shadow;
       }
     }
   }
@@ -111,10 +70,6 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
 
   /********* TABLE LAYOUT STYLES ************/
   table {
-    position: absolute;
-    top: 0px;
-    left: 15px;
-
     tr {
       height: $table-row-height;
     }
@@ -127,11 +82,25 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
       white-space: nowrap;
       vertical-align: middle;
 
-      .label {
+
+
+      .branch-label {
         margin-right: 2px;
-        font-size: 11px;
-        font-weight: normal;
-        height: 15px;
+
+        [class*="icon-"] {
+          margin-left: 2px;
+        }
+
+        [class*="icon-white"]:hover {
+          cursor: pointer;
+          background-image: url("../../img/glyphicons-halflings.png");
+        }
+
+        &.label {
+          font-size: 11px;
+          font-weight: normal;
+          height: 15px;
+        }
       }
 
       > .btn {
