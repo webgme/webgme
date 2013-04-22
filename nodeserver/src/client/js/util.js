@@ -78,31 +78,28 @@ define([], function () {
                 } else if (format === 'elapsed') {
                     delta = (currentDate - date) / 1000;    //elapsed time in seconds
 
-                    if (delta < 60) {
-                        result = Math.round(delta) + ' seconds ago';
-                    } else {
-                        delta = delta / 60;
-                        if (delta < 60) {
-                            result = Math.round(delta) + ' minutes ago';
-                        } else {
-                            delta = delta / 60;
-                            if (delta < 24) {
-                                result = Math.round(delta) + ' hours ago';
-                            } else {
-                                delta = delta / 24;
-                                if (delta < 30) {
-                                    result = Math.round(delta) + ' days ago';
-                                } else {
-                                    delta = delta / 30;
-                                    if (delta < 12) {
-                                        result = Math.round(delta) + ' months ago';
-                                    } else {
-                                        delta = delta / 12;
-                                        result = Math.round(delta) + ' years ago';
-                                    }
-                                }
-                            }
-                        }
+                    if (delta < 45) {       //0..45 sec
+                        result = 'just now';
+                    } else if (delta < 90) {    //45..90 sec
+                        result = 'a minute ago';
+                    } else if (delta < 45 * 60) {    //90 sec 45 min
+                        result = Math.round(delta / 60) + ' minutes ago';
+                    } else if (delta < 90 * 60) {    //45 min to 90 min
+                        result = 'an hour ago';
+                    } else if (delta < 22 * 3600) {       //90 min to 22 hours
+                        result = Math.round(delta / 3600) + ' hours ago';
+                    } else if (delta < 36 * 3600) {       //22 hours to 36 hours
+                        result = 'a day ago';
+                    } else if (delta < 25 * 86400) {       //36 hours to 25 days
+                        result = Math.round(delta / 86400) + ' days ago';
+                    } else if (delta < 45 * 86400) {       //25 days to 45 days
+                        result = 'a month ago';
+                    } else if (delta < 345 * 86400) {       //45 days to 345 days
+                        result = Math.round(delta / 2592000) + ' months ago';
+                    } else if (delta < 547 * 86400) {       //45 days to 547 days (1.5 years)
+                        result = 'a year ago';
+                    } else {       //548+ days (1.5 years)
+                        result = Math.round(delta / 31536000) + ' years ago';
                     }
                 }
             }
