@@ -17,9 +17,9 @@ define(['logManager'], function (logManager) {
             self._client.selectCommitAsync(params.id, function (err) {
                 if (err) {
                     self._logger.error(err);
-                } else {
-                    self._refreshActualCommit();
                 }
+
+                self._refreshActualCommit();
             });
         };
 
@@ -27,9 +27,9 @@ define(['logManager'], function (logManager) {
             self._client.deleteBranchAsync(branch, function (err) {
                 if (err) {
                     self._logger.error(err);
-                } else {
-                    self._refreshBranches();
                 }
+
+                self._refreshBranches();
             });
         };
 
@@ -40,9 +40,8 @@ define(['logManager'], function (logManager) {
                 function (err) {
                     if (err) {
                         self._logger.error(err);
-                    } else {
-                        self._refreshBranches();
                     }
+                    self._refreshBranches();
                 });
         };
 
