@@ -955,9 +955,11 @@ define([
                         var getBranchValues = function(name){
                             _commit.getBranchHash(name,'',function(err,newhash,forked){
                                 if(!err && newhash){
-                                    var element = {name:name,localcommit:newhash,remotecommit:newhash};
+                                    var element = {name:name,commitId:newhash};
                                     if(forked){
-                                        element.remotecommit = forked;
+                                        element.sync = false;
+                                    } else {
+                                        element.sync = true;
                                     }
                                     branchArray.push(element);
                                 } else {
