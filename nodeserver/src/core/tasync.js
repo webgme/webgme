@@ -399,37 +399,51 @@
 		return FUNCTION_CALL.apply(func, arguments);
 	};
 
-	// ------- Then -------
+	// ------- Attempt -------
 
-	function FutureThen (func, that, value) {
-		FutureApply.call(this, func, that, [ null, value ], 1);
+	function FutureAttempt (handler) {
+		Future.call(this);
+
+		this.handler = handler;
 	}
 
-	FutureThen.prototype = Object.create(FutureApply.prototype);
+	FutureAttempt.prototype = Object.create(Future.prototype);
 
-	FutureThen.prototype.onRejected = function (error) {
-		this.args[0] = error;
-		this.onResolved(null);
+	FutureAttempt.prototype.onRejected = function (error) {
+		try {
+			var value = this.handler(error);
+
+			if (value instanceof Future) {
+				this.onRejected = Future.prorotype.reject;
+				value.register(this);
+			} else {
+				this.resolve(value);
+			}
+		} catch (err) {
+			this.reject(err);
+		}
 	};
 
-	function then (value, func, that) {
-		if (typeof func !== "function") {
-			throw new Error("function argument is expected");
+	FutureAttempt.prototype.onResolved = Future.prototype.resolve;
+
+	function trycatch (func, handler) {
+		if (typeof func !== "function" || typeof handler !== "function") {
+			throw new Error("function arguments are expected");
 		}
 
-		if (value instanceof Future) {
-			if (value.state === STATE_LISTEN) {
-				var future = new FutureThen(func, that, value);
+		try {
+			var value = func();
+
+			if (value instanceof Future) {
+				var future = new FutureAttempt(handler);
 				value.register(future);
+
 				return future;
-			} else if (value.state instanceof STATE_RESOLVED) {
-				return func(null, value.value);
 			} else {
-				assert(value.state === STATE_REJECTED);
-				return func(value.value);
+				return value;
 			}
-		} else {
-			return func(null, value);
+		} catch (error) {
+			return handler(error);
 		}
 	}
 
@@ -716,7 +730,7 @@
 		array: array,
 		apply: apply,
 		call: call,
-		then: then,
+		trycatch: trycatch,
 		adapt: adapt,
 		unadapt: unadapt,
 		throttle: throttle,
