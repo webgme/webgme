@@ -79,6 +79,10 @@ define(['logManager',
         this._addBranch(obj);
     };
 
+    RepositoryLogView.prototype.clearBranches = function () {
+        this._clearBranches();
+    };
+
     RepositoryLogView.prototype.addCommit = function (obj) {
         var idx = this._orderedCommitIds.push(obj.id) - 1;
 
@@ -374,6 +378,8 @@ define(['logManager',
                     this._applyBranchHeaderLabel(this._commits[idx], this._branches[len].name, this._branches[len].sync);
                 }
             }
+
+            this._branchListUpdated = false;
         }
     };
 
@@ -419,6 +425,15 @@ define(['logManager',
         this._branchListUpdated = true;
 
         this._addBranchHeaderLabels();
+    };
+
+    RepositoryLogView.prototype._clearBranches = function () {
+        this._branches = [];
+        this._branchNames = [];
+
+        this._removeBranchHeaderLabels();
+
+        this._branchListUpdated = true;
     };
 
     RepositoryLogView.prototype._trDOMBase = $('<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>');

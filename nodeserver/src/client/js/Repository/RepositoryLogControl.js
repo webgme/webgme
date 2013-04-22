@@ -98,6 +98,8 @@ define(['logManager'], function (logManager) {
                     self._view.render();
 
                     self._refreshActualCommit();
+
+                    self._refreshBranches();
                 }
 
                 self._view.hidePogressbar();
@@ -110,17 +112,19 @@ define(['logManager'], function (logManager) {
 
         this._view.showPogressbar();
 
-        this._refreshBranches(function () {
-            self._client.getCommitsAsync(self._lastCommitID,num,commitsLoaded);
-        });
+        this._client.getCommitsAsync(this._lastCommitID,num,commitsLoaded);
+
+
     };
 
     RepositoryLogControl.prototype._refreshActualCommit = function () {
         this._view.setActualCommitId(this._client.getActualCommit());
     };
 
-    RepositoryLogControl.prototype._refreshBranches = function (callBack) {
+    RepositoryLogControl.prototype._refreshBranches = function () {
         var self = this;
+
+        this._view.clearBranches();
 
         this._client.getBranchesAsync(function (err, data) {
             var i;
@@ -129,7 +133,8 @@ define(['logManager'], function (logManager) {
 
             if (err) {
                 self._logger.error(err);
-            } else {
+            }
+            if (data && data.length) {
                 //set view's branch info
                 i = data.length;
 
@@ -138,10 +143,6 @@ define(['logManager'], function (logManager) {
                         "commitId":  data[i].commitId,
                         "sync":  data[i].sync});
                 }
-            }
-
-            if (callBack) {
-                callBack.call(self);
             }
         });
     };
