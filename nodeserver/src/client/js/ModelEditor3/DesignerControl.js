@@ -565,17 +565,19 @@ define(['logManager',
             this.designerCanvas.setTitle(objDesc.name);
         } else {
             if (objDesc) {
-                if (objDesc.parentId == this.currentNodeInfo.id) {
+                if (objDesc.parentId === this.currentNodeInfo.id) {
                     if (objDesc.kind === "MODEL") {
-                        len = this._GmeID2ComponentID[gmeID].length;
-                        while (len--) {
-                            componentID = this._GmeID2ComponentID[gmeID][len];
+                        if(this._GmeID2ComponentID[gmeID]){
+                            len = this._GmeID2ComponentID[gmeID].length;
+                            while (len--) {
+                                componentID = this._GmeID2ComponentID[gmeID][len];
 
-                            decClass = this.decoratorClasses[objDesc.decorator];
+                                decClass = this.decoratorClasses[objDesc.decorator];
 
-                            objDesc.decoratorClass = decClass;
+                                objDesc.decoratorClass = decClass;
 
-                            this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                                this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                            }
                         }
                     }
 
@@ -612,7 +614,8 @@ define(['logManager',
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.selectedObjectChanged(undefined);
+            //this.selectedObjectChanged(undefined);
+            //TODO fix this
             this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
                                                                                                      'color': '#000000'});
         } else {
