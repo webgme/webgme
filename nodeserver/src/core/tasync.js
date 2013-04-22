@@ -139,7 +139,7 @@
 					return future;
 				} else {
 					assert(value.state === STATE_REJECTED);
-					throw value.value;
+					return value;
 				}
 			}
 		}
@@ -291,7 +291,7 @@
 					args[index] = value.value;
 				} else {
 					assert(value.state === STATE_REJECTED);
-					throw value.value;
+					return value;
 				}
 			}
 		}
@@ -552,6 +552,62 @@
 		};
 	}
 
+	// ------- Join -------
+
+	function JoinFuture (first) {
+		Future.call(this);
+
+		this.first = first;
+		this.missing = first instanceof Future && first.state === STATE_LISTEN ? 1 : 0;
+	}
+
+	JoinFuture.prototype = Object.create(Future.prototype);
+
+	JoinFuture.prototype.onResolved = function (value) {
+		if (--this.missing === 0) {
+			assert(this.state !== STATE_RESOLVED);
+
+			if (this.state === STATE_LISTEN) {
+				if (this.first instanceof Future) {
+					assert(this.first.state === STATE_RESOLVED);
+
+					this.resolve(this.first.value);
+				} else {
+					this.resolve(this.first);
+				}
+			}
+		}
+	};
+
+	JoinFuture.prototype.onRejected = function (error) {
+		if (this.state === STATE_LISTEN) {
+			this.reject(error);
+		}
+	};
+
+	function join (first, second) {
+		if (first instanceof Future && first.state === STATE_REJECTED) {
+			return first;
+		} else if (second instanceof Future) {
+			if (second.state === STATE_RESOLVED) {
+				return first;
+			} else if (second.state === STATE_REJECTED) {
+				return second;
+			}
+		} else {
+			return first;
+		}
+
+		if (!(first instanceof JoinFuture)) {
+			first = new JoinFuture(first);
+		}
+
+		first.missing += 1;
+		second.register(first);
+
+		return first;
+	}
+
 	// ------- TASYNC -------
 
 	var TASYNC = {
@@ -562,7 +618,8 @@
 		then: then,
 		adapt: adapt,
 		unadapt: unadapt,
-		throttle: throttle
+		throttle: throttle,
+		join: join
 	};
 
 	if (typeof define === "function" && define.amd) {
