@@ -77,16 +77,13 @@ define(['logManager',
     };
 
     NetworkStatusView.prototype.BRANCH_STATES = {'INSYNC': 'INSYNC',
-        'FORKED': 'FORKED',
-        'OFFLINE': 'OFFLINE'};
+        'FORKED': 'FORKED'};
 
     NetworkStatusView.prototype.branchStateChanged = function (newState) {
         if (newState === this.BRANCH_STATES.INSYNC) {
             this._branchInSync();
         } else if (newState === this.BRANCH_STATES.FORKED) {
             this._branchForked();
-        } else if (newState === this.BRANCH_STATES.OFFLINE) {
-            this._branchOffline();
         }
     };
 
@@ -121,22 +118,12 @@ define(['logManager',
         this._ddBranchStatus.clear();
         this._ddBranchStatus.setTitle('IN SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GREEN);
-        this._ddBranchStatus.addItem({"text": 'Go Offline...',
-            "value": 'go_offline'});
     };
 
     NetworkStatusView.prototype._branchForked = function () {
         this._ddBranchStatus.clear();
-        this._ddBranchStatus.setTitle('FORKED');
+        this._ddBranchStatus.setTitle('OUT OF SYNC');
         this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.ORANGE);
-    };
-
-    NetworkStatusView.prototype._branchOffline = function () {
-        this._ddBranchStatus.clear();
-        this._ddBranchStatus.setTitle('OFFLINE');
-        this._ddBranchStatus.setColor(DropDownMenu.prototype.COLORS.GRAY);
-        this._ddBranchStatus.addItem({"text": 'Go Online...',
-            "value": 'go_online'});
     };
 
     NetworkStatusView.prototype._onBranchStatusItemClicked = function (value) {
