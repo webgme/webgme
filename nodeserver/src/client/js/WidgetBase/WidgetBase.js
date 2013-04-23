@@ -57,9 +57,9 @@ define(['jquery',
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     WidgetBase.prototype.onReadOnlyChanged = function (isReadOnly) {
         if (isReadOnly === true) {
-            this.$el.addClass(READ_ONLY_CLASS);
+            this.$el.addClass(WidgetBase.READ_ONLY_CLASS);
         } else {
-            this.$el.removeClass(READ_ONLY_CLASS);
+            this.$el.removeClass(WidgetBase.READ_ONLY_CLASS);
         }
     };
     /***** END OF --- SET READ-ONLY MODE *********/
