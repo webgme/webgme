@@ -25,24 +25,11 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
     }
 
     .commit {
+      position: absolute;
       width: $commit-size;
       height: $commit-size;
       background-color: $commit-background-color;
-      vertical-align: middle;
-      text-align: center;
-      font-family: Helvetica, Arial;
-      pointer-events:all;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      position: absolute;
-      cursor: pointer;
-      box-sizing: border-box;
       border-radius: $commit-radius;
-
-      &.merge {
-        border-radius: 0 !important;
-      }
 
       &.actual {
         background-color: $commit-actual-background-color;
@@ -61,6 +48,7 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
     border-top: $show-more-panel-border;
     text-align: center;
     margin-top: 15px;
+    position: relative;   //NEEDED BECAUSE OF THE LOADER ANIMATION'S POSITIONNING LOGIC
 
     a:hover {
       text-decoration: none;
