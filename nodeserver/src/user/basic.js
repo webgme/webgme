@@ -1010,6 +1010,7 @@ define([
                 //we use the existing territories
                 //we set viewer mode, so there will be no modification allowed to send to server...
                 _branch = null;
+                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                 _viewer = true;
                 _recentCommits = [hash];
                 _project.loadObject(hash,function(err,commitObj){
