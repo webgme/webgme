@@ -237,5 +237,10 @@ define(['logManager',
         this._logger.warning("onSetMemberRemove is not overridden!!! params: '" + JSON.stringify(params) + "'");
     };
 
+    SetEditorView.prototype.setReadOnly = function (isReadOnly) {
+        //TODO: NOT YET IMPLEMENTED
+        this._logger.warning("SetEditorView.prototype.setReadOnly NOT YET IMPLEMENTED!!!");
+    };
+
     return SetEditorView;
 });

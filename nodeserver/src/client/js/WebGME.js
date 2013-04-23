@@ -95,7 +95,9 @@ define([  'logManager',
         demoHackInit,
         onOneEvent,
         branchManagerView,
-        branchManagerControl;
+        branchManagerControl,
+        branchChanged,
+        treeBrowserView;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -178,6 +180,19 @@ define([  'logManager',
         }
     };
 
+    branchChanged = function (__project, branchName) {
+        var readOnly = (branchName === null || branchName === undefined) ? true : false;
+
+        if (projectTitleView) {
+            projectTitleView.refresh(proxy);
+        }
+
+        partBrowserView.setReadOnly(readOnly);
+        setEditorView.setReadOnly(readOnly);
+        treeBrowserView.setReadOnly(readOnly);
+        visualizerPanel.setReadOnly(readOnly);
+    };
+
     doConnect = function (callback) {
 
 
@@ -209,13 +224,12 @@ define([  'logManager',
                     projectTitleView.refresh(proxy);
                 }
             });
-            proxy.addEventListener(proxy.events.BRANCH_CHANGED, function () {
-                if (projectTitleView) {
-                    projectTitleView.refresh(proxy);
-                }
+            proxy.addEventListener(proxy.events.BRANCH_CHANGED, function (__project, branchName) {
+                branchChanged(__project, branchName);
             });
 
-            tJSTree = new TreeBrowserControl(proxy, new JSTreeBrowserWidget("tbJSTree"));
+            treeBrowserView = new JSTreeBrowserWidget("tbJSTree");
+            tJSTree = new TreeBrowserControl(proxy, treeBrowserView);
 
             partBrowserView = new PartBrowserView("pPartBrowser");
             partBrowserController = new PartBrowserControl(proxy, partBrowserView);
