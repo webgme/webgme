@@ -299,5 +299,17 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     /***************** END OF - DROPDOWN MENU ****************************/
 
+    WidgetToolbar.prototype.addLabel = function () {
+        var label = $('<span/>', {
+            "class": "toolbar-group"
+        });
+
+        this.$el.append(label);
+
+        return label;
+    };
+
+
+
     return WidgetToolbar;
 });
