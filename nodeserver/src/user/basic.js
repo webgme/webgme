@@ -853,18 +853,34 @@ define([
                     }
                 });
                 //here we try to make an immediate event building
-                modifiedPaths = getModifiedNodes(_loadNodes);
-                _nodes = {};
+                //TODO we should deal with the full unloading!!!
+                var hasNodesalready = false;
                 for(var i in _loadNodes){
-                    _nodes[i] = _loadNodes[i];
+                    if(!hasNodesalready){
+                        hasNodesalready = true;
+                        break;
+                    }
                 }
+                if(hasNodesalready){
+                    modifiedPaths = getModifiedNodes(_loadNodes);
+                    _nodes = {};
+                    for(i in _loadNodes){
+                        _nodes[i] = _loadNodes[i];
+                    }
 
-                for(i in _users){
-                    userEvents(i,modifiedPaths);
-                }
+                    for(i in _users){
+                        userEvents(i,modifiedPaths);
+                    }
 
-                if(--missing === 0){
-                    finalEvents();
+                    if(--missing === 0){
+                        finalEvents();
+                    }
+
+                } else {
+                    _loadError++;
+                    if(--missing === 0){
+                        finalEvents();
+                    }
                 }
             }
 
