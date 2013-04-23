@@ -17,6 +17,8 @@ define([], function () {
 
         this._droppableTable = table;
 
+        this._oTDAcceptDrop = false;
+
         table.droppable({
             over: function( event, ui ) {
                 //self._onBackgroundDroppableOver(ui);
@@ -43,7 +45,7 @@ define([], function () {
     DataGridViewDroppable.prototype._activateDroppable = function (ui) {
         var self = this;
 
-        if (this._droppable === true) {
+        if (this.isReadOnly() !== true && this._droppable === true) {
 
             this._draggedData = ui.helper.data();
 
