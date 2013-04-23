@@ -39,13 +39,14 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		console.log("  -parsemeta\t\t\tparses the current xml root as a meta project");
 		console.log("  -parsedata\t\t\tparses the current xml root as a gme project");
 		console.log("  -test <integer>\t\texecutes a test program (see tests.js)");
-		console.log("  -writeroot\t\t\twrites the current root for visualization");
-		console.log("  -readroot\t\t\treads the current root for visualization");
+		console.log("  -setbranch [<branch>]\t\twrites the current root to the given branch");
+		console.log("  -getbranch [<branch>]\t\treads the current root for the given branch");
 		console.log("  -wait <secs>\t\t\twaits the given number of seconds");
 		console.log("");
 	};
 	
-	var database = null, project = null, projectName;
+	var database = null, project = null, projectName, root = "";
+
 	commands.mongo = function () {
 		ASSERT(!database && !project);
 		
@@ -68,6 +69,9 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 			return TASYNC.call(function (p) {
 				p.closeProject = TASYNC.adapt(p.closeProject);
 				p.dumpObjects = TASYNC.adapt(p.dumpObjects);
+				p.findHash = TASYNC.adapt(p.findHash);
+				p.setBranchHash = TASYNC.adapt(p.setBranchHash);
+				p.getBranchHash = TASYNC.adapt(p.getBranchHash);
 				
 				database = d;
 				project = p;
@@ -118,6 +122,45 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		
 		console.log("Deleting project: " + projectName);
 		return database.deleteProject(projectName);
+	};
+	
+	commands.root = function() {
+		ASSERT(project);
+
+		var start = nextParam();
+		if( typeof start !== "string" ) {
+			throw new Error("root hash fragment not specified");
+		}
+		if( start.charAt(0) !== "#" ) {
+			start = "#" + start;
+		}
+		
+		var hash = TASYNC.trycatch(function() {
+			return project.findHash(start);
+		}, function(error) {
+			console.log("Error: " + error.message);
+			return "";
+		});
+		
+		return TASYNC.call(function(hash) {
+			console.log("Root set to " + hash);
+			root = hash;
+		}, hash);
+	};
+
+	commands.setbranch = function() {
+		ASSERT(project && root);
+		
+		var branch = nextParam("*master");
+		if( branch.charAt(0) !== "*" ) {
+			branch = "*" + branch;
+		}
+		
+		console.log("Setting branch " + branch + " to " + root);
+
+		return TASYNC.call(function(oldhash){
+			return project.setBranchHash(branch, oldhash, root);
+		}, project.getBranchHash(branch, null));
 	};
 	
 	// --- main 
@@ -207,35 +250,6 @@ return;
 								console.log("XML parsing", err.stack);
 								argv.splice(i, 0, "-end");
 							} else {
-								ASSERT(typeof key === "string");
-								root = key;
-							}
-							next();
-						});
-					}
-				}
-			} else if (cmd === "-root") {
-				if (!mongo) {
-					argv.splice(--i, 0, "-mongo");
-					next();
-				} else {
-					opt = parm();
-
-					if (!opt) {
-						console.log("Error: root id fragment is not specified");
-						argv.splice(i, 0, "-end");
-						next();
-					} else {
-						if (opt.charAt(0) !== "#") {
-							opt = "#" + opt;
-						}
-
-						mongo.searchId(opt, function (err, key) {
-							if (err) {
-								console.log(err);
-								argv.splice(i, 0, "-end");
-							} else {
-								console.log("Found root = " + key);
 								ASSERT(typeof key === "string");
 								root = key;
 							}
@@ -395,23 +409,7 @@ return;
 						next();
 					});
 				}
-			} else {
-				if (cmd !== "-end") {
-					console.log("Error: unknown command " + cmd);
-				}
-
-				if (mongo && mongo.opened()) {
-					if (cmd === "-end") {
-						console.log("Closing database");
-					}
-					mongo.close();
-					mongo = undefined;
-				}
 			}
 		};
-
-		argv.push("-end");
-		i = 0;
-		next();
 	}
 

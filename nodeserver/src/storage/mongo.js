@@ -270,7 +270,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 
 			function getBranchHash (branch, oldhash, callback) {
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
-				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
+				ASSERT(oldhash === null || (typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash))));
 				ASSERT(typeof callback === "function");
 
 				collection.findOne({
@@ -280,7 +280,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						callback(err);
 					} else {
 						var newhash = (obj && obj.hash) || "";
-						if (oldhash !== newhash) {
+						if (oldhash === null || oldhash !== newhash) {
 							callback(null, newhash, null);
 						} else {
 							setTimeout(callback, options.timeout, null, newhash, null);

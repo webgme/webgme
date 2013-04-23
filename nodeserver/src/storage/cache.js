@@ -219,7 +219,8 @@ define([ "util/assert" ], function (ASSERT) {
 			}
 
 			function getBranchHash (name, oldhash, callback) {
-				ASSERT(typeof name === "string" && typeof oldhash === "string" && typeof callback === "function");
+				ASSERT(typeof name === "string" && typeof callback === "function");
+				ASSERT(typeof oldhash === "string" || oldhash === null);
 
 				var tag = name + "@" + oldhash;
 				var branch = branches[tag];
