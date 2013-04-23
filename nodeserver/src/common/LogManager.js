@@ -33,7 +33,8 @@ define([], function () {
         useColors = false,
         excludedComponents = [],
         Logger,
-        isComponentAllowedToLog;
+        isComponentAllowedToLog,
+        logMessage;
 
     isComponentAllowedToLog = function (componentName) {
         var i,
@@ -59,66 +60,67 @@ define([], function () {
         return true;
     };
 
-    Logger = function (componentName) {
-        var logMessage = function (level, msg) {
-            var logTime = new Date(),
-                logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours(),
-                levelStr = level,
-                concreteLogger = console.log;
-            if (isComponentAllowedToLog(componentName) === true) {
-                if (currentLogLevel > logLevels.OFF) {
-                    //log only what meets configuration
-                    if (logLevels[level] <= currentLogLevel) {
-                        //see whether console exists
-                        if (console && console.log) {
-                            logTimeStr += ":";
-                            logTimeStr += (logTime.getMinutes() < 10) ? "0" + logTime.getMinutes() : logTime.getMinutes();
-                            logTimeStr += ":";
-                            logTimeStr += (logTime.getSeconds() < 10) ? "0" + logTime.getSeconds() : logTime.getSeconds();
-                            logTimeStr += ".";
-                            logTimeStr += (logTime.getMilliseconds() < 10) ? "00" + logTime.getMilliseconds() : ((logTime.getMilliseconds() < 100) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds());
+    logMessage = function (level, componentName, msg) {
+        var logTime = new Date(),
+            logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours(),
+            levelStr = level,
+            concreteLogger = console.log;
 
-                            if (useColors === true) {
-                                levelStr  = '\u001B[' + logColors[level] + 'm' + level + '\u001B[39m';
-                            }
+        if (isComponentAllowedToLog(componentName) === true) {
+            if (currentLogLevel > logLevels.OFF) {
+                //log only what meets configuration
+                if (logLevels[level] <= currentLogLevel) {
+                    //see whether console exists
+                    if (console && console.log) {
+                        logTimeStr += ":";
+                        logTimeStr += (logTime.getMinutes() < 10) ? "0" + logTime.getMinutes() : logTime.getMinutes();
+                        logTimeStr += ":";
+                        logTimeStr += (logTime.getSeconds() < 10) ? "0" + logTime.getSeconds() : logTime.getSeconds();
+                        logTimeStr += ".";
+                        logTimeStr += (logTime.getMilliseconds() < 10) ? "00" + logTime.getMilliseconds() : ((logTime.getMilliseconds() < 100) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds());
 
-                            if ((logLevels[level] === logLevels.ERROR) && (console.error)) {
-                                concreteLogger = console.error;
-                            }
-
-                            if ((logLevels[level] === logLevels.WARNING) && (console.warn)) {
-                                concreteLogger = console.warn;
-                            }
-
-                            if ((logLevels[level] === logLevels.INFO) && (console.info)) {
-                                concreteLogger = console.info;
-                            }
-
-                            concreteLogger.call(console, levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg);
+                        if (useColors === true) {
+                            levelStr  = '\u001B[' + logColors[level] + 'm' + level + '\u001B[39m';
                         }
+
+                        if ((logLevels[level] === logLevels.ERROR) && (console.error)) {
+                            concreteLogger = console.error;
+                        }
+
+                        if ((logLevels[level] === logLevels.WARNING) && (console.warn)) {
+                            concreteLogger = console.warn;
+                        }
+
+                        if ((logLevels[level] === logLevels.INFO) && (console.info)) {
+                            concreteLogger = console.info;
+                        }
+
+                        concreteLogger.call(console, levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg);
                     }
                 }
             }
-        };
+        }
+    };
 
+    Logger = function (componentName) {
         this.debug = function (msg) {
-            logMessage("DEBUG", msg);
+            logMessage("DEBUG", componentName, msg);
         };
 
         this.info = function (msg) {
-            logMessage("INFO", msg);
+            logMessage("INFO", componentName, msg);
         };
 
         this.warning = function (msg) {
-            logMessage("WARNING", msg);
+            logMessage("WARNING", componentName, msg);
         };
         
         this.warn = function (msg) {
-            logMessage("WARNING", msg);
+            logMessage("WARNING", componentName, msg);
         };
 
         this.error = function (msg) {
-            logMessage("ERROR", msg);
+            logMessage("ERROR", componentName, msg);
         };
     };
 
