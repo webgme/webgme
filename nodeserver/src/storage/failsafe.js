@@ -321,15 +321,15 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         ASSERT(branchObj.local.length === 0);
                         branchObj.state = 'ahead';
                         branchObj.local = [newhash,oldhash];
-                        callback(null);
                         project.setBranchHash(branch,oldhash,newhash,returnFunction);
+                        callback(null);
                         return;
                     case 'ahead':
                         ASSERT(branchObj.local.length > 0);
                         if(oldhash === branchObj.local[0]){
                             branchObj.local.unshift(newhash);
-                            callback(null);
                             project.setBranchHash(branch,oldhash,newhash,returnFunction);
+                            callback(null);
                         } else {
                             callback('old hash mismatch');
                         }

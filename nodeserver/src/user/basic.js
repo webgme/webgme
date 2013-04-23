@@ -1107,6 +1107,7 @@ define([
             function startTransaction() {
                 if (_core) {
                     _inTransaction = true;
+                    saveRoot('startTransaction()');
                 }
             }
             function completeTransaction() {
@@ -1493,6 +1494,20 @@ define([
 
             }
 
+            //testing
+            function testMethod(testnumber){
+                deleteBranchAsync("blabla",function(err){
+                    getBranchesAsync(function(err,branches){
+                        console.log('kecso');
+                    });
+                    /*setTimeout(function(){
+                        getBranchesAsync(function(err,branches){
+                            console.log('kecso');
+                        });
+                    },0);*/
+                });
+            }
+
             //initialization
             function initialize(){
                 _database.openDatabase(function(){
@@ -1571,7 +1586,10 @@ define([
                 addUI: addUI,
                 removeUI: removeUI,
                 updateTerritory: updateTerritory,
-                getNode: getNode
+                getNode: getNode,
+
+                //testing
+                testMethod: testMethod
 
             };
         }
