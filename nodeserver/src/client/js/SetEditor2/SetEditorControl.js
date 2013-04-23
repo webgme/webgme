@@ -17,7 +17,9 @@ define(['logManager',
 
     var SetEditorControl,
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
-        DECORATOR_CLASS = "DefaultDecorator";
+        DECORATOR_CLASS = "DefaultDecorator",
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',
+        BACKGROUND_TEXT_SIZE = 30;
 
 
     SetEditorControl = function (options) {
@@ -139,9 +141,6 @@ define(['logManager',
         this.currentNodeInfo.parentId = undefined;
 
         if (nodeId) {
-            this.designerCanvas.setBackgroundText("SetEditor", {"color": "#DEDEDE",
-                "font-size": "10px"});
-
             this.currentNodeInfo.parentId = desc.parentId;
 
             if (this.currentNodeInfo.parentId) {
@@ -157,14 +156,17 @@ define(['logManager',
 
             this.designerCanvas.setTitle(desc.name);
 
+            this.designerCanvas.setBackgroundText(desc.name, {"color": BACKGROUND_TEXT_COLOR,
+                "font-size": BACKGROUND_TEXT_SIZE});
+
             this.designerCanvas.showPogressbar();
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
-            this.designerCanvas.setBackgroundText("No object to display", {"color": "#DEDEDE",
-                "font-size": "30px"});
+            this.designerCanvas.setBackgroundText("No object to display", {"color": BACKGROUND_TEXT_COLOR,
+                "font-size": BACKGROUND_TEXT_SIZE});
         }
     };
 
@@ -431,9 +433,8 @@ define(['logManager',
         if (gmeID === this.currentNodeInfo.id) {
             //the unloaded object is the parent whose children are displayed here
             this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.selectedObjectChanged(undefined);
-            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
-                                                                                                     'color': '#000000'});
+            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...',{"color": BACKGROUND_TEXT_COLOR,
+                "font-size": BACKGROUND_TEXT_SIZE});
         } else {
             //get all the set-relation representation for this guy
             //remove all the connections associated with it

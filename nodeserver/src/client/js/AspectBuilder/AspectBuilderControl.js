@@ -441,7 +441,6 @@ define(['logManager',
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            this.selectedObjectChanged(undefined);
             this.designerCanvas.setBackgroundText('The currently opened aspect has been deleted...', {'font-size': 30,
                                                                                                      'color': '#000000'});
         } else {

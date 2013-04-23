@@ -16,7 +16,9 @@ define(['logManager',
 
     var DesignerControl,
         DECORATOR_PATH = "js/ModelEditor3/Decorators/",      //TODO: fix path;
-        GME_ID = "GME_ID";
+        GME_ID = "GME_ID",
+        BACKGROUND_TEXT_COLOR = '#DEDEDE',
+        BACKGROUND_TEXT_SIZE = 30;
 
     DesignerControl = function (options) {
         var self = this,
@@ -156,7 +158,8 @@ define(['logManager',
     };
 
     DesignerControl.prototype.selectedObjectChanged = function (nodeId) {
-        var desc = this._getObjectDescriptor(nodeId);
+        var desc = this._getObjectDescriptor(nodeId),
+            nodeName;
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
@@ -184,9 +187,6 @@ define(['logManager',
         this.currentNodeInfo.parentId = undefined;
 
         if (nodeId) {
-            this.designerCanvas.setBackgroundText("ModelEditor", {"color": "#DEDEDE",
-                "font-size": "10px"});
-
             this.currentNodeInfo.parentId = desc.parentId;
 
             if (this.currentNodeInfo.parentId) {
@@ -195,12 +195,15 @@ define(['logManager',
                 this.$btnGroupModelHierarchyUp.hide();
             }
 
-
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 2 };
 
-            this.designerCanvas.setTitle(desc.name);
+            nodeName = desc.name.toUpperCase();
+
+            this.designerCanvas.setTitle(nodeName);
+            this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
+                'color': BACKGROUND_TEXT_COLOR });
 
             this.designerCanvas.showPogressbar();
 
@@ -208,8 +211,8 @@ define(['logManager',
             //update the territory
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         } else {
-            this.designerCanvas.setBackgroundText("No object to display", {"color": "#DEDEDE",
-                "font-size": "30px"});
+            this.designerCanvas.setBackgroundText("No object to display", {"color": BACKGROUND_TEXT_COLOR,
+                "font-size": BACKGROUND_TEXT_SIZE});
         }
     };
 
@@ -612,12 +615,10 @@ define(['logManager',
             len;
 
         if (gmeID === this.currentNodeInfo.id) {
-            //the opened model has been deleted....
+            //the opened model has been removed from territoy --> most likely deleted...
             this.logger.debug('The currently opened model has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
-            //this.selectedObjectChanged(undefined);
-            //TODO fix this
-            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': 30,
-                                                                                                     'color': '#000000'});
+            this.designerCanvas.setBackgroundText('The currently opened model has been deleted...', {'font-size': BACKGROUND_TEXT_SIZE,
+                                                                                                     'color': BACKGROUND_TEXT_COLOR});
         } else {
             if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
                 len = this._GmeID2ComponentID[gmeID].length;

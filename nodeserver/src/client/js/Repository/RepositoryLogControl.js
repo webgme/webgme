@@ -113,8 +113,6 @@ define(['logManager'], function (logManager) {
         this._view.showPogressbar();
 
         this._client.getCommitsAsync(this._lastCommitID,num,commitsLoaded);
-
-
     };
 
     RepositoryLogControl.prototype._refreshActualCommit = function () {
