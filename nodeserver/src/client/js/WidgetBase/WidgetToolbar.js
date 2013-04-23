@@ -133,6 +133,14 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
         params.clickFn = toggleClickFn;
         btn = this._createButton(params);
 
+        //add setToggle method
+        btn.setToggled = function (toggled) {
+            btn.removeClass('active');
+            if (toggled === true) {
+                btn.addClass('active');
+            }
+        };
+
         btnGroup.append(btn);
 
         return btn;
