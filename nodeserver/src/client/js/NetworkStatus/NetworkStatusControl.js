@@ -44,9 +44,6 @@ define(['logManager'], function (logManager) {
                 case self._client.branchStates.FORKED:
                     self._view.branchStateChanged(self._view.BRANCH_STATES.FORKED);
                     break;
-                case self._client.branchStates.OFFLINE:
-                    self._view.branchStateChanged(self._view.BRANCH_STATES.OFFLINE);
-                    break;
             }
         });
 
