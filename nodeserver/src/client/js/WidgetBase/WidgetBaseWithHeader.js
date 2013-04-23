@@ -142,6 +142,11 @@ define(['js/WidgetBase/WidgetBase',
         } else {
             this.$_el.removeClass(WidgetBase.READ_ONLY_CLASS);
         }
+
+        //in DEBUG mode set Read-only button's toggle status accordingly
+        if (this.$readOnlyBtn) {
+            this.$readOnlyBtn.setToggled(isReadOnly);
+        }
     };
 
     return WidgetBaseWithHeader;
