@@ -29,9 +29,9 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		console.log("where each command is one of the following.");
 		console.log("");
 		console.log("  -help\t\t\t\tprints out this help");
-		console.log("  -mongo <host> [<db> [<coll>]]\tchanges the default mongodb parameters");
-		console.log("  -dumpmongo\t\t\tdumps the content of the database");
-		console.log("  -eraseall\t\t\tremoves all objects from the database");
+		console.log("  -mongo <host> [<db> [<proj>]]\topens the database and project");
+		console.log("  -dump\t\t\t\tdumps the content of the project");
+		console.log("  -erase\t\t\tremoves all objects from the project");
 		console.log("  -readxml <file>\t\treads and parses the given xml file");
 		console.log("  -root <sha1>\t\t\tselects a new root by hash");
 		console.log("  -dumptree\t\t\tdumps the current root as a json object");
@@ -45,36 +45,57 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		console.log("");
 	};
 	
-	var database, project;
+	var database = null, project = null, projectName;
 	commands.mongo = function () {
-		var opt = {
-			host: nextParam(),
-			database: nextParam(),
-			collection: nextParam(),
-			port: nextParam()
-		};
+		ASSERT(!database && !project);
+		
+		var opt = {};
+		opt.host = nextParam("localhost");
+		opt.database = nextParam("webgme");
+		projectName = nextParam("test");
+		opt.port = nextParam();
 		opt.port = opt.port && parseInt(opt.port, 10);
 
-		console.log("Opening database at " + opt.host + " (" + opt.database + "/" + opt.collection + ")");
+		console.log("Opening project " + opt.database + "/" + opt.project + " on " + opt.host);
 
 		var d = new Cache(new Mongo(opt), {});
 		d.openDatabase = TASYNC.adapt(d.openDatabase);
 		d.openProject = TASYNC.adapt(d.openProject);
+		d.deleteProject = TASYNC.adapt(d.deleteProject);
 		d.closeDatabase = TASYNC.adapt(d.closeDatabase);
 
 		return TASYNC.call(function () {
 			return TASYNC.call(function (p) {
+				p.closeProject = TASYNC.adapt(p.closeProject);
+				p.dumpObjects = TASYNC.adapt(p.dumpObjects);
+				
 				database = d;
 				project = p;
-			}, d.openProject("test"));
+			}, d.openProject(projectName));
 		}, d.openDatabase());
 	};
 
+	commands.close = function() {
+		var p = project, d = database;
+		project = null;
+		database = null;
+		
+		if(p) {
+			console.log("Closing project");
+
+			return TASYNC.call(function() {
+				return d.closeDatabase();
+			}, p.closeProject());
+		}
+	};
+	
 	commands.wait = function() {
 		var opt = nextParam();
+
 		if (typeof opt === "string") {
 			opt = parseInt(opt, 10);
 		}
+		
 		if (typeof opt !== "number" || opt < 0) {
 			opt = 1;
 		}
@@ -82,43 +103,60 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		console.log("Waiting " + opt + " seconds ...");
 		return TASYNC.delay(1000 * opt);
 	};
+
+	commands.dump = function() {
+		ASSERT(project);
+		
+		console.log("Dumping all data ...");
+		return TASYNC.call(function() {
+			console.log("Dumping done");
+		}, project.dumpObjects());
+	};
+
+	commands.erase = function() {
+		ASSERT(database);
+		
+		console.log("Deleting project: " + projectName);
+		return database.deleteProject(projectName);
+	};
 	
 	// --- main 
 	
 	function runNextCommand() {
-		ASSERT(argvIndex < argv.length);
+		if( argvIndex >= argv.length) {
+			return;
+		}
 		
 		var name = argv[argvIndex++];
 		if( name.charAt(0) !== "-" ) {
-			throw new Error("Incorrect command: " + name);
+			throw new Error("Command does not start with a dash: " + name);
 		}
-		
+
 		var cmd = commands[name.substr(1)];
 		if( typeof cmd !== "function" ) {
 			throw new Error("Unknown command: " + name);
 		}
-		
-		return TASYNC.call(runNextCommand, cmd());
+
+		var done = cmd();
+		return TASYNC.call(runNextCommand, done);
 	}
 	
 	if( argv.length <= 0 ) {
 		commands.help();
 	}
 	else {
-		argv.push("-end");
-
-		var catcher = function(err) {
-			console.log(err);
-		};
-		
-		TASYNC.then(runNextCommand(), function(err) {
-			console.log(err);
+		argv.push("-close");	
+		TASYNC.trycatch(runNextCommand, function(err) {
+			console.log(err.trace || err.stack);
+			
+			if(database) {
+				return commands.close();
+			}
 		});
 	}
 });
 
 return;
-
 	
 	if (argv.length <= 0 || argv[0] === "-help") {
 	} else {
@@ -128,38 +166,6 @@ return;
 
 			var cmd = argv[i++];
 			if (cmd === "-mongo") {
-			} else if (cmd === "-dumpmongo") {
-				if (!mongo) {
-					argv.splice(--i, 0, "-mongo");
-					next();
-				} else {
-					console.log("Dumping all data from database ...");
-					mongo.dumpAll(function (err) {
-						if (err) {
-							console.log("Database error: " + err);
-							argv.splice(i, 0, "-end");
-						} else {
-							console.log("Dumping done");
-						}
-						next();
-					});
-				}
-			} else if (cmd === "-eraseall") {
-				if (!mongo) {
-					argv.splice(--i, 0, "-mongo");
-					next();
-				} else {
-					console.log("Erasing all data from database ...");
-					mongo.removeAll(function (err) {
-						if (err) {
-							console.log("Database error: " + err);
-							argv.splice(i, 0, "-end");
-						} else {
-							console.log("Erasing done");
-						}
-						next();
-					});
-				}
 			} else if (cmd === "-readxml") {
 				if (!mongo) {
 					argv.splice(--i, 0, "-mongo");

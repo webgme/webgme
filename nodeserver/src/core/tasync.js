@@ -80,18 +80,18 @@
 		return future;
 	}
 
-	// ------- Array -------
+	// ------- Lift -------
 
-	var FutureArray = function (array, index) {
+	var FutureLift = function (array, index) {
 		Future.call(this);
 
 		this.array = array;
 		this.index = index;
 	};
 
-	FutureArray.prototype = Object.create(Future.prototype);
+	FutureLift.prototype = Object.create(Future.prototype);
 
-	FutureArray.prototype.onResolved = function (value) {
+	FutureLift.prototype.onResolved = function (value) {
 		assert(this.state === STATE_LISTEN);
 
 		var array = this.array;
@@ -117,12 +117,12 @@
 		this.resolve(array);
 	};
 
-	FutureArray.prototype.onRejected = function (error) {
+	FutureLift.prototype.onRejected = function (error) {
 		this.array = null;
 		this.reject(error);
 	};
 
-	var array = function (array) {
+	var lift = function (array) {
 		if (!(array instanceof Array)) {
 			throw new Error("array argument is expected");
 		}
@@ -134,7 +134,7 @@
 				if (value.state === STATE_RESOLVED) {
 					array[index] = value.value;
 				} else if (value.state === STATE_LISTEN) {
-					var future = new FutureArray(array, index);
+					var future = new FutureLift(array, index);
 					value.register(future);
 					return future;
 				} else {
@@ -155,7 +155,7 @@
 
 	var FRAME = ROOT;
 
-	function FutureApply (func, that, args, index) {
+	var FutureApply = function tasync_trace_end (func, that, args, index) {
 		Future.call(this);
 
 		this.caller = FRAME;
@@ -170,7 +170,7 @@
 		this.that = that;
 		this.args = args;
 		this.index = index;
-	}
+	};
 
 	FutureApply.prototype = Object.create(Future.prototype);
 
@@ -188,7 +188,7 @@
 	function getSlice (trace) {
 		assert(typeof trace === "string");
 
-		var end = trace.indexOf("_trace_start");
+		var end = trace.indexOf("tasync_trace_start");
 		if (end >= 0) {
 			end = trace.lastIndexOf("\n", end) + 1;
 		} else {
@@ -198,9 +198,12 @@
 			end = undefined;
 		}
 
-		var start = trace.indexOf("_trace_end");
+		var start = trace.indexOf("tasync_trace_end");
 		if (start >= 0) {
 			start = trace.indexOf("\n", start) + 1;
+			if (start >= 0) {
+				start = trace.indexOf("\n", start) + 1;
+			}
 		} else {
 			start = 0;
 		}
@@ -230,7 +233,7 @@
 		this.reject(error);
 	};
 
-	FutureApply.prototype.onResolved = function apply_on_resolved_trace_start (value) {
+	FutureApply.prototype.onResolved = function tasync_trace_start (value) {
 		assert(this.state === STATE_LISTEN);
 
 		var args = this.args;
@@ -277,7 +280,7 @@
 		}
 	};
 
-	var apply = function apply_trace_end (func, args, that) {
+	var apply = function (func, args, that) {
 		if (typeof func !== "function") {
 			throw new Error("function argument is expected");
 		} else if (!(args instanceof Array)) {
@@ -306,7 +309,7 @@
 
 	// ------- Call -------
 
-	function FutureCall (args, index) {
+	var FutureCall = function tasync_trace_end (args, index) {
 		Future.call(this);
 
 		this.caller = FRAME;
@@ -319,7 +322,7 @@
 
 		this.args = args;
 		this.index = index;
-	}
+	};
 
 	FutureCall.prototype = Object.create(Future.prototype);
 
@@ -328,7 +331,7 @@
 
 	var FUNCTION_CALL = Function.call;
 
-	FutureCall.prototype.onResolved = function call_on_resolved_trace_start (value) {
+	FutureCall.prototype.onResolved = function tasync_trace_start (value) {
 		assert(this.state === STATE_LISTEN);
 
 		var args = this.args;
@@ -377,7 +380,7 @@
 		}
 	};
 
-	var call = function call_trace_end () {
+	var call = function () {
 		var index = arguments.length;
 		while (--index >= 0) {
 			var value = arguments[index];
@@ -727,7 +730,7 @@
 	var TASYNC = {
 		setTrace: setTrace,
 		delay: delay,
-		array: array,
+		lift: lift,
 		apply: apply,
 		call: call,
 		trycatch: trycatch,

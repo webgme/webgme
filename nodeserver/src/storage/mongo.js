@@ -141,7 +141,9 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 			ASSERT(typeof callback === "function");
 
-			mongo.dropCollection(name, callback);
+			mongo.dropCollection(name, function(err) {
+				callback(null);
+			});
 		}
 
 		function openProject (name, callback) {
