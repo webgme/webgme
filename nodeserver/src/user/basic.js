@@ -8,7 +8,9 @@ define([
     'core/commit',
     'storage/cache',
     'storage/failsafe',
-    'storage/socketioclient'
+    'storage/socketioclient',
+    'storage/log',
+    'logManager'
 ],
     function (
         ASSERT,
@@ -20,7 +22,9 @@ define([
         Commit,
         Cache,
         Failsafe,
-        SocketIOClient
+        SocketIOClient,
+        Log,
+        LogManager
         ) {
 
         function GUID(){
@@ -37,15 +41,18 @@ define([
 
         function Client(){
             var _self = this,
-                _database = new Cache(
-                    new Failsafe(
-                        new SocketIOClient(
-                            {
-                                host:commonUtil.combinedserver.host,
-                                port:commonUtil.combinedserver.port
-                            }
+                logger = LogManager.create("client"),
+                _database = new Log(
+                    new Cache(
+                        new Failsafe(
+                            new SocketIOClient(
+                                {
+                                    host:commonUtil.combinedserver.host,
+                                    port:commonUtil.combinedserver.port
+                                }
+                            ),{}
                         ),{}
-                    ),{}
+                    ),{log:LogManager.create('client-storage')}
                 ),
                 _projectName = null,
                 _project = null,
@@ -70,12 +77,12 @@ define([
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
-                "SELECTEDOBJECT_CHANGED": Constants.USER_EVENT_SELECTEDOBJECT_CHANGED,
-                "NETWORKSTATUS_CHANGED" : Constants.USER_EVENT_NETWORKSTATUS_CHANGED,
-                "BRANCHSTATUS_CHANGED"  : Constants.USER_EVENT_BRANCHSTATUS_CHANGED,
-                "BRANCH_CHANGED"        : Constants.USER_EVENT_BRANCH_CHANGED,
-                "PROJECT_CLOSED"        : Constants.USER_EVENT_PROJECT_CLOSED,
-                "PROJECT_OPENED"        : Constants.USER_EVENT_PROJECT_OPENED
+                "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
+                "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
+                "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
+                "BRANCH_CHANGED"        : "BRANCH_CHANGED",
+                "PROJECT_CLOSED"        : "PROJECT_CLOSED",
+                "PROJECT_OPENED"        : "PROJECT_OPENED"
             };
             _self.networkStates = {
                 'CONNECTED' :"connected",
@@ -160,9 +167,9 @@ define([
                             } else {
                                 if(forked){
                                     changeBranchState(_self.branchStates.FORKED);
-                                } else {
+                                }/* else {
                                     changeBranchState(_self.branchStates.SYNC);
-                                }
+                                }*/
                             }
 
                             return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
@@ -1015,9 +1022,7 @@ define([
                 _recentCommits = [hash];
                 _project.loadObject(hash,function(err,commitObj){
                     if(!err && commitObj){
-                        loading(commitObj.root,function(err){
-                            callback(err);
-                        });
+                        loading(commitObj.root,callback);
                     } else {
                         callback(err);
                     }
@@ -1051,7 +1056,11 @@ define([
                 _commit.getBranchHash(branchName,'',function(err,newhash,forkedhash){
                     if(!err && newhash){
                         if(forkedhash){
-                            _commit.setBranchHash(branchName,newhash,forkedhash,callback);
+                            _commit.setBranchHash(branchName,newhash,forkedhash,function(err){
+                                if(!err){
+                                    changeBranchState(_self.branchStates.SYNC);
+                                }
+                            });
                         } else {
                             _commit.setBranchHash(branchName,newhash,'',callback);
                         }

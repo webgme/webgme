@@ -264,7 +264,33 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branch];
 
                 if(branchObj.state === 'sync' || branchObj.state === 'ahead'){
-                    project.getBranchHash(branch,oldhash,callback);
+                    project.getBranchHash(branch,oldhash,function(err,newhash,forkedhash){
+                        switch(branchObj.state){
+                            case 'sync':
+                                callback(err,newhash,forkedhash);
+                                break;
+                            case 'ahead':
+                                if(err){
+                                    callback(err,newhash,forkedhash);
+                                } else {
+                                    if(newhash && branchObj.local.indexOf(newhash) !== -1){
+                                        callback(err,newhash,forkedhash);
+                                    } else {
+                                        //we forked!!!
+                                        branchObj.state = 'forked';
+                                        branchObj.fork = newhash;
+                                        callback(null,branchObj.local[0],branchObj.fork);
+                                    }
+                                }
+                                break;
+                            case 'disconnected':
+                                callback(null,branchObj.local[0],branchObj.fork);
+                                break;
+                            default://forked
+                                callback(null,branchObj.local[0],branchObj.fork);
+                                break;
+                        }
+                    });
                 } else {
                     //served locally
                     ASSERT(branchObj.local[0] && branchObj.local[0] !== "");
