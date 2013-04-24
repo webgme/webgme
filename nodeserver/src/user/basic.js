@@ -579,16 +579,6 @@ define([
                 });
             }
             function completeNode(core,nodesSoFar,node,callback){
-                var testcallback = callback;
-                var test = false;
-                callback = function(err){
-                    console.log('kecso',core.getStringPath(node),err);
-                    testcallback(err);
-                };
-                if(core.getStringPath(node) === 'root'){
-                    console.log('kecso');
-                    test = true;
-                }
                 if(core.getSetsNumber(node)>0){
                     core.loadSets(node,function(err,sets){
                         if(!err && sets ){
@@ -602,9 +592,6 @@ define([
                                 }
                                 if(core.getChildrenNumber(sets[i])>0){
                                     core.loadChildren(sets[i],function(err,children){
-                                        if(test){
-                                            console.log('kecso');
-                                        }
                                         error = error || err;
                                         if(!err){
                                             for(var j=0;j<children.length;j++){
