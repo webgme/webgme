@@ -565,7 +565,8 @@ define(['logManager',
         this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
 
-        if (this.mode === this.OPERATING_MODES.NORMAL) {
+        if (this.mode === this.OPERATING_MODES.NORMAL ||
+            this.mode === this.OPERATING_MODES.READ_ONLY) {
             this.selectionManager.showSelectionOutline();    
         }
 
