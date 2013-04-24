@@ -67,46 +67,46 @@ define(['logManager',
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         /************** CREATE POINTERS *****************/
-        this._$btnGroupCreatePointers = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+        this._$btnGroupCreatePointers = this.designerCanvas.toolBar.addRadioButtonGroup(function (event, data) {
             self._setNewConnectionType(data.connType);
         });
 
-        var btnCreatePointerSource = this.designerCanvas.addButton({ "title": "SOURCE pointer",
+        var btnCreatePointerSource = this.designerCanvas.toolBar.addButton({ "title": "SOURCE pointer",
             "selected": true,
             "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_SOURCE },
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_SOURCE))}, this._$btnGroupCreatePointers);
 
-        var btnCreatePointerTarget = this.designerCanvas.addButton({ "title": "TARGET pointer",
+        var btnCreatePointerTarget = this.designerCanvas.toolBar.addButton({ "title": "TARGET pointer",
             "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_TARGET },
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_TARGET))}, this._$btnGroupCreatePointers);
 
-        var btnCreatePointerRef = this.designerCanvas.addButton({ "title": "REF pointer",
+        var btnCreatePointerRef = this.designerCanvas.toolBar.addButton({ "title": "REF pointer",
             "data": { "connType": POINTER_PREFIX + CONSTANTS.POINTER_REF },
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(POINTER_PREFIX + CONSTANTS.POINTER_REF))}, this._$btnGroupCreatePointers);
         /************** END OF - CREATE POINTERS *****************/
 
         /************** CREATE SET RELATIONS *****************/
-        this._$btnGroupCreateSetRelations = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+        this._$btnGroupCreateSetRelations = this.designerCanvas.toolBar.addRadioButtonGroup(function (event, data) {
             self._setNewConnectionType(data.connType);
         });
 
-        var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": "SET ValidChildren",
+        var btnCreateSetValidChildren = this.designerCanvas.toolBar.addButton({ "title": "SET ValidChildren",
             "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN },
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDCHILDREN))}, this._$btnGroupCreateSetRelations);
 
-        var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": "SET ValidInheritor",
+        var btnCreateSetValidInheritor = this.designerCanvas.toolBar.addButton({ "title": "SET ValidInheritor",
             "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR},
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDINHERITOR))}, this._$btnGroupCreateSetRelations);
 
-        var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": "SET ValidSource",
+        var btnCreateSetValidSource = this.designerCanvas.toolBar.addButton({ "title": "SET ValidSource",
             "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDSOURCE},
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDSOURCE))}, this._$btnGroupCreateSetRelations);
 
-        var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": "SET ValidDestination",
+        var btnCreateSetValidDestination = this.designerCanvas.toolBar.addButton({ "title": "SET ValidDestination",
             "data": { "connType": SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION},
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_VALIDDESTINATION))}, this._$btnGroupCreateSetRelations);
 
-        var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": "SET General",
+        var btnCreateSetGeneral = this.designerCanvas.toolBar.addButton({ "title": "SET General",
             "data": { "connType": SET_PREFIX + CONSTANTS.SET_GENERAL},
             "icon": SetVisualHelper.createButtonIcon(16, this._getConnTypeVisualDescriptor(SET_PREFIX + CONSTANTS.SET_GENERAL))}, this._$btnGroupCreateSetRelations);
 
@@ -115,11 +115,11 @@ define(['logManager',
 
 
         /************** PRINT NODE DATA *****************/
-        $btnGroupPrintNodeData = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+        $btnGroupPrintNodeData = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
             self._printNodeData();
         });
 
-        this.designerCanvas.addButton({ "title": "Print node data",
+        this.designerCanvas.toolBar.addButton({ "title": "Print node data",
             "icon": "icon-share"}, $btnGroupPrintNodeData);
         /************** END OF - PRINT NODE DATA *****************/
 

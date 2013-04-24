@@ -1,6 +1,5 @@
 @import "Connector";
 
-$designer-canvas-header-background-color: #EFEFEF;
 $designer-canvas-selection-rubber-band-background-color: rgba(219, 234, 252, 0.49);
 $designer-canvas-selection-rubber-band-border-color: #52A8EC;
 $designer-canvas-selection-outline-background-color: rgba(255, 255, 0, 0.1);
@@ -16,112 +15,73 @@ $connector-hover-border-color: rgba( 255, 43, 43, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $designer-canvas-property-dialog-ui-dialog-content-background-color: #000000;
-$designer-canvas-body-read-only-background-color: #EDEDED;
+
 $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
 
 .designer-canvas {
 
-  .designer-canvas-header {
-    padding: 5px;
-    height: 30px;
-    background-color: $designer-canvas-header-background-color;
-    overflow: hidden;
-    white-space: nowrap;
+  .items {
+    position: absolute;
 
-    .designer-canvas-header-title {
-      font-size: 20px;
-      font-weight: bold;
-      display: inline-block;
-      margin-right: 10px;
-      margin-left: 10px;
+    &:focus {
+      outline: none;
     }
 
-    .designer-canvas-read-only-mode {
-      font-size: 18px;
-      font-weight: bold;
-      display: inline-block;
-      margin-right: 10px;
-      margin-left: 10px;
+    .rubberband {
+      background: $designer-canvas-selection-rubber-band-background-color;
+      border: $designer-canvas-selection-rubber-band-border-color solid 1px;
+      z-index: 100000;
     }
 
-    .btn-group {
-      margin-left: 10px;
+    .selection-outline {
+      background: $designer-canvas-selection-outline-background-color;
+      border: $designer-canvas-selection-outline-border;
+      position: absolute;
+      /*z-index: 1002;*/
+      pointer-events: none;
+      -webkit-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start 0 0 8px $designer-canvas-selection-outline-shadow-end;
+      -moz-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start, 0 0 8px $designer-canvas-selection-outline-shadow-end;
+      box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start, 0 0 8px $designer-canvas-selection-outline-shadow-end;
+
+      .s-btn {
+        position: absolute;
+        /*z-index: 100000;*/
+        /*width: 26px;
+        height: 26px;*/
+        background-color: $designer-canvas-selection-outline-s-btn-background-color;
+        border: 2px solid #000000;
+        line-height: 14px;
+        padding: 3px;
+        border-radius: 12px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
+        -moz-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start, 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
+        box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start, 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
+
+        &.delete {
+          top: -13px;
+          right: -13px;
+        }
+      }
     }
 
-    .btn-group.no-margin {
-      margin-left: 0px;
+    .connectionDraggableEnd {
+      @include connector_basics;
+      margin-top: $connector-size / -2;
+      margin-left: $connector-size / -2;
     }
   }
 
-  .designer-canvas-body {
-    position: relative;
-    overflow: auto;
+  .dropRegion {
+    width: 0;
+    height: 0;
+    position: absolute;
+    top: 0;
+    left: 0;
 
-    &.read-only {
-      background-color: $designer-canvas-body-read-only-background-color;
-    }
-
-    .items {
-      position: absolute;
-
-      &:focus {
-        outline: none;
-      }
-
-      .rubberband {
-        background: $designer-canvas-selection-rubber-band-background-color;
-        border: $designer-canvas-selection-rubber-band-border-color solid 1px;
-        z-index: 100000;
-      }
-
-      .selection-outline {
-        background: $designer-canvas-selection-outline-background-color;
-        border: $designer-canvas-selection-outline-border;
-        position: absolute;
-        /*z-index: 1002;*/
-        pointer-events: none;
-        -webkit-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start 0 0 8px $designer-canvas-selection-outline-shadow-end;
-        -moz-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start, 0 0 8px $designer-canvas-selection-outline-shadow-end;
-        box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-shadow-start, 0 0 8px $designer-canvas-selection-outline-shadow-end;
-
-        .s-btn {
-          position: absolute;
-          /*z-index: 100000;*/
-          width: 26px;
-          height: 26px;
-          background-color: $designer-canvas-selection-outline-s-btn-background-color;
-          border-radius: 13px;
-          pointer-events: all;
-          cursor: pointer;
-          -webkit-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
-          -moz-box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start, 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
-          box-shadow: inset 0 1px 1px $designer-canvas-selection-outline-s-btn-shadow-start, 0 0 8px $designer-canvas-selection-outline-s-btn-shadow-end;
-
-          &.delete {
-            top: -13px;
-            right: -13px;
-            background-image: url(../../img/remove.png);
-          }
-        }
-      }
-
-      .connectionDraggableEnd {
-        @include connector_basics;
-        margin-top: $connector-size / -2;
-        margin-left: $connector-size / -2;
-      }
-    }
-
-    .dropRegion {
-      width: 0;
-      height: 0;
-      position: absolute;
-      top: 0;
-      left: 0;
-
-      &.accept-droppable {
-        background-color: $items-accept-droppable-background-color;
-      }
+    &.accept-droppable {
+      background-color: $items-accept-droppable-background-color;
     }
   }
 }
