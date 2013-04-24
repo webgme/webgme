@@ -681,7 +681,9 @@ define(['logManager',
 
         for (i in this._GmeID2ComponentID) {
             if (this._GmeID2ComponentID.hasOwnProperty(i)) {
-                allGMEID.pushUnique(i);
+                if (this._GMEModels.indexOf(i) !== -1) {
+                    allGMEID.pushUnique(i);
+                }
             }
         }
 
