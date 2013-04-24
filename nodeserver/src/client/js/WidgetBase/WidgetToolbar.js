@@ -75,7 +75,6 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
         }
 
         if (params.selected === true) {
-            btnGroup.find('.btn.active').removeClass('active');
             $btn.addClass("active");
         }
 
@@ -107,6 +106,11 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     WidgetToolbar.prototype.addButton = function (params, btnGroup) {
         var $btn = this._createButton(params);
+
+        //if this guy is selected then unselect the currently selected before adding it to the same group
+        if (params.selected === true) {
+            btnGroup.find('.btn.active').removeClass('active');
+        }
 
         btnGroup.append($btn);
 
