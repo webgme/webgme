@@ -131,5 +131,10 @@ define(['logManager',
         this._logger.warning("PartBrowserView.prototype.updatePart NOT YET IMPLEMENTED!!!");
     };
 
+    PartBrowserView.prototype.setReadOnly = function (isReadOnly) {
+        //TODO: NOT YET IMPLEMENTED
+        this._logger.warning("PartBrowserView.prototype.setReadOnly NOT YET IMPLEMENTED!!!");
+    };
+
     return PartBrowserView;
 });

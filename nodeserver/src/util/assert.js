@@ -12,6 +12,7 @@ define(function () {
 			var error = new Error("ASSERT failed");
 
 			console.log("Throwing", error.stack);
+			console.log();
 			
 			throw error;
 		}

@@ -25,6 +25,8 @@ define(['js/WidgetBase/WidgetBase',
 
         this.initUI(options);
         this._resize();
+
+        this.attachScrollHandler(options.fnOnScroll);
     };
     //inherit from WidgetBase Phase #2
     WidgetBaseWithHeader.OPTIONS = _.extend(WidgetBase.OPTIONS, { "HEADER_TITLE": "HEADER_TITLE",
@@ -35,14 +37,17 @@ define(['js/WidgetBase/WidgetBase',
                                                                                            "MICRO": "MICRO"}});
     _.extend(WidgetBaseWithHeader.prototype, __parent__.prototype);
 
+
     /* OVERRIDE WidgetBase members */
     WidgetBaseWithHeader.prototype.parentContainerSizeChanged = function (newWidth, newHeight) {
         this._resize(newWidth, newHeight);
     };
 
+
     WidgetBaseWithHeader.prototype.onReadOnlyChanged = function (isReadOnly) {
         this._onReadOnlyChanged(isReadOnly);
     };
+
 
     /* CUSTOM MEMBERS */
     WidgetBaseWithHeader.prototype.initUI = function (options) {
@@ -118,6 +123,8 @@ define(['js/WidgetBase/WidgetBase',
         }
     };
 
+
+    /************** CUSTOM RESIZE HANDLER *****************/
     WidgetBaseWithHeader.prototype._resize = function (parentW, parentH) {
         var widgetHeaderHeight = this.$widgetHeader.outerHeight(true),
             widgetHeaderPaddingLeft = parseInt(this.$widgetHeader.css('padding-left')),
@@ -134,15 +141,31 @@ define(['js/WidgetBase/WidgetBase',
         this.$_el.width(parentW).height(parentH);
         this.$widgetHeader.width(parentW - widgetHeaderPaddingLeft - widgetHeaderPaddingRight);
         this.$widgetBody.width(parentW).height(parentH - widgetHeaderHeight);
-    };
 
+        //get widget-body's offset
+        this.offset = this.$el.offset();
+
+        this.size = {"width": parentW,
+            "height": parentH - widgetHeaderHeight};
+    };
+    /************** END OF --- CUSTOM RESIZE HANDLER *****************/
+
+
+    /************** CUSTOM READ-ONLY CHANGED HANDLER *****************/
     WidgetBaseWithHeader.prototype._onReadOnlyChanged = function (isReadOnly) {
         if (isReadOnly === true) {
             this.$_el.addClass(WidgetBase.READ_ONLY_CLASS);
         } else {
             this.$_el.removeClass(WidgetBase.READ_ONLY_CLASS);
         }
+
+        //in DEBUG mode set Read-only button's toggle status accordingly
+        if (this.$readOnlyBtn) {
+            this.$readOnlyBtn.setToggled(isReadOnly);
+        }
     };
+    /************** END OF --- CUSTOM READ-ONLY CHANGED HANDLER *****************/
+
 
     return WidgetBaseWithHeader;
 });

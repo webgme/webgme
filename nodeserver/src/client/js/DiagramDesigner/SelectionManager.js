@@ -539,6 +539,7 @@ define(['logManager',
             "data-id" : "delete"
         });
         this.canvas.skinParts.$selectionOutline.append(deleteBtn);
+        deleteBtn.html('<i class="icon-remove"></i>');
 
         /*this._skinParts.copySelection = $('<div/>', {
             "class" : "copySelectionBtn selectionBtn"

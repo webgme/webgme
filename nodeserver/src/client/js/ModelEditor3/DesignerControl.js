@@ -58,12 +58,12 @@ define(['logManager',
         /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+        this.$btnGroupModelHierarchyUp = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
             self._onModelHierarchyUp();
         });
 
-        this.designerCanvas.addButton({ "title": "Go to parent",
-            "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp );
+        this.designerCanvas.toolBar.addButton({ "title": "Go to parent",
+            "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp);
 
         this.$btnGroupModelHierarchyUp.hide();
 
@@ -74,75 +74,75 @@ define(['logManager',
 
         if (commonUtil.DEBUG === true) {
             /************** AUTO RENAME GME NODES *****************/
-            $btnGroupAutoRename = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+            $btnGroupAutoRename = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
                 self._autoRenameGMEObjects();
             });
-            this.designerCanvas.addButton({ "title": "Auto rename",
-                "icon": "icon-th-list"}, $btnGroupAutoRename );
+            this.designerCanvas.toolBar.addButton({ "title": "Auto rename",
+                "icon": "icon-th-list"}, $btnGroupAutoRename);
 
             /************** END OF - AUTO RENAME GME NODES *****************/
 
             /************** AUTO CREATE NEW NODES *****************/
-            $btnGroupAutoCreateModel = this.designerCanvas.addButtonGroup(function (event, data) {
+            $btnGroupAutoCreateModel = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
                 self._createGMEModels(data.num);
             });
 
-            this.designerCanvas.addButton({ "title": "Create 1",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 1",
                 "icon": "icon-plus-sign",
                 "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateModel );
+                "data": { "num": 1 }}, $btnGroupAutoCreateModel);
 
-            this.designerCanvas.addButton({ "title": "Create 5",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 5",
                 "icon": "icon-plus-sign",
                 "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateModel );
+                "data": { "num": 5 }}, $btnGroupAutoCreateModel);
 
-            this.designerCanvas.addButton({ "title": "Create 10",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 10",
                 "icon": "icon-plus-sign",
                 "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateModel );
+                "data": { "num": 10 }}, $btnGroupAutoCreateModel);
 
             /************** END OF - AUTO CREATE NEW NODES *****************/
 
             /************** AUTO CREATE NEW CONNECTIONS *****************/
-            $btnGroupAutoCreateConnection = this.designerCanvas.addButtonGroup(function (event, data) {
+            $btnGroupAutoCreateConnection = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
                 self._createGMEConnections(data.num);
             });
 
-            this.designerCanvas.addButton({ "title": "Create 1 connection",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 1 connection",
                 "icon": "icon-resize-horizontal",
                 "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateConnection );
+                "data": { "num": 1 }}, $btnGroupAutoCreateConnection);
 
-            this.designerCanvas.addButton({ "title": "Create 5 connections",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 5 connections",
                 "icon": "icon-resize-horizontal",
                 "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateConnection );
+                "data": { "num": 5 }}, $btnGroupAutoCreateConnection);
 
-            this.designerCanvas.addButton({ "title": "Create 10 connections",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 10 connections",
                 "icon": "icon-resize-horizontal",
                 "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateConnection );
+                "data": { "num": 10 }}, $btnGroupAutoCreateConnection);
 
-            this.designerCanvas.addButton({ "title": "Create 50 connections",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 50 connections",
                 "icon": "icon-resize-horizontal",
                 "text": "50",
-                "data": { "num": 50 }}, $btnGroupAutoCreateConnection );
+                "data": { "num": 50 }}, $btnGroupAutoCreateConnection);
 
-            this.designerCanvas.addButton({ "title": "Create 100 connections",
+            this.designerCanvas.toolBar.addButton({ "title": "Create 100 connections",
                 "icon": "icon-resize-horizontal",
                 "text": "100",
-                "data": { "num": 100 }}, $btnGroupAutoCreateConnection );
+                "data": { "num": 100 }}, $btnGroupAutoCreateConnection);
 
             /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
             /************** PRINT NODE DATA *****************/
-            $btnGroupPrintNodeData = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+            $btnGroupPrintNodeData = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
                 self._printNodeData();
             });
 
-            this.designerCanvas.addButton({ "title": "Print node data",
-                "icon": "icon-share"}, $btnGroupPrintNodeData );
+            this.designerCanvas.toolBar.addButton({ "title": "Print node data",
+                "icon": "icon-share"}, $btnGroupPrintNodeData);
 
             /************** END OF - PRINT NODE DATA *****************/
         }
@@ -168,10 +168,10 @@ define(['logManager',
 
         //clean up local hash map
         this._components = {};
-        
+
         this._GMEModels = [];
         this._GMEConnections = [];
-        
+
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
 
@@ -259,13 +259,13 @@ define(['logManager',
 
                     objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
                     if (objDescriptor.decorator !== "DefaultDecorator" &&
-                        objDescriptor.decorator !== "CircleDecorator" &&
-                        objDescriptor.decorator !== "DecoratorWithPorts") {
+                            objDescriptor.decorator !== "CircleDecorator" &&
+                            objDescriptor.decorator !== "DecoratorWithPorts") {
                         objDescriptor.decorator = "DecoratorWithPorts";
                     }
                     /*objDescriptor.decorator = "DefaultDecorator";*/
                 }
-            }            
+            }
         }
 
         return objDescriptor;
@@ -310,8 +310,8 @@ define(['logManager',
             len = nextBatchInQueue.length;
 
             while (len--) {
-                if ( (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) ) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                if ((nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
+                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid)) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
@@ -485,7 +485,7 @@ define(['logManager',
                                 i = this._GmeID2ComponentID[GMESrcId].length;
                                 while (i--) {
                                     sources.push( {"objId" : this._GmeID2ComponentID[GMESrcId][i],
-                                                   "subCompId" : undefined } );
+                                                   "subCompId" : undefined });
                                 }
                             } else {
                                 //src is not a DesignerItem
@@ -494,7 +494,7 @@ define(['logManager',
                                     for (i in this._GMEID2Subcomponent[GMESrcId]) {
                                         if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
                                             sources.push( {"objId" : i,
-                                                "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] } );
+                                                "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] });
                                         }
                                     }
                                 }
@@ -504,7 +504,7 @@ define(['logManager',
                                 i = this._GmeID2ComponentID[GMEDstId].length;
                                 while (i--) {
                                     destinations.push( {"objId" : this._GmeID2ComponentID[GMEDstId][i],
-                                        "subCompId" : undefined } );
+                                        "subCompId" : undefined });
                                 }
                             } else {
                                 //dst is not a DesignerItem
@@ -513,7 +513,7 @@ define(['logManager',
                                     for (i in this._GMEID2Subcomponent[GMEDstId]) {
                                         if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(i)) {
                                             destinations.push( {"objId" : i,
-                                                "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] } );
+                                                "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] });
                                         }
                                     }
                                 }
@@ -673,7 +673,6 @@ define(['logManager',
 
     DesignerControl.prototype._createGMEConnections = function (num) {
         var counter = this._GMEConnections.length,
-            prefix = "Connection_",
             allGMEID = [],
             i,
             sourceId,
@@ -682,7 +681,9 @@ define(['logManager',
 
         for (i in this._GmeID2ComponentID) {
             if (this._GmeID2ComponentID.hasOwnProperty(i)) {
-                allGMEID.pushUnique(i);
+                if (this._GMEModels.indexOf(i) !== -1) {
+                    allGMEID.pushUnique(i);
+                }
             }
         }
 

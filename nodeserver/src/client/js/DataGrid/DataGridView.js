@@ -66,6 +66,8 @@ define(['clientUtil',
             self._filterDataTable(newVal);
         });
 
+        this.$infoLabel = this.toolBar.addLabel();
+
         //add DROPDOWN MENU to toolbar for column hide/show
         this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Column visibility" });
 
@@ -168,6 +170,7 @@ define(['clientUtil',
 
         this._oTable = this.$table.dataTable( {
             "bPaginate": false,
+            "bInfo": false,
             "bLengthChange": false,
             "bSortClasses": false,
             "bFilter": true,
@@ -874,6 +877,8 @@ i,
         }
 
         this._applyCommonColumnFilter();
+
+        this._updateInfo(oSettings);
     };
 
     DataGridView.prototype._enableColumnFilterCheckBox = function (index, enabled) {
@@ -1021,6 +1026,24 @@ i,
         }
 
         this._isApplyingCommonColumnFilter = false;
+    };
+
+    DataGridView.prototype._updateInfo = function (oSettings) {
+        var iStart = oSettings._iDisplayStart+1,
+            iEnd = oSettings.fnDisplayEnd(),
+            iMax = oSettings.fnRecordsTotal(),
+            iTotal = oSettings.fnRecordsDisplay(),
+            sOut;
+
+        if ( iTotal === iMax )
+        {
+            sOut = 'Displaying ' + iTotal + ' entries';
+        } else {
+            /* Record set after filtering */
+            sOut = 'Displaying ' + iTotal + '/' + iMax + ' entries';
+        }
+
+        this.$infoLabel.text(sOut);
     };
 
     /******* END OF --- CALCULATE ROW HEIGHT AND COLUMN WIDTHS ****************/

@@ -152,6 +152,10 @@ body {
 
 }
 
+#mainWidget {
+    overflow: hidden;
+}
+
 .pointer {
     cursor: pointer;
 }
@@ -181,6 +185,10 @@ div.ObjectBrowser {
 }
 
 /************************/
+
+.nowrap {
+    white-space: nowrap;
+}
 
 /****** IPHONE STYLE TOGGLE BUTTON ********/
 

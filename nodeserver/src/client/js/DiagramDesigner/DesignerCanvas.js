@@ -3,14 +3,13 @@
 define(['logManager',
     'clientUtil',
     'commonUtil',
+    'js/WidgetBase/WidgetBaseWithHeader',
     'js/Constants',
     'js/DiagramDesigner/SelectionManager',
     'js/DiagramDesigner/DragManager.Native',
     'raphaeljs',
     'loaderCircles',
     'js/DiagramDesigner/DesignerCanvas.OperatingModes',
-    'js/DiagramDesigner/DesignerCanvas.DEBUG',
-    'js/DiagramDesigner/DesignerCanvas.Toolbar',
     'js/DiagramDesigner/DesignerCanvas.DesignerItems',
     'js/DiagramDesigner/DesignerCanvas.Connections',
     'js/DiagramDesigner/DesignerCanvas.Subcomponents',
@@ -22,14 +21,13 @@ define(['logManager',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
+                                                      WidgetBaseWithHeader,
                                                       CONSTANTS,
                                                       SelectionManager,
                                                       DragManager,
                                                       raphaeljs,
                                                       LoaderCircles,
                                                       DesignerCanvasOperatingModes,
-                                                      DesignerCanvasDEBUG,
-                                                      DesignerCanvasToolbar,
                                                       DesignerCanvasDesignerItems,
                                                       DesignerCanvasConnections,
                                                       DesignerCanvasSubcomponents,
@@ -43,106 +41,87 @@ define(['logManager',
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog",
-        READ_ONLY_CLASS = "read-only",
-        ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable";
+        ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
+        __parent__ = WidgetBaseWithHeader,
+        __parent_proto__ = __parent__.prototype;
 
     DesignerCanvas = function (options) {
         var self = this;
 
         //set properties from options
-        this.$el = options.containerElement;
-        if (this.$el.length === 0) {
-            this.logger.error("DesignerCanvas's container control does not exist");
-            throw ("DesignerCanvas can not be created");
-        }
+        options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "DesignerCanvas";
 
-        this.logger = options.logger || logManager.create((options.loggerName || "DesignerCanvas") + '_' + this.$el.attr("id"));
+        //call parent's constructor
+        __parent__.apply(this, [options]);
 
-        this._readOnlyMode = options.readOnlyMode || false;
-        this.logger.warning("DesignerCanvas.ctor _readOnlyMode is set to TRUE by default");
-
+        //transform this instance into EventDispatcher
         this._addEventDispatcherExtensions();
 
+        //Get DesignerCanvas parameters from options
+        //Grid size for item positioning granularity
         this.gridSize = options.gridSize || DEFAULT_GRID_SIZE;
-
-        this._droppable = _.isBoolean(options.droppable) ? options.droppable : true;
+        this._droppable = options.droppable !== false ? true :false;
 
         //define properties of its own
         this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
-        this._title = "";
         this._itemIDCounter = 0;
+        this._documentFragment = document.createDocumentFragment();
 
+        //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
+        this._updating = false;
 
         this._initializeCollections();
 
         //initialize UI
         this.initializeUI();
 
-        this._updating = false;
-
+        //initiate Selection Manager (if needed)
         this.selectionManager = options.selectionManager || new SelectionManager({"canvas": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
         this.selectionManager.onSelectionDeleteClicked = function (selectedIds) {
             self._onSelectionDeleteClicked(selectedIds);
-        }
+        };
 
         this.selectionManager.onSelectionChanged = function (selectedIds) {
             self._onSelectionChanged(selectedIds);
-        }
+        };
 
+        //initiate Drag Manager (if needed)
         this.dragManager = options.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize(this.skinParts.$itemsContainer);
 
+        //initiate Connection Router (if needed)
         this.connectionRouteManager = options.connectionRouteManager || new ConnectionRouteManagerBasic({"canvas": this});
         this.connectionRouteManager.initialize();
 
+        //initiate Connection drawer component (if needed)
         this.connectionDrawingManager = options.connectionDrawingManager || new ConnectionDrawingManager({"canvas": this});
         this.connectionDrawingManager.initialize();
 
-        this._documentFragment = document.createDocumentFragment();
-
-        //in DEBUG mode add additional content to canvas
-        if (commonUtil.DEBUG === true) {
-            this._addDebugModeExtensions();
-        }
-
         /************** ROUTING MANAGER SELECTION **************************/
         if (commonUtil.DEBUG === true) {
-            this.$btnGroupConnectionRouteManager = this.addButtonGroup(function (event, data) {
+            this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
                 self._onConnectionRouteManagerChanged(data.type);
             });
 
-            this.addButton({ "title": "Basic route manager",
+            this.toolBar.addButton({ "title": "Basic route manager",
                 "text": "RM #1",
                 "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
 
-            this.addButton({ "title": "Basic+ route manager",
+            this.toolBar.addButton({ "title": "Basic+ route manager",
                 "text": "RM #2",
                 "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
         }
         /************** END OF - ROUTING MANAGER SELECTION **************************/
 
-        /************** READ ONLY MODE **************************/
-        if (commonUtil.DEBUG === true) {
-            this.$btnGroupReadOnly = this.addButtonGroup(function (event, data) {
-                self.setReadOnlyMode(data.mode);
-            });
-
-            this.addButton({ "title": "READ-ONLY ON",
-                "text": "RO: ON",
-                "data": { "mode": true}}, this.$btnGroupReadOnly );
-
-            this.addButton({ "title": "READ-ONLY OFF",
-                "text": "RO: OFF",
-                "data": { "mode": false}}, this.$btnGroupReadOnly );
-        }
-
-        /************** END OF - READ ONLY MODE **************************/
-
         this.logger.debug("DesignerCanvas ctor finished");
     };
+
+    //inherit from WidgetBase
+    DesignerCanvas.OPTIONS = _.extend(WidgetBaseWithHeader.OPTIONS, {});
+    _.extend(DesignerCanvas.prototype, __parent__.prototype);
 
     DesignerCanvas.prototype._initializeCollections = function () {
         //all the designer items and connections
@@ -181,12 +160,22 @@ define(['logManager',
         return nextID;
     };
 
+    /**************************** READ-ONLY MODE HANDLERS ************************/
+
+    /* OVERRIDE FROM WIDGET-WITH-HEADER */
+    /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
+    DesignerCanvas.prototype.onReadOnlyChanged = function (isReadOnly) {
+        //apply parent's onReadOnlyChanged
+        __parent_proto__.onReadOnlyChanged.call(this, isReadOnly);
+
+        this._setReadOnlyMode(isReadOnly);
+    };
+
     DesignerCanvas.prototype.getIsReadOnlyMode = function () {
-        /*return this._readOnlyMode;*/
         return this.mode === this.OPERATING_MODES.READ_ONLY;
     };
 
-    DesignerCanvas.prototype.setReadOnlyMode = function (readOnly) {
+    DesignerCanvas.prototype._setReadOnlyMode = function (readOnly) {
         if (readOnly === true && this.mode !== this.OPERATING_MODES.READ_ONLY) {
             //enter READ-ONLY mode
             this.mode = this.OPERATING_MODES.READ_ONLY;
@@ -199,14 +188,10 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype._readOnlyOn = function () {
-        this.skinParts.$readOnlyMode.show();
-        this.skinParts.$designerCanvasBody.addClass(READ_ONLY_CLASS);
         this._setManagersReadOnlyMode(true);
     };
 
     DesignerCanvas.prototype._readOnlyOff = function () {
-        this.skinParts.$readOnlyMode.hide();
-        this.skinParts.$designerCanvasBody.removeClass(READ_ONLY_CLASS);
         this._setManagersReadOnlyMode(false);
     };
 
@@ -226,11 +211,18 @@ define(['logManager',
         }
     };
 
+    /**************************** END OF --- READ-ONLY MODE HANDLERS ************************/
+
+
     /****************** PUBLIC FUNCTIONS ***********************************/
 
-        //Called when the browser window is resized
+    //Called when the browser window is resized
     DesignerCanvas.prototype.parentContainerSizeChanged = function (newWidth, newHeight) {
-        this._resizeCanvas(newWidth, newHeight);
+        //call parent's resize handler first
+        __parent_proto__.parentContainerSizeChanged.call(this, newWidth, newHeight);
+
+        //call our own resize handler
+        this._resizeItemContainer(this.size.width, this.size.height);
     };
 
     DesignerCanvas.prototype.destroy = function () {
@@ -240,8 +232,7 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.initializeUI = function () {
-        var _parentSize,
-            self = this;
+        var self = this;
 
         this.logger.debug("DesignerCanvas.initializeUI");
 
@@ -253,79 +244,36 @@ define(['logManager',
 
         //DESIGNER CANVAS HEADER
         this.skinParts = {};
-        this.skinParts.$designerCanvasHeader = $('<div/>', {
-            "class" : "designer-canvas-header"
-        });
-        this.$el.append(this.skinParts.$designerCanvasHeader);
 
-        //DESIGNER CANVAS BODY
-        this.skinParts.$designerCanvasBody = $('<div/>', {
-            "class" : "designer-canvas-body"
-        });
-        this.$el.append(this.skinParts.$designerCanvasBody);
-
-        this.childrenContainerScroll = { "left": 0,
-                                        "top": 0 };
-        this.skinParts.$designerCanvasBody.on("scroll", function (event) {
-            self.childrenContainerScroll = { "left": self.skinParts.$designerCanvasBody.scrollLeft(),
-                "top": self.skinParts.$designerCanvasBody.scrollTop() };
-        });
-
-        //TITLE IN HEADER BAR
-        this.skinParts.$title = $('<div/>', {
-            "class" : "designer-canvas-header-title"
-        });
-        this.skinParts.$designerCanvasHeader.append(this.skinParts.$title);
-
-        //READ-ONLY IN HEADER BAR
-        this.skinParts.$readOnlyMode = $('<div/>', {
-            "class" : "designer-canvas-read-only-mode"
-        });
-        this.skinParts.$readOnlyMode.text("[READ-ONLY]");
-        this.skinParts.$designerCanvasHeader.append(this.skinParts.$readOnlyMode);
-        if (this._readOnlyMode === false) {
-            this.skinParts.$readOnlyMode.hide();
-        }
+        //TODO: $designerCanvasBody --> this.$el;
+        this.skinParts.$designerCanvasBody = this.$el;
 
         if (commonUtil.DEBUG === true) {
-            this.skinParts.$progressText = $('<div/>', {
-                "class": "inline"
-            });
-            this.skinParts.$designerCanvasHeader.append(this.skinParts.$progressText);
+            this.skinParts.$progressText = this.toolBar.addLabel();
         }
 
         /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
-        this.skinParts.$toolBar = $('<div/>', {
-            "class": "inline"
-        });
-        this.skinParts.$designerCanvasHeader.append(this.skinParts.$toolBar);
-
         //add extra visual piece
-        this.skinParts.$btnGroupItemAutoOptions = this.addButtonGroup(function (event, data) {
+        this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
             self._itemAutoLayout(data.mode);
         });
 
-        if (commonUtil.DEBUG !== "DEMOHACK") {
-            this.addButton({ "title": "Grid layout",
-                "icon": "icon-th",
-                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
-        }
+        this.toolBar.addButton({ "title": "Grid layout",
+            "icon": "icon-th",
+            "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
-        if (commonUtil.DEBUG === true) {
-            this.addButton({ "title": "Diagonal",
-                "icon": "icon-signal",
-                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
-        }
+        this.toolBar.addButton({ "title": "Diagonal",
+            "icon": "icon-signal",
+            "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
 
         /************** PROPERTIES BUTTON ***********************/
-        if (commonUtil.DEBUG !== "DEMOHACK") {
-            this.skinParts.$btnGroupProperties = this.addButtonGroup(function (event, data) {
-                self._showProperties();
-            });
+        this.skinParts.$btnGroupProperties = this.toolBar.addButtonGroup(function (event, data) {
+            self._showProperties();
+        });
 
-            this.addButton({ "title": "Properties",
-                "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
-        }
+        this.toolBar.addButton({ "title": "Properties",
+            "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
+
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -339,11 +287,8 @@ define(['logManager',
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer.attr("id"));
         this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
 
-        _parentSize = { "w": parseInt(this.$el.parent().css("width"), 10),
-                        "h": parseInt(this.$el.parent().css("height"), 10) };
-
         //finally resize the whole content according to available space
-        this._resizeCanvas(_parentSize.w, _parentSize.h);
+        this._resizeItemContainer(this.size.width, this.size.height);
 
         if (this._droppable === true) {
             //hook up drop event handler on children container
@@ -363,16 +308,16 @@ define(['logManager',
                     self._onBackgroundDroppableOut(ui);
                 },
                 drop: function (event, ui) {
-                    self._onBackgroundDrop(ui);
+                    self._onBackgroundDrop(event, ui);
                 },
                 activate: function( event, ui ) {
                     var m = 0;
                     if (ui.helper) {
                         if (self.mode === self.OPERATING_MODES.NORMAL) {
-                            self.skinParts.$dropRegion.css({"width": self.designerCanvasBodySize.width - 2 * m,
-                                "height": self.designerCanvasBodySize.height - 2 * m,
-                                "top": self.childrenContainerScroll.top + m,
-                                "left": self.childrenContainerScroll.left + m });
+                            self.skinParts.$dropRegion.css({"width": self.size.width - 2 * m,
+                                "height": self.size.height - 2 * m,
+                                "top": self.scrollPos.top + m,
+                                "left": self.scrollPos.left + m });
                         }    
                     }
                 },
@@ -386,23 +331,6 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
-    };
-
-    DesignerCanvas.prototype._resizeCanvas = function (width, height) {
-        var canvasHeaderHeight = this.skinParts.$designerCanvasHeader.outerHeight(true),
-            bodyHeight = height - canvasHeaderHeight;
-
-        this.skinParts.$designerCanvasHeader.outerWidth(width);
-
-        this.skinParts.$designerCanvasBody.css({"width": width,
-            "height": bodyHeight});
-
-        this.designerCanvasBodySize = {"width": width,
-            "height": bodyHeight};
-
-        this._resizeItemContainer(width, bodyHeight);
-
-        this.designerCanvasBodyOffset = this.skinParts.$designerCanvasBody.offset();
     };
 
     DesignerCanvas.prototype._resizeItemContainer = function (width, height) {
@@ -419,8 +347,8 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.getAdjustedMousePos = function (e) {
-        var childrenContainerOffset = this.designerCanvasBodyOffset || { "left": 0, "top": 0 },
-            childrenContainerScroll = this.childrenContainerScroll || { "left": 0, "top": 0 },
+        var childrenContainerOffset = this.offset || { "left": 0, "top": 0 },
+            childrenContainerScroll = this.scrollPos || { "left": 0, "top": 0 },
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
             pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top;
 
@@ -429,8 +357,7 @@ define(['logManager',
     };
 
     DesignerCanvas.prototype.clear = function () {
-        var i,
-            _parentSize;
+        var i;
 
         this.selectionManager.clear(); 
 
@@ -445,19 +372,7 @@ define(['logManager',
 
         this._actualSize = { "w": 0, "h": 0 };
 
-        _parentSize = { "w": parseInt(this.$el.parent().css("width"), 10),
-            "h": parseInt(this.$el.parent().css("height"), 10) };
-
-        //finally resize the whole content according to available space
-        this._resizeCanvas(_parentSize.w, _parentSize.h);
-    };
-
-    DesignerCanvas.prototype.setTitle = function (newTitle) {
-        //apply content to controls based on desc
-        if (this._title !== newTitle) {
-            this._title = newTitle;
-            this.skinParts.$title.text(this._title);
-        }
+        this._resizeItemContainer(this.size.width, this.size.height);
     };
 
     DesignerCanvas.prototype.deleteComponent = function (componentId) {
@@ -535,9 +450,9 @@ define(['logManager',
             deletedLen += this._deletedDesignerItemIDs ? this._deletedDesignerItemIDs.length : 0 ;
             deletedLen += this._deletedConnectionIDs ? this._deletedConnectionIDs.length : 0 ;
 
-            msg += "Added: " + insertedLen;
-            msg += " Updated: " + updatedLen;
-            msg += " Deleted: " + deletedLen;
+            msg += "I: " + insertedLen;
+            msg += " U: " + updatedLen;
+            msg += " D: " + deletedLen;
 
             this.logger.debug(msg);
             if (commonUtil.DEBUG === true) {
@@ -990,10 +905,11 @@ define(['logManager',
         this._doAcceptDroppable(false);
     };
 
-    DesignerCanvas.prototype._onBackgroundDrop = function (ui) {
+    DesignerCanvas.prototype._onBackgroundDrop = function (event, ui) {
         var helper = ui.helper,
-            posX = ui.offset.left - this.designerCanvasBodyOffset.left,
-            posY = ui.offset.top - this.designerCanvasBodyOffset.top;
+            mPos = this.getAdjustedMousePos(event),
+            posX = mPos.mX,
+            posY = mPos.mY;
 
         if (this._acceptDroppable === true) {
             this.onBackgroundDrop(helper, { "x": posX, "y": posY });
@@ -1130,15 +1046,8 @@ define(['logManager',
     _.extend(DesignerCanvas.prototype, DesignerCanvasOperatingModes.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasDesignerItems.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasConnections.prototype);
-    _.extend(DesignerCanvas.prototype, DesignerCanvasToolbar.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasSubcomponents.prototype);
     _.extend(DesignerCanvas.prototype, DesignerCanvasEventDispatcher.prototype);
-
-    //in DEBUG mode add additional content to canvas
-    if (commonUtil.DEBUG === true) {
-        _.extend(DesignerCanvas.prototype, DesignerCanvasDEBUG.prototype);
-    }
-
 
     return DesignerCanvas;
 });

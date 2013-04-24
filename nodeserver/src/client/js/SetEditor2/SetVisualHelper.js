@@ -54,7 +54,7 @@ define(['js/Constants'], function (CONSTANTS) {
                 path,
                 paper = Raphael(el[0], btnSize, btnSize);
 
-            el.attr({"style": "height: " + btnSize + "px"});
+            el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});
 
             path = paper.path("M" + btnSize / 2 + ",0, L" + btnSize / 2 + "," + btnSize);
 

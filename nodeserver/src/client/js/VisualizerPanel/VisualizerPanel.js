@@ -230,5 +230,15 @@ define(['logManager',
         }
     };
 
+    VisualizerPanel.prototype.setReadOnly = function (isReadOnly) {
+        if (this._activeWidget) {
+            if (this._activeWidget.setReadOnly) {
+                this._activeWidget.setReadOnly(isReadOnly);
+            } else {
+                this._logger.error('Active widget does not support method "setReadOnly"!!!');
+            }
+        }
+    };
+
     return VisualizerPanel;
 });

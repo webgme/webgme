@@ -83,7 +83,10 @@ requirejs([ "util/assert", "core/coretree", "storage/mongo", "core/tasync", "cor
 			return TASYNC.adapt(database.closeDatabase)();
 		}, done);
 
-		TASYNC.then(done, function (err) {
+		TASYNC.trycatch(function () {
+			TASYNC.call(function () {
+			}, done);
+		}, function (err) {
 			if (err) {
 				console.log(err && (err.trace || err.stack));
 			}

@@ -758,6 +758,11 @@ define(['clientUtil',
 
             return treeViewE.jstree("is_open", node);
         };
+
+        this.setReadOnly = function (isReadOnly) {
+            //TODO: NOT YET IMPLEMENTED
+            logger.warning("JSTreeBroswerWidget.setReadOnly NOT YET IMPLEMENTED!!!");
+        };
     };
 
     return JSTreeBrowserWidget;

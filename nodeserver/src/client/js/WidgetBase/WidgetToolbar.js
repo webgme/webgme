@@ -75,7 +75,6 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
         }
 
         if (params.selected === true) {
-            btnGroup.find('.btn.active').removeClass('active');
             $btn.addClass("active");
         }
 
@@ -108,6 +107,11 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
     WidgetToolbar.prototype.addButton = function (params, btnGroup) {
         var $btn = this._createButton(params);
 
+        //if this guy is selected then unselect the currently selected before adding it to the same group
+        if (params.selected === true) {
+            btnGroup.find('.btn.active').removeClass('active');
+        }
+
         btnGroup.append($btn);
 
         return $btn;
@@ -132,6 +136,14 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
         params.clickFn = toggleClickFn;
         btn = this._createButton(params);
+
+        //add setToggle method
+        btn.setToggled = function (toggled) {
+            btn.removeClass('active');
+            if (toggled === true) {
+                btn.addClass('active');
+            }
+        };
 
         btnGroup.append(btn);
 
@@ -290,6 +302,18 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
     };
 
     /***************** END OF - DROPDOWN MENU ****************************/
+
+    WidgetToolbar.prototype.addLabel = function () {
+        var label = $('<span/>', {
+            "class": "toolbar-group"
+        });
+
+        this.$el.append(label);
+
+        return label;
+    };
+
+
 
     return WidgetToolbar;
 });

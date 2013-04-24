@@ -11,11 +11,8 @@ define(['logManager',
         __parent__ = DesignerCanvas,
         __parent_proto__ = DesignerCanvas.prototype;
 
-    AspectBuilderCanvas = function (opts) {
-        var options = $.extend({}, opts);
-
-        options.loggerName = options.loggerName || "AspectBuilderCanvas";
-
+    AspectBuilderCanvas = function (options) {
+        options[DesignerCanvas.OPTIONS.LOGGER_INSTANCE_NAME] = options[DesignerCanvas.OPTIONS.LOGGER_INSTANCE_NAME] || "AspectBuilderCanvas";
         __parent__.apply(this, [options]);
 
         this.logger.debug("AspectBuilderCanvas ctor");

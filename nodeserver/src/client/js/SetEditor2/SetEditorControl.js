@@ -59,11 +59,11 @@ define(['logManager',
 
 
         /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnGroupModelHierarchyUp = this.designerCanvas.addButtonGroup(function (/*event, data*/) {
+        this.$btnGroupModelHierarchyUp = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
             self._onModelHierarchyUp();
         });
 
-        this.designerCanvas.addButton({ "title": "Go to parent",
+        this.designerCanvas.toolBar.addButton({ "title": "Go to parent",
             "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp );
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
@@ -72,28 +72,28 @@ define(['logManager',
         /************** SET TYPE SELECTOR BUTTONS *******************************/
 
             //add extra visual piece
-        $btnGroupConnectionType = this.designerCanvas.addRadioButtonGroup(function (event, data) {
+        $btnGroupConnectionType = this.designerCanvas.toolBar.addRadioButtonGroup(function (event, data) {
             self._setMetaConnectionType(data.mode);
         });
 
-        var btnCreateSetValidChildren = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDCHILDREN,
+        var btnCreateSetValidChildren = this.designerCanvas.toolBar.addButton({ "title": CONSTANTS.SET_VALIDCHILDREN,
             "selected": true,
             "data": { "mode": CONSTANTS.SET_VALIDCHILDREN }}, $btnGroupConnectionType );
         this._createButtonFace(btnCreateSetValidChildren, CONSTANTS.SET_VALIDCHILDREN);
 
-        var btnCreateSetValidInheritor = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDINHERITOR,
+        var btnCreateSetValidInheritor = this.designerCanvas.toolBar.addButton({ "title": CONSTANTS.SET_VALIDINHERITOR,
             "data": { "mode": CONSTANTS.SET_VALIDINHERITOR }}, $btnGroupConnectionType );
         this._createButtonFace(btnCreateSetValidInheritor, CONSTANTS.SET_VALIDINHERITOR);
 
-        var btnCreateSetValidSource = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDSOURCE,
+        var btnCreateSetValidSource = this.designerCanvas.toolBar.addButton({ "title": CONSTANTS.SET_VALIDSOURCE,
             "data": { "mode": CONSTANTS.SET_VALIDSOURCE }}, $btnGroupConnectionType );
         this._createButtonFace(btnCreateSetValidSource, CONSTANTS.SET_VALIDSOURCE);
 
-        var btnCreateSetValidDestination = this.designerCanvas.addButton({ "title": CONSTANTS.SET_VALIDDESTINATION,
+        var btnCreateSetValidDestination = this.designerCanvas.toolBar.addButton({ "title": CONSTANTS.SET_VALIDDESTINATION,
             "data": { "mode": CONSTANTS.SET_VALIDDESTINATION }}, $btnGroupConnectionType );
         this._createButtonFace(btnCreateSetValidDestination, CONSTANTS.SET_VALIDDESTINATION);
 
-        var btnCreateSetGeneral = this.designerCanvas.addButton({ "title": CONSTANTS.SET_GENERAL,
+        var btnCreateSetGeneral = this.designerCanvas.toolBar.addButton({ "title": CONSTANTS.SET_GENERAL,
             "data": { "mode": CONSTANTS.SET_GENERAL }}, $btnGroupConnectionType );
         this._createButtonFace(btnCreateSetGeneral, CONSTANTS.SET_GENERAL);
 

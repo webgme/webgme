@@ -36,24 +36,26 @@ define(['logManager'], function (logManager) {
 
         this._logger = logManager.create("ProjectsControl");
         this._logger.debug("Created");
+    };
 
-        ProjectsControl.prototype.displayProjects = function () {
-            self._client.getAvailableProjectsAsync(function(err,projectNames){
-                var availableProjects = projectNames || [];
-                availableProjects = availableProjects.sort();
-                var len = availableProjects.length,
-                    i = len,
-                    activeProjectId = self._client.getActiveProject();
-                self._view.clearItems();
-                while (i--) {
-                    self._view.addItem({"id": availableProjects[len - i - 1],
-                        "name":  availableProjects[len - i - 1],
-                        "actual": activeProjectId === availableProjects[len - i - 1]});
-                }
-                self._view.render();
-            });
+    ProjectsControl.prototype.displayProjects = function () {
+        var self = this;
 
-        };
+        this._client.getAvailableProjectsAsync(function(err,projectNames){
+            var availableProjects = projectNames || [];
+            availableProjects = availableProjects.sort();
+            var len = availableProjects.length,
+                i = len,
+                activeProjectId = self._client.getActiveProject();
+            self._view.clearItems();
+            while (i--) {
+                self._view.addItem({"id": availableProjects[len - i - 1],
+                    "name":  availableProjects[len - i - 1],
+                    "actual": activeProjectId === availableProjects[len - i - 1]});
+            }
+            self._view.render();
+        });
+
     };
 
 

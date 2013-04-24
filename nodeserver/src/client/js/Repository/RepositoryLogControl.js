@@ -30,6 +30,7 @@ define(['logManager'], function (logManager) {
                 }
 
                 self._refreshBranches();
+                self._refreshActualCommit();
             });
         };
 

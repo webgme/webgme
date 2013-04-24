@@ -2,7 +2,7 @@
 
 var __WebGME__DEBUG = true;
 var _webGME_jquery_ver = '1.8.2';
-var _webGME_jqueryui_ver = '1.8.23';  //jquery.ui.mouse has been fixed by RobertK, not yet in the official jQuery.UI release
+var _webGME_jqueryui_ver = '1.8.23';
 
 // set the baseUrl for module lookup to '/lib' folder
 require.config({

@@ -10,11 +10,8 @@ define(['logManager',
         __parent__ = DesignerCanvas,
         __parent_proto__ = DesignerCanvas.prototype;
 
-    SetEditorCanvas = function (opts) {
-        var options = $.extend({}, opts);
-
-        options.loggerName = options.loggerName || "SetEditorCanvas";
-
+    SetEditorCanvas = function (options) {
+        options[DesignerCanvas.OPTIONS.LOGGER_INSTANCE_NAME] = options[DesignerCanvas.OPTIONS.LOGGER_INSTANCE_NAME] || "SetEditorCanvas";
         __parent__.apply(this, [options]);
 
         this.logger.debug("SetEditorCanvas ctor");
