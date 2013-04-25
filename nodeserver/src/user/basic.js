@@ -141,38 +141,49 @@ define([
                 var myCallback = null;
                 var branchHashUpdated = function(err,newhash,forked){
                     if(branch === _branch && !_offline){
-                        if(!err && newhash){
-                            if(_recentCommits.indexOf(newhash) === -1){
-
-                                addCommit(newhash);
-                                //_commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
-
-                                //TODO here we have to start with a syncronous root object load...
-                                _project.loadObject(newhash,function(err,commitObj){
-                                    if(!err && commitObj){
-                                        loading(commitObj.root);
+                        if(!err && typeof newhash === 'string'){
+                            if(newhash === ''){
+                                logger.warning('The current branch '+branch+' have been deleted!');
+                                //we should open a viewer with our current commit...
+                                var latestCommit = _recentCommits[0];
+                                viewerCommit(latestCommit,function(err){
+                                    if(err){
+                                        logger.error('Current branch '+branch+' have been deleted, and unable to open the latest commit '+latestCommit+'! ['+JSON.stringify(err)+']');
                                     }
                                 });
-                            }
+                            } else{
+                                if(_recentCommits.indexOf(newhash) === -1){
 
-                            if(callback){
-                                myCallback = callback;
-                                callback = null;
-                                myCallback();
-                            }
+                                    addCommit(newhash);
+                                    //_commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
 
-                            //branch status update
-                            if(_offline){
-                                changeBranchState(_self.branchStates.OFFLINE);
-                            } else {
-                                if(forked){
-                                    changeBranchState(_self.branchStates.FORKED);
-                                }/* else {
-                                    changeBranchState(_self.branchStates.SYNC);
-                                }*/
-                            }
+                                    //TODO here we have to start with a syncronous root object load...
+                                    _project.loadObject(newhash,function(err,commitObj){
+                                        if(!err && commitObj){
+                                            loading(commitObj.root);
+                                        }
+                                    });
+                                }
 
-                            return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                                if(callback){
+                                    myCallback = callback;
+                                    callback = null;
+                                    myCallback();
+                                }
+
+                                //branch status update
+                                if(_offline){
+                                    changeBranchState(_self.branchStates.OFFLINE);
+                                } else {
+                                    if(forked){
+                                        changeBranchState(_self.branchStates.FORKED);
+                                    }/* else {
+                                     changeBranchState(_self.branchStates.SYNC);
+                                     }*/
+                                }
+
+                                return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                            }
                         } else {
                             if(callback){
                                 myCallback = callback;
@@ -335,6 +346,16 @@ define([
                 }
             }
 
+            function viewLatestCommit(callback){
+                _commitCache.getNCommitsFrom(null,1,function(err,commits){
+                    if(!err && commits && commits.length>0){
+                        viewerCommit(commits[0][_database.ID_NAME],callback)
+                    } else {
+                        logger.error('Cannot get latest commit! ['+JSON.stringify(err)+']');
+                        callback(err);
+                    }
+                });
+            }
             function openProject(name,callback){
                 ASSERT(_database);
                 _database.openProject(name,function(err,p){
@@ -350,16 +371,44 @@ define([
                         } else {
                             _commitCache = commitCache();
                         }
-                        branchWatcher('master',function(err){
-                            if(!err){
-                                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
-                                callback(null);
+                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
+
+                        //check for master or any other branch
+                        _commit.getBranchNames(function(err,names){
+                            if(!err && names){
+                                var firstName = null;
+
+                                for(var i in names){
+                                    if(!firstName){
+                                        firstName = i;
+                                    }
+                                    if(i === 'master'){
+                                        firstName = i;
+                                        break;
+                                    }
+                                }
+
+                                if(firstName){
+                                    branchWatcher(firstName,function(err){
+                                        if(!err){
+                                            _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
+                                            callback(null);
+                                        } else {
+                                            logger.error('The branch '+firstName+' of project '+name+' cannot be selected! ['+JSON.stringify(err)+']');
+                                            callback(err);
+                                        }
+                                    });
+                                } else {
+                                    //we should try the latest commit
+                                    viewLatestCommit(callback);
+                                }
                             } else {
-                                callback(err);
+                                //we should try the latest commit
+                                viewLatestCommit(callback);
                             }
                         });
-                        _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
                     } else {
+                        logger.error('The project '+name+' cannot be opened! ['+JSON.stringify(err)+']');
                         callback(err);
                     }
                 });
@@ -390,7 +439,6 @@ define([
                     }
                 }
             }
-
             function closeOpenedProject(callback){
                 callback = callback || function(){};
                 var returning = function(e){
@@ -427,7 +475,6 @@ define([
                     returning(null);
                 }
             }
-
             function createEmptyProject(project,callback){
                 var core = new SetCore(new Core(project,{}));
                 var commit = new Commit(project,{});
@@ -1017,13 +1064,14 @@ define([
                 //we use the existing territories
                 //we set viewer mode, so there will be no modification allowed to send to server...
                 _branch = null;
-                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                 _viewer = true;
                 _recentCommits = [hash];
+                _self.dispatchEvent(_self.events.BRANCH_CHANGED, _branch);
                 _project.loadObject(hash,function(err,commitObj){
                     if(!err && commitObj){
                         loading(commitObj.root,callback);
                     } else {
+                        logger.error('Cannot view given '+hash+' commit as it\'s root cannot be loaded! ['+JSON.stringify(err)+']');
                         callback(err);
                     }
                 });
@@ -1536,23 +1584,29 @@ define([
 
             //initialization
             function initialize(){
-                _database.openDatabase(function(){
-                    networkWatcher();
-                    _database.getProjectNames(function(err,names){
-                        var projectname = null;
-                        if(commonUtil.combinedserver.project && names.indexOf(commonUtil.combinedserver.project) !== -1){
-                            projectname = commonUtil.combinedserver.project;
-                        } else {
-                            projectname = names[0];
-                        }
-                        if(!err && names && names.length>0){
-                            openProject(projectname,function(err){
-                                if(err){
-                                    console.log(err);
+                _database.openDatabase(function(err){
+                    if(!err){
+                        networkWatcher();
+                        _database.getProjectNames(function(err,names){
+                            if(!err && names && names.length>0){
+                                var projectname = null;
+                                if(commonUtil.combinedserver.project && names.indexOf(commonUtil.combinedserver.project) !== -1){
+                                    projectname = commonUtil.combinedserver.project;
+                                } else {
+                                    projectname = names[0];
                                 }
-                            });
-                        }
-                    });
+                                openProject(projectname,function(err){
+                                    if(err){
+                                        logger.error('Problem during project opening:'+JSON.stringify(err));
+                                    }
+                                });
+                            } else {
+                                logger.error('Cannot get project names / There is no project on the server');
+                            }
+                        });
+                    } else {
+                        logger.error('Cannot open database');
+                    }
                 });
             }
             initialize();
