@@ -51,10 +51,16 @@ define(['logManager',
         this._renderContent();
 
         // set title editable on double-click
-        this.skinParts.$name.editOnDblClick({"class": "",
-                                             "onChange": function (oldValue, newValue) {
-                                                 self._onNodeTitleChanged(oldValue, newValue);
-                                             }});
+        this.skinParts.$name.on("dblclick.editOnDblClick", null, function (event) {
+            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                $(this).editInPlace({"class": "",
+                    "onChange": function (oldValue, newValue) {
+                        self._onNodeTitleChanged(oldValue, newValue);
+                    }});
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM

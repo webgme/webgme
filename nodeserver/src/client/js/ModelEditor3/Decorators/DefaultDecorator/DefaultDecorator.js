@@ -42,10 +42,16 @@ define(['logManager',
         this._renderName();
 
         // set title editable on double-click
-        this.skinParts.$name.editOnDblClick({"class": "",
-            "onChange": function (oldValue, newValue) {
-                self._onNodeTitleChanged(oldValue, newValue);
-            }});
+        this.skinParts.$name.on("dblclick.editOnDblClick", null, function (event) {
+            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                $(this).editInPlace({"class": "",
+                    "onChange": function (oldValue, newValue) {
+                        self._onNodeTitleChanged(oldValue, newValue);
+                    }});
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
         //let the parent decorator class do its job first
         __parent_proto__.on_addTo.apply(this, arguments);
