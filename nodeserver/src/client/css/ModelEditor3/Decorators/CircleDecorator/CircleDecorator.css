@@ -9,10 +9,9 @@
     text-transform: uppercase;
     position: relative; }
   .circle-decorator .connector {
-    box-sizing: border-box;
     background-color: #fefefe;
-    height: 12px;
-    width: 12px;
+    height: 10px;
+    width: 10px;
     position: absolute;
     cursor: pointer;
     border: 1px solid blue; }
