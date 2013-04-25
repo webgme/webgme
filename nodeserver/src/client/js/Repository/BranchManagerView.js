@@ -44,6 +44,7 @@ define(['logManager',
                                              "size": "micro",
                                              "sort": true,
                                              "icon": "icon-random"});
+        this._dropUpMenu.setUndefinedValueText('NO BRANCH SELECTED');
 
         this._dropUpMenu.selectedValueChanged = function (val) {
             self.onSelectBranch(val);
