@@ -42,6 +42,11 @@
     font-size: 12px;
     white-space: nowrap;
     vertical-align: middle; }
+    .repositoryLogView table th div.cMessage,
+    .repositoryLogView table td div.cMessage {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block; }
     .repositoryLogView table th .branch-label,
     .repositoryLogView table td .branch-label {
       margin-right: 2px; }

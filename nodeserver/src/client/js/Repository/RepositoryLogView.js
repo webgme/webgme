@@ -28,7 +28,8 @@ define(['logManager',
         CREATE_BRANCH_EDIT_CONTROL_CLASS = 'create-branch-from-commit',
         BRANCH_LABEL_CLASS = 'branch-label',
         BTN_LOAD_COMMIT_CLASS = 'btnLoadCommit',
-        COMMIT_IT = 'commitId';
+        COMMIT_IT = 'commitId',
+        MESSAGE_DIV_CLASS = 'cMessage';
 
     RepositoryLogView = function (container) {
         this._el = container;
@@ -137,6 +138,8 @@ define(['logManager',
 
     /******************* PRIVATE API *****************************/
 
+    RepositoryLogView.cMessageStyleStr = 'div.' + MESSAGE_DIV_CLASS + ' { max-width: __MW__px; }';
+
     RepositoryLogView.prototype._initializeUI = function () {
         var self = this;
 
@@ -145,6 +148,9 @@ define(['logManager',
         this._el.addClass(REPOSITORY_LOG_VIEW_CLASS);
 
         //initialize all containers
+        this._cMessageStyle = $('<style/>', {"type": "text/css"});
+        this._cMessageStyle.html(RepositoryLogView.cMessageStyleStr.replace('__MW__', '400'));
+        this._el.append(this._cMessageStyle);
 
         /*table layout*/
         this._table = $('<table/>', {"class": "table table-hover user-select-on"});
@@ -387,7 +393,8 @@ define(['logManager',
 
     RepositoryLogView.prototype._applyBranchHeaderLabel = function (commit, branchName, sync) {
         var label = this._branchLabelDOMBase.clone(),
-            td;
+            td,
+            div;
 
         label.prepend(branchName);
         label.find('i').attr("data-branch",branchName);
@@ -400,7 +407,8 @@ define(['logManager',
         }
 
         td = this._tBody.children()[this._orderedCommitIds.indexOf(commit.id)].cells[this._tableCellMessageIndex];
-        td.insertBefore(label[0], td.childNodes[0]);
+        div = $(td).find('div.' + MESSAGE_DIV_CLASS)[0];
+        div.insertBefore(label[0], div.childNodes[0]);
     };
 
     RepositoryLogView.prototype._addBranch = function (obj) {
@@ -436,7 +444,7 @@ define(['logManager',
         this._branchListUpdated = true;
     };
 
-    RepositoryLogView.prototype._trDOMBase = $('<tr><td></td><td></td><td></td><td></td><td></td><td></td></tr>');
+    RepositoryLogView.prototype._trDOMBase = $('<tr><td></td><td></td><td></td><td><div class="cMessage"></div></td><td></td><td></td></tr>');
     RepositoryLogView.prototype._createBranhcBtnDOMBase = $('<a class="btn btn-mini btnCreateBranchFromCommit" href="#" title="Create new branch from here"><i class="icon-edit"></i></a>');
     RepositoryLogView.prototype._loadCommitBtnDOMBase = $('<a class="btn btn-mini ' + BTN_LOAD_COMMIT_CLASS + '" href="#" title="Load this commit"><i class="icon-share"></i></a>');
 
@@ -475,7 +483,7 @@ define(['logManager',
         }
 
         $(tr[0].cells[this._tableCellCommitIDIndex]).append(params.id);
-        $(tr[0].cells[this._tableCellMessageIndex]).append(params.message);
+        $(tr[0].cells[this._tableCellMessageIndex]).find('div.' + MESSAGE_DIV_CLASS).text(params.message);
         $(tr[0].cells[this._tableCellUserIndex]).append(params.user || '');
         $(tr[0].cells[this._tableCellTimeStampIndex]).append( util.formattedDate(new Date(parseInt(params.timestamp, 10)), 'elapsed'));
 
@@ -612,6 +620,8 @@ define(['logManager',
             "margin-left": wW / 2 * (-1),
             "margin-top": repoDialog.height() / 2 * (-1),
             "top": "50%"});
+
+        this._cMessageStyle.html(RepositoryLogView.cMessageStyleStr.replace('__MW__', wW * 0.66));
 
         tWidth = this._table.width();
         this._showMoreContainer.css("width", tWidth);
