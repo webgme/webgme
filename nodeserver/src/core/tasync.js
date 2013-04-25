@@ -450,15 +450,15 @@
 		}
 	}
 
-	// ------- Adapt -------
+	// ------- Wrap -------
 
-	function adapt (func) {
+	function wrap (func) {
 		if (typeof func !== "function") {
 			throw new Error("function argument is expected");
 		}
 
-		if (typeof func.tasync_adapted === "undefined") {
-			func.tasync_adapted = function () {
+		if (typeof func.tasync_wraped === "undefined") {
+			func.tasync_wraped = function () {
 				var args = arguments;
 				var future = new Future();
 
@@ -482,33 +482,33 @@
 				}
 			};
 
-			func.tasync_adapted.tasync_unadapted = func;
+			func.tasync_wraped.tasync_unwraped = func;
 		}
 
-		return func.tasync_adapted;
+		return func.tasync_wraped;
 	}
 
-	// ------- Unadapt -------
+	// ------- Unwrap -------
 
-	function UnadaptListener (callback) {
+	function UnwrapListener (callback) {
 		this.callback = callback;
 	}
 
-	UnadaptListener.prototype.onRejected = function (error) {
+	UnwrapListener.prototype.onRejected = function (error) {
 		this.callback(error);
 	};
 
-	UnadaptListener.prototype.onResolved = function (value) {
+	UnwrapListener.prototype.onResolved = function (value) {
 		this.callback(null, value);
 	};
 
-	function unadapt (func) {
+	function unwrap (func) {
 		if (typeof func !== "function") {
 			throw new Error("function argument is expected");
 		}
 
-		if (typeof func.tasync_unadapted === "undefined") {
-			func.tasync_unadapted = function () {
+		if (typeof func.tasync_unwraped === "undefined") {
+			func.tasync_unwraped = function () {
 				var args = arguments;
 
 				var callback = args[--args.length];
@@ -525,17 +525,17 @@
 				if (value instanceof Future) {
 					assert(value.state === STATE_LISTEN);
 
-					var listener = new UnadaptListener(callback);
+					var listener = new UnwrapListener(callback);
 					value.register(listener);
 				} else {
 					callback(null, value);
 				}
 			};
 
-			func.tasync_unadapted.tasync_adapted = func;
+			func.tasync_unwraped.tasync_wraped = func;
 		}
 
-		return func.tasync_unadapted;
+		return func.tasync_unwraped;
 	}
 
 	// ------- Throttle -------
@@ -734,8 +734,8 @@
 		apply: apply,
 		call: call,
 		trycatch: trycatch,
-		adapt: adapt,
-		unadapt: unadapt,
+		wrap: wrap,
+		unwrap: unwrap,
 		throttle: throttle,
 		join: join
 	};
