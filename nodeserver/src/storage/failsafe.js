@@ -7,7 +7,6 @@
 define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
     var BRANCH_OBJ_ID = '*branch*';
-    var ERROR_TIMEOUT = "no valid response arrived in time";
 
     function Database(_database,options){
         ASSERT(typeof options === "object" && typeof _database === "object");
@@ -80,7 +79,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 setInterval(savePending,options.failsafefrequency);
                 _database.openDatabase(callback);
             } else {
-                callback('cannot initialize fail safe storage');
+                callback(new Error('cannot initialize fail safe storage'));
             }
         }
 
@@ -357,7 +356,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             project.setBranchHash(branch,oldhash,newhash,returnFunction);
                             callback(null);
                         } else {
-                            callback('old hash mismatch');
+                            callback(new Error("branch hash mismatch"));
                         }
                         return;
                     case 'disconnected':
@@ -366,7 +365,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             branchObj.local.unshift(newhash);
                             callback(null);
                         } else {
-                            callback('old hash mismatch');
+                            callback(new Error("branch hash mismatch"));
                         }
                         return;
                     default: //'forked'
@@ -382,7 +381,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             }
                             callback(null);
                         } else {
-                            callback('old hash mismatch');
+                            callback(new Error("branch hash mismatch"));
                         }
                         return;
                 }

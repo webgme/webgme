@@ -1117,6 +1117,10 @@ define([
                     }
                 });
             }
+            function commitAsync(params,callback){
+                var msg = params.message || '';
+                saveRoot(msg,callback);
+            }
 
             //MGA
             function copyMoreNodes(nodePaths,parentPath,callback){
@@ -1368,7 +1372,7 @@ define([
                         var members = _core.getChildrenPaths(_nodes[setPath].node);
                         var memberPaths =[];
                         for(var i=0;i<members.length;i++){
-                            if(_nodes[members[i]] && typeof _nodes[memebrs[i]].node === 'object'){
+                            if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
                                 memberPaths.push(_core.getPointerPath(_nodes[members[i]].node,'member'));
                             }
                         }
@@ -1589,13 +1593,13 @@ define([
                         networkWatcher();
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
-                                var projectname = null;
+                                var projectName = null;
                                 if(commonUtil.combinedserver.project && names.indexOf(commonUtil.combinedserver.project) !== -1){
-                                    projectname = commonUtil.combinedserver.project;
+                                    projectName = commonUtil.combinedserver.project;
                                 } else {
-                                    projectname = names[0];
+                                    projectName = names[0];
                                 }
-                                openProject(projectname,function(err){
+                                openProject(projectName,function(err){
                                     if(err){
                                         logger.error('Problem during project opening:'+JSON.stringify(err));
                                     }
@@ -1640,6 +1644,7 @@ define([
                 createBranchAsync: createBranchAsync,
                 deleteBranchAsync: deleteBranchAsync,
                 selectBranchAsync: selectBranchAsync,
+                commitAsync: commitAsync,
                 goOffline: goOffline,
                 goOnline: goOnline,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
