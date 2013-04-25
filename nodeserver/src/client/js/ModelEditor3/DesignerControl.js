@@ -102,6 +102,11 @@ define(['logManager',
                 "text": "10",
                 "data": { "num": 10 }}, $btnGroupAutoCreateModel);
 
+            this.designerCanvas.toolBar.addButton({ "title": "Create 50",
+                "icon": "icon-plus-sign",
+                "text": "50",
+                "data": { "num": 50 }}, $btnGroupAutoCreateModel);
+
             /************** END OF - AUTO CREATE NEW NODES *****************/
 
             /************** AUTO CREATE NEW CONNECTIONS *****************/

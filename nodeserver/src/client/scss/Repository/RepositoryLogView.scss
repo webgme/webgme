@@ -70,7 +70,11 @@ $table-row-height: 25px; //equals RepositoryLogView.js Y_DELTA!!!
       white-space: nowrap;
       vertical-align: middle;
 
-
+      div.cMessage {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: inline-block;
+      }
 
       .branch-label {
         margin-right: 2px;
