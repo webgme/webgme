@@ -402,17 +402,17 @@
 		return FUNCTION_CALL.apply(func, arguments);
 	};
 
-	// ------- Attempt -------
+	// ------- TryCatch -------
 
-	function FutureAttempt (handler) {
+	function FutureTryCatch (handler) {
 		Future.call(this);
 
 		this.handler = handler;
 	}
 
-	FutureAttempt.prototype = Object.create(Future.prototype);
+	FutureTryCatch.prototype = Object.create(Future.prototype);
 
-	FutureAttempt.prototype.onRejected = function (error) {
+	FutureTryCatch.prototype.onRejected = function (error) {
 		try {
 			var value = this.handler(error);
 
@@ -427,7 +427,7 @@
 		}
 	};
 
-	FutureAttempt.prototype.onResolved = Future.prototype.resolve;
+	FutureTryCatch.prototype.onResolved = Future.prototype.resolve;
 
 	function trycatch (func, handler) {
 		if (typeof func !== "function" || typeof handler !== "function") {
@@ -438,7 +438,7 @@
 			var value = func();
 
 			if (value instanceof Future) {
-				var future = new FutureAttempt(handler);
+				var future = new FutureTryCatch(handler);
 				value.register(future);
 
 				return future;
