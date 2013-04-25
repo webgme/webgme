@@ -35,10 +35,9 @@
         top: -13px;
         right: -13px; }
   .designer-canvas .items .connectionDraggableEnd {
-    box-sizing: border-box;
     background-color: #fefefe;
-    height: 12px;
-    width: 12px;
+    height: 10px;
+    width: 10px;
     position: absolute;
     cursor: pointer;
     border: 1px solid #883333;

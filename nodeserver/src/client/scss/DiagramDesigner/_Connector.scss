@@ -1,5 +1,6 @@
 $connector-background-color: #FEFEFE;
-$connector-border: 1px solid #0000FF;
+$connector-border-width: 1px;
+$connector-border: $connector-border-width solid #0000FF;
 $connector-size: 12px;
 $connector-hover-border-color: rgba(82, 168, 236, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
@@ -7,10 +8,9 @@ $connector-hover-shadow-color-end: rgba(82, 168, 236, 0.6);
 $connection-end-state-hover-background-color: #00FF00;
 
 @mixin connector_basics {
-  box-sizing: border-box;
   background-color: $connector-background-color;
-  height: $connector-size;
-  width: $connector-size;
+  height: $connector-size - $connector-border-width * 2;
+  width: $connector-size - $connector-border-width * 2;
   position: absolute;
   cursor: pointer;
   border: $connector-border;
