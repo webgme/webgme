@@ -146,6 +146,9 @@ define(['logManager',
 
                     var copiedItem = this.canvas.createDesignerItem(objDesc);
 
+                    //fix the DesignerCanvas' 'try-to-avoid-overlapping-auto-shift' feature
+                    copiedItem.moveTo(srcItem.positionX, srcItem.positionY);
+
                     if (items[id].positionX < this._dragOptions.minCoordinates.x) {
                         this._dragOptions.minCoordinates.x = items[id].positionX;
                     }

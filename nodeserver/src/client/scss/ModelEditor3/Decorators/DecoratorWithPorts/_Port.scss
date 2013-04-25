@@ -1,68 +1,71 @@
-@import "../../../DiagramDesigner/Connector";
-
 $dot-color: #666666;
+$port-height: 20px;
+$dot-radius : 4px;
+$dot-width: 3px;
+$dot-height: 8px;
+$dot-border-width: 1px;
 
-
-.port {
-  white-space: nowrap;
-
-  &:hover {
-    cursor: pointer;
-  }
-
-  .title-wrapper {
-    display: inline-block;
-    width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  span.dot {
-    display: inline-block;
-    width: 3px;
-    height: 7px;
-    background: $dot-color;
-    border: 1px solid $dot-color;
-    margin-bottom: 1px;
-    top: 2px;
+@mixin port($ports-width, $padding, $connector-size) {
+  .port {
+    white-space: nowrap;
     position: relative;
-  }
-}
+    height: $port-height;
+    line-height: $port-height;
 
-.left {
-  .port {
-    span.dot {
-      margin-right: 2px;
-      border-top-left-radius: 4px;
-      border-bottom-left-radius: 4px
+    &:hover {
+      cursor: pointer;
     }
 
-    .connector {
-      @include connector_basics;
+    .title-wrapper {
+      display: inline-block;
+      width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
+    span.dot {
       position: absolute;
-      left: 2px;
-      top: 3px;
       display: inline-block;
+      background: $dot-color;
+      border: $dot-border-width solid $dot-color;
+      width: $dot-width;
+      height: $dot-height;
+      top: ($port-height - $dot-height - 2 * $dot-border-width)/2;
+    }
+
+    div.connector {
+      top: ($port-height - $connector-size)/2;
+    }
+  }
+
+  .left {
+    .port {
+      span.dot {
+        left: - $padding - $dot-width - 2; /* -2 because of the 2px border-width of the decorator)*/
+        border-top-left-radius: $dot-radius;
+        border-bottom-left-radius: $dot-radius;
+      }
+
+      .connector {
+        left: -($connector-size/2) - ($padding - 2);
+      }
+    }
+  }
+
+  .right {
+    .port {
+      span.dot {
+        left: $ports-width + $padding;
+        border-top-right-radius: $dot-radius;
+        border-bottom-right-radius: $dot-radius;
+      }
+
+      .connector {
+        left: $ports-width + ($connector-size/2) + ($padding - 2);
+      }
     }
   }
 }
 
-.right {
-  .port {
-    span.dot {
-      margin-left: 3px;
-      border-top-right-radius: 4px;
-      border-bottom-right-radius: 4px;
-    }
 
-    .connector {
-      @include connector_basics;
 
-      position: relative;
-      left: -2px;
-      top: 2px;
-      display: inline-block;
-    }
-  }
-}

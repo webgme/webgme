@@ -73,41 +73,63 @@ define(['logManager',
         var self = this,
             commitSaveButton = this._commitMsgDialog.find("#btnSave"),
             txtMessage = this._commitMsgDialog.find("#txtMessage"),
-            txtBranchName = this._commitMsgDialog.find("#txtBranchName"),
-            btnGroupBranch = this._commitMsgDialog.find("#btnGroupBranch"),
+            lblBranchName = this._commitMsgDialog.find(".branch"),
             client = this.onGetClient(),
             currentBranchName = client.getActualBranch(),
-            btnCurrent = btnGroupBranch.find(".btnCurrent"),
-            btnNew = btnGroupBranch.find(".btnNew"),
-            controlGroupBranch = this._commitMsgDialog.find(".control-group-branch"),
             controlGroupMessage = this._commitMsgDialog.find(".control-group-message"),
-            validateControl;
+            validateControl,
+            enableDisableSaveButton;
 
-        btnNew.removeClass("active");
-        btnCurrent.addClass("active");
-        txtBranchName.val(currentBranchName).attr('disabled', 'disabled');
+
+        //not on a branch..., cannot make commit
+        if (currentBranchName === null || currentBranchName === undefined) {
+            //display error info to user
+            //and remove all other UI elements
+            $(this._commitMsgDialog.find("fieldset")[1]).hide();
+            commitSaveButton.hide();
+            lblBranchName.hide();
+
+            $(this._commitMsgDialog.find(".alert")).show();
+        } else {
+            $(this._commitMsgDialog.find("fieldset")[1]).show();
+            commitSaveButton.show();
+            lblBranchName.show();
+            $(this._commitMsgDialog.find(".alert")).hide();
+
+            lblBranchName.text(currentBranchName);
+
+            commitSaveButton.on('click', function (event) {
+                var msg = txtMessage.val();
+
+                if (msg !== "" && currentBranchName && currentBranchName !== "") {
+                    txtMessage.val("");
+                    self._commitMsgDialog.modal('hide');
+                    commitSaveButton.off('click');
+                    txtMessage.off('keyup');
+                    event.stopPropagation();
+                    event.preventDefault();
+                    self.onCommit({"message": msg,
+                        "branch": currentBranchName});
+                }
+            });
+
+            txtMessage.focus();
+        }
 
         this._commitMsgDialog.modal();
 
-        btnGroupBranch.on('click', function (event) {
-            var selected = $(event.target).attr("data-b");
+        enableDisableSaveButton = function () {
+            var enabled = currentBranchName !== null && currentBranchName !== undefined && txtMessage.val() !== "";
 
-            if (selected === "current") {
-                txtBranchName.val(currentBranchName);
-                txtBranchName.attr('disabled', 'disabled');
-            } else {
-                txtBranchName.val("");
-                txtBranchName.removeAttr('disabled');
-                txtBranchName.focus();
-            }
-        });
-
-        txtMessage.on('keyup', function (event) {
-            if (txtMessage.val() === "") {
+            if (!enabled) {
                 commitSaveButton.addClass("disabled");
             } else {
                 commitSaveButton.removeClass("disabled");
             }
+        };
+
+        txtMessage.on('keyup', function (event) {
+            enableDisableSaveButton();
         });
 
         validateControl = function (ctrl, ctrlGroup) {
@@ -121,31 +143,8 @@ define(['logManager',
         };
 
         validateControl(txtMessage, controlGroupMessage);
-        validateControl(txtBranchName, controlGroupBranch);
 
-        commitSaveButton.bind('click', function (event) {
-            var msg = self._commitMsgDialog.find("#txtMessage").val(),
-                selectedBranch = btnGroupBranch.find(".active").attr("data-b");
 
-            if (selectedBranch === "current") {
-                selectedBranch = currentBranchName;
-            } else {
-                selectedBranch = txtBranchName.val();
-            }
-
-            if (msg !== "" && selectedBranch !== "") {
-                txtMessage.val("");
-                self._commitMsgDialog.modal('hide');
-                commitSaveButton.unbind('click');
-                txtMessage.off('keyup');
-                event.stopPropagation();
-                event.preventDefault();
-                self.onCommit({"message": msg,
-                    "branch": selectedBranch});
-            }
-        });
-
-        txtMessage.focus();
     };
 
     ProjectPanel.prototype._btnRepoHistoryClick = function () {

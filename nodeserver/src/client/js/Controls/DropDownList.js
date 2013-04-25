@@ -6,7 +6,8 @@ define(['jquery',
 
     var DropDownList,
         __parent__ = DropDownMenu,
-        __parent_proto__ = DropDownMenu.prototype;
+        __parent_proto__ = DropDownMenu.prototype,
+        DEFAULT_UNDEFINED_TEXT = 'N/A';
 
     DropDownList = function (params) {
         var self = this;
@@ -16,7 +17,8 @@ define(['jquery',
 
         //DropDownList own attributes
         this._selectedValue = undefined;
-        this.setTitle('NO ITEM');
+        this._undefinedValueText = DEFAULT_UNDEFINED_TEXT;
+        this.setTitle(this._undefinedValueText);
 
         this._btnDropDownToggle.on('click', '', function (/*event*/) {
             self.dropDownMenuOpen();
@@ -25,6 +27,10 @@ define(['jquery',
 
     //inherit DropDownMenu's stuff
     _.extend(DropDownList.prototype, DropDownMenu.prototype);
+
+    DropDownList.prototype.setUndefinedValueText = function (text) {
+        this._undefinedValueText = text;
+    };
 
     //define DropDownList's own
     DropDownList.prototype.onItemClicked = function (value) {
@@ -39,7 +45,7 @@ define(['jquery',
         //TODO: override this to get notified about new value selection
     };
 
-    DropDownList.prototype.addItem = function (item) {
+    /*DropDownList.prototype.addItem = function (item) {
         var firstItem = this._ul.children().length === 0;
 
         //call parent's addItem
@@ -49,7 +55,7 @@ define(['jquery',
         if (firstItem === true) {
             this._setSelectedValue(item.value, true);
         }
-    };
+    };*/
 
     //clear in DropDownMenu removes the popup menu
     //here it should never happen
@@ -70,37 +76,46 @@ define(['jquery',
             text;
 
         if (this._selectedValue !== val) {
-            li = this._ul.find('li[data-val="' + val + '"]');
+            if (val === null || val === undefined) {
+                this._selectedValue = undefined;
+                this.setTitle(this._undefinedValueText);
+                this._applySelectedIcon();
+            } else {
+                li = this._ul.find('li[data-val="' + val + '"]');
 
-            //if that value exist at all in the DropDownList
-            if (li.length !== 0) {
-                this._selectedValue = val;
+                //if that value exist at all in the DropDownList
+                if (li.length !== 0) {
+                    this._selectedValue = val;
 
-                text = li.find('> a').text();
-                this.setTitle(text);
+                    text = li.find('> a').text();
+                    this.setTitle(text);
 
-                this._applySelectedIcon(li);
+                    this._applySelectedIcon(li);
 
-                if (noEvent !== true) {
-                    this.selectedValueChanged(this._selectedValue);
+                    if (noEvent !== true) {
+                        this.selectedValueChanged(this._selectedValue);
+                    }
                 }
             }
         }
-
-
     };
 
     DropDownList.prototype._applySelectedIcon = function (li) {
-        var a = li.find('> a'),
-            selectedIcon = $('<i class="icon-ok"></i>');
-
-        selectedIcon.css({"margin-left": "-16px",
-            "margin-right": "2px"});
+        var a,
+            selectedIcon;
 
         //first remove existing
         this._ul.find('i.icon-ok').remove();
 
-        a.prepend(selectedIcon);
+        if (li) {
+            a = li.find('> a');
+            selectedIcon = $('<i class="icon-ok"></i>');
+
+            selectedIcon.css({"margin-left": "-16px",
+                "margin-right": "2px"});
+
+            a.prepend(selectedIcon);
+        }
     };
 
     return DropDownList;

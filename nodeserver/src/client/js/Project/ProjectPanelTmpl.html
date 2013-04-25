@@ -12,14 +12,10 @@
     </div>
     <div class="modal-body">
         <fieldset>
-            <legend>Select branch</legend>
-            <div class="btn-group" data-toggle="buttons-radio" id="btnGroupBranch">
-                <button type="button" class="btn btnCurrent active" data-b="current">Current</button>
-                <button type="button" class="btn btnNew" data-b="new">New branch</button>
-            </div>
-            <br/>
-            <div class="control-group control-group-branch">
-                <input type="text" id="txtBranchName" class="input-block-level" placeholder="Type your branch name here..." disabled />
+            <legend>Selected branch</legend>
+            <h3 class="branch"></h3>
+            <div class="alert alert-error">
+                Oooops, you are not ready to commit since you are not on a branch right now. Select a branch first and you will be able to make your commit.
             </div>
         </fieldset>
         <br/>

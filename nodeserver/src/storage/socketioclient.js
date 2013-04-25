@@ -66,7 +66,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             if(callbacks[guid]){
                 cb = callbacks[guid].cb;
                 delete callbacks[guid];
-                cb(ERROR_TIMEOUT);
+                cb(new Error(ERROR_TIMEOUT));
             } else if(getDbStatusCallbacks[guid]){
                 cb = getDbStatusCallbacks[guid].cb;
                 delete getDbStatusCallbacks[guid];
@@ -75,7 +75,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 cb = getBranchHashCallbacks[guid].cb;
                 oldhash = getBranchHashCallbacks[guid].oldhash;
                 delete getBranchHashCallbacks[guid];
-                cb(ERROR_TIMEOUT,null,null);
+                cb(new Error(ERROR_TIMEOUT),null,null);
             }
         }
 
@@ -198,7 +198,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     callback(err);
                 });
             } else {
-                callback(ERROR_DISCONNECTED);
+                callback(new Error(ERROR_DISCONNECTED));
             }
         }
 
@@ -213,7 +213,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     callback(err);
                 });
             } else {
-                callback(ERROR_DISCONNECTED);
+                callback(new Error(ERROR_DISCONNECTED));
             }
         }
 
@@ -256,7 +256,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     callback(err,names);
                 });
             } else {
-                callback(ERROR_DISCONNECTED);
+                callback(new Error(ERROR_DISCONNECTED));
             }
         }
 
@@ -271,7 +271,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     callback(err);
                 });
             } else {
-                callback(ERROR_DISCONNECTED);
+                callback(new Error(ERROR_DISCONNECTED));
             }
         }
 
@@ -311,7 +311,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -330,7 +330,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -386,7 +386,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -403,7 +403,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -420,7 +420,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -437,7 +437,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -454,7 +454,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -494,7 +494,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
 
@@ -511,7 +511,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                     });
                 } else {
-                    callback(ERROR_DISCONNECTED);
+                    callback(new Error(ERROR_DISCONNECTED));
                 }
             }
         }

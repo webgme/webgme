@@ -16,7 +16,11 @@ define(['logManager'], function (logManager) {
         });
         this._client.addEventListener(this._client.events.PROJECT_CLOSED, function () {
             self._view.clear();
-            self._view.setSelectedBranch('NO OPEN PROJECT');
+            self._view.setSelectedBranch('NO BRANCH SELECTED');
+        });
+        this._client.addEventListener(this._client.events.BRANCH_CHANGED, function (/*name*/) {
+            self._updateBranchList();
+            self._updateCurrentBranchInfo();
         });
 
         this._view.onSelectBranch = function (branchName) {
