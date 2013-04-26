@@ -393,6 +393,9 @@ define(['logManager',
             this.connectionDrawingManager.componentDelete(componentId);
         }
 
+        //let the selection manager know about the deletion
+        this.selectionManager.componentsDeleted([componentId]);
+
         //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
             this.deleteDesignerItem(componentId);
@@ -676,43 +679,6 @@ define(['logManager',
         this.selectionManager.showSelectionOutline();
     };
 
-    DesignerCanvas.prototype.designerItemsMove = function (itemIDs) {
-        var i = itemIDs.length,
-            newPositions = {},
-            id,
-            item;
-
-        while (i--) {
-            id = itemIDs[i];
-            item = this.items[id];
-
-            newPositions[id] = { "x": item.positionX, "y": item.positionY };
-        }
-
-        this.onDesignerItemsMove(newPositions);
-    };
-
-    DesignerCanvas.prototype.designerItemsCopy = function (copyDesc) {
-        var newSelectionIDs = [],
-            i;
-
-        for (i in copyDesc.items) {
-            if (copyDesc.items.hasOwnProperty(i)) {
-                newSelectionIDs.push(i);
-            }
-        }
-
-        for (i in copyDesc.connections) {
-            if (copyDesc.connections.hasOwnProperty(i)) {
-                newSelectionIDs.push(i);
-            }
-        }
-
-        this.selectionManager._clearSelection();
-        this.selectionManager.setSelection(newSelectionIDs);
-
-        this.onDesignerItemsCopy(copyDesc);
-    };
     /************************** END - DRAG ITEM ***************************/
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
@@ -749,7 +715,8 @@ define(['logManager',
             dx = 20,
             dy = 20,
             w,
-            h = 0;
+            h = 0,
+            newPositions = {};
 
         this.beginUpdate();
 
@@ -759,6 +726,7 @@ define(['logManager',
                     w = this.items[this.itemIds[i]].width;
                     h = Math.max(h, this.items[this.itemIds[i]].height);
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
+                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;
                     if (x >= 1000) {
                         x = 10;
@@ -772,6 +740,7 @@ define(['logManager',
                     w = this.items[this.itemIds[i]].width;
                     h = Math.max(h, this.items[this.itemIds[i]].height);
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
+                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;
                     y += h + dy;
                 }
@@ -782,7 +751,7 @@ define(['logManager',
 
         this.endUpdate();
 
-        this.designerItemsMove(this.itemIds);
+        this.onDesignerItemsMove(newPositions);
     };
 
     /********************************************************************/
