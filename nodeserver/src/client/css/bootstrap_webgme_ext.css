@@ -9,6 +9,14 @@
     user-select: all;
 }
 
+/************ MODAL DIALOG **************************/
+/* DISABLE DROP-SHADOW because it slows down scrolling :( */
+.modal {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
 /**************** NAVBAR *********************/
 
 .navbar-fixed-top .navbar-inner,
