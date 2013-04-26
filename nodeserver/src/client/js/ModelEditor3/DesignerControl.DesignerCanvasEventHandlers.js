@@ -404,14 +404,19 @@ define(['logManager',
             propPointer = propObject;
             keyArr.splice(0, 1);
 
-            //dig down to leaf property
-            while (keyArr.length > 1) {
-                propPointer = propPointer[keyArr[0]];
-                keyArr.splice(0, 1);
-            }
+            if(keyArr.length<1){
+                //simple value so just set it
+                propObject = args.newValue;
+            } else {
+                //dig down to leaf property
+                while (keyArr.length > 1) {
+                    propPointer = propPointer[keyArr[0]];
+                    keyArr.splice(0, 1);
+                }
 
-            //set value
-            propPointer[keyArr[0]] = args.newValue;
+                //set value
+                propPointer[keyArr[0]] = args.newValue;
+            }
 
             //save back object
             this._client[setterFn](gmeID, path, propObject);
