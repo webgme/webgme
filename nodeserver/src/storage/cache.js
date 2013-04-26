@@ -256,7 +256,7 @@ define([ "util/assert" ], function (ASSERT) {
 								delete branches[tag];
 
 								while ((cb = branch.pop())) {
-									cb(err, newhash);
+									cb(err,newhash,null);
 								}
 							}
 						}
