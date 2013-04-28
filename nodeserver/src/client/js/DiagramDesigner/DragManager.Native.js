@@ -107,7 +107,7 @@ define(['logManager',
             dy = mousePos.mY - this._dragDesc.startY;
 
         //touch device fix: not sure why but sometime during dragging negative coordinates are passed here
-        if (mousePos.mX < 0 && mousePos.mX < 0) {
+        if (mousePos.mX <= 0 && mousePos.mX <= 0) {
             return;
         }
 
