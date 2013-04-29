@@ -23,7 +23,7 @@ define(['logManager',
         ITEM_WIDTH = 8,     //RepositoryLogView.css - $commit-size
         ITEM_HEIGHT = 8,    //RepositoryLogView.css - $commit-size
         LINE_CORNER_SIZE = 5,
-        NON_EXISTING_PARENT_LINE_FILL_COLOR = '#000000',
+        LINE_FILL_COLOR = '#000000',
         NON_EXISTING_PARENT_LINE_GRADIENT_NAME = 'grad1',
         CREATE_BRANCH_EDIT_CONTROL_CLASS = 'create-branch-from-commit',
         BRANCH_LABEL_CLASS = 'branch-label',
@@ -552,15 +552,27 @@ define(['logManager',
             x2 = dstDesc.x + ITEM_WIDTH / 2,
             y2 = dstDesc.y + ITEM_HEIGHT / 2,
             dX = x2 - x,
-            path;
+            path,
+            pathDefGradient;
 
         if (dX === 0) {
             //vertical line
+            y2 = dstDesc.y + ITEM_HEIGHT + 2;
+
             if (nonVisibleSource === false) {
                 y = srcDesc.y - 2;
+                pathDef = ["M", x, y, "L", x2, y2 ];
+            } else {
+                //is it the most bottom commit circle??
+                if (y !== dstDesc.y + ITEM_HEIGHT) {
+                    //will be drawn as two separate path
+                    //send one will be the gradient
+                    pathDef = ["M", x, y - Y_DELTA, "L", x2, y2 ];
+
+                    //inject fake initial "move to" --> Gradient will be applied
+                    pathDefGradient = [ "M", x - 1, y, "M", x, y, "L", x2, y - Y_DELTA ];
+                }
             }
-            y2 = dstDesc.y + ITEM_HEIGHT + 2;
-            pathDef = ["M", x, y, "L", x2, y2 ];
         } else {
             //multiple segment line
             if (x2 < x) {
@@ -580,14 +592,21 @@ define(['logManager',
 
 
         if (nonVisibleSource === true) {
-            //inject fake initial "move to" --> Gradient will be applied
-            pathDef.splice(0, 0, "M", -1, -1);
-            path = this._svgPaper.path(pathDef.join(","));
-            path.attr({"stroke": NON_EXISTING_PARENT_LINE_FILL_COLOR});
-            path.node.setAttribute("stroke", "url(#" + NON_EXISTING_PARENT_LINE_GRADIENT_NAME + ")");
-            this._nonExistingParentPaths.push(path);
+            if (pathDef) {
+                path = this._svgPaper.path(pathDef.join(","));
+                path.attr({"stroke": LINE_FILL_COLOR});
+                this._nonExistingParentPaths.push(path);
+            }
+
+            if (pathDefGradient) {
+                path = this._svgPaper.path(pathDefGradient.join(","));
+
+                path.node.setAttribute("stroke", "url(#" + NON_EXISTING_PARENT_LINE_GRADIENT_NAME + ")");
+                this._nonExistingParentPaths.push(path);
+            }
         } else {
-            this._svgPaper.path(pathDef.join(","));
+            path = this._svgPaper.path(pathDef.join(","));
+            path.attr({"stroke": LINE_FILL_COLOR});
         }
     };
 
@@ -656,19 +675,14 @@ define(['logManager',
 
             var stop0 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
             stop0.setAttribute("offset", "0%");
-            stop0.setAttribute("style", "stop-color: " + NON_EXISTING_PARENT_LINE_FILL_COLOR);
+            stop0.setAttribute("style", "stop-color: " + LINE_FILL_COLOR);
 
             var stop1 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
-            stop1.setAttribute("offset", "90%");
-            stop1.setAttribute("style", "stop-color: " + NON_EXISTING_PARENT_LINE_FILL_COLOR);
-
-            var stop2 = document.createElementNS("http://www.w3.org/2000/svg", 'stop');
-            stop2.setAttribute("offset", "100%");
-            stop2.setAttribute("style", "stop-color: #FFFFFF");
+            stop1.setAttribute("offset", "100%");
+            stop1.setAttribute("style", "stop-color: #FFFFFF");
 
             linearGradient.appendChild(stop0);
             linearGradient.appendChild(stop1);
-            linearGradient.appendChild(stop2);
 
             defs.appendChild(linearGradient);
 
