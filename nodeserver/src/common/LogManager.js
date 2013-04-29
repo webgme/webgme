@@ -32,8 +32,12 @@ define([], function () {
         currentLogLevel = logLevels.WARNING,
         useColors = false,
         excludedComponents = [],
+        FS = null,
+        logFilePath = null,
+        logFileBuffer = [],
         Logger,
         isComponentAllowedToLog,
+        printLogMessageToFile,
         logMessage;
 
     isComponentAllowedToLog = function (componentName) {
@@ -60,28 +64,58 @@ define([], function () {
         return true;
     };
 
+    printLogMessageToFile = function(){
+        var message = logFileBuffer[0];
+        if(message){
+            FS.appendFile(logFilePath, message, function (err) {
+                logFileBuffer.shift();
+                if(err){
+                    //something wrong so we should fallback to console logging
+                    logFilePath = null;
+                    logFileBuffer = [];
+                } else {
+                    if(logFileBuffer.length > 0){
+                        printLogMessageToFile();
+                    }
+                }
+            });
+        }
+    };
+
     logMessage = function (level, componentName, msg) {
         var logTime = new Date(),
             logTimeStr = (logTime.getHours() < 10) ? "0" + logTime.getHours() : logTime.getHours(),
             levelStr = level,
             concreteLogger = console.log;
 
+        //logTimeString
+        logTimeStr += ":";
+        logTimeStr += (logTime.getMinutes() < 10) ? "0" + logTime.getMinutes() : logTime.getMinutes();
+        logTimeStr += ":";
+        logTimeStr += (logTime.getSeconds() < 10) ? "0" + logTime.getSeconds() : logTime.getSeconds();
+        logTimeStr += ".";
+        logTimeStr += (logTime.getMilliseconds() < 10) ? "00" + logTime.getMilliseconds() : ((logTime.getMilliseconds() < 100) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds());
+
+        //levelStr
+        if (useColors === true && logFilePath === null) {
+            levelStr  = '\u001B[' + logColors[level] + 'm' + level + '\u001B[39m';
+        }
+
         if (isComponentAllowedToLog(componentName) === true) {
-            if (currentLogLevel > logLevels.OFF) {
+            if(logFilePath){
+                msg = levelStr + " - " + logTimeStr + " [" + componentName + "] - " + msg + "\n";
+                if(logFileBuffer.length === 0){
+                    logFileBuffer.push(msg);
+                    printLogMessageToFile();
+                } else {
+                    logFileBuffer.push(msg);
+                }
+            } else {
+                //console logging
                 //log only what meets configuration
                 if (logLevels[level] <= currentLogLevel) {
                     //see whether console exists
                     if (console && console.log) {
-                        logTimeStr += ":";
-                        logTimeStr += (logTime.getMinutes() < 10) ? "0" + logTime.getMinutes() : logTime.getMinutes();
-                        logTimeStr += ":";
-                        logTimeStr += (logTime.getSeconds() < 10) ? "0" + logTime.getSeconds() : logTime.getSeconds();
-                        logTimeStr += ".";
-                        logTimeStr += (logTime.getMilliseconds() < 10) ? "00" + logTime.getMilliseconds() : ((logTime.getMilliseconds() < 100) ? "0" + logTime.getMilliseconds() : logTime.getMilliseconds());
-
-                        if (useColors === true) {
-                            levelStr  = '\u001B[' + logColors[level] + 'm' + level + '\u001B[39m';
-                        }
 
                         if ((logLevels[level] === logLevels.ERROR) && (console.error)) {
                             concreteLogger = console.error;
@@ -135,6 +169,28 @@ define([], function () {
 
         getLogLevel : function () {
             return currentLogLevel;
+        },
+
+        // this function is only for server side!!!
+        setFileLogPath : function(logPath){
+            if(FS === null){
+                try {
+                    FS = require('fs');
+                    logFilePath = logPath;
+                }
+                catch(e){
+                    FS = {};
+                    logFilePath = null;
+                }
+            } else {
+                if(FS.appendFile){
+                    logFilePath = logPath;
+                }
+            }
+        },
+
+        getFileLogPath : function(){
+            return logFilePath;
         },
 
         useColors : function (enabled) {

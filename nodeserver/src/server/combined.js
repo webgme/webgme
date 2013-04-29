@@ -26,8 +26,10 @@ requirejs(['logManager',
     Mongo,
     Log){
     var logLevel = commonUtil.combinedserver.loglevel || logManager.logLevels.WARNING;
+    var logFile = commonUtil.combinedserver.logfile || 'server.log';
     logManager.setLogLevel(logLevel);
     logManager.useColors(true);
+    logManager.setFileLogPath(logFile);
     var Combined = function(parameters){
         var logger = logManager.create("combined-server");
         var iologger = logManager.create("socket.io");
