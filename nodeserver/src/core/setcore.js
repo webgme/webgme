@@ -185,11 +185,23 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
+        var isSetNode = function(node){
+            var parent = _innerCore.getParent(node);
+            if(parent){
+                var path = getStringPath(node);
+                var sets = getSetPaths(parent);
+                return sets.indexOf(path) !== -1;
+            } else {
+                return false;
+            }
+        };
+
         return {
             // check
             isValidNode: _innerCore.isValidNode,
             isValidRelid: _innerCore.isValidRelid,
             isValidPath: _innerCore.isValidPath,
+            isSetNode: isSetNode,
 
             // root
             getKey: _innerCore.getKey,

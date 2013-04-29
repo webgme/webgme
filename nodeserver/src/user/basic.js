@@ -517,12 +517,21 @@ define([
                 }
 
             }
+            function addSetPaths(pathsSoFar){
+                for(var i in pathsSoFar){
+                    var sets = _core.getSetPaths(_nodes[i].node);
+                    for(var j=0;j<sets.length;j++){
+                        pathsSoFar[sets[j]] = true;
+                    }
+                }
+            }
             function userEvents(userId,modifiedNodes){
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
                     patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
                 }
+                addSetPaths(newPaths);
 
                 var events = [];
                 //deleted items
@@ -547,6 +556,38 @@ define([
                 }
 
                 _users[userId].PATHS = newPaths;
+
+                //we should remove set events and add their owner instead
+                var setEvents = {};
+                var eventsToRemove = [];
+                //first we mark the set changes
+                for(i=0;i<events.length;i++){
+                    if(_core.isSetNode(_nodes[events[i].eid].node)){
+                        eventsToRemove.unshift(i);
+                        var parentPath = _core.getStringPath(_core.getParent(_nodes[events[i].eid].node));
+                        setEvents[parentPath] = false;
+                    }
+                }
+                //we remove the set events
+                while(eventsToRemove.length>0){
+                    var index = eventsToRemove.shift();
+                    events.splice(index,1);
+                }
+
+                //we check which events should be really added
+                for(i=0;i<events.length;i++){
+                    if(setEvents[events[i].eid] === false){
+                        setEvents[events[i].eid] = true;
+                    }
+                }
+
+                //adding the needed events
+                for(i in setEvents){
+                    if(setEvents[i] === false){
+                        events.push({etype:'update',eid:i});
+                    }
+                }
+
 
                 if(events.length>0){
                     if(_loadError > startErrorLevel){
