@@ -573,58 +573,6 @@ define([
                 }
                 return path;
             }
-            function addNode(core,nodesSoFar,node,callback){
-                var path = core.getStringPath(node);
-                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node)};
-                core.loadSets(node,function(err,sets){
-                    if(!err && sets && sets.length>0){
-                        var  missing = 0;
-                        var error = null;
-                        var alldone = function(){
-                            callback(error);
-                        };
-
-                        var loadSet = function(node,callback){
-                            core.loadChildren(node,function(err,children){
-                                error = error || err;
-                                if(!err && children && children.length>0){
-                                    for(var i=0;i<children.length;i++){
-                                        nodesSoFar[core.getStringPath(children[i])] = {node:children[i],hash:core.getSingleNodeHash(children[i])};
-                                        core.loadPointer(children[i],'member',function(err,member){
-                                            error = error || err;
-                                            if(!err && member){
-                                                nodesSoFar[core.getStringPath(member)] = {node:member,hash:core.getSingleNodeHash(member)};
-                                                if(--missing === 0){
-                                                    alldone();
-                                                }
-                                            } else {
-                                                if(--missing === 0){
-                                                    alldone();
-                                                }
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    missing -= core.getChildrenNumber(node);
-                                    if(missing === 0){
-                                        alldone();
-                                    }
-                                }
-                            });
-                        };
-
-                        for(var i=0;i<sets.length;i++){
-                            missing += core.getChildrenNumber(sets[i]);
-                        }
-                        for(i=0;i<sets.length;i++){
-                            nodesSoFar[core.getStringPath(sets[i])] = {node:sets[i],hash:core.getSingleNodeHash(sets[i])};
-                            loadSet(sets[i]);
-                        }
-                    } else {
-                        callback(err);
-                    }
-                });
-            }
             function completeNode(core,nodesSoFar,node,callback){
                 if(core.getSetsNumber(node)>0){
                     core.loadSets(node,function(err,sets){
@@ -700,7 +648,7 @@ define([
                     callback(null);
                 }
             }
-            function loadPattern2(core,id,pattern,nodesSoFar,callback){
+            function loadPattern(core,id,pattern,nodesSoFar,callback){
                 var base = null;
                 var baseLoaded = function(){
                        if(pattern.children && pattern.children>0){
@@ -771,7 +719,7 @@ define([
                         if(missing > 0){
                             for(i in _users){
                                 for(j in _users[i].PATTERNS){
-                                    loadPattern2(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
+                                    loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
                                         error = error || err;
                                         if(--missing === 0){
                                             allLoaded();
@@ -788,96 +736,6 @@ define([
                 });
             }
             //this is just a first brute implementation it needs serious optimization!!!
-            function loadPattern(core,id,pattern,nodesSoFar,callback){
-                callback = callback || function(){};
-                ASSERT(core && typeof core === 'object' && typeof pattern === 'object' && typeof nodesSoFar === 'object');
-
-                core.loadByPath(id,function(err,node){
-                    if(!err && node){
-                        addNode(core,nodesSoFar,node,function(err){
-                            if(!err){
-                                //currently we only have children type pattern, so we try to simplify the function
-                                if(!pattern.children || pattern.children === 0){
-                                    //we are done with this pattern
-                                    callback(null);
-                                } else {
-                                    var childrenIds = core.getChildrenPaths(node);
-                                    var subPattern = COPY(pattern);
-                                    subPattern.children--;
-                                    var missing = childrenIds.length;
-                                    var error = null;
-                                    var subLoadComplete = function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            callback(error);
-                                        }
-                                    };
-                                    for(var i=0;i<childrenIds.length;i++){
-                                        loadPattern(core,childrenIds[i],subPattern,nodesSoFar,subLoadComplete);
-                                    }
-                                    if(missing === 0){
-                                        missing = 1;
-                                        subLoadComplete(null);
-                                    }
-                                }
-                            } else {
-                                callback(err);
-                            }
-                        });
-                    } else {
-                        callback(err);
-                    }
-                });
-            }
-            function _loadRoot(newRootHash,callback){
-                //TODO here we should first do the immediate event calculating
-                // then if not every object reachable we should start the normal loading
-                ASSERT(_project);
-                _loadNodes = {};
-                _loadError = 0;
-                _core.loadRoot(newRootHash,function(err,root){
-                    if(!err){
-                        var missing = 0,
-                            error = null;
-                        var allLoaded = function(){
-                            if(!error){
-                                callback(null);
-                            } else {
-                                callback(error);
-                            }
-                        };
-
-                        for(var i in _users){
-                            for(var j in _users[i].PATTERNS){
-                                missing++;
-                            }
-                        }
-                        if(missing > 0){
-                            addNode(_core,_loadNodes,root,function(err){
-                                error == error || err;
-                                if(!err){
-                                    for(i in _users){
-                                        for(j in _users[i].PATTERNS){
-                                            loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
-                                                error = error || err;
-                                                if(--missing === 0){
-                                                    allLoaded();
-                                                }
-                                            });
-                                        }
-                                    }
-                                } else {
-                                    allLoaded();
-                                }
-                            });
-                        } else {
-                            allLoaded();
-                        }
-                    } else {
-                        callback(err);
-                    }
-                });
-            }
             function loading(newRootHash,callback){
                 callback = callback || function(){};
                 var incomplete = false;
@@ -908,14 +766,20 @@ define([
                 });
                 //here we try to make an immediate event building
                 //TODO we should deal with the full unloading!!!
-                var hasNodesalready = false;
-                for(var i in _loadNodes){
-                    if(!hasNodesalready){
-                        hasNodesalready = true;
-                        break;
-                    }
+                //TODO we should check not to hide any issue related to immediate loading!!!
+                var hasEnoughNodes = false;
+                var counter = 0;
+                var limit = 0;
+                for(var i in _nodes){
+                    counter++;
                 }
-                if(hasNodesalready){
+                limit = counter/2;
+                counter = 0;
+                for(i in _loadNodes){
+                    counter++;
+                }
+                hasEnoughNodes = limit <= counter;
+                if(hasEnoughNodes){
                     modifiedPaths = getModifiedNodes(_loadNodes);
                     _nodes = {};
                     for(i in _loadNodes){
