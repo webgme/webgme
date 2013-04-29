@@ -9,9 +9,18 @@
     user-select: all;
 }
 
+
 /************ MODAL DIALOG **************************/
-/* DISABLE DROP-SHADOW because it slows down scrolling :( */
+/* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
 .modal {
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
+
+/************ BUTTON DIALOG **************************/
+/* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
+.btn {
     -webkit-box-shadow: none;
     -moz-box-shadow: none;
     box-shadow: none;
