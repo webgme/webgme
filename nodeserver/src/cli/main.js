@@ -14,12 +14,6 @@ requirejs.config({
 requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], function (ASSERT, Mongo, Cache, TASYNC) {
 	"use strict";
 
-	var argv = process.argv.slice(2), argvIndex = 0;
-
-	function nextParam (defValue) {
-		return (argvIndex < argv.length && argv[argvIndex].charAt(0) !== "-") ? argv[argvIndex++] : defValue;
-	}
-
 	var commands = {};
 
 	commands.help = function () {
@@ -47,17 +41,17 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 
 	var database = null, project = null, projectName, root = "";
 
-	commands.mongo = function () {
-		ASSERT(!database && !project);
+	commands.mongo = function (host, databaseName, projectName, port) {
+		ASSERT(!databaseName && !project);
 
-		var opt = {};
-		opt.host = nextParam("localhost");
-		opt.database = nextParam("webgme");
-		projectName = nextParam("test");
-		opt.port = nextParam();
-		opt.port = opt.port && parseInt(opt.port, 10);
+		var opt = {
+			host: host || "localhost",
+			database: databaseName || "webgme",
+			port: port && parseInt(port, 10)
+		};
+		projectName = projectName || "test";
 
-		console.log("Opening project " + opt.database + "/" + opt.project + " on " + opt.host);
+		console.log("Opening project " + opt.database + "/" + projectName + " on " + opt.host);
 
 		var d = new Cache(new Mongo(opt), {});
 		d.openDatabase = TASYNC.wrap(d.openDatabase);
@@ -66,6 +60,7 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		d.closeDatabase = TASYNC.wrap(d.closeDatabase);
 
 		return TASYNC.call(function () {
+			database = d;
 			return TASYNC.call(function (p) {
 				p.closeProject = TASYNC.wrap(p.closeProject);
 				p.dumpObjects = TASYNC.wrap(p.dumpObjects);
@@ -73,39 +68,35 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 				p.setBranchHash = TASYNC.wrap(p.setBranchHash);
 				p.getBranchHash = TASYNC.wrap(p.getBranchHash);
 
-				database = d;
 				project = p;
 			}, d.openProject(projectName));
 		}, d.openDatabase());
 	};
 
 	commands.close = function () {
-		var p = project, d = database;
-		project = null;
-		database = null;
+		var done;
 
-		if (p) {
+		if (project) {
 			console.log("Closing project");
-
-			return TASYNC.call(function () {
-				return d.closeDatabase();
-			}, p.closeProject());
+			done = project.closeProject();
+			project = null;
 		}
+
+		if (database) {
+			done = TASYNC.call(function (database) {
+				return database.closeDatabase();
+			}, database, done);
+			database = null;
+		}
+
+		return done;
 	};
 
-	commands.wait = function () {
-		var opt = nextParam();
+	commands.wait = function (delay) {
+		delay = (delay && parseInt(delay, 10)) || 1;
 
-		if (typeof opt === "string") {
-			opt = parseInt(opt, 10);
-		}
-
-		if (typeof opt !== "number" || opt < 0) {
-			opt = 1;
-		}
-
-		console.log("Waiting " + opt + " seconds ...");
-		return TASYNC.delay(1000 * opt);
+		console.log("Waiting " + delay + " seconds ...");
+		return TASYNC.delay(1000 * delay);
 	};
 
 	commands.dump = function () {
@@ -124,11 +115,10 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		return database.deleteProject(projectName);
 	};
 
-	commands.root = function () {
+	commands.root = function (start) {
 		ASSERT(project);
 
-		var start = nextParam("");
-		if (start === "") {
+		if (!start || start === "") {
 			console.log("Root is cleared");
 			root = "";
 			return;
@@ -148,10 +138,10 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		});
 	};
 
-	commands.setbranch = function () {
+	commands.setbranch = function (branch) {
 		ASSERT(project);
 
-		var branch = nextParam("*master");
+		branch = branch || "*master";
 		if (branch.charAt(0) !== "*") {
 			branch = "*" + branch;
 		}
@@ -167,10 +157,10 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		}, project.getBranchHash(branch, null));
 	};
 
-	commands.getbranch = function () {
+	commands.getbranch = function (branch) {
 		ASSERT(project);
 
-		var branch = nextParam("*master");
+		branch = branch || "*master";
 		if (branch.charAt(0) !== "*") {
 			branch = "*" + branch;
 		}
@@ -187,55 +177,54 @@ requirejs([ "util/assert", "storage/mongo", "storage/cache", "core/tasync" ], fu
 		}, project.getBranchHash(branch, null));
 	};
 
-	var runExternal = TASYNC.wrap(function (module, callback) {
-		requirejs(module, function (func) {
+	var external = TASYNC.wrap(function (module, args, callback) {
+		requirejs([ module ], function (func) {
+			if (typeof func !== "function") {
+				callback(new Error("invalid cli module"));
+			} else {
+				func = TASYNC.unwrap(func);
+				args.push(callback);
+				func.apply(null, args);
+			}
 		});
 	});
 
-	commands.readxml = function () {
-		ASSERT(project);
-
-		var xmlfile = nextParam();
-		if (typeof xmlfile !== "string") {
-			throw new Error("xml file not is not specified");
-		}
-
-		requirejs([ "cli/readxml" ], function () {
-			console.log("loaded");
-		});
+	commands.readxml = function (xmlfile) {
+		return external("cli/readxml", [ project, xmlfile ]);
 	};
 
 	// --- main 
 
-	function runNextCommand () {
-		if (argvIndex >= argv.length) {
-			return;
+	TASYNC.trycatch(function () {
+		var argv = process.argv.slice(2);
+
+		if (argv.length === 0 || argv[0].charAt(0) !== "-") {
+			return commands.help();
 		}
 
-		var name = argv[argvIndex++];
-		if (name.charAt(0) !== "-") {
-			throw new Error("Command does not start with a dash: " + name);
-		}
+		var index = 0, done;
+		while (index < argv.length) {
+			var cmd = argv[index++];
+			ASSERT(cmd.charAt(0) === "-");
 
-		var cmd = commands[name.substr(1)];
-		if (typeof cmd !== "function") {
-			throw new Error("Unknown command: " + name);
-		}
-
-		var done = cmd();
-		return TASYNC.call(runNextCommand, done);
-	}
-
-	if (argv.length <= 0) {
-		commands.help();
-	} else {
-		argv.push("-close");
-		TASYNC.trycatch(runNextCommand, function (err) {
-			console.log(err.trace || err.stack);
-
-			if (database) {
-				return commands.close();
+			var func = commands[cmd.substr(1)];
+			if (typeof func !== "function") {
+				throw new Error("Unknown command: " + cmd);
 			}
-		});
-	}
+
+			var args = [];
+			while (index < argv.length && argv[index].charAt(0) !== "-") {
+				args.push(argv[index++]);
+			}
+
+			args.push(done);
+			done = TASYNC.apply(func, args);
+		}
+
+		return TASYNC.call(commands.close, done);
+	}, function (error) {
+		console.log(error.trace || error.stack);
+
+		return commands.close();
+	});
 });
