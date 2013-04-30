@@ -26,7 +26,7 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		var argv = process.argv.slice(2);
 
 		if (argv.length < 1) {
-			console.log("Usage: node parsexml.js <xmlfile> <project> [database] [host] [port]");
+			console.log("Usage: node parse_xml.js <xmlfile> [project] [database] [host] [port]");
 			return;
 		}
 
@@ -174,7 +174,13 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		var tags = [];
 
 		function addTag (tag) {
-			var node = core.createNode(tags.length === 0 ? null : tags[tags.length - 1].node);
+			var node;
+			if (tags.length === 0) {
+				node = core.createNode();
+				root = node;
+			} else {
+				node = core.createNode(tags[tags.length - 1].node);
+			}
 
 			var hasIdrefs = false, key;
 			for (key in tag.attributes) {
@@ -209,21 +215,6 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			tags.push(tag);
 		}
 
-		function getDate () {
-			var date = new Date();
-			var d = date.getDate();
-			var m = date.getMonth() + 1;
-			var y = date.getFullYear();
-			return "" + y + "-" + (m <= 9 ? "0" + m : m) + '-' + (d <= 9 ? "0" + d : d);
-		}
-
-		addTag({
-			name: "Root",
-			attributes: {
-				created: getDate()
-			}
-		});
-
 		setProgress(function () {
 			console.log("  at line " + parser._parser.line + " (" + objects + " xml objects, " + idCount + " ids, " + unresolved.length + " idrefs)");
 		});
@@ -235,7 +226,7 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		parser.on("opentag", addTag);
 
 		parser.on("closetag", function (name) {
-			ASSERT(tags.length >= 2);
+			ASSERT(tags.length >= 1);
 
 			var tag = tags.pop();
 			ASSERT(tag.name === name);
@@ -258,8 +249,7 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		});
 
 		parser.on("end", function () {
-			ASSERT(tags.length === 1);
-			root = tags[0].node;
+			ASSERT(tags.length === 0);
 
 			setProgress(null);
 			callback(null);
