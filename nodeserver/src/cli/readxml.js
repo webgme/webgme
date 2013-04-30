@@ -52,7 +52,7 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 
 		var paths = {};
 		var idCount = 0, objectCount = 0, resolved = 0;
-		var unresolved = [];
+		var unresolved = [], globalRoot;
 
 		var parse = TASYNC.wrap(function (xmlfile, callback) {
 			var tags = [];
@@ -142,19 +142,11 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 			});
 
 			parser.on("end", function () {
-				clearInterval(reporter);
-				console.log("Waiting for objects to be saved ...");
-
 				ASSERT(tags.length === 1);
+				globalRoot = tags[0].node;
 
-				TASYNC.unwrap(core.persist)(tags[0].node, function (err) {
-					if (err) {
-						callback(err);
-					} else {
-						var root = tags[0].node;
-						callback(null, root);
-					}
-				});
+				clearInterval(reporter);
+				callback(null);
 			});
 
 			var stream = FS.createReadStream(xmlfile);
@@ -170,12 +162,13 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 			});
 		});
 
-		var globalRoot;
+		function persist () {
+			console.log("Waiting for objects to be saved ...");
+			return core.persist(globalRoot);
+		}
 
-		function resolve (root) {
+		function resolve () {
 			console.log("Resolving " + unresolved.length + " objects with idrefs ...");
-
-			globalRoot = root;
 
 			var reporter = setInterval(function () {
 				console.log("  at object " + resolved + " out of " + unresolved.length);
@@ -192,8 +185,8 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 						clearInterval(reporter);
 						console.log("Parsing done (" + objectCount + " xml objects, " + idCount + " ids, " + resolved + " idrefs)");
 
-						return core.getKey(root);
-					}, core.persist(root));
+						return core.getKey(globalRoot);
+					}, core.persist(globalRoot));
 				}, done);
 			}, function (error) {
 				clearInterval(reporter);
@@ -220,7 +213,7 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 				if (type === IDREF) {
 					id = core.getAttribute(node, name);
 					path = paths[id];
-					if (path === undefined) {
+					if (typeof path !== "string") {
 						console.log("Missing id " + id);
 					} else {
 						done = TASYNC.join(done, resolvePointer(node, name, path));
@@ -232,7 +225,7 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 					id = id === "" ? [] : id.split(" ");
 					for ( var j = 0; j < id.length; ++j) {
 						path = paths[id[j]];
-						if (path === undefined) {
+						if (typeof path !== "string") {
 							console.log("Missing id " + id[j]);
 						} else {
 							done = TASYNC.join(done, resolvePointer(node, name + "-" + j, path));
@@ -245,10 +238,13 @@ define([ "util/assert", "util/sax", "fs", "core/core", "core/tasync" ], function
 		}
 
 		function resolvePointer (node, name, path) {
-			ASSERT(typeof path === "string");
 			return TASYNC.call(core.setPointer, node, name, core.loadByPath(globalRoot, path));
 		}
 
-		return TASYNC.call(resolve, parse(xmlfile));
+		var done = parse(xmlfile);
+		done = TASYNC.call(persist, done);
+		done = TASYNC.call(resolve, done);
+
+		return done;
 	};
 });
