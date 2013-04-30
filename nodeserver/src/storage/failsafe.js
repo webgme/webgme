@@ -120,7 +120,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         getBranchNames: getBranchNames,
                         getBranchHash: getBranchHash,
                         setBranchHash: setBranchHash,
-                        getCommits: project.getCommits
+                        getCommits: project.getCommits,
+                        makeCommit: project.makeCommit
                     });
                 } else {
                     callback(err,project);

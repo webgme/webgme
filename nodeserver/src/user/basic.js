@@ -5,7 +5,6 @@ define([
     'eventDispatcher',
     'core/core',
     'core/setcore',
-    'core/commit',
     'storage/cache',
     'storage/failsafe',
     'storage/socketioclient',
@@ -19,7 +18,6 @@ define([
         EventDispatcher,
         Core,
         SetCore,
-        Commit,
         Cache,
         Failsafe,
         SocketIOClient,
@@ -56,7 +54,6 @@ define([
                 ),
                 _projectName = null,
                 _project = null,
-                _commit = null,
                 _core = null,
                 _selectedObjectId = null,
                 _propertyEditorSelection = null,
@@ -148,7 +145,7 @@ define([
             }
 
             function branchWatcher(branch,callback) {
-                ASSERT(_project && _commit);
+                ASSERT(_project);
                 callback = callback || function(){};
                 var myCallback = null;
                 var branchHashUpdated = function(err,newhash,forked){
@@ -167,7 +164,6 @@ define([
                                 if(_recentCommits.indexOf(newhash) === -1){
 
                                     addCommit(newhash);
-                                    //_commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
 
                                     //TODO here we have to start with a syncronous root object load...
                                     _project.loadObject(newhash,function(err,commitObj){
@@ -194,7 +190,7 @@ define([
                                      }*/
                                 }
 
-                                return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                                return _project.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                             }
                         } else {
                             if(callback){
@@ -202,7 +198,7 @@ define([
                                 callback = null;
                                 myCallback();
                             }
-                            return _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                            return _project.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                         }
                     } else {
                         if(callback){
@@ -220,13 +216,13 @@ define([
                     _recentCommits = [""];
                     _self.dispatchEvent(_self.events.BRANCH_CHANGED,_branch);
                     changeBranchState(_self.branchStates.SYNC);
-                    _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                    _project.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                 } else {
                     if(_offline){
                         _viewer = false;
                         _offline = false;
                         changeBranchState(_self.branchStates.SYNC);
-                        _commit.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
+                        _project.getBranchHash(branch,_recentCommits[0],branchHashUpdated);
                     } else {
                         callback(null);
                     }
@@ -377,7 +373,6 @@ define([
                         _inTransaction = false;
                         _nodes = {};
                         _core = new SetCore(new Core(_project));
-                        _commit = new Commit(_project,{});
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -386,7 +381,7 @@ define([
                         _self.dispatchEvent(_self.events.PROJECT_OPENED, _projectName);
 
                         //check for master or any other branch
-                        _commit.getBranchNames(function(err,names){
+                        _project.getBranchNames(function(err,names){
                             if(!err && names){
                                 var firstName = null;
 
@@ -456,7 +451,6 @@ define([
                 var returning = function(e){
                     clearSelectedObjectId();
                     _projectName = null;
-                    _commit = null;
                     _inTransaction = false;
                     _core = null;
                     _nodes = {};
@@ -489,15 +483,14 @@ define([
             }
             function createEmptyProject(project,callback){
                 var core = new SetCore(new Core(project,{}));
-                var commit = new Commit(project,{});
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
                 var rootHash = core.persist(function(err){});
-                var commitHash = commit.commit('master',[],rootHash,'project creation commit');
-                commit.setBranchHash('master',"",commitHash,callback);
+                var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
+                project.setBranchHash('master',"",commitHash,callback);
             }
 
             //loading functions
@@ -573,11 +566,12 @@ define([
                 var setEvents = {};
                 var eventsToRemove = [];
                 //first we mark the set changes
+                var setPath = null;
                 for(i=0;i<events.length;i++){
-                    if(_core.isSetNode(_nodes[events[i].eid].node)){
+                    setPath =  _core.getSetOwnerPath(events[i].eid);
+                    if(setPath){
                         eventsToRemove.unshift(i);
-                        var parentPath = _core.getStringPath(_core.getParent(_nodes[events[i].eid].node));
-                        setEvents[parentPath] = false;
+                        setEvents[setPath] = false;
                     }
                 }
                 //we remove the set events
@@ -861,12 +855,14 @@ define([
                 if(!_viewer){
                     _msg +="\n"+msg;
                     if(!_inTransaction){
-                        ASSERT(_project && _commit && _core && _branch);
+                        ASSERT(_project && _core && _branch);
                         var newRootHash = _core.persist(function(err){});
-                        var newCommitHash = _commit.commit(_branch,[_recentCommits[0]],newRootHash,_msg);
+                        var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
+                            //TODO now what??? - could we end up here?
+                        });
                         _msg = "";
                         addCommit(newCommitHash);
-                        _commit.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
+                        _project.setBranchHash(_branch,_recentCommits[1],_recentCommits[0],function(err){
                             //TODO now what??? - could we screw up?
                             callback(err);
                         });
@@ -934,13 +930,13 @@ define([
 
             //branching functionality
             function getBranchesAsync(callback){
-                _commit.getBranchNames(function(err,names){
+                _project.getBranchNames(function(err,names){
                     if(!err && names){
                         var missing = 0;
                         var branchArray = [];
                         var error = null;
                         var getBranchValues = function(name){
-                            _commit.getBranchHash(name,'',function(err,newhash,forked){
+                            _project.getBranchHash(name,'',function(err,newhash,forked){
                                 if(!err && newhash){
                                     var element = {name:name,commitId:newhash};
                                     if(forked){
@@ -1015,19 +1011,19 @@ define([
             }
             function createBranchAsync(branchName,commitHash,callback){
                 //it doesn't changes anything, just creates the new branch
-                _commit.setBranchHash(branchName,'',commitHash,callback);
+                _project.setBranchHash(branchName,'',commitHash,callback);
             }
             function deleteBranchAsync(branchName,callback){
-                _commit.getBranchHash(branchName,'',function(err,newhash,forkedhash){
+                _project.getBranchHash(branchName,'',function(err,newhash,forkedhash){
                     if(!err && newhash){
                         if(forkedhash){
-                            _commit.setBranchHash(branchName,newhash,forkedhash,function(err){
+                            _project.setBranchHash(branchName,newhash,forkedhash,function(err){
                                 if(!err){
                                     changeBranchState(_self.branchStates.SYNC);
                                 }
                             });
                         } else {
-                            _commit.setBranchHash(branchName,newhash,'',callback);
+                            _project.setBranchHash(branchName,newhash,'',callback);
                         }
                     } else {
                         callback(err);
@@ -1345,7 +1341,7 @@ define([
                 delete _users[guid];
             }
             function updateTerritory(guid, patterns) {
-                if(_project && _commit){
+                if(_project){
 
                     //this has to be optimized
                     var missing = 0;
