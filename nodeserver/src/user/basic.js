@@ -59,6 +59,7 @@ define([
                 _commit = null,
                 _core = null,
                 _selectedObjectId = null,
+                _propertyEditorSelection = null,
                 _branch = null,
                 _branchState = null,
                 _nodes = {},
@@ -78,6 +79,7 @@ define([
             $.extend(_self, new EventDispatcher());
             _self.events = {
                 "SELECTEDOBJECT_CHANGED": "SELECTEDOBJECT_CHANGED",
+                "PROPERTY_EDITOR_SELECTION_CHANGED": "PROPERTY_EDITOR_SELECTION_CHANGED",
                 "NETWORKSTATUS_CHANGED" : "NETWORKSTATUS_CHANGED",
                 "BRANCHSTATUS_CHANGED"  : "BRANCHSTATUS_CHANGED",
                 "BRANCH_CHANGED"        : "BRANCH_CHANGED",
@@ -98,10 +100,20 @@ define([
                 if (objectId !== _selectedObjectId) {
                     _selectedObjectId = objectId;
                     _self.dispatchEvent(_self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
+                    setPropertyEditorIdList([objectId]);
                 }
             }
             function clearSelectedObjectId() {
                 setSelectedObjectId(null);
+            }
+            function setPropertyEditorIdList(idList) {
+                if (idList !== _propertyEditorSelection) {
+                    _propertyEditorSelection = idList;
+                    _self.dispatchEvent(_self.events.PROPERTY_EDITOR_SELECTION_CHANGED, _propertyEditorSelection);
+                }
+            }
+            function clearPropertyEditorIdList() {
+                setPropertyEditorIdList([]);
             }
             function changeBranchState(newstate){
                 if(_branchState !== newstate){
@@ -1533,6 +1545,8 @@ define([
                 dispatchEvent: _self.dispatchEvent,
                 setSelectedObjectId: setSelectedObjectId,
                 clearSelectedObjectId: clearSelectedObjectId,
+                setPropertyEditorIdList: setPropertyEditorIdList,
+                clearPropertyEditorIdList: clearPropertyEditorIdList,
                 connect: connect,
 
                 //projects, branch, etc.
