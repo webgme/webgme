@@ -281,7 +281,8 @@ define([ "util/assert" ], function (ASSERT) {
 					getBranchNames: project.getBranchNames,
 					getBranchHash: getBranchHash,
 					setBranchHash: setBranchHash,
-					getCommits: project.getCommits
+					getCommits: project.getCommits,
+                    makeCommit: project.makeCommit
 				});
 			}
 

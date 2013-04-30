@@ -196,12 +196,29 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
+        var getSetOwnerPath = function(path){
+            //return null if the original path is not set
+            if(path.length>10){
+                var ending = path.slice(path.length-10);
+                if(VALIDSETIDS.indexOf(ending) !== -1){
+                    var parent = path.replace('/'+ending,'');
+                    return parent === rootPath ? visibleRootPath : parent;
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        };
+
+
         return {
             // check
             isValidNode: _innerCore.isValidNode,
             isValidRelid: _innerCore.isValidRelid,
             isValidPath: _innerCore.isValidPath,
             isSetNode: isSetNode,
+            getSetOwnerPath: getSetOwnerPath,
 
             // root
             getKey: _innerCore.getKey,

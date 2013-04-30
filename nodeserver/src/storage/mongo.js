@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
+define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1) {
 	"use strict";
 
 	var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");
@@ -261,7 +261,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 					} else {
 						var branches = {};
 						for ( var i = 0; i < docs.length; ++i) {
-							branches[docs[i]._id] = docs[i].hash;
+							branches[docs[i]._id.slice(1)] = docs[i].hash;
 						}
 						callback(null, branches);
 					}
@@ -269,6 +269,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			}
 
 			function getBranchHash (branch, oldhash, callback) {
+                branch = '*'+branch;
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(oldhash === null || (typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash))));
 				ASSERT(typeof callback === "function");
@@ -290,6 +291,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 			}
 
 			function setBranchHash (branch, oldhash, newhash, callback) {
+                branch = '*'+branch;
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
 				ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
@@ -349,6 +351,29 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 					$natural: -1
 				}).toArray(callback);
 			}
+
+            function makeCommit(parents,roothash,msg,callback){
+                //THERE IS NO SENSE TO CALL THIS METHOD!!!
+                //we implement only because of the API
+                ASSERT(HASH_REGEXP.test(roothash));
+                ASSERT(typeof callback === 'function');
+                parents = parents || [];
+                msg = msg || "n/a";
+
+                var commitObj = {
+                    _id     : "",
+                    root    : roothash,
+                    parents : parents,
+                    updater : ['TODO'],
+                    time    : (new Date()).getTime(),
+                    message : msg,
+                    type    : "commit"
+                };
+
+                commitObj._id = '#' + SHA1(JSON.stringify(commitObj));
+                insertObject(commitObj,callback);
+                return commitObj._id;
+            }
 		}
 
 		return {

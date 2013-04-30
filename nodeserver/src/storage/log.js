@@ -65,7 +65,8 @@ define([ "util/assert"], function (ASSERT) {
                         getBranchNames: getBranchNames,
                         getBranchHash: getBranchHash,
                         setBranchHash: setBranchHash,
-                        getCommits: getCommits
+                        getCommits: getCommits,
+                        makeCommit: makeCommit
                     });
                 } else {
                     callback(err,proj);
@@ -109,12 +110,18 @@ define([ "util/assert"], function (ASSERT) {
 
             function getBranchHash(branch,oldhash,callback){
                 logger.debug(projectName+'.getBranchHash('+branch+','+oldhash+')');
-                project.getBranchHash(branch,oldhash,callback);
+                project.getBranchHash(branch,oldhash,function(err,newhash,forked){
+                    logger.debug(projectName+'.getBranchHash('+branch+','+oldhash+')->('+JSON.stringify(err)+','+newhash+','+forked+')');
+                    callback(err,newhash,forked);
+                });
             }
 
             function setBranchHash(branch,oldhash,newhash,callback){
                 logger.debug(projectName+'.setBranchHash('+branch+','+oldhash+','+newhash+')');
-                project.setBranchHash(branch,oldhash,newhash,callback);
+                project.setBranchHash(branch,oldhash,newhash,function(err){
+                    logger.debug(projectName+'.setBranchHash('+branch+','+oldhash+','+newhash+') ->('+JSON.stringify(err)+')');
+                    callback(err);
+                });
             }
 
             function getCommits(before,number,callback){
@@ -122,6 +129,10 @@ define([ "util/assert"], function (ASSERT) {
                 project.getCommits(before,number,callback);
             }
 
+            function makeCommit(parents,roothash,msg,callback){
+                logger.debug(projectName+'.makeCommit('+parents+','+roothash+','+msg+')');
+                return project.makeCommit(parents,roothash,msg,callback);
+            }
         }
 
         return {

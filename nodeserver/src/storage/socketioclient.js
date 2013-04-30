@@ -4,8 +4,10 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert","util/guid"], function (ASSERT,GUID) {
-    //"use strict";
+define([ "util/assert","util/guid","util/sha1"], function (ASSERT,GUID,SHA1) {
+    "use strict";
+
+    var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
     function Database(options){
         ASSERT(typeof options === "object");
@@ -302,7 +304,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                     getBranchNames: getBranchNames,
                                     getBranchHash: getBranchHash,
                                     setBranchHash: setBranchHash,
-                                    getCommits: getCommits
+                                    getCommits: getCommits,
+                                    makeCommit: makeCommit
                                 };
                                 callback(null,projects[project]);
                             }
@@ -510,6 +513,33 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback(err,commits);
                         }
                     });
+                } else {
+                    callback(new Error(ERROR_DISCONNECTED));
+                }
+            }
+
+            function makeCommit(parents,roothash,msg,callback){
+                //we should implement the commit object creation here as well
+                //to avoid the round-trip
+                ASSERT(HASH_REGEXP.test(roothash));
+                ASSERT(typeof callback === 'function');
+                if(socketConnected){
+                    parents = parents || [];
+                    msg = msg || "n/a";
+
+                    var commitObj = {
+                        _id     : "",
+                        root    : roothash,
+                        parents : parents,
+                        updater : ['TODO'],
+                        time    : (new Date()).getTime(),
+                        message : msg,
+                        type    : "commit"
+                    };
+
+                    commitObj._id = '#' + SHA1(JSON.stringify(commitObj));
+                    insertObject(commitObj,callback);
+                    return commitObj._id;
                 } else {
                     callback(new Error(ERROR_DISCONNECTED));
                 }
