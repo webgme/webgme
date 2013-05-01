@@ -1,0 +1,19 @@
+.panel {
+  position: relative;
+  padding: 3px;
+  margin-bottom: 2px;
+  background-color: whitesmoke;
+  border: 1px solid #e9e9e9;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px; }
+  .panel .widget-header {
+    display: block;
+    padding: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 18px;
+    color: #999;
+    text-transform: uppercase; }
+    .panel .widget-header div {
+      display: inline-block; }

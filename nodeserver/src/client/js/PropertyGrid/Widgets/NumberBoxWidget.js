@@ -1,17 +1,10 @@
 "use strict";
 
-define([
-    'js/PropertyEditor/Widgets/NumberWidgetBase',
-    'clientUtil'
-], function (NumberWidgetBase,
-             clientUtil) {
+define(['js/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
 
   /**
    * @class Represents a given property of an object that is a number and
    * provides an input element with which to manipulate it.
-   *
-   * @extends dat.controllers.Controller
-   * @extends dat.controllers.NumberController
    *
    * @param {Object} object The object to be manipulated
    * @param {string} property The name of the property to be manipulated
@@ -20,7 +13,6 @@ define([
    * @param {Number} [params.max] Maximum allowed value
    * @param {Number} [params.step] Increment by which to change value
    *
-   * @member dat.controllers
    */
     var NumberBoxWidget;
 
@@ -44,7 +36,7 @@ define([
         this.__input.on('blur', function (e) {
             self._onBlur();
         });
-        this.__input.on('mousedown', function (e) {
+        /*this.__input.on('mousedown', function (e) {
             var prev_y = e.clientY,
                 onMouseDrag,
                 onMouseUp;
@@ -62,7 +54,7 @@ define([
 
             $(window).on('mousemove', onMouseDrag);
             $(window).on('mouseup', onMouseUp);
-        });
+        });*/
 
         this.__input.on('keydown', function (e) {
               // When pressing entire, you can be as precise as you want.
@@ -95,6 +87,9 @@ define([
     /*DEFINE CUSTOM PROPERTIES*/
     NumberBoxWidget.prototype._roundToDecimal = function (value, decimals) {
         var tenTo = Math.pow(10, decimals);
+        if (value === "") {
+            return value;
+        }
         return Math.round(value * tenTo) / tenTo;
     };
 
@@ -102,6 +97,8 @@ define([
         var attempted = parseFloat(this.__input.val());
         if (!_.isNaN(attempted)) {
             this.setValue(attempted);
+        } else {
+            this.__input.val(this.originalValue);
         }
     };
 

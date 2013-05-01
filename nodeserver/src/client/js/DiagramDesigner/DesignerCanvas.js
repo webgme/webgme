@@ -17,7 +17,7 @@ define(['logManager',
     'js/DiagramDesigner/ConnectionRouteManager2',
     'js/DiagramDesigner/ConnectionDrawingManager',
     'js/DiagramDesigner/DesignerCanvas.EventDispatcher',
-    'js/PropertyEditor/PropertyListView',
+    'js/PropertyGrid/PropertyGrid',
     'css!DiagramDesignerCSS/DesignerCanvas'], function (logManager,
                                                       util,
                                                       commonUtil,
@@ -35,7 +35,7 @@ define(['logManager',
                                                       ConnectionRouteManager2,
                                                       ConnectionDrawingManager,
                                                       DesignerCanvasEventDispatcher,
-                                                      PropertyListView) {
+                                                      PropertyGrid) {
 
     var DesignerCanvas,
         DEFAULT_GRID_SIZE = 10,
@@ -50,6 +50,9 @@ define(['logManager',
 
         //set properties from options
         options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "DesignerCanvas";
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
+        options[WidgetBaseWithHeader.OPTIONS.FILL_CONTAINER] = true;
 
         //call parent's constructor
         __parent__.apply(this, [options]);
@@ -227,8 +230,7 @@ define(['logManager',
 
     DesignerCanvas.prototype.destroy = function () {
         this.__loader.destroy();
-        this.$el.empty();
-        this.$el.removeClass("designer-canvas");
+        __parent_proto__.destroy.call(this);
     };
 
     DesignerCanvas.prototype.initializeUI = function () {
@@ -802,7 +804,8 @@ define(['logManager',
                         self._hideProperties();
                     } });
 
-                this.propListView = new PropertyListView(this.$propertyDialog);
+                this.propListView = new PropertyGrid();
+                this.$propertyDialog.append(this.propListView.$el);
 
                 this.propListView.onFinishChange(function (args) {
                     self._onPropertyChanged(args);
@@ -1002,7 +1005,6 @@ define(['logManager',
     };
 
     /*************   END OF - BACKGROUND TEXT      *****************/
-
 
     /************** API REGARDING TO MANAGERS ***********************/
 

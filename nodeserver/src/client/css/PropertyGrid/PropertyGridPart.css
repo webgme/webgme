@@ -1,0 +1,99 @@
+.pgp {
+  color: #eeeeee;
+  font-family: "Helvetica", "Arial", "sans-serif";
+  font-size: 11px;
+  background-color: #1a1a1a; }
+  .pgp ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    clear: both; }
+    .pgp ul li {
+      -webkit-transition: height 0.1s ease-out;
+      -o-transition: height 0.1s ease-out;
+      -moz-transition: height 0.1s ease-out;
+      transition: height 0.1s ease-out;
+      /* Controller row, <li> */ }
+      .pgp ul li:not(.folder) {
+        border-bottom: 1px solid #2c2c2c;
+        height: 27px;
+        line-height: 27px;
+        overflow: hidden;
+        padding: 0 3px 0 3px; }
+      .pgp ul li.folder {
+        border-bottom: 0;
+        padding: 0;
+        border-left: 4px solid rgba(0, 0, 0, 0); }
+      .pgp ul li.title {
+        padding-left: 14px;
+        background: black url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 4px 10px no-repeat;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        margin-left: -4px; }
+      .pgp ul li.cr {
+        clear: both;
+        border-left: 3px solid rgba(0, 0, 0, 0);
+        /** Name-half (left) */
+        /** Controllers */
+        /** Controller-half (right) */ }
+        .pgp ul li.cr.boolean {
+          border-left-color: #806787; }
+        .pgp ul li.cr.number {
+          border-left-color: #2fa1d6; }
+          .pgp ul li.cr.number input[type=text] {
+            color: #2fa1d6; }
+        .pgp ul li.cr.string {
+          border-left-color: #1ed36f; }
+          .pgp ul li.cr.string input[type=text] {
+            color: #1ed36f; }
+        .pgp ul li.cr.custom {
+          border-left-color: yellow; }
+        .pgp ul li.cr .property-name {
+          cursor: default;
+          float: left;
+          clear: left;
+          width: 40%;
+          overflow: hidden;
+          text-overflow: ellipsis; }
+        .pgp ul li.cr .c {
+          float: left;
+          width: 60%;
+          height: 27px;
+          /** Controller placement */ }
+          .pgp ul li.cr .c input {
+            font-size: 12px;
+            height: 13px;
+            line-height: 17px; }
+          .pgp ul li.cr .c input[type=checkbox] {
+            margin-top: -2px; }
+          .pgp ul li.cr .c input[type=text] {
+            border: 0;
+            margin-top: 4px;
+            margin-bottom: 0;
+            padding: 3px;
+            width: 100%;
+            float: right;
+            background: #303030;
+            outline: none; }
+            .pgp ul li.cr .c input[type=text]:hover {
+              background: #3c3c3c; }
+            .pgp ul li.cr .c input[type=text]:focus {
+              background: #494949;
+              color: #fff; }
+          .pgp ul li.cr .c select {
+            margin-top: 2px;
+            width: 100%;
+            height: 23px;
+            border: 0;
+            color: #FFFFFF;
+            background: #303030; }
+    .pgp ul.closed li:not(.title),
+    .pgp ul.closed ul li,
+    .pgp ul.closed ul li > * {
+      height: 0;
+      overflow: hidden;
+      border: 0; }
+    .pgp ul.closed li.title {
+      background-image: url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==); }

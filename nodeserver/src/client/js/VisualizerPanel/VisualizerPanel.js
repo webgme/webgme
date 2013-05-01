@@ -86,7 +86,7 @@ define(['logManager',
             }
 
             /*clear any leftover style --> should not happen, all the widgets needs to clean up after themselves, but...*/
-            this._widgetContainer.removeAttr("style").removeAttr("class");
+            //this._widgetContainer.removeAttr("style").removeAttr("class");
 
             this._activeContoller = null;
             this._activeWidget = null;

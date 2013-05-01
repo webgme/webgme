@@ -20,7 +20,9 @@ define([  'logManager',
     'js/Repository/BranchManagerControl',
     'js/Repository/BranchManagerView',
     'js/VisualizerPanel/VisualizerPanel',
-    'text!js/Visualizers.json'], function (logManager,
+    'text!js/Visualizers.json',
+    'js/PropertyEditorWidget/PropertyEditorWidget',
+    'js/PropertyEditorWidget/PropertyEditorWidgetController'], function (logManager,
                                             commonUtil,
                                             util,
                                             Core,
@@ -39,7 +41,9 @@ define([  'logManager',
                                             BranchManagerControl,
                                             BranchManagerView,
                                             VisualizerPanel,
-                                            VisualizersJSON) {
+                                            VisualizersJSON,
+                                            PropertyEditorWidget,
+                                            PropertyEditorWidgetController) {
 
     /*if (commonUtil.DEBUG === true) {
         logManager.setLogLevel(logManager.logLevels.ALL);
@@ -97,7 +101,9 @@ define([  'logManager',
         branchManagerView,
         branchManagerControl,
         branchChanged,
-        treeBrowserView;
+        treeBrowserView,
+        propertyEditorWidget,
+        propertyEditorWidgetController;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -136,8 +142,6 @@ define([  'logManager',
         $contentContainer.height(bodyH - headerH - footerH);
 
         if (bodyW !== lastBodyWidth || bodyH !== lastBodyHeight) {
-            $middlePanel.css({"overflow": "hidden"});
-
             $middlePanel.width(bodyW - leftPanelW - rightPanelW);
 
             lastBodyWidth = bodyW;
@@ -149,8 +153,6 @@ define([  'logManager',
             if (visualizerPanel) {
                 visualizerPanel.widgetContainerSizeChanged(eW, eH);
             }
-
-            $middlePanel.css({"overflow": "auto"});
         }
     };
 
@@ -250,7 +252,10 @@ define([  'logManager',
 
             visualizerPanel = new VisualizerPanel({"containerElement": "visualizerPanel",
                                                    "client": proxy,
-                                                   "widgetContainer": "mainWidget"});
+                                                   "widgetContainer": "middlePane"});
+
+            propertyEditorWidget = new PropertyEditorWidget({"containerElement": "#rightPane"});
+            propertyEditorWidgetController = new PropertyEditorWidgetController(proxy, propertyEditorWidget);
 
             visArray = JSON.parse(VisualizersJSON);
             visualizerPanel.addRange(visArray, function () {

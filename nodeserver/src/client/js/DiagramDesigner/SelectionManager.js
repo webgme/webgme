@@ -284,9 +284,9 @@ define(['logManager',
 
         this.hideSelectionOutline();
 
-        /*if (changed) {
+        if (changed) {
             this.onSelectionChanged(this.selectedItemIdList);
-        }*/
+        }
     };
 
     SelectionManager.prototype.setSelection = function (idList, event) {

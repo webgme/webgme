@@ -1,11 +1,8 @@
 "use strict";
 
 define([
-    'js/PropertyEditor/Widgets/WidgetBase',
-    'clientUtil'
-],
-    function (WidgetBase,
-              clientUtil) {
+    'js/PropertyGrid/Widgets/WidgetBase'],
+    function (WidgetBase) {
 
   /**
    * @class Represents a given property of an object that is a number.

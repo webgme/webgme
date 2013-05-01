@@ -53,7 +53,6 @@ require.config({
         "nodeAttributeNames2": 'js/ModelEditor2/NodeAttributeNames',
         "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
         "ModelEditor2CSS": "css/ModelEditor2",
-        "PropertyEditorCSS": "css/PropertyEditor",
         "PartBrowserCSS": "css/PartBrowser",
         "PartBrowser": "js/PartBrowser",
         "Repository": "js/Repository",

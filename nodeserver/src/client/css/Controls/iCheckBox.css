@@ -4,6 +4,7 @@ div.iCheckBox {
   display: inline-block;
   border-radius: 3px;
   position: relative;
+  cursor: pointer;
   background: -moz-linear-gradient(top, #cbcbcb, white);
   background: -webkit-linear-gradient(top, #cbcbcb, white);
   background: -o-linear-gradient(top, #cbcbcb, white);

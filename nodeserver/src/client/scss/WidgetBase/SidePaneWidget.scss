@@ -1,0 +1,32 @@
+$panel-background-color: #F5F5F5;
+$border-color: #E9E9E9;
+$border-radius: 4px;
+
+.panel {
+  position: relative;
+  padding: 3px;
+  margin-bottom: 2px;
+  background-color: $panel-background-color;
+  border: 1px solid $border-color;
+  -webkit-border-radius: $border-radius;
+  -moz-border-radius: $border-radius;
+  border-radius: $border-radius;
+
+  .widget-header {
+    display: block;
+    padding: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 18px;
+    color: #999;
+    text-transform: uppercase;
+
+    div {
+      display: inline-block;
+    }
+  }
+
+  .widget-body {
+
+  }
+}

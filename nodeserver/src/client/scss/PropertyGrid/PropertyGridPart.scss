@@ -1,0 +1,173 @@
+$sublevel-margin: 4px;
+$row-height: 27px;
+
+$background-color: #1a1a1a;
+$title-background-color: #000000;
+$text-color: #eee;
+$font-family: 'Helvetica', 'Arial', 'sans-serif';
+$font-size: 11px;
+
+$hover-lighten: 5%;
+$border-lighten: 7%;
+$active-lighten: 10%;
+
+$number-color: #2FA1D6;
+$boolean-color: #806787;
+$string-color: #1ed36f;
+$custom-color: #FFFF00;
+$type-border-width: 3px;
+
+$border-color: lighten($background-color, $border-lighten);
+$title-border-color: rgba(255, 255, 255, 0.2);
+$input-color: lighten($background-color, 8.5%);
+
+@mixin transition($prop, $time, $curve) {
+  -webkit-transition: $prop $time $curve;
+  -o-transition: $prop $time $curve;
+  -moz-transition: $prop $time $curve;
+  transition: $prop $time $curve;
+}
+
+
+.pgp {
+  color: $text-color;
+  font-family: $font-family;
+  font-size: $font-size;
+  background-color:  $background-color;
+
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    clear: both;
+
+    li {
+      @include transition(height, 0.1s, ease-out);
+
+      &:not(.folder) {
+        border-bottom: 1px solid $border-color;
+        height: $row-height;
+        line-height: $row-height;
+        overflow: hidden;
+        padding: 0 3px 0 3px;
+      }
+
+      &.folder {
+        border-bottom: 0;
+        padding: 0;
+        border-left: $sublevel-margin solid rgba(0,0,0,0);
+      }
+
+      &.title {
+        padding-left: 14px;
+        background: $title-background-color url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 4px 10px no-repeat;
+        cursor: pointer;
+        border-bottom: 1px solid $title-border-color;
+        cursor: pointer;
+        margin-left: -$sublevel-margin;
+      }
+
+      /* Controller row, <li> */
+      &.cr {
+        clear: both;
+        border-left: $type-border-width solid rgba(0,0,0,0);
+
+        &.boolean {
+          border-left-color: $boolean-color;
+        }
+
+        &.number {
+          border-left-color: $number-color;
+          input[type=text] {
+            color: $number-color;
+          }
+        }
+
+        &.string {
+          border-left-color: $string-color;
+          input[type=text] {
+            color: $string-color;
+          }
+        }
+
+        &.custom {
+          border-left-color: $custom-color;
+        }
+
+        /** Name-half (left) */
+        .property-name {
+          cursor: default;
+          float: left;
+          clear: left;
+          width: 40%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        /** Controllers */
+        /** Controller-half (right) */
+        .c {
+          float: left;
+          width: 60%;
+          height: $row-height;
+
+          /** Controller placement */
+          input {
+            font-size: 12px;
+            height: 13px;
+            line-height: 17px;
+          }
+
+          input[type=checkbox] {
+            margin-top: -2px;
+          }
+
+          input[type=text] {
+            border: 0;
+            margin-top: 4px;
+            margin-bottom: 0;
+            padding: 3px;
+            width: 100%;
+            float: right;
+
+            background: $input-color;
+            outline: none;
+
+            &:hover {
+              background: lighten($input-color, $hover-lighten);
+            }
+
+            &:focus {
+              background: lighten($input-color, $active-lighten);
+              color: #fff;
+            }
+          }
+
+          select {
+            margin-top: 2px;
+            width: 100%;
+            height: 23px;
+            border: 0;
+            color: #FFFFFF;
+            background: $input-color;
+          }
+        }
+      }
+    }
+
+    &.closed {
+      li:not(.title),
+      ul li,
+      ul li > * {
+        height: 0;
+        overflow: hidden;
+        border: 0;
+      }
+
+      li.title {
+        background-image: url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==);
+      }
+    }
+  }
+}

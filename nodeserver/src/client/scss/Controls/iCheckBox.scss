@@ -23,6 +23,7 @@ div.iCheckBox {
   display: inline-block;
   border-radius: 3px;
   position: relative;
+  cursor: pointer;
   background: -moz-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -webkit-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -o-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );

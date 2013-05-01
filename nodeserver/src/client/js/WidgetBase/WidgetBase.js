@@ -19,12 +19,14 @@ define(['jquery',
 
         //this.$el --- jQuery reference to the DOM container of Widget
         if (options && options[WidgetBase.OPTIONS.CONTAINER_ELEMENT]) {
-            this.$el = $(options[WidgetBase.OPTIONS.CONTAINER_ELEMENT]);
-            if (this.$el.length === 0) {
+            this.$container = $(options[WidgetBase.OPTIONS.CONTAINER_ELEMENT]);
+            if (this.$container.length === 0) {
                 msg = "Widget's container element can not be found";
                 this.logger.error(msg);
                 throw (msg);
             }
+            this.$el = $('<div/>');
+            this.$container.append(this.$el);
         } else {
             msg = "Widget's container element is not specified in constructor's 'options' parameter";
             this.logger.error(msg);
@@ -107,6 +109,7 @@ define(['jquery',
     /* DO THE NECESSARY CLEANUP */
     WidgetBase.prototype.destroy = function () {
         this.clear();
+        this.$el.remove();
     };
 
     /* METHOD CALLED WHEN THE PARENT CONTAINER SIZE HAS CHANGED AND WIDGET SHOULD RESIZE ITSELF ACCORDINGLY */

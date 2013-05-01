@@ -1,11 +1,7 @@
 "use strict";
 
-define([
-    'js/PropertyEditor/Widgets/WidgetBase',
-    'clientUtil'
-],
-    function (WidgetBase,
-              clientUtil) {
+define(['js/PropertyGrid/Widgets/WidgetBase'],
+    function (WidgetBase) {
 
         var StringWidget;
 

@@ -69,6 +69,10 @@ define(['logManager',
             self._onBackgroundDrop(helper, position);
         };
 
+        this.designerCanvas.onSelectionChanged = function (selectedIds) {
+            self._onSelectionChanged(selectedIds);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -453,6 +457,30 @@ define(['logManager',
 
                 this._client.intellyPaste(intellyPasteOpts);
             }
+        }
+    };
+
+
+    DesignerControlDesignerCanvasEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
+        var gmeIDs = [],
+            len = selectedIds.length,
+            id;
+
+        while (len--) {
+            id = this._ComponentID2GmeID[selectedIds[len]];
+            if (id) {
+                gmeIDs.push(id);
+            }
+        }
+
+        //nobody is selected on the canvas
+        //set the active selection to the opened guy
+        if (gmeIDs.length === 0) {
+            gmeIDs.push(this.currentNodeInfo.id);
+        }
+
+        if (gmeIDs.length !== 0) {
+            this._client.setPropertyEditorIdList(gmeIDs);
         }
     };
     

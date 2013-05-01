@@ -27,6 +27,9 @@ define(['clientUtil',
     DataGridView = function (options) {
         //set properties from options
         options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "DataGridView";
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
+        options[WidgetBaseWithHeader.OPTIONS.FILL_CONTAINER] = true;
         //options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] = WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE_OPTIONS.MINI;
 
         //call parent's constructor

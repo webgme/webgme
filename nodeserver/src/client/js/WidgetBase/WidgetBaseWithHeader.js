@@ -16,9 +16,10 @@ define(['js/WidgetBase/WidgetBase',
         options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[WidgetBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "WidgetBaseWithHeader";
 
         //add WidgetBaseWithHeader specific options when not present
-        options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] = options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] || true;
-        options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] || true;
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] = options[WidgetBaseWithHeader.OPTIONS.HEADER_TITLE] === true ? true : false;
+        options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] === true ? true : false;
         options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] = options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] || WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE_OPTIONS.NORMAL;
+        options[WidgetBaseWithHeader.OPTIONS.FILL_CONTAINER] = options[WidgetBaseWithHeader.OPTIONS.FILL_CONTAINER] === true ? true : false;
 
         //call parent's constructor
         __parent__.apply(this, [options]);
@@ -34,7 +35,8 @@ define(['js/WidgetBase/WidgetBase',
                                                                   "HEADER_TOOLBAR_SIZE": "HEADER_TOOLBAR_SIZE",
                                                                   "HEADER_TOOLBAR_SIZE_OPTIONS": { "NORMAL": "NORMAL",
                                                                                            "MINI": "MINI",
-                                                                                           "MICRO": "MICRO"}});
+                                                                                           "MICRO": "MICRO"},
+                                                                  "FILL_CONTAINER": "FILL_CONTAINER"});
     _.extend(WidgetBaseWithHeader.prototype, __parent__.prototype);
 
 
@@ -92,9 +94,6 @@ define(['js/WidgetBase/WidgetBase',
                 "class" : "widget-header-title"
             });
             this.$widgetHeader.append(this.$widgetHeaderTitle);
-            this.setTitle = function (text) {
-                this.$widgetHeaderTitle.text(text);
-            };
         }
 
         if (options[WidgetBaseWithHeader.OPTIONS.HEADER_TOOLBAR] === true) {
@@ -121,6 +120,19 @@ define(['js/WidgetBase/WidgetBase',
                         }}, readOnlyButtonGroup);
             }
         }
+
+        this._fillContainer = options[WidgetBaseWithHeader.OPTIONS.FILL_CONTAINER] === true ? true : false;
+    };
+
+    WidgetBaseWithHeader.prototype.destroy = function () {
+        this.clear();
+        this.$_el.remove();
+    };
+
+    WidgetBaseWithHeader.prototype.setTitle = function (text) {
+        if (this.$widgetHeaderTitle) {
+            this.$widgetHeaderTitle.text(text);
+        }
     };
 
 
@@ -130,23 +142,25 @@ define(['js/WidgetBase/WidgetBase',
             widgetHeaderPaddingLeft = parseInt(this.$widgetHeader.css('padding-left')),
             widgetHeaderPaddingRight = parseInt(this.$widgetHeader.css('padding-right'));
 
-        if (!parentW) {
-            parentW = this.$_el.parent().width();
+        if (this._fillContainer === true) {
+            if (!parentW) {
+                parentW = this.$_el.parent().width();
+            }
+
+            if (!parentH) {
+                parentH = this.$_el.parent().height();
+            }
+
+            this.$_el.width(parentW).height(parentH);
+            this.$widgetHeader.width(parentW - widgetHeaderPaddingLeft - widgetHeaderPaddingRight);
+            this.$widgetBody.width(parentW).height(parentH - widgetHeaderHeight);
+
+            //get widget-body's offset
+            this.offset = this.$el.offset();
+
+            this.size = {"width": parentW,
+                "height": parentH - widgetHeaderHeight};
         }
-
-        if (!parentH) {
-            parentH = this.$_el.parent().height();
-        }
-
-        this.$_el.width(parentW).height(parentH);
-        this.$widgetHeader.width(parentW - widgetHeaderPaddingLeft - widgetHeaderPaddingRight);
-        this.$widgetBody.width(parentW).height(parentH - widgetHeaderHeight);
-
-        //get widget-body's offset
-        this.offset = this.$el.offset();
-
-        this.size = {"width": parentW,
-            "height": parentH - widgetHeaderHeight};
     };
     /************** END OF --- CUSTOM RESIZE HANDLER *****************/
 
