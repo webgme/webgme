@@ -119,13 +119,15 @@ define(['logManager',
             while (--i >= 0) {
                 cNode = this._client.getNode(selectedObjIDs[i]);
 
-                flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
+                if (cNode) {
+                    flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
 
-                _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
+                    _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
 
-                flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
+                    flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
 
-                _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+                    _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+                }
             }
 
             _addItemsToResultList = function (srcList, prefix, dstList) {
