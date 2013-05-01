@@ -64,18 +64,22 @@ define(['logManager',
         }
     };
 
-    PropertyGrid.prototype._addPropertyItem = function (arrID, prefix, propDesc, guiObj) {
+    PropertyGrid.prototype._addPropertyItem = function (attrID, prefix, propDesc, guiObj) {
         var parentFolderKey,
             parentFolderName;
 
-        if (arrID.length > 1) {
-            parentFolderName = arrID[0];
+        if (attrID.length > 1) {
+            parentFolderName = attrID[0];
             parentFolderKey = prefix !== "" ? prefix + parentFolderName : parentFolderName;
             this._folders[parentFolderKey] = this._folders[parentFolderKey] || guiObj.addFolder(parentFolderName);
-            arrID.splice(0, 1);
-            this._addPropertyItem(arrID, parentFolderKey + ".", propDesc, this._folders[parentFolderKey]);
+            attrID.splice(0, 1);
+            this._addPropertyItem(attrID, parentFolderKey + ".", propDesc, this._folders[parentFolderKey]);
         } else {
-            this._widgets[propDesc.id] = guiObj.add(propDesc);
+            if (propDesc.value === undefined || propDesc.value === null) {
+                this._folders[propDesc.name] = guiObj.addFolder(propDesc.name, propDesc.text);
+            } else {
+                this._widgets[propDesc.id] = guiObj.add(propDesc);
+            }
         }
     };
 
