@@ -51,7 +51,7 @@ define(['logManager',
     };
 
     PropertyGridPart.prototype._addNestedGUI = function (params) {
-        var title_row = this._addRow(this, $(document.createTextNode(params.name))),
+        var title_row = this._addRow(this, $(document.createTextNode(params.text || params.name))),
             on_click_title,
             self = this;
 
@@ -160,7 +160,7 @@ define(['logManager',
             self._finishChange(args);
         });
 
-        spnName.text(widget.propertyName);
+        spnName.text(widget.propertyText || widget.propertyName);
 
         if (propertyDesc.options) {
             if (propertyDesc.options.textColor) {
@@ -192,12 +192,12 @@ define(['logManager',
         return widget;
     };
 
-    PropertyGridPart.prototype.addFolder = function (name) {
+    PropertyGridPart.prototype.addFolder = function (name, text) {
         if (this.__folders[name] !== undefined) {
             throw new Error('You already have a folder with the name "' + name + '"');
         }
 
-        var new_gui_params = { name: name, parent: this },
+        var new_gui_params = { name: name, text: text, parent: this },
             gui,
             li,
             self = this;

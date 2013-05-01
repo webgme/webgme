@@ -9,6 +9,7 @@ define([], function () {
         this.originalValue = propertyDesc.value;
         this.propertyName = propertyDesc.name;
         this.propertyID = propertyDesc.id;
+        this.propertyText = propertyDesc.text;
 
         this._isReadOnly = false;
 
