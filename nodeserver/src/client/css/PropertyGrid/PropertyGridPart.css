@@ -20,7 +20,9 @@
         height: 27px;
         line-height: 27px;
         overflow: hidden;
-        padding: 0 3px 0 3px; }
+        padding: 0 3px 0 3px;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
       .pgp ul li.folder {
         border-bottom: 0;
         padding: 0;
