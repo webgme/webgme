@@ -44,10 +44,10 @@ $input-color: lighten($background-color, 18.5%);
 
 
           /** Controllers */
-          /** Controller-half (right) */
           .c {
-            input[type=text] {
+            input[type=text]:not([disabled]) {
               background: $input-color;
+
               &:hover {
                 background: lighten($input-color, $hover-lighten);
               }

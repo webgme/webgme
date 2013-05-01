@@ -253,7 +253,24 @@ define(['logManager',
         }
 
         this.__ul.empty();
+    };
 
+    PropertyGridPart.prototype.setReadOnly = function (isReadOnly) {
+        var i;
+
+        //set all its widget to isReadOnly
+        for (i in this.__widgets) {
+            if (this.__widgets.hasOwnProperty(i)) {
+                this.__widgets[i].setReadOnly(isReadOnly);
+            }
+        }
+
+        //set all its sub-folders to isReadOnly
+        for (i in this.__folders) {
+            if (this.__folders.hasOwnProperty(i)) {
+                this.__folders[i].setReadOnly(isReadOnly);
+            }
+        }
     };
 
     PropertyGridPart.prototype.registerWidgetForType = function (type, widget) {

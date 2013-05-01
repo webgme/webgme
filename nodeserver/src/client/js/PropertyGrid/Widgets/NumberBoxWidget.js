@@ -107,6 +107,16 @@ define(['js/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase)
         this.fireFinishChange();
     };
 
+    NumberBoxWidget.prototype.setReadOnly = function (isReadOnly) {
+        NumberBoxWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+
+        if (isReadOnly === true) {
+            this.__input.attr('disabled', 'disabled');
+        } else {
+            this.__input.removeAttr('disabled');
+        }
+    };
+
     return NumberBoxWidget;
 });
 

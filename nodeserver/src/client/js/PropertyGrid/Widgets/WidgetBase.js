@@ -10,6 +10,8 @@ define([], function () {
         this.propertyName = propertyDesc.name;
         this.propertyID = propertyDesc.id;
 
+        this._isReadOnly = false;
+
         //The function to be called on change.
         this.__onChange = undefined;
 
@@ -29,15 +31,19 @@ define([], function () {
 
     WidgetBase.prototype.setValue = function (newValue) {
         var _oldValue = this.propertyValue;
-        if (newValue !== _oldValue) {
-            this.propertyValue = newValue;
-            if (this.__onChange) {
-                this.__onChange.call(this, { "id": this.propertyID,
-                    "oldValue": _oldValue,
-                    "newValue": newValue });
+
+        if (this._isReadOnly !== true) {
+            if (newValue !== _oldValue) {
+                this.propertyValue = newValue;
+                if (this.__onChange) {
+                    this.__onChange.call(this, { "id": this.propertyID,
+                        "oldValue": _oldValue,
+                        "newValue": newValue });
+                }
+                this.updateDisplay();
             }
-            this.updateDisplay();
         }
+
         return this;
     };
 
@@ -64,6 +70,10 @@ define([], function () {
         this.__onChange = undefined;
         this.__onFinishChange = undefined;
         this.el.remove();
+    };
+
+    WidgetBase.prototype.setReadOnly = function (isReadOnly) {
+        this._isReadOnly = isReadOnly;
     };
 
     return WidgetBase;

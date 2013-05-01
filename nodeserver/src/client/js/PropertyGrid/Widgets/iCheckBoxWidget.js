@@ -19,16 +19,6 @@ define(['js/PropertyGrid/Widgets/WidgetBase',
                                                  self.fireFinishChange();
                                              }});
 
-            /*$('<input/>', {
-                "type": "checkbox",
-                "checked": this.propertyValue
-            });*/
-
-            /*this.__checkbox.on('change', function (e) {
-                self.setValue($(this).is(':checked'));
-                self.fireFinishChange();
-            });*/
-
             this.updateDisplay();
 
             this.el.append(this.__checkbox.el);
@@ -43,15 +33,16 @@ define(['js/PropertyGrid/Widgets/WidgetBase',
 
         iCheckBoxWidget.prototype.updateDisplay =  function () {
             this.__checkbox.setChecked(this.getValue());
-            /*if (this.getValue() === true) {
-                this.__checkbox.attr('checked', true);
-            } else {
-                this.__checkbox.attr('checked', false);
-            }*/
 
             return iCheckBoxWidget.superclass.prototype.updateDisplay.call(this);
         };
 
+        iCheckBoxWidget.prototype.setReadOnly = function (isReadOnly) {
+            iCheckBoxWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+
+            this.__checkbox.setEnabled(!isReadOnly);
+        };
+
         return iCheckBoxWidget;
 
-    });
+});

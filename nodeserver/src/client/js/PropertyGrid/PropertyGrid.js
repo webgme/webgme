@@ -16,6 +16,8 @@ define(['logManager',
         this._widgetList = {};
         this._initDefaultWidgets();
 
+        this._isReadOnly = false;
+
         this.__onChange = null;
         this.__onFinishChange = null;
 
@@ -82,6 +84,7 @@ define(['logManager',
     PropertyGrid.prototype.setPropertyList = function (pList) {
         this._propertyList = pList || {};
         this._render();
+        this.setReadOnly(this._isReadOnly);
     };
 
     PropertyGrid.prototype.onChange = function (fnc) {
@@ -94,6 +97,11 @@ define(['logManager',
 
     PropertyGrid.prototype.destroy = function () {
         this._gui.clear();
+    };
+
+    PropertyGrid.prototype.setReadOnly = function (isReadOnly) {
+        this._isReadOnly = isReadOnly;
+        this._gui.setReadOnly(isReadOnly);
     };
 
     return PropertyGrid;
