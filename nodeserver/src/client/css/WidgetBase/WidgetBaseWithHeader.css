@@ -8,7 +8,8 @@
     overflow-x: hidden;*/
     white-space: nowrap; }
     .widget-base-wh .widget-header .ro-icon {
-      display: none; }
+      display: none;
+      margin-right: 2px; }
     .widget-base-wh .widget-header .widget-header-title {
       font-size: 20px;
       font-weight: bold;
