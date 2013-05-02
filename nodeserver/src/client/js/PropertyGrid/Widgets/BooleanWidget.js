@@ -43,6 +43,16 @@ define(['js/PropertyGrid/Widgets/WidgetBase'],
             return BooleanWidget.superclass.prototype.updateDisplay.call(this);
         };
 
+        BooleanWidget.prototype.setReadOnly = function (isReadOnly) {
+            BooleanWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+
+            if (isReadOnly === true) {
+                this.__checkbox.attr('disabled', 'disabled');
+            } else {
+                this.__checkbox.removeAttr('disabled');
+            }
+        };
+
         return BooleanWidget;
 
     });

@@ -193,6 +193,8 @@ define([  'logManager',
         setEditorView.setReadOnly(readOnly);
         treeBrowserView.setReadOnly(readOnly);
         visualizerPanel.setReadOnly(readOnly);
+
+        propertyEditorWidget.setReadOnly(readOnly);
     };
 
     doConnect = function (callback) {

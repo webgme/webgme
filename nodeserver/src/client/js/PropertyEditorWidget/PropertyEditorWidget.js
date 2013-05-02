@@ -39,5 +39,14 @@ define(['clientUtil',
         this.propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
     };
 
+    /* OVERRIDE FROM WIDGET-WITH-HEADER */
+    /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
+    PropertyEditorWidget.prototype.onReadOnlyChanged = function (isReadOnly) {
+        //apply parent's onReadOnlyChanged
+        __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
+
+        this.propertyGrid.setReadOnly(isReadOnly);
+    };
+
     return PropertyEditorWidget;
 });

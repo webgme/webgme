@@ -20,7 +20,9 @@
         height: 27px;
         line-height: 27px;
         overflow: hidden;
-        padding: 0 3px 0 3px; }
+        padding: 0 3px 0 3px;
+        white-space: nowrap;
+        text-overflow: ellipsis; }
       .pgp ul li.folder {
         border-bottom: 0;
         padding: 0;
@@ -75,11 +77,12 @@
             padding: 3px;
             width: 100%;
             float: right;
-            background: #303030;
             outline: none; }
-            .pgp ul li.cr .c input[type=text]:hover {
+          .pgp ul li.cr .c input[type=text]:not([disabled]) {
+            background: #303030; }
+            .pgp ul li.cr .c input[type=text]:not([disabled]):hover {
               background: #3c3c3c; }
-            .pgp ul li.cr .c input[type=text]:focus {
+            .pgp ul li.cr .c input[type=text]:not([disabled]):focus {
               background: #494949;
               color: #fff; }
           .pgp ul li.cr .c select {

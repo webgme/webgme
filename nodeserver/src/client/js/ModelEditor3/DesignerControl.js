@@ -604,10 +604,20 @@ define(['logManager',
                 } else {
                     //update about a subcomponent - will be handled in the decorator
                     //find the host and send update to it
+                    var sCompExist = false;
                     for (objId in this._GMEID2Subcomponent[gmeID]) {
                         if (this._GMEID2Subcomponent[gmeID].hasOwnProperty(objId)) {
                             sCompId = this._GMEID2Subcomponent[gmeID][objId];
+                            sCompExist = true;
                             this.designerCanvas.updateDesignerItemSubComponent(objId, sCompId);
+                        }
+                    }
+
+                    //the guy was not registered for being subcomponent
+                    //try to locate it's parent
+                    if (sCompExist === false) {
+                        if(this._GMEModels.indexOf(objDesc.parentId) !== -1){
+                            this._onUpdate(objDesc.parentId,this._getObjectDescriptor(objDesc.parentId));
                         }
                     }
                 }

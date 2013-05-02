@@ -51,7 +51,7 @@ define(['logManager',
     };
 
     PropertyGridPart.prototype._addNestedGUI = function (params) {
-        var title_row = this._addRow(this, $(document.createTextNode(params.name))),
+        var title_row = this._addRow(this, $(document.createTextNode(params.text || params.name))),
             on_click_title,
             self = this;
 
@@ -160,7 +160,7 @@ define(['logManager',
             self._finishChange(args);
         });
 
-        spnName.text(widget.propertyName);
+        spnName.text(widget.propertyText || widget.propertyName);
 
         if (propertyDesc.options) {
             if (propertyDesc.options.textColor) {
@@ -192,12 +192,12 @@ define(['logManager',
         return widget;
     };
 
-    PropertyGridPart.prototype.addFolder = function (name) {
+    PropertyGridPart.prototype.addFolder = function (name, text) {
         if (this.__folders[name] !== undefined) {
             throw new Error('You already have a folder with the name "' + name + '"');
         }
 
-        var new_gui_params = { name: name, parent: this },
+        var new_gui_params = { name: name, text: text, parent: this },
             gui,
             li,
             self = this;
@@ -253,7 +253,24 @@ define(['logManager',
         }
 
         this.__ul.empty();
+    };
 
+    PropertyGridPart.prototype.setReadOnly = function (isReadOnly) {
+        var i;
+
+        //set all its widget to isReadOnly
+        for (i in this.__widgets) {
+            if (this.__widgets.hasOwnProperty(i)) {
+                this.__widgets[i].setReadOnly(isReadOnly);
+            }
+        }
+
+        //set all its sub-folders to isReadOnly
+        for (i in this.__folders) {
+            if (this.__folders.hasOwnProperty(i)) {
+                this.__folders[i].setReadOnly(isReadOnly);
+            }
+        }
     };
 
     PropertyGridPart.prototype.registerWidgetForType = function (type, widget) {

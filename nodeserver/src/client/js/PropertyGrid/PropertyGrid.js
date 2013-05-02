@@ -16,6 +16,8 @@ define(['logManager',
         this._widgetList = {};
         this._initDefaultWidgets();
 
+        this._isReadOnly = false;
+
         this.__onChange = null;
         this.__onFinishChange = null;
 
@@ -62,18 +64,22 @@ define(['logManager',
         }
     };
 
-    PropertyGrid.prototype._addPropertyItem = function (arrID, prefix, propDesc, guiObj) {
+    PropertyGrid.prototype._addPropertyItem = function (attrID, prefix, propDesc, guiObj) {
         var parentFolderKey,
             parentFolderName;
 
-        if (arrID.length > 1) {
-            parentFolderName = arrID[0];
+        if (attrID.length > 1) {
+            parentFolderName = attrID[0];
             parentFolderKey = prefix !== "" ? prefix + parentFolderName : parentFolderName;
             this._folders[parentFolderKey] = this._folders[parentFolderKey] || guiObj.addFolder(parentFolderName);
-            arrID.splice(0, 1);
-            this._addPropertyItem(arrID, parentFolderKey + ".", propDesc, this._folders[parentFolderKey]);
+            attrID.splice(0, 1);
+            this._addPropertyItem(attrID, parentFolderKey + ".", propDesc, this._folders[parentFolderKey]);
         } else {
-            this._widgets[propDesc.id] = guiObj.add(propDesc);
+            if (propDesc.value === undefined || propDesc.value === null) {
+                this._folders[propDesc.name] = guiObj.addFolder(propDesc.name, propDesc.text);
+            } else {
+                this._widgets[propDesc.id] = guiObj.add(propDesc);
+            }
         }
     };
 
@@ -82,6 +88,7 @@ define(['logManager',
     PropertyGrid.prototype.setPropertyList = function (pList) {
         this._propertyList = pList || {};
         this._render();
+        this.setReadOnly(this._isReadOnly);
     };
 
     PropertyGrid.prototype.onChange = function (fnc) {
@@ -94,6 +101,11 @@ define(['logManager',
 
     PropertyGrid.prototype.destroy = function () {
         this._gui.clear();
+    };
+
+    PropertyGrid.prototype.setReadOnly = function (isReadOnly) {
+        this._isReadOnly = isReadOnly;
+        this._gui.setReadOnly(isReadOnly);
     };
 
     return PropertyGrid;

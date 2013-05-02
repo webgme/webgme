@@ -172,11 +172,20 @@ define(['logManager',
             };
 
             if (selectedObjIDs.length === 1) {
-                _addItemsToResultList({"ID": { "value": selectedObjIDs[0],
+                propList["ID"] = { "name": 'ID',
+                    "value": selectedObjIDs[0],
                     "valueType": typeof selectedObjIDs[0],
                     "isCommon": true,
-                    "readOnly": true}}, "", propList);
+                    "readOnly": true};
             }
+
+            propList["Attributes"] = { "name": 'Attributes',
+                "text": "Attributes",
+                "value": undefined};
+
+            propList["Registry"] = { "name": 'Registry',
+                "text": "Registry",
+                "value": undefined};
 
             _addItemsToResultList(commonAttrs, "Attributes", propList);
             _addItemsToResultList(commonRegs, "Registry", propList);

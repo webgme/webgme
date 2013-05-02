@@ -53,6 +53,16 @@ define(['js/PropertyGrid/Widgets/WidgetBase'],
             return StringWidget.superclass.prototype.updateDisplay.call(this);
         };
 
+        StringWidget.prototype.setReadOnly = function (isReadOnly) {
+            StringWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+
+            if (isReadOnly === true) {
+                this.__input.attr('disabled', 'disabled');
+            } else {
+                this.__input.removeAttr('disabled');
+            }
+        };
+
         return StringWidget;
 
     });

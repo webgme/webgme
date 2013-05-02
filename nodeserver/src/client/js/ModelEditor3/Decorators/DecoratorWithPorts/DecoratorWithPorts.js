@@ -93,12 +93,7 @@ define(['logManager',
             this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
             this._refreshName();
 
-            childrenIDs = nodeObj.getChildrenIds();
-            len = childrenIDs.length;
-
-            while (len--) {
-                this._renderPort(childrenIDs[len]);
-            }
+            this._updatePorts();
         }
     };
 
@@ -204,9 +199,10 @@ define(['logManager',
 
     DecoratorWithPorts.prototype._renderPort = function (portId) {
         var client = this._control._client,
-            portNode = client.getNode(portId);
+            portNode = client.getNode(portId),
+            isPort = this._isPort(portNode);
 
-        if (portNode) {
+        if (portNode && isPort) {
             this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
                 "decorator": this});
 
@@ -216,6 +212,17 @@ define(['logManager',
                 this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
             }
         }
+    };
+
+    DecoratorWithPorts.prototype._isPort = function (portNode) {
+        var isPort = false;
+
+        if (portNode) {
+            isPort = portNode.getAttribute(nodePropertyNames.Attributes.isPort);
+            isPort = (isPort === true || isPort === false) ? isPort : false;
+        }
+
+        return isPort;
     };
 
     DecoratorWithPorts.prototype._removePort = function (portId) {
@@ -307,11 +314,18 @@ define(['logManager',
     DecoratorWithPorts.prototype.updateSubcomponent = function (portId) {
         var idx = this._portIDs.indexOf(portId),
             client = this._control._client,
-            portNode = client.getNode(portId);
+            portNode = client.getNode(portId),
+            isPort = this._isPort(portNode);
 
+        //check if it is already displayed as port
         if (idx !== -1) {
-            this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name)});
-            this._updatePortPosition(portId);
+            //port already, should it stay one?
+            if (isPort === true) {
+                this._ports[portId].update({"title": portNode.getAttribute(nodePropertyNames.Attributes.name)});
+                this._updatePortPosition(portId);
+            } else {
+                this._removePort(portId);
+            }
         }
     };
 
