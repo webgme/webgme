@@ -142,6 +142,10 @@ define(['common/Constants'], function (CONSTANTS) {
             host            : 'http://kecskes.isis.vanderbilt.edu',
             port            : 80,
             project         : "test",
+            autorecconnect  : true,
+            reconndelay     : 1000,
+            reconnamount    : 1000,
+
 
             //used by the server
             loglevel        : 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
