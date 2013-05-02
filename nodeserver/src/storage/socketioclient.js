@@ -113,7 +113,13 @@ define([ "util/assert","util/guid","util/sha1"], function (ASSERT,GUID,SHA1) {
             ASSERT(typeof callback === "function");
 
             if(socket){
-                callback(null);
+                if(socketConnected){
+                    callback(null);
+                } else {
+                    //we should try to reconnect
+                    callback(null);
+                    socket.socket.reconnect();
+                }
             } else {
                 var guid = GUID(),
                     firstConnection = true;
@@ -169,7 +175,7 @@ define([ "util/assert","util/guid","util/sha1"], function (ASSERT,GUID,SHA1) {
                         socketConnected = false;
                         clearDbCallbacks();
                         clearCallbacks();
-                        socket.socket.reconnect();
+                        //socket.socket.reconnect();
                     });
                 };
 

@@ -121,6 +121,7 @@ define([
             function connect(){
                 //this is when the user force to go online on network level
                 //TODO implement :) - but how, there is no such function on the storage's API
+                _database.openDatabase(function(err){});
             }
 
             //branch handling functions
@@ -231,22 +232,26 @@ define([
 
             function networkWatcher(){
                 var status = "";
-                var outstatus = '';
+                var autoReconnect = commonUtil.combinedserver.autoreconnect ? true : false;
+                var reConnDelay = commonUtil.combinedserver.reconndelay || 1000;
+                var reConnAmount = commonUtil.combinedserver.reconnamount || 1000;
+                var reconnecting = function(){
+                    var counter = 0;
+                    var timerId = setInterval(function(){
+                        if(counter<reConnAmount && status === _self.networkStates.DISCONNECTED){
+                            _database.openDatabase(function(err){});
+                            counter++;
+                        } else {
+                            clearInterval(timerId);
+                        }
+                    },reConnDelay);
+                };
                 var dbStatusUpdated = function(err,newstatus){
                     if(!err && newstatus && status !== newstatus){
                         status = newstatus;
-                        //TODO we should remove this mapping
-                        /*switch (status){
-                            case 'connected':
-                                outstatus = 'online';
-                                break;
-                            case "socket.io is disconnected":
-                                outstatus = 'nonetwork';
-                                break;
-                            default:
-                                outstatus = 'offline';
-                                break;
-                        }*/
+                        if(status === _self.networkStates.DISCONNECTED && autoReconnect){
+                            reconnecting();
+                        }
                         _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, status);
                     }
                     return _database.getDatabaseStatus(status,dbStatusUpdated);
