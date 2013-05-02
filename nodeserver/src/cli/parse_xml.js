@@ -207,6 +207,7 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			}
 
 			core.setAttribute(node, "#tag", tag.name);
+			core.setAttribute(node, "#line", 1 + parser._parser.line);
 
 			tag.text = "";
 			tag.node = node;

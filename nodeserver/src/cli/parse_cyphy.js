@@ -159,14 +159,14 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		return traverseNode(xmlroot);
 	}
 
-	function traverseNode (xmlnode) {
+	var traverseNode = TASYNC.throttle(function (xmlnode) {
 		var done;
 
 		done = TASYNC.call(traverseChildren, core.loadChildren(xmlnode));
 		done = TASYNC.join(done, parseNode(xmlnode));
 
 		return done;
-	}
+	}, 1000);
 
 	function traverseChildren (children) {
 		var done, i = 0;
@@ -192,6 +192,8 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 
 			if (tag === "project") {
 				parser = parseProject;
+			} else if (tag === "folder" || tag === "model" || tag === "atom" || tag === "connection" || tag === "reference" || tag === "set") {
+				parser = parseFco;
 			}
 
 			if (parser) {
@@ -207,13 +209,19 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 
 			if (tag === "name" || tag === "author" || tag === "comment") {
 				parser = parseName;
+			} else if (tag === "value") {
+				parser = parseValue;
 			}
 
 			if (parser) {
 				return parser(xmlnode, tag);
 			}
 
-			// console.log("*** Unknown tag: " + tag);
+			if (tag === "attribute" || tag === "regnode" || tag === "connpoint") {
+				return;
+			}
+
+			console.log("Warning: unknown xml tag: " + tag + " at line " + core.getAttribute(xmlnode, "#line"));
 		}
 	}
 
@@ -233,11 +241,34 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			cdate: "created",
 			mdate: "modified",
 			metaname: "#metaname",
+			guid: "#guid",
 			"#tag": "#type",
-			guid: "#guid"
+			"#line": "#line"
 		});
 
 		return gmeroot;
+	}
+
+	function parseFco (xmlnode) {
+		var xmlparent = core.getParent(xmlnode);
+		var gmeparent = parseNode(xmlparent);
+
+		return TASYNC.call(parseFco2, xmlnode, gmeparent);
+	}
+
+	function parseFco2 (xmlnode, gmeparent) {
+		var gmenode = core.createNode(gmeparent);
+
+		copyAttributes(xmlnode, gmenode, {
+			id: "#id",
+			relid: "#relid",
+			kind: "#kind",
+			guid: "#guid",
+			"#tag": "#tag",
+			"#line": "#line"
+		});
+
+		return gmenode;
 	}
 
 	// --- name
@@ -252,24 +283,77 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			var value = core.getAttribute(xmlnode, "#text") || "";
 			core.setAttribute(gmenode, tag, value);
 		}
-		else {
-			console.log(core.getStringPath(xmlnode));
+	}
+
+	// --- value
+
+	function parseValue (xmlnode) {
+		var xmlparent = core.getParent(xmlnode);
+		var value, name, gmenode;
+
+		var tag = core.getAttribute(xmlparent, "#tag");
+		if (tag === "attribute") {
+			value = core.getAttribute(xmlnode, "#text") || "";
+			name = core.getAttribute(xmlparent, "kind");
+			ASSERT(typeof name === "string");
+
+			gmenode = parseNode(core.getParent(xmlparent));
+			return TASYNC.call(setGmeAttribute, gmenode, name, value);
+		} else if (tag === "regnode") {
+			value = core.getAttribute(xmlnode, "#text") || "";
+			var status = core.getAttribute(xmlparent, "status") || "defined";
+			if (status !== "undefined" || value !== "") {
+				do {
+					var part = core.getAttribute(xmlparent, "name");
+					ASSERT(typeof part === "string");
+
+					if (typeof name === "string") {
+						// MONGODB does not accept . in the name
+						name = part + "/" + name;
+					} else {
+						name = part;
+					}
+
+					xmlparent = core.getParent(xmlparent);
+				} while (core.getAttribute(xmlparent, "#tag") === "regnode");
+
+				gmenode = parseNode(core.getParent(xmlparent));
+				return TASYNC.call(setGmeRegistry, gmenode, name, value);
+			}
+		} else {
+			console.log("Warning: value in unknown node " + tag + " at line " + core.getAttribute(xmlnode, "#line"));
+		}
+	}
+
+	function setGmeAttribute (gmenode, name, value) {
+		if (gmenode) {
+			core.setAttribute(gmenode, name, value);
+		} else {
+			console.log("Warning: trying to set attributes for nonexisting object");
+		}
+	}
+
+	function setGmeRegistry (gmenode, name, value) {
+		if (gmenode) {
+			core.setRegistry(gmenode, name, value);
+		} else {
+			console.log("Warning: trying to set attributes for nonexisting object");
 		}
 	}
 
 	// --- helpers
 
-	function copyAttributes (xmlNode, dataNode, attrs) {
-		ASSERT(xmlNode && dataNode && attrs);
+	function copyAttributes (xmlnode, gmenode, attrs) {
+		ASSERT(xmlnode && gmenode && attrs);
 
 		var key;
 		for (key in attrs) {
-			var value = core.getAttribute(xmlNode, key);
+			var value = core.getAttribute(xmlnode, key);
 			if (value !== undefined) {
 				if (attrs[key].charAt(0) !== "#") {
-					core.setAttribute(dataNode, attrs[key], value);
+					core.setAttribute(gmenode, attrs[key], value);
 				} else {
-					core.setRegistry(dataNode, attrs[key], value);
+					core.setRegistry(gmenode, attrs[key], value);
 				}
 			}
 		}
