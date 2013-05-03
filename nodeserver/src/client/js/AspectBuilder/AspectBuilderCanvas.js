@@ -3,9 +3,11 @@
 define(['logManager',
     'clientUtil',
     'js/DiagramDesigner/DesignerCanvas',
+    'js/Controls/iCheckBox',
     'css!/css/AspectBuilder/AspectBuilderCanvas'], function (logManager,
                                                     clientUtil,
-                                                    DesignerCanvas) {
+                                                    DesignerCanvas,
+                                                    iCheckBox) {
 
     var AspectBuilderCanvas,
         __parent__ = DesignerCanvas,
@@ -51,8 +53,6 @@ define(['logManager',
     };
 
     AspectBuilderCanvas.prototype._initializeFilterPanel = function () {
-        var self = this;
-
         /**** create FILTER PANEL ****/
         this.$filterPanel = $('<div/>', {
             'class': 'filterPanel'
@@ -64,15 +64,6 @@ define(['logManager',
         this.$filterUl = this.$filterPanel.find('ul.body');
 
         this.$el.append(this.$filterPanel);
-
-        this.$filterUl.on('click', '.toggle-switch', function (event) {
-            var checkBox = $(this),
-                value = checkBox.attr('data-v');
-
-            checkBox.toggleClass('on');
-
-            self._checkChanged(value, checkBox.hasClass('on'));
-        });
     };
 
     AspectBuilderCanvas.prototype._checkChanged = function (value, isChecked) {
@@ -89,15 +80,17 @@ define(['logManager',
         var item = $('<li/>', {
                 'class': 'filterItem'
             }),
-            checkBox = $('<div/>', {
-                'class': 'toggle-switch on pull-right',
-                'data-v': value
-            }),
-            text;
+            checkBox,
+            self = this;
+
+        checkBox = new iCheckBox({
+            "checkChangedFn": function (isChecked) {
+                self._checkChanged(value, isChecked);
+            }});
 
         item.append(iconEl.addClass('inline'));
         item.append(text);
-        item.append(checkBox);
+        item.append(checkBox.el);
 
         this.$filterUl.append(item);
 
@@ -107,8 +100,8 @@ define(['logManager',
     };
 
     AspectBuilderCanvas.prototype._refreshHeaderText = function () {
-        var all = this.$filterUl.find('.toggle-switch').length,
-            on = this.$filterUl.find('.toggle-switch.on').length;
+        var all = this.$filterUl.find('.iCheckBox').length,
+            on = this.$filterUl.find('.iCheckBox.checked').length;
 
         this.$filterHeader.html('FILTER (' + on + '/' + all + ')');
     };
