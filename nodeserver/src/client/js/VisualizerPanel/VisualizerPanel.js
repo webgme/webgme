@@ -4,7 +4,7 @@ define(['logManager',
     'loaderProgressBar',
     'commonUtil',
     'js/WidgetBase/WidgetBase',
-    'css!VisualizerPanelCSS/VisualizerPanel'], function (logManager,
+    'css!/css/VisualizerPanel/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     commonUtil,
                                     WidgetBase) {

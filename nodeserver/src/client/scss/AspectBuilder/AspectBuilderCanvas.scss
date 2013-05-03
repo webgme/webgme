@@ -39,11 +39,16 @@ div.filterPanel {
 
 		li.filterItem {
 			margin: 3px 0;
-		}
 
-		.icon {
-			display: inline-block;
-			padding: 2px;
+            .iCheckBox {
+              float: right;
+              margin-top: 6px;
+              margin-left: 3px;
+            }
+
+            div > svg {
+              margin-top: 4px;
+            }
 		}
 	}
 

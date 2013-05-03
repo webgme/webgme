@@ -45,27 +45,6 @@ define([  'logManager',
                                             PropertyEditorWidget,
                                             PropertyEditorWidgetController) {
 
-    /*if (commonUtil.DEBUG === true) {
-        logManager.setLogLevel(logManager.logLevels.ALL);
-        logManager.excludeComponent("TreeBrowserControl");
-        logManager.excludeComponent("JSTreeBrowserWidget");
-        logManager.excludeComponent("Client");
-        logManager.excludeComponent("ModelEditorSVGWidget");
-        logManager.excludeComponent("ModelEditorControl");
-        logManager.excludeComponent("ModelEditorSVGConnection*");
-
-        //logManager.excludeComponent("ModelEditorModelComponent*");
-        //logManager.excludeComponent("ModelWithPortsDecorator*");
-        //logManager.excludeComponent("Port*");
-        //logManager.excludeComponent("ModelEditorConnectionComponent*");
-
-        //logManager.excludeComponent("ModelEditorView_*");
-        //logManager.excludeComponent("HTML_ModelEditorControl");
-
-        logManager.excludeComponent("GraphVizControl");
-        logManager.excludeComponent("GraphVizObject*");
-    }*/
-
     logManager.excludeComponent("CORE");
     logManager.excludeComponent('TreeBrowserControl');
     logManager.excludeComponent("Client");
@@ -103,7 +82,8 @@ define([  'logManager',
         branchChanged,
         treeBrowserView,
         propertyEditorWidget,
-        propertyEditorWidgetController;
+        propertyEditorWidgetController,
+        resizeRightPane;
 
     /*
      * Compute the size of the middle pane window based on current browser size
@@ -156,9 +136,32 @@ define([  'logManager',
         }
     };
 
+    resizeRightPane = function () {
+        var rightPane = $("#rightPane"),
+            height = rightPane.height(),
+            widgets = rightPane.children(),
+            len = widgets.length,
+            w,
+            wB,
+            wP,
+            wH = height / len,
+            wM;
+
+        while (len--) {
+            w = $(widgets[len]);
+            wB = parseInt(w.css("border-top-width"), 10) + parseInt(w.css("border-bottom-width"), 10);
+            wP = parseInt(w.css("padding-top"), 10) + parseInt(w.css("padding-bottom"), 10);
+            wM = parseInt(w.css("margin-top"), 10) + parseInt(w.css("margin-bottom"), 10);
+
+            w.css({"height": Math.floor(wH - wB - wP - wM),
+                    "overflow": "auto"});
+        }
+    };
+
     //hook up windows resize event
     $(window).resize(function () {
         resizeMiddlePane();
+        resizeRightPane();
     });
 
     //and call if for the first time as well
@@ -278,6 +281,8 @@ define([  'logManager',
                 });
             }
             callback(null);
+
+            resizeRightPane();
         }
     };
 

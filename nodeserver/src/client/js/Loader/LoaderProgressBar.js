@@ -1,6 +1,6 @@
 "use strict";
 
-define(['css!LoaderCSS/LoaderProgressBar'], function () {
+define(['css!/css/Loader/LoaderProgressBar'], function () {
 
     var LoaderProgressBar;
 

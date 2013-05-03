@@ -26,10 +26,8 @@ require.config({
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": 'common/underscore',
 
-        "WebGME": 'js/WebGME',
-
         //RaphaelJS family
-        "eve": 'lib/raphael/eve',
+        "eve": 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'
         "raphaeljs": 'lib/raphael/raphael.amd',
 
         //WebGME custom modules
@@ -38,34 +36,8 @@ require.config({
         "eventDispatcher": 'common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
-        "bezierHelper" : 'js/BezierHelper',
         "loaderCircles": "js/Loader/LoaderCircles",
-        "loaderProgressBar": "js/Loader/LoaderProgressBar",
-
-        "ModelEditorHTML": "js/ModelEditor/HTML",
-        "nodeAttributeNames": 'js/ModelEditor/HTML/NodeAttributeNames',
-        "nodeRegistryNames": 'js/ModelEditor/HTML/NodeRegistryNames',
-        "ModelEditorHTMLCSS": "css/ModelEditor",
-        "GraphVizCSS": "css/GraphViz",
-        "GraphViz": "js/GraphViz",
-
-        "ModelEditor2": "js/ModelEditor2",
-        "nodeAttributeNames2": 'js/ModelEditor2/NodeAttributeNames',
-        "nodeRegistryNames2": 'js/ModelEditor2/NodeRegistryNames',
-        "ModelEditor2CSS": "css/ModelEditor2",
-        "PartBrowserCSS": "css/PartBrowser",
-        "PartBrowser": "js/PartBrowser",
-        "Repository": "js/Repository",
-        "RepositoryCSS": "css/Repository",
-        "SetEditorCSS": "css/SetEditor",
-        "SetEditor": "js/SetEditor",
-
-        "DiagramDesignerCSS": "css/DiagramDesigner",
-        "ModelEditor3CSS": "css/ModelEditor3",
-        "SetEditor2CSS": "css/SetEditor2",
-        "DataGridCSS": "css/DataGrid",
-        "LoaderCSS": "css/Loader",
-        "VisualizerPanelCSS": "css/VisualizerPanel"
+        "loaderProgressBar": "js/Loader/LoaderProgressBar"
     },
     shim: {
         'jquery-ui': ['jquery'],
@@ -89,7 +61,7 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
-        'WebGME'
+        'js/WebGME'
     ],
     function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
         domReady(function () {

@@ -4,7 +4,7 @@ define(['logManager',
         'clientUtil',
         'loaderCircles',
         'raphaeljs',
-        'css!RepositoryCSS/RepositoryLogView'], function (logManager,
+        'css!/css/Repository/RepositoryLogView'], function (logManager,
                                                           util,
                                                           LoaderCircles) {
 
