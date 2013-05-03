@@ -103,6 +103,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		core.loadByPath = TASYNC.wrap(core.loadByPath);
 		core.loadRoot = TASYNC.wrap(core.loadRoot);
 		core.loadChildren = TASYNC.wrap(core.loadChildren);
+		core.loadPointer = TASYNC.wrap(core.loadPointer);
 	}
 
 	function closeProject () {
@@ -119,6 +120,10 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 
 	function getProject () {
 		return project;
+	}
+
+	function getCore () {
+		return core;
 	}
 
 	// --- progress
@@ -144,6 +149,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		openProject: openProject,
 		closeProject: closeProject,
 		getProject: getProject,
+		getCore: getCore,
 		setProgress: setProgress
 	};
 });

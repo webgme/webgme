@@ -11,162 +11,92 @@ requirejs.config({
 	baseUrl: ".."
 });
 
-requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storage/mongo", "storage/cache" ], function (ASSERT, SAX, FS, Core, TASYNC, Mongo, Cache) {
+requirejs([ "cli/common", "util/assert", "util/sax", "fs", "core/tasync" ], function (COMMON, ASSERT, SAX, FS, TASYNC) {
 	"use strict";
 
 	TASYNC.trycatch(main, function (error) {
 		console.log(error.trace || error.stack);
 
-		setProgress(null);
-		closeProject();
-		closeDatabase();
+		COMMON.setProgress(null);
+		COMMON.closeProject();
+		COMMON.closeDatabase();
 	});
 
 	function main () {
 		var argv = process.argv.slice(2);
 
-		if (argv.length < 1) {
-			console.log("Usage: node parse_cyphy.js xmlroot [project] [database] [host] [port]");
+		if (argv.length < 1 || COMMON.getParameters("help") !== null) {
+			console.log("Usage: node parse_cyphy.js xmlroot  [options]");
+			console.log("");
+			console.log("Transforms an xme tree into a gme tree. Possible options:");
+			console.log("");
+			console.log("  -mongo [database [host [port]]]\topens a mongo database");
+			console.log("  -proj <project>\t\t\tselects the given project");
+			console.log("");
 			return;
 		}
 
 		var xmlroot = argv[0];
-		var project = argv[1] || "test";
-		var database = argv[2] || "webgme";
-		var host = argv[3] || "localhost";
-		var port = argv[4];
 
-		var done = TASYNC.call(openDatabase, host, port, database);
-		done = TASYNC.call(openProject, project, done);
+		var done = TASYNC.call(COMMON.openDatabase, argv);
+		done = TASYNC.call(COMMON.openProject, argv, done);
 		done = TASYNC.call(parse, xmlroot, done);
 		done = TASYNC.call(persist, done);
-		done = TASYNC.call(closeProject, done);
-		done = TASYNC.call(closeDatabase, done);
+		done = TASYNC.call(COMMON.closeProject, done);
+		done = TASYNC.call(COMMON.closeDatabase, done);
 
 		return done;
 	}
 
-	// --- database
-
-	var database;
-
-	function openDatabase (host, port, name) {
-		console.log("Opening database " + name + " on " + host);
-
-		var database = new Cache(new Mongo({
-			host: host,
-			port: port,
-			database: name
-		}), {});
-
-		database.openDatabase = TASYNC.wrap(database.openDatabase);
-		database.openProject = TASYNC.wrap(database.openProject);
-		database.closeDatabase = TASYNC.wrap(database.closeDatabase);
-
-		return TASYNC.call(openDatabase2, database, database.openDatabase());
-	}
-
-	function openDatabase2 (d) {
-		database = d;
-	}
-
-	function closeDatabase () {
-		if (database) {
-			console.log("Closing database");
-
-			var d = database;
-			database = null;
-
-			return d.closeDatabase();
-		}
-	}
-
-	// --- project
-
-	var project, core;
-
-	function openProject (name) {
-		TASYNC.call(openProject2, database.openProject(name));
-	}
-
-	function openProject2 (p) {
-		p.closeProject = TASYNC.wrap(p.closeProject);
-		p.dumpObjects = TASYNC.wrap(p.dumpObjects);
-		p.findHash = TASYNC.wrap(p.findHash);
-		p.setBranchHash = TASYNC.wrap(p.setBranchHash);
-		p.getBranchHash = TASYNC.wrap(p.getBranchHash);
-
-		project = p;
-
-		core = new Core(project, {
-			autopersist: true
-		});
-
-		core.persist = TASYNC.wrap(core.persist);
-		core.loadByPath = TASYNC.wrap(core.loadByPath);
-		core.loadRoot = TASYNC.wrap(core.loadRoot);
-		core.loadChildren = TASYNC.wrap(core.loadChildren);
-	}
-
-	function closeProject () {
-		if (project) {
-			var p = project;
-			project = null;
-
-			return p.closeProject();
-		}
-	}
-
-	// --- progress
-
-	var progress;
-
-	function setProgress (func) {
-		if (progress) {
-			clearInterval(progress);
-		}
-
-		if (func) {
-			progress = setInterval(func, 2000);
-		}
-	}
-
 	// --- parse main
 
-	var xmlroot;
+	var core, xmlroot;
 
 	function parse (hash) {
 		ASSERT(typeof hash === "string");
+
+		core = COMMON.getCore();
+		core.loadChildren = TASYNC.throttle(core.loadChildren, 10);
 
 		if (hash.charAt(0) !== "#") {
 			hash = "#" + hash;
 		}
 
-		hash = project.findHash(hash);
+		hash = COMMON.getProject().findHash(hash);
 		var xmlroot = TASYNC.call(core.loadRoot, hash);
 		return TASYNC.call(parse2, xmlroot);
 	}
 
-	function parse2 (_xmlroot) {
+	var xmlobjects = 0, gmeobjects = 0;
+
+	function parse2 (xr) {
 		console.log("Building gme project ...");
 
-		xmlroot = _xmlroot;
+		xmlroot = xr;
 
 		if (core.getAttribute(xmlroot, "#tag") !== "project") {
 			throw new Error("The root is not a parsed xme file");
 		}
 
-		return traverseNode(xmlroot);
+		COMMON.setProgress(function () {
+			console.log("  at xml object " + xmlobjects + " (" + gmeobjects + " gme objects, " + unresolved.length + " pointers)");
+		});
+		var done = traverseNode(xmlroot);
+		done = TASYNC.call(COMMON.setProgress, null, done);
+
+		return done;
 	}
 
-	var traverseNode = TASYNC.throttle(function (xmlnode) {
+	function traverseNode (xmlnode) {
 		var done;
+
+		++xmlobjects;
 
 		done = TASYNC.call(traverseChildren, core.loadChildren(xmlnode));
 		done = TASYNC.join(done, parseNode(xmlnode));
 
 		return done;
-	}, 1000);
+	}
 
 	function traverseChildren (children) {
 		var done, i = 0;
@@ -197,6 +127,8 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			}
 
 			if (parser) {
+				++gmeobjects;
+
 				gmenode = parser(xmlnode, tag);
 
 				ASSERT(typeof parsedNodes[path] === "undefined");
@@ -256,6 +188,8 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		return TASYNC.call(parseFco2, xmlnode, gmeparent);
 	}
 
+	var unresolved = [];
+
 	function parseFco2 (xmlnode, gmeparent) {
 		var gmenode = core.createNode(gmeparent);
 
@@ -263,10 +197,26 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 			id: "#id",
 			relid: "#relid",
 			kind: "#kind",
+			role: "#role",
+			isinstance: "#isinstance",
+			isprimary: "#isprimary",
 			guid: "#guid",
 			"#tag": "#tag",
 			"#line": "#line"
 		});
+
+		var names = core.getPointerNames(xmlnode);
+		if (names.length !== 0) {
+			var i, gmesource = core.getStringPath(gmenode);
+			for (i = 0; i < names.length; ++i) {
+				var xmltarget = core.getPointerPath(xmlnode, names[i]);
+				unresolved.push({
+					gmesource: gmesource,
+					name: names[i],
+					xmltarget: xmltarget
+				});
+			}
+		}
 
 		return gmenode;
 	}

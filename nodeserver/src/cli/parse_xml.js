@@ -41,6 +41,7 @@ requirejs([ "util/assert", "util/sax", "fs", "core/core", "core/tasync", "storag
 		done = TASYNC.call(function () {
 			return parse(xmlfile);
 		}, done);
+		done = TASYNC.call(persist, done);
 		done = TASYNC.call(resolve, done);
 		done = TASYNC.call(closeProject, done);
 		done = TASYNC.call(closeDatabase, done);
