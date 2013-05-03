@@ -2,6 +2,7 @@ $widget-header-background-color: #EFEFEF;
 $widget-body-background-color: #FFFFFF;
 $widget-body-background-color-read-only: #FBFBFB;
 
+$sidepane-widget-background-color: #F5F5F5;
 $sidepane-widget-header-background-color: #F5F5F5;
 $sidepane-widget-body-background-color: #F5F5F5;
 $sidepane-widget-body-background-color-read-only: #FBFBFB;
@@ -90,6 +91,7 @@ $sidepane-widget-border-radius: 4px;
     -webkit-border-radius: $sidepane-widget-border-radius;
     -moz-border-radius: $sidepane-widget-border-radius;
     border-radius: $sidepane-widget-border-radius;
+    background-color: $sidepane-widget-background-color;
 
     .widget-header {
       padding: 3px;
