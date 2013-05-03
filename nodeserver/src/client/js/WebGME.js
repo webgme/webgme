@@ -45,27 +45,6 @@ define([  'logManager',
                                             PropertyEditorWidget,
                                             PropertyEditorWidgetController) {
 
-    /*if (commonUtil.DEBUG === true) {
-        logManager.setLogLevel(logManager.logLevels.ALL);
-        logManager.excludeComponent("TreeBrowserControl");
-        logManager.excludeComponent("JSTreeBrowserWidget");
-        logManager.excludeComponent("Client");
-        logManager.excludeComponent("ModelEditorSVGWidget");
-        logManager.excludeComponent("ModelEditorControl");
-        logManager.excludeComponent("ModelEditorSVGConnection*");
-
-        //logManager.excludeComponent("ModelEditorModelComponent*");
-        //logManager.excludeComponent("ModelWithPortsDecorator*");
-        //logManager.excludeComponent("Port*");
-        //logManager.excludeComponent("ModelEditorConnectionComponent*");
-
-        //logManager.excludeComponent("ModelEditorView_*");
-        //logManager.excludeComponent("HTML_ModelEditorControl");
-
-        logManager.excludeComponent("GraphVizControl");
-        logManager.excludeComponent("GraphVizObject*");
-    }*/
-
     logManager.excludeComponent("CORE");
     logManager.excludeComponent('TreeBrowserControl');
     logManager.excludeComponent("Client");

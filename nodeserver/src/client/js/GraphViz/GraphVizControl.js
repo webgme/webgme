@@ -2,11 +2,9 @@
 
 define(['logManager',
     'clientUtil',
-    'nodeAttributeNames',
-    'nodeRegistryNames'], function (logManager,
+    'js/NodePropertyNames'], function (logManager,
                                     util,
-                                    nodeAttributeNames,
-                                    nodeRegistryNames) {
+                                    nodePropertyNames) {
 
     var GraphVizControl;
 
@@ -135,7 +133,7 @@ define(['logManager',
             pointerTo;
 
         objDescriptor.id = nodeObj.getId();
-        objDescriptor.name =  nodeObj.getAttribute(nodeAttributeNames.name);
+        objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         objDescriptor.expandable =  nodeObj.getChildrenIds().length > 0;
 
         objDescriptor.pointers = {};

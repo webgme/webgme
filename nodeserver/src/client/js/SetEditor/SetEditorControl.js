@@ -4,13 +4,11 @@ define(['logManager',
     'clientUtil',
     'commonUtil',
     'js/Constants',
-    'nodeAttributeNames',
-    'nodeRegistryNames'], function (logManager,
+    'js/NodePropertyNames'], function (logManager,
                                     util,
                                     commonUtil,
                                     CONSTANTS,
-                                    nodeAttributeNames,
-                                    nodeRegistryNames) {
+                                    nodePropertyNames) {
 
     var SetEditorControl;
 
@@ -173,9 +171,7 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId().toString();
-            objDescriptor.name =  nodeObj.getAttribute(nodeAttributeNames.name);
-            objDescriptor.kind = nodeObj.getBaseId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodeRegistryNames.decorator) || "DefaultDecorator";
+            objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         }
 
         return objDescriptor;

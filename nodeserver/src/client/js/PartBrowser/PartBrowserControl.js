@@ -3,12 +3,10 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
-    'nodeAttributeNames',
-    'nodeRegistryNames'], function (logManager,
+    'js/NodePropertyNames'], function (logManager,
                              util,
                              CONSTANTS,
-                             nodeAttributeNames,
-                             nodeRegistryNames) {
+                             nodePropertyNames) {
 
     var PartBrowserControl,
         DECORATOR_PATH = "js/ModelEditor3/Decorators/";      //TODO: fix path;
@@ -56,9 +54,9 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.name =  nodeObj.getAttribute(nodeAttributeNames.name);
+            objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.kind = nodeObj.getBaseId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodeRegistryNames.decorator) || "DefaultDecorator";
+            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "DefaultDecorator";
         }
 
         return objDescriptor;
