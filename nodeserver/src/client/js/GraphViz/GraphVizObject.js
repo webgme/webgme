@@ -1,8 +1,8 @@
 "use strict";
 
 define(['logManager',
-    'text!GraphViz/GraphVizObjectTmpl.html',
-    'css!GraphVizCSS/GraphVizObject'], function (logManager,
+    'text!./GraphVizObjectTmpl.html',
+    'css!/css/GraphViz/GraphVizObject'], function (logManager,
                                               graphVizObjectTmpl) {
 
     var GraphVizObject;

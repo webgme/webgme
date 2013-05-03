@@ -2,7 +2,7 @@
 
 define(['logManager',
     'js/Constants',
-    'css!PartBrowserCSS/PartBrowserView.css'], function (logManager, CONSTANTS) {
+    'css!/css/PartBrowser/PartBrowserView'], function (logManager, CONSTANTS) {
 
     var PartBrowserView,
         PART_CLASS = "part";

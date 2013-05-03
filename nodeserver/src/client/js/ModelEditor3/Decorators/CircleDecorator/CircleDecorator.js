@@ -4,7 +4,7 @@ define(['logManager',
     'clientUtil',
     'js/ModelEditor3/Decorators/DefaultDecorator/DefaultDecorator',
     'text!js/ModelEditor3/Decorators/CircleDecorator/CircleDecoratorTemplate.html',
-    'css!ModelEditor3CSS/Decorators/CircleDecorator/CircleDecorator'], function (logManager,
+    'css!/css/ModelEditor3/Decorators/CircleDecorator/CircleDecorator'], function (logManager,
                                                           util,
                                                           DefaultDecorator,
                                                           circleDecoratorTemplate) {

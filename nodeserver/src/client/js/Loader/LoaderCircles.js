@@ -1,6 +1,6 @@
 "use strict";
 
-define(['css!LoaderCSS/LoaderCircles'], function () {
+define(['css!/css/Loader/LoaderCircles'], function () {
 
     var LoaderCircles,
         CIRCLE_O_SHADOW_SIZE = 36,
