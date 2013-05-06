@@ -1,8 +1,10 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil'], function (logManager,
-    util) {
+    'clientUtil',
+    'js/NodePropertyNames'], function (logManager,
+                                        util,
+                                        nodePropertyNames) {
 
     var PropertyEditorWidgetController;
 
@@ -166,6 +168,12 @@ define(['logManager',
                             dstList[extKey].options = dstList[extKey].options || {};
                             dstList[extKey].options.textItalic = true;
                             dstList[extKey].options.textBold = true;
+                        }
+
+                        //decorator value should be rendered as an option list
+                        if (i === nodePropertyNames.Registry.decorator) {
+                            dstList[extKey].valueType = "option";
+                            dstList[extKey].valueItems = ['DefaultDecorator', 'CircleDecorator', 'DecoratorWithPorts', 'AttributesDecorator'];
                         }
                     }
                 }
