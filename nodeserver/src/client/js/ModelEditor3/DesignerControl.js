@@ -265,10 +265,12 @@ define(['logManager',
                     objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
                     if (objDescriptor.decorator !== "DefaultDecorator" &&
                             objDescriptor.decorator !== "CircleDecorator" &&
-                            objDescriptor.decorator !== "DecoratorWithPorts") {
+                            objDescriptor.decorator !== "DecoratorWithPorts" &&
+                            objDescriptor.decorator !== "AttributesDecorator") {
                         objDescriptor.decorator = "DecoratorWithPorts";
                     }
-                    /*objDescriptor.decorator = "DefaultDecorator";*/
+                    
+                    //objDescriptor.decorator = "AttributesDecorator";
                 }
             }
         }
@@ -327,6 +329,8 @@ define(['logManager',
                             //TODO: hack
                             decoratorsToDownload.pushUnique("DefaultDecorator");
                             decoratorsToDownload.pushUnique("CircleDecorator");
+                            decoratorsToDownload.pushUnique("AttributesDecorator");
+                            
                         }
                     }
                 }

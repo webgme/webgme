@@ -252,6 +252,9 @@ define(['logManager',
                 nextDec = "DecoratorWithPorts";
                 break;
             case "DecoratorWithPorts":
+                nextDec = "AttributesDecorator";
+                break;
+            case "AttributesDecorator":
                 nextDec = "DefaultDecorator";
                 break;
             default:
