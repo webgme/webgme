@@ -18,6 +18,8 @@ define(['logManager',
 
         this._isReadOnly = false;
 
+        this._ordered = false;
+
         this.__onChange = null;
         this.__onFinishChange = null;
 
@@ -49,17 +51,33 @@ define(['logManager',
     };
 
     PropertyGrid.prototype._render = function () {
-        var i;
+        var i,
+            orderedPropNames = [];
 
         this._folders = {};
         this._widgets = {};
 
         this._gui.clear();
 
-        for (i in this._propertyList) {
-            if (this._propertyList.hasOwnProperty(i)) {
-                this._propertyList[i].id = i;
-                this._addPropertyItem(i.split("."), "", this._propertyList[i], this._gui);
+        if (this._ordered === true) {
+            for (i in this._propertyList) {
+                if (this._propertyList.hasOwnProperty(i)) {
+                    this._propertyList[i].id = i;
+                    orderedPropNames.push(i);
+                }
+            }
+
+            orderedPropNames.sort();
+
+            for (i = 0; i < orderedPropNames.length; i += 1) {
+                this._addPropertyItem(orderedPropNames[i].split("."), "", this._propertyList[orderedPropNames[i]], this._gui);
+            }
+        } else {
+            for (i in this._propertyList) {
+                if (this._propertyList.hasOwnProperty(i)) {
+                    this._propertyList[i].id = i;
+                    this._addPropertyItem(i.split("."), "", this._propertyList[i], this._gui);
+                }
             }
         }
     };
@@ -101,6 +119,13 @@ define(['logManager',
 
     PropertyGrid.prototype.destroy = function () {
         this._gui.clear();
+    };
+
+    PropertyGrid.prototype.setOrdered = function (isOrdered) {
+        if (this._ordered !== isOrdered) {
+            this._ordered = isOrdered;
+            this._render();
+        }
     };
 
     PropertyGrid.prototype.setReadOnly = function (isReadOnly) {

@@ -37,6 +37,7 @@ define(['clientUtil',
         this.$el.append(this.propertyGrid.$el);
 
         this.propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
+        this.propertyGrid.setOrdered(true);
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
