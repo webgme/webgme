@@ -31,7 +31,7 @@ define(['logManager',
         this._attributes = {};
         this._skinParts = { "$name": undefined,
                             "$attributesContainer": undefined,
-                            "$addAttr": undefined };
+                            "$addAttributeContainer": undefined };
 
         this.logger.debug("AttributesDecorator ctor");
     };
@@ -226,12 +226,13 @@ define(['logManager',
             cancel,
             save,
             endEdit,
-            self = this;
+            self = this,
+            ctrlGroup;
 
         this._skinParts.$addAttributeContainer.detach();
 
         endEdit = function () {
-            inputCtrl.remove();
+            ctrlGroup.remove();
             self._skinParts.$addAttributeContainer.insertAfter(self._skinParts.$attributesContainer);
         };
 
@@ -240,16 +241,19 @@ define(['logManager',
         };
 
         save = function () {
-            var attrName = inputCtrl.val(),
-                attrType = "string";
+            var attrName = inputCtrl.val();
 
-            //call onNewAttrCreate
-            self._onNewAttributeCreate(attrName,attrType);
+            if (self._isValidName(attrName)) {
+                //call onNewAttrCreate
+                self._onNewAttributeCreate(attrName);
 
-            //call finish
-            endEdit();
+                //call finish
+                endEdit();
+            }
         };
 
+        ctrlGroup = $("<div/>",
+                    {"class": "control-group"});
 
         inputCtrl = $("<input/>", {
                     "type": "text",
@@ -259,8 +263,9 @@ define(['logManager',
         inputCtrl.css({"box-sizing": "border-box",
                     "margin": "0px"});
 
+        ctrlGroup.append(inputCtrl);
 
-        inputCtrl.insertAfter(this._skinParts.$attributesContainer);
+        ctrlGroup.insertAfter(this._skinParts.$attributesContainer);
 
         //finally put the control in focus
         inputCtrl.focus();
@@ -288,32 +293,58 @@ define(['logManager',
                         break;
                 }
             }
-        );
+        ).keyup( function (/*event*/) {
+            if (self._isValidName(inputCtrl.val())) {
+                ctrlGroup.removeClass("error");
+            } else {
+                ctrlGroup.addClass("error");
+            }
+        }).blur(function (/*event*/) {
+            cancel();
+        });
     };
 
 
-    AttributesDecorator.prototype._onNewAttributeCreate = function (attrName, attrType) {
+    AttributesDecorator.prototype._onNewAttributeCreate = function (attrName) {
         var client = this._control._client,
-            defaultValue;
+            defaultValue = '';
 
-        this.logger.warning("_onNewAttribute: " + attrName);
+        this.logger.debug("_onNewAttributeCreate: " + attrName);
 
-        switch(attrType) {
-            case 'string':
-                defaultValue = "";
-                break;
-            case 'boolean':
-                defaultValue = false;
-                break;
-            case 'number':
-                defaultValue = 0;
-                break;
-            case 'enum':
-                defaultValue = '';
-                break;
+        if (this._isValidName(attrName)) {
+            client.setAttributes(this._metaInfo[CONSTANTS.GME_ID],attrName,defaultValue);
+        }
+    };
+
+    AttributesDecorator.prototype._isValidName = function (attrName) {
+        if (typeof attrName !== 'string') {
+            return false;
         }
 
-        client.setAttributes(this._metaInfo[CONSTANTS.GME_ID],attrName,defaultValue);
+        if (attrName === '') {
+            return false;
+        }
+
+        if (this._attributeNames.indexOf(attrName) !== -1) {
+            return false;
+        }
+
+        return true;
+    };
+
+    AttributesDecorator.prototype.readOnlyMode = function (readOnlyMode) {
+        __parent_proto__.readOnlyMode.call(this, readOnlyMode);
+
+        this._setReadOnlyMode(readOnlyMode);
+    };
+
+    AttributesDecorator.prototype._setReadOnlyMode = function (readOnly) {
+        if (readOnly === true) {
+            this._skinParts.$addAttributeContainer.detach();
+            this.$el.find('input.new-attr').val('').blur();
+        } else {
+            this._skinParts.$addAttributeContainer.insertAfter(this._skinParts.$attributesContainer);
+        }
     };
 
     return AttributesDecorator;

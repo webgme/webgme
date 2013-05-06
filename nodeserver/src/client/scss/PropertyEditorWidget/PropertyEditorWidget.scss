@@ -61,6 +61,15 @@ $input-color: lighten($background-color, 18.5%);
             div.iCheckBox {
               margin-top: 5px;
             }
+
+            select {
+              color: $text-color;
+              font-size: 11px;
+            }
+
+            select:not([disabled]) {
+              background: $input-color;
+            }
           }
         }
       }

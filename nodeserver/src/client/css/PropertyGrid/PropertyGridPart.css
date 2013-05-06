@@ -91,6 +91,8 @@
             height: 23px;
             border: 0;
             color: #FFFFFF;
+            padding: 3px; }
+          .pgp ul li.cr .c select:not([disabled]) {
             background: #303030; }
     .pgp ul.closed li:not(.title),
     .pgp ul.closed ul li,

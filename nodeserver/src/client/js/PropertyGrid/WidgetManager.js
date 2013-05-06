@@ -5,12 +5,14 @@ define([
     'js/PropertyGrid/Widgets/NumberBoxWidget',
     'js/PropertyGrid/Widgets/BooleanWidget',
     'js/PropertyGrid/Widgets/LabelWidget',
-    'js/PropertyGrid/Widgets/iCheckBoxWidget'],
+    'js/PropertyGrid/Widgets/iCheckBoxWidget',
+    'js/PropertyGrid/Widgets/OptionWidget'],
     function (StringWidget,
               NumberBoxWidget,
               BooleanWidget,
               LabelWidget,
-              iCheckBoxWidget) {
+              iCheckBoxWidget,
+              OptionWidget) {
 
         var WidgetManager;
 
@@ -20,10 +22,13 @@ define([
 
         WidgetManager.prototype.getWidgetForProperty = function (propDesc) {
             var _type = propDesc.valueType || typeof propDesc.value,
-                _readOnly = propDesc.readOnly === true ?  true : false;
+                _readOnly = propDesc.readOnly === true ?  true : false,
+                _isOption = _.isArray(propDesc.valueItems);
 
             if (_readOnly) {
                 return new LabelWidget(propDesc);
+            } else if (_isOption){
+                return new OptionWidget(propDesc);
             } else {
                 if (this._registeredWidgets[_type]) {
                     return new this._registeredWidgets[_type](propDesc);

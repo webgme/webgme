@@ -10,6 +10,15 @@ $port-height: 20px;
     &:hover {
       cursor: pointer;
     }
+
+    .n {
+      float: left;
+      margin-right: 3px;
+    }
+
+    .t {
+      float: right;
+    }
   }
 }
 
