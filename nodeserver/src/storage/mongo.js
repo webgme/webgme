@@ -351,29 +351,6 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 					$natural: -1
 				}).toArray(callback);
 			}
-
-            function makeCommit(parents,roothash,msg,callback){
-                //THERE IS NO SENSE TO CALL THIS METHOD!!!
-                //we implement only because of the API
-                ASSERT(HASH_REGEXP.test(roothash));
-                ASSERT(typeof callback === 'function');
-                parents = parents || [];
-                msg = msg || "n/a";
-
-                var commitObj = {
-                    _id     : "",
-                    root    : roothash,
-                    parents : parents,
-                    updater : ['TODO'],
-                    time    : (new Date()).getTime(),
-                    message : msg,
-                    type    : "commit"
-                };
-
-                commitObj._id = '#' + SHA1(JSON.stringify(commitObj));
-                insertObject(commitObj,callback);
-                return commitObj._id;
-            }
 		}
 
 		return {

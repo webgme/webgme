@@ -9,6 +9,7 @@ define([
     'storage/failsafe',
     'storage/socketioclient',
     'storage/log',
+    'storage/commit',
     'logManager'
 ],
     function (
@@ -22,6 +23,7 @@ define([
         Failsafe,
         SocketIOClient,
         Log,
+        Commit,
         LogManager
         ) {
 
@@ -41,13 +43,15 @@ define([
             var _self = this,
                 logger = LogManager.create("client"),
                 _database = new Log(
-                    new Cache(
-                        new Failsafe(
-                            new SocketIOClient(
-                                {
-                                    host:commonUtil.combinedserver.host,
-                                    port:commonUtil.combinedserver.port
-                                }
+                    new Commit(
+                        new Cache(
+                            new Failsafe(
+                                new SocketIOClient(
+                                    {
+                                        host:commonUtil.combinedserver.host,
+                                        port:commonUtil.combinedserver.port
+                                    }
+                                ),{}
                             ),{}
                         ),{}
                     ),{log:LogManager.create('client-storage')}
@@ -139,6 +143,7 @@ define([
             }
 
             function addCommit(commitHash){
+                _commitCache.newCommit(commitHash);
                 _recentCommits.unshift(commitHash);
                 if(_recentCommits.length > 10){
                     _recentCommits.pop();
@@ -291,7 +296,10 @@ define([
                                 }
                                 callback(null);
                             } else {
-                                callback(err);
+                                //we cannot get new commits from the server
+                                //we should use our very own ones
+                                //callback(err);
+                                callback(null);
                             }
                         });
                     };
@@ -353,9 +361,23 @@ define([
                     }
                 }
 
+                function newCommit(commitHash){
+                    if(_cache[commitHash]){
+                        return;
+                    } else {
+                        _project.loadObject(commitHash,function(err,commitObj){
+                            if(!err && commitObj){
+                                addCommit(commitObj);
+                            }
+                            return;
+                        });
+                    }
+                }
+
                 return {
                     getNCommitsFrom: getNCommitsFrom,
-                    clearCache: clearCache
+                    clearCache: clearCache,
+                    newCommit: newCommit
                 }
             }
 

@@ -525,27 +525,17 @@ define([ "util/assert","util/guid","util/sha1"], function (ASSERT,GUID,SHA1) {
             }
 
             function makeCommit(parents,roothash,msg,callback){
-                //we should implement the commit object creation here as well
-                //to avoid the round-trip
-                ASSERT(HASH_REGEXP.test(roothash));
                 ASSERT(typeof callback === 'function');
                 if(socketConnected){
-                    parents = parents || [];
-                    msg = msg || "n/a";
-
-                    var commitObj = {
-                        _id     : "",
-                        root    : roothash,
-                        parents : parents,
-                        updater : ['TODO'],
-                        time    : (new Date()).getTime(),
-                        message : msg,
-                        type    : "commit"
-                    };
-
-                    commitObj._id = '#' + SHA1(JSON.stringify(commitObj));
-                    insertObject(commitObj,callback);
-                    return commitObj._id;
+                    var guid = GUID();
+                    callbacks[guid] = {cb:callback,to:setTimeout(callbackTimeout,options.timeout,guid)};
+                    socket.emit('makeCommit',project,parents,roothash,msg,function(err){
+                        if(callbacks[guid]){
+                            clearTimeout(callbacks[guid].to);
+                            delete callbacks[guid];
+                            callback(err);
+                        }
+                    });
                 } else {
                     callback(new Error(ERROR_DISCONNECTED));
                 }

@@ -7,6 +7,12 @@
 define([ "util/assert","util/guid"], function (ASSERT,GUID) {
     "use strict";
     var BRANCH_OBJ_ID = '*branch*';
+    var BRANCH_STATES = {
+        SYNC : 'sync',
+        FORKED : 'forked',
+        DISCONNECTED : 'disconnected',
+        AHEAD : 'ahead'
+    };
 
     function Database(_database,options){
         ASSERT(typeof options === "object" && typeof _database === "object");
@@ -88,7 +94,10 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
         }
 
         function fsyncDatabase(callback){
-            _database.fsyncDatabase(callback);
+            _database.fsyncDatabase(function(err){
+                //TODO we should start to select amongst errors
+                callback(null);
+            });
         }
 
         function getProjectNames(callback){
@@ -110,7 +119,7 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         pendingStorage[projectName][BRANCH_OBJ_ID] = {};
                     }
                     callback(null,{
-                        fsyncDatabase: project.fsyncDatabase,
+                        fsyncDatabase: fsyncDatabase,
                         getDatabaseStatus: project.getDatabaseStatus,
                         closeProject: project.closeProject,
                         loadObject: loadObject,
@@ -158,7 +167,25 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     pendingStorage[projectName] = {};
                     pendingStorage[projectName][BRANCH_OBJ_ID] = branchObj;
 
-                    count = objects.length;
+                    //synchronizing the branches
+                    var aheadBranches = [];
+                    for(i in pendingStorage[projectName][BRANCH_OBJ_ID]){
+                        if(pendingStorage[projectName][BRANCH_OBJ_ID][i].state === BRANCH_STATES.DISCONNECTED){
+                            if(pendingStorage[projectName][BRANCH_OBJ_ID][i].local.length>0){
+                                pendingStorage[projectName][BRANCH_OBJ_ID][i].state = BRANCH_STATES.AHEAD;
+                                //we try to save our local head
+                                aheadBranches.push(i);
+                            } else {
+                                pendingStorage[projectName][BRANCH_OBJ_ID][i].state = BRANCH_STATES.SYNC;
+                            }
+                        }
+                    }
+
+
+                    count = objects.length + aheadBranches.length;
+                    for(i=0;i<aheadBranches.length;i++){
+                        synchroniseBranch(aheadBranches[i],objectProcessed);
+                    }
                     for(i=0;i<objects.length;i++){
                         savingObject(objects[i],objectProcessed);
                     }
@@ -170,13 +197,27 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 }
             }
 
-            function synchroniseBranch(callback){
-
+            function synchroniseBranch(branchname,callback){
+                var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branchname];
+                project.getBranchHash(branchname,branchObj.local[0],function(err,newhash,forked){
+                    if(!err && newhash){
+                        project.setBranchHash(branchname,newhash,branchObj.local[0],function(err){
+                            callback();
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
             }
 
             function errorMode(){
                 if(inSync){
                     inSync = false;
+                    for(var i in pendingStorage[projectName][BRANCH_OBJ_ID]){
+                        if(pendingStorage[projectName][BRANCH_OBJ_ID][i].state !== BRANCH_STATES.FORKED){
+                            pendingStorage[projectName][BRANCH_OBJ_ID][i].state = BRANCH_STATES.DISCONNECTED;
+                        }
+                    }
                     var checkIfAvailable = function(err,newstate){
                         if(newstate === STATUS_CONNECTED){
                             synchronise(function(){
@@ -236,6 +277,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     for(var i in pendingStorage[projectName][BRANCH_OBJ_ID]){
                         if(pendingStorage[projectName][BRANCH_OBJ_ID][i].local.length > 0){
                             locals[i] = pendingStorage[projectName][BRANCH_OBJ_ID][i].local[0];
+                        } else if(pendingStorage[projectName][BRANCH_OBJ_ID][i].fork === null && pendingStorage[projectName][BRANCH_OBJ_ID][i].remote !== null){
+                            locals[i] = pendingStorage[projectName][BRANCH_OBJ_ID][i].remote;
                         }
                     }
 
@@ -250,6 +293,8 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         for(i in names){
                             if(!locals[i]){
                                 locals[i] = names[i];
+                            } else if( locals[i] === pendingStorage[projectName][BRANCH_OBJ_ID][i].remote){
+                                locals[i] = names[i];
                             }
                         }
                         callback(err,locals);
@@ -259,17 +304,20 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
 
             function getBranchHash(branch,oldhash,callback){
                 if(!pendingStorage[projectName][BRANCH_OBJ_ID][branch]){
-                    pendingStorage[projectName][BRANCH_OBJ_ID][branch] = {local:[],fork:null,state:'sync'};
+                    pendingStorage[projectName][BRANCH_OBJ_ID][branch] = {local:[],fork:null,state:BRANCH_STATES.SYNC,remote:null};
                 }
                 var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branch];
 
-                if(branchObj.state === 'sync' || branchObj.state === 'ahead'){
+                if(branchObj.state === BRANCH_STATES.SYNC || branchObj.state === BRANCH_STATES.AHEAD){
                     project.getBranchHash(branch,oldhash,function(err,newhash,forkedhash){
+                        if(!err && newhash){
+                            branchObj.remote = newhash;
+                        }
                         switch(branchObj.state){
-                            case 'sync':
+                            case BRANCH_STATES.SYNC:
                                 callback(err,newhash,forkedhash);
                                 break;
-                            case 'ahead':
+                            case BRANCH_STATES.AHEAD:
                                 if(err){
                                     callback(err,newhash,forkedhash);
                                 } else {
@@ -277,13 +325,13 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                         callback(err,newhash,forkedhash);
                                     } else {
                                         //we forked!!!
-                                        branchObj.state = 'forked';
+                                        branchObj.state = BRANCH_STATES.FORKED;
                                         branchObj.fork = newhash;
                                         callback(null,branchObj.local[0],branchObj.fork);
                                     }
                                 }
                                 break;
-                            case 'disconnected':
+                            case BRANCH_STATES.DISCONNECTED:
                                 callback(null,branchObj.local[0],branchObj.fork);
                                 break;
                             default://forked
@@ -293,20 +341,29 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                     });
                 } else {
                     //served locally
-                    ASSERT(branchObj.local[0] && branchObj.local[0] !== "");
-                    if(branchObj.local[0] === oldhash){
+                    ASSERT((branchObj.local[0] && branchObj.local[0] !== "") || branchObj.remote);
+                    var myhash = null;
+                    if(branchObj.local[0]){
+                        myhash = branchObj.local[0];
+                    } else {
+                        myhash = branchObj.remote;
+                    }
+
+                    if(myhash === oldhash){
                         setTimeout(function(){
                             callback(null,oldhash,branchObj.fork);
                         },options.timeout);
                     } else {
-                        callback(null,branchObj.local[0],branchObj.fork);
+                        callback(null,myhash,branchObj.fork);
                     }
+
                 }
             }
 
             function setBranchHash(branch,oldhash,newhash,callback){
+                ASSERT(typeof oldhash === 'string' && typeof newhash === 'string');
                 if(!pendingStorage[projectName][BRANCH_OBJ_ID][branch]){
-                    pendingStorage[projectName][BRANCH_OBJ_ID][branch] = {local:[],fork:null,state:'sync'};
+                    pendingStorage[projectName][BRANCH_OBJ_ID][branch] = {local:[],fork:null,state:BRANCH_STATES.SYNC};
                 }
                 var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branch];
 
@@ -316,19 +373,19 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         ASSERT(index !== -1);
                         branchObj.local.splice(index,branchObj.local.length-index);
                         if(branchObj.local.length === 0){
-                            branchObj.state = 'sync';
+                            branchObj.state = BRANCH_STATES.SYNC;
                         }
                     } else {
-                        //we go to disconnected state
+                        /*//we go to disconnected state
                         ASSERT(branchObj.local.length > 0);
-                        if(branchObj.state !== 'disconnected'){
-                            branchObj.state = 'disconnected';
+                        if(branchObj.state !== BRANCH_STATES.DISCONNECTED){
+                            branchObj.state = BRANCH_STATES.DISCONNECTED;
                             var reSyncBranch = function(err,newhash,forkedhash){
                                 if(!err && newhash){
                                     if(branchObj.local.indexOf(newhash) === -1){
                                         //we forked
                                         branchObj.fork = newhash;
-                                        branchObj.state = 'forked';
+                                        branchObj.state = BRANCH_STATES.FORKED;
                                     } else {
                                         setBranchHash(branch,newhash,branchObj.local[0],function(){});
                                     }
@@ -338,19 +395,21 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                                 }
                             };
                             project.getBranchHash(branch,branchObj.local[0],reSyncBranch);
-                        }
+                        }*/
+                        //we have ancountered an error
+                        errorMode();
                     }
                 };
 
                 switch(branchObj.state){
-                    case 'sync':
+                    case BRANCH_STATES.SYNC:
                         ASSERT(branchObj.local.length === 0);
-                        branchObj.state = 'ahead';
+                        branchObj.state = BRANCH_STATES.AHEAD;
                         branchObj.local = [newhash,oldhash];
                         project.setBranchHash(branch,oldhash,newhash,returnFunction);
                         callback(null);
                         return;
-                    case 'ahead':
+                    case BRANCH_STATES.AHEAD:
                         ASSERT(branchObj.local.length > 0);
                         if(oldhash === branchObj.local[0]){
                             branchObj.local.unshift(newhash);
@@ -360,22 +419,22 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                             callback(new Error("branch hash mismatch"));
                         }
                         return;
-                    case 'disconnected':
-                        ASSERT(branchObj.local.length > 0);
-                        if(oldhash === branchObj.local[0]){
+                    case BRANCH_STATES.DISCONNECTED:
+                        ASSERT(branchObj.local.length > 0 || branchObj.remote);
+                        if(oldhash === branchObj.local[0] || oldhash === branchObj.remote){
                             branchObj.local.unshift(newhash);
                             callback(null);
                         } else {
                             callback(new Error("branch hash mismatch"));
                         }
                         return;
-                    default: //'forked'
+                    default: //BRANCH_STATES.FORKED
                         ASSERT(branchObj.local.length > 0 && branchObj.fork);
                         if(oldhash === branchObj.local[0]){
                             if(branchObj.fork === newhash){
                                 //clearing the forked leg
                                 branchObj.fork = null;
-                                branchObj.state = 'sync';
+                                branchObj.state = BRANCH_STATES.SYNC;
                                 branchObj.local = [];
                             } else {
                                 branchObj.local.unshift(newhash);
