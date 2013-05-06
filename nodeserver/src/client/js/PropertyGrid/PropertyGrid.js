@@ -13,7 +13,7 @@ define(['logManager',
 
         this._propertyList = {};
 
-        this._widgetList = {};
+        //this._widgetList = {};
         this._initDefaultWidgets();
 
         this._isReadOnly = false;

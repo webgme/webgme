@@ -27,8 +27,6 @@ define(['clientUtil',
     _.extend(PropertyEditorWidget.prototype, __parent__.prototype);
 
     PropertyEditorWidget.prototype._initializeUI = function () {
-        var self = this;
-
         //set Widget title
         this.setTitle("Property Editor");
 
