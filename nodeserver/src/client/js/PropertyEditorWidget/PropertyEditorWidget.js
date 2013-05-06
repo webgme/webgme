@@ -27,8 +27,6 @@ define(['clientUtil',
     _.extend(PropertyEditorWidget.prototype, __parent__.prototype);
 
     PropertyEditorWidget.prototype._initializeUI = function () {
-        var self = this;
-
         //set Widget title
         this.setTitle("Property Editor");
 
@@ -37,6 +35,7 @@ define(['clientUtil',
         this.$el.append(this.propertyGrid.$el);
 
         this.propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
+        this.propertyGrid.setOrdered(true);
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
