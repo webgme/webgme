@@ -155,6 +155,7 @@ $input-color: lighten($background-color, 8.5%);
             border: 0;
             color: #FFFFFF;
             background: $input-color;
+            padding: 3px;
           }
         }
       }

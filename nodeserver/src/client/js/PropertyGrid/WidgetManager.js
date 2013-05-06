@@ -5,12 +5,14 @@ define([
     'js/PropertyGrid/Widgets/NumberBoxWidget',
     'js/PropertyGrid/Widgets/BooleanWidget',
     'js/PropertyGrid/Widgets/LabelWidget',
-    'js/PropertyGrid/Widgets/iCheckBoxWidget'],
+    'js/PropertyGrid/Widgets/iCheckBoxWidget',
+    'js/PropertyGrid/Widgets/OptionWidget'],
     function (StringWidget,
               NumberBoxWidget,
               BooleanWidget,
               LabelWidget,
-              iCheckBoxWidget) {
+              iCheckBoxWidget,
+              OptionWidget) {
 
         var WidgetManager;
 
@@ -31,6 +33,8 @@ define([
                     return new NumberBoxWidget(propDesc);
                 } else if (_type === "boolean") {
                     return new BooleanWidget(propDesc);
+                }  else if (_type === "option") {
+                    return new OptionWidget(propDesc);
                 } else {
                     return new StringWidget(propDesc);
                 }

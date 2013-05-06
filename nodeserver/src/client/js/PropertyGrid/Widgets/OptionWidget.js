@@ -1,0 +1,70 @@
+"use strict";
+
+define(['js/PropertyGrid/Widgets/WidgetBase'],
+    function (WidgetBase) {
+
+        var OptionWidget;
+
+        OptionWidget = function (propertyDesc) {
+            OptionWidget.superclass.call(this, propertyDesc);
+
+            var _self = this,
+                i,
+                opt;
+
+            this.__select = $('<select/>');
+
+            if (propertyDesc.value === '') {
+                opt = $('<option value="empty"/>');
+                opt.text('');
+                this.__select.append(opt);
+            }
+
+            for (i = 0; i < this.valueItems.length; i += 1 ) {
+                opt = $('<option/>');
+                opt.text(this.valueItems[i]);
+                this.__select.append(opt);
+            }
+
+            this.__select.on('change', function (e) {
+                e.stopPropagation();
+                e.preventDefault();
+
+                //remove empty value if present
+                _self.__select.find('option[value="empty"]').remove();
+
+                _self.setValue(_self.__select.val());
+                _self.fireFinishChange();
+            });
+
+            this.updateDisplay();
+
+            this.el.append(this.__select);
+        };
+
+        OptionWidget.superclass = WidgetBase;
+
+        _.extend(
+            OptionWidget.prototype,
+            WidgetBase.prototype
+        );
+
+        OptionWidget.prototype.updateDisplay = function () {
+            this.__select.val(this.getValue());
+
+            return OptionWidget.superclass.prototype.updateDisplay.call(this);
+        };
+
+        OptionWidget.prototype.setReadOnly = function (isReadOnly) {
+            OptionWidget.superclass.prototype.setReadOnly.call(this, isReadOnly);
+
+            if (isReadOnly === true) {
+                this.__select.attr('disabled', 'disabled');
+            } else {
+                this.__select.removeAttr('disabled');
+            }
+        };
+
+        return OptionWidget;
+
+    });
