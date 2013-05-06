@@ -22,10 +22,13 @@ define([
 
         WidgetManager.prototype.getWidgetForProperty = function (propDesc) {
             var _type = propDesc.valueType || typeof propDesc.value,
-                _readOnly = propDesc.readOnly === true ?  true : false;
+                _readOnly = propDesc.readOnly === true ?  true : false,
+                _isOption = _.isArray(propDesc.valueItems);
 
             if (_readOnly) {
                 return new LabelWidget(propDesc);
+            } else if (_isOption){
+                return new OptionWidget(propDesc);
             } else {
                 if (this._registeredWidgets[_type]) {
                     return new this._registeredWidgets[_type](propDesc);
@@ -33,8 +36,6 @@ define([
                     return new NumberBoxWidget(propDesc);
                 } else if (_type === "boolean") {
                     return new BooleanWidget(propDesc);
-                }  else if (_type === "option") {
-                    return new OptionWidget(propDesc);
                 } else {
                     return new StringWidget(propDesc);
                 }

@@ -172,7 +172,7 @@ define(['logManager',
 
                         //decorator value should be rendered as an option list
                         if (i === nodePropertyNames.Registry.decorator) {
-                            dstList[extKey].valueType = "option";
+                            //dstList[extKey].valueType = "option";
                             dstList[extKey].valueItems = ['DefaultDecorator', 'CircleDecorator', 'DecoratorWithPorts', 'AttributesDecorator'];
                         }
                     }

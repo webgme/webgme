@@ -27,14 +27,21 @@ define(['js/PropertyGrid/Widgets/WidgetBase'],
             }
 
             this.__select.on('change', function (e) {
+                var val = _self.__select.val();
                 e.stopPropagation();
                 e.preventDefault();
 
-                //remove empty value if present
-                _self.__select.find('option[value="empty"]').remove();
+                if (this.valueType === 'number') {
+                    val = parseFloat(val);
+                }
 
-                _self.setValue(_self.__select.val());
-                _self.fireFinishChange();
+                if (val !== NaN) {
+                    //remove empty value if present
+                    _self.__select.find('option[value="empty"]').remove();
+
+                    _self.setValue(val);
+                    _self.fireFinishChange();
+                }
             });
 
             this.updateDisplay();
