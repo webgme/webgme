@@ -1,5 +1,5 @@
 .attributes-decorator {
-  min-width: 80px;
+  min-width: 100px;
   min-height: 40px;
   border: 2px solid black;
   background-color: whitesmoke;
@@ -15,9 +15,10 @@
     text-overflow: ellipsis;
     border-bottom: 1px solid #000000; }
   .attributes-decorator .attributes {
-    background-color: rgba(255, 255, 0, 0.5);
+    /*background-color: $attributes-background-color;*/
     font-size: 10px;
-    min-height: 1px; }
+    min-height: 1px;
+    margin-bottom: 0; }
     .attributes-decorator .attributes .attr {
       white-space: nowrap;
       position: relative;
@@ -25,8 +26,23 @@
       line-height: 20px; }
       .attributes-decorator .attributes .attr:hover {
         cursor: pointer; }
+      .attributes-decorator .attributes .attr .n {
+        float: left;
+        margin-right: 3px; }
+      .attributes-decorator .attributes .attr .t {
+        float: right; }
+  .attributes-decorator .add-new {
+    font-size: 10px;
+    cursor: pointer; }
+    .attributes-decorator .add-new [class^="icon-"],
+    .attributes-decorator .add-new [class*=" icon-"] {
+      margin-top: -1px; }
+    .attributes-decorator .add-new:hover {
+      background-color: #dbeafc; }
   .attributes-decorator input[type=text].new-attr {
     font-size: 10px; }
+  .attributes-decorator .control-group {
+    margin-bottom: 0; }
   .attributes-decorator .connector {
     background-color: #fefefe;
     height: 10px;
@@ -48,9 +64,11 @@
     .attributes-decorator .connector.bottom {
       bottom: -6px; }
 
-.selectable .decorator-with-ports {
+.selectable .attributes-decorator {
   cursor: pointer; }
 
-.selected .decorator-with-ports {
+.selected .attributes-decorator {
   border: 2px solid #52a8ec;
   background-color: #dbeafc; }
+  .selected .attributes-decorator .add-new:hover {
+    background-color: #ffffc0; }

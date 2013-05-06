@@ -21,8 +21,7 @@ define(['logManager'], function (logManager) {
         this.logger.debug("Created");
     };
 
-    Attribute.prototype._DOMAttributeBase = $('<div class="attr" data-name="__ID__"></div>');
-    Attribute.prototype._DOMTitleWrapper = $('<div class="title-wrapper"><span class="title">__NAME__</span></div>');
+    Attribute.prototype._DOMAttributeBase = $('<div class="attr" data-name="__ID__"><span class="n"></span><span class="t"></span></div>');
 
     Attribute.prototype._render = function () {
         var self = this;
@@ -31,13 +30,13 @@ define(['logManager'], function (logManager) {
         this.$el.attr({"data-name": this.name,
                       "title": this.name});
 
-        this.$el.text(this.name + ": " + this.type);
+        this.$el.find(".n").text(this.name + ":");
+        this.$el.find(".t").text(this.type);
     };
 
     Attribute.prototype.destroy = function () {
         //finally remove itself from DOM
         if (this.$el) {
-            this.$el.off( MOUSE_ENTER + '.' + EVENT_POSTFIX).off( MOUSE_LEAVE + '.' + EVENT_POSTFIX);
             this.$el.remove();
             this.$el.empty();
         }
