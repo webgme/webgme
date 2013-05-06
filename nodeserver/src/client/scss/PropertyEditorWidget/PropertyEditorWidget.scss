@@ -63,9 +63,12 @@ $input-color: lighten($background-color, 18.5%);
             }
 
             select {
-              background: $input-color;
               color: $text-color;
               font-size: 11px;
+            }
+
+            select:not([disabled]) {
+              background: $input-color;
             }
           }
         }
