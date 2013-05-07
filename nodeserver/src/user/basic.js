@@ -1048,6 +1048,7 @@ define([
                                 if(!err){
                                     changeBranchState(_self.branchStates.SYNC);
                                 }
+                                callback(err);
                             });
                         } else {
                             _project.setBranchHash(branchName,newhash,'',callback);

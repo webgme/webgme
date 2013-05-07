@@ -201,9 +201,14 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                 var branchObj = pendingStorage[projectName][BRANCH_OBJ_ID][branchname];
                 project.getBranchHash(branchname,branchObj.local[0],function(err,newhash,forked){
                     if(!err && newhash){
-                        project.setBranchHash(branchname,newhash,branchObj.local[0],function(err){
-                            callback();
-                        });
+                        if(branchObj.local.indexOf(newhash) !== -1){
+                            project.setBranchHash(branchname,newhash,branchObj.local[0],callback);
+                        } else {
+                            //we forked
+                            branchObj.state = BRANCH_STATES.FORKED;
+                            branchObj.fork = newhash;
+                            callback(null);
+                        }
                     } else {
                         callback(err);
                     }
@@ -420,12 +425,27 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
                         }
                         return;
                     case BRANCH_STATES.DISCONNECTED:
-                        ASSERT(branchObj.local.length > 0 || branchObj.remote);
+                        /*ASSERT(branchObj.local.length > 0 || branchObj.remote);
                         if(oldhash === branchObj.local[0] || oldhash === branchObj.remote){
-                            branchObj.local.unshift(newhash);
+                            if(branchObj.local.length === 0){
+                                branchObj.local = [newhash,oldhash];
+                            } else {
+                                branchObj.local.unshift(newhash);
+                            }
                             callback(null);
                         } else {
                             callback(new Error("branch hash mismatch"));
+                        }*/
+                        if(branchObj.local.length === 0){
+                            branchObj.local = [newhash,oldhash];
+                            callback(null);
+                        } else {
+                            if(oldhash === branchObj.local[0]){
+                                branchObj.local.unshift(newhash);
+                                callback(null);
+                            } else {
+                                callback(new Error("branch hash mismatch"));
+                            }
                         }
                         return;
                     default: //BRANCH_STATES.FORKED
