@@ -67,7 +67,7 @@ define([
                 _inTransaction = false,
                 _users = {},
                 _patterns = {},
-                _networkStatus = null,
+                _networkStatus = '',
                 _clipboard = [],
                 _msg = "",
                 _recentCommits = [],
@@ -236,14 +236,14 @@ define([
             }
 
             function networkWatcher(){
-                var status = "";
+                _networkStatus = "";
                 var autoReconnect = commonUtil.combinedserver.autoreconnect ? true : false;
                 var reConnDelay = commonUtil.combinedserver.reconndelay || 1000;
                 var reConnAmount = commonUtil.combinedserver.reconnamount || 1000;
                 var reconnecting = function(){
                     var counter = 0;
                     var timerId = setInterval(function(){
-                        if(counter<reConnAmount && status === _self.networkStates.DISCONNECTED){
+                        if(counter<reConnAmount && _networkStatus === _self.networkStates.DISCONNECTED){
                             _database.openDatabase(function(err){});
                             counter++;
                         } else {
@@ -252,14 +252,14 @@ define([
                     },reConnDelay);
                 };
                 var dbStatusUpdated = function(err,newstatus){
-                    if(!err && newstatus && status !== newstatus){
-                        status = newstatus;
-                        if(status === _self.networkStates.DISCONNECTED && autoReconnect){
+                    if(!err && newstatus && _networkStatus !== newstatus){
+                        _networkStatus = newstatus;
+                        if(_networkStatus === _self.networkStates.DISCONNECTED && autoReconnect){
                             reconnecting();
                         }
-                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, status);
+                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
                     }
-                    return _database.getDatabaseStatus(status,dbStatusUpdated);
+                    return _database.getDatabaseStatus(_networkStatus,dbStatusUpdated);
                 };
                 _database.getDatabaseStatus('',dbStatusUpdated);
             }
@@ -483,7 +483,6 @@ define([
                     _nodes = {};
                     //_commitObject = null;
                     _patterns = {};
-                    _networkStatus = null;
                     _clipboard = [];
                     _msg = "";
                     _recentCommits = [];
@@ -1036,6 +1035,12 @@ define([
             function getActualBranch(){
                 return _branch;
             }
+            function getActualNetworkStatus(){
+                return _networkStatus;
+            }
+            function getActualBranchStatus(){
+                return _branchState;
+            }
             function createBranchAsync(branchName,commitHash,callback){
                 //it doesn't changes anything, just creates the new branch
                 _project.setBranchHash(branchName,'',commitHash,callback);
@@ -1584,6 +1589,8 @@ define([
                 getCommitsAsync: getCommitsAsync,
                 getActualCommit: getActualCommit,
                 getActualBranch: getActualBranch,
+                getActualNetworkStatus: getActualNetworkStatus,
+                getActualBranchStatus: getActualBranchStatus,
                 createBranchAsync: createBranchAsync,
                 deleteBranchAsync: deleteBranchAsync,
                 selectBranchAsync: selectBranchAsync,
