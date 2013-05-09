@@ -1654,6 +1654,7 @@ define([
                 //projects, branch, etc.
                 getActiveProject: getActiveProject,
                 getAvailableProjectsAsync: getAvailableProjectsAsync,
+                connectToDatabaseAsync: connectToDatabaseAsync,
                 selectProjectAsync: selectProjectAsync,
                 createProjectAsync: createProjectAsync,
                 deleteProjectAsync: deleteProjectAsync,
