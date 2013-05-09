@@ -42,20 +42,7 @@ define([
         function Client(){
             var _self = this,
                 logger = LogManager.create("client"),
-                _database = new Log(
-                    new Commit(
-                        new Cache(
-                            new Failsafe(
-                                new SocketIOClient(
-                                    {
-                                        host:commonUtil.combinedserver.host,
-                                        port:commonUtil.combinedserver.port
-                                    }
-                                ),{}
-                            ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                ),
+                _database = null,
                 _projectName = null,
                 _project = null,
                 _core = null,
@@ -75,7 +62,8 @@ define([
                 _loadNodes = {},
                 _loadError = 0,
                 _commitCache = null,
-                _offline = false;
+                _offline = false,
+                _networkWatcher = null;
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
@@ -237,13 +225,14 @@ define([
 
             function networkWatcher(){
                 _networkStatus = "";
+                var running = true;
                 var autoReconnect = commonUtil.combinedserver.autoreconnect ? true : false;
                 var reConnDelay = commonUtil.combinedserver.reconndelay || 1000;
                 var reConnAmount = commonUtil.combinedserver.reconnamount || 1000;
                 var reconnecting = function(){
                     var counter = 0;
                     var timerId = setInterval(function(){
-                        if(counter<reConnAmount && _networkStatus === _self.networkStates.DISCONNECTED){
+                        if(counter<reConnAmount && _networkStatus === _self.networkStates.DISCONNECTED && running){
                             _database.openDatabase(function(err){});
                             counter++;
                         } else {
@@ -252,16 +241,26 @@ define([
                     },reConnDelay);
                 };
                 var dbStatusUpdated = function(err,newstatus){
-                    if(!err && newstatus && _networkStatus !== newstatus){
-                        _networkStatus = newstatus;
-                        if(_networkStatus === _self.networkStates.DISCONNECTED && autoReconnect){
-                            reconnecting();
+                    if(running){
+                        if(!err && newstatus && _networkStatus !== newstatus){
+                            _networkStatus = newstatus;
+                            if(_networkStatus === _self.networkStates.DISCONNECTED && autoReconnect){
+                                reconnecting();
+                            }
+                            _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
                         }
-                        _self.dispatchEvent(_self.events.NETWORKSTATUS_CHANGED, _networkStatus);
+                        return _database.getDatabaseStatus(_networkStatus,dbStatusUpdated);
                     }
-                    return _database.getDatabaseStatus(_networkStatus,dbStatusUpdated);
+                    return;
                 };
+                var stop = function(){
+                    running = false;
+                }
                 _database.getDatabaseStatus('',dbStatusUpdated);
+
+                return {
+                    stop: stop
+                }
             }
 
             function commitCache(){
@@ -906,7 +905,6 @@ define([
             function getAvailableProjectsAsync(callback) {
                 _database.getProjectNames(callback);
             }
-
             function selectProjectAsync(projectname,callback) {
                 //we assume that every project has a master branch and we
                 //open that...
@@ -919,7 +917,6 @@ define([
                     });
                 }
             }
-
             function createProjectAsync(projectname,callback){
                 getAvailableProjectsAsync(function(err,names){
                     if(!err && names){
@@ -946,7 +943,6 @@ define([
                     }
                 });
             }
-
             function deleteProjectAsync(projectname,callback){
                 if(projectname === _projectName){
                     closeOpenedProject();
@@ -1067,7 +1063,65 @@ define([
                 var msg = params.message || '';
                 saveRoot(msg,callback);
             }
+            function connectToDatabaseAsync(options,callback){
+                options = options || {};
+                callback = callback || function(){};
+                options.host = options.host || commonUtil.combinedserver.host;
+                options.port = options.port || commonUtil.combinedserver.port;
+                options.open = (options.open !== undefined || options.open !== null) ? options.open : false;
+                options.project = options.project || null;
+                if(_database){
+                    //we have to close the current
+                    _database.closeDatabase();
+                    closeOpenedProject(function(){});
+                    _networkStatus = "";
+                    changeBranchState(null);
+                }
+                _database = new Log(
+                    new Commit(
+                        new Cache(
+                            new Failsafe(
+                                new SocketIOClient(
+                                    {
+                                        host:options.host,
+                                        port:options.port
+                                    }
+                                ),{}
+                            ),{}
+                        ),{}
+                    ),{log:LogManager.create('client-storage')}
+                );
 
+                _database.openDatabase(function(err){
+                    if(!err){
+                        if(_networkWatcher){
+                            _networkWatcher.stop();
+                        }
+                        _networkWatcher = networkWatcher();
+
+                        if(options.open){
+                            if(options.project){
+                                openProject(options.project,callback);
+                            } else {
+                                //default opening routine
+                                _database.getProjectNames(function(err,names){
+                                    if(!err && names && names.length>0){
+                                        openProject(names[0],callback);
+                                    } else {
+                                        logger.error('Cannot get project names / There is no project on the server');
+                                        callback(err);
+                                    }
+                                });
+                            }
+                        } else {
+                            callback(null);
+                        }
+                    } else {
+                        logger.error('Cannot open database');
+                        callback(err);
+                    }
+                });
+            }
             //MGA
             function copyMoreNodes(nodePaths,parentPath,callback){
                 var checkPaths = function(){
@@ -1520,7 +1574,7 @@ define([
 
             //testing
             function testMethod(testnumber){
-                deleteBranchAsync("blabla",function(err){
+                /*deleteBranchAsync("blabla",function(err){
                     getBranchesAsync(function(err,branches){
                         console.log('kecso');
                     });
@@ -1528,15 +1582,32 @@ define([
                         getBranchesAsync(function(err,branches){
                             console.log('kecso');
                         });
-                    },0);*/
+                    },0);
+                });*/
+                connectToDatabaseAsync({open:true},function(err){
+                    console.log('kecso connecting to database',err);
                 });
             }
 
             //initialization
             function initialize(){
+                _database = new Log(
+                    new Commit(
+                        new Cache(
+                            new Failsafe(
+                                new SocketIOClient(
+                                    {
+                                        host:commonUtil.combinedserver.host,
+                                        port:commonUtil.combinedserver.port
+                                    }
+                                ),{}
+                            ),{}
+                        ),{}
+                    ),{log:LogManager.create('client-storage')}
+                );
                 _database.openDatabase(function(err){
                     if(!err){
-                        networkWatcher();
+                        _networkWatcher = networkWatcher();
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
                                 var projectName = null;
@@ -1559,7 +1630,9 @@ define([
                     }
                 });
             }
-            initialize();
+            if(commonUtil.combinedserver.autostart){
+                initialize();
+            }
 
             return {
                 //eventer

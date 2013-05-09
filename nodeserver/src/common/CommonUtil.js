@@ -145,6 +145,7 @@ define(['common/Constants'], function (CONSTANTS) {
             autorecconnect  : true,
             reconndelay     : 1000,
             reconnamount    : 1000,
+            autostart       : true,
 
 
             //used by the server
