@@ -113,7 +113,9 @@ define([
             function connect(){
                 //this is when the user force to go online on network level
                 //TODO implement :) - but how, there is no such function on the storage's API
-                _database.openDatabase(function(err){});
+                if(_database){
+                    _database.openDatabase(function(err){});
+                }
             }
 
             //branch handling functions
@@ -903,94 +905,118 @@ define([
             }
 
             function getAvailableProjectsAsync(callback) {
-                _database.getProjectNames(callback);
+                if(_database){
+                    _database.getProjectNames(callback);
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function selectProjectAsync(projectname,callback) {
-                //we assume that every project has a master branch and we
-                //open that...
-                if(projectname === _projectName){
-                    callback(null);
+                if(_database){
+                    if(projectname === _projectName){
+                        callback(null);
+                    } else {
+                        closeOpenedProject(function(err){
+                            //TODO what can we do with the error??
+                            openProject(projectname,callback);
+                        });
+                    }
                 } else {
-                    closeOpenedProject(function(err){
-                        //TODO what can we do with the error??
-                        openProject(projectname,callback);
-                    });
+                    callback(new Error('there is no open database connection!!!'));
                 }
             }
             function createProjectAsync(projectname,callback){
-                getAvailableProjectsAsync(function(err,names){
-                    if(!err && names){
-                        if(names.indexOf(projectname) === -1){
-                            _database.openProject(projectname,function(err,p){
-                                if(!err && p){
-                                    createEmptyProject(p,function(err,commit){
-                                        if(!err && commit){
-                                            callback(null);
-                                        } else {
-                                            callback(err);
-                                        }
-                                    });
-                                } else {
-                                    callback(err);
-                                }
-                            });
+                if(_database){
+                    getAvailableProjectsAsync(function(err,names){
+                        if(!err && names){
+                            if(names.indexOf(projectname) === -1){
+                                _database.openProject(projectname,function(err,p){
+                                    if(!err && p){
+                                        createEmptyProject(p,function(err,commit){
+                                            if(!err && commit){
+                                                callback(null);
+                                            } else {
+                                                callback(err);
+                                            }
+                                        });
+                                    } else {
+                                        callback(err);
+                                    }
+                                });
+                            } else {
+                                //TODO maybe the selectProjectAsync could be called :)
+                                callback('the project already exists!');
+                            }
                         } else {
-                            //TODO maybe the selectProjectAsync could be called :)
-                            callback('the project already exists!');
+                            callback(err);
                         }
-                    } else {
-                        callback(err);
-                    }
-                });
+                    });
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
+
             }
             function deleteProjectAsync(projectname,callback){
-                if(projectname === _projectName){
-                    closeOpenedProject();
+                if(_database){
+                    if(projectname === _projectName){
+                        closeOpenedProject();
+                    }
+                    _database.deleteProject(projectname,callback);
+
+                } else {
+                    callback(new Error('there is no open database connection!'));
                 }
-                _database.deleteProject(projectname,callback);
             }
 
             //branching functionality
             function getBranchesAsync(callback){
-                _project.getBranchNames(function(err,names){
-                    if(!err && names){
-                        var missing = 0;
-                        var branchArray = [];
-                        var error = null;
-                        var getBranchValues = function(name){
-                            _project.getBranchHash(name,'',function(err,newhash,forked){
-                                if(!err && newhash){
-                                    var element = {name:name,commitId:newhash};
-                                    if(forked){
-                                        element.sync = false;
-                                    } else {
-                                        element.sync = true;
+                if(_database){
+                    if(_project){
+                        _project.getBranchNames(function(err,names){
+                            if(!err && names){
+                                var missing = 0;
+                                var branchArray = [];
+                                var error = null;
+                                var getBranchValues = function(name){
+                                    _project.getBranchHash(name,'',function(err,newhash,forked){
+                                        if(!err && newhash){
+                                            var element = {name:name,commitId:newhash};
+                                            if(forked){
+                                                element.sync = false;
+                                            } else {
+                                                element.sync = true;
+                                            }
+                                            branchArray.push(element);
+                                        } else {
+                                            error = error || err;
+                                        }
+
+                                        if(--missing === 0){
+                                            callback(error,branchArray);
+                                        }
+                                    });
+                                };
+
+                                for(var i in names){
+                                    missing++;
+                                }
+                                if(missing > 0){
+                                    for(i in names){
+                                        getBranchValues(i);
                                     }
-                                    branchArray.push(element);
                                 } else {
-                                    error = error || err;
+                                    callback(null,branchArray);
                                 }
-
-                                if(--missing === 0){
-                                    callback(error,branchArray);
-                                }
-                            });
-                        };
-
-                        for(var i in names){
-                            missing++;
-                        }
-                        if(missing > 0){
-                            for(i in names){
-                                getBranchValues(i);
+                            } else {
+                                callback(err);
                             }
-                        } else {
-                            callback(null,branchArray);
-                        }
+                        });
                     } else {
-                        callback(err);
+                        callback(new Error('there is no open project!'));
                     }
-                });
+                } else {
+                    callback(new Error('there is no opened database connection!'));
+                }
             }
             function viewerCommit(hash,callback){
                 //no project change
@@ -1013,17 +1039,41 @@ define([
             }
             function selectCommitAsync(hash,callback){
                 //this should proxy to branch selection and viewer functions
-                viewerCommit(hash,callback);
+                if(_database){
+                    if(_project){
+                        viewerCommit(hash,callback);
+                    } else {
+                        callback(new Error('there is no open project!'));
+                    }
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function selectBranchAsync(branch,callback){
-                branchWatcher(branch,callback);
+                if(_database){
+                    if(_project){
+                        branchWatcher(branch,callback);
+                    } else {
+                        callback(new Error('there is no open project!'));
+                    }
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function getCommitsAsync(commitHash,number,callback){
-                ASSERT(_commitCache);
-                if(commitHash === undefined){
-                    commitHash = null;
+                if(_database){
+                    if(_project){
+                        ASSERT(_commitCache);
+                        if(commitHash === undefined){
+                            commitHash = null;
+                        }
+                        _commitCache.getNCommitsFrom(commitHash,number,callback);
+                    } else {
+                        callback(new Error('there is no open project!'));
+                    }
+                } else {
+                    callback(new Error('there is no open database connection!'));
                 }
-                _commitCache.getNCommitsFrom(commitHash,number,callback);
             }
             function getActualCommit(){
                 return _recentCommits[0];
@@ -1039,29 +1089,53 @@ define([
             }
             function createBranchAsync(branchName,commitHash,callback){
                 //it doesn't changes anything, just creates the new branch
-                _project.setBranchHash(branchName,'',commitHash,callback);
+                if(_database){
+                    if(_project){
+                        _project.setBranchHash(branchName,'',commitHash,callback);
+                    } else {
+                        callback(new Error('there is no open project!'));
+                    }
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function deleteBranchAsync(branchName,callback){
-                _project.getBranchHash(branchName,'',function(err,newhash,forkedhash){
-                    if(!err && newhash){
-                        if(forkedhash){
-                            _project.setBranchHash(branchName,newhash,forkedhash,function(err){
-                                if(!err){
-                                    changeBranchState(_self.branchStates.SYNC);
+                if(_database){
+                    if(_project){
+                        _project.getBranchHash(branchName,'',function(err,newhash,forkedhash){
+                            if(!err && newhash){
+                                if(forkedhash){
+                                    _project.setBranchHash(branchName,newhash,forkedhash,function(err){
+                                        if(!err){
+                                            changeBranchState(_self.branchStates.SYNC);
+                                        }
+                                        callback(err);
+                                    });
+                                } else {
+                                    _project.setBranchHash(branchName,newhash,'',callback);
                                 }
+                            } else {
                                 callback(err);
-                            });
-                        } else {
-                            _project.setBranchHash(branchName,newhash,'',callback);
-                        }
+                            }
+                        });
                     } else {
-                        callback(err);
+                        callback(new Error('there is no open project!'));
                     }
-                });
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function commitAsync(params,callback){
-                var msg = params.message || '';
-                saveRoot(msg,callback);
+                if(_database){
+                    if(_project){
+                        var msg = params.message || '';
+                        saveRoot(msg,callback);
+                    } else {
+                        callback(new Error('there is no open project!'));
+                    }
+                } else {
+                    callback(new Error('there is no open database connection!'));
+                }
             }
             function connectToDatabaseAsync(options,callback){
                 options = options || {};
