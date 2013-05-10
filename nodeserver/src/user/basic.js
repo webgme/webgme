@@ -1146,8 +1146,8 @@ define([
                 options.project = options.project || null;
                 if(_database){
                     //we have to close the current
-                    _database.closeDatabase();
                     closeOpenedProject(function(){});
+                    _database.closeDatabase(function(){});
                     _networkStatus = "";
                     changeBranchState(null);
                 }
