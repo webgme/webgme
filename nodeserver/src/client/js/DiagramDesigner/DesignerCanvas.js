@@ -946,7 +946,6 @@ define(['logManager',
 
     /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
 
-
     /************** WAITPROGRESS *********************/
     DesignerCanvas.prototype.showPogressbar = function () {
         this.__loader.start();

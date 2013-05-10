@@ -1,0 +1,20 @@
+.ui-layout-pane { /* all 'panes' */
+    padding:	0;
+}
+
+.ui-layout-north,
+.ui-layout-south {
+    border: 0;
+}
+
+.ui-layout-south {
+    overflow: visible;  /*enable the popups to be shown*/
+}
+
+.ui-layout-center {
+    overflow: hidden;   /*prevent center panel scrollbars if panel header is too wide, to many controls*/
+}
+
+.ui-layout-east {
+    overflow: hidden;   /*no scroll in right panel*/
+}

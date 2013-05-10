@@ -1,10 +1,13 @@
 "use strict";
 
 var __WebGME__DEBUG = true;
-var _webGME_jquery_ver = '1.8.2';
-var _webGME_jqueryui_ver = '1.8.23';
+var _webGME_jquery_ver = '2.0.0';
+var _webGME_jqueryui_ver = '1.10.3';
 
-// set the baseUrl for module lookup to '/lib' folder
+//touch device detection
+var SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
+
+// configure require path and modules
 require.config({
     baseUrl: "/",
     paths: {
@@ -44,7 +47,7 @@ require.config({
         'jquery-ui-iPad': ['jquery','jquery-ui'],
         'bootstrap': ['jquery'],
         'clientUtil': ['jquery'],
-        'jquery-WebGME': ['jquery'],
+        'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
         'WebGME': ['jquery-WebGME']

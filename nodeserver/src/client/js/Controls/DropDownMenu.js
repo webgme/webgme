@@ -13,6 +13,10 @@ define(['jquery'], function () {
         //TODO: override this to get notified about new value selection
     };
 
+    DropDownMenu.prototype.onDropDownMenuOpen = function () {
+        //TODO: override this to get notified when the menu opens
+    };
+
     DropDownMenu.prototype.appendTo = function (el) {
         this._el.appendTo(el);
     };
@@ -25,8 +29,8 @@ define(['jquery'], function () {
        this._addItem(item);
     };
 
-    DropDownMenu.prototype.clear = function () {
-        this._clear();
+    DropDownMenu.prototype.clear = function (noDetach) {
+        this._clear(noDetach);
     };
 
     /****************** PRIVATE API *************************/
@@ -82,10 +86,16 @@ define(['jquery'], function () {
             self._btnDropDownToggle.trigger('click');
             event.stopPropagation();
         });
+
+        this._btnDropDownToggle.on('click', '', function () {
+            self.onDropDownMenuOpen();
+        });
     };
 
     DropDownMenu.prototype._addItem = function (item) {
-        var li = $('<li data-val="' + item.value +'"><a href="#">' + item.text + '</a></li>');
+        var li = $('<li><a href="#">' + item.text + '</a></li>');
+
+        li.data('val',item.value);
 
         if (this._sorted === false) {
             this._ul.append(li);
@@ -114,11 +124,14 @@ define(['jquery'], function () {
         }
     };
 
-    DropDownMenu.prototype._clear = function () {
-        this._el.removeClass('open');
+    DropDownMenu.prototype._clear = function (noDetach) {
         this._ul.empty();
-        this._ul.detach();
-        this._btnDropDownToggle.detach();
+
+        if (noDetach !== true) {
+            this._ul.detach();
+            this._el.removeClass('open');
+            this._btnDropDownToggle.detach();
+        }
     };
 
     DropDownMenu.prototype._onItemClick = function (li) {
@@ -163,15 +176,21 @@ define(['jquery'], function () {
     ];
 
     DropDownMenu.prototype.setColor = function (color) {
+        this.removeColor();
+
+        if (this._colorClasses.hasOwnProperty(color)) {
+            this._btnSelected.addClass(this._colorClasses[color]);
+            this._btnDropDownToggle.addClass(this._colorClasses[color]);
+        }
+    };
+
+    DropDownMenu.prototype.removeColor = function () {
         var len = this._colorClasses.length;
 
         while (len--) {
             this._btnSelected.removeClass(this._colorClasses[len]);
             this._btnDropDownToggle.removeClass(this._colorClasses[len]);
         }
-
-        this._btnSelected.addClass(this._colorClasses[color]);
-        this._btnDropDownToggle.addClass(this._colorClasses[color]);
     };
 
     return DropDownMenu;

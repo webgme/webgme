@@ -35,6 +35,8 @@ $loader-container-circle-i-top: 0 - $loader-container-circle-o-shadow-size/3 - $
   position: absolute;
   width: $loader-container-size;
   height: $loader-container-size;
+  line-height: $loader-container-size;
+  text-align: center;
   border-radius: 10px;
   top: 50%;
   left: 50%;

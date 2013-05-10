@@ -1,4 +1,17 @@
-/************** OVEERIDE BOOTSTRAP *******************/
+/* WebGME's Twitter Bootstrap stylesheet extension */
+
+/*** ICON extension ***/
+.icon-white.inverse-on-hover:hover {
+    background-image: url("../img/glyphicons-halflings.png");
+}
+
+[class^="icon-"]:not(.icon-white).inverse-on-hover:hover,
+[class*=" icon-"]:not(.icon-white).inverse-on-hover:hover {
+    background-image: url("../img/glyphicons-halflings-white.png");
+}
+
+
+/*** POPOVER extension ***/
 .popover {
     width: auto;
     max-width: 500px;
@@ -10,7 +23,7 @@
 }
 
 
-/************ MODAL DIALOG **************************/
+/*** MODAL extension ***/
 /* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
 .modal {
     -webkit-box-shadow: none;
@@ -18,7 +31,8 @@
     box-shadow: none;
 }
 
-/************ BUTTON DIALOG **************************/
+
+/*** BUTTON extension ***/
 /* DISABLE DROP-SHADOW because it slows down scrolling :(  - especially on tablet*/
 .btn {
     -webkit-box-shadow: none;
@@ -26,110 +40,16 @@
     box-shadow: none;
 }
 
-/**************** NAVBAR *********************/
 
-.navbar-fixed-top .navbar-inner,
-.navbar-fixed-bottom .navbar-inner {
-    padding-right: 10px;
-    padding-left: 10px;
-    -webkit-border-radius: 0;
-    -moz-border-radius: 0;
-    border-radius: 0;
-}
-
+/*** NAVBAR extension ***/
 .navbar-fixed-bottom .navbar-inner {
     height: 26px;
     min-height: 26px;
 }
 
-/******************* tooltiplabel - BASED ON TOOLTIP BUT DOES NOT HAVE DIFFERENT Z-INDEX *****************/
 
-.tooltiplabel {
-    position: absolute;
-    display: block;
-    padding: 5px;
-    font-size: 11px;
-    opacity: 0;
-    filter: alpha(opacity=0);
-    visibility: visible;
-}
-
-.tooltiplabel.in {
-    opacity: 0.8;
-    filter: alpha(opacity=80);
-}
-
-.tooltiplabel.top {
-    margin-top: -3px;
-}
-
-.tooltiplabel.right {
-    margin-left: 3px;
-}
-
-.tooltiplabel.bottom {
-    margin-top: 3px;
-}
-
-.tooltiplabel.left {
-    margin-left: -3px;
-}
-
-.tooltiplabel-inner {
-    max-width: 200px;
-    /*padding: 3px 8px;*/
-    padding: 0px 5px;
-    color: #ffffff;
-    text-align: center;
-    text-decoration: none;
-    background-color: #000000;
-    -webkit-border-radius: 4px;
-    -moz-border-radius: 4px;
-    border-radius: 4px;
-}
-
-.tooltiplabel-arrow {
-    position: absolute;
-    width: 0;
-    height: 0;
-    border-color: transparent;
-    border-style: solid;
-}
-
-.tooltiplabel.top .tooltiplabel-arrow {
-    bottom: 0;
-    left: 50%;
-    margin-left: -5px;
-    border-top-color: #000000;
-    border-width: 5px 5px 0;
-}
-
-.tooltiplabel.right .tooltiplabel-arrow {
-    top: 50%;
-    left: 0;
-    margin-top: -5px;
-    border-right-color: #000000;
-    border-width: 5px 5px 5px 0;
-}
-
-.tooltiplabel.left .tooltiplabel-arrow {
-    top: 50%;
-    right: 0;
-    margin-top: -5px;
-    border-left-color: #000000;
-    border-width: 5px 0 5px 5px;
-}
-
-.tooltiplabel.bottom .tooltiplabel-arrow {
-    top: 0;
-    left: 50%;
-    margin-left: -5px;
-    border-bottom-color: #000000;
-    border-width: 0 5px 5px;
-}
-
-/******************* MICRO BUTTON DEFINITION *******************/
-
+/*** BTN-MICRO extension ***/
+/*** micro size button ***/
 .btn-micro {
     padding: 0 6px;
     font-size: 10.5px;
@@ -168,7 +88,8 @@ input[type="submit"].btn.btn-micro {
     top: 0;
 }
 
-/******************* GRAY BUTTON DEFINITION *******************/
+
+/*** DARK GRAY COLORED BUTTON extension ***/
 .btn-gray.active
 {
     color: rgba(255, 255, 255, 0.75);
@@ -215,21 +136,7 @@ input[type="submit"].btn.btn-micro {
     border-bottom-color: #ffffff;
 }
 
-/**************** additional icons */
-.icon-progress {
-    background-image: url("../img/progress.gif");
-    width: 16px;
-    height: 16px;
-    margin-top: 0px;
-    background-position: 0px 0px;
-}
-
-/************** pointer on hover ******************/
-.pointer:hover {
-    cursor: pointer;
-}
-
-/************ INPUT ****************/
+/*** INPUT extension ***/
 input.input-mini {
     height: 12px;
     line-height: 12px;

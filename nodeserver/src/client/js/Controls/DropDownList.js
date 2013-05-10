@@ -19,10 +19,6 @@ define(['jquery',
         this._selectedValue = undefined;
         this._undefinedValueText = DEFAULT_UNDEFINED_TEXT;
         this.setTitle(this._undefinedValueText);
-
-        this._btnDropDownToggle.on('click', '', function (/*event*/) {
-            self.dropDownMenuOpen();
-        });
     };
 
     //inherit DropDownMenu's stuff
@@ -38,10 +34,6 @@ define(['jquery',
     };
 
     DropDownList.prototype.selectedValueChanged = function (value) {
-        //TODO: override this to get notified about new value selection
-    };
-
-    DropDownList.prototype.dropDownMenuOpen = function () {
         //TODO: override this to get notified about new value selection
     };
 

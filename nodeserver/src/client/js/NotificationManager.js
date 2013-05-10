@@ -9,8 +9,7 @@
  * -------- NOTIFICATIONMANAGER -------
  */
 
-define(['lib/jquery/jquery.jgrowl.min',
-        'lib/jquery/jquery.gritter.min',
+define(['lib/jquery/jquery.gritter.min',
         'clientUtil'], function (myjgrowl, mygritter, util) {
 
     var activeNotifications = {};

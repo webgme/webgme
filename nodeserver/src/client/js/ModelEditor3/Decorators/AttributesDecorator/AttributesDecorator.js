@@ -347,5 +347,34 @@ define(['logManager',
         }
     };
 
+    AttributesDecorator.prototype.getConnectionAreas = function (id) {
+        var result = [],
+            edge = 10;
+
+        //by default return the bounding box edges midpoints
+
+        if (id === undefined || id === this.hostDesignerItem.id) {
+            //top left
+            result.push( {"id": "0",
+                "x": edge,
+                "y": 0,
+                "w": this.hostDesignerItem.width - 2 * edge,
+                "h": 0,
+                "orientation": "N",
+                "len": 10} );
+
+            result.push( {"id": "1",
+                "x": edge,
+                "y": this.hostDesignerItem.height,
+                "w": this.hostDesignerItem.width - 2 * edge,
+                "h": 0,
+                "orientation": "S",
+                "len": 10} );
+        }
+
+
+        return result;
+    };
+
     return AttributesDecorator;
 });

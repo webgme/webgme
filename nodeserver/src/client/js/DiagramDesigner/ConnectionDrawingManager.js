@@ -73,14 +73,18 @@ define(['logManager',
 
     ConnectionDrawingManager.prototype._detachConnectionSourcePointHandler = function (elements) {
         if (elements && elements.length > 0) {
-            elements.draggable('destroy');
+            if (elements.hasClass('ui-draggable')) {
+                elements.draggable('destroy');
+            }
             elements.off(MOUSEDOWN);
         }
     };
 
     ConnectionDrawingManager.prototype._detachConnectionEndPointHandler = function (elements) {
         if (elements && elements.length > 0) {
-            elements.droppable('destroy');
+            if (elements.hasClass('ui-droppable')) {
+                elements.droppable('destroy');
+            }
             elements.off(MOUSEENTER).off(MOUSELEAVE).off(MOUSEUP);
             elements.removeClass(HOVER_CLASS);
         }
@@ -95,7 +99,9 @@ define(['logManager',
                 event.stopPropagation();
                 event.preventDefault();
             });
-            elements.draggable('destroy');
+            if (elements.hasClass('ui-draggable')) {
+                elements.draggable('destroy');
+            }
             elements.draggable({
                 helper: function () {
                     return $("<div class='draw-connection-drag-helper'></div>");
@@ -351,7 +357,9 @@ define(['logManager',
             event.preventDefault();
         });
 
-        srcEl.draggable('destroy');
+        if (srcEl.hasClass('ui-draggable')) {
+            srcEl.draggable('destroy');
+        }
         srcEl.draggable({
             helper: function () {
                 return $("<div class='draw-connection-drag-helper'></div>");
@@ -383,7 +391,9 @@ define(['logManager',
             }
         });
 
-        dstEl.draggable('destroy');
+        if (dstEl.hasClass('ui-draggable')) {
+            dstEl.draggable('destroy');
+        }
         dstEl.draggable({
             helper: function () {
                 return $("<div class='draw-connection-drag-helper'></div>");
