@@ -1,0 +1,126 @@
+$panel-header-background-color: #EFEFEF;
+$panel-body-background-color: #FFFFFF;
+$panel-body-background-color-read-only: #FBFBFB;
+
+$sidepane-panel-background-color: #F5F5F5;
+$sidepane-panel-header-background-color: #F5F5F5;
+$sidepane-panel-body-background-color: #F5F5F5;
+$sidepane-panel-body-background-color-read-only: #FBFBFB;
+
+$sidepane-panel-border-color: #E9E9E9;
+$sidepane-panel-border-radius: 4px;
+
+.panel-base-wh {
+  box-sizing: border-box;
+
+  .panel-header {
+    padding: 5px;
+    height: 30px;
+    background-color: $panel-header-background-color;
+    /*overflow: visible;
+    overflow-x: hidden;*/
+    white-space: nowrap;
+
+    .ro-icon {
+      display: none;
+      margin-right: 2px;
+    }
+
+    .panel-header-title {
+      font-size: 20px;
+      font-weight: bold;
+      display: inline-block;
+      margin-right: 10px;
+      margin-left: 10px;
+    }
+
+    .panel-header-toolbar {
+      .toolbar-group {
+        margin-left: 10px;
+      }
+
+      select,
+      textarea,
+      input,
+      .uneditable-input {
+        margin-bottom: 0px;
+      }
+
+      .input-append,
+      .input-prepend {
+        margin-bottom: 0px;
+      }
+
+      li {
+        div.iCheckBox {
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+
+  .panel-body {
+    position: relative;
+    overflow: auto;
+    background-color: $panel-body-background-color;
+  }
+
+  &.read-only {
+    .panel-header {
+      .ro-icon {
+        display: inline-block;
+      }
+    }
+
+    .panel-body {
+      background-color: $panel-body-background-color-read-only;
+    }
+  }
+}
+
+
+
+
+.side-panel {
+
+  .panel-base-wh {
+    position: relative;
+    padding: 0px;
+    margin-bottom: 2px;
+    border: 1px solid $sidepane-panel-border-color;
+    -webkit-border-radius: $sidepane-panel-border-radius;
+    -moz-border-radius: $sidepane-panel-border-radius;
+    border-radius: $sidepane-panel-border-radius;
+    background-color: $sidepane-panel-background-color;
+
+    .panel-header {
+      padding: 3px;
+      height: 18px;
+      background-color: $sidepane-panel-header-background-color;
+
+      .panel-header-title {
+        font-size: 11px;
+        line-height: 18px;
+        color: #999;
+        text-transform: uppercase;
+        margin-right: 0;
+        margin-left: 0;
+      }
+
+      .panel-header-toolbar {
+        display: block;
+     }
+    }
+
+    .panel-body {
+      background-color: $sidepane-panel-body-background-color;
+      padding: 3px;
+    }
+
+    &.read-only {
+      .panel-body {
+        background-color: $sidepane-panel-body-background-color-read-only;
+      }
+    }
+  }
+}

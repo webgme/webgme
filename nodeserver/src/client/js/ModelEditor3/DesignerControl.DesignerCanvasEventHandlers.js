@@ -478,7 +478,7 @@ define(['logManager',
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
-        if (gmeIDs.length === 0) {
+        if (gmeIDs.length === 0 && this.currentNodeInfo.id) {
             gmeIDs.push(this.currentNodeInfo.id);
         }
 

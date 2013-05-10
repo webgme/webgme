@@ -13,7 +13,7 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         /*
          * DOM element ID to use for all-over-the-screen-draggable-parent
          */
-        ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID : 'contentContainer'
+        ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID : 'body'
     });
 
 
