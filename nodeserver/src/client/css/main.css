@@ -20,27 +20,27 @@ html,body {
     min-width:800px;
     min-height:480px;
 
-    -khtml-user-select:none;
     -moz-user-select:-moz-none;
     -webkit-user-select:none;
     -o-user-select:none;
     user-select:none;
+    -ms-user-select:none;
 }
 
 .user-select-off {
-    -khtml-user-select:none;
     -moz-user-select:-moz-none;
     -webkit-user-select:none;
     -o-user-select:none;
     user-select:none;
+    -ms-user-select:none;
 }
 
 .user-select-on {
-    -khtml-user-select: all;
     -moz-user-select:-moz-all;
     -webkit-user-select:all;
     -o-user-select:all;
     user-select:all;
+    -ms-user-select:element;
 }
 
 input[type=text],
@@ -48,10 +48,10 @@ input[type=password],
 input, /*stupid jsTree does not specify type for input (renaming node)*/
 textarea{
     -webkit-user-select:text;
-    -khtml-user-select:text;
     -moz-user-select:text;
     -o-user-select:text;
     user-select:text;
+    -ms-user-select:text;
 }
 
 div {
