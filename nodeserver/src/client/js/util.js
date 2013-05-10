@@ -27,18 +27,6 @@ define([], function () {
             return result;
         },
 
-        /*
-         * Loads a CSS file dinamically
-         */
-        loadCSS : function (filePath) {
-            var css	= document.createElement('link');
-            css.rel		= 'stylesheet';
-            css.type	= 'text/css';
-            css.media	= 'all';
-            css.href	= filePath;
-            document.getElementsByTagName("head")[0].appendChild(css);
-        },
-
         flattenObject: function (obj) {
             var result = {},
                 discover;
