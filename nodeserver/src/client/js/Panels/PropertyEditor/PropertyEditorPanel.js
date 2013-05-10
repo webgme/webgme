@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
-    'js/PropertyGrid/PropertyGrid',
+    'js/Controls/PropertyGrid/PropertyGrid',
     './PropertyEditorPanelController',
     'css!/css/Panels/PropertyEditor/PropertyEditorPanel'], function (PanelBaseWithHeader,
                                                                      PropertyGrid,
@@ -41,7 +41,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.propertyGrid.registerWidgetForType('boolean', 'iCheckBox');
         this.propertyGrid.setOrdered(true);
 
-        this.propertyEditorControl = new PropertyEditorPanelController(this._client, this);
+        //attach control to the PropertyGrid
+        new PropertyEditorPanelController(this._client, this.propertyGrid);
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

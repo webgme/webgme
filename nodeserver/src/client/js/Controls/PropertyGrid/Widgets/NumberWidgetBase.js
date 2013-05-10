@@ -1,18 +1,9 @@
 "use strict";
 
 define([
-    'js/PropertyGrid/Widgets/WidgetBase'],
+    'js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
-  /**
-   * @class Represents a given property of an object that is a number.
-   *
-   * @param {Number} [params.min] Minimum allowed value
-   * @param {Number} [params.max] Maximum allowed value
-   * @param {Number} [params.step] Increment by which to change value
-   *
-   * @member dat.controllers
-   */
         var NumberWidgetBase;
 
         NumberWidgetBase = function (propertyDesc) {

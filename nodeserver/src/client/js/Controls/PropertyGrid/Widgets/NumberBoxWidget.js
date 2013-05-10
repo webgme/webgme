@@ -1,19 +1,7 @@
 "use strict";
 
-define(['js/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
+define(['js/Controls/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase) {
 
-  /**
-   * @class Represents a given property of an object that is a number and
-   * provides an input element with which to manipulate it.
-   *
-   * @param {Object} object The object to be manipulated
-   * @param {string} property The name of the property to be manipulated
-   * @param {Object} [params] Optional parameters
-   * @param {Number} [params.min] Minimum allowed value
-   * @param {Number} [params.max] Maximum allowed value
-   * @param {Number} [params.step] Increment by which to change value
-   *
-   */
     var NumberBoxWidget;
 
     NumberBoxWidget = function (propertyDesc) {
@@ -36,25 +24,6 @@ define(['js/PropertyGrid/Widgets/NumberWidgetBase'], function (NumberWidgetBase)
         this.__input.on('blur', function (e) {
             self._onBlur();
         });
-        /*this.__input.on('mousedown', function (e) {
-            var prev_y = e.clientY,
-                onMouseDrag,
-                onMouseUp;
-
-            onMouseDrag = function (e) {
-                var diff = prev_y - e.clientY;
-                self.setValue(self.getValue() + diff * self.__impliedStep);
-                prev_y = e.clientY;
-            };
-
-            onMouseUp = function (e) {
-                $(window).off('mousemove', onMouseDrag);
-                $(window).off('mouseup', onMouseUp);
-            };
-
-            $(window).on('mousemove', onMouseDrag);
-            $(window).on('mouseup', onMouseUp);
-        });*/
 
         this.__input.on('keydown', function (e) {
               // When pressing entire, you can be as precise as you want.

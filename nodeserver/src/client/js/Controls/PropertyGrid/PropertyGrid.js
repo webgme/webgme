@@ -1,13 +1,15 @@
 "use strict";
 
 define(['logManager',
-    'js/PropertyGrid/PropertyGridPart'], function (logManager,
+    'js/Controls/PropertyGrid/PropertyGridPart'], function (logManager,
                                                    PropertyGridPart) {
 
     var PropertyGrid;
 
     PropertyGrid = function () {
         var self = this;
+
+        this._logger = logManager.create("PropertyGrid");
 
         this.$el = $('<div/>', { "class" : "property-list" });
 
@@ -25,20 +27,19 @@ define(['logManager',
 
         this._gui = new PropertyGridPart({"el": this.$el});
         this._gui.onChange(function (args) {
-            self._logger.warning("onChange: " + JSON.stringify(args));
+            self._logger.debug("onChange: " + JSON.stringify(args));
             if (self.__onChange) {
                 self.__onChange.call(self, args);
             }
         });
 
         this._gui.onFinishChange(function (args) {
-            self._logger.warning("onFinishChange: " + JSON.stringify(args));
+            self._logger.debug("onFinishChange: " + JSON.stringify(args));
             if (self.__onFinishChange) {
                 self.__onFinishChange.call(self, args);
             }
         });
 
-        this._logger = logManager.create("PropertyGrid");
         this._logger.debug("Created");
     };
 

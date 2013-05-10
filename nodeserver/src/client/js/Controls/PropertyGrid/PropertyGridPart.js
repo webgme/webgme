@@ -1,11 +1,7 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
-    'js/PropertyGrid/WidgetManager',
-    'css!/css/PropertyGrid/PropertyGridPart'], function (logManager,
-                                                               util,
-                                                               WidgetManager) {
+define(['js/Controls/PropertyGrid/PropertyGridWidgetManager',
+        'css!/css/Controls/PropertyGrid/PropertyGridPart'], function (PropertyGridWidgetManager) {
 
     /** Outer-most className for GUI's */
     var PropertyGridPart,
@@ -41,7 +37,7 @@ define(['logManager',
 
         // Are we a root level GUI?
         if (params.parent === undefined) {
-            this._widgetManager = new WidgetManager();
+            this._widgetManager = new PropertyGridWidgetManager();
             this._containerElement.append(this._el);
             // Oh, you're a nested GUI!
         } else {
