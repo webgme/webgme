@@ -91,8 +91,12 @@ define(['logManager',
         this._skinParts.$attributesContainer = this.$el.find(".attributes");
         this._skinParts.$addAttributeContainer = this.$el.find(".add-new");
 
-        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
-            this._skinParts.$addAttributeContainer.detach();
+        if (this.renderedInPartBrowser === true) {
+            this._skinParts.$addAttributeContainer.remove();
+        } else {
+            if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
+                this._skinParts.$addAttributeContainer.detach();
+            }
         }
 
         /* FILL WITH DATA */

@@ -5,14 +5,13 @@ $partbrowser-li-margin-top: 15px;
     overflow-x: hidden;
     overflow-y: hidden;
 
-
-  ul {
+  > ul {
     list-style-type: none;
     margin: 0;
     white-space: nowrap;
     padding: 0;
 
-    li {
+    > li {
       list-style-type: none;
       padding: 0px;
       margin: $partbrowser-li-margin-top 10px 5px 10px;

@@ -133,6 +133,9 @@ define(['logManager',
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
         if (this._currentNodeId === gmeID) {
             this._refreshParts(gmeID);
+        } else if (this._displayedParts.indexOf(gmeID) !== -1) {
+            //update on one of the parts
+            this._refreshOnePart(gmeID);
         }
     };
 
@@ -151,8 +154,7 @@ define(['logManager',
             idx,
             id,
             requiredDecorators = [],
-            diffInserted,
-            diffUpdated;
+            diffInserted;
 
         if (node) {
 
@@ -164,6 +166,9 @@ define(['logManager',
                 this._partBrowserView.removePart(id);
                 idx = this._displayedParts.indexOf(id);
                 this._displayedParts.splice(idx, 1);
+
+                //remove it from the territory
+                delete this._selfPatterns[id];
             }
 
             //check the added ones
@@ -172,16 +177,19 @@ define(['logManager',
             while (len--) {
                 id = diffInserted[len];
                 requiredDecorators.pushUnique(this._getObjectDescriptor(id).decorator);
+
+                //add to the territory
+                this._selfPatterns[id] = { "children": 0 };
             }
 
-            //check the updated ones (decorator update, name change, etc????)
-            //...
-            diffUpdated = [];
+            //update the territory
+            this._client.updateTerritory(this._territoryId, this._selfPatterns);
 
+            //download the required decorators
             this._downloadDecorators(requiredDecorators, { "fn": this._refreshInsertedUpdatedParts,
                                                            "context": this,
                                                            "data": { "inserted": diffInserted,
-                                                                     "updated": diffUpdated }});
+                                                                     "updated": [] }});
         }
     };
 
@@ -213,8 +221,26 @@ define(['logManager',
         while (len--) {
             id = updated[len];
             desc = this._getObjectDescriptor(id);
-            //this._partBrowserView.updatePart(id, desc);
-            //TODO: fix here , handle update correctly
+
+            decClass = this._decoratorClasses[desc.decorator];
+
+            desc.decoratorClass = decClass;
+            desc.control = this;
+            desc.metaInfo = {};
+            desc.metaInfo[CONSTANTS.GME_ID] = id;
+
+            this._partBrowserView.updatePart(id, desc);
+        }
+    };
+
+    PartBrowserControl.prototype._refreshOnePart = function (gmeID) {
+        var decorator = this._getObjectDescriptor(gmeID).decorator;
+
+        if (decorator !== null && decorator !== undefined) {
+            this._downloadDecorators([decorator], { "fn": this._refreshInsertedUpdatedParts,
+                "context": this,
+                "data": { "inserted": [],
+                    "updated": [gmeID] }});
         }
     };
 

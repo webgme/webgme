@@ -37,14 +37,14 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(PartBrowserPanel.prototype, __parent__.prototype);
 
     PartBrowserPanel.prototype._initialize = function () {
-        var self = this;
-
         //set Widget title
         this.setTitle("Part Browser");
 
         this.$el.addClass("partBrowser");
 
         this._list = $("<ul/>");
+
+        this._parts = {};
 
         this.$el.append(this._list);
     };
@@ -82,25 +82,32 @@ define(['js/PanelBase/PanelBaseWithHeader',
             decoratorInstance.onRenderSetLayoutInfo();
 
             this._makeDraggable({ "el": partContainerDiv,
-                "partDesc": partDesc });
+                "partDesc": partDesc,
+                "partId": partId});
+
+            this._parts[partId] = {"decoratorInstance": decoratorInstance,
+                                   "decoratorClass": partDesc.decoratorClass} ;
         }
     };
 
     PartBrowserPanel.prototype._makeDraggable = function (params) {
         var el = params.el,
-            DecoratorClass = params.partDesc.decoratorClass,
-            self = this;
+            self = this,
+            partId = params.partId;
 
         //hook up draggable
         el.draggable({
             helper: function () {
                 var draggedEl = self.$_DOMBase.clone(),
+                    DecoratorClass = self._parts[partId].decoratorClass,
+                    existingDecoratorInstance =  self._parts[partId].decoratorInstance,
                     decoratorInstance,
-                    partContainerLi = $("<li/>");
+                    partContainerLi = $("<li/>"),
+                    metaInfo = existingDecoratorInstance.getMetaInfo();
 
                 decoratorInstance = new DecoratorClass();
-                decoratorInstance.setControl(params.partDesc.control);
-                decoratorInstance.setMetaInfo(params.partDesc.metaInfo);
+                decoratorInstance.setControl(existingDecoratorInstance.getControl());
+                decoratorInstance.setMetaInfo(metaInfo);
 
                 //render the part inside 'draggedEl'
                 decoratorInstance.on_addToPartBrowser();
@@ -116,7 +123,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
                 partContainerLi.remove();
 
                 //set it up with GME related info
-                draggedEl.data("metaInfo", params.partDesc.metaInfo);
+                draggedEl.data("metaInfo", metaInfo);
 
                 return draggedEl;
             },
@@ -137,12 +144,51 @@ define(['js/PanelBase/PanelBaseWithHeader',
             partContainer = partContainer.parent(); //this is the <li> contains the part
             partContainer.remove();
             partContainer.empty();
+
+            delete this._parts[partId];
         }
     };
 
     PartBrowserPanel.prototype.updatePart = function (partId, partDesc) {
-        //TODO: NOT YET IMPLEMENTED
-        this.logger.warning("PartBrowserView.prototype.updatePart NOT YET IMPLEMENTED!!!");
+        var partDecoratorInstance = this._parts[partId].decoratorInstance,
+            DecoratorClass = partDesc.decoratorClass,
+            partContainerDiv = this._list.find("div[id='" + partId + "']");
+
+        if (partDecoratorInstance) {
+            if (partDesc.decoratorClass && partDecoratorInstance.DECORATORID !== partDesc.decoratorClass.prototype.DECORATORID) {
+
+                this.logger.debug("decorator update: '" + partDecoratorInstance.DECORATORID + "' --> '" + partDesc.decoratorClass.prototype.DECORATORID + "'...");
+
+                var oldControl = partDecoratorInstance.getControl();
+                var oldMetaInfo = partDecoratorInstance.getMetaInfo();
+
+                //remove old one
+                partDecoratorInstance.$el.remove();
+                partDecoratorInstance.destroy();
+
+                //instantiate new one
+                partDecoratorInstance = new DecoratorClass();
+                partDecoratorInstance.setControl(oldControl);
+                partDecoratorInstance.setMetaInfo(oldMetaInfo);
+
+                //attach new one
+                partDecoratorInstance.on_addToPartBrowser();
+                partContainerDiv.append(partDecoratorInstance.$el);
+
+                partDecoratorInstance.onRenderGetLayoutInfo();
+                partDecoratorInstance.onRenderSetLayoutInfo();
+
+                //update in partList
+                this._parts[partId].decoratorInstance = partDecoratorInstance;
+                this._parts[partId].decoratorClass = partDesc.decoratorClass;
+
+                this.logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
+            } else {
+                //if decorator instance not changed
+                //let the decorator instance know about the update
+                partDecoratorInstance.update();
+            }
+        }
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
@@ -151,8 +197,11 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //apply parent's onReadOnlyChanged
         __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
-        //TODO: NOT YET IMPLEMENTED
-        this.logger.warning("PartBrowserView.prototype.setReadOnly NOT YET IMPLEMENTED!!!");
+        if (isReadOnly === true) {
+            this._list.find('.' + PART_CLASS).draggable('disable');
+        } else {
+            this._list.find('.' + PART_CLASS).draggable('enable');
+        }
     };
 
     return PartBrowserPanel;

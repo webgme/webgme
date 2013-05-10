@@ -2,18 +2,18 @@
   text-align: center;
   overflow-x: hidden;
   overflow-y: hidden; }
-  .partBrowser ul {
+  .partBrowser > ul {
     list-style-type: none;
     margin: 0;
     white-space: nowrap;
     padding: 0; }
-    .partBrowser ul li {
+    .partBrowser > ul > li {
       list-style-type: none;
       padding: 0px;
       margin: 15px 10px 5px 10px;
       text-decoration: none;
       color: black;
       font-size: 10px; }
-      .partBrowser ul li div.part {
+      .partBrowser > ul > li div.part {
         display: inline-block;
         cursor: pointer; }
