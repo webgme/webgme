@@ -692,6 +692,28 @@ define([
                     callback(null);
                 }
             }
+            function completeNodes(core,nodes,callback){
+                var incompletes = [];
+                for(var i in nodes){
+                    if(nodes[i].incomplete){
+                        incompletes.push(nodes[i].node);
+                    }
+                }
+                var missing = incompletes.length;
+                if(missing>0){
+                    var error = null;
+                    for(i=0;i<incompletes.length;i++){
+                        completeNode(core,nodes,incompletes[i],function(err){
+                            error = error || err;
+                            if(--missing === 0){
+                                callback(error);
+                            }
+                        });
+                    }
+                } else {
+                    callback(null);
+                }
+            }
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getStringPath(node);
                 if(!nodesSoFar[path]){
@@ -755,31 +777,9 @@ define([
                         var missing = 0,
                             error = null;
                         _loadNodes[_core.getStringPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
-                        var completeNodes = function(){
-                            var incompletes = [];
-                            for(var i in _loadNodes){
-                                if(_loadNodes[i].incomplete){
-                                    incompletes.push(_loadNodes[i].node);
-                                }
-                            }
-                            var missing = incompletes.length;
-                            if(missing>0){
-                                var error = null;
-                                for(i=0;i<incompletes.length;i++){
-                                    completeNode(_core,_loadNodes,incompletes[i],function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            callback(error);
-                                        }
-                                    })
-                                }
-                            } else {
-                                callback(null);
-                            }
-                        };
                         var allLoaded = function(){
                             if(!error){
-                                completeNodes();
+                                completeNodes(_core,_loadNodes,callback);
                             } else {
                                 callback(error);
                             }
@@ -978,7 +978,7 @@ define([
                                 var branchArray = [];
                                 var error = null;
                                 var getBranchValues = function(name){
-                                    _project.getBranchHash(name,'',function(err,newhash,forked){
+                                    _project.getBranchHash(name,'#hack',function(err,newhash,forked){
                                         if(!err && newhash){
                                             var element = {name:name,commitId:newhash};
                                             if(forked){
@@ -1508,10 +1508,12 @@ define([
                     var missing = 0;
                     var error = null;
                     var allDone = function(){
-                        _users[guid].PATTERNS = patterns;
-                        if(!error){
-                            userEvents(guid,[]);
-                        }
+                        completeNodes(_core,_nodes,function(err){
+                            _users[guid].PATTERNS = patterns;
+                            if(!error && !err){
+                                userEvents(guid,[]);
+                            }
+                        });
                     };
                     for(var i in patterns){
                         missing++;
