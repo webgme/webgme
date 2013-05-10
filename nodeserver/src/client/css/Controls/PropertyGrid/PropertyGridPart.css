@@ -1,8 +1,8 @@
 .pgp {
-  color: #eeeeee;
+  color: #1a1a1a;
   font-family: "Helvetica", "Arial", "sans-serif";
   font-size: 11px;
-  background-color: #1a1a1a; }
+  background-color: #e8e8e8; }
   .pgp ul {
     list-style: none;
     margin: 0;
@@ -16,7 +16,7 @@
       transition: height 0.1s ease-out;
       /* Controller row, <li> */ }
       .pgp ul li:not(.folder) {
-        border-bottom: 1px solid #2c2c2c;
+        border-bottom: 1px solid #fafafa;
         height: 27px;
         line-height: 27px;
         overflow: hidden;
@@ -29,7 +29,7 @@
         border-left: 4px solid rgba(0, 0, 0, 0); }
       .pgp ul li.title {
         padding-left: 14px;
-        background: black url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 4px 10px no-repeat;
+        background: gainsboro url(data:image/gif;base64,R0lGODlhBQAFAPcAAAAAAAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBmmQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMzmTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPMADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZAGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lmAJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnMmZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wzAMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZmcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9mmf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////AP//M///Zv//mf//zP////X19QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAANgALAAAAAAFAAUAAAgQALEJHEgQgEGD2A4OBCAwIAA7) 4px 10px no-repeat;
         cursor: pointer;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         cursor: pointer;
@@ -79,21 +79,23 @@
             float: right;
             outline: none; }
           .pgp ul li.cr .c input[type=text]:not([disabled]) {
-            background: #303030; }
+            background: white; }
             .pgp ul li.cr .c input[type=text]:not([disabled]):hover {
-              background: #3c3c3c; }
+              background: white; }
             .pgp ul li.cr .c input[type=text]:not([disabled]):focus {
-              background: #494949;
-              color: #fff; }
+              background: white; }
+          .pgp ul li.cr .c div.iCheckBox {
+            margin-top: 5px; }
           .pgp ul li.cr .c select {
             margin-top: 2px;
             width: 100%;
             height: 23px;
             border: 0;
-            color: #FFFFFF;
-            padding: 3px; }
+            padding: 3px;
+            color: #1a1a1a;
+            font-size: 11px; }
           .pgp ul li.cr .c select:not([disabled]) {
-            background: #303030; }
+            background: white; }
     .pgp ul.closed li:not(.title),
     .pgp ul.closed ul li,
     .pgp ul.closed ul li > * {
@@ -101,4 +103,4 @@
       overflow: hidden;
       border: 0; }
     .pgp ul.closed li.title {
-      background-image: url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlGIWqMCbWAEAOw==); }
+      background-image: url(data:image/gif;base64,R0lGODlhBQAFAPcAAAAAAAAAMwAAZgAAmQAAzAAA/wAzAAAzMwAzZgAzmQAzzAAz/wBmAABmMwBmZgBmmQBmzABm/wCZAACZMwCZZgCZmQCZzACZ/wDMAADMMwDMZgDMmQDMzADM/wD/AAD/MwD/ZgD/mQD/zAD//zMAADMAMzMAZjMAmTMAzDMA/zMzADMzMzMzZjMzmTMzzDMz/zNmADNmMzNmZjNmmTNmzDNm/zOZADOZMzOZZjOZmTOZzDOZ/zPMADPMMzPMZjPMmTPMzDPM/zP/ADP/MzP/ZjP/mTP/zDP//2YAAGYAM2YAZmYAmWYAzGYA/2YzAGYzM2YzZmYzmWYzzGYz/2ZmAGZmM2ZmZmZmmWZmzGZm/2aZAGaZM2aZZmaZmWaZzGaZ/2bMAGbMM2bMZmbMmWbMzGbM/2b/AGb/M2b/Zmb/mWb/zGb//5kAAJkAM5kAZpkAmZkAzJkA/5kzAJkzM5kzZpkzmZkzzJkz/5lmAJlmM5lmZplmmZlmzJlm/5mZAJmZM5mZZpmZmZmZzJmZ/5nMAJnMM5nMZpnMmZnMzJnM/5n/AJn/M5n/Zpn/mZn/zJn//8wAAMwAM8wAZswAmcwAzMwA/8wzAMwzM8wzZswzmcwzzMwz/8xmAMxmM8xmZsxmmcxmzMxm/8yZAMyZM8yZZsyZmcyZzMyZ/8zMAMzMM8zMZszMmczMzMzM/8z/AMz/M8z/Zsz/mcz/zMz///8AAP8AM/8AZv8Amf8AzP8A//8zAP8zM/8zZv8zmf8zzP8z//9mAP9mM/9mZv9mmf9mzP9m//+ZAP+ZM/+ZZv+Zmf+ZzP+Z///MAP/MM//MZv/Mmf/MzP/M////AP//M///Zv//mf//zP////X19QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACH5BAEAANgALAAAAAAFAAUAAAgQALFhAyBQIACCBg8mLIgwIAA7); }

@@ -1,12 +1,12 @@
 "use strict";
 
 define([
-    'js/PropertyGrid/Widgets/StringWidget',
-    'js/PropertyGrid/Widgets/NumberBoxWidget',
-    'js/PropertyGrid/Widgets/BooleanWidget',
-    'js/PropertyGrid/Widgets/LabelWidget',
-    'js/PropertyGrid/Widgets/iCheckBoxWidget',
-    'js/PropertyGrid/Widgets/OptionWidget'],
+    'js/Controls/PropertyGrid/Widgets/StringWidget',
+    'js/Controls/PropertyGrid/Widgets/NumberBoxWidget',
+    'js/Controls/PropertyGrid/Widgets/BooleanWidget',
+    'js/Controls/PropertyGrid/Widgets/LabelWidget',
+    'js/Controls/PropertyGrid/Widgets/iCheckBoxWidget',
+    'js/Controls/PropertyGrid/Widgets/OptionWidget'],
     function (StringWidget,
               NumberBoxWidget,
               BooleanWidget,
@@ -14,13 +14,13 @@ define([
               iCheckBoxWidget,
               OptionWidget) {
 
-        var WidgetManager;
+        var PropertyGridWidgetManager;
 
-        WidgetManager = function () {
+        PropertyGridWidgetManager = function () {
             this._registeredWidgets = {};
         };
 
-        WidgetManager.prototype.getWidgetForProperty = function (propDesc) {
+        PropertyGridWidgetManager.prototype.getWidgetForProperty = function (propDesc) {
             var _type = propDesc.valueType || typeof propDesc.value,
                 _readOnly = propDesc.readOnly === true ?  true : false,
                 _isOption = _.isArray(propDesc.valueItems);
@@ -42,7 +42,7 @@ define([
             }
         };
 
-        WidgetManager.prototype.registerWidgetForType = function (type, widget) {
+        PropertyGridWidgetManager.prototype.registerWidgetForType = function (type, widget) {
             if (typeof  widget === 'string') {
                 switch (widget) {
                     case 'iCheckBox':
@@ -53,6 +53,6 @@ define([
             }
         };
 
-        return WidgetManager;
+        return PropertyGridWidgetManager;
 
     });

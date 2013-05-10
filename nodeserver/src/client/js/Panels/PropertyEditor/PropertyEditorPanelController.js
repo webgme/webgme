@@ -8,9 +8,9 @@ define(['logManager',
 
     var PropertyEditorController;
 
-    PropertyEditorController = function (myClient, myView) {
-        this._client = myClient;
-        this._widget = myView;
+    PropertyEditorController = function (client, propertyGrid) {
+        this._client = client;
+        this._propertyGrid = propertyGrid;
 
         this._initEventHandlers();
 
@@ -27,7 +27,7 @@ define(['logManager',
             });
         }
 
-        this._widget.propertyGrid.onFinishChange(function (args) {
+        this._propertyGrid.onFinishChange(function (args) {
             self._onPropertyChanged(args);
         });
     };
@@ -59,7 +59,7 @@ define(['logManager',
 
     PropertyEditorController.prototype._refreshPropertyList = function () {
         var propList = this._getCommonPropertiesForSelection(this._idList);
-        this._widget.propertyGrid.setPropertyList(propList);
+        this._propertyGrid.setPropertyList(propList);
     };
 
     PropertyEditorController.prototype._getCommonPropertiesForSelection = function (selectedObjIDs) {

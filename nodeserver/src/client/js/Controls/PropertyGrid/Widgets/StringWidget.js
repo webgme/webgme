@@ -1,6 +1,6 @@
 "use strict";
 
-define(['js/PropertyGrid/Widgets/WidgetBase'],
+define(['js/Controls/PropertyGrid/Widgets/WidgetBase'],
     function (WidgetBase) {
 
         var StringWidget;

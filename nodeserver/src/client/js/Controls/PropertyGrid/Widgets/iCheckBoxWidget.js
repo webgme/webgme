@@ -1,6 +1,6 @@
 "use strict";
 
-define(['js/PropertyGrid/Widgets/WidgetBase',
+define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
         'js/Controls/iCheckBox'],
     function (WidgetBase,
               iCheckBox) {
