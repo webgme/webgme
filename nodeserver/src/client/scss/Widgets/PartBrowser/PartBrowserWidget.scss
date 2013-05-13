@@ -1,6 +1,6 @@
-$partbrowser-li-margin-top: 15px;
+$part-browser-li-margin-top: 15px;
 
-.partBrowser {
+.part-browser {
     text-align: center;
     overflow-x: hidden;
     overflow-y: hidden;
@@ -14,7 +14,7 @@ $partbrowser-li-margin-top: 15px;
     > li {
       list-style-type: none;
       padding: 0px;
-      margin: $partbrowser-li-margin-top 10px 5px 10px;
+      margin: $part-browser-li-margin-top 10px 5px 10px;
       text-decoration: none;
       color: black;
       font-size: 10px;
