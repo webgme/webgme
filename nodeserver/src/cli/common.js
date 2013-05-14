@@ -6,14 +6,20 @@
 
 define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/core" ], function (ASSERT, Mongo, Cache, TASYNC, Core) {
 
-	function getParameters (option, argv) {
-		ASSERT(option.charAt(0) !== "-");
+	function getParameters (option) {
+		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
+
+		var i, j, argv = process.argv.slice(2);
+
+		if (option === null) {
+			for (i = 0; i < argv.length && argv[i].charAt(0) !== "-"; ++i) {
+			}
+			return argv.slice(0, i);
+		}
 
 		var option1 = "-" + option;
 		var option2 = "--" + option;
-		argv = argv || process.argv.slice(2);
 
-		var i, j;
 		for (i = 0; i < argv.length; ++i) {
 			if (argv[i] === option1 || argv[i] === option2) {
 				for (j = i + 1; j < argv.length && argv[j].charAt(0) !== "-"; ++j) {
@@ -29,7 +35,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 
 	var database;
 
-	function openDatabase (argv) {
+	function openDatabase () {
 		var database;
 
 		if (false) {
@@ -73,7 +79,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 
 	var project, core;
 
-	function openProject (argv) {
+	function openProject () {
 		ASSERT(database);
 
 		var params = getParameters("proj") || [];
