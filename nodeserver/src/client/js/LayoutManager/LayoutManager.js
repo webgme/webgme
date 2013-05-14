@@ -98,12 +98,17 @@ define(['logManager',
         }
     };
 
-    LayoutManager.prototype.getMainPanelContainer = function () {
-        if (this._currentLayout) {
-            return this._currentLayout.getMainPanelContainer();
-        }
+    LayoutManager.prototype.addPanel = function (name, panel, container) {
+        this._panels[name] = panel;
+        this._currentLayout.addToContainer(panel, 'main');
+        panel.afterAppend();
+    };
 
-        return undefined;
+    LayoutManager.prototype.removePanel = function (name) {
+        if (this._panels[name]) {
+            this._currentLayout.remove(this._panels[name]);
+            delete this._panels[name];
+        }
     };
 
     LayoutManager.prototype._startProgressBar = function () {

@@ -21,12 +21,6 @@ define(['jquery',
 
         //by default Panel is in EDIT mode
         this._isReadOnly = false;
-
-        //scroll position
-        this.scrollPos = {"left": 0,
-            "top": 0};
-
-        this.attachScrollHandler(options.fnOnScroll);
     };
 
     PanelBase.OPTIONS = { "CONTAINER_ELEMENT" : "containerElement",  //TODO:delete
@@ -58,20 +52,7 @@ define(['jquery',
     };
     /***** END OF --- SET READ-ONLY MODE *********/
 
-    PanelBase.prototype.attachScrollHandler = function (fnOnScroll) {
-        var self = this;
-
-        this.$el.on('scroll', function (event) {
-            self.scrollPos.left = self.$el.scrollLeft();
-            self.scrollPos.top = self.$el.scrollTop();
-
-            if (fnOnScroll) {
-                fnOnScroll(self.scrollPos);
-            }
-        });
-    };
-
-    PanelBase.prototype._size = function () {
+    PanelBase.prototype._getSize = function () {
         this.size = {"width": this.$el.outerWidth(true),
             "height": this.$el.outerHeight(true)};
     };
@@ -90,12 +71,14 @@ define(['jquery',
     };
 
     /* METHOD CALLED WHEN THE PARENT CONTAINER SIZE HAS CHANGED AND WIDGET SHOULD RESIZE ITSELF ACCORDINGLY */
-    PanelBase.prototype.parentContainerSizeChanged = function (newWidth, newHeight) {
-        this._size();
+    PanelBase.prototype.setSize = function (width, height) {
+        this._getSize();
+
+        this.onResize(this.size.width, this.size.height);
     };
 
-    PanelBase.prototype.setSize = function (width, height) {
-        this._size();
+    PanelBase.prototype.onResize = function (width, height) {
+        this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
     };
 
     PanelBase.prototype.afterAppend = function () {
@@ -103,7 +86,7 @@ define(['jquery',
         this.offset = this.$el.offset();
 
         //get panel's size
-        this._size();
+        this._getSize();
     };
 
     return PanelBase;

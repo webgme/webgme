@@ -29,16 +29,8 @@ define(['logManager',
         //initialize UI
         this._initialize();
 
-
-
-        this._widgetContainer = layoutManager.getMainPanelContainer();
-        if (!this._widgetContainer) {
-            this.logger.error("Invalid widgetContainer in params");
-            throw "Invalid widgetContainer in params";
-        }
-
         this._activeContoller = null;
-        this._activeWidget = null;
+        this._activePanel = null;
         this._activeVisualizer = "";
         this._currentNodeID = null;
         this._visualizers = {};
@@ -71,56 +63,49 @@ define(['logManager',
         this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         });
-
-        this._layoutManager._currentLayout.onCenterResize = function (w, h) {
-            self.widgetContainerSizeChanged(w, h);
-        };
     };
 
     VisualizerPanel.prototype._loadVisualizers = function () {
         var self = this;
 
         this.addRange(JSON.parse(VisualizersJSON), function () {
-            self.setActiveVisualizer('DesignerCanvas_Model');
+            self.setActiveVisualizer('ModelEditor');
         });
     };
 
     VisualizerPanel.prototype._setActiveVisualizer = function (visualizer) {
-        var WidgetClass,
+        var PanelClass,
             ControlClass;
 
         if (this._activeVisualizer !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
-
-            this._activeVisualizer = visualizer;
-            this._ul.find('> li').removeClass('active');
-            this._ul.find('> li[data-id="' + visualizer + '"]').addClass('active');
 
             //destroy current controller and visualizer
             if (this._activeContoller && this._activeContoller.destroy) {
                 this._activeContoller.destroy();
             }
-            if (this._activeWidget && this._activeWidget.destroy) {
-                this._activeWidget.destroy();
+            if (this._activePanel && this._activePanel.destroy) {
+                this._layoutManager.removePanel(this._activeVisualizer);
+                this._activePanel.destroy();
             }
 
-            /*clear any leftover style --> should not happen, all the widgets needs to clean up after themselves, but...*/
-            //this._widgetContainer.removeAttr("style").removeAttr("class");
+            this._activeVisualizer = visualizer;
+            this._ul.find('> li').removeClass('active');
+            this._ul.find('> li[data-id="' + visualizer + '"]').addClass('active');
 
             this._activeContoller = null;
-            this._activeWidget = null;
+            this._activePanel = null;
 
             if (this._visualizers[visualizer]) {
-                WidgetClass = this._visualizers[visualizer].widget;
-                if (WidgetClass) {
-                    var opts = {};
-                    opts[PanelBaseWithHeader.OPTIONS.CONTAINER_ELEMENT] = this._widgetContainer;
-                    this._activeWidget = new WidgetClass(opts);
+                PanelClass = this._visualizers[visualizer].panel;
+                if (PanelClass) {
+                    this._activePanel = new PanelClass(this._layoutManager, {'client': this._client});
+                    this._layoutManager.addPanel(visualizer, this._activePanel, 'main');
                 }
 
                 ControlClass = this._visualizers[visualizer].control;
                 if (ControlClass) {
                     this._activeContoller = new ControlClass({"client": this._client,
-                        "widget": this._activeWidget});
+                        "panel": this._activePanel});
                 }
 
                 if (this._currentNodeID) {
@@ -174,7 +159,7 @@ define(['logManager',
 
             this._ul.append(li);
 
-            if (menuDesc.widgetJS && menuDesc.controlJS) {
+            if (menuDesc.panel && menuDesc.control) {
 
                 loaderDiv = $("<div/>", { "class": "vis-loader"});
 
@@ -182,11 +167,11 @@ define(['logManager',
                 li.loader.start();
                 a.append(loaderDiv);
 
-                require([menuDesc.widgetJS,
-                    menuDesc.controlJS],
-                    function (widgetClass, controlClass) {
-                        self.logger.debug("downloaded: " + menuDesc.widgetJS + ", " + menuDesc.controlJS);
-                        self._visualizers[menuDesc.id] = {"widget": widgetClass,
+                require([menuDesc.panel,
+                    menuDesc.control],
+                    function (panelClass, controlClass) {
+                        self.logger.debug("downloaded: " + menuDesc.panel + ", " + menuDesc.control);
+                        self._visualizers[menuDesc.id] = {"panel": panelClass,
                             "control": controlClass};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
@@ -202,7 +187,7 @@ define(['logManager',
             } else {
                 a.append(' <i class="icon-warning-sign"></i>');
 
-                this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing widgetJS or controlJS");
+                this.logger.warning("The visualizer with the ID '" + menuDesc.id + "' is missing 'panel' or 'control'");
 
                 doCallBack();
             }
@@ -234,27 +219,11 @@ define(['logManager',
         this._setActiveVisualizer(visualizer);
     };
 
-    VisualizerPanel.prototype.widgetContainerSizeChanged = function (nW, nH) {
-        if (this._activeWidget && this._activeWidget.parentContainerSizeChanged) {
-            this._activeWidget.parentContainerSizeChanged(nW, nH);
-        }
-    };
-
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
 
         if (this._activeContoller) {
             this._activeContoller.selectedObjectChanged(this._currentNodeID);
-        }
-    };
-
-    VisualizerPanel.prototype.setReadOnly = function (isReadOnly) {
-        if (this._activeWidget) {
-            if (this._activeWidget.setReadOnly) {
-                this._activeWidget.setReadOnly(isReadOnly);
-            } else {
-                this.logger.error('Active widget does not support method "setReadOnly"!!!');
-            }
         }
     };
 

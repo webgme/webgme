@@ -25,8 +25,6 @@ define(['js/PanelBase/PanelBase',
         __parent__.apply(this, [options]);
 
         this.initUI(options);
-
-        this.attachScrollHandler(options.fnOnScroll);
     };
     //inherit from PanelBase Phase #2
     PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, { "HEADER_TITLE": "HEADER_TITLE",
@@ -40,14 +38,10 @@ define(['js/PanelBase/PanelBase',
 
 
     /* OVERRIDE PanelBase members */
-    PanelBaseWithHeader.prototype.parentContainerSizeChanged = function (newWidth, newHeight) {
-        this._resize(newWidth, newHeight);
-    };
-
     PanelBaseWithHeader.prototype.setSize = function (width, height) {
         this._setSize(width, height);
 
-        this._size();
+        this.onResize(this.size.width, this.size.height);
     };
 
 
@@ -142,34 +136,6 @@ define(['js/PanelBase/PanelBase',
 
 
     /************** CUSTOM RESIZE HANDLER *****************/
-    PanelBaseWithHeader.prototype._resize = function (parentW, parentH) {
-        var panelHeaderHeight = this.$panelHeader.outerHeight(true),
-            panelHeaderPaddingLeft = parseInt(this.$panelHeader.css('padding-left')),
-            panelHeaderPaddingRight = parseInt(this.$panelHeader.css('padding-right'));
-
-        if (this._fillContainer === true) {
-            if (!parentW) {
-                parentW = this.$_el.parent().width();
-            }
-
-            if (!parentH) {
-                parentH = this.$_el.parent().height();
-            }
-
-            this.$_el.width(parentW).height(parentH);
-            this.$panelHeader.width(parentW - panelHeaderPaddingLeft - panelHeaderPaddingRight);
-            this.$panelBody.width(parentW).height(parentH - panelHeaderHeight);
-
-            //get panel-body's offset
-            this.offset = this.$el.offset();
-
-            this.size = {"width": parentW,
-                "height": parentH - panelHeaderHeight};
-        }
-    };
-    /************** END OF --- CUSTOM RESIZE HANDLER *****************/
-
-    /************** CUSTOM RESIZE HANDLER *****************/
     PanelBaseWithHeader.prototype._setSize = function (w, h) {
         var panelHeaderHeight = this.$panelHeader.outerHeight(true),
             panelHeaderPadding = parseInt(this.$panelHeader.css('padding-left')) + parseInt(this.$panelHeader.css('padding-right')),
@@ -208,12 +174,6 @@ define(['js/PanelBase/PanelBase',
         }
     };
     /************** END OF --- CUSTOM READ-ONLY CHANGED HANDLER *****************/
-
-    PanelBaseWithHeader.prototype.afterAppend = function () {
-        __parent_proto__.afterAppend.call(this);
-
-        this._resize();
-    };
 
     return PanelBaseWithHeader;
 });

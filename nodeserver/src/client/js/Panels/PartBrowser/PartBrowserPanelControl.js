@@ -9,7 +9,7 @@ define(['logManager',
                              nodePropertyNames) {
 
     var PartBrowserControl,
-        DECORATOR_PATH = "js/ModelEditor3/Decorators/";      //TODO: fix path;
+        DECORATOR_PATH = "js/Decorators/DiagramDesigner/Decorators/";      //TODO: fix path;
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
         this._client = myClient;

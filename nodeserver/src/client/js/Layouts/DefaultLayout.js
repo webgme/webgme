@@ -17,6 +17,7 @@ define([ 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery.layout' : 'jquery.layout.min
         SPACING_CLOSED = SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP;
 
     DefaultLayout = function () {
+        this._logger = logManager.create('DefaultLayout');
     };
 
     DefaultLayout.prototype.init = function () {
@@ -90,23 +91,53 @@ define([ 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery.layout' : 'jquery.layout.min
             this._onEastResize();
         } else if (container === 'main') {
             this._mainPanel.append(panel.$pEl);
+            this._centerPanels.push(panel);
+            this._onCenterResize();
         }
     };
 
-    DefaultLayout.prototype.getMainPanelContainer = function () {
-        return this._mainPanel;
+    DefaultLayout.prototype.remove = function (panel) {
+          var idx;
+
+        //check it in the right pane
+        idx = this._rightPanels.indexOf(panel);
+
+        //check it in the left pane if not found in right
+        if (idx === -1) {
+            idx = this._leftPanels.indexOf(panel);
+
+            //check it in the center pane if not found in left
+            if (idx === -1) {
+                idx = this._centerPanels.indexOf(panel);
+
+                if (idx === -1) {
+                    this._logger.warning("Panel to be removed not found");
+                } else {
+                    this._centerPanels.splice(idx, 1);
+                    this._onCenterResize();
+                }
+            } else {
+                this._leftPanels.splice(idx, 1);
+            }
+        } else {
+            this._rightPanels.splice(idx, 1);
+            this._onEastResize();
+        }
     };
 
     DefaultLayout.prototype.destroy = function () {
-
+        this._body.empty();
     };
 
     DefaultLayout.prototype._onCenterResize = function () {
-        var w = this._mainPanel.width(),
-            h = this._mainPanel.height();
+        var len = this._centerPanels.length,
+            w = this._mainPanel.width(),
+            h = this._mainPanel.height(),
+            pHeight = Math.floor(h / len),
+            i;
 
-        if (this.onCenterResize) {
-            this.onCenterResize(w, h);
+        for (i = 0; i < len; i += 1) {
+            this._centerPanels[i].setSize(w, pHeight);
         }
     };
 
