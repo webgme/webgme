@@ -4,11 +4,10 @@
  */
 define(['clientUtil',
         'logManager',
-        'commonUtil',
         'js/Constants',
         'lib/jquery/jquery.hotkeys',
         'lib/jquery/jquery.jstree',
-        'css!/css/JSTreeBrowserWidget'], function (util, logManager, commonUtil, CONSTANTS) {
+        'css!/css/JSTreeBrowserWidget'], function (util, logManager, CONSTANTS) {
 
     var JSTreeBrowserWidget = function (containerEl) {
         //save this for later use
@@ -39,12 +38,9 @@ define(['clientUtil',
         //clear container content
         containerControl.html("");
 
-        //generate unique id for control
-        guid = commonUtil.guid();
-
         //generate control dynamically
         treeViewE = $('<div/>', {
-            "id": "jstree_" + guid
+            "id": "jstree_"
         });
 
         //add control to parent

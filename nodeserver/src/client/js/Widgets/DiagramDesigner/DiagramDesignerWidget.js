@@ -273,7 +273,6 @@ define(['logManager',
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
             "class" : "items",
-            /*"id": commonUtil.guid(),*/
             "tabindex": 0
         });
         this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$itemsContainer);
