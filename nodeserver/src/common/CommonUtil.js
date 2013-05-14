@@ -3,19 +3,25 @@
  * Utility helper functions for the client and server side
  */
 
-define(['common/Constants'], function (CONSTANTS) {
+define(['common/Constants',
+        'config/config'], function (CONSTANTS,
+                                    config) {
 
-    var minimalSetId = "2200000000";
     //return utility functions
     return {
         /*
          * is the application running in debug more or not
          */
+        //TODO: remove from here
+        //TODO: server and client debug swithc has to be separate
+        //TODO: client DEBUG should be a global variable
         DEBUG: true, // true / false / 'DEMOHACK',
 
         /*
          * Generated a GUID
          */
+        //TODO: to be removed
+        //TODO: user/basic.js still uses it....
         guid: function () {
             var S4 = function () {
                 return (((1 + Math.random()) * 0x10000) | 0).toString(16).substring(1);
@@ -25,78 +31,8 @@ define(['common/Constants'], function (CONSTANTS) {
             return (S4() + S4() + "-" + S4() + "-" + S4() + "-" + S4() + "-" + S4() + S4() + S4());
         },
 
-        copy: function (object) {
-            return JSON.parse(JSON.stringify(object));
-        },
-        insertIntoArray: function (list, item) {
-            if (list instanceof Array) {
-                if (list.indexOf(item) === -1) {
-                    list.push(item);
-                    return true;
-                }
-                return false;
-            }
-            return false;
-        },
-        removeFromArray: function (list, item) {
-            var index = list.indexOf(item);
-            if (index === -1) {
-                return false;
-            } else {
-                list.splice(index, 1);
-                return true;
-            }
-        },
-        mergeArrays: function (one, two) {
-            var three = [], i;
-            for (i in one) {
-                three.push(one[i]);
-            }
-            for (i in two) {
-                if (one.indexOf(two[i]) === -1) {
-                    three.push(two[i]);
-                }
-            }
-            return three;
-        },
-        isSameArray: function(arr1,arr2){
-            return $(arr1).not(arr2).length == 0 && $(arr2).not(arr1).length == 0
-        },
-
-        assert : function (cond) {
-            if( !cond ) {
-                var error = new Error("ASSERT failed");
-                var message = "ASSERT failed at " + error.stack;
-
-                if( console && !process ) {
-                    console.log(message);
-                }
-                throw error;
-            }
-        },
-        timestamp : function(){
-            return "" + (new Date()).getTime();
-        },
-        minsetid : minimalSetId,
-        setidtorelid : function(setid){
-            switch(setid){
-                case CONSTANTS.SET_VALIDCHILDREN:
-                    return "2200000001";
-                    break;
-                case CONSTANTS.SET_VALIDSOURCE:
-                    return "2200000002";
-                    break;
-                case CONSTANTS.SET_VALIDDESTINATION:
-                    return "2200000003";
-                    break;
-                case CONSTANTS.SET_VALIDINHERITOR:
-                    return "2200000004";
-                    break;
-                default:
-                    return "2200000000";
-                    break;
-            }
-        },
+        //TODO: remove this
+        //TODO: user/basic.js still uses this method....
         relidtosetid : function(relid){
             switch(relid){
                 case "2200000001":
@@ -116,41 +52,16 @@ define(['common/Constants'], function (CONSTANTS) {
                     break;
             }
         },
-        issetrelid : function(relid){
-            if(parseInt(relid)>= parseInt(minimalSetId)){
-                return true;
-            }
-            return false;
-        },
-        relidfromid : function(id){
-            var ind = id.lastIndexOf('/');
-            if(ind === -1){
-                return id;
-            } else {
-                return id.substr(ind+1);
-            }
-        },
+
+        //TODO: Panels/SetEditorPanelControl.js uses it
+        //TODO: implement API in clientNode to get valid set names
         validSetNames     : [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_GENERAL],
-        validMetaSetNames : [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR],
-        validRealSetNames : [CONSTANTS.SET_GENERAL],
 
-        combinedserver: {
+        //TODO: refactor
+        //TODO: load localConfig if present
+        combinedserver: _.extend({
             //used by the client currently
-            host            : 'http://kecskes.isis.vanderbilt.edu',
-            port            : 80,
-            project         : "test",
-            autorecconnect  : true,
-            reconndelay     : 1000,
-            reconnamount    : 1000,
-            autostart       : false,
 
-
-            //used by the server
-            loglevel        : 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
-            logfile         : 'server.log',
-            mongoip         : "129.59.105.239",
-            mongoport       : 27017,
-            mongodatabase   : "multi",
 
             mongosrv        : "/datamongo",
             rootsrv         : "/root",
@@ -176,9 +87,7 @@ define(['common/Constants'], function (CONSTANTS) {
                 'heartbeats'         : true,
                 'log level'          : 1
             },
-            nosaveddata     : true,
-
-        }
-
+            nosaveddata     : true
+        }, config)
     };
 });

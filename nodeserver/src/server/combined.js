@@ -9,7 +9,8 @@ requirejs.config({
         "logManager": "common/LogManager",
         "util": "../../nodeserver/src/util",
         "storage": "../../nodeserver/src/storage",
-        "user": "../../nodeserver/src/user"
+        "user": "../../nodeserver/src/user",
+        "underscore": 'common/underscore'
     }
 });
 
@@ -42,7 +43,7 @@ requirejs(['logManager',
                 req.url = '/index.html';
             }
 
-            if (req.url.indexOf('/common/') === 0 || req.url.indexOf('/util/') === 0 || req.url.indexOf('/storage/') === 0 || req.url.indexOf('/core/') === 0 || req.url.indexOf('/user/') === 0) {
+            if (req.url.indexOf('/common/') === 0 || req.url.indexOf('/util/') === 0 || req.url.indexOf('/storage/') === 0 || req.url.indexOf('/core/') === 0 || req.url.indexOf('/user/') === 0 || req.url.indexOf('/config/') === 0) {
                 clientsrcfolder = "/..";
             } else {
                 clientsrcfolder = "/../client";
