@@ -2,9 +2,7 @@
 
 define([ 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
-    'text!html/Layouts/Default/DefaultLayout.html',
-    'css!/css/jquery.layout',
-    'css!/css/jquery.layout.webgme'], function (_jQueryLayout,
+    'text!html/Layouts/Default/DefaultLayout.html'], function (_jQueryLayout,
                              logManager,
                              defaultLayoutTemplate) {
 

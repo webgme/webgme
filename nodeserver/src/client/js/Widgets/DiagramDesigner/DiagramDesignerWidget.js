@@ -38,7 +38,7 @@ define(['logManager',
     var DiagramDesignerWidget,
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
-        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "designer-canvas-property-dialog",
+        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "diagram-designer-property-dialog",
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer';   // must be same as scss/Widgets/DiagramDesignerWidget.scss
 
