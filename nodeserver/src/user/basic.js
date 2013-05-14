@@ -1,7 +1,6 @@
 define([
     'util/assert',
     'commonUtil',
-    'user/constants',
     'eventDispatcher',
     'core/core',
     'core/setcore',
@@ -15,7 +14,6 @@ define([
     function (
         ASSERT,
         commonUtil,
-        Constants,
         EventDispatcher,
         Core,
         SetCore,

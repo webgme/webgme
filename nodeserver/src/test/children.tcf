@@ -1,8 +1,0 @@
-{"clients":["c001","c002"]}
-{"clientId":"c001","servercommands":[{"cid":"0001","type":"territory","id":"t0001","patterns":{"root":{"children":-1}}}]}
-{"clientId":"c002","servercommands":[{"cid":"0002","type":"territory","id":"t0001","patterns":{"root":{"children":-1}}}]}
-{"clientId":"c002","servercommands":[{"cid":"0003","type":"createChild","baseId":"o5","parentId":"o8"}]}
-{"clientId":"c002","servercommands":[{"cid":"0004","type":"createChild","baseId":"o2","parentId":"o10"}]}
-{"internalcommand":{"type":"printVariables"}}
-{"internalcommand":{"type":"printContainment"}}
-{"internalcommand":{"type":"printObjects"}}
