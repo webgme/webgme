@@ -19,9 +19,13 @@ npm install mongodb
 npm install socket.io
     
 
+GIT LOCAL HOOKS
 
+#1) POST-MERGE
 
+create an executable file with name 'post-merge' in .git\hooks with the content
 
+#!/bin/bash
 
-
-
+# Generate local configuration file
+bash nodeserver/src/config/clc.sh
