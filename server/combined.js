@@ -16,13 +16,13 @@ requirejs.config({
 });
 
 requirejs(['logManager',
-    'common/CommonUtil',
+    'config/config',
     'storage/socketioserver',
     'storage/cache',
     'storage/mongo',
     'storage/log'],function(
     logManager,
-    commonUtil,
+    CONFIG,
     Server,
     Cache,
     Mongo,
@@ -94,6 +94,6 @@ requirejs(['logManager',
         storage.open();
     };
 
-    var server = new Combined(commonUtil.combinedserver);
+    var server = new Combined(CONFIG);
 
 });

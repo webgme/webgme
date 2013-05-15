@@ -34,7 +34,6 @@ require.config({
         "raphaeljs": 'lib/raphael/raphael.amd',
 
         //WebGME custom modules
-        "commonUtil": './../../common/CommonUtil',
         "logManager": 'common/LogManager',
         "eventDispatcher": 'common/EventDispatcher',
         "notificationManager": 'js/NotificationManager',

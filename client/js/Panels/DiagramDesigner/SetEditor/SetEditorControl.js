@@ -2,13 +2,11 @@
 
 define(['logManager',
     'clientUtil',
-    'commonUtil',
     'js/Constants',
     'js/NodePropertyNames',
     './SetEditorControl.DiagramDesignerWidgetEventHandlers',
     './SetVisualHelper'], function (logManager,
                                                      clientUtil,
-                                                     commonUtil,
                                                      CONSTANTS,
                                                      nodePropertyNames,
                                                      SetEditorControlDiagramDesignerWidgetEventHandlers,
