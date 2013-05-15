@@ -75,7 +75,7 @@ define(['logManager',
                 'params' : {'client': client}});
 
             // DEBUG ONLY PANELS
-            if (commonUtil.DEBUG === true) {
+            if (DEBUG === true) {
                 panels.push({'name': 'DebugTest/DebugTestPanel',
                     'container': 'left',
                     'params' : {'client': client}});

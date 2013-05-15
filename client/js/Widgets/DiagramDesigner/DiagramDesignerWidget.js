@@ -1,8 +1,6 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
-    'commonUtil',
     'js/Constants',
     'raphaeljs',
     'loaderCircles',
@@ -18,8 +16,6 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
     'js/Controls/PropertyGrid/PropertyGrid',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
-                                                      util,
-                                                      commonUtil,
                                                       CONSTANTS,
                                                       raphaeljs,
                                                       LoaderCircles,
@@ -101,7 +97,7 @@ define(['logManager',
         this.connectionDrawingManager.initialize();
 
         /************** ROUTING MANAGER SELECTION **************************/
-        if (commonUtil.DEBUG === true) {
+        if (DEBUG === true) {
             this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
                 self._onConnectionRouteManagerChanged(data.type);
             });
@@ -243,7 +239,7 @@ define(['logManager',
         //TODO: $diagramDesignerWidgetBody --> this.$el;
         this.skinParts.$diagramDesignerWidgetBody = this.$el;
 
-        if (commonUtil.DEBUG === true) {
+        if (DEBUG === true) {
             this.skinParts.$progressText = this.toolBar.addLabel();
         }
 
@@ -469,7 +465,7 @@ define(['logManager',
             msg += " D: " + deletedLen;
 
             this.logger.debug(msg);
-            if (commonUtil.DEBUG === true) {
+            if (DEBUG === true) {
                 this.skinParts.$progressText.text(msg);
             }
 

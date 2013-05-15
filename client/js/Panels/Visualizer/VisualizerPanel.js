@@ -2,12 +2,10 @@
 
 define(['logManager',
     'loaderProgressBar',
-    'commonUtil',
     'js/PanelBase/PanelBaseWithHeader',
     'text!js/Visualizers.json',
     'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
-                                    commonUtil,
                                     PanelBaseWithHeader,
                                     VisualizersJSON) {
 
@@ -145,7 +143,7 @@ define(['logManager',
             }
         };
 
-        if (menuDesc.DEBUG_ONLY === true && commonUtil.DEBUG !== true) {
+        if (menuDesc.DEBUG_ONLY === true && DEBUG !== true) {
             doCallBack();
             return;
         }

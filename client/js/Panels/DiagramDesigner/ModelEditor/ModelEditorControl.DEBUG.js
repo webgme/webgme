@@ -55,7 +55,7 @@ define([], function () {
             for (UIid in repositionDesc) {
                 if (repositionDesc.hasOwnProperty(UIid)) {
                     objId = self.componentsMapRev[UIid];
-                    if (commonUtil.DEBUG === true && self._debugItemIDs.indexOf(objId) !== -1) {
+                    if (DEBUG === true && self._debugItemIDs.indexOf(objId) !== -1) {
                         desc = self._generateObjectDescriptorDEBUG(objId);
 
                         desc.position.x = repositionDesc[UIid].x;
@@ -79,7 +79,7 @@ define([], function () {
                 dst = self.componentsMapRev[params.dst],
                 desc;
 
-            if (commonUtil.DEBUG && (self._debugItemIDs.indexOf(src) !== -1 || self._debugItemIDs.indexOf(dst) !== -1)) {
+            if (DEBUG && (self._debugItemIDs.indexOf(src) !== -1 || self._debugItemIDs.indexOf(dst) !== -1)) {
 
                 desc =  self._generateObjectDescriptorDEBUG(-1, DEBUG_CONNECTION_TYPE);
 
@@ -100,7 +100,7 @@ define([], function () {
                 realIDs = [];
 
             while(i--) {
-                if (commonUtil.DEBUG && (self._debugItemIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1 || self._debugConnectionsIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1)) {
+                if (DEBUG && (self._debugItemIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1 || self._debugConnectionsIDs.indexOf(self.componentsMapRev[idList[i]]) !== -1)) {
                     debugIDs.push(self.componentsMapRev[idList[i]]);
                 } else {
                     realIDs.push(idList[i]);

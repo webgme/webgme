@@ -10,14 +10,6 @@ define(['common/Constants',
     //return utility functions
     return {
         /*
-         * is the application running in debug more or not
-         */
-        //TODO: remove from here
-        //TODO: server and client debug swithc has to be separate
-        //TODO: client DEBUG should be a global variable
-        DEBUG: true, // true / false / 'DEMOHACK',
-
-        /*
          * Generated a GUID
          */
         //TODO: to be removed

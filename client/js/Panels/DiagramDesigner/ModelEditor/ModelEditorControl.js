@@ -1,14 +1,10 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
-    'commonUtil',
     'js/Constants',
     'js/NodePropertyNames',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     './ModelEditorControl.DEBUG'], function (logManager,
-                                                        util,
-                                                        commonUtil,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
@@ -76,7 +72,7 @@ define(['logManager',
 
 
 
-        if (commonUtil.DEBUG === true) {
+        if (DEBUG === true) {
             /************** AUTO RENAME GME NODES *****************/
             $btnGroupAutoRename = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
                 self._autoRenameGMEObjects();
@@ -766,7 +762,7 @@ define(['logManager',
     _.extend(ModelEditorControl.prototype, ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype);
 
     //in DEBUG mode add additional content to canvas
-    if (commonUtil.DEBUG === true) {
+    if (DEBUG === true) {
         _.extend(ModelEditorControl.prototype, ModelEditorControlDEBUG.prototype);
     }
 
