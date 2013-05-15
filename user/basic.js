@@ -1,7 +1,7 @@
 define([
     'util/assert',
-    'commonUtil',
     'eventDispatcher',
+    'util/guid',
     'core/core',
     'core/setcore',
     'storage/cache',
@@ -13,8 +13,8 @@ define([
 ],
     function (
         ASSERT,
-        commonUtil,
         EventDispatcher,
+        GUID,
         Core,
         SetCore,
         Cache,
@@ -25,10 +25,6 @@ define([
         LogManager
         ) {
 
-        function GUID(){
-            return commonUtil.guid();
-        }
-
         function COPY(object){
             if(object){
                 return JSON.parse(JSON.stringify(object));
@@ -37,7 +33,7 @@ define([
         }
 
 
-        function Client(){
+        function Client(_configuration){
             var _self = this,
                 logger = LogManager.create("client"),
                 _database = null,
@@ -62,6 +58,16 @@ define([
                 _commitCache = null,
                 _offline = false,
                 _networkWatcher = null;
+
+            //default configuration
+            _configuration = _configuration || {};
+            _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
+            _configuration.reconndelay  = _configuration.reconndelay || 1000;
+            _configuration.reconnamount = _configuration.reconnamount || 1000;
+            _configuration.host = _configuration.host || "http://"+document.location.hostname;
+            _configuration.port = _configuration.port || document.location.port;
+            _configuration.autostart = _configuration.autostart === null || _configuration.autostart === undefined ? false : _configuration.autostart;
+
 
             $.extend(_self, new EventDispatcher());
             _self.events = {
@@ -226,9 +232,9 @@ define([
             function networkWatcher(){
                 _networkStatus = "";
                 var running = true;
-                var autoReconnect = commonUtil.combinedserver.autoreconnect ? true : false;
-                var reConnDelay = commonUtil.combinedserver.reconndelay || 1000;
-                var reConnAmount = commonUtil.combinedserver.reconnamount || 1000;
+                var autoReconnect = _configuration.autoreconnect ? true : false;
+                var reConnDelay = _configuration.reconndelay || 1000;
+                var reConnAmount = _configuration.reconnamount || 1000;
                 var reconnecting = function(){
                     var counter = 0;
                     var timerId = setInterval(function(){
@@ -1138,8 +1144,8 @@ define([
             function connectToDatabaseAsync(options,callback){
                 options = options || {};
                 callback = callback || function(){};
-                options.host = options.host || commonUtil.combinedserver.host;
-                options.port = options.port || commonUtil.combinedserver.port;
+                options.host = options.host || _configuration.host;
+                options.port = options.port || _configuration.port;
                 options.open = (options.open !== undefined || options.open !== null) ? options.open : false;
                 options.project = options.project || null;
                 if(_database){
@@ -1537,6 +1543,20 @@ define([
             //getNode
             function getNode(_id){
 
+                var setNames = {
+                    VALIDCHILDREN    : 'ValidChildren',
+                    VALIDSOURCE      : 'ValidSource',
+                    VALIDDESTINATION : 'ValidDestination',
+                    VALIDINHERITOR   : 'ValidInheritor',
+                    GENERAL          : 'General'
+                };
+                var setIds = {
+                    VALIDCHILDREN    : "2200000001",
+                    VALIDSOURCE      : "2200000002",
+                    VALIDDESTINATION : "2200000003",
+                    VALIDINHERITOR   : "2200000004",
+                    GENERAL          : "2200000000"
+                };
                 var getParentId = function(){
                     return _core.getStringPath(_core.getParent(_nodes[_id].node));
                 };
@@ -1603,12 +1623,27 @@ define([
                         return [];
                     }
                 };
+                var relidtosetid = function(id){
+                    for(var i in setIds){
+                        if(id === setIds[i]){
+                            return setNames[i];
+                        }
+                    }
+                    return "-";
+                };
                 var getSetNames = function(){
                     var setids = _core.getSetRelids(_nodes[_id].node);
                     for(var i=0;i<setids.length;i++){
-                        setids[i] = commonUtil.relidtosetid(setids[i])
+                        setids[i] = relidtosetid(setids[i])
                     }
                     return setids;
+                };
+                var getValidSetNames = function(){
+                    var names = [];
+                    for(var i in setNames){
+                        names.push(setNames[i]);
+                    }
+                    return names;
                 };
                 var getSetIds = function(){
                     return _core.getSetPaths(_nodes[_id].node);
@@ -1638,7 +1673,8 @@ define([
                         getValidChildrenTypes : getValidChildrenTypes,
                         getMemberIds          : getMemberIds,
                         getSetIds             : getSetIds,
-                        getSetNames           : getSetNames
+                        getSetNames           : getSetNames,
+                        getValidSetNames      : getValidSetNames
                     }
                 }
 
@@ -1671,8 +1707,8 @@ define([
                             new Failsafe(
                                 new SocketIOClient(
                                     {
-                                        host:commonUtil.combinedserver.host,
-                                        port:commonUtil.combinedserver.port
+                                        host:_configuration.host,
+                                        port:_configuration.port
                                     }
                                 ),{}
                             ),{}
@@ -1685,8 +1721,8 @@ define([
                         _database.getProjectNames(function(err,names){
                             if(!err && names && names.length>0){
                                 var projectName = null;
-                                if(commonUtil.combinedserver.project && names.indexOf(commonUtil.combinedserver.project) !== -1){
-                                    projectName = commonUtil.combinedserver.project;
+                                if(_configuration.project && names.indexOf(_configuration.project) !== -1){
+                                    projectName = _configuration.project;
                                 } else {
                                     projectName = names[0];
                                 }
@@ -1704,7 +1740,7 @@ define([
                     }
                 });
             }
-            if(commonUtil.combinedserver.autostart){
+            if(_configuration.autostart){
                 initialize();
             }
 

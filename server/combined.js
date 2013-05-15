@@ -27,12 +27,13 @@ requirejs(['logManager',
     Cache,
     Mongo,
     Log){
-    var logLevel = commonUtil.combinedserver.loglevel || logManager.logLevels.WARNING;
-    var logFile = commonUtil.combinedserver.logfile || 'server.log';
-    logManager.setLogLevel(logLevel);
-    logManager.useColors(true);
-    logManager.setFileLogPath(logFile);
+
     var Combined = function(parameters){
+        var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
+        var logFile = parameters.logfile || 'server.log';
+        logManager.setLogLevel(logLevel);
+        logManager.useColors(true);
+        logManager.setFileLogPath(logFile);
         var logger = logManager.create("combined-server");
         var iologger = logManager.create("socket.io");
         var iopar =  {
@@ -50,9 +51,9 @@ requirejs(['logManager',
             }
 
             if (req.url.indexOf('/common/') === 0 || req.url.indexOf('/util/') === 0 || req.url.indexOf('/storage/') === 0 || req.url.indexOf('/core/') === 0 || req.url.indexOf('/user/') === 0 || req.url.indexOf('/config/') === 0) {
-                clientsrcfolder = "/..";
+                clientsrcfolder = "./../";
             } else {
-                clientsrcfolder = "/../client";
+                clientsrcfolder = "./../client";
             }
 
             req.url.replace('index','index2');
@@ -82,12 +83,12 @@ requirejs(['logManager',
                 }
                 res.end(data);
             });
-        }).listen(commonUtil.combinedserver.port);
+        }).listen(parameters.port);
 
         var storage = new Server(new Log(new Cache(new Mongo({
-            host: commonUtil.combinedserver.mongoip,
-            port: commonUtil.combinedserver.mongoport,
-            database: commonUtil.combinedserver.mongodatabase
+            host: parameters.mongoip,
+            port: parameters.mongoport,
+            database: parameters.mongodatabase
         }),{}),{log:logManager.create('combined-server-storage')}),{combined:http,logger:iologger});
 
         storage.open();
