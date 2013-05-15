@@ -59,35 +59,6 @@ define(['common/Constants',
 
         //TODO: refactor
         //TODO: load localConfig if present
-        combinedserver: _.extend({
-            //used by the client currently
-
-
-            mongosrv        : "/datamongo",
-            rootsrv         : "/root",
-            projsrv         : "/project",
-
-            mongoopt        : {
-                'auto_reconnect' : true,
-                'poolSize'       : 5,
-                'socketOptions'  : {
-                    'keepAlive' : 1
-                }
-            },
-            cache           : true,
-            faulttolerant   : true,
-            socketiopar     : {
-                'reconnection delay' : 10,
-                'max reconnection attempts' : 50,
-                'force new connection' : true
-            },
-            srvsocketpar    : {
-                'heartbeat timeout'  : 240,
-                'heartbeat interval' : 60,
-                'heartbeats'         : true,
-                'log level'          : 1
-            },
-            nosaveddata     : true
-        }, config)
+        combinedserver: config
     };
 });
