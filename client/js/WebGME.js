@@ -2,16 +2,15 @@
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
-    'commonUtil',
+    'config/config',
     'user/basic',
     'js/LayoutManager/LayoutManager'], function (logManager,
-                                            commonUtil,
+                                            CONFIG,
                                             Client,
                                             LayoutManager) {
 
     var _webGMEStart = function () {
-        var options = commonUtil.combinedserver,
-            lm,
+        var lm,
             client,
             loadPanels;
 
@@ -19,18 +18,7 @@ define(['logManager',
         lm.loadLayout('DefaultLayout', function () {
             var panels = [];
 
-            client = new Client({
-                proxy: location.host + options.projsrv,
-                options : options.socketiopar,
-                projectinfo : "*PI*" + options.mongocollection,
-                defaultproject : options.mongocollection,
-                faulttolerant : options.faulttolerant,
-                cache : options.cache,
-                log : options.logging,
-                logsrv : location.host + options.logsrv,
-                nosaveddata : commonUtil.combinedserver.nosaveddata,
-                project : commonUtil.combinedserver.project
-            });
+            client = new Client(CONFIG);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
@@ -75,7 +63,7 @@ define(['logManager',
                 'params' : {'client': client}});
 
             // DEBUG ONLY PANELS
-            if (DEBUG === true) {
+            if (__WebGME__DEBUG === true) {
                 panels.push({'name': 'DebugTest/DebugTestPanel',
                     'container': 'left',
                     'params' : {'client': client}});
@@ -93,7 +81,7 @@ define(['logManager',
                     loadPanels(panels);
                 } else {
                     client.connectToDatabaseAsync({'open': true,
-                                                    'project': commonUtil.combinedserver.project});
+                                                    'project': CONFIG.project});
                 }
             });
         };
