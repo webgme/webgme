@@ -17,5 +17,5 @@ In your webgme\nodeserver folder simply let the node package manager install the
 npm install requirejs
 npm install mongodb
 npm install socket.io
-
+    
 
