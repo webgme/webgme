@@ -45,10 +45,6 @@ define(['common/Constants',
             }
         },
 
-        //TODO: Panels/SetEditorPanelControl.js uses it
-        //TODO: implement API in clientNode to get valid set names
-        validSetNames     : [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_GENERAL],
-
         //TODO: refactor
         //TODO: load localConfig if present
         combinedserver: config

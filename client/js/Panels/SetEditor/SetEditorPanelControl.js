@@ -1,12 +1,8 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
-    'commonUtil',
     'js/Constants',
     'js/NodePropertyNames'], function (logManager,
-                                    util,
-                                    commonUtil,
                                     CONSTANTS,
                                     nodePropertyNames) {
 
@@ -117,7 +113,7 @@ define(['logManager',
     };
 
     SetEditorControl.prototype._refreshSetMember = function (gmeID) {
-        var setNames = commonUtil.validSetNames,
+        var setNames = [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_GENERAL],
             num = setNames.length,
             nodeObj = this._client.getNode(gmeID),
             node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
