@@ -4,7 +4,6 @@
 *.class
 
 
-/nodeserver/node_modules
 /node_modules
 
 *.log
@@ -12,4 +11,7 @@
 .sass-cache
 .DS_Store
 
-local.config.js
+.project
+.settings
+
+config/local.js
