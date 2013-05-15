@@ -21,7 +21,7 @@ define(['logManager',
     LayoutManager.prototype.loadLayout = function (layout, fnCallback) {
         var self = this;
 
-        this._logger.warning('LayoutManager loadLayout...');
+        this._logger.debug('LayoutManager loadLayout...');
 
         //destroy existing
         if (this._currentLayout) {
@@ -37,7 +37,7 @@ define(['logManager',
         this._startProgressBar();
 
         //load new one
-        this._logger.warning("Downloading layout '" + layout + "'...");
+        this._logger.debug("Downloading layout '" + layout + "'...");
 
         require([LAYOUT_PATH + layout],
             function (Layout) {
@@ -66,7 +66,7 @@ define(['logManager',
             rPath = PANEL_PATH + name,
             fn;
 
-        this._logger.warning('LayoutManager loadPanel with name: "' + name + '", container: "' + container + '"');
+        this._logger.debug('LayoutManager loadPanel with name: "' + name + '", container: "' + container + '"');
 
         fn = function () {
             if (fnCallback) {

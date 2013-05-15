@@ -14,7 +14,6 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/ConnectionRouteManager2',
     'js/Widgets/DiagramDesigner/ConnectionDrawingManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
-    'js/Controls/PropertyGrid/PropertyGrid',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -28,8 +27,7 @@ define(['logManager',
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionRouteManager2,
                                                       ConnectionDrawingManager,
-                                                      DiagramDesignerWidgetEventDispatcher,
-                                                      PropertyGrid) {
+                                                      DiagramDesignerWidgetEventDispatcher) {
 
     var DiagramDesignerWidget,
         DEFAULT_GRID_SIZE = 10,
@@ -256,15 +254,6 @@ define(['logManager',
         this.toolBar.addButton({ "title": "Diagonal",
             "icon": "icon-signal",
             "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
-
-        /************** PROPERTIES BUTTON ***********************/
-        this.skinParts.$btnGroupProperties = this.toolBar.addButtonGroup(function (event, data) {
-            self._showProperties();
-        });
-
-        this.toolBar.addButton({ "title": "Properties",
-            "icon": "icon-list-alt"}, this.skinParts.$btnGroupProperties );
-
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -580,8 +569,6 @@ define(['logManager',
             this.selectionManager.showSelectionOutline();    
         }
 
-        this._refreshProperties(this.selectionManager.selectedItemIdList);
-
         this.logger.debug("_refreshScreen END");
     };
 
@@ -703,7 +690,6 @@ define(['logManager',
     /************************** SELECTION CHANGED HANDLER ****************************/
 
     DiagramDesignerWidget.prototype._onSelectionChanged = function (selectedIds) {
-        this._refreshProperties(selectedIds);
         this.onSelectionChanged(selectedIds);
     };
 
@@ -784,90 +770,6 @@ define(['logManager',
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
-
-    /************** PROPERTY WIDGET **********************/
-
-    DiagramDesignerWidget.prototype._showProperties = function () {
-        var propList,
-            self = this;
-
-        if (this.propListView === null || this.propListView === undefined) {
-            propList = this._getCommonPropertiesForSelection();
-            if (propList && !_.isEmpty(propList)) {
-
-                if (this.$propertyDialog === undefined) {
-                    this.$propertyDialog = $("<div/>", {id : DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS});
-                    this.$el.append(this.$propertyDialog);
-                } else {
-                    this.$propertyDialog.empty();
-                }
-
-
-                this.$propertyDialog.dialog({"title": "Properties",
-                    "dialogClass": DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS,
-                    "close": function (event, ui) {
-                        self._hideProperties();
-                    } });
-
-                this.propListView = new PropertyGrid();
-                this.$propertyDialog.append(this.propListView.$el);
-
-                this.propListView.onFinishChange(function (args) {
-                    self._onPropertyChanged(args);
-                });
-
-                this.propListView.setPropertyList(propList);
-            }
-        }
-    };
-
-    DiagramDesignerWidget.prototype._hideProperties = function () {
-        if (this.propListView) {
-            this.propListView.destroy();
-            this.propListView = undefined;
-        }
-
-        if (this.$propertyDialog) {
-            this.$propertyDialog.dialog( "destroy" );
-            this.$propertyDialog.empty();
-            this.$propertyDialog.remove();
-            this.$propertyDialog = undefined;
-        }
-
-    };
-
-    DiagramDesignerWidget.prototype._refreshProperties = function (selectedIds) {
-        var propList;
-
-        if (this.propListView) {
-            if (selectedIds.length === 0) {
-                this._hideProperties();
-            } else {
-                propList = this._getCommonPropertiesForSelection();
-
-                this.propListView.setPropertyList(propList);
-            }
-        }
-    };
-
-    DiagramDesignerWidget.prototype._getCommonPropertiesForSelection = function () {
-        return this.onGetCommonPropertiesForSelection(this.selectionManager.selectedItemIdList);
-    };
-
-    DiagramDesignerWidget.prototype.onGetCommonPropertiesForSelection = function (selectedItemIDs) {
-        this.logger.warning("DiagramDesignerWidget.onGetCommonPropertiesForSelection is not overridden!");
-        return {};
-    };
-
-    DiagramDesignerWidget.prototype._onPropertyChanged = function (args) {
-        this.onPropertyChanged(this.selectionManager.selectedItemIdList, args);
-    };
-
-    DiagramDesignerWidget.prototype.onPropertyChanged = function (selectedObjIDs, args) {
-        this.logger.warning("DiagramDesignerWidget.onPropertyChanged is not overridden!");
-    };
-
-    /************** END OF - PROPERTY WIDGET **********************/
 
     /************** ITEM CONTAINER DROPPABLE HANDLERS *************/
 
