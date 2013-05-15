@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Server test page</title>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" />
+    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+    <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.js"></script>
+    <script>
+        $(function() {
+            $.get('test.html',"init").done(loadData);
+            setInterval(function(){
+                $.get('test.html',"refresh").done(loadData);
+            },10000)
+        });
+        function loadData(data){
+          //this function should create the HTML
+          //the coming data is an array, each element has {id:client id, blocked:true/false, delay:Xms} format
+            data = JSON.parse(data);
+            var maindiv = $("#maindiv");
+            maindiv.empty();
+            for(var i=0;i<data.length;i++){
+                var mydiv = $('<div/>',{id:data[i].id, class: 'ui-widget'});
+                mydiv.append("<label width=200>"+data[i].id+"<label/>");
+                var mybutton = $('<button/>',{id:data[i].id+"_button"}).button({label:'disconnect'}).click(function(event){
+                    $.get('test.html',"block*_*"+this.parentElement.id,loadData);
+                });
+                mydiv.append(mybutton);
+                var myslider = $('<div/>',{id:data[i].id+"_slider",width:200,clear:'left'}).slider({
+                    range: ' min',
+                    min:0,
+                    max:10000,
+                    value:data[i].delay || 0,
+                    stop: function(event, ui){
+                        $.get('test.html',"delay*_*"+this.parentElement.id+"*_*"+ui.value).done(loadData);
+                    }
+                });
+                mydiv.append(myslider);
+                maindiv.append(mydiv);
+            }
+        };
+    </script>
+</head>
+<body>
+    <div id="maindiv"></div>
+</body>
+</html>
