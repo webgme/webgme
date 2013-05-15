@@ -108,7 +108,7 @@ define(['js/PanelBase/PanelBase',
 
             //add default buttons
             //#1 Read-Only button in DEBUG mode
-            if (__WebGME__DEBUG === true) {
+            if (DEBUG === true) {
                 var readOnlyButtonGroup = this.toolBar.addButtonGroup();
 
                 this.$readOnlyBtn = this.toolBar.addToggleButton(

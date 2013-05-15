@@ -1,8 +1,6 @@
 "use strict";
 
-define(['logManager',
-        'clientUtil',
-        'commonUtil'], function (logManager, util, commonUtil) {
+define(['logManager'], function (logManager) {
 
     var TreeBrowserControl = function (client, treeBrowser) {
 
@@ -212,7 +210,7 @@ define(['logManager',
                     }
                 }
 
-                if (commonUtil.DEBUG === "DEMOHACK" && objectId === 'root') {
+                if (DEBUG === "DEMOHACK" && objectId === 'root') {
                     client.setSelectedObjectId(objectId);
                 }
             }

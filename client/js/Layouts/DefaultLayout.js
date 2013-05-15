@@ -1,6 +1,6 @@
 "use strict";
 
-define([ 'lib/jquery/' + (__WebGME__DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
+define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
     'text!html/Layouts/Default/DefaultLayout.html'], function (_jQueryLayout,
                              logManager,
