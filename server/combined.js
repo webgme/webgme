@@ -5,12 +5,13 @@ requirejs.config({
     nodeRequire: require,
     baseUrl: "..",
     paths: {
-        "core":"../../nodeserver/src/core",
+        "core":"core",
         "logManager": "common/LogManager",
-        "util": "../../nodeserver/src/util",
-        "storage": "../../nodeserver/src/storage",
-        "user": "../../nodeserver/src/user",
-        "underscore": 'common/underscore'
+        "util": "util",
+        "storage": "storage",
+        "user": "user",
+        "underscore": 'common/underscore',
+        "config": 'config'
     }
 });
 
@@ -34,7 +35,12 @@ requirejs(['logManager',
     var Combined = function(parameters){
         var logger = logManager.create("combined-server");
         var iologger = logManager.create("socket.io");
-        var iopar =  commonUtil.combinedserver.srvsocketpar;
+        var iopar =  {
+            'heartbeat timeout'  : 240,
+            'heartbeat interval' : 60,
+            'heartbeats'         : true,
+            'log level'          : 1
+        };
         iopar.logger = iopar.logger || iologger;
         var http = require('http').createServer(function(req, res){
             logger.debug("HTTP REQ - "+req.url);
