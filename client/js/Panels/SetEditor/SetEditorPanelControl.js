@@ -113,10 +113,9 @@ define(['logManager',
     };
 
     SetEditorControl.prototype._refreshSetMember = function (gmeID) {
-        var setNames = [CONSTANTS.SET_VALIDCHILDREN, CONSTANTS.SET_VALIDSOURCE, CONSTANTS.SET_VALIDDESTINATION, CONSTANTS.SET_VALIDINHERITOR, CONSTANTS.SET_GENERAL],
-            num = setNames.length,
-            nodeObj = this._client.getNode(gmeID),
-            node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
+        var node = this._currentNodeId ? this._client.getNode(this._currentNodeId) : null,
+            setNames,
+            num,
             len,
             oldMembers,
             currentMembers,
@@ -124,7 +123,10 @@ define(['logManager',
             idx,
             id;
 
-        if (nodeObj) {
+        if (node) {
+            setNames = node.getValidSetNames();
+            num = setNames.length;
+
             while (num--) {
                 if (!this._setItems[setNames[num]]) {
                     this._setEditorView.addSet({"id": setNames[num],
