@@ -20,7 +20,6 @@ require.config({
         "jquery": 'lib/jquery/' + (DEBUG ? 'jquery-' + _webGME_jquery_ver : 'jquery-' + _webGME_jquery_ver + '.min'),
         "jquery-ui": 'lib/jquery/' + (DEBUG ? 'jquery-ui-' + _webGME_jqueryui_ver + '.custom' : 'jquery-ui-' + _webGME_jqueryui_ver + '.custom.min'),
         "jquery-ui-iPad": 'lib/jquery/jquery.ui.ipad',
-        "datGUI": 'lib/datGUI/dat.gui.min',
         "jquery-WebGME": 'js/jquery.WebGME',
         "jquery-dataTables": 'lib/jquery/jquery.dataTables' + (DEBUG ? '' : '.min'),
         "jquery-dataTables-bootstrapped": 'lib/jquery/jquery.dataTables.bootstrapped',
