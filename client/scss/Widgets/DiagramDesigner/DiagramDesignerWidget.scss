@@ -83,16 +83,18 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
       background-color: $items-accept-droppable-background-color;
     }
   }
-}
 
-.diagram-designer-property-dialog {
-  &.ui-dialog {
-    .ui-dialog-content {
-      position: relative;
-      border: 0;
-      padding: 1px 1px;
-      overflow: auto;
-      zoom: 1;
+  div.zoom {
+    height: 200px;
+    width: 5px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    a.ui-slider-handle {
+      width: 11px;
+      height: 11px;
+      left: -4px;
     }
   }
 }

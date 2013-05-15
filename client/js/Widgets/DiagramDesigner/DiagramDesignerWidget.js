@@ -32,7 +32,6 @@ define(['logManager',
     var DiagramDesignerWidget,
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
-        DESIGNER_CANVAS_PROPERTY_DIALOG_CLASS = "diagram-designer-property-dialog",
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer';   // must be same as scss/Widgets/DiagramDesignerWidget.scss
 
@@ -61,6 +60,8 @@ define(['logManager',
 
         this._offset = { "left": 0, "top": 0 };
         this._scrollPos = { "left": 0, "top": 0 };
+
+        this._zoom = 1.0;
 
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
@@ -310,6 +311,23 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+
+        //zoom
+        this._zoomSlider = $('<div/>', {'class': 'zoom'});
+        this.$el.append(this._zoomSlider);
+
+        this._zoomSlider.slider({
+            orientation: "vertical",
+            min: 0,
+            max: 8,
+            value: 4,
+            slide: function( event, ui ) {
+                var vals = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+                    val = vals[ ui.value ];
+
+                self.setZoom(val);
+            }
+        });
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
@@ -347,6 +365,9 @@ define(['logManager',
             childrenContainerScroll = this._scrollPos,
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
             pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top;
+
+        pX /= this._zoom;
+        pY /= this._zoom;
 
         return { "mX": pX > 0 ? pX : 0,
             "mY": pY > 0 ? pY : 0 };
@@ -921,6 +942,16 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
         this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+    };
+
+    DiagramDesignerWidget.prototype.setZoom = function (val) {
+        if (this._zoom !== val) {
+            this._zoom = val;
+
+            $( "span.toolbar-group" ).text( val );
+            $(".diagram-designer div.items").css({'transform-origin': '0 0',
+                'transform': 'scale('+ val + ', ' + val + ')'});
+        }
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
