@@ -1,8 +1,18 @@
 /*
- * CONFIG FILE
+ * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Miklos Maroti
  */
 
-define(["config/local"], function (LOCAL) {
+define("ifexists", {
+	load: function (name, require, onload) {
+		require([ name ], onload, function () {
+			onload(null);
+		});
+	}
+});
+
+define([ "ifexists!config/local" ], function (LOCAL) {
 	"use strict";
 
 	var GLOBAL = {
@@ -22,8 +32,10 @@ define(["config/local"], function (LOCAL) {
 		mongodatabase: "multi"
 	};
 
-	for ( var key in LOCAL) {
-		GLOBAL[key] = LOCAL[key];
+	if (LOCAL) {
+		for ( var key in LOCAL) {
+			GLOBAL[key] = LOCAL[key];
+		}
 	}
 
 	return GLOBAL;

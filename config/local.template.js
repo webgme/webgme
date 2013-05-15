@@ -1,12 +1,10 @@
 /*
- * LOCAL CONFIG FILE TO OVERRIDE GLOBAL CONFIG VALUES
- * NOTE: DO NOT COMMIT TO SOURCE CONTROL
+ * Copy this file to local.js and add there you can overwrite 
+ * configuration options.
  */
 
 define([], function () {
 	"use strict";
 
-	return {
-		host: "localhost"
-	};
+	return {};
 });
