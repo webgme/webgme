@@ -22,7 +22,7 @@ define(['logManager',
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
-                var readOnly = (branchName === null || branchName === undefined) ? true : false;
+                var readOnly = branchName === null || branchName === undefined;
                 lm.setPanelReadOnly(readOnly);
             });
 
@@ -63,7 +63,7 @@ define(['logManager',
                 'params' : {'client': client}});
 
             // DEBUG ONLY PANELS
-            if (__WebGME__DEBUG === true) {
+            if (DEBUG === true) {
                 panels.push({'name': 'DebugTest/DebugTestPanel',
                     'container': 'left',
                     'params' : {'client': client}});
