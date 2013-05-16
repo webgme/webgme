@@ -572,10 +572,10 @@ define(['logManager',
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
-        i = redrawnConnectionIDs.len;
+        i = redrawnConnectionIDs.length;
 
         while(i--) {
-            itemBBox = items[i].getBoundingBox();
+            itemBBox = items[redrawnConnectionIDs[i]].getBoundingBox();
             maxWidth = Math.max(maxWidth, itemBBox.x2);
             maxHeight = Math.max(maxHeight, itemBBox.y2);
         }
