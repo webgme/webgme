@@ -1,63 +1,63 @@
 /* override default connector properties for draggable connector end */
-.diagram-designer .items {
-  position: absolute; }
-  .diagram-designer .items:focus {
-    outline: none; }
-  .diagram-designer .items .rubberband {
-    background: rgba(219, 234, 252, 0.49);
-    border: #52a8ec solid 1px;
-    z-index: 100000; }
-  .diagram-designer .items .selection-outline {
-    background: rgba(255, 255, 0, 0.1);
-    border: black dashed 1px;
-    position: absolute;
-    /*z-index: 1002;*/
-    pointer-events: none;
-    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
-    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
-    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
-    .diagram-designer .items .selection-outline .s-btn {
+.diagram-designer {
+  outline: none; }
+  .diagram-designer .items {
+    position: absolute; }
+    .diagram-designer .items .rubberband {
+      background: rgba(219, 234, 252, 0.49);
+      border: #52a8ec solid 1px;
+      z-index: 100000; }
+    .diagram-designer .items .selection-outline {
+      background: rgba(255, 255, 0, 0.1);
+      border: black dashed 1px;
       position: absolute;
-      /*z-index: 100000;*/
-      /*width: 26px;
-      height: 26px;*/
-      background-color: white;
-      border: 2px solid #000000;
-      line-height: 14px;
-      padding: 3px;
-      border-radius: 12px;
-      pointer-events: all;
-      cursor: pointer;
+      /*z-index: 1002;*/
+      pointer-events: none;
       -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
       -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
       box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
-      .diagram-designer .items .selection-outline .s-btn.delete {
-        top: -13px;
-        right: -13px; }
-  .diagram-designer .items .connectionDraggableEnd {
-    background-color: #fefefe;
-    height: 10px;
-    width: 10px;
+      .diagram-designer .items .selection-outline .s-btn {
+        position: absolute;
+        /*z-index: 100000;*/
+        /*width: 26px;
+        height: 26px;*/
+        background-color: white;
+        border: 2px solid #000000;
+        line-height: 14px;
+        padding: 3px;
+        border-radius: 12px;
+        pointer-events: all;
+        cursor: pointer;
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075) 0 0 8px rgba(0, 0, 0, 0.6);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(0, 0, 0, 0.6); }
+        .diagram-designer .items .selection-outline .s-btn.delete {
+          top: -13px;
+          right: -13px; }
+    .diagram-designer .items .connectionDraggableEnd {
+      background-color: #fefefe;
+      height: 10px;
+      width: 10px;
+      position: absolute;
+      cursor: pointer;
+      border: 1px solid #883333;
+      margin-top: -6px;
+      margin-left: -6px; }
+      .diagram-designer .items .connectionDraggableEnd:hover {
+        border-color: rgba(255, 43, 43, 0.8);
+        -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
+        -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
+        box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6); }
+      .diagram-designer .items .connectionDraggableEnd.connection-end-state-hover {
+        background-color: lime; }
+  .diagram-designer .dropRegion {
+    width: 0;
+    height: 0;
     position: absolute;
-    cursor: pointer;
-    border: 1px solid #883333;
-    margin-top: -6px;
-    margin-left: -6px; }
-    .diagram-designer .items .connectionDraggableEnd:hover {
-      border-color: rgba(255, 43, 43, 0.8);
-      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
-      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
-      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6); }
-    .diagram-designer .items .connectionDraggableEnd.connection-end-state-hover {
-      background-color: lime; }
-.diagram-designer .dropRegion {
-  width: 0;
-  height: 0;
-  position: absolute;
-  top: 0;
-  left: 0; }
-  .diagram-designer .dropRegion.accept-droppable {
-    background-color: rgba(0, 255, 0, 0.05); }
+    top: 0;
+    left: 0; }
+    .diagram-designer .dropRegion.accept-droppable {
+      background-color: rgba(0, 255, 0, 0.05); }
 
 div.diagram-designer-zoom {
   height: 100px;

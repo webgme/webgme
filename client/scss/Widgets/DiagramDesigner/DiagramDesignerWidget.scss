@@ -18,13 +18,10 @@ $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
 $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
 
 .diagram-designer {
+  outline: none;
 
   .items {
     position: absolute;
-
-    &:focus {
-      outline: none;
-    }
 
     .rubberband {
       background: $diagram-designer-selection-rubber-band-background-color;
