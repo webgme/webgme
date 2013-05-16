@@ -264,7 +264,7 @@ define(['logManager',
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
-            "class" : "items",
+            "class" : "items"
         });
         this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$itemsContainer);
 
@@ -987,7 +987,7 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype._addZoomMouseHandler = function (el) {
         var self = this;
-        
+
         //MOUSE ENTER WORKAROUND
         el.attr("tabindex", 0);
         el.mouseenter(function(){
