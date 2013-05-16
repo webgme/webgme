@@ -33,7 +33,11 @@ define(['logManager',
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
-        WIDGET_CLASS = 'diagram-designer';   // must be same as scss/Widgets/DiagramDesignerWidget.scss
+        WIDGET_CLASS = 'diagram-designer',
+        ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+        ZOOM_MIN = 0,
+        ZOOM_MAX = ZOOM_VALUES.length,
+        ZOOM_LEVEL = ZOOM_VALUES.indexOf(1);   // must be same as scss/Widgets/DiagramDesignerWidget.scss
 
     DiagramDesignerWidget = function (container, params) {
         var self = this;
@@ -230,6 +234,8 @@ define(['logManager',
         //add own class
         this.$el.addClass(WIDGET_CLASS);
 
+        this._addZoomMouseHandler(this.$el);
+
         this._attachScrollHandler(this.$el);
 
         //DESIGNER CANVAS HEADER
@@ -259,7 +265,6 @@ define(['logManager',
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
             "class" : "items",
-            "tabindex": 0
         });
         this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$itemsContainer);
 
@@ -318,14 +323,13 @@ define(['logManager',
 
         this._zoomSlider.slider({
             orientation: "vertical",
-            min: 0,
-            max: 8,
-            value: 4,
+            min: ZOOM_MIN,
+            max: ZOOM_MAX,
+            value: ZOOM_LEVEL,
             slide: function( event, ui ) {
-                var vals = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
-                    val = vals[ ui.value ];
+                ZOOM_LEVEL = ui.value;
 
-                self.setZoom(val);
+                self.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
             }
         });
 
@@ -963,6 +967,70 @@ define(['logManager',
             $(".diagram-designer div.items").css({'transform-origin': '0 0',
                 'transform': 'scale('+ val + ', ' + val + ')'});
         }
+    };
+
+    DiagramDesignerWidget.prototype.zoomIn = function () {
+        if (ZOOM_LEVEL < ZOOM_MAX) {
+            ZOOM_LEVEL += 1;
+            this._zoomSlider.slider( "option", "value", ZOOM_LEVEL );
+            this.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
+        }
+    };
+
+    DiagramDesignerWidget.prototype.zoomOut = function () {
+        if (ZOOM_LEVEL > ZOOM_MIN) {
+            ZOOM_LEVEL -= 1;
+            this._zoomSlider.slider( "option", "value", ZOOM_LEVEL );
+            this.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
+        }
+    };
+
+    DiagramDesignerWidget.prototype._addZoomMouseHandler = function (el) {
+        var self = this;
+        
+        //MOUSE ENTER WORKAROUND
+        el.attr("tabindex", 0);
+        el.mouseenter(function(){
+            $(this).focus();
+        });
+
+        //IE, Chrome, etc
+        el.on('mousewheel', function (event){
+            var org = event.originalEvent;
+
+            if (org &&  (org.ctrlKey || org.metaKey || org.altKey)) {
+                //CTRL + mouse scroll
+                if (org.wheelDelta < 0) {
+                    console.log ('DOWN');
+                    self.zoomOut();
+                } else {
+                    console.log ('UP');
+                    self.zoomIn();
+                }
+
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        });
+
+        //FIREFOX
+        el.on('DOMMouseScroll', function (event){
+            var org = event.originalEvent;
+
+            if (org && (org.ctrlKey || org.metaKey || org.altKey)) {
+                //CTRL + mouse scroll
+                if (org.detail > 0) {
+                    console.log ('DOWN');
+                    self.zoomOut();
+                } else {
+                    console.log ('UP');
+                    self.zoomIn();
+                }
+
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        });
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
