@@ -73,9 +73,7 @@ define(['logManager',
 
     DecoratorWithPorts.prototype._renderContent = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            childrenIDs,
-            len;
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
@@ -98,9 +96,6 @@ define(['logManager',
     };
 
     DecoratorWithPorts.prototype.calculateDimension = function () {
-        var zoom = this.hostDesignerItem.canvas._zoom,
-            canvasOffset =  this.hostDesignerItem.canvas._offset;
-
         if (this.hostDesignerItem) {
             this.hostDesignerItem.width = this.$el.outerWidth(true);
             this.hostDesignerItem.height = this.$el.outerHeight(true);
@@ -139,8 +134,7 @@ define(['logManager',
 
     DecoratorWithPorts.prototype.getConnectionAreas = function (id) {
         var result = [],
-            edge = 10,
-            zoom = this.hostDesignerItem.canvas._zoom;
+            edge = 10;
 
         //by default return the bounding box edges midpoints
 
