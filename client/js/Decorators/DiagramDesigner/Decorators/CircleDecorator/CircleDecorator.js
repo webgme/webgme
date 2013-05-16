@@ -13,7 +13,8 @@ define(['logManager',
         __parent__ = DefaultDecorator,
         __parent_proto__ = DefaultDecorator.prototype,
         DECORATOR_ID = "CircleDecorator",
-        CANVAS_SIZE = 40;
+        CANVAS_SIZE = 40,
+        FILL_COLOR = '#000000';
 
     CircleDecorator = function (options) {
         var opts = _.extend( {}, options);
@@ -48,13 +49,11 @@ define(['logManager',
 
     CircleDecorator.prototype._renderCircle = function () {
         //find additional CircleDecorator specific UI components
-        this.skinParts.$arrowCanvas = this.$el.find('[id="circleCanvas"]');
-        this.skinParts.$arrowCanvas[0].height = CANVAS_SIZE;
-        this.skinParts.$arrowCanvas[0].width = CANVAS_SIZE;
-        var ctx = this.skinParts.$arrowCanvas[0].getContext('2d');
-        if(ctx) {
-            ctx.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1, true);
-        }
+        this.skinParts.$circleCanvas = this.$el.find('[id="circleCanvas"]');
+        this.skinParts.$circleCanvas.height(CANVAS_SIZE);
+        this.skinParts.$circleCanvas.width(CANVAS_SIZE);
+        this.skinParts.svgPaper = Raphael(this.skinParts.$circleCanvas[0]);
+        this.skinParts.svgPaper.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1).attr('fill',FILL_COLOR);
     };
 
     CircleDecorator.prototype.onRenderGetLayoutInfo = function () {
@@ -65,7 +64,7 @@ define(['logManager',
     };
 
     CircleDecorator.prototype.onRenderSetLayoutInfo = function () {
-        var shift = (40 - this.renderLayoutInfo.nameWidth) / 2;
+        var shift = (CANVAS_SIZE - this.renderLayoutInfo.nameWidth) / 2;
 
         this.skinParts.$name.css({ "left": shift });
 
@@ -75,15 +74,15 @@ define(['logManager',
 
     CircleDecorator.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = this.skinParts.$arrowCanvas[0].width;
-            this.hostDesignerItem.height = this.skinParts.$arrowCanvas[0].height + this.skinParts.$name.outerHeight(true);
+            this.hostDesignerItem.width = CANVAS_SIZE;
+            this.hostDesignerItem.height = CANVAS_SIZE + this.skinParts.$name.outerHeight(true);
         }
     };
 
     CircleDecorator.prototype.getConnectionAreas = function (/*id*/) {
         var result = [],
-            width = this.skinParts.$arrowCanvas[0].width,
-            height = this.skinParts.$arrowCanvas[0].height;
+            width = CANVAS_SIZE,
+            height = CANVAS_SIZE;
 
         //by default return the bounding box edges midpoints
         //NOTE: it returns the connection point regardless of being asked for
