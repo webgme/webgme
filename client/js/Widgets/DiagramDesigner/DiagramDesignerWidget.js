@@ -313,8 +313,8 @@ define(['logManager',
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
 
         //zoom
-        this._zoomSlider = $('<div/>', {'class': 'zoom'});
-        this.$el.append(this._zoomSlider);
+        this._zoomSlider = $('<div/>', {'class': 'diagram-designer-zoom'});
+        this.$el.parent().append(this._zoomSlider);
 
         this._zoomSlider.slider({
             orientation: "vertical",

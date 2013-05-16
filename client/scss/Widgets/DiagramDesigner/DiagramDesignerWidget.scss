@@ -83,23 +83,23 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
       background-color: $items-accept-droppable-background-color;
     }
   }
+}
 
-  div.zoom {
-    height: 100px;
-    width: 3px;
-    position: absolute;
-    top: 10px;
-    left: 10px;
+div.diagram-designer-zoom {
+  height: 100px;
+  width: 3px;
+  position: absolute;
+  top: 60px;
+  left: 10px;
 
-    a.ui-slider-handle {
-      width: 15px;
-      height: 15px;
-      left: -7px;
-      outline: none;
+  a.ui-slider-handle {
+    width: 15px;
+    height: 15px;
+    left: -7px;
+    outline: none;
 
-      [class*="icon-"] {
-        margin-top: -2px;
-      }
+    [class*="icon-"] {
+      margin-top: -2px;
     }
   }
 }

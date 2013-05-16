@@ -58,16 +58,17 @@
   left: 0; }
   .diagram-designer .dropRegion.accept-droppable {
     background-color: rgba(0, 255, 0, 0.05); }
-.diagram-designer div.zoom {
+
+div.diagram-designer-zoom {
   height: 100px;
   width: 3px;
   position: absolute;
-  top: 10px;
+  top: 60px;
   left: 10px; }
-  .diagram-designer div.zoom a.ui-slider-handle {
+  div.diagram-designer-zoom a.ui-slider-handle {
     width: 15px;
     height: 15px;
     left: -7px;
     outline: none; }
-    .diagram-designer div.zoom a.ui-slider-handle [class*="icon-"] {
+    div.diagram-designer-zoom a.ui-slider-handle [class*="icon-"] {
       margin-top: -2px; }
