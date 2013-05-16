@@ -59,12 +59,15 @@
   .diagram-designer .dropRegion.accept-droppable {
     background-color: rgba(0, 255, 0, 0.05); }
 .diagram-designer div.zoom {
-  height: 200px;
-  width: 5px;
+  height: 100px;
+  width: 3px;
   position: absolute;
   top: 10px;
   left: 10px; }
   .diagram-designer div.zoom a.ui-slider-handle {
-    width: 11px;
-    height: 11px;
-    left: -4px; }
+    width: 15px;
+    height: 15px;
+    left: -7px;
+    outline: none; }
+    .diagram-designer div.zoom a.ui-slider-handle [class*="icon-"] {
+      margin-top: -2px; }

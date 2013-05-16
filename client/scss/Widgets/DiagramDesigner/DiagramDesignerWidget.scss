@@ -85,16 +85,21 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
   }
 
   div.zoom {
-    height: 200px;
-    width: 5px;
+    height: 100px;
+    width: 3px;
     position: absolute;
     top: 10px;
     left: 10px;
 
     a.ui-slider-handle {
-      width: 11px;
-      height: 11px;
-      left: -4px;
+      width: 15px;
+      height: 15px;
+      left: -7px;
+      outline: none;
+
+      [class*="icon-"] {
+        margin-top: -2px;
+      }
     }
   }
 }
