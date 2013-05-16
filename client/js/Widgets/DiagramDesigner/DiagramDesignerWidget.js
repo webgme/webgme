@@ -328,6 +328,8 @@ define(['logManager',
                 self.setZoom(val);
             }
         });
+
+        this._zoomSlider.find('.ui-slider-handle').html('<i class="icon-search"></i>');
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
@@ -371,6 +373,15 @@ define(['logManager',
 
         return { "mX": pX > 0 ? pX : 0,
             "mY": pY > 0 ? pY : 0 };
+    };
+
+    DiagramDesignerWidget.prototype.getAdjustedOffset = function (offset) {
+        var childrenContainerOffset = this._offset,
+            left = (offset.left - childrenContainerOffset.left) / this._zoom + childrenContainerOffset.left,
+            top = (offset.top - childrenContainerOffset.top) / this._zoom + childrenContainerOffset.top;
+
+        return { "left": left,
+            "top": top };
     };
 
     DiagramDesignerWidget.prototype.clear = function () {

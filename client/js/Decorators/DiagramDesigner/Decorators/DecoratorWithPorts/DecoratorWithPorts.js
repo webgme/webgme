@@ -98,12 +98,16 @@ define(['logManager',
     };
 
     DecoratorWithPorts.prototype.calculateDimension = function () {
+        var zoom = this.hostDesignerItem.canvas._zoom,
+            canvasOffset =  this.hostDesignerItem.canvas._offset;
+
         if (this.hostDesignerItem) {
             this.hostDesignerItem.width = this.$el.outerWidth(true);
             this.hostDesignerItem.height = this.$el.outerHeight(true);
         }
 
-        this.offset = this.$el.offset();
+        this.offset = this.hostDesignerItem.canvas.getAdjustedOffset(this.$el.offset());
+
         var i = this._portIDs.length;
 
         while (i--) {
@@ -135,7 +139,8 @@ define(['logManager',
 
     DecoratorWithPorts.prototype.getConnectionAreas = function (id) {
         var result = [],
-            edge = 10;
+            edge = 10,
+            zoom = this.hostDesignerItem.canvas._zoom;
 
         //by default return the bounding box edges midpoints
 

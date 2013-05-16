@@ -157,7 +157,7 @@ define(['logManager'], function (logManager) {
     };
 
     Port.prototype.calculatePortConnectionArea = function () {
-        var location = this.$portDot.offset();
+        var location = this.decorator.hostDesignerItem.canvas.getAdjustedOffset(this.$portDot.offset());
 
         this.connectionArea.x = location.left;
         this.connectionArea.y = location.top;
