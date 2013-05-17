@@ -56,7 +56,7 @@ define(['logManager',
         this.$infoLabel = this.toolBar.addLabel();
 
         //add DROPDOWN MENU to toolbar for column hide/show
-        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Column visibility" });
+        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Columns" });
 
         //toggle button for show common/all fields
         var toggleButtonGroup = this.toolBar.addButtonGroup();
