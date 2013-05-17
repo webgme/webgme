@@ -40,6 +40,10 @@ $dot-border-width: 1px;
 
   .left {
     .port {
+      .title-wrapper {
+        text-align: left;
+      }
+
       span.dot {
         left: - $padding - $dot-width - 2; /* -2 because of the 2px border-width of the decorator)*/
         border-top-left-radius: $dot-radius;
@@ -54,6 +58,10 @@ $dot-border-width: 1px;
 
   .right {
     .port {
+      .title-wrapper {
+        text-align: right;
+      }
+
       span.dot {
         left: $ports-width + $padding;
         border-top-right-radius: $dot-radius;

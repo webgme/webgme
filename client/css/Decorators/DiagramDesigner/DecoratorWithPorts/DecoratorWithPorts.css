@@ -60,6 +60,8 @@
         top: 5px; }
       .decorator-with-ports .ports .port div.connector {
         top: 4px; }
+    .decorator-with-ports .ports .left .port .title-wrapper {
+      text-align: left; }
     .decorator-with-ports .ports .left .port span.dot {
       left: -8px;
       /* -2 because of the 2px border-width of the decorator)*/
@@ -67,6 +69,8 @@
       border-bottom-left-radius: 4px; }
     .decorator-with-ports .ports .left .port .connector {
       left: -7px; }
+    .decorator-with-ports .ports .right .port .title-wrapper {
+      text-align: right; }
     .decorator-with-ports .ports .right .port span.dot {
       left: 53px;
       border-top-right-radius: 4px;
