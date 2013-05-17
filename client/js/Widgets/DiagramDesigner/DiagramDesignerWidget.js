@@ -33,11 +33,8 @@ define(['logManager',
         DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
-        WIDGET_CLASS = 'diagram-designer',
-        ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
-        ZOOM_MIN = 0,
-        ZOOM_MAX = ZOOM_VALUES.length,
-        ZOOM_LEVEL = ZOOM_VALUES.indexOf(1);   // must be same as scss/Widgets/DiagramDesignerWidget.scss
+        WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
+        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5];  
 
     DiagramDesignerWidget = function (container, params) {
         var self = this;
@@ -66,6 +63,15 @@ define(['logManager',
         this._scrollPos = { "left": 0, "top": 0 };
 
         this._zoom = 1.0;
+        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+        if (this._zoomValues.indexOf(1) === -1) {
+            this._zoomValues.push(1);
+        }
+        this._zoomValues.sort();
+        this._zoomLevelMin = 0;
+        this._zoomLevelMax = this._zoomValues.length;
+        this._zoomLevel = this._zoomValues.indexOf(1);
+
 
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
@@ -234,6 +240,7 @@ define(['logManager',
         //add own class
         this.$el.addClass(WIDGET_CLASS);
 
+        //add zoom level UI and handlers
         this._addZoomMouseHandler(this.$el);
 
         this._attachScrollHandler(this.$el);
@@ -323,13 +330,11 @@ define(['logManager',
 
         this._zoomSlider.slider({
             orientation: "vertical",
-            min: ZOOM_MIN,
-            max: ZOOM_MAX,
-            value: ZOOM_LEVEL,
+            min: this._zoomLevelMin,
+            max: this._zoomLevelMax,
+            value: this._zoomLevel,
             slide: function( event, ui ) {
-                ZOOM_LEVEL = ui.value;
-
-                self.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
+                self.setZoomLevel(ui.value);
             }
         });
 
@@ -959,30 +964,28 @@ define(['logManager',
         this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
-    DiagramDesignerWidget.prototype.setZoom = function (val) {
-        if (this._zoom !== val) {
-            this._zoom = val;
+    DiagramDesignerWidget.prototype.setZoomLevel = function (val) {
+        if (val >= this._zoomLevelMin && val <= this._zoomLevelMax) {
+            if (this._zoomLevel !== val) {
+                this._zoomLevel = val;
 
-            $( "span.toolbar-group" ).text( val );
-            $(".diagram-designer div.items").css({'transform-origin': '0 0',
-                'transform': 'scale('+ val + ', ' + val + ')'});
+                this._zoom = this._zoomValues[this._zoomLevel];
+
+                this.skinParts.$itemsContainer.css({'transform-origin': '0 0',
+                    'transform': 'scale('+ this._zoom + ', ' + this._zoom + ')'});
+
+                $( "span.toolbar-group" ).text( this._zoom );
+                this._zoomSlider.slider( "option", "value", this._zoomLevel );
+            }    
         }
     };
 
     DiagramDesignerWidget.prototype.zoomIn = function () {
-        if (ZOOM_LEVEL < ZOOM_MAX) {
-            ZOOM_LEVEL += 1;
-            this._zoomSlider.slider( "option", "value", ZOOM_LEVEL );
-            this.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
-        }
+        this.setZoomLevel(this._zoomLevel + 1);
     };
 
     DiagramDesignerWidget.prototype.zoomOut = function () {
-        if (ZOOM_LEVEL > ZOOM_MIN) {
-            ZOOM_LEVEL -= 1;
-            this._zoomSlider.slider( "option", "value", ZOOM_LEVEL );
-            this.setZoom(ZOOM_VALUES[ZOOM_LEVEL]);
-        }
+        this.setZoomLevel(this._zoomLevel - 1);
     };
 
     DiagramDesignerWidget.prototype._addZoomMouseHandler = function (el) {
@@ -1001,10 +1004,8 @@ define(['logManager',
             if (org &&  (org.ctrlKey || org.metaKey || org.altKey)) {
                 //CTRL + mouse scroll
                 if (org.wheelDelta < 0) {
-                    console.log ('DOWN');
                     self.zoomOut();
                 } else {
-                    console.log ('UP');
                     self.zoomIn();
                 }
 
@@ -1020,10 +1021,8 @@ define(['logManager',
             if (org && (org.ctrlKey || org.metaKey || org.altKey)) {
                 //CTRL + mouse scroll
                 if (org.detail > 0) {
-                    console.log ('DOWN');
                     self.zoomOut();
                 } else {
-                    console.log ('UP');
                     self.zoomIn();
                 }
 
