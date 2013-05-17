@@ -170,6 +170,10 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             $label.text(params.label + ": ");
         }
 
+        if (params && params.collapse) {
+            $textBox.addClass('no-focus-collapse');
+        }
+
         if ($label) {
             $txtGroup.append($label);
         }

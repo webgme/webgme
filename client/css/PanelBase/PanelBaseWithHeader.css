@@ -26,6 +26,8 @@
     .panel-base-wh .panel-header .panel-header-toolbar .input-append,
     .panel-base-wh .panel-header .panel-header-toolbar .input-prepend {
       margin-bottom: 0px; }
+    .panel-base-wh .panel-header .panel-header-toolbar input.no-focus-collapse:not(:focus) {
+      width: 30px; }
     .panel-base-wh .panel-header .panel-header-toolbar li div.iCheckBox {
       margin-left: 10px; }
   .panel-base-wh .panel-body {

@@ -51,6 +51,10 @@ $sidepane-panel-border-radius: 4px;
         margin-bottom: 0px;
       }
 
+      input.no-focus-collapse:not(:focus) {
+        width: 30px;
+      }
+
       li {
         div.iCheckBox {
           margin-left: 10px;
