@@ -47,6 +47,8 @@ define(['logManager',
         //set Widget title
         this.setTitle("Visualizer");
 
+        this.$el.addClass('visualizer-panel');
+
         this._ul = $('<ul class="nav nav-pills nav-stacked">');
 
         this.$el.append(this._ul);

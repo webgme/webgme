@@ -1,5 +1,12 @@
-.vis-loader {
-  display: inline-block;
-  vertical-align: middle;
-  margin-left: 7px;
+.visualizer-panel {
+  .vis-loader {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 7px;
+  }
+  
+  > ul {
+    margin-bottom: 0;
+  }
 }
+
