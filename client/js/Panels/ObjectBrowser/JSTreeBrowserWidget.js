@@ -27,7 +27,8 @@ define(['clientUtil',
             animateNode,
             focusNode,
             lastSelection,
-            openInVisualizer;
+            openInVisualizer,
+            makeNodeDraggable;
 
         //get logger instance for this component
         logger = logManager.create("JSTreeBrowserWidget");
@@ -441,6 +442,42 @@ define(['clientUtil',
             event.stopPropagation();
         });
 
+        //hook up draggable
+        makeNodeDraggable = function (node) {
+            var nodeEl = node;
+
+            nodeEl.draggable({
+                zIndex: 100000,
+                appendTo: $(CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first(),
+                cursorAt: { left: 0, top: -2 },
+                helper: function (event) {
+                    var helperEl = nodeEl.clone(),
+                        wrapper = $('<div class="jstree jstree-default"><ul class="jstree-no-dots"></ul></div>'),
+                        metaInfo;
+
+                    //trim down unnecessary DOM elements from it
+                    helperEl.children().first().remove();
+                    helperEl.find("ul").remove();
+                    helperEl.find(".jstree-hovered").removeClass("jstree-hovered");
+                    helperEl.find(".jstree-clicked").removeClass("jstree-clicked");
+
+                    wrapper.find('ul').append(helperEl);
+
+                    helperEl = wrapper;
+
+                    //add extra GME related drag info
+                    metaInfo = {};
+                    metaInfo[CONSTANTS.GME_ID] =  node.attr("nId");
+                    helperEl.data("metaInfo", metaInfo);
+
+                    helperEl[0].GMEDragData = { "type": "simple-drag",
+                        "id": node.attr("nId")};
+
+                    return helperEl;
+                }
+            });
+        };
+
         /*
          * PUBLIC METHODS
          */
@@ -453,8 +490,7 @@ define(['clientUtil',
                 newNodeData,
                 existingChildren,
                 i,
-                insertPos = -1,
-                makeNodeDraggable;
+                insertPos = -1;
 
             //check if the parentNode is null or not
             //when null, the new node belongs to the root
@@ -485,13 +521,7 @@ define(['clientUtil',
 
             for (i = 0; i < existingChildren.length; i += 1) {
                 if (newNodeData.data.title < this.treeInstance.get_text(existingChildren[i])) {
-                    /*if (insertPos !== -1) {
-                        if (this.treeInstance.get_text(existingChildren[i]) < this.treeInstance.get_text(existingChildren[insertPos])) {
-                            insertPos = i;
-                        }
-                    } else {
-                        insertPos = i;
-                    }*/
+
                     insertPos = i;
                     break;
                 }
@@ -512,52 +542,10 @@ define(['clientUtil',
             //log
             logger.debug("New node created: " + objDescriptor.id);
 
-            //hook up draggable
-            makeNodeDraggable = function (node) {
-                var nodeEl = node;
-
-                nodeEl.draggable({
-                    zIndex: 100000,
-                    appendTo: $(CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first(),
-                    cursorAt: { left: 0, top: -2 },
-                    helper: function (event) {
-                        var helperEl = nodeEl.clone(),
-                            wrapper = $('<div class="jstree jstree-default"><ul class="jstree-no-dots"></ul></div>'),
-                            metaInfo;
-
-                        //trim down unnecessary DOM elements from it
-                        helperEl.children().first().remove();
-                        helperEl.find("ul").remove();
-                        helperEl.find(".jstree-hovered").removeClass("jstree-hovered");
-                        helperEl.find(".jstree-clicked").removeClass("jstree-clicked");
-
-                        wrapper.find('ul').append(helperEl);
-
-                        helperEl = wrapper;
-
-                        //add extra GME related drag info
-                        metaInfo = {};
-                        metaInfo[CONSTANTS.GME_ID] =  node.attr("nId");
-                        helperEl.data("metaInfo", metaInfo);
-
-                        helperEl[0].GMEDragData = { "type": "simple-drag",
-                                             "id": node.attr("nId")};
-
-                        return helperEl;
-                    },
-                    start: function (event, ui) {
-                    },
-                    stop: function (event, ui) {
-                    },
-                    drag: function (event, ui) {
-                    }
-                });
-            };
-
             makeNodeDraggable(newNode);
 
             //a bit of visual effect
-            animateNode(newNode);
+            //animateNode(newNode);
 
             //return the newly created node
             return newNode;
