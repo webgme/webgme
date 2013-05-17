@@ -16,50 +16,50 @@ div.loader-progressbar {
 
 @keyframes wait {
   12% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, 0px 0px, 0px 0px; }
+    background-position: -4px 3px,-4px 3px,   -4px 3px, -4px 3px,  -4px 3px,-4px 3px,  -4px 2px,-4px 2px,  -4px 0px, -4px 0px,  0px 0px, 0px 0px; }
 
   25% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, 0px 0px, 0px 0px, 6px 0px, 6px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 3px,-4px 3px,  -4px 2px, -4px 2px,   0px 0px,    0px 0px,     6px 0px, 6px 0px; }
 
   37% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, 0px 2px, 0px 2px, 6px 0px, 6px 0px, 12px 0px, 12px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  0px 2px,    0px 2px,     6px 0px,  6px 0px,  12px 0px, 12px 0px; }
 
   50% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, 0px 3px, 0px 3px, 6px 2px, 6px 2px, 12px 0px, 12px 0px, -4px 0px, -4px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,   0px 3px,    0px 3px,  6px 2px,  6px 2px,  12px 0px, 12px 0px,  -4px 0px, -4px 0px; }
 
   62% {
-    background-position: -4px 3px, -4px 3px, 0px 3px, 0px 3px, 6px 3px, 6px 3px, 12px 2px, 12px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: -4px 3px, -4px 3px,   0px 3px,    0px 3px,     6px 3px,  6px 3px,  12px 2px, 12px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   75% {
-    background-position: 0px 3px, 0px 3px, 6px 3px, 6px 3px, 12px 3px, 12px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: 0px 3px,    0px 3px,     6px 3px,  6px 3px,  12px 3px, 12px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   87% {
-    background-position: 6px 3px, 6px 3px, 12px 3px, 12px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: 6px 3px,  6px 3px,  12px 3px, 12px 3px,  -4px 3px, -4px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   100% {
-    background-position: 12px 3px, 12px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; } }
+    background-position: 12px 3px, 12px 3px,  -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; } }
 
 @-webkit-keyframes wait {
   12% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, 0px 0px, 0px 0px; }
+    background-position: -4px 3px,-4px 3px,   -4px 3px, -4px 3px,  -4px 3px,-4px 3px,  -4px 2px,-4px 2px,  -4px 0px, -4px 0px,  0px 0px, 0px 0px; }
 
   25% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, 0px 0px, 0px 0px, 6px 0px, 6px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 3px,-4px 3px,  -4px 2px, -4px 2px,   0px 0px,    0px 0px,     6px 0px, 6px 0px; }
 
   37% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, 0px 2px, 0px 2px, 6px 0px, 6px 0px, 12px 0px, 12px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  0px 2px,    0px 2px,     6px 0px,  6px 0px,  12px 0px, 12px 0px; }
 
   50% {
-    background-position: -4px 3px, -4px 3px, -4px 3px, -4px 3px, 0px 3px, 0px 3px, 6px 2px, 6px 2px, 12px 0px, 12px 0px, -4px 0px, -4px 0px; }
+    background-position: -4px 3px, -4px 3px,  -4px 3px, -4px 3px,   0px 3px,    0px 3px,  6px 2px,  6px 2px,  12px 0px, 12px 0px,  -4px 0px, -4px 0px; }
 
   62% {
-    background-position: -4px 3px, -4px 3px, 0px 3px, 0px 3px, 6px 3px, 6px 3px, 12px 2px, 12px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: -4px 3px, -4px 3px,   0px 3px,    0px 3px,     6px 3px,  6px 3px,  12px 2px, 12px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   75% {
-    background-position: 0px 3px, 0px 3px, 6px 3px, 6px 3px, 12px 3px, 12px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: 0px 3px,    0px 3px,     6px 3px,  6px 3px,  12px 3px, 12px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   87% {
-    background-position: 6px 3px, 6px 3px, 12px 3px, 12px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; }
+    background-position: 6px 3px,  6px 3px,  12px 3px, 12px 3px,  -4px 3px, -4px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; }
 
   100% {
-    background-position: 12px 3px, 12px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 3px, -4px 2px, -4px 2px, -4px 0px, -4px 0px, -4px 0px, -4px 0px; } }
+    background-position: 12px 3px, 12px 3px,  -4px 3px, -4px 3px,  -4px 3px, -4px 3px,  -4px 2px, -4px 2px,  -4px 0px, -4px 0px,  -4px 0px, -4px 0px; } }
