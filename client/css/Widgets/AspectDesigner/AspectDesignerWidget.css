@@ -1,7 +1,7 @@
 div.filterPanel {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 60px;
+  left: 25px;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.2);
   -webkit-border-radius: 6px;

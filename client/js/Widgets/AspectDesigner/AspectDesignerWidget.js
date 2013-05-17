@@ -65,7 +65,7 @@ define(['logManager',
         this.$filterHeader = this.$filterPanel.find('.header');
         this.$filterUl = this.$filterPanel.find('ul.body');
 
-        this.$el.append(this.$filterPanel);
+        this.$el.parent().append(this.$filterPanel);
     };
 
     AspectDesignerWidget.prototype._checkChanged = function (value, isChecked) {
