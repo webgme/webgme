@@ -67,7 +67,7 @@ define([], function () {
 
         this.skinParts.$zoomLabel.text( "Zoom: " + this._zoom * 100 + "%" );
 
-        this._resizeItemContainerForZoom();
+        this._resizeItemContainer();
     };
 
     DiagramDesignerWidgetZoom.prototype.zoomIn = function () {
@@ -121,26 +121,6 @@ define([], function () {
             }
         });
     };
-
-    DiagramDesignerWidgetZoom.prototype._resizeItemContainerForZoom = function () {
-        var width = this.$el.width(),
-            height = this.$el.height(),
-            zoomedWidth = width / this._zoom,
-            zoomedHeight = height / this._zoom;
-
-        this._resizeItemContainer();
-
-        if (zoomedWidth > this._actualSize.w || zoomedHeight > this._actualSize.h) {
-            this.skinParts.$itemsContainer.css({"width": zoomedWidth,
-                "height": zoomedHeight});
-
-            this.skinParts.SVGPaper.setSize(zoomedWidth, zoomedHeight);
-            this.skinParts.SVGPaper.setViewBox(0, 0, zoomedWidth, zoomedHeight, false);
-
-            this._centerBackgroundText();
-        }
-    };
-
 
 
     return DiagramDesignerWidgetZoom;

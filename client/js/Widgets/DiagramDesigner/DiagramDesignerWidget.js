@@ -70,11 +70,14 @@ define(['logManager',
 
         this._initializeCollections();
 
+        //define zoom value
+        this._zoom = 1.0;
+        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+
         //initialize UI
         this.initializeUI();
 
-        this._zoom = 1.0;
-        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+        //init zoom related UI and handlers
         this._initZoom();
 
         //initiate Selection Manager (if needed)
@@ -211,12 +214,11 @@ define(['logManager',
 
     //Called when the widget's container size changed
     DiagramDesignerWidget.prototype.onWidgetContainerResize = function (width, height) {
-
-        //call our own resize handler
-        this._resizeItemContainer(width, height);
-
         this._containerSize.w = width;
         this._containerSize.h = height;
+
+        //call our own resize handler
+        this._resizeItemContainer();
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
@@ -272,6 +274,8 @@ define(['logManager',
         this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
 
         //finally resize the whole content according to available space
+        this._containerSize.w = this.$el.width();
+        this._containerSize.h = this.$el.height();
         this._resizeItemContainer();
 
         if (this._droppable === true) {
@@ -326,21 +330,25 @@ define(['logManager',
         });
     };
 
-    DiagramDesignerWidget.prototype._resizeItemContainer = function (width, height) {
-        if (width === undefined) {
-            width = this.$el.width();
-        }
-        if (height === undefined) {
-            height = this.$el.height();
-        }
-        this._actualSize.w = Math.max(this._actualSize.w, width);
-        this._actualSize.h = Math.max(this._actualSize.h, height);
+    DiagramDesignerWidget.prototype._resizeItemContainer = function () {
+        var zoomedWidth = this._containerSize.w / this._zoom,
+            zoomedHeight = this._containerSize.h / this._zoom;
 
-        this.skinParts.$itemsContainer.css({"width": this._actualSize.w,
-            "height": this._actualSize.h});
+        this.logger.debug('MinZoomedSize: ' + zoomedWidth + ', ' + zoomedHeight);
 
-        this.skinParts.SVGPaper.setSize(this._actualSize.w, this._actualSize.h);
-        this.skinParts.SVGPaper.setViewBox(0, 0, this._actualSize.w, this._actualSize.h, false);
+        this.logger.debug('this._actualSize: ' + this._actualSize.w + ', ' + this._actualSize.h);
+
+        zoomedWidth = Math.max(zoomedWidth, this._actualSize.w);
+        zoomedHeight = Math.max(zoomedHeight, this._actualSize.h);
+
+        this.skinParts.$itemsContainer.css({"width": zoomedWidth,
+            "height": zoomedHeight});
+
+        this.skinParts.SVGPaper.setSize(zoomedWidth, zoomedHeight);
+        this.skinParts.SVGPaper.setViewBox(0, 0, zoomedWidth, zoomedHeight, false);
+
+        this._svgPaperSize = {"w": zoomedWidth,
+                           "h": zoomedHeight};
 
         this._centerBackgroundText();
 
@@ -567,7 +575,9 @@ define(['logManager',
 
         //adjust the canvas size to the new 'grown' are that the inserted / updated require
         //TODO: canvas size decrease not handled yet
-        this._resizeItemContainer(maxWidth + CANVAS_EDGE, maxHeight + CANVAS_EDGE);
+        this._actualSize.w = Math.max(this._actualSize.w, maxWidth + CANVAS_EDGE);
+        this._actualSize.h = Math.max(this._actualSize.h, maxHeight + CANVAS_EDGE);
+        this._resizeItemContainer();
 
         //let the selection manager know about deleted items and connections
         this.selectionManager.componentsDeleted(this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
@@ -663,6 +673,9 @@ define(['logManager',
     DiagramDesignerWidget.prototype.onDesignerItemDragStart = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.hideSelectionOutline();
 
+        this._preDragActualSize = {"w": this._actualSize.w,
+                                    "h": this._actualSize.h};
+
         var len = allDraggedItemIDs.length;
         while (len--) {
             this.items[allDraggedItemIDs[len]].hideConnectors();
@@ -672,7 +685,23 @@ define(['logManager',
     DiagramDesignerWidget.prototype.onDesignerItemDrag = function (draggedItemId, allDraggedItemIDs) {
         var i = allDraggedItemIDs.length,
             connectionIDsToUpdate,
-            redrawnConnectionIDs;
+            redrawnConnectionIDs,
+            maxWidth = 0,
+            maxHeight = 0,
+            itemBBox,
+            items = this.items;
+
+        //get the position and size of all dragged guy and temporarily resize canvas to fit them
+        while (i--) {
+            itemBBox =  items[allDraggedItemIDs[i]].getBoundingBox();
+            maxWidth = Math.max(maxWidth, itemBBox.x2);
+            maxHeight = Math.max(maxHeight, itemBBox.y2);
+        }
+
+        this._actualSize.w = Math.max(this._preDragActualSize.w, maxWidth);
+        this._actualSize.h = Math.max(this._preDragActualSize.h, maxHeight);
+
+        this._resizeItemContainer();
 
         //refresh only the connections that are really needed
         connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
@@ -688,6 +717,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
         this.selectionManager.showSelectionOutline();
+
+        delete this._preDragActualSize;
     };
 
     /************************** END - DRAG ITEM ***************************/
@@ -892,12 +923,12 @@ define(['logManager',
             if (!text) {
                 this.logger.error("Invalid parameter 'text' for method 'setBackgroundText'");
             } else {
-                this._backGroundText = this.skinParts.SVGPaper.text(this._actualSize.w / 2, this._actualSize.h / 2, text);    
+                this._backGroundText = this.skinParts.SVGPaper.text(this._svgPaperSize.w / 2, this._svgPaperSize.h / 2, text);
             }
         } else {
             svgParams.text = text;
-            svgParams.x = this._actualSize.w / 2;
-            svgParams.y = this._actualSize.h / 2;
+            svgParams.x = this._svgPaperSize.w / 2;
+            svgParams.y = this._svgPaperSize.h / 2;
         }
 
         if (this._backGroundText) {
@@ -922,8 +953,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype._centerBackgroundText = function () {
         if (this._backGroundText) {
-            this._backGroundText.attr({"x" : this._actualSize.w / 2,
-                                       "y" : this._actualSize.h / 2});
+            this._backGroundText.attr({"x" : this._svgPaperSize.w / 2,
+                                       "y" : this._svgPaperSize.h / 2});
         }
     };
 
