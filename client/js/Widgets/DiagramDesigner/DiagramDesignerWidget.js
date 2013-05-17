@@ -14,6 +14,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/ConnectionRouteManager2',
     'js/Widgets/DiagramDesigner/ConnectionDrawingManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Zoom',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -27,7 +28,8 @@ define(['logManager',
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionRouteManager2,
                                                       ConnectionDrawingManager,
-                                                      DiagramDesignerWidgetEventDispatcher) {
+                                                      DiagramDesignerWidgetEventDispatcher,
+                                                      DiagramDesignerWidgetZoom) {
 
     var DiagramDesignerWidget,
         DEFAULT_GRID_SIZE = 10,
@@ -62,17 +64,6 @@ define(['logManager',
         this._offset = { "left": 0, "top": 0 };
         this._scrollPos = { "left": 0, "top": 0 };
 
-        this._zoom = 1.0;
-        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
-        if (this._zoomValues.indexOf(1) === -1) {
-            this._zoomValues.push(1);
-        }
-        this._zoomValues.sort();
-        this._zoomLevelMin = 0;
-        this._zoomLevelMax = this._zoomValues.length;
-        this._zoomLevel = this._zoomValues.indexOf(1);
-
-
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
         this._updating = false;
@@ -81,6 +72,10 @@ define(['logManager',
 
         //initialize UI
         this.initializeUI();
+
+        this._zoom = 1.0;
+        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+        this._initZoom();
 
         //initiate Selection Manager (if needed)
         this.selectionManager = params.selectionManager || new SelectionManager({"canvas": this});
@@ -240,9 +235,6 @@ define(['logManager',
         //add own class
         this.$el.addClass(WIDGET_CLASS);
 
-        //add zoom level UI and handlers
-        this._addZoomMouseHandler(this.$el);
-
         this._attachScrollHandler(this.$el);
 
         //DESIGNER CANVAS HEADER
@@ -323,22 +315,6 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
-
-        //zoom
-        this._zoomSlider = $('<div/>', {'class': 'diagram-designer-zoom'});
-        this.$el.parent().append(this._zoomSlider);
-
-        this._zoomSlider.slider({
-            orientation: "vertical",
-            min: this._zoomLevelMin,
-            max: this._zoomLevelMax,
-            value: this._zoomLevel,
-            slide: function( event, ui ) {
-                self.setZoomLevel(ui.value);
-            }
-        });
-
-        this._zoomSlider.find('.ui-slider-handle').html('<i class="icon-search"></i>');
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
@@ -964,74 +940,6 @@ define(['logManager',
         this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
-    DiagramDesignerWidget.prototype.setZoomLevel = function (val) {
-        if (val >= this._zoomLevelMin && val <= this._zoomLevelMax) {
-            if (this._zoomLevel !== val) {
-                this._zoomLevel = val;
-
-                this._zoom = this._zoomValues[this._zoomLevel];
-
-                this.skinParts.$itemsContainer.css({'transform-origin': '0 0',
-                    'transform': 'scale('+ this._zoom + ', ' + this._zoom + ')'});
-
-                $( "span.toolbar-group" ).text( this._zoom );
-                this._zoomSlider.slider( "option", "value", this._zoomLevel );
-            }    
-        }
-    };
-
-    DiagramDesignerWidget.prototype.zoomIn = function () {
-        this.setZoomLevel(this._zoomLevel + 1);
-    };
-
-    DiagramDesignerWidget.prototype.zoomOut = function () {
-        this.setZoomLevel(this._zoomLevel - 1);
-    };
-
-    DiagramDesignerWidget.prototype._addZoomMouseHandler = function (el) {
-        var self = this;
-
-        //MOUSE ENTER WORKAROUND
-        el.attr("tabindex", 0);
-        el.mouseenter(function(){
-            $(this).focus();
-        });
-
-        //IE, Chrome, etc
-        el.on('mousewheel', function (event){
-            var org = event.originalEvent;
-
-            if (org &&  (org.ctrlKey || org.metaKey || org.altKey)) {
-                //CTRL + mouse scroll
-                if (org.wheelDelta < 0) {
-                    self.zoomOut();
-                } else {
-                    self.zoomIn();
-                }
-
-                event.stopPropagation();
-                event.preventDefault();
-            }
-        });
-
-        //FIREFOX
-        el.on('DOMMouseScroll', function (event){
-            var org = event.originalEvent;
-
-            if (org && (org.ctrlKey || org.metaKey || org.altKey)) {
-                //CTRL + mouse scroll
-                if (org.detail > 0) {
-                    self.zoomOut();
-                } else {
-                    self.zoomIn();
-                }
-
-                event.stopPropagation();
-                event.preventDefault();
-            }
-        });
-    };
-
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
@@ -1040,6 +948,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetConnections.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetSubcomponents.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetEventDispatcher.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
+
 
     return DiagramDesignerWidget;
 });
