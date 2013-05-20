@@ -1,10 +1,16 @@
 {
     "name": "webGME",
-    "version": "0.1.0",
-    "description": "Web based ",
+    "version": "0.1.1",
+    "description": "Web based graphical domain specific modeling environments",
     "main": "server/combined",
     "homepage": "http://github.com/webgme/webgme",
     "keywords": [
+    	"webgme",
+    	"gme",
+    	"cooperative",
+    	"modeling",
+    	"editor",
+    	"domain"
     ],
     "repository": {
         "type": "git",

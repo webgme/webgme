@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/core" ], function (ASSERT, Mongo, Cache, TASYNC, Core) {
+define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/core", "util/sax", "fs" ], function (ASSERT, Mongo, Cache, TASYNC, Core, SAX, FS) {
 
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
@@ -146,6 +146,51 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		}
 	}
 
+	// --- sax parsing
+
+	var saxParse = TASYNC.wrap(function (xmlfile, handler, callback) {
+		ASSERT(typeof handler.opentag === "function");
+		ASSERT(typeof handler.closetag === "function");
+		ASSERT(typeof handler.text === "function");
+		ASSERT(typeof handler.getstat === "function");
+
+		var parser = SAX.createStream(true, {
+			trim: true
+		});
+
+		parser.on("opentag", handler.opentag);
+		parser.on("closetag", handler.closetag);
+		parser.on("text", handler.text);
+
+		parser.on("error", function (error) {
+			setProgress(null);
+			callback(error);
+		});
+
+		parser.on("end", function () {
+			console.log("Parsing done");
+			setProgress(null);
+			callback(null);
+		});
+
+		var stream = FS.createReadStream(xmlfile);
+
+		stream.on("error", function (err) {
+			setProgress(null);
+			callback(new Error(err.code === "ENOENT" ? "File not found: " + xmlfile : "Unknown file error: " + JSON.stringify(err)));
+		});
+
+		stream.on("open", function () {
+			console.log("Parsing " + xmlfile + " ...");
+			stream.pipe(parser);
+		});
+
+		setProgress(function () {
+			var stat = handler.getstat();
+			console.log("  at line " + parser._parser.line + (typeof stat === "string" ? " (" + stat + ")" : ""));
+		});
+	});
+
 	// --- export
 
 	return {
@@ -156,6 +201,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		closeProject: closeProject,
 		getProject: getProject,
 		getCore: getCore,
-		setProgress: setProgress
+		setProgress: setProgress,
+		saxParse: saxParse
 	};
 });

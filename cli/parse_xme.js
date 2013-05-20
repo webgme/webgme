@@ -53,8 +53,25 @@ if (typeof define !== "function") {
 	return;
 }
 
-define([ "util/assert", "util/sax", "fs", "core/tasync" ], function (ASSERT, SAX, FS, TASYNC) {
+define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC, COMMON) {
+
+	function parse (xmlfile) {
+		return COMMON.saxParse(xmlfile, {
+			opentag: function (tag) {
+				//				console.log("open", tag);
+			},
+			closetag: function (name) {
+				//				console.log("close", name);
+			},
+			text: function (text) {
+				//				console.log("text", text);
+			},
+			getstat: function () {
+			}
+		});
+	}
+
 	return function (xmlfile, core) {
-		console.log(xmlfile);
+		return parse(xmlfile);
 	};
 });
