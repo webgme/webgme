@@ -50,18 +50,24 @@ requirejs(['logManager',
                 req.url = '/index.html';
             }
 
+            var dirname = __dirname;
+            if(dirname.charAt(dirname.length-1) !== '/') {
+                dirname += '/';
+            } 
+            
             if (req.url.indexOf('/common/') === 0 || req.url.indexOf('/util/') === 0 || req.url.indexOf('/storage/') === 0 || req.url.indexOf('/core/') === 0 || req.url.indexOf('/user/') === 0 || req.url.indexOf('/config/') === 0) {
-                clientsrcfolder = "./../";
+                dirname += "./../";
             } else {
-                clientsrcfolder = "./../client";
+                dirname += "./../client";
             }
 
             req.url.replace('index','index2');
 
-            FS.readFile(__dirname + clientsrcfolder +req.url, function(err,data){
+            FS.readFile(dirname + req.url, function(err,data){
                 if(err){
                     res.writeHead(500);
-                    logger.error("Error getting the file:" +__dirname + clientsrcfolder +req.url);
+                    console.log(req.url);
+                    logger.error("Error getting the file:" + dirname + req.url);
                     return res.end('Error loading ' + req.url);
                 }
 
