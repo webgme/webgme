@@ -1,28 +1,35 @@
 {
-  "name": "webgme",
-  "version": "0.1.7",
-  "description": "Web based ",
-  "engines": {
-    "node": ">=0.8.0"
-  },
-  "main": "./server/combined",
-  "homepage": "http://github.com/webgme/webgme",
-  "keywords": [],
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/webgme/webgme.git"
-  },
-  "bugs": {
-    "url": "http://github.com/webgme/webgme/issues"
-  },
-  "license": "MIT",
-  "dependencies": {
-    "mongodb": ">=1.2.0",
-    "socket.io": ">=0.9.14",
-    "requirejs": ">=2.0.0"
-  },
-  "devDependencies": {},
-  "bin": {
-    "webgme": "./server/combined"
-  }
+    "name": "webGME",
+    "version": "0.1.8",
+    "description": "Web based graphical domain specific modeling environments",
+    "engines": {
+        "node": ">=0.5.0"
+    },
+    "main": "./server/combined",
+    "homepage": "http://github.com/webgme/webgme",
+    "keywords": [
+        "webgme",
+        "gme",
+        "cooperative",
+        "modeling",
+        "editor",
+        "domain"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "http://github.com/webgme/webgme.git"
+    },
+    "bugs": {
+        "url": "http://github.com/webgme/webgme/issues"
+    },
+    "license": "MIT",
+    "dependencies": {
+        "mongodb": ">=1.2.0",
+        "socket.io": ">=0.9.14",
+        "requirejs": ">=2.0.0"
+    },
+    "devDependencies": {},
+    "bin": {
+        "webgme": "./server/combined"
+    }
 }
