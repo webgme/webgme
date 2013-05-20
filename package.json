@@ -1,26 +1,28 @@
 {
-    "name": "webGME",
-    "version": "0.1.0",
-    "description": "Web based ",
-    "main": "server/combined",
-    "homepage": "http://github.com/webgme/webgme",
-    "keywords": [
-    ],
-    "repository": {
-        "type": "git",
-        "url": "http://github.com/webgme/webgme.git"
-    },
-    "bugs": {
-        "url": "http://github.com/webgme/webgme/issues"
-    },
-    "license": "MIT",
-    "dependencies": {
-        "mongodb"   : ">=1.3.5",
-        "socket.io" : ">=0.9.14",
-        "requirejs" : ">=2.1.6"
-    },
-    "devDependencies": {},
-    "engines": {
-        "node": "*"
-    }
+  "name": "webgme",
+  "version": "0.1.7",
+  "description": "Web based ",
+  "engines": {
+    "node": ">=0.8.0"
+  },
+  "main": "./server/combined",
+  "homepage": "http://github.com/webgme/webgme",
+  "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/webgme/webgme.git"
+  },
+  "bugs": {
+    "url": "http://github.com/webgme/webgme/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "mongodb": ">=1.2.0",
+    "socket.io": ">=0.9.14",
+    "requirejs": ">=2.0.0"
+  },
+  "devDependencies": {},
+  "bin": {
+    "webgme": "./server/combined"
+  }
 }
