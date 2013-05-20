@@ -49,6 +49,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 		database.openDatabase = TASYNC.wrap(database.openDatabase);
 		database.openProject = TASYNC.wrap(database.openProject);
 		database.closeDatabase = TASYNC.wrap(database.closeDatabase);
+		database.getProjectNames = TASYNC.wrap(database.getProjectNames);
 
 		return TASYNC.call(openDatabase2, database, database.openDatabase());
 	}
@@ -66,6 +67,10 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 			return d.closeDatabase();
 		}
+	}
+
+	function getDatabase () {
+		return database;
 	}
 
 	// --- project
@@ -89,6 +94,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 		p.loadObject = TASYNC.wrap(p.loadObject);
 		p.insertObject = TASYNC.wrap(p.insertObject);
 		p.findHash = TASYNC.wrap(p.findHash);
+		p.getBranchNames = TASYNC.wrap(p.getBranchNames);
 		p.setBranchHash = TASYNC.wrap(p.setBranchHash);
 		p.getBranchHash = TASYNC.wrap(p.getBranchHash);
 		p.makeCommit = TASYNC.wrap(p.makeCommit);
@@ -191,6 +197,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 		getParameters: getParameters,
 		openDatabase: openDatabase,
 		closeDatabase: closeDatabase,
+		getDatabase: getDatabase,
 		openProject: openProject,
 		closeProject: closeProject,
 		getProject: getProject,

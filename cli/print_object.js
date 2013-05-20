@@ -22,31 +22,31 @@ requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASY
 	});
 
 	function main () {
-		var argv = process.argv.slice(2);
+		var argv = COMMON.getParameters(null);
 
 		if (argv.length < 1 || COMMON.getParameters("help") !== null) {
-			console.log("Usage: node dump_tree.js <selector> [options]");
+			console.log("Usage: node print_object.js <selector> [options]");
 			console.log("");
-			console.log("Print out the storage objects starting from the selected object. The selector");
-			console.log("is a string that starts with a hash fragment, optionally followed by relid");
+			console.log("Prints out the storage objects starting from the selected object. The selector");
+			console.log("is a string that starts with a hash fragment, optionally followed by a relid");
 			console.log("path. The possible options are the following:");
 			console.log("");
 			console.log("  -mongo [database [host [port]]]\topens a mongo database");
 			console.log("  -proj <project>\t\t\tselects the given project");
 			console.log("  -depth <depth>\t\t\tlimits the printout depth");
+			console.log("  -help\t\t\t\t\tprints out this help message");
 			console.log("");
 			return;
 		}
 
 		var selector = argv[0];
-		ASSERT(selector.charAt(0) !== "-");
 
 		var depth = COMMON.getParameters("depth");
 		depth = depth ? depth[0] : "0";
 		depth = parseInt(depth, 10);
 
-		var done = TASYNC.call(COMMON.openDatabase, argv);
-		done = TASYNC.call(COMMON.openProject, argv, done);
+		var done = TASYNC.call(COMMON.openDatabase);
+		done = TASYNC.call(COMMON.openProject, done);
 		done = TASYNC.call(dump, selector, depth, done);
 		done = TASYNC.call(COMMON.closeProject, done);
 		done = TASYNC.call(COMMON.closeDatabase, done);
