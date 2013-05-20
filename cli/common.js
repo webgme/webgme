@@ -4,8 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/core" ], function (ASSERT, Mongo, Cache, TASYNC, Core) {
-
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -36,22 +35,16 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 	var database;
 
 	function openDatabase () {
-		var database;
+		var params = getParameters("mongo") || [];
 
-		if (false) {
+		var opt = {
+			database: params[0] || "webgme",
+			host: params[1] || "localhost",
+			port: params[2]
+		};
 
-		} else {
-			var params = getParameters("mongo") || [];
-
-			var opt = {
-				database: params[0] || "webgme",
-				host: params[1] || "localhost",
-				port: params[2]
-			};
-
-			console.log("Opening mongo database " + opt.database + " on " + opt.host + (opt.port ? ":" + opt.port : ""));
-			database = new Cache(new Mongo(opt), {});
-		}
+		console.log("Opening mongo database " + opt.database + " on " + opt.host + (opt.port ? ":" + opt.port : ""));
+		var database = new Commit(new Cache(new Mongo(opt), {}));
 
 		database.openDatabase = TASYNC.wrap(database.openDatabase);
 		database.openProject = TASYNC.wrap(database.openProject);
@@ -98,6 +91,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		p.findHash = TASYNC.wrap(p.findHash);
 		p.setBranchHash = TASYNC.wrap(p.setBranchHash);
 		p.getBranchHash = TASYNC.wrap(p.getBranchHash);
+		p.makeCommit = TASYNC.wrap(p.makeCommit);
 
 		project = p;
 
@@ -146,6 +140,51 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		}
 	}
 
+	// --- sax parsing
+
+	var saxParse = TASYNC.wrap(function (xmlfile, handler, callback) {
+		ASSERT(typeof handler.opentag === "function");
+		ASSERT(typeof handler.closetag === "function");
+		ASSERT(typeof handler.text === "function");
+		ASSERT(typeof handler.getstat === "function");
+
+		var parser = SAX.createStream(true, {
+			trim: true
+		});
+
+		parser.on("opentag", handler.opentag);
+		parser.on("closetag", handler.closetag);
+		parser.on("text", handler.text);
+
+		parser.on("error", function (error) {
+			setProgress(null);
+			callback(error);
+		});
+
+		parser.on("end", function () {
+			console.log("Parsing done");
+			setProgress(null);
+			callback(null);
+		});
+
+		var stream = FS.createReadStream(xmlfile);
+
+		stream.on("error", function (err) {
+			setProgress(null);
+			callback(new Error(err.code === "ENOENT" ? "File not found: " + xmlfile : "Unknown file error: " + JSON.stringify(err)));
+		});
+
+		stream.on("open", function () {
+			console.log("Parsing " + xmlfile + " ...");
+			stream.pipe(parser);
+		});
+
+		setProgress(function () {
+			var stat = handler.getstat();
+			console.log("  at line " + parser._parser.line + (typeof stat === "string" ? " (" + stat + ")" : ""));
+		});
+	});
+
 	// --- export
 
 	return {
@@ -156,6 +195,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "core/tasync", "core/c
 		closeProject: closeProject,
 		getProject: getProject,
 		getCore: getCore,
-		setProgress: setProgress
+		setProgress: setProgress,
+		saxParse: saxParse
 	};
 });

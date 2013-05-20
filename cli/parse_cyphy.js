@@ -252,7 +252,7 @@ requirejs([ "cli/common", "util/assert", "core/tasync" ], function (COMMON, ASSE
 		} else if (tag === "regnode") {
 			value = core.getAttribute(xmlnode, "#text") || "";
 			var status = core.getAttribute(xmlparent, "status") || "defined";
-			if (status !== "undefined" || value !== "") {
+			if (status !== "undefined" && value !== "") {
 				do {
 					var part = core.getAttribute(xmlparent, "name");
 					ASSERT(typeof part === "string");

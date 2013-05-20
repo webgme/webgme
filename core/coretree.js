@@ -826,7 +826,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 
 		// disable checking for now
 		var checkValidTreeRunning = true;
-		
+
 		var isValidNode = function (node) {
 			try {
 				__test("object", typeof node === "object" && node !== null);
