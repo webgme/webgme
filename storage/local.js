@@ -156,7 +156,8 @@ define([ "util/assert" ], function (ASSERT) {
                 dumpObjects: dumpObjects,
                 getBranchNames: getBranchNames,
                 getBranchHash: getBranchHash,
-                setBranchHash: setBranchHash
+                setBranchHash: setBranchHash,
+                ID_NAME: "_id"
             });
 
             function closeProject (callback) {
@@ -307,8 +308,7 @@ define([ "util/assert" ], function (ASSERT) {
             getDatabaseStatus: getDatabaseStatus,
             getProjectNames: getProjectNames,
             openProject: openProject,
-            deleteProject: deleteProject,
-            ID_NAME: "_id"
+            deleteProject: deleteProject
         };
     }
 

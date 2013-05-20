@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1) {
+define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT, SHA1) {
 	"use strict";
 
 	var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");
@@ -14,6 +14,8 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 	var STATUS_CLOSED = "mongodb closed";
 	var STATUS_UNREACHABLE = "mongodb unreachable";
 	var STATUS_CONNECTED = "connected";
+
+	var ID_NAME = "_id";
 
 	function Database (options) {
 		ASSERT(typeof options === "object");
@@ -141,7 +143,7 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 			ASSERT(typeof name === "string" && PROJECT_REGEXP.test(name));
 			ASSERT(typeof callback === "function");
 
-			mongo.dropCollection(name, function(err) {
+			mongo.dropCollection(name, function (err) {
 				callback(null);
 			});
 		}
@@ -168,7 +170,8 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 						getBranchNames: getBranchNames,
 						getBranchHash: getBranchHash,
 						setBranchHash: setBranchHash,
-						getCommits: getCommits
+						getCommits: getCommits,
+						ID_NAME: ID_NAME
 					});
 				}
 			});
@@ -269,7 +272,7 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 			}
 
 			function getBranchHash (branch, oldhash, callback) {
-                branch = '*'+branch;
+				branch = '*' + branch;
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(oldhash === null || (typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash))));
 				ASSERT(typeof callback === "function");
@@ -291,7 +294,7 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 			}
 
 			function setBranchHash (branch, oldhash, newhash, callback) {
-                branch = '*'+branch;
+				branch = '*' + branch;
 				ASSERT(typeof branch === "string" && BRANCH_REGEXP.test(branch));
 				ASSERT(typeof oldhash === "string" && (oldhash === "" || HASH_REGEXP.test(oldhash)));
 				ASSERT(typeof newhash === "string" && (newhash === "" || HASH_REGEXP.test(newhash)));
@@ -360,8 +363,7 @@ define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT,SHA1
 			getDatabaseStatus: getDatabaseStatus,
 			getProjectNames: getProjectNames,
 			openProject: openProject,
-			deleteProject: deleteProject,
-			ID_NAME: "_id"
+			deleteProject: deleteProject
 		};
 	}
 

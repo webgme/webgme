@@ -33,7 +33,6 @@ define([ "util/assert" ], function (ASSERT) {
 
 		options.cache = options.cache || 2000;
 
-		var ID_NAME = database.ID_NAME;
 		var projects = {};
 		var dlock = new Lock();
 
@@ -80,8 +79,9 @@ define([ "util/assert" ], function (ASSERT) {
 		}
 
 		function wrapProject (name, project) {
+			var ID_NAME = project.ID_NAME;
+			
 			var refcount = 0;
-
 			var branches = {};
 			var missing = {};
 			var backup = {};
@@ -256,7 +256,7 @@ define([ "util/assert" ], function (ASSERT) {
 								delete branches[tag];
 
 								while ((cb = branch.pop())) {
-									cb(err,newhash,null);
+									cb(err, newhash, null);
 								}
 							}
 						}
@@ -282,7 +282,8 @@ define([ "util/assert" ], function (ASSERT) {
 					getBranchHash: getBranchHash,
 					setBranchHash: setBranchHash,
 					getCommits: project.getCommits,
-                    makeCommit: project.makeCommit
+					makeCommit: project.makeCommit,
+					ID_NAME: project.ID_NAME
 				});
 			}
 
@@ -300,8 +301,7 @@ define([ "util/assert" ], function (ASSERT) {
 			getDatabaseStatus: database.getDatabaseStatus,
 			getProjectNames: database.getProjectNames,
 			openProject: openProject,
-			deleteProject: deleteProject,
-			ID_NAME: ID_NAME
+			deleteProject: deleteProject
 		};
 	};
 

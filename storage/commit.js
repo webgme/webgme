@@ -28,7 +28,8 @@ define([ "util/assert", "util/sha1" ], function (ASSERT, SHA1) {
 						getBranchHash: _project.getBranchHash,
 						setBranchHash: _project.setBranchHash,
 						getCommits: _project.getCommits,
-						makeCommit: makeCommit
+						makeCommit: makeCommit,
+						ID_NAME: _project.ID_NAME
 					});
 				} else {
 					callback(err, proj);
@@ -52,7 +53,7 @@ define([ "util/assert", "util/sha1" ], function (ASSERT, SHA1) {
 				};
 
 				var id = '#' + SHA1(JSON.stringify(commitObj));
-				commitObj[_database.ID_NAME] = id;
+				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {
 					if (err) {
@@ -73,8 +74,7 @@ define([ "util/assert", "util/sha1" ], function (ASSERT, SHA1) {
 			getProjectNames: _database.getProjectNames,
 			getDatabaseStatus: _database.getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: _database.deleteProject,
-			ID_NAME: _database.ID_NAME
+			deleteProject: _database.deleteProject
 		};
 	}
 

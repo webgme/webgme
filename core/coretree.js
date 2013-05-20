@@ -48,7 +48,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		var MAX_MUTATE = (options && options.maxmutate) || CONFIG.coretree.maxmutate;
 		var autopersist = (options && options.autopersist) || false;
 
-		var HASH_ID = "_id";
+		var ID_NAME = storage.ID_NAME;
 		var EMPTY_DATA = {};
 
 		var roots = [];
@@ -215,7 +215,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 					parent.children.push(node);
 
 					temp = __getChildData(parent.data, node.relid);
-					if (!isValidHash(temp) || temp !== __getChildData(node.data, HASH_ID)) {
+					if (!isValidHash(temp) || temp !== __getChildData(node.data, ID_NAME)) {
 						node.data = temp;
 					}
 				} else {
@@ -295,7 +295,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				},
 				rootid: ++rootCounter
 			};
-			root.data[HASH_ID] = "";
+			root.data[ID_NAME] = "";
 			roots.push(root);
 
 			__ageRoots();
@@ -303,7 +303,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 
 		var getChild = function (node, relid) {
-			ASSERT(typeof relid === "string" && relid !== HASH_ID);
+			ASSERT(typeof relid === "string" && relid !== ID_NAME);
 
 			node = normalize(node);
 
@@ -416,7 +416,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 
 		var __areEquivalent = function (data1, data2) {
-			return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, HASH_ID)) || (__isEmptyData(data1) && __isEmptyData(data2));
+			return data1 === data2 || (typeof data1 === "string" && data1 === __getChildData(data2, ID_NAME)) || (__isEmptyData(data1) && __isEmptyData(data2));
 		};
 
 		var mutateCount = 0;
@@ -458,8 +458,8 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 
 			ASSERT(copy._mutable === true);
 
-			if (typeof data[HASH_ID] === "string") {
-				copy[HASH_ID] = "";
+			if (typeof data[ID_NAME] === "string") {
+				copy[ID_NAME] = "";
 			}
 
 			if (node.parent !== null) {
@@ -483,7 +483,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 				var child = node.children[i];
 
 				var data = __getChildData(node.data, child.relid);
-				if (!isValidHash(data) || data !== __getChildData(child.data, HASH_ID)) {
+				if (!isValidHash(data) || data !== __getChildData(child.data, ID_NAME)) {
 					child.data = data;
 					__reloadChildrenData(child);
 				}
@@ -537,7 +537,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 
 		var getProperty = function (node, name) {
-			ASSERT(typeof name === "string" && name !== HASH_ID);
+			ASSERT(typeof name === "string" && name !== ID_NAME);
 
 			var data;
 			node = normalize(node);
@@ -551,7 +551,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 
 		var setProperty = function (node, name, data) {
-			ASSERT(typeof name === "string" && name !== HASH_ID);
+			ASSERT(typeof name === "string" && name !== ID_NAME);
 			ASSERT(!__isMutableData(data) && data !== null && data !== undefined);
 
 			node = normalize(node);
@@ -569,7 +569,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 		};
 
 		var deleteProperty = function (node, name) {
-			ASSERT(typeof name === "string" && name !== HASH_ID);
+			ASSERT(typeof name === "string" && name !== ID_NAME);
 
 			node = normalize(node);
 			if (!mutate(node)) {
@@ -626,7 +626,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 			var hash;
 			node = normalize(node);
 			if (typeof node.data === "object" && node.data !== null) {
-				hash = node.data[HASH_ID];
+				hash = node.data[ID_NAME];
 			}
 
 			ASSERT(typeof hash === "string" || typeof hash === "undefined");
@@ -635,7 +635,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 
 		var isHashed = function (node) {
 			node = normalize(node);
-			return typeof node.data === "object" && node.data !== null && typeof node.data[HASH_ID] === "string";
+			return typeof node.data === "object" && node.data !== null && typeof node.data[ID_NAME] === "string";
 		};
 
 		var setHashed = function (node, hashed) {
@@ -647,12 +647,12 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 			}
 
 			if (hashed) {
-				node.data[HASH_ID] = "";
+				node.data[ID_NAME] = "";
 			} else {
-				delete node.data[HASH_ID];
+				delete node.data[ID_NAME];
 			}
 
-			ASSERT(typeof node.children[HASH_ID] === "undefined");
+			ASSERT(typeof node.children[ID_NAME] === "undefined");
 		};
 
 		var __storageSave = FUTURE.adapt(storage.insertObject);
@@ -670,8 +670,8 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 						delete data[relid];
 					} else {
 						done = FUTURE.join(done, sub);
-						if (typeof child[HASH_ID] === "string") {
-							data[relid] = child[HASH_ID];
+						if (typeof child[ID_NAME] === "string") {
+							data[relid] = child[ID_NAME];
 						}
 					}
 				} else {
@@ -680,12 +680,12 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 			}
 
 			if (done !== EMPTY_DATA) {
-				var hash = data[HASH_ID];
+				var hash = data[ID_NAME];
 				ASSERT(hash === "" || typeof key === "undefined");
 
 				if (hash === "") {
 					hash = "#" + SHA1(JSON.stringify(data));
-					data[HASH_ID] = hash;
+					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, __storageSave(data));
 				}
@@ -751,7 +751,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 
 			// TODO: this is a hack, we should avoid loading it multiple times
 			if (isValidHash(node.data)) {
-				ASSERT(node.data === newdata[HASH_ID]);
+				ASSERT(node.data === newdata[ID_NAME]);
 
 				node.data = newdata;
 				__reloadChildrenData(node);
