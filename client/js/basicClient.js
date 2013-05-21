@@ -1330,9 +1330,11 @@ define([
                         var child = _core.createNode(_nodes[parameters.parentId].node);
                         if(baseId === "connection"){
                             _core.setRegistry(child,"isConnection",true);
+                            _core.setRegistry(child,"isPort",false);
                             _core.setAttribute(child,"name","defaultConn");
                         } else {
                             _core.setRegistry(child,"isConnection",false);
+                            _core.setRegistry(child,"isPort",true);
                             _core.setAttribute(child,"name", parameters.name || "defaultObj");
 
                             if (parameters.position) {
@@ -1341,7 +1343,8 @@ define([
                                 _core.setRegistry(child,"position", { "x": 100, "y": 100});
                             }
                         }
-                        _core.setAttribute(child,"isPort",true);
+
+                        _core.setRegistry(child,"decorator","DefaultDecorator");
 
                         storeNode(child);
                         saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getStringPath(child)+')');
