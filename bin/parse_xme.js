@@ -9,10 +9,10 @@ if (typeof define !== "function") {
 
 	requirejs.config({
 		nodeRequire: require,
-		baseUrl: ".."
+		baseUrl: __dirname + "/.."
 	});
 
-	requirejs([ "cli/common", "util/assert", "core/tasync", "cli/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
+	requirejs([ "cli/common", "util/assert", "core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
 		"use strict";
 
 		TASYNC.trycatch(main, function (error) {

@@ -8,7 +8,7 @@ var requirejs = require("requirejs");
 
 requirejs.config({
 	nodeRequire: require,
-	baseUrl: ".."
+	baseUrl: __dirname + "/.."
 });
 
 requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC, COMMON) {
