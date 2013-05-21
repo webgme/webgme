@@ -33,24 +33,41 @@ if (typeof define !== "function") {
 				console.log("");
 				console.log("  -mongo [database [host [port]]]\topens a mongo database");
 				console.log("  -proj <project>\t\t\tselects the given project");
+				console.log("  -branch <branch>\t\t\tselects the branch to be overwritten");
 				console.log("  -help\t\t\t\t\tprints out this help message");
 				console.log("");
 				return;
 			}
 
+			var xmlfile = args[0];
+
+			var branch = COMMON.getParameters("branch");
+			if (branch) {
+				branch = branch[0] || "parsed";
+			}
+
 			var done = TASYNC.call(COMMON.openDatabase);
 			done = TASYNC.call(COMMON.openProject, done);
 			var core = TASYNC.call(COMMON.getCore, done);
-			var hash = TASYNC.call(parser, args[0], core);
-			done = TASYNC.call(printHash, hash);
+			var hash = TASYNC.call(parser, xmlfile, core);
+			done = TASYNC.call(writeBranch, branch, hash);
 			done = TASYNC.call(COMMON.closeProject, done);
 			done = TASYNC.call(COMMON.closeDatabase, done);
 
 			return done;
 		}
-		
-		function printHash(hash) {
-			console.log(hash);
+
+		function writeBranch (branch, hash) {
+			if (typeof branch === "string") {
+				var project = COMMON.getProject();
+				var oldhash = project.getBranchHash(branch, null);
+				var done = TASYNC.call(project.setBranchHash, branch, oldhash, hash);
+				return TASYNC.call(function () {
+					console.log("Commit " + hash + " written to branch " + branch);
+				}, done);
+			} else {
+				console.log("Created commit " + hash);
+			}
 		}
 	});
 
@@ -130,9 +147,8 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 	}
 
 	function makeCommit (xmlfile, hash) {
-		console.log("Writing commit ...");
 		var project = COMMON.getProject();
-		hash = project.makeCommit([], hash, xmlfile + " parsed on " + new Date());
+		hash = project.makeCommit([], hash, "parsed " + xmlfile);
 		return hash;
 	}
 

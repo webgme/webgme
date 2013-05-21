@@ -17,6 +17,10 @@ define([ "util/assert", "util/guid", "util/sha1" ], function (ASSERT, GUID, SHA1
 		options.type = options.type || "browser";
 		options.timeout = options.timeout || 10000;
 
+		if (options.host.substr(0, 7) !== "http://" && options.host.substr(0, 7) !== "https://") {
+			options.host = "http://" + options.host;
+		}
+
 		var socketConnected = false, socket = null, status = null, reconnect = false, getDbStatusCallbacks = {}, callbacks = {}, getBranchHashCallbacks = {}, IO = null, projects = {}, references = {}, ERROR_DISCONNECTED =
 				'The socket.io is disconnected', ERROR_TIMEOUT = "no valid response arrived in time", STATUS_NETWORK_DISCONNECTED = "socket.io is disconnected";
 
