@@ -80,7 +80,8 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 		var global = {
 			ids: {},
 			cps: [],
-			refs: []
+			refs: [],
+			typs: []
 		};
 
 		function opentag (tag) {
@@ -195,9 +196,6 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 		}
 
 		core.setRegistry(tag.node, "metameta", tag.name);
-
-		// TODO: remove this, onlyu registry should be set
-		core.setAttribute(tag.node, "isPort", tag.name === "atom");
 		core.setRegistry(tag.node, "isPort", tag.name === "atom");
 
 		if (tag.name === "connection") {
@@ -210,6 +208,13 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			global.refs.push({
 				node: tag.node,
 				referred: tag.attributes.referred
+			});
+		}
+
+		if (tag.attributes.derivedfrom) {
+			global.typs.push({
+				node: tag.node,
+				base: tag.attributes.derivedfrom
 			});
 		}
 	}
@@ -301,6 +306,10 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			resolveReference(core, global.ids, global.refs[i]);
 		}
 
+		for (i = 0; i < global.typs.length; ++i) {
+			resolveBasetype(core, global.ids, global.typs[i]);
+		}
+
 		for (i = 0; i < global.cps.length; ++i) {
 			done = TASYNC.join(done, resolveConnPoint(core, global.ids, global.cps[i]));
 		}
@@ -314,6 +323,15 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			core.setPointer(ref.node, "target", target);
 		} else {
 			console.log("Warning: could not find id " + ref.referred);
+		}
+	}
+
+	function resolveBasetype (core, ids, typ) {
+		var target = ids[typ.base];
+		if (target) {
+			core.setPointer(typ.node, "proto", target);
+		} else {
+			console.log("Warning: could not find id " + typ.based);
 		}
 	}
 
@@ -366,9 +384,6 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			core.setRegistry(refport, "position", core.getRegistry(target, "position"));
 			core.setRegistry(refport, "id", targetid);
 			core.setRegistry(refport, "metameta", "refport");
-
-			// TODO: remove this, onlyu registry should be set
-			core.setAttribute(refport, "isPort", true);
 			core.setRegistry(refport, "isPort", true);
 		}
 
