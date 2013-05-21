@@ -9,14 +9,13 @@ define(['logManager',
                              nodePropertyNames) {
 
     var PartBrowserControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/Decorators/";      //TODO: fix path;
+        DECORATOR_PATH = "js/Decorators/DiagramDesigner/";      //TODO: fix path;
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
         this._currentNodeId = null;
-        this._decoratorClasses = {};
 
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
@@ -62,41 +61,8 @@ define(['logManager',
         return objDescriptor;
     };
 
-    PartBrowserControl.prototype._downloadDecorators = function (decoratorList, callBack) {
-        var len = decoratorList.length,
-            decoratorName,
-            processRemainingList,
-            self = this;
-
-        processRemainingList = function () {
-            var len = decoratorList.length;
-
-            if (len > 0) {
-                self._downloadDecorators(decoratorList, callBack);
-            } else {
-                self._logger.debug("All downloaded...");
-                callBack.fn.call(callBack.context, callBack.data);
-            }
-        };
-
-        this._logger.debug("Remaining: " + len);
-
-        if (len > 0) {
-            decoratorName = decoratorList.pop();
-
-            require([DECORATOR_PATH + decoratorName + "/" + decoratorName],
-                function (decoratorClass) {
-                    self._logger.warning("downloaded:" + decoratorName);
-                    self._decoratorClasses[decoratorName] = decoratorClass;
-                    processRemainingList();
-                },
-                function (err) {
-                    //for any error store undefined in the list and the default decorator will be used on the canvas
-                    self._logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
-                    self._decoratorClasses[decoratorName] = undefined;
-                    processRemainingList();
-                });
-        }
+    PartBrowserControl.prototype._getFullDecoratorName = function (decorator) {
+        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     PartBrowserControl.prototype.onOneEvent = function (events) {
@@ -154,7 +120,8 @@ define(['logManager',
             idx,
             id,
             requiredDecorators = [],
-            diffInserted;
+            diffInserted,
+            self = this;
 
         if (node) {
 
@@ -176,7 +143,7 @@ define(['logManager',
             len = diffInserted.length;
             while (len--) {
                 id = diffInserted[len];
-                requiredDecorators.pushUnique(this._getObjectDescriptor(id).decorator);
+                requiredDecorators.pushUnique(this._getFullDecoratorName(this._getObjectDescriptor(id).decorator));
 
                 //add to the territory
                 this._selfPatterns[id] = { "children": 0 };
@@ -186,10 +153,11 @@ define(['logManager',
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
 
             //download the required decorators
-            this._downloadDecorators(requiredDecorators, { "fn": this._refreshInsertedUpdatedParts,
-                                                           "context": this,
-                                                           "data": { "inserted": diffInserted,
-                                                                     "updated": [] }});
+            //few decorators need to be downloaded
+            this._client.decoratorManager.download(requiredDecorators, function () {
+                self._refreshInsertedUpdatedParts({ "inserted": diffInserted,
+                                                    "updated": [] });
+            });
         }
     };
 
@@ -206,7 +174,7 @@ define(['logManager',
             id = inserted[len];
             desc = this._getObjectDescriptor(id);
 
-            decClass = this._decoratorClasses[desc.decorator];
+            decClass = this._client.decoratorManager.get(this._getFullDecoratorName(desc.decorator));
 
             desc.decoratorClass = decClass;
             desc.control = this;
@@ -222,7 +190,7 @@ define(['logManager',
             id = updated[len];
             desc = this._getObjectDescriptor(id);
 
-            decClass = this._decoratorClasses[desc.decorator];
+            decClass = this._client.decoratorManager.get(this._getFullDecoratorName(desc.decorator));
 
             desc.decoratorClass = decClass;
             desc.control = this;
@@ -234,13 +202,14 @@ define(['logManager',
     };
 
     PartBrowserControl.prototype._refreshOnePart = function (gmeID) {
-        var decorator = this._getObjectDescriptor(gmeID).decorator;
+        var decorator = this._getObjectDescriptor(gmeID).decorator,
+            self = this;
 
         if (decorator !== null && decorator !== undefined) {
-            this._downloadDecorators([decorator], { "fn": this._refreshInsertedUpdatedParts,
-                "context": this,
-                "data": { "inserted": [],
-                    "updated": [gmeID] }});
+            this._client.decoratorManager.download([this._getFullDecoratorName(decorator)], function () {
+                self._refreshInsertedUpdatedParts({ "inserted": [],
+                    "updated": [gmeID] });
+            });
         }
     };
 
