@@ -2,8 +2,8 @@
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
-    'config/config',
-    'user/basic',
+    'bin/getconfig',
+    'js/basicClient',
     'js/LayoutManager/LayoutManager'], function (logManager,
                                             CONFIG,
                                             Client,
