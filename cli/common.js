@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs", "bin/getconfig" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS, CONFIG) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -38,9 +38,9 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 		var params = getParameters("mongo") || [];
 
 		var opt = {
-			database: params[0] || "webgme",
-			host: params[1] || "localhost",
-			port: params[2]
+			database: params[0] || CONFIG.mongodatabase || "webgme",
+			host: params[1] || CONFIG.mongoip || "localhost",
+			port: params[2] || CONFIG.mongoport || 27017
 		};
 
 		console.log("Opening mongo database " + opt.database + " on " + opt.host + (opt.port ? ":" + opt.port : ""));

@@ -40,6 +40,12 @@ requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASY
 		return done;
 	}
 
+	// --- print
+
+	function print (what) {
+		console.log(what);
+	}
+
 	// --- database
 
 	function printDatabaseInfo () {
@@ -57,7 +63,8 @@ requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASY
 		} else {
 			var done, i;
 			for (i = 0; i < names.length; ++i) {
-				done = TASYNC.join(done, printProjectInfo(database, names[i]));
+				var name = names[i], project = database.openProject(name);
+				done = TASYNC.call(printProjectInfo, project, name, done);
 			}
 			return done;
 		}
@@ -65,25 +72,50 @@ requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASY
 
 	// --- project
 
-	function printProjectInfo (database, name) {
-		var project = database.openProject(name);
-
-		return TASYNC.call(printProjectInfo2, project, name);
-	}
-
-	function printProjectInfo2 (project, name) {
+	function printProjectInfo (project, name) {
 		project.getBranchNames = TASYNC.wrap(project.getBranchNames);
+		project.loadObject = TASYNC.wrap(project.loadObject);
 
 		var branches = project.getBranchNames();
-		return TASYNC.call(printProjectInfo3, project, name, branches);
+		var done = TASYNC.call(printProjectInfo2, project, name, branches);
+		return TASYNC.call(project.closeProject, done);
 	}
 
-	function printProjectInfo3 (project, name, branches) {
-		console.log("project " + name);
+	function printProjectInfo2 (project, name, branches) {
+		var done = print("project " + name);
+
 		var branch;
 		for (branch in branches) {
-			console.log("  branch " + branch + "\t" + branches[branch]);
+			done = TASYNC.call(printCommitInfo, project, branch, branches[branch], done);
 		}
-		return project.closeProject();
+
+		return done;
+	}
+
+	// --- commit
+
+	function printCommitInfo (project, branch, hash) {
+		return TASYNC.trycatch(function () {
+			var object = project.loadObject(hash);
+			return TASYNC.call(printCommitInfo2, branch, hash, object);
+		}, function (err) {
+			console.log("  " + branch + ":\t" + hash + " (load error)");
+		});
+	}
+
+	function printCommitInfo2 (branch, hash, object) {
+		ASSERT(typeof object === "object");
+
+		var done;
+		if (object === null) {
+			console.log("  " + branch + ":\t" + hash + " (not found)");
+		} else {
+			var d = new Date();
+			d.setTime(object.time);
+			d = d.toDateString();
+			console.log("  " + branch + ":\t" + hash + " (" + d + ")");
+		}
+
+		return done;
 	}
 });
