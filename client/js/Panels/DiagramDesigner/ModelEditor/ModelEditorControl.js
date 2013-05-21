@@ -11,7 +11,7 @@ define(['logManager',
                                                         ModelEditorControlDEBUG) {
 
     var ModelEditorControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/Decorators/",      //TODO: fix path;
+        DECORATOR_PATH = "js/Decorators/DiagramDesigner/",      //TODO: fix path;
         GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30;
@@ -47,7 +47,6 @@ define(['logManager',
         this._components = {};
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
-        this.decoratorClasses = {};
         this.eventQueue = [];
 
         //local variable holding info about the currently opened node
@@ -309,7 +308,8 @@ define(['logManager',
         var nextBatchInQueue,
             len = this.eventQueue.length,
             decoratorsToDownload = [],
-            itemDecorator;
+            itemDecorator,
+            self = this;
 
         if (len > 0) {
             nextBatchInQueue = this.eventQueue.pop();
@@ -323,15 +323,7 @@ define(['logManager',
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                     if (itemDecorator && itemDecorator !== "") {
-                        if (!this.decoratorClasses.hasOwnProperty(itemDecorator)) {
-                            decoratorsToDownload.pushUnique(itemDecorator);
-
-                            //TODO: hack
-                            decoratorsToDownload.pushUnique("DefaultDecorator");
-                            decoratorsToDownload.pushUnique("CircleDecorator");
-                            decoratorsToDownload.pushUnique("AttributesDecorator");
-                            
-                        }
+                        decoratorsToDownload.pushUnique( this._getFullDecoratorName(itemDecorator));
                     }
                 }
             }
@@ -341,51 +333,15 @@ define(['logManager',
                 this._dispatchEvents(nextBatchInQueue);
             } else {
                 //few decorators need to be downloaded
-                this._downloadDecorators(decoratorsToDownload, { "fn": this._dispatchEvents,
-                                                                 "context": this,
-                                                                 "data": nextBatchInQueue });
+                this._client.decoratorManager.download(decoratorsToDownload, function () {
+                    self._dispatchEvents(nextBatchInQueue);
+                });
             }
         }
     };
 
-    ModelEditorControl.prototype._downloadDecorators = function (decoratorList, callBack) {
-        var len = decoratorList.length,
-            decoratorName,
-            processRemainingList,
-            self = this;
-
-        processRemainingList = function () {
-            var len = decoratorList.length;
-
-            if (len > 0) {
-                self._downloadDecorators(decoratorList, callBack);
-            } else {
-                self.logger.debug("All downloaded...");
-                callBack.fn.call(callBack.context, callBack.data);
-            }
-        };
-
-        this.logger.debug("Remaining: " + len);
-
-        if (len > 0) {
-            decoratorName = decoratorList.pop();
-
-            require([DECORATOR_PATH + decoratorName + "/" + decoratorName],
-                function (decoratorClass) {
-                    self.logger.warning("downloaded:" + decoratorName);
-                    self.decoratorClasses[decoratorName] = decoratorClass;
-                    /*self.decoratorClasses[decoratorName].prototype.setControlSpecificAttributes = function () {
-                        this.ModelEditorControl = self;
-                    };*/
-                    processRemainingList();
-                },
-                function (err) {
-                    //for any error store undefined in the list and the default decorator will be used on the canvas
-                    self.logger.error("Failed to load decorator because of '" + err.requireType + "' with module '" + err.requireModules[0] + "'. Fallback to default...");
-                    self.decoratorClasses[decoratorName] = undefined;
-                    processRemainingList();
-                });
-        }
+    ModelEditorControl.prototype._getFullDecoratorName = function (decorator) {
+        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
@@ -465,7 +421,7 @@ define(['logManager',
 
                         this._GMEModels.push(gmeID);
 
-                        decClass = this.decoratorClasses[objDesc.decorator];
+                        decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
 
                         objDesc.decoratorClass = decClass;
                         objDesc.control = this;
@@ -586,7 +542,7 @@ define(['logManager',
                             while (len--) {
                                 componentID = this._GmeID2ComponentID[gmeID][len];
 
-                                decClass = this.decoratorClasses[objDesc.decorator];
+                                decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
 
                                 objDesc.decoratorClass = decClass;
 
