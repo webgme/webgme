@@ -15,7 +15,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 
 	FS.stat(name, function (err, stat) {
 		if (err && err.errno === 34) {
-			var file = "// local configuration, please edit it by hand\n\ndefine([], function () {\n\tuse strict\n\n\treturn {};\n});\n";
+			var file = "// local configuration, please edit it by hand\n\ndefine([], function () {\n\t\"use strict\";\n\n\treturn {};\n});\n";
 			FS.writeFile(name, file, function (err) {
 				if (err) {
 					console.log("Error writing config.js");
