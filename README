@@ -1,19 +1,12 @@
-Sample README for WebGme
+Usage instructions for webGME
 
+1. Installation:
+    - fetch the latest version from git directly and start using it (check the package.json for other node package dependencies!!!)
+    - install it with npm ('npm install webgme'), and you are ready to go
 
-Prerequisites:
---------------
+2. Program Usage:
+    !!! all runnable function are stored in the bin directory !!!
+    - combined_server : this program runs an http server plus an additional webgme server as well ('node bin/combined_server.js')
 
-#1) You will need Node.js to run the server, get it from http:\\nodejs.org
-
-#2) You will need to install the following packages for Node.js:
-- requirejs
-- mongodb
-- socket.io
-
-
-In your webgme\nodeserver folder simply let the node package manager install them for you
-
-npm install requirejs
-npm install mongodb
-npm install socket.io
+3. Library Usage:
+    !!! not yet created !!!

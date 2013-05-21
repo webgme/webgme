@@ -5,10 +5,10 @@ define([], function () {
     "use strict";
 
     var attributeNames = {  "name" : "name",
-                            "isPort": "isPort",
                             "directed": "directed" },
         registryNames = {   "position" : "position",
                             "decorator": "decorator",
+                            "isPort": "isPort",
                             "segmentPoints": "segmentPoints",
                             "lineType": "lineType" };
 

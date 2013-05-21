@@ -99,9 +99,8 @@ define(['logManager',
         if (this.hostDesignerItem) {
             this.hostDesignerItem.width = this.$el.outerWidth(true);
             this.hostDesignerItem.height = this.$el.outerHeight(true);
+            this.offset = this.hostDesignerItem.canvas.getAdjustedOffset(this.$el.offset());
         }
-
-        this.offset = this.hostDesignerItem.canvas.getAdjustedOffset(this.$el.offset());
 
         var i = this._portIDs.length;
 
@@ -217,7 +216,7 @@ define(['logManager',
         var isPort = false;
 
         if (portNode) {
-            isPort = portNode.getAttribute(nodePropertyNames.Attributes.isPort);
+            isPort = portNode.getRegistry(nodePropertyNames.Registry.isPort);
             isPort = (isPort === true || isPort === false) ? isPort : false;
         }
 

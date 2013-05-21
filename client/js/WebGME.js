@@ -2,12 +2,14 @@
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
-    'config/config',
-    'user/basic',
-    'js/LayoutManager/LayoutManager'], function (logManager,
+    'bin/getconfig',
+    'js/basicClient',
+    'js/LayoutManager/LayoutManager',
+    'js/Decorators/DecoratorManager'], function (logManager,
                                             CONFIG,
                                             Client,
-                                            LayoutManager) {
+                                            LayoutManager,
+                                            DecoratorManager) {
 
     var _webGMEStart = function () {
         var lm,
@@ -25,6 +27,8 @@ define(['logManager',
                 var readOnly = branchName === null || branchName === undefined;
                 lm.setPanelReadOnly(readOnly);
             });
+
+            client.decoratorManager = new DecoratorManager();
 
             // HEADER PANEL
             panels.push({'name': 'ProjectTitle/ProjectTitlePanel',

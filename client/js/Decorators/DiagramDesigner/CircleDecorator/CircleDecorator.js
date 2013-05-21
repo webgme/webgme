@@ -2,7 +2,7 @@
 
 define(['logManager',
     'clientUtil',
-    'js/Decorators/DiagramDesigner/Decorators/DefaultDecorator/DefaultDecorator',
+    'js/Decorators/DiagramDesigner/DefaultDecorator/DefaultDecorator',
     'text!./CircleDecoratorTemplate.html',
     'css!/css/Decorators/DiagramDesigner/CircleDecorator/CircleDecorator'], function (logManager,
                                                           util,
