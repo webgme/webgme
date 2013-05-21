@@ -76,8 +76,12 @@ if (typeof define !== "function") {
 
 define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC, COMMON) {
 	function parser (xmlfile, core) {
-		var root = core.createNode();
-		var stack = [], objects = 1;
+		var root = core.createNode(), stack = [], objects = 1;
+		var global = {
+			ids: {},
+			cps: [],
+			refs: []
+		};
 
 		function opentag (tag) {
 			var name = tag.name;
@@ -114,13 +118,15 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			ASSERT(tag.name === name);
 
 			if (name === "project" || name === "folder" || name === "model" || name === "atom" || name === "connection" || name === "reference" || name === "set") {
-				parseObject(core, tag);
+				parseObject(core, tag, global);
 			} else if (name === "author" || name === "comment") {
 				parseComment(core, tag);
 			} else if (name === "name") {
 				parseName(core, tag);
 			} else if (name === "value") {
 				parseValue(core, tag);
+			} else if (name === "connpoint") {
+				parseConnPoint(core, tag, global);
 			} else {
 				ASSERT(name === "attribute" || name === "regnode" || name === "connpoint");
 			}
@@ -133,6 +139,7 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			getstat: getstat
 		});
 
+		var done = TASYNC.call(resolveAll, core, root, global, done);
 		var hash = TASYNC.call(persist, core, root, done);
 		hash = TASYNC.call(makeCommit, xmlfile, hash);
 
@@ -168,7 +175,10 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 		isprimary: "isprimary"
 	};
 
-	function parseObject (core, tag) {
+	var POSITION_KEY_REGEXP = new RegExp("^PartRegs/.*/Position$");
+	var POSITION_VAL_REGEXP = new RegExp("^([0-9]*),([0-9]*)$");
+
+	function parseObject (core, tag, global) {
 		var key;
 		for (key in registry) {
 			if (typeof tag.attributes[key] !== "undefined") {
@@ -176,7 +186,72 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			}
 		}
 
+		if (typeof tag.attributes.id !== "undefined") {
+			if (typeof global.ids[tag.attributes.id] === "undefined") {
+				global.ids[tag.attributes.id] = tag.node;
+			} else {
+				console.log("Warning: multiple object with the same id: " + tag.attributes.id);
+			}
+		}
+
 		core.setRegistry(tag.node, "metameta", tag.name);
+
+		// TODO: remove this, onlyu registry should be set
+		core.setAttribute(tag.node, "isPort", tag.name === "atom");
+		core.setRegistry(tag.node, "isPort", tag.name === "atom");
+
+		if (tag.name === "connection") {
+			core.setRegistry(tag.node, "isConnection", true);
+		} else {
+			setPosition(core, tag.node);
+		}
+
+		if (tag.name === "reference" && tag.attributes.referred) {
+			global.refs.push({
+				node: tag.node,
+				referred: tag.attributes.referred
+			});
+		}
+	}
+
+	function setPosition (core, node) {
+		var pos = core.getRegistry(node, "PartRegs/All/Position");
+		if (!pos) {
+			var i, names = core.getRegistryNames(node);
+			for (i = 0; i < names.length; ++i) {
+				var key = POSITION_KEY_REGEXP.exec(names[i]);
+				if (key) {
+					pos = core.getRegistry(node, names[i]);
+					break;
+				}
+			}
+		}
+
+		if (pos) {
+			var pos = POSITION_VAL_REGEXP.exec(pos);
+			if (pos) {
+				pos = {
+					x: parseInt(pos[1], 10),
+					y: parseInt(pos[2], 10)
+				}
+			}
+		}
+
+		pos = pos || {
+			x: 0,
+			y: 0
+		};
+
+		core.setRegistry(node, "position", pos);
+	}
+
+	function parseConnPoint (core, tag, global) {
+		ASSERT(tag.parent.node);
+
+		var entry = tag.attributes;
+		entry.node = tag.parent.node;
+
+		global.cps.push(entry);
 	}
 
 	function parseComment (core, tag) {
@@ -201,6 +276,7 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 			if (status !== "undefined") {
 				var parent = tag.parent;
 				var path = parent.attributes.name;
+				parent = parent.parent;
 
 				while (parent.name === "regnode") {
 					path = parent.attributes.name + "/" + path;
@@ -208,9 +284,95 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 				}
 
 				ASSERT(parent.node);
-				core.setRegistry(parent.node, path, tag.text);
+
+				// this actually happens
+				if (path !== "" && tag.text !== "") {
+					core.setRegistry(parent.node, path, tag.text);
+				}
 			}
 		}
+	}
+
+	function resolveAll (core, root, global) {
+		console.log("Resolving references ...");
+
+		var done, i;
+		for (i = 0; i < global.refs.length; ++i) {
+			resolveReference(core, global.ids, global.refs[i]);
+		}
+
+		for (i = 0; i < global.cps.length; ++i) {
+			done = TASYNC.join(done, resolveConnPoint(core, global.ids, global.cps[i]));
+		}
+
+		return done;
+	}
+
+	function resolveReference (core, ids, ref) {
+		var target = ids[ref.referred];
+		if (target) {
+			core.setPointer(ref.node, "target", target);
+		} else {
+			console.log("Warning: could not find id " + ref.referred);
+		}
+	}
+
+	function resolveConnPoint (core, ids, cp) {
+		var role = cp.role;
+		if (role === "src") {
+			role = "source";
+		} else if (role === "dst") {
+			role = "target";
+		} else {
+			console.log("Unknown connection point role: " + role);
+			return;
+		}
+
+		var target = ids[cp.target];
+		if (!target) {
+			console.log("Warning: could not find id " + cp.target);
+			return;
+		}
+
+		if (cp.refs) {
+			var ref = ids[cp.refs.split(" ")[0]];
+			if (!ref) {
+				console.log("Warning: unknown refport references " + cp.refs);
+				return;
+			}
+
+			var children = core.loadChildren(ref);
+			return TASYNC.call(resolveRefPort, core, cp.node, role, ref, target, cp.target, children);
+		} else {
+			core.setPointer(cp.node, role, target);
+		}
+	}
+
+	function resolveRefPort (core, source, role, reference, target, targetid, children) {
+		ASSERT(children instanceof Array);
+
+		var i, refport = null;
+		for (i = 0; i < children.length; ++i) {
+			var id = core.getRegistry(children[i], "id");
+			if (id === targetid) {
+				refport = children[i];
+				break;
+			}
+		}
+
+		if (!refport) {
+			refport = core.createNode(reference);
+			core.setAttribute(refport, "name", core.getAttribute(target, "name"));
+			core.setRegistry(refport, "position", core.getRegistry(target, "position"));
+			core.setRegistry(refport, "id", targetid);
+			core.setRegistry(refport, "metameta", "refport");
+
+			// TODO: remove this, onlyu registry should be set
+			core.setAttribute(refport, "isPort", true);
+			core.setRegistry(refport, "isPort", true);
+		}
+
+		core.setPointer(source, role, refport);
 	}
 
 	return parser;

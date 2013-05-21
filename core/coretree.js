@@ -681,7 +681,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 
 			if (done !== EMPTY_DATA) {
 				var hash = data[ID_NAME];
-				ASSERT(hash === "" || typeof key === "undefined");
+				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
 					hash = "#" + SHA1(JSON.stringify(data));
