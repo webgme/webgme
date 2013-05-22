@@ -11,7 +11,7 @@ requirejs.config({
 	baseUrl: __dirname + "/.."
 });
 
-requirejs([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC, COMMON) {
+requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC, COMMON) {
 	"use strict";
 
 	TASYNC.trycatch(main, function (error) {

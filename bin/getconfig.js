@@ -11,7 +11,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 	if (name.charAt(name.length - 1) !== '/') {
 		name += '/';
 	}
-	name += "config.js"
+	name += "config.js";
 
 	FS.stat(name, function (err, stat) {
 		if (err && err.errno === 34) {

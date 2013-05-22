@@ -26,7 +26,7 @@ requirejs(['logManager',
     'storage/cache',
     'storage/mongo',
     'storage/log',
-    'cli/common'],function(
+    'util/common'],function(
     logManager,
     CONFIG,
     Server,

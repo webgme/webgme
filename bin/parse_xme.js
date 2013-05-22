@@ -12,7 +12,7 @@ if (typeof define !== "function") {
 		baseUrl: __dirname + "/.."
 	});
 
-	requirejs([ "cli/common", "util/assert", "core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
+	requirejs([ "util/common", "util/assert", "core/tasync", "bin/parse_xme" ], function (COMMON, ASSERT, TASYNC, parser) {
 		"use strict";
 
 		TASYNC.trycatch(main, function (error) {
@@ -74,7 +74,7 @@ if (typeof define !== "function") {
 	return;
 }
 
-define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC, COMMON) {
+define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC, COMMON) {
 	function parser (xmlfile, core) {
 		var root = core.createNode(), stack = [], objects = 1;
 		var global = {
@@ -238,7 +238,7 @@ define([ "util/assert", "core/tasync", "cli/common" ], function (ASSERT, TASYNC,
 				pos = {
 					x: parseInt(pos[1], 10),
 					y: parseInt(pos[2], 10)
-				}
+				};
 			}
 		}
 
