@@ -4,10 +4,10 @@
  * Author: Miklos Maroti
  */
 
-define([ "core/config" ], function (CONFIG) {
+define([], function () {
 	"use strict";
 
-	var maxDepth = CONFIG.future.maxDepth || 5;
+	var maxDepth = 5;
 
 	var ASSERT = function (cond) {
 		if (!cond) {

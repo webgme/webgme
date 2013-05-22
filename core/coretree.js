@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (ASSERT, SHA1, FUTURE, CONFIG) {
+define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FUTURE) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -43,9 +43,9 @@ define([ "util/assert", "util/sha1", "core/future", "core/config" ], function (A
 	var rootCounter = 0;
 
 	return function (storage, options) {
-		var MAX_AGE = (options && options.maxage) || CONFIG.coretree.maxage;
-		var MAX_TICKS = (options && options.maxticks) || CONFIG.coretree.maxticks;
-		var MAX_MUTATE = (options && options.maxmutate) || CONFIG.coretree.maxmutate;
+		var MAX_AGE = (options && options.maxage) || 3;
+		var MAX_TICKS = (options && options.maxticks) || 2000;
+		var MAX_MUTATE = (options && options.maxmutate) || 30000;
 		var autopersist = (options && options.autopersist) || false;
 
 		var ID_NAME = storage.ID_NAME;
