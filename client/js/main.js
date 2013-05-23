@@ -27,6 +27,7 @@ require.config({
         //necessary 3rd party modules
         "bootstrap": 'lib/bootstrap/bootstrap.amd',
         "underscore": 'lib/underscore/underscore'+ (DEBUG ? '': '-min'),
+        "d3": 'lib/d3/d3.v3.min',
 
         //RaphaelJS family
         "eve": 'lib/raphael/eve',   //needed because of raphael.core.js uses require with 'eve'

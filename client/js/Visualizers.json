@@ -27,5 +27,11 @@
         "title": "AspectEditor",
         "panel": "js/Panels/AspectDesigner/AspectDesignerPanel",
         "control": "js/Panels/AspectDesigner/AspectDesignerControl",
+        "DEBUG_ONLY": false},
+
+    {"id": "GraphViz",
+        "title": "Graph visualizer",
+        "panel": "js/Panels/GraphViz/GraphVizPanel",
+        "control": "js/Panels/GraphViz/GraphVizPanelControl",
         "DEBUG_ONLY": false}
 ]
