@@ -4,16 +4,20 @@
  * Author: Tamas Kecskes
  */
 var requirejs = require('requirejs');
-var cache = requirejs(__dirname+'/../storage/cache'),
-    commit = requirejs(__dirname+'/../storage/commit'),
-    failsafe = requirejs(__dirname+'/../storage/failsafe'),
-    local = requirejs(__dirname+'/../storage/local'),
-    log = requirejs(__dirname+'/../storage/log'),
-    mongo = requirejs(__dirname+'/../storage/mongo'),
-    socketioclient = requirejs(__dirname+'/../storage/socketioclient'),
-    socketioserver = requirejs(__dirname+'/../storage/socketioserver'),
-    core = requirejs(__dirname+'/../core/core'),
-    setcore = requirejs(__dirname+'/../core/setcore');
+requirejs.config({
+    nodeRequire: require,
+    baseUrl: __dirname+'/..'
+});
+var cache = requirejs(__dirname+'/../storage/cache.js'),
+    commit = requirejs(__dirname+'/../storage/commit.js'),
+    failsafe = requirejs(__dirname+'/../storage/failsafe.js'),
+    local = requirejs(__dirname+'/../storage/local.js'),
+    log = requirejs(__dirname+'/../storage/log.js'),
+    mongo = requirejs(__dirname+'/../storage/mongo.js'),
+    socketioclient = requirejs(__dirname+'/../storage/socketioclient.js'),
+    socketioserver = requirejs(__dirname+'/../storage/socketioserver.js'),
+    core = requirejs(__dirname+'/../core/core.js'),
+    setcore = requirejs(__dirname+'/../core/setcore.js');
 
 module.exports = {
     storage : {
