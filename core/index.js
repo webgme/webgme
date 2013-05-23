@@ -3,18 +3,31 @@
  *
  * Author: Tamas Kecskes
  */
-define([], function () {
-    "use strict";
+var requirejs = require('requirejs');
+var cache = requirejs(__dirname+'/../storage/cache'),
+    commit = requirejs(__dirname+'/../storage/commit'),
+    failsafe = requirejs(__dirname+'/../storage/failsafe'),
+    local = requirejs(__dirname+'/../storage/local'),
+    log = requirejs(__dirname+'/../storage/log'),
+    mongo = requirejs(__dirname+'/../storage/mongo'),
+    socketioclient = requirejs(__dirname+'/../storage/socketioclient'),
+    socketioserver = requirejs(__dirname+'/../storage/socketioserver'),
+    core = requirejs(__dirname+'/../core/core'),
+    setcore = requirejs(__dirname+'/../core/setcore');
 
-    return {
-        core           : require('core/core.js'),
-        mongo          : require('storage/mongo.js'),
-        log            : require('storage/log.js'),
-        cache          : require('storage/cache.js'),
-        commit         : require('storage/commit.js'),
-        socketioclient : require('storage/socketioclient.js'),
-        socketioserver : require('storage/socketioserver.js'),
-        local : require('storage/local.js'),
-        failsafe : require('storage/failsafe.js')
-    };
-});
+module.exports = {
+    storage : {
+        cache : cache,
+        commit : commit,
+        failsafe : failsafe,
+        local : local,
+        log : log,
+        mongo : mongo,
+        socketioclient : socketioclient,
+        socketioserver : socketioserver
+    },
+    core : {
+        core : core,
+        setcore : setcore
+    }
+};
