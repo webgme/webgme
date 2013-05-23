@@ -9,4 +9,15 @@ Usage instructions for webGME
     - combined_server : this program runs an http server plus an additional webgme server as well ('node bin/combined_server.js')
 
 3. Library Usage:
-    !!! not yet created !!!
+    - birck by birck:
+        ...
+        var webGME = require('webgme');
+        var storage = new webgme.storage.mongo({host:'my database address', port:'port to communicate with mongoDB' });
+        storage.openDatabase(function(err){
+            if(!err){
+                //put your function here
+            }
+        });
+        ...
+
+... TO BE CONTINUED ...
