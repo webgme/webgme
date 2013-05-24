@@ -203,7 +203,7 @@ define(['logManager',
         link.enter().insert("path", "g")
             .attr("class", "link")
             .attr("d", function(d) {
-                var o = {x: d.source.x0, y: d.source.y0};
+                var o = {x: d.source.x0 || d.source.y, y: d.source.y0 || d.source.y};
                 return diagonal({source: o, target: o});
             });
 
