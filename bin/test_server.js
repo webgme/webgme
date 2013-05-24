@@ -3,13 +3,12 @@ var requirejs = require("requirejs");
 
 requirejs.config({
     nodeRequire: require,
-    baseUrl: "..",
+    baseUrl: __dirname + '/..',
     paths: {
-        "core":"../../nodeserver/src/core",
+        "core":"core",
         "logManager": "common/LogManager",
-        "util": "../../nodeserver/src/util",
-        "storage": "../../nodeserver/src/storage",
-        "user": "../../nodeserver/src/user"
+        "util": "util",
+        "storage": "storage"
     }
 });
 
@@ -44,17 +43,27 @@ requirejs(['logManager',
                 req.url = '/index.html';
             }
 
-            if (req.url.indexOf('/common/') === 0 || req.url.indexOf('/util/') === 0 || req.url.indexOf('/storage/') === 0 || req.url.indexOf('/core/') === 0 || req.url.indexOf('/user/') === 0) {
-                clientsrcfolder = "/..";
-            } else {
-                clientsrcfolder = "/../client";
+            var dirname = __dirname;
+            if(dirname.charAt(dirname.length-1) !== '/') {
+                dirname += '/';
+            }
+            dirname += "./../";
+
+            if (!(  req.url.indexOf('/common/') === 0 ||
+                req.url.indexOf('/util/') === 0 ||
+                req.url.indexOf('/storage/') === 0 ||
+                req.url.indexOf('/core/') === 0 ||
+                req.url.indexOf('/user/') === 0 ||
+                req.url.indexOf('/config/') === 0 ||
+                req.url.indexOf('/bin/') === 0)){
+                dirname += "client";
             }
 
 
-            FS.readFile(__dirname + clientsrcfolder +req.url, function(err,data){
+            FS.readFile(dirname +req.url, function(err,data){
                 if(err){
                     res.writeHead(500);
-                    logger.error("Error getting the file:" +__dirname + clientsrcfolder +req.url);
+                    logger.error("Error getting the file:" + dirname +req.url);
                     return res.end('Error loading ' + req.url);
                 }
 
@@ -100,7 +109,7 @@ requirejs(['logManager',
     var testPageHandler = function(req,res){
         if(req.url === '/test.html'){
             //initial get, we should respond with the page itself
-            FS.readFile(__dirname + req.url, function(err,data){
+            FS.readFile(__dirname +'/../client'+ req.url, function(err,data){
                 if(err){
 
                 } else {
