@@ -73,8 +73,6 @@ requirejs(['logManager',
                 dirname += "client";
             }
 
-            req.url.replace('index','index2');
-
             require('fs').readFile(dirname + req.url, function(err,data){
                 if(err){
                     res.writeHead(500);
