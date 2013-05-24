@@ -337,6 +337,10 @@ define(['logManager',
         this._resizeD3Tree(width, height);
 
         this._update(undefined);
+
+        //approximate width of the root name
+        var rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+        this._el.find('svg > g').attr("transform", "translate(" + (rootNameWidth + MARGIN) + "," + MARGIN + ")");
     };
 
     GraphVizWidget.prototype.onNodeOpen = function (id) {
