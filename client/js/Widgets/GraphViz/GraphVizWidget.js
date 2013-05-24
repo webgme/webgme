@@ -18,7 +18,9 @@ define(['logManager',
         OPEN = 'open',
         LEAF = 'LEAF',
         OPENING = 'opening',
-        CLOSING = 'CLOSING';
+        CLOSING = 'CLOSING',
+        NODE_SIZE = 15,
+        TREE_LEVEL_DISTANCE = 180;
 
     GraphVizWidget = function (container, params) {
         this._logger = logManager.create("GraphVizWidget");
@@ -52,14 +54,20 @@ define(['logManager',
     GraphVizWidget.prototype.onWidgetContainerResize = function (width, height) {
         //call our own resize handler
         this._resizeD3Tree(width, height);
-    };
-
-    GraphVizWidget.prototype._resizeD3Tree = function (width, height) {
-        this._tree.size([height - 2 * MARGIN, width - 2 * MARGIN]);
-        this.__svg.attr("width", width).attr("height", height);
         if (this._root) {
             this._update(undefined);
         }
+    };
+
+    GraphVizWidget.prototype._resizeD3Tree = function (width, height) {
+        var ew = this._el.width(),
+            eh = this._el.height();
+
+        width = Math.max(ew, width);
+        height = Math.max(eh, height);
+
+        this._tree.size([height - 2 * MARGIN, width - 2 * MARGIN]);
+        this.__svg.attr("width", width).attr("height", height);
     };
 
     GraphVizWidget.prototype._update = function(source) {
@@ -88,7 +96,7 @@ define(['logManager',
 
         // Normalize for fixed-depth.
         nodes.forEach(function(d) {
-            d.y = d.depth * 180;
+            d.y = d.depth * TREE_LEVEL_DISTANCE;
             d.status = d.status || getOpenStatus(d);
         });
 
@@ -203,11 +211,60 @@ define(['logManager',
             })
             .remove();
 
-        // Stash the old positions for transition.
+        //node vertical positions by depth
+        var nodesYByDepth = [];
+
+
         nodes.forEach(function(d) {
+            // Stash the old positions for transition.
             d.x0 = d.x;
             d.y0 = d.y;
+
+            // and query vertical coordinates of the nodes at the same depth to detect collision
+            nodesYByDepth[d.depth] = nodesYByDepth[d.depth] || [];
+            nodesYByDepth[d.depth].push(d.x);
         });
+
+        //if already resizing, don't try to optimize again
+        if (this.__resizing !== true) {
+            var l = nodesYByDepth.length;
+            var collideAtDepth = [];
+            for (i = 1; i < l; i+= 1) {
+                //sort the coordinates for easy check of collision
+                nodesYByDepth[i].sort(function(a,b){return a-b});
+
+                //see if any of the nodes overlap
+                var j;
+                var depthLength = nodesYByDepth[i].length;
+                for (j = 0; j < depthLength - 1; j += 1 ) {
+                    if (nodesYByDepth[i][j+1] - NODE_SIZE <= nodesYByDepth[i][j]) {
+                        collideAtDepth.push([i,depthLength]);
+                        break;
+                    }
+                }
+            }
+
+            this._logger.debug("Collide:" + collideAtDepth);
+
+            var sum = 0;
+            var len = collideAtDepth.length;
+            if (len > 0) {
+                //start resize mode
+                this.__resizing = true;
+
+                while (len--) {
+                    sum += collideAtDepth[len][1];
+                }
+
+                this._resizeD3Tree(nodesYByDepth.length * TREE_LEVEL_DISTANCE, sum * NODE_SIZE);
+
+                //redraw the tree
+                this._update();
+
+                //finish resize mode
+                this.__resizing = false;
+            }
+        }
     };
 
     GraphVizWidget.prototype._onNodeClick = function(d) {
@@ -264,6 +321,10 @@ define(['logManager',
 
         copyOver(this.__root, this._root);
         delete this.__root;
+
+        var width = this._el.width(),
+            height = this._el.height();
+        this._resizeD3Tree(width, height);
 
         this._update(undefined);
     };
