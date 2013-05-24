@@ -8,7 +8,8 @@ define(['logManager',
                                        CONSTANTS,
                                        nodePropertyNames) {
 
-    var GraphVizControl;
+    var GraphVizControl,
+        MODEL = 'MODEL';
 
     GraphVizControl = function (options) {
         this._logger = logManager.create("GraphVizControl");
@@ -21,6 +22,8 @@ define(['logManager',
 
         this._currentNodeId = null;
         this._currentNodeParentId = undefined;
+
+        this._displayModelsOnly = false;
 
         this._initWidgetEventHandlers();
 
@@ -80,6 +83,19 @@ define(['logManager',
         this.$btnGroupModelHierarchyUp.hide();
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
+
+        /************** MODEL / CONNECTION filter *******************/
+
+        this._graphVizWidget.toolBar.addLabel().text('SHOW CONNECTIONS:');
+
+        this._graphVizWidget.toolBar.addCheckBox({ "title": "Go to parent",
+            "checkChangedFn": function(data, checked){
+                self._displayModelsOnly = !checked;
+                self._generateData();
+            }
+        });
+
+        /************** END OF - MODEL / CONNECTION filter *******************/
     };
 
     GraphVizControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -134,7 +150,12 @@ define(['logManager',
             objDescriptor = {'id': undefined,
                              'name': undefined,
                              'childrenIDs': undefined,
-                             'parentId': undefined};
+                             'parentId': undefined,
+                             'kind': MODEL};
+
+            if (nodeObj.getBaseId() === "connection") {
+                objDescriptor.kind = "CONNECTION";
+            }
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
@@ -148,8 +169,7 @@ define(['logManager',
 
     GraphVizControl.prototype.onOneEvent = function (events) {
         var i = events ? events.length : 0,
-            e,
-            self = this;
+            e;
 
         this._logger.debug("onOneEvent '" + i + "' items");
 
@@ -168,6 +188,14 @@ define(['logManager',
             }
         }
 
+        this._generateData();
+
+        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
+    };
+
+    GraphVizControl.prototype._generateData = function () {
+        var self = this;
+
         var data = _.extend({}, this._nodes[this._currentNodeId]);
 
         var loadRecursive = function (node) {
@@ -175,16 +203,17 @@ define(['logManager',
             while (len--) {
                 node.children = node.children || [];
                 if (self._nodes[node.childrenIDs[len]]) {
-                    node.children.push(_.extend({}, self._nodes[node.childrenIDs[len]]));
-                    loadRecursive(node.children[node.children.length-1]);
+                    if ((self._displayModelsOnly === true && self._nodes[node.childrenIDs[len]].kind === MODEL) ||
+                        self._displayModelsOnly === false) {
+                        node.children.push(_.extend({}, self._nodes[node.childrenIDs[len]]));
+                        loadRecursive(node.children[node.children.length-1]);
+                    }
                 }
             }
         };
         loadRecursive(data);
 
         this._graphVizWidget.setData(data);
-
-        this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
     // PUBLIC METHODS
