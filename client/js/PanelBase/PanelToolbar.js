@@ -307,6 +307,9 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     /***************** END OF - DROPDOWN MENU ****************************/
 
+
+    /***************** LABEL ****************************/
+
     PanelToolbar.prototype.addLabel = function () {
         var label = $('<span/>', {
             "class": "toolbar-group"
@@ -317,6 +320,36 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
         return label;
     };
 
+    /***************** END OF - LABEL ****************************/
+
+    /***************** CHECKBOX ****************************/
+
+    PanelToolbar.prototype.addCheckBox = function (params) {
+        var onCheckChanged,
+            chkFieldEpx;
+
+        onCheckChanged = function (checked) {
+            var data = chkFieldEpx.el.data();
+
+            if (params.checkChangedFn) {
+                params.checkChangedFn.call(this, data, checked);
+            }
+        };
+
+        chkFieldEpx = new iCheckBox({"checkChangedFn": onCheckChanged});
+
+        chkFieldEpx.el.addClass('pull-right');
+
+        if (params.data) {
+            chkFieldEpx.el.data(params.data);
+        }
+
+        this.$el.append(chkFieldEpx.el);
+
+        return chkFieldEpx;
+    };
+
+    /***************** END OF - CHECKBOX ****************************/
 
 
     return PanelToolbar;

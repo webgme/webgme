@@ -30,6 +30,9 @@
       width: 30px; }
     .panel-base-wh .panel-header .panel-header-toolbar li div.iCheckBox {
       margin-left: 10px; }
+    .panel-base-wh .panel-header .panel-header-toolbar .iCheckBox {
+      top: 5px;
+      margin-left: 10px; }
   .panel-base-wh .panel-body {
     position: relative;
     overflow: auto;
