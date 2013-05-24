@@ -6,8 +6,10 @@
 "use strict";
 
 define(['logManager',
+        'js/Widgets/GraphViz/GraphVizWidget.Zoom',
         'd3',
-        'css!/css/Widgets/GraphViz/GraphVizWidget'], function (logManager) {
+        'css!/css/Widgets/GraphViz/GraphVizWidget'], function (logManager,
+                                                               GraphVizWidgetZoom) {
 
     var GraphVizWidget,
         GRAPH_VIZ_CLASS = "graph-viz",
@@ -20,7 +22,8 @@ define(['logManager',
         OPENING = 'opening',
         CLOSING = 'CLOSING',
         NODE_SIZE = 15,
-        TREE_LEVEL_DISTANCE = 180;
+        TREE_LEVEL_DISTANCE = 180,
+        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5];
 
     GraphVizWidget = function (container, params) {
         this._logger = logManager.create("GraphVizWidget");
@@ -28,7 +31,14 @@ define(['logManager',
         this._el = container;
         this.toolBar = params.toolBar;
 
+        //define zoom value
+        this._zoom = 1.0;
+        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+
         this._initialize();
+
+        //init zoom related UI and handlers
+        this._initZoom();
 
         this._logger.debug("GraphVizWidget ctor finished");
     };
@@ -337,6 +347,8 @@ define(['logManager',
 
     GraphVizWidget.prototype.onNodeDblClick = function (id) {
     };
+
+    _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);
 
     return GraphVizWidget;
 });

@@ -1,11 +1,17 @@
+$node-stroke-color: steelblue;
+$node-fill-color: #FFF;
+$link-stroke-color: #CCC;
+
 .graph-viz {
+  outline: none;
+
   .node {
     cursor: pointer;
   }
 
   .node circle {
-    fill: #fff;
-    stroke: steelblue;
+    fill: $node-fill-color;
+    stroke: $node-stroke-color;
     stroke-width: 1.5px;
   }
 
@@ -15,7 +21,7 @@
 
   .link {
     fill: none;
-    stroke: #ccc;
+    stroke: $link-stroke-color;
     stroke-width: 1.5px;
   }
 }
