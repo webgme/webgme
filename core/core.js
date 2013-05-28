@@ -44,6 +44,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future", "core/tasyn
 		coretree.loadRoot = TASYNC.wrap(FUTURE.unadapt(coretree.loadRoot));
 		coretree.loadChild = TASYNC.wrap(FUTURE.unadapt(coretree.loadChild));
 		coretree.loadByPath = TASYNC.wrap(FUTURE.unadapt(coretree.loadByPath));
+		coretree.persist = TASYNC.wrap(FUTURE.unadapt(coretree.persist));
 
 		var __test = function (text, cond) {
 			if (!cond) {
@@ -816,14 +817,9 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future", "core/tasyn
 			// root
 			getKey: coretree.getHash,
 			isEmpty: coretree.isEmpty,
+
 			loadRoot: TASYNC.unwrap(coretree.loadRoot),
-
-			persist: function (node, callback) {
-				var finished = coretree.persist(node);
-				FUTURE.then(finished, callback);
-				return coretree.getHash(node);
-			},
-
+			persist: TASYNC.unwrap(coretree.persist),
 			getRoot: coretree.getRoot,
 
 			// containment

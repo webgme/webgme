@@ -519,7 +519,8 @@ define([
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
-                var rootHash = core.persist(function(err){});
+                core.persist(function(err){});
+                var rootHash = core.getKey(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
                 project.setBranchHash('master',"",commitHash,callback);
             }
@@ -887,7 +888,8 @@ define([
                     _msg +="\n"+msg;
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
-                        var newRootHash = _core.persist(function(err){});
+                        _core.persist(function(err){});
+                        var newRootHash = _core.getKey(_core.getRoot());
                         var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
                             //TODO now what??? - could we end up here?
                         });
