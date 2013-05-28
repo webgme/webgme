@@ -694,6 +694,7 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			return done;
 		};
 
+		var __storageFsync = FUTURE.adapt(storage.fsyncDatabase);
 		var persist = function (node) {
 			node = normalize(node);
 
@@ -703,11 +704,6 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 
 			var done = __saveData(node.data);
 			return FUTURE.join(done, __storageFsync());
-		};
-
-		var __storageFsync = FUTURE.adapt(storage.fsyncDatabase);
-		var __persist2 = function () {
-			return __storageFsync();
 		};
 
 		var __storageLoad = FUTURE.adapt(storage.loadObject);

@@ -780,6 +780,29 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			}
 		};
 
+		// --- checking 
+
+		function checkNode (node) {
+			if (isValidNode(node)) {
+				return node;
+			} else {
+				throw new Error("Invalid result node");
+			}
+		}
+
+		function checkNodes (nodes) {
+			ASSERT(nodes instanceof Array);
+
+			var i;
+			for (i = 0; i < nodes.length; ++i) {
+				if (!isValidNode(nodes[i])) {
+					throw new Error("Invalid result node array");
+				}
+			}
+
+			return nodes;
+		}
+
 		return {
 			// check
 			isValidNode: isValidNode,
@@ -793,9 +816,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 
 			persist: function (node, callback) {
 				var finished = coretree.persist(node);
-
 				FUTURE.then(finished, callback);
-
 				return coretree.getHash(node);
 			},
 
@@ -810,49 +831,19 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			getChildrenPaths: getChildrenPaths,
 
 			loadChildx: FUTURE.unadapt(coretree.loadChild),
-			loadChild: function (node, relid, callback) {
-				ASSERT(isValidNode(node));
-				var future = coretree.loadChild(node, relid);
-				FUTURE.then(future, function (err, child) {
-					if (err) {
-						callback(err);
-					} else {
-						ASSERT(isValidNode(child));
-						callback(null, child);
-					}
-				});
-			},
+			loadChild: FUTURE.unadapt(function (node, relid) {
+				return FUTURE.call(coretree.loadChild(node, relid), checkNode);
+			}),
 
 			loadByPathx: FUTURE.unadapt(coretree.loadByPath),
-			loadByPath: function (node, path, callback) {
-				ASSERT(isValidNode(node));
-				var future = coretree.loadByPath(node, path);
-				FUTURE.then(future, function (err, child) {
-					if (err) {
-						callback(err);
-					} else {
-						ASSERT(isValidNode(child));
-						callback(null, child);
-					}
-				});
-			},
+			loadByPath: FUTURE.unadapt(function (node, path) {
+				return FUTURE.call(coretree.loadByPath(node, path), checkNodes);
+			}),
 
 			loadChildrenx: FUTURE.unadapt(loadChildren),
-			loadChildren: function (node, callback) {
-				ASSERT(isValidNode(node));
-				var future = loadChildren(node);
-				FUTURE.then(future, function (err, children) {
-					if (err) {
-						callback(err);
-					} else {
-						ASSERT(children instanceof Array);
-						for ( var i = 0; i < children.length; ++i) {
-							ASSERT(isValidNode(children[i]));
-						}
-						callback(null, children);
-					}
-				});
-			},
+			loadChildren: FUTURE.unadapt(function (node) {
+				return FUTURE.call(loadChildren(node), checkNodes);
+			}),
 
 			// modify
 			createNode: createNode,
