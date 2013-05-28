@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function (ASSERT, CoreTree, SHA1, FUTURE) {
+define([ "util/assert", "core/coretree", "util/sha1", "core/future", "core/tasync" ], function (ASSERT, CoreTree, SHA1, FUTURE, TASYNC) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -40,6 +40,10 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 	var Core = function (storage, options) {
 
 		var coretree = new CoreTree(storage, options);
+
+		coretree.loadRoot = TASYNC.wrap(FUTURE.unadapt(coretree.loadRoot));
+		coretree.loadChild = TASYNC.wrap(FUTURE.unadapt(coretree.loadChild));
+		coretree.loadByPath = TASYNC.wrap(FUTURE.unadapt(coretree.loadByPath));
 
 		var __test = function (text, cond) {
 			if (!cond) {
@@ -516,7 +520,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 				children[i] = coretree.loadChild(node, children[i]);
 			}
 
-			return FUTURE.array(children);
+			return TASYNC.lift(children);
 		};
 
 		var getPointerNames = function (node) {
@@ -707,7 +711,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 				node = coretree.getParent(node);
 			} while (node);
 
-			return FUTURE.array(collection);
+			return TASYNC.lift(collection);
 		};
 
 		var getCollectionPaths = function (node, name) {
@@ -783,7 +787,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 		// --- checking 
 
 		function checkNode (node) {
-			if (isValidNode(node)) {
+			if (node === null || isValidNode(node)) {
 				return node;
 			} else {
 				throw new Error("Invalid result node");
@@ -812,7 +816,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			// root
 			getKey: coretree.getHash,
 			isEmpty: coretree.isEmpty,
-			loadRoot: FUTURE.unadapt(coretree.loadRoot),
+			loadRoot: TASYNC.unwrap(coretree.loadRoot),
 
 			persist: function (node, callback) {
 				var finished = coretree.persist(node);
@@ -830,19 +834,19 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
 
-			loadChildx: FUTURE.unadapt(coretree.loadChild),
-			loadChild: FUTURE.unadapt(function (node, relid) {
-				return FUTURE.call(coretree.loadChild(node, relid), checkNode);
+			loadChildx: TASYNC.unwrap(coretree.loadChild),
+			loadChild: TASYNC.unwrap(function (node, relid) {
+				return TASYNC.call(checkNode, coretree.loadChild(node, relid));
 			}),
 
-			loadByPathx: FUTURE.unadapt(coretree.loadByPath),
-			loadByPath: FUTURE.unadapt(function (node, path) {
-				return FUTURE.call(coretree.loadByPath(node, path), checkNodes);
+			loadByPathx: TASYNC.unwrap(coretree.loadByPath),
+			loadByPath: TASYNC.unwrap(function (node, path) {
+				return TASYNC.call(checkNodes, coretree.loadByPath(node, path));
 			}),
 
-			loadChildrenx: FUTURE.unadapt(loadChildren),
-			loadChildren: FUTURE.unadapt(function (node) {
-				return FUTURE.call(loadChildren(node), checkNodes);
+			loadChildrenx: TASYNC.unwrap(loadChildren),
+			loadChildren: TASYNC.unwrap(function (node) {
+				return TASYNC.call(checkNodes, loadChildren(node));
 			}),
 
 			// modify
@@ -866,12 +870,12 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future" ], function 
 			getPointerPath: getPointerPath,
 			hasPointer: hasPointer,
 			getOutsidePointerPath: getOutsidePointerPath,
-			loadPointer: FUTURE.unadapt(loadPointer),
+			loadPointer: TASYNC.unwrap(loadPointer),
 			deletePointer: deletePointer,
 			setPointer: setPointer,
 			getCollectionNames: getCollectionNames,
 			getCollectionPaths: getCollectionPaths,
-			loadCollection: FUTURE.unadapt(loadCollection),
+			loadCollection: TASYNC.unwrap(loadCollection),
 
 			getSingleNodeHash: getSingleNodeHash,
 			getCommonPathPrefixData: getCommonPathPrefixData
