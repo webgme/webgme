@@ -810,7 +810,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function 
 			isValidPath: isValidPath,
 
 			// root
-			getKey: coretree.getHash,
+			getHash: coretree.getHash,
 			isEmpty: coretree.isEmpty,
 
 			loadRoot: TASYNC.unwrap(coretree.loadRoot),
@@ -819,7 +819,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function 
 
 			// containment
 			getLevel: coretree.getLevel,
-			getStringPath: coretree.getPath,
+			getPath: coretree.getPath,
 			getParent: coretree.getParent,
 			getRelid: coretree.getRelid,
 			getChildrenRelids: getChildrenRelids,

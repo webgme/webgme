@@ -45,8 +45,8 @@ define([ "util/assert"], function (ASSERT) {
             return root;
         };
 
-        var getStringPath = function(node){
-            var path = _innerCore.getStringPath(node,root);
+        var getPath = function(node){
+            var path = _innerCore.getPath(node,root);
             if(path === rootPath){
                 return visibleRootPath;
             } else {
@@ -188,7 +188,7 @@ define([ "util/assert"], function (ASSERT) {
         var isSetNode = function(node){
             var parent = _innerCore.getParent(node);
             if(parent){
-                var path = getStringPath(node);
+                var path = getPath(node);
                 var sets = getSetPaths(parent);
                 return sets.indexOf(path) !== -1;
             } else {
@@ -221,7 +221,7 @@ define([ "util/assert"], function (ASSERT) {
             getSetOwnerPath: getSetOwnerPath,
 
             // root
-            getKey: _innerCore.getKey,
+            getHash: _innerCore.getHash,
             loadRoot: loadRoot,
 
             persist:persist,
@@ -230,7 +230,7 @@ define([ "util/assert"], function (ASSERT) {
 
             // containment
             getLevel: _innerCore.getLevel,
-            getStringPath: getStringPath,
+            getPath: getPath,
             getParent: _innerCore.getParent,
             getRelid: _innerCore.getRelid,
             getChildrenRelids: getChildrenRelids,
