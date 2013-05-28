@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FUTURE) {
+define([ "util/assert", "util/sha1", "core/future", "core/tasync" ], function (ASSERT, SHA1, FUTURE, TASYNC) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -53,6 +53,10 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 
 		var roots = [];
 		var ticks = 0;
+
+		storage.loadObject = TASYNC.wrap(storage.loadObject);
+		storage.insertObject = FUTURE.adapt(storage.insertObject);
+		storage.fsyncDatabase = FUTURE.adapt(storage.fsyncDatabase);
 
 		// ------- static methods
 
@@ -655,7 +659,6 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			ASSERT(typeof node.children[ID_NAME] === "undefined");
 		};
 
-		var __storageSave = FUTURE.adapt(storage.insertObject);
 		var __saveData = function (data) {
 			ASSERT(__isMutableData(data));
 
@@ -687,14 +690,13 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 					hash = "#" + SHA1(JSON.stringify(data));
 					data[ID_NAME] = hash;
 
-					done = FUTURE.join(done, __storageSave(data));
+					done = FUTURE.join(done, storage.insertObject(data));
 				}
 			}
 
 			return done;
 		};
 
-		var __storageFsync = FUTURE.adapt(storage.fsyncDatabase);
 		var persist = function (node) {
 			node = normalize(node);
 
@@ -703,14 +705,13 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			}
 
 			var done = __saveData(node.data);
-			return FUTURE.join(done, __storageFsync());
+			return FUTURE.join(done, storage.fsyncDatabase());
 		};
 
-		var __storageLoad = FUTURE.adapt(storage.loadObject);
 		var loadRoot = function (hash) {
 			ASSERT(isValidHash(hash));
 
-			return FUTURE.call(__storageLoad(hash), __loadRoot2);
+			return TASYNC.call(__loadRoot2, storage.loadObject(hash));
 		};
 
 		var __loadRoot2 = function (data) {
@@ -736,7 +737,7 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			if (isValidHash(node.data)) {
 				// TODO: this is a hack, we should avoid loading it multiple
 				// times
-				return FUTURE.call(node, __storageLoad(node.data), __loadChild2);
+				return TASYNC.call(__loadChild2, node, storage.loadObject(node.data));
 			} else {
 				return typeof node.data === "object" && node.data !== null ? node : null;
 			}
@@ -773,7 +774,7 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			}
 
 			var child = loadChild(node, path[index]);
-			return FUTURE.call(child, path, index + 1, __loadDescendantByPath2);
+			return TASYNC.call(__loadDescendantByPath2, child, path, index + 1);
 		};
 
 		// ------- valid -------
@@ -889,7 +890,7 @@ define([ "util/assert", "util/sha1", "core/future" ], function (ASSERT, SHA1, FU
 			isHashed: isHashed,
 			setHashed: setHashed,
 			getHash: getHash,
-			persist: persist,
+			persist: TASYNC.wrap(FUTURE.unadapt(persist)),
 			loadRoot: loadRoot,
 			loadChild: loadChild,
 			loadByPath: loadByPath,

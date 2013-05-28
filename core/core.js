@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "util/sha1", "core/future", "core/tasync" ], function (ASSERT, CoreTree, SHA1, FUTURE, TASYNC) {
+define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function (ASSERT, CoreTree, SHA1, TASYNC) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -40,11 +40,6 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/future", "core/tasyn
 	var Core = function (storage, options) {
 
 		var coretree = new CoreTree(storage, options);
-
-		coretree.loadRoot = TASYNC.wrap(FUTURE.unadapt(coretree.loadRoot));
-		coretree.loadChild = TASYNC.wrap(FUTURE.unadapt(coretree.loadChild));
-		coretree.loadByPath = TASYNC.wrap(FUTURE.unadapt(coretree.loadByPath));
-		coretree.persist = TASYNC.wrap(FUTURE.unadapt(coretree.persist));
 
 		var __test = function (text, cond) {
 			if (!cond) {
