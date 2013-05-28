@@ -520,7 +520,7 @@ define([
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
                 core.persist(function(err){});
-                var rootHash = core.getKey(root);
+                var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
                 project.setBranchHash('master',"",commitHash,callback);
             }
@@ -644,7 +644,7 @@ define([
             }
             function storeNode(node,basic){
                 basic = basic || true;
-                var path = _core.getStringPath(node);
+                var path = _core.getPath(node);
                 if(_nodes[path]){
                     //TODO we try to avoid this
                 } else {
@@ -660,7 +660,7 @@ define([
                             var error = null;
                             var path = null;
                             for(var i=0;i<sets.length;i++){
-                                path = core.getStringPath(sets[i]);
+                                path = core.getPath(sets[i]);
                                 if(!nodesSoFar[path]){
                                     nodesSoFar[path] = {node:sets[i],hash:core.getSingleNodeHash(sets[i]),incomplete:false,basic:false};
                                 }
@@ -669,7 +669,7 @@ define([
                                         error = error || err;
                                         if(!err){
                                             for(var j=0;j<children.length;j++){
-                                                path = core.getStringPath(children[j]);
+                                                path = core.getPath(children[j]);
                                                 if(!nodesSoFar[path]){
                                                     nodesSoFar[path] = {node:children[j],hash:core.getSingleNodeHash(children[j]),incomplete:false,basic:false};
                                                 }
@@ -677,13 +677,13 @@ define([
                                         }
 
                                         if(--missing === 0){
-                                            nodesSoFar[core.getStringPath(node)].incomplete = false;
+                                            nodesSoFar[core.getPath(node)].incomplete = false;
                                             callback(error);
                                         }
                                     });
                                 } else {
                                     if(--missing === 0){
-                                        nodesSoFar[core.getStringPath(node)].incomplete = false;
+                                        nodesSoFar[core.getPath(node)].incomplete = false;
                                         callback(error);
                                     }
                                 }
@@ -693,7 +693,7 @@ define([
                         }
                     });
                 } else {
-                    nodesSoFar[core.getStringPath(node)].incomplete = false;
+                    nodesSoFar[core.getPath(node)].incomplete = false;
                     callback(null);
                 }
             }
@@ -720,7 +720,7 @@ define([
                 }
             }
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
-                var path = core.getStringPath(node);
+                var path = core.getPath(node);
                 if(!nodesSoFar[path]){
                     nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                 }
@@ -781,7 +781,7 @@ define([
                     if(!err){
                         var missing = 0,
                             error = null;
-                        _loadNodes[_core.getStringPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
+                        _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
                         var allLoaded = function(){
                             if(!error){
                                 completeNodes(_core,_loadNodes,callback);
@@ -889,7 +889,7 @@ define([
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
                         _core.persist(function(err){});
-                        var newRootHash = _core.getKey(_core.getRoot());
+                        var newRootHash = _core.getHash(_core.getRoot());
                         var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
                             //TODO now what??? - could we end up here?
                         });
@@ -1349,7 +1349,7 @@ define([
                         _core.setRegistry(child,"decorator","DefaultDecorator");
 
                         storeNode(child);
-                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getStringPath(child)+')');
+                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
                     }
                 }
             }
@@ -1447,7 +1447,7 @@ define([
                         var id = _core.getSetRelid(setid);
                         var setNode = _core.createNode(_nodes[path].node,id);
                         storeNode(setNode);
-                        setPath = _core.getStringPath(setNode);
+                        setPath = _core.getPath(setNode);
                     }
 
                     if(_nodes[setPath] && typeof _nodes[setPath].node === 'object'){
@@ -1563,7 +1563,7 @@ define([
                     GENERAL          : "2200000000"
                 };
                 var getParentId = function(){
-                    return _core.getStringPath(_core.getParent(_nodes[_id].node));
+                    return _core.getPath(_core.getParent(_nodes[_id].node));
                 };
 
                 var getId = function(){

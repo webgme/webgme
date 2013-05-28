@@ -150,7 +150,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 	function persist (core, root) {
 		console.log("Waiting for objects to be saved ...");
 		var done = core.persist(root);
-		var hash = core.getKey(root);
+		var hash = core.getHash(root);
 		return TASYNC.join(hash, done);
 	}
 
