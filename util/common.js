@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs", "bin/getconfig" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS, CONFIG) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs", "bin/getconfig", "storage/socketioclient" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS, CONFIG, Client) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -35,16 +35,27 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 	var database;
 
 	function openDatabase () {
-		var params = getParameters("mongo") || [];
+		var paramsMongo = getParameters("mongo");
+        var paramsSIO = getParameters("socketio");
+        var isSIO = paramsMongo === null && paramsSIO !== null && paramsSIO.length > 0;
+        paramsMongo = paramsMongo || [];
+        paramsSIO = paramsSIO || [];
 
 		var opt = {
-			database: params[0] || CONFIG.mongodatabase || "webgme",
-			host: params[1] || CONFIG.mongoip || "localhost",
-			port: params[2] || CONFIG.mongoport || 27017
+			database: paramsMongo[0] || CONFIG.mongodatabase || "webgme",
+			host: paramsMongo[1] || paramsSIO[0] || CONFIG.mongoip || "localhost",
+			port: paramsMongo[2] || paramsSIO[1] || CONFIG.mongoport || 27017
 		};
 
-		console.log("Opening mongo database " + opt.database + " on " + opt.host + (opt.port ? ":" + opt.port : ""));
-		var database = new Commit(new Cache(new Mongo(opt), {}));
+        var database = null;
+        if(isSIO){
+            opt.type = "node";
+            console.log("Opening database through socket.io connection on " + opt.host + (opt.port ? ":" + opt.port : ""));
+            database = new Commit(new Cache(new Client(opt), {}));
+        } else {
+            console.log("Opening mongo database " + opt.database + " on " + opt.host + (opt.port ? ":" + opt.port : ""));
+            database = new Commit(new Cache(new Mongo(opt), {}));
+        }
 
 		database.openDatabase = TASYNC.wrap(database.openDatabase);
 		database.openProject = TASYNC.wrap(database.openProject);

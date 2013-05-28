@@ -28,6 +28,7 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 			console.log("options are the following:");
 			console.log("");
 			console.log("  -mongo [database [host [port]]]\topens a mongo database");
+            console.log("  -socketio [host [port]]\t\topens a conneciton to a socket.io server");
 			console.log("  -help\t\t\t\t\tprints out this help message");
 			console.log("");
 			return;
