@@ -211,7 +211,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 			});
 		}
 
-		if (tag.attributes.derivedfrom) {
+		if (tag.attributes.derivedfrom && tag.attributes.isprimary === "yes") {
 			global.typs.push({
 				node: tag.node,
 				base: tag.attributes.derivedfrom
