@@ -247,7 +247,11 @@ define(['logManager',
                     objDescriptor.kind = "MODEL";
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
 
-                    objDescriptor.position = { "x": pos.x, "y": pos.y};
+                    if (pos) {
+                        objDescriptor.position = { "x": pos.x || 30, "y": pos.y || 30};
+                    } else {
+                        objDescriptor.position = { "x": 30, "y": 30};
+                    }
 
                     if (objDescriptor.position.hasOwnProperty("x")) {
                         objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, 0);
