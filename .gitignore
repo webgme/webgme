@@ -15,4 +15,4 @@
 .settings
 
 bin/config.js
-config/local.js
+bin/server.log
