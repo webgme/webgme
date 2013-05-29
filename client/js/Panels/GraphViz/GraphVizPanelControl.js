@@ -82,6 +82,12 @@ define(['logManager',
 
         this.$btnGroupModelHierarchyUp.hide();
 
+        this._graphVizWidget.onBackgroundDblClick = function () {
+            if (self._currentNodeParentId) {
+                self._client.setSelectedObjectId(self._currentNodeParentId);
+            }
+        };
+
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
         /************** MODEL / CONNECTION filter *******************/
