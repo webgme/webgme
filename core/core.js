@@ -832,7 +832,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function 
 
 			loadByPathx: TASYNC.unwrap(coretree.loadByPath),
 			loadByPath: TASYNC.unwrap(function (node, path) {
-				return TASYNC.call(checkNodes, coretree.loadByPath(node, path));
+				return TASYNC.call(checkNode, coretree.loadByPath(node, path));
 			}),
 
 			loadChildrenx: TASYNC.unwrap(loadChildren),
