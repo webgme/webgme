@@ -3,10 +3,12 @@
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Constants',
     './TreeBrowserControl',
-    './JSTreeBrowserWidget'], function (PanelBaseWithHeader,
+    './JSTreeBrowserWidget',
+    './DynaTreeBrowserWidget'], function (PanelBaseWithHeader,
                                                           CONSTANTS,
                                                           TreeBrowserControl,
-                                                          JSTreeBrowserWidget) {
+                                                          JSTreeBrowserWidget,
+                                                          DynaTreeBrowserWidget) {
 
     var ObjectBrowserPanel,
         __parent__ = PanelBaseWithHeader,
@@ -38,7 +40,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("Object Browser");
 
-        var treeBrowserView = new JSTreeBrowserWidget(this.$el);
+        var treeBrowserView = new DynaTreeBrowserWidget(this.$el);
         var control = new TreeBrowserControl(this._client, treeBrowserView);
     };
 

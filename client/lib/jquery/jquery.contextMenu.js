@@ -1,6 +1,6 @@
 // jQuery Context Menu Plugin
 //
-// Version 1.01
+// Version 1.01 customized version (see comment below)
 //
 // Cory S.N. LaViska
 // A Beautiful Site (http://abeautifulsite.net/)
@@ -11,6 +11,13 @@
 //
 // This plugin is dual-licensed under the GNU General Public License
 //   and the MIT License and is copyright A Beautiful Site, LLC.
+//
+// 2011-02-17 Martin Wendt: 
+//            Changed stopPropagation() to preventDefault() in order to make it
+//            work with Dynatree drag'n'drop.  
+//            See http://code.google.com/p/dynatree/issues/detail?id=174
+// 2012-09-27 Martin Wendt: 
+//            fixed position in a fancy layout
 //
 if(jQuery)( function() {
 	$.extend($.fn, {
@@ -32,9 +39,11 @@ if(jQuery)( function() {
 				// Simulate a true right click
 				$(this).mousedown( function(e) {
 					var evt = e;
-					evt.stopPropagation();
+//					evt.stopPropagation();
+					evt.preventDefault();
 					$(this).mouseup( function(e) {
-						e.stopPropagation();
+//						e.stopPropagation();
+						e.preventDefault();
 						var srcElement = $(this);
 						$(this).unbind('mouseup');
 						if( evt.button == 2 ) {
@@ -69,7 +78,9 @@ if(jQuery)( function() {
 							
 							// Show the menu
 							$(document).unbind('click');
-							$(menu).css({ top: y, left: x }).fadeIn(o.inSpeed);
+							// MW: fixed position in a fancy layout
+//							$(menu).css({ top: y, left: x }).fadeIn(o.inSpeed);
+							$(menu).fadeIn(o.inSpeed).offset({ top: y, left: x }); // must be visible, before calling offset()
 							// Hover events
 							$(menu).find('A').mouseover( function() {
 								$(menu).find('LI.hover').removeClass('hover');
@@ -129,13 +140,13 @@ if(jQuery)( function() {
 				});
 				
 				// Disable text selection
-				if( $.browser.mozilla ) {
+				/*if( $.browser.mozilla ) {
 					$('#' + o.menu).each( function() { $(this).css({ 'MozUserSelect' : 'none' }); });
 				} else if( $.browser.msie ) {
 					$('#' + o.menu).each( function() { $(this).bind('selectstart.disableTextSelect', function() { return false; }); });
 				} else {
 					$('#' + o.menu).each(function() { $(this).bind('mousedown.disableTextSelect', function() { return false; }); });
-				}
+				}*/
 				// Disable browser context menu (requires both selectors to work in IE/Safari + FF/Chrome)
 				$(el).add($('UL.contextMenu')).bind('contextmenu', function() { return false; });
 				

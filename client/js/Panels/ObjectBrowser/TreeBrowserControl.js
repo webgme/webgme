@@ -60,6 +60,8 @@ define(['logManager'], function (logManager) {
                 //get the children IDs of the parent
                 childrenIDs = parent.getChildrenIds();
 
+                treeBrowser.enableUpdate(false);
+
                 for (i = 0; i < childrenIDs.length; i += 1) {
                     currentChildId = childrenIDs[i];
 
@@ -94,6 +96,8 @@ define(['logManager'], function (logManager) {
                                                         "state" : stateLoading };
                     }
                 }
+
+                treeBrowser.enableUpdate(true);
             }
 
             //need to expand the territory
