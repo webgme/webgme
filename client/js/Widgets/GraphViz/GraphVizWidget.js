@@ -45,7 +45,8 @@ define(['logManager',
 
     GraphVizWidget.prototype._initialize = function () {
         var width = this._el.width(),
-            height = this._el.height();
+            height = this._el.height(),
+            self = this;
 
         //set Widget title
         this._el.addClass(GRAPH_VIZ_CLASS);
@@ -59,6 +60,12 @@ define(['logManager',
         this._resizeD3Tree(width, height);
 
         this._svg = this.__svg.append("g").attr("transform", "translate(" + MARGIN + "," + MARGIN + ")");
+
+        this._el.on("dblclick", function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            self.onBackgroundDblClick();
+        });
     };
 
     GraphVizWidget.prototype.onWidgetContainerResize = function (width, height) {
@@ -131,6 +138,8 @@ define(['logManager',
                 return d.parent ? "translate(" + d.parent.y0 + "," + d.parent.x0 + ")" : "translate(" + d.y + "," + d.x + ")";
             })
             .on("click", function (d) {
+                d3.event.stopPropagation();
+                d3.event.preventDefault();
                 self._onNodeClick(d);
             })
             .on("dblclick", function (d) {
@@ -350,6 +359,9 @@ define(['logManager',
     };
 
     GraphVizWidget.prototype.onNodeDblClick = function (id) {
+    };
+
+    GraphVizWidget.prototype.onBackgroundDblClick = function () {
     };
 
     _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);
