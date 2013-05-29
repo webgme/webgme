@@ -348,7 +348,10 @@ define(['logManager',
         this._update(undefined);
 
         //approximate width of the root name
-        var rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+        var rootNameWidth = this._root.name.length * 6;
+        if (this._root.children) {
+            rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+        }
         this._el.find('svg > g').attr("transform", "translate(" + (rootNameWidth + MARGIN) + "," + MARGIN + ")");
     };
 
