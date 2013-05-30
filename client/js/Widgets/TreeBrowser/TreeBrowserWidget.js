@@ -189,6 +189,7 @@ define(['logManager',
                         self._nodeEdit(node);
                         return false;
                     case 13: //ENTER
+                        self.onNodeDoubleClicked.call(self, node.data.key);
                         return false;
                     case 37: // <left>
                         if (node.bExpanded) {
