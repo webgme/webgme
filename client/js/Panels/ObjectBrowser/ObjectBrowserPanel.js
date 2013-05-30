@@ -3,16 +3,13 @@
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Constants',
     './TreeBrowserControl',
-    './JSTreeBrowserWidget',
-    './DynaTreeBrowserWidget'], function (PanelBaseWithHeader,
+    'js/Widgets/TreeBrowser/TreeBrowserWidget'], function (PanelBaseWithHeader,
                                                           CONSTANTS,
                                                           TreeBrowserControl,
-                                                          JSTreeBrowserWidget,
-                                                          DynaTreeBrowserWidget) {
+                                                          TreeBrowserWidget) {
 
     var ObjectBrowserPanel,
-        __parent__ = PanelBaseWithHeader,
-        PART_CLASS = "part";
+        __parent__ = PanelBaseWithHeader;
 
     ObjectBrowserPanel = function (layoutManager, params) {
         var options = {};
@@ -35,13 +32,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(ObjectBrowserPanel.prototype, __parent__.prototype);
 
     ObjectBrowserPanel.prototype._initialize = function () {
-        var self = this;
+        var self = this,
+            treeBrowserWidget,
+            treeBrowserControl;
 
         //set Widget title
         this.setTitle("Object Browser");
 
-        var treeBrowserView = new DynaTreeBrowserWidget(this.$el);
-        var control = new TreeBrowserControl(this._client, treeBrowserView);
+        treeBrowserWidget = new TreeBrowserWidget(this.$el);
+        treeBrowserControl = new TreeBrowserControl(this._client, treeBrowserWidget);
     };
 
     return ObjectBrowserPanel;

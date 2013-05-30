@@ -2,6 +2,8 @@
 
 define(['logManager'], function (logManager) {
 
+    var NODE_PROGRESS_CLASS = 'node-progress';
+
     var TreeBrowserControl = function (client, treeBrowser) {
 
         var logger,
@@ -28,7 +30,7 @@ define(['logManager'], function (logManager) {
             loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
                 "name": "Initializing tree...",
                 "hasChildren" : false,
-                "class" :  "gme-loading" });
+                "class" :  NODE_PROGRESS_CLASS });
 
             //store the node's info in the local hashmap
             nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
@@ -88,7 +90,7 @@ define(['logManager'], function (logManager) {
                         childTreeNode = treeBrowser.createNode(parentNode, {   "id": currentChildId,
                                                                                 "name": "Loading...",
                                                                                 "hasChildren" : false,
-                                                                                "class" :  "gme-loading" });
+                                                                                "class" :  NODE_PROGRESS_CLASS });
 
                         //store the node's info in the local hashmap
                         nodes[currentChildId] = {    "treeNode": childTreeNode,
@@ -348,7 +350,7 @@ define(['logManager'], function (logManager) {
                                         childTreeNode = treeBrowser.createNode(nodes[objectId].treeNode, {  "id": currentChildId,
                                             "name": "Loading...",
                                             "hasChildren" : false,
-                                            "class" :  "gme-loading"  });
+                                            "class" :  NODE_PROGRESS_CLASS  });
 
                                         //store the node's info in the local hashmap
                                         nodes[currentChildId] = {   "treeNode": childTreeNode,
