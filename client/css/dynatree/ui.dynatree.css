@@ -8,8 +8,8 @@ ul.dynatree-container
 	white-space: nowrap;
 	padding: 3px;
 	margin: 0; /* issue 201 */
-	/*background-color: white;*/
-	/*border: 1px dotted gray;*/
+	background-color: white;
+	border: 1px dotted gray;
 	overflow: auto;
 	height: 100%; /* issue 263 */
 }
@@ -299,15 +299,15 @@ ul.dynatree-container a
 	/* Set transparent border to prevent jumping when active node gets a border
 	   (we can do this, because this theme doesn't use vertical lines)
 	   */
-	/*border: 1px solid white; /* Note: 'transparent' would not work in IE6 */
+	border: 1px solid white; /* Note: 'transparent' would not work in IE6 */
 
 }
 
 ul.dynatree-container a:hover
 {
 /*	text-decoration: underline; */
-	/*background: #F2F7FD; /* light blue */
-	/*border-color: #B8D6FB; /* darker light blue */
+	background: #F2F7FD; /* light blue */
+	border-color: #B8D6FB; /* darker light blue */
 }
 
 span.dynatree-node a
