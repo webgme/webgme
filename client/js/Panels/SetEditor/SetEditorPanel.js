@@ -5,11 +5,13 @@ define(['js/PanelBase/PanelBaseWithHeader',
     'text!./SetTemplate.html',
     'text!./SetItemTemplate.html',
     './SetEditorPanelControl',
+    'js/Constants',
     'css!/css/Panels/SetEditor/SetEditorPanel'], function (PanelBaseWithHeader,
                                                    setEditorViewTemplate,
                                                    setTemplate,
                                                    setItemTemplate,
-                                                   SetEditorPanelControl) {
+                                                   SetEditorPanelControl,
+                                                   CONSTANTS) {
 
     var SetEditorPanel,
         __parent__ = PanelBaseWithHeader,
@@ -193,8 +195,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     SetEditorPanel.prototype._onDropOver = function (setLi, event, ui) {
-        //ui.helper contains information about the concrete dragging (ui.helper[0].GMEDragData)
-        var dragParams = ui.helper[0].GMEDragData || "";
+        //ui.helper contains information about the dragging
+        var dragParams = ui.helper.data("metaInfo");
 
         if (this._isAcceptableDrag(dragParams)) {
             this._highlightItemArea(setLi, true);
@@ -202,12 +204,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     SetEditorPanel.prototype._onDrop = function (setLi, event, ui) {
-        //ui.helper contains information about the concrete dragging (ui.helper[0].GMEDragData)
-        var dragParams = ui.helper[0].GMEDragData || "";
+        //ui.helper contains information about the dragging
+        var dragParams = ui.helper.data("metaInfo");
 
         if (this._isAcceptableDrag(dragParams)) {
 
-            this.onSetMemberAdd({"id": dragParams.id,
+            this.onSetMemberAdd({"id": dragParams[CONSTANTS.GME_ID],
                 "setId": setLi.attr("data-setid")});
 
             this._highlightItemArea(setLi, false);
@@ -219,7 +221,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     SetEditorPanel.prototype._isAcceptableDrag = function (dragParams) {
-        return dragParams.id;
+        return dragParams.hasOwnProperty(CONSTANTS.GME_ID);
     };
 
     SetEditorPanel.prototype._highlightItemArea = function (setLi, enabled) {
