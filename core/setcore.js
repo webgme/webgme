@@ -36,8 +36,12 @@ define([ "util/assert"], function (ASSERT) {
             return node;
         };
 
-        var persist = function(callback){
-            return _innerCore.persist(root,callback);
+        var persist = function(node,callback){
+            if( (callback === null || callback === undefined) && typeof node === 'function'){
+                callback = node;
+                node = root;
+            }
+            return _innerCore.persist(node,callback);
         };
 
         var getRoot = function(){
