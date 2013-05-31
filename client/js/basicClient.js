@@ -697,7 +697,7 @@ define([
                     callback(null);
                 }
             }
-            function completeNodes(core,nodes,callback){
+            function _completeNodes(core,nodes,callback){
                 var incompletes = [];
                 for(var i in nodes){
                     if(nodes[i].incomplete){
@@ -718,6 +718,14 @@ define([
                 } else {
                     callback(null);
                 }
+            }
+            function completeNodes(core,nodes,callback){
+                for(var i in nodes){
+                    if(nodes[i].incomplete){
+                        nodes[i].incomplete = false;
+                    }
+                }
+                callback(null);
             }
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
@@ -1436,7 +1444,7 @@ define([
                 }
             }
             //MGAlike - set functions
-            function addMember(path, memberpath, setid) {
+            function _addMember(path, memberpath, setid) {
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
                     typeof _nodes[path].node === 'object' &&
@@ -1468,7 +1476,7 @@ define([
                     }
                 }
             }
-            function removeMember(path, memberpath, setid) {
+            function _removeMember(path, memberpath, setid) {
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
                     typeof _nodes[path].node === 'object' &&
@@ -1498,6 +1506,23 @@ define([
                             }
                         }
                     }
+                }
+            }
+
+            function addMember(path,memberpath,setid){
+                if(_nodes[path] &&
+                    _nodes[memberpath] &&
+                    typeof _nodes[path].node === 'object' &&
+                    typeof _nodes[memberpath].node === 'object'){
+                    _core.addMember(_nodes[path].node,setid,_nodes[memberpath].node);
+                    saveRoot('addMember('+path+','+memberpath+','+setid+')');
+                }
+            }
+            function removeMember(path,memberpath,setid){
+                if(_nodes[path] &&
+                    typeof _nodes[path].node === 'object'){
+                    _core.delMember(_nodes[path].node,setid,memberpath);
+                    saveRoot('removeMember('+path+','+memberpath+','+setid+')');
                 }
             }
 
@@ -1608,7 +1633,7 @@ define([
                 };
 
                 //SET
-                var getMemberIds = function(setid){
+                var _getMemberIds = function(setid){
                     var setPath = _core.getSetPath(_nodes[_id].node,setid);
                     if(setPath && _nodes[setPath] && typeof _nodes[setPath].node === 'object'){
                         var members = _core.getChildrenPaths(_nodes[setPath].node);
@@ -1628,6 +1653,9 @@ define([
                         return [];
                     }
                 };
+                var getMemberIds = function(setid){
+                    return _core.getMemberPaths(_nodes[_id].node,setid);
+                };
                 var relidtosetid = function(id){
                     for(var i in setIds){
                         if(id === setIds[i]){
@@ -1636,12 +1664,15 @@ define([
                     }
                     return "-";
                 };
-                var getSetNames = function(){
+                var _getSetNames = function(){
                     var setids = _core.getSetRelids(_nodes[_id].node);
                     for(var i=0;i<setids.length;i++){
                         setids[i] = relidtosetid(setids[i])
                     }
                     return setids;
+                };
+                var getSetNames = function(){
+                    return _core.getSetNames(_nodes[_id].node);
                 };
                 var getValidSetNames = function(){
                     var names = [];
@@ -1650,9 +1681,9 @@ define([
                     }
                     return names;
                 };
-                var getSetIds = function(){
+                /*var getSetIds = function(){
                     return _core.getSetPaths(_nodes[_id].node);
-                };
+                };*/
                 //META
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
@@ -1677,7 +1708,7 @@ define([
                         //META functions
                         getValidChildrenTypes : getValidChildrenTypes,
                         getMemberIds          : getMemberIds,
-                        getSetIds             : getSetIds,
+                        //getSetIds             : getSetIds,
                         getSetNames           : getSetNames,
                         getValidSetNames      : getValidSetNames
                     }

@@ -12,6 +12,7 @@ define([ "util/assert"], function (ASSERT) {
     // this layer is to simplify the calls for the client a bit ;)
     var VALIDSETIDS = ["2200000000","2200000001","2200000002","2200000003","2200000004"];
     var VALIDSETNAMES = ['General','ValidChildren','ValidSource','ValidDestination','ValidInheritor'];
+    var SETS_ID = '_sets';
 
     var SetCore = function (_innerCore) {
 
@@ -215,6 +216,80 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
+        //set functionality again :)
+        var getMemberRelId = function(node,setName,memberPath){
+            var setBase = _innerCore.getChild(node,SETS_ID);
+            var setNode = _innerCore.getChild(setBase,setName);
+            var elements = _innerCore.getChildrenRelids(setNode);
+
+            for(var i=0;i<elements.length;i++){
+                if(_innerCore.getPointerPath(_innerCore.getChild(setNode,elements[i]),'member') === memberPath){
+                    return elements[i];
+                }
+            }
+
+            return null;
+
+        };
+
+        var addMember = function(node,setName,member){
+            var MAX_RELID = Math.pow(2, 31);
+            var setBase = _innerCore.getChild(node,SETS_ID);
+            var setNode = _innerCore.getChild(setBase,setName);
+            if(getMemberRelId(node,setName,member) === null){
+                var relId;
+                do {
+                    relId = Math.floor(Math.random() * MAX_RELID);
+                    relId +="";
+                } while (!_innerCore.isEmpty(_innerCore.getChild(setNode,relId)));
+
+                var setMember =  _innerCore.getChild(setNode,relId);
+                _innerCore.setPointer(setMember,'member',member);
+                _innerCore.setRegistry(setMember,'h','h'); //TODO hack
+            }
+        };
+
+        var delMember = function(node,setName,member){
+            //we only need the path of the member so we allow to enter only it
+            if(typeof member !== 'string'){
+                member = _innerCore.getPath(member);
+            }
+            var setBase = _innerCore.getChild(node,SETS_ID);
+            var setNode = _innerCore.getChild(setBase,setName);
+            var setMemberRelId = getMemberRelId(node,setName,member);
+            if(setMemberRelId){
+                var setMemberNode = _innerCore.getChild(setNode,setMemberRelId);
+                _innerCore.deleteNode(setMemberNode);
+            }
+
+            var elements = _innerCore.getChildrenRelids(setNode);
+            if(elements.length === 0){
+                _innerCore.deleteNode(setNode);
+            }
+        };
+
+        var getMemberPaths = function(node,setName){
+            var memberPaths = [];
+            var setBase = _innerCore.getChild(node,SETS_ID);
+            var setNode = _innerCore.getChild(setBase,setName);
+
+            var elements = _innerCore.getChildrenRelids(setNode);
+            for(var i=0;i<elements.length;i++){
+                var element = _innerCore.getChild(setNode,elements[i]);
+                var path = _innerCore.getPointerPath(element,'member');
+                if(path){
+                    memberPaths.push(path);
+                }
+            }
+            /*if(elements.length === 0){
+                _innerCore.deleteNode(setNode);
+            }*/
+            return memberPaths;
+        };
+        var getSetNames = function(node){
+            return _innerCore.getChildrenRelids(_innerCore.getChild(node,SETS_ID));
+        };
+
 
         return {
             // check
@@ -252,6 +327,10 @@ define([ "util/assert"], function (ASSERT) {
             getSetsNumber: getSetsNumber,
             loadSets : loadSets,
             loadSet : _innerCore.loadChild,
+            addMember : addMember,
+            delMember : delMember,
+            getMemberPaths : getMemberPaths,
+            getSetNames : getSetNames,
 
             // modify
             createNode: createNode,

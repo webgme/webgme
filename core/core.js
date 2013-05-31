@@ -825,6 +825,8 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function 
 			getChildrenRelids: getChildrenRelids,
 			getChildrenPaths: getChildrenPaths,
 
+            getChild: coretree.getChild,
+
 			loadChildx: TASYNC.unwrap(coretree.loadChild),
 			loadChild: TASYNC.unwrap(function (node, relid) {
 				return TASYNC.call(checkNode, coretree.loadChild(node, relid));
