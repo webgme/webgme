@@ -1,6 +1,12 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'css!/css/Panels/ObjectBrowser/TreeBrowserControl'], function (logManager) {
 
     var NODE_PROGRESS_CLASS = 'node-progress';
 
@@ -264,11 +270,19 @@ define(['logManager'], function (logManager) {
                         } else {
                             //object is already loaded here, let's see what changed in it
 
+                            //specify the icon for the treenode
+                            //TODO: fixme (determine the type based on the 'kind' of the object)
+                            objType = ((updatedObject.getChildrenIds()).length > 0) ? "gme-model" : "gme-atom";
+                            //for root node let's specify specific type
+                            if (objectId === rootNodeId) {
+                                objType = "gme-root";
+                            }
+
                             //create the node's descriptor for the treebrowser widget
                             nodeDescriptor = {
                                 "text" : updatedObject.getAttribute("name"),
-                                "hasChildren" : (updatedObject.getChildrenIds()).length > 0//,
-                                //"icon" : "img/temp/icon1.png"  --- SET ICON HERE IF NEEDED
+                                "hasChildren" : (updatedObject.getChildrenIds()).length > 0,
+                                "class" : objType
                             };
 
                             //update the node's representation in the tree
@@ -415,6 +429,10 @@ define(['logManager'], function (logManager) {
             nodes = {};
 
             initialize();
+        };
+
+        this.destroy = function () {
+            $(document).find('link[href*="css/Panels/ObjectBrowser/TreeBrowserControl.css"]').remove();
         };
 
         setTimeout(initialize, 250);

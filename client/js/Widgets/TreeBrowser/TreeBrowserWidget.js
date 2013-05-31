@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Vanderbilt University, All rights reserved.
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
  * Author: Robert Kereskenyi
  */
@@ -51,8 +51,8 @@ define(['logManager',
         $.contextMenu({
             selector: '.dynatree-node',
             position: function(selector/*, x, y*/) {
-                var _offset = selector.$trigger.find('.dynatree-icon').offset();
-                selector.$menu.css({top: _offset.top + 10, left: _offset.left + 10});
+                var _offset = selector.$trigger.find('.dynatree-title').offset();
+                selector.$menu.css({top: _offset.top + 10, left: _offset.left - 10});
             },
             build: function($trigger/*, e*/) {
                 // this callback is executed every time the menu is to be shown
