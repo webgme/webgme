@@ -273,7 +273,8 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
         var metaInfo = helper.data("metaInfo"),
             intellyPasteOpts,
-            gmeID;
+            gmeID,
+            i;
 
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
@@ -282,9 +283,20 @@ define(['logManager',
 
                 gmeID = metaInfo[CONSTANTS.GME_ID];
 
-                intellyPasteOpts[gmeID] = { "attributes": {}, registry: {} };
-                intellyPasteOpts[gmeID].registry[nodePropertyNames.Registry.position] = { "x": position.x,
-                                    "y": position.y };
+                if (_.isArray(gmeID)) {
+                    for (i = 0; i < gmeID.length; i+= 1) {
+                        intellyPasteOpts[gmeID[i]] = { "attributes": {}, registry: {} };
+                        intellyPasteOpts[gmeID[i]].registry[nodePropertyNames.Registry.position] = { "x": position.x,
+                            "y": position.y };
+
+                        position.x += 20;
+                        position.y += 20;
+                    }
+                } else {
+                    intellyPasteOpts[gmeID] = { "attributes": {}, registry: {} };
+                    intellyPasteOpts[gmeID].registry[nodePropertyNames.Registry.position] = { "x": position.x,
+                        "y": position.y };
+                }
 
                 this._client.intellyPaste(intellyPasteOpts);
             }

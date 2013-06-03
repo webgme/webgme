@@ -17,8 +17,17 @@ define(['logManager',
         this._currentNodeId = null;
 
         this._setEditorView.onSetMemberAdd = function (params) {
+            var i;
             if (self._currentNodeId) {
-                self._client.addMember(self._currentNodeId, params.id, params.setId);
+                if (_.isArray(params.id)) {
+                    self._client.startTransaction();
+                    for (i = 0; i < params.id.length; i+= 1) {
+                        self._client.addMember(self._currentNodeId, params.id[i], params.setId);
+                    }
+                    self._client.completeTransaction();
+                } else {
+                    self._client.addMember(self._currentNodeId, params.id, params.setId);
+                }
             }
         };
 
