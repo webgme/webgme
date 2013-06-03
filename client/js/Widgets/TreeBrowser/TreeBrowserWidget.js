@@ -460,7 +460,8 @@ define(['logManager',
 
 
     TreeBrowserWidget.prototype._makeNodeDraggable = function (node) {
-        var nodeEl = $(node.span),
+        var self = this,
+            nodeEl = $(node.span),
             removeClasses = ['dynatree-selected',
             'dynatree-focus',
             'dynatree-has-children',
@@ -476,7 +477,10 @@ define(['logManager',
             helper: function (/*event*/) {
                 var helperEl = nodeEl.clone(),
                     wrapper = $('<div class="' + TREE_BROWSER_CLASS + '"><ul class="dynatree-container"><li></li></ul></div>'),
-                    metaInfo;
+                    metaInfo,
+                    selectedIds,
+                    selNodes,
+                    i;
 
                 //trim down unnecessary DOM elements from it
                 helperEl.children().first().remove();
@@ -486,9 +490,22 @@ define(['logManager',
 
                 helperEl = wrapper;
 
+                selectedIds = [];
+                selNodes = self._treeEl.dynatree("getTree").getSelectedNodes();
+                for (i = 0; i < selNodes.length; i += 1) {
+                    if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
+                        selectedIds.push(selNodes[i].data.key);
+                    }
+                }
+
+                if (selectedIds.length > 1) {
+                    var t = helperEl.find('.dynatree-title').text();
+                    helperEl.find('.dynatree-title').text(t + ' (+' + (selectedIds.length - 1) + ')');
+                }
+
                 //add extra GME related drag info
                 metaInfo = {};
-                metaInfo[CONSTANTS.GME_ID] =  node.data.key;
+                metaInfo[CONSTANTS.GME_ID] =  selectedIds;
                 helperEl.data("metaInfo", metaInfo);
 
                 return helperEl;

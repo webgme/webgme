@@ -503,14 +503,31 @@ define(['logManager',
     /**********************************************************/
     /*  HANDLE OBJECT ADDITION TO ASPECT                      */
     /**********************************************************/
-    AspectDesignerControl.prototype._addItemsToAspect = function (gmeID, position) {
+    AspectDesignerControl.prototype._addItemsToAspect = function (gmeIDList, position) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry();
+            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
+            gmeID,
+            i;
 
-        if (registry.Members.indexOf(gmeID) === -1) {
-            registry.Members.push(gmeID);
-            registry.MemberCoord[gmeID] = { "x": position.x,
-                "y": position.y};
+        if (_.isArray(gmeIDList)) {
+            for (i = 0; i < gmeIDList.length; i+= 1) {
+                gmeID = gmeIDList[i];
+                if (registry.Members.indexOf(gmeID) === -1) {
+                    registry.Members.push(gmeID);
+                    registry.MemberCoord[gmeID] = { "x": position.x,
+                        "y": position.y};
+
+                    position.x += 20;
+                    position.y += 20;
+                }
+            }
+        } else {
+            gmeID = gmeIDList;
+            if (registry.Members.indexOf(gmeID) === -1) {
+                registry.Members.push(gmeID);
+                registry.MemberCoord[gmeID] = { "x": position.x,
+                    "y": position.y};
+            }
         }
 
         this._client.setRegistry(this.currentNodeInfo.id, ASPECT_BUILDER_REGISTRY_KEY, registry);
