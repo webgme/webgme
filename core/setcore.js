@@ -246,7 +246,7 @@ define([ "util/assert"], function (ASSERT) {
                 var setMember =  _innerCore.getChild(setNode,relId);
                 _innerCore.setPointer(setMember,'member',member);
                 _innerCore.setRegistry(setMember,'h','h'); //TODO hack
-                _innerCore.setRegistry(node,'setsHash'+setName,_innerCore.getSingleNodeHash(setNode));
+                _innerCore.setRegistry(node,'_hash_'+setName,'#'+_innerCore.getSingleNodeHash(setNode));
             }
         };
 
@@ -261,13 +261,13 @@ define([ "util/assert"], function (ASSERT) {
             if(setMemberRelId){
                 var setMemberNode = _innerCore.getChild(setNode,setMemberRelId);
                 _innerCore.deleteNode(setMemberNode);
-                _innerCore.setRegistry(node,'setsHash'+setName,_innerCore.getSingleNodeHash(setNode));
+                _innerCore.setRegistry(node,'_hash_'+setName,'#'+_innerCore.getSingleNodeHash(setNode));
             }
 
             /*var elements = _innerCore.getChildrenRelids(setNode);
             if(elements.length === 0){
                 _innerCore.deleteNode(setNode);
-                _innerCore.delRegistry(node,'setsHash'+setName);
+                _innerCore.delRegistry(node,'_hash_'+setName);
             }*/
         };
 
