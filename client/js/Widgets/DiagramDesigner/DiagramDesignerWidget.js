@@ -103,22 +103,6 @@ define(['logManager',
         this.connectionDrawingManager = params.connectionDrawingManager || new ConnectionDrawingManager({"canvas": this});
         this.connectionDrawingManager.initialize();
 
-        /************** ROUTING MANAGER SELECTION **************************/
-        if (DEBUG === true) {
-            this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
-                self._onConnectionRouteManagerChanged(data.type);
-            });
-
-            this.toolBar.addButton({ "title": "Basic route manager",
-                "text": "RM #1",
-                "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
-
-            this.toolBar.addButton({ "title": "Basic+ route manager",
-                "text": "RM #2",
-                "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
-        }
-        /************** END OF - ROUTING MANAGER SELECTION **************************/
-
         this.logger.debug("DiagramDesignerWidget ctor finished");
     };
 
@@ -245,23 +229,42 @@ define(['logManager',
         //TODO: $diagramDesignerWidgetBody --> this.$el;
         this.skinParts.$diagramDesignerWidgetBody = this.$el;
 
-        if (DEBUG === true) {
-            this.skinParts.$progressText = this.toolBar.addLabel();
+        //if and external toolbar exist for the component
+        if (this.toolBar) {
+            /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
+                //add extra visual piece
+            this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+                self.itemAutoLayout(data.mode);
+            });
+
+            this.toolBar.addButton({ "title": "Grid layout",
+                "icon": "icon-th",
+                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
+            this.toolBar.addButton({ "title": "Diagonal",
+                "icon": "icon-signal",
+                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
+
+            /************** ROUTING MANAGER SELECTION **************************/
+            if (DEBUG === true) {
+                //progress text in toolbar for debug only
+                this.skinParts.$progressText = this.toolBar.addLabel();
+
+                //route manager selection
+                this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
+                    self._onConnectionRouteManagerChanged(data.type);
+                });
+
+                this.toolBar.addButton({ "title": "Basic route manager",
+                    "text": "RM #1",
+                    "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
+
+                this.toolBar.addButton({ "title": "Basic+ route manager",
+                    "text": "RM #2",
+                    "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
+            }
+            /************** END OF - ROUTING MANAGER SELECTION **************************/
         }
-
-        /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
-        //add extra visual piece
-        this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-            self._itemAutoLayout(data.mode);
-        });
-
-        this.toolBar.addButton({ "title": "Grid layout",
-            "icon": "icon-th",
-            "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
-
-        this.toolBar.addButton({ "title": "Diagonal",
-            "icon": "icon-signal",
-            "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -749,7 +752,7 @@ define(['logManager',
 
     /********************** ITEM AUTO LAYOUT ****************************/
 
-    DiagramDesignerWidget.prototype._itemAutoLayout = function (mode) {
+    DiagramDesignerWidget.prototype.itemAutoLayout = function (mode) {
         var i = this.itemIds.length,
             x = 10,
             y = 10,
@@ -762,7 +765,18 @@ define(['logManager',
         this.beginUpdate();
 
         switch (mode) {
+            case "diagonal":
+                while (i--) {
+                    w = this.items[this.itemIds[i]].width;
+                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
+                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
+                    x += w + dx;
+                    y += h + dy;
+                }
+                break;
             case "grid":
+            default:
                 while (i--) {
                     w = this.items[this.itemIds[i]].width;
                     h = Math.max(h, this.items[this.itemIds[i]].height);
@@ -776,17 +790,6 @@ define(['logManager',
                     }
                 }
                 break;
-            case "diagonal":
-                while (i--) {
-                    w = this.items[this.itemIds[i]].width;
-                    h = Math.max(h, this.items[this.itemIds[i]].height);
-                    this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
-                    newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
-                    x += w + dx;
-                    y += h + dy;
-                }
-                break;
-            default:
                 break;
         }
 
