@@ -98,5 +98,13 @@ div.diagram-designer-zoom {
     [class*="icon-"] {
       margin-top: -2px;
     }
+
+    .diagram-designer-zoom-label {
+      top: -2px;
+      left: 17px;
+      position: absolute;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;  //same as Bootstrap
+      font-size: 10px;
+    }
   }
 }

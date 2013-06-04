@@ -39,7 +39,9 @@ define([], function () {
 
         this._zoomSlider.find('.ui-slider-handle').html('<i class="icon-search"></i>');
 
-        this.skinParts.$zoomLabel = this.toolBar.addLabel();
+        this._zoomLabel = $('<div/>', {'class': 'diagram-designer-zoom-label'});
+
+        this._zoomSlider.find('.ui-slider-handle').append(this._zoomLabel);
 
         this.zoom(this._zoom);
 
@@ -65,7 +67,7 @@ define([], function () {
         this.skinParts.$itemsContainer.css({'transform-origin': '0 0',
             'transform': 'scale('+ this._zoom + ', ' + this._zoom + ')'});
 
-        this.skinParts.$zoomLabel.text( "Zoom: " + this._zoom * 100 + "%" );
+        this._zoomLabel.text( this._zoom + "x" );
 
         this._resizeItemContainer();
     };

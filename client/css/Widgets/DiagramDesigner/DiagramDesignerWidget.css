@@ -72,3 +72,9 @@ div.diagram-designer-zoom {
     outline: none; }
     div.diagram-designer-zoom a.ui-slider-handle [class*="icon-"] {
       margin-top: -2px; }
+    div.diagram-designer-zoom a.ui-slider-handle .diagram-designer-zoom-label {
+      top: -2px;
+      left: 17px;
+      position: absolute;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      font-size: 10px; }
