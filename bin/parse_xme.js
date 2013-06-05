@@ -274,7 +274,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 
 		if (tag.parent.name === "attribute") {
 			ASSERT(tag.parent.parent.node);
-			core.setAttribute(tag.parent.parent.node, tag.parent.name, tag.text);
+			core.setAttribute(tag.parent.parent.node, tag.parent.attributes['kind'], tag.text);
 		} else {
 			ASSERT(tag.parent.name === "regnode");
 			var status = tag.parent.attributes.status || "defined";
