@@ -165,46 +165,51 @@ define(['logManager',
             onKeydown: function (node, event) {
                 var sib = null,
                     parents,
-                    i;
+                    i,
+                    handled = false;
 
                 switch (event.which) {
                     case 46:    // DEL
                         self._nodeDelete(node);
-                        return false;
+                        handled = true;
                         break;
                     // Handle Ctrl-C, -X and -V
                     case 67:
                         if (event.ctrlKey) { // Ctrl-C
                             self._nodeCopy(node);
-                            return false;
+                            handled = true;
                         }
                         break;
                     case 86:
                         if (event.ctrlKey) { // Ctrl-V
                             self._nodePaste(node);
-                            return false;
+                            handled = true;
                         }
                         break;
                     case 113: //F2
                         self._nodeEdit(node);
-                        return false;
+                        handled = true;
+                        break;
                     case 13: //ENTER
                         self.onNodeDoubleClicked.call(self, node.data.key);
-                        return false;
+                        handled = true;
+                        break;
                     case 37: // <left>
                         if (node.bExpanded) {
                             node.toggleExpand();
                             node.focus();
                             node.select(true);
                         }
-                        return false;
+                        handled = true;
+                        nreak;
                     case 39: // <right>
                         if (!node.bExpanded && (node.childList || node.data.isLazy)) {
                             node.toggleExpand();
                             node.focus();
                             node.select(true);
                         }
-                        return false;
+                        handled = true;
+                        break;
                     case 38: // <up>
                         if (event.shiftKey !== true) {
                             self._deselectSelectedNodes();
@@ -220,7 +225,8 @@ define(['logManager',
                             sib.focus();
                             sib.select(true);
                         }
-                        return false;
+                        handled = true;
+                        break;
                     case 40: // <down>
                         if (event.shiftKey !== true) {
                             self._deselectSelectedNodes();
@@ -240,10 +246,11 @@ define(['logManager',
                             sib.focus();
                             sib.select(true);
                         }
-                        return false;
+                        handled = true;
+                        break;
                 }
 
-                return true;
+                return !handled;
             },
 
             onCreate: function (node/*, span*/) {
@@ -693,8 +700,6 @@ define(['logManager',
         //return the complete action set for this node
         return menuItems;
     };
-
-
 
     return TreeBrowserWidget;
 });
