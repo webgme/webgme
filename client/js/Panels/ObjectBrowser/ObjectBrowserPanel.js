@@ -18,7 +18,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options]);
+        __parent__.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
@@ -32,15 +32,13 @@ define(['js/PanelBase/PanelBaseWithHeader',
     _.extend(ObjectBrowserPanel.prototype, __parent__.prototype);
 
     ObjectBrowserPanel.prototype._initialize = function () {
-        var self = this,
-            treeBrowserWidget,
-            treeBrowserControl;
+        var treeBrowserControl;
 
         //set Widget title
         this.setTitle("Object Browser");
 
-        treeBrowserWidget = new TreeBrowserWidget(this.$el);
-        treeBrowserControl = new TreeBrowserControl(this._client, treeBrowserWidget);
+        this._treeBrowserWidget = new TreeBrowserWidget(this.$el);
+        treeBrowserControl = new TreeBrowserControl(this._client, this._treeBrowserWidget);
     };
 
     return ObjectBrowserPanel;

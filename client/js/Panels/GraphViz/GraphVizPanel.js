@@ -17,7 +17,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options]);
+        __parent__.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
