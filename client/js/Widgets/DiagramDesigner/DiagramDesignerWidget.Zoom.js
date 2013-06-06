@@ -83,12 +83,6 @@ define([], function () {
     DiagramDesignerWidgetZoom.prototype._addZoomMouseHandler = function (el) {
         var self = this;
 
-        //MOUSE ENTER WORKAROUND
-        el.attr("tabindex", 0);
-        el.mouseenter(function(){
-            $(this).focus();
-        });
-
         //IE, Chrome, etc
         el.on('mousewheel', function (event){
             var org = event.originalEvent;
