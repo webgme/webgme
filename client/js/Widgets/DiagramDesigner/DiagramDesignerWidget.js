@@ -38,7 +38,8 @@ define(['logManager',
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5];  
+        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2;
 
     DiagramDesignerWidget = function (container, params) {
         var self = this;
@@ -98,7 +99,7 @@ define(['logManager',
         this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         //initiate Connection Router (if needed)
-        this.connectionRouteManager = params.connectionRouteManager || new ConnectionRouteManagerBasic({"canvas": this});
+        this.connectionRouteManager = params.connectionRouteManager || new DEFAULT_CONNECTION_ROUTE_MANAGER({"canvas": this});
         this.connectionRouteManager.initialize();
 
         //initiate Connection drawer component (if needed)
