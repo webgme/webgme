@@ -6,10 +6,9 @@ define(['jquery',
 
     var PanelBase;
 
-    PanelBase = function (options) {
+    PanelBase = function (options, layoutManager) {
         //this.logger --- logger instance for the Panel
-        var loggerName = "PanelBase",
-            msg = "";
+        var loggerName = "PanelBase";
 
         if (options && options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME]) {
             loggerName = options[PanelBase.OPTIONS.LOGGER_INSTANCE_NAME];
@@ -23,8 +22,7 @@ define(['jquery',
         this._isReadOnly = false;
     };
 
-    PanelBase.OPTIONS = { "CONTAINER_ELEMENT" : "containerElement",  //TODO:delete
-        "LOGGER_INSTANCE_NAME": "LOGGER_INSTANCE_NAME" };
+    PanelBase.OPTIONS = { "LOGGER_INSTANCE_NAME": "LOGGER_INSTANCE_NAME" };
 
     PanelBase.READ_ONLY_CLASS = 'read-only';
 

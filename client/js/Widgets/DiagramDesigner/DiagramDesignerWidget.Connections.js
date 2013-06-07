@@ -11,7 +11,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
     };
 
     DiagramDesignerWidget.prototype.createConnection = function (objD) {
-        var connectionId = this.getGuid("C_"),
+        var connectionId = this._getGuid("C_"),
             objDescriptor = _.extend({}, objD),
             sourceId = objDescriptor.srcObjId,
             sourceSubcomponentId = objDescriptor.srcSubCompId,

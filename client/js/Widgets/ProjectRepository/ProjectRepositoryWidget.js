@@ -105,12 +105,12 @@ define(['logManager',
         this._calculatePositionForCommit(idx);
     };
 
-    ProjectRepositoryWidget.prototype.showPogressbar = function () {
+    ProjectRepositoryWidget.prototype.showProgressbar = function () {
         this._btnShowMore.hide();
         this._loader.start();
     };
 
-    ProjectRepositoryWidget.prototype.hidePogressbar = function () {
+    ProjectRepositoryWidget.prototype.hideProgressbar = function () {
         this._loader.stop();
         this._btnShowMore.show();
     };

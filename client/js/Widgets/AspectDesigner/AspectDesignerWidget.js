@@ -24,9 +24,9 @@ define(['logManager',
 
     _.extend(AspectDesignerWidget.prototype, DiagramDesignerWidget.prototype);
 
-    AspectDesignerWidget.prototype.initializeUI = function (containerElement) {
-        __parent_proto__.initializeUI.apply(this, arguments);
-        this.logger.debug("AspectDesignerWidget.initializeUI");
+    AspectDesignerWidget.prototype._initializeUI = function (containerElement) {
+        __parent_proto__._initializeUI.apply(this, arguments);
+        this.logger.debug("AspectDesignerWidget._initializeUI");
 
         this._num = 0;
         this._aspectBuilderCanvasBackGroundText();

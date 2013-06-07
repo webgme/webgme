@@ -188,7 +188,7 @@ define(['logManager',
 
             this.designerCanvas.setTitle(desc.name);
 
-            this.designerCanvas.showPogressbar();
+            this.designerCanvas.showProgressbar();
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
@@ -303,7 +303,7 @@ define(['logManager',
             this.designerCanvas.setAspectMemberNum(this._GMEModels.length);
         }
 
-        this.designerCanvas.hidePogressbar();
+        this.designerCanvas.hideProgressbar();
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 

@@ -103,7 +103,7 @@ define(['logManager'], function (logManager) {
                     self._refreshBranches();
                 }
 
-                self._view.hidePogressbar();
+                self._view.hideProgressbar();
 
                 if (cLen < num) {
                     self._view.noMoreCommitsToDisplay();
@@ -111,7 +111,7 @@ define(['logManager'], function (logManager) {
             }
         };
 
-        this._view.showPogressbar();
+        this._view.showProgressbar();
 
         this._client.getCommitsAsync(this._lastCommitID,num,commitsLoaded);
     };

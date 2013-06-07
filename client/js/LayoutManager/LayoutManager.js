@@ -100,7 +100,7 @@ define(['logManager',
 
     LayoutManager.prototype.addPanel = function (name, panel, container) {
         this._panels[name] = panel;
-        this._currentLayout.addToContainer(panel, 'main');
+        this._currentLayout.addToContainer(panel, container);
         panel.afterAppend();
     };
 
@@ -116,7 +116,6 @@ define(['logManager',
 
         //start progressbar
         _loader = new LoaderCircles({"containerElement": $('body')});
-        //_loader.setSize(100);
         _loader.start();
     };
 

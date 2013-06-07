@@ -11,7 +11,7 @@ define(['js/PanelBase/PanelBase',
         BASE_CLASS = "panel-base-wh"; // /scss/PanelBase/PanelBaseWithHeader.scss
 
     //inherit from PanelBase Phase #1
-    PanelBaseWithHeader = function (options) {
+    PanelBaseWithHeader = function (options, layoutManager) {
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "PanelBaseWithHeader";
 
@@ -22,7 +22,7 @@ define(['js/PanelBase/PanelBase',
         options[PanelBaseWithHeader.OPTIONS.FILL_CONTAINER] = options[PanelBaseWithHeader.OPTIONS.FILL_CONTAINER] === true ? true : false;
 
         //call parent's constructor
-        __parent__.apply(this, [options]);
+        __parent__.apply(this, [options, layoutManager]);
 
         this.initUI(options);
     };

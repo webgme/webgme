@@ -158,7 +158,7 @@ define(['logManager',
             this.designerCanvas.setBackgroundText(desc.name, {"color": BACKGROUND_TEXT_COLOR,
                 "font-size": BACKGROUND_TEXT_SIZE});
 
-            this.designerCanvas.showPogressbar();
+            this.designerCanvas.showProgressbar();
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
@@ -307,7 +307,7 @@ define(['logManager',
 
         this.designerCanvas.endUpdate();
 
-        this.designerCanvas.hidePogressbar();
+        this.designerCanvas.hideProgressbar();
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 

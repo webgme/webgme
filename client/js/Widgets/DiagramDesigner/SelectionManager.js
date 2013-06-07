@@ -81,6 +81,8 @@ define(['logManager',
 
         this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
 
+        this.canvas._registerKeyboardListener();
+
         if (leftButton === true) {
 
             if ((event.ctrlKey || event.metaKey) !== true) {

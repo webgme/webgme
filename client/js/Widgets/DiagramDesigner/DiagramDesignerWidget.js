@@ -15,6 +15,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/ConnectionDrawingManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Zoom',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -29,7 +30,8 @@ define(['logManager',
                                                       ConnectionRouteManager2,
                                                       ConnectionDrawingManager,
                                                       DiagramDesignerWidgetEventDispatcher,
-                                                      DiagramDesignerWidgetZoom) {
+                                                      DiagramDesignerWidgetZoom,
+                                                      DiagramDesignerWidgetKeyboard) {
 
     var DiagramDesignerWidget,
         DEFAULT_GRID_SIZE = 10,
@@ -75,7 +77,7 @@ define(['logManager',
         this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         //initialize UI
-        this.initializeUI();
+        this._initializeUI();
 
         //init zoom related UI and handlers
         this._initZoom();
@@ -135,7 +137,7 @@ define(['logManager',
         this._itemSubcomponentsMap = {};
     };
 
-    DiagramDesignerWidget.prototype.getGuid = function (prefix) {
+    DiagramDesignerWidget.prototype._getGuid = function (prefix) {
         var nextID = (prefix || "") + this._itemIDCounter + "";
 
         this._itemIDCounter++;
@@ -206,14 +208,15 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
+        this._unregisterKeyboardListener();
         this.__loader.destroy();
         //TODO: what about item and connection destroys????
     };
 
-    DiagramDesignerWidget.prototype.initializeUI = function () {
+    DiagramDesignerWidget.prototype._initializeUI = function () {
         var self = this;
 
-        this.logger.debug("DiagramDesignerWidget.initializeUI");
+        this.logger.debug("DiagramDesignerWidget._initializeUI");
 
         //clear content
         this.$el.empty();
@@ -450,16 +453,10 @@ define(['logManager',
         this.logger.debug("endUpdate");
 
         this._updating = false;
-        this.tryRefreshScreen();
+        this._tryRefreshScreen();
     };
 
-    DiagramDesignerWidget.prototype.decoratorUpdated = function (itemID) {
-        this.logger.error("DecoratorUpdated: '" + itemID + "'");
-
-        this.tryRefreshScreen();
-    };
-
-    DiagramDesignerWidget.prototype.tryRefreshScreen = function () {
+    DiagramDesignerWidget.prototype._tryRefreshScreen = function () {
         var insertedLen = 0,
             updatedLen = 0,
             deletedLen = 0,
@@ -661,12 +658,16 @@ define(['logManager',
     DiagramDesignerWidget.prototype.onItemMouseDown = function (event, itemId) {
         this.logger.debug("onItemMouseDown: " + itemId);
 
+        this._registerKeyboardListener();
+
         //mousedown initiates a component selection
         this.selectionManager.setSelection([itemId], event);
     };
 
     DiagramDesignerWidget.prototype.onConnectionMouseDown = function (event, connId) {
         this.logger.debug("onConnectionMouseDown: " + connId);
+
+        this._registerKeyboardListener();
 
         //mousedown initiates a connection selection
         this.selectionManager.setSelection([connId], event);
@@ -905,11 +906,11 @@ define(['logManager',
     /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
 
     /************** WAITPROGRESS *********************/
-    DiagramDesignerWidget.prototype.showPogressbar = function () {
+    DiagramDesignerWidget.prototype.showProgressbar = function () {
         this.__loader.start();
     };
 
-    DiagramDesignerWidget.prototype.hidePogressbar = function () {
+    DiagramDesignerWidget.prototype.hideProgressbar = function () {
         this.__loader.stop();
     };
 
@@ -974,6 +975,38 @@ define(['logManager',
         this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
+    /*************** SELECTION API ******************************************/
+
+    DiagramDesignerWidget.prototype.selectAll = function () {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(this.itemIds.concat(this.connectionIds), undefined);
+    };
+
+    DiagramDesignerWidget.prototype.selectNone = function () {
+        this.selectionManager.clear();
+    };
+
+    DiagramDesignerWidget.prototype.selectInvert = function () {
+        var invertList = _.difference(this.itemIds.concat(this.connectionIds), this.selectionManager.selectedItemIdList);
+
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(invertList, undefined);
+    };
+
+    DiagramDesignerWidget.prototype.selectItems = function () {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(this.itemIds, undefined);
+    };
+
+    DiagramDesignerWidget.prototype.selectConnections = function () {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(this.connectionIds, undefined);
+    };
+
+    /*************** END OF --- SELECTION API ******************************************/
+
+
+
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
@@ -983,7 +1016,7 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetSubcomponents.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetEventDispatcher.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
-
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
 
     return DiagramDesignerWidget;
 });

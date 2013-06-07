@@ -1,20 +1,29 @@
 "use strict";
 
+var WebGMEGlobal = {};
+
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
     'bin/getconfig',
     'js/basicClient',
     'js/LayoutManager/LayoutManager',
-    'js/Decorators/DecoratorManager'], function (logManager,
+    'js/Decorators/DecoratorManager',
+    'js/KeyboardManager'], function (logManager,
                                             CONFIG,
                                             Client,
                                             LayoutManager,
-                                            DecoratorManager) {
+                                            DecoratorManager,
+                                            KeyboardManager) {
 
     var _webGMEStart = function () {
         var lm,
             client,
-            loadPanels;
+            loadPanels,
+            km;
+
+        //as of now it's a global variable just to make access to it easier
+        //TODO: might need to be changed
+        WebGMEGlobal.KeyboardManager = new KeyboardManager();
 
         lm = new LayoutManager();
         lm.loadLayout('DefaultLayout', function () {
