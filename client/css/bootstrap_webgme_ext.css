@@ -10,6 +10,11 @@
     background-image: url("../img/glyphicons-halflings-white.png");
 }
 
+.icon-keyboard {
+    background-image: url("../img/keyboard.png");
+    background-position: 0 0;
+}
+
 
 /*** POPOVER extension ***/
 .popover {
@@ -45,6 +50,20 @@
 .navbar-fixed-bottom .navbar-inner {
     height: 26px;
     min-height: 26px;
+}
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox  {
+    margin-top: 7px;
+    height: 16px;
+}
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox .sw  {
+    height: 14px;
+}
+
+.navbar-fixed-bottom .navbar-inner .iCheckBox .txt  {
+    height: 16px;
+    line-height: 16px;
 }
 
 

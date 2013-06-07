@@ -4,11 +4,13 @@ define(['js/PanelBase/PanelBase',
     'js/Widgets/LogLevelManager/LogLevelManagerWidget',
     'js/Widgets/NetworkStatus/NetworkStatusWidget',
     'js/Widgets/BranchStatus/BranchStatusWidget',
-    'js/Widgets/BranchSelector/BranchSelectorWidget'], function (PanelBase,
+    'js/Widgets/BranchSelector/BranchSelectorWidget',
+    'js/Widgets/KeyboardManager/KeyboardManagerWidget'], function (PanelBase,
                                                   LogLevelManagerWidget,
                                                   NetworkStatusWidget,
                                                   BranchStatusWidget,
-                                                  BranchSelectorWidget) {
+                                                  BranchSelectorWidget,
+                                                  KeyboardManagerWidget) {
 
     var FooterControlsPanel,
         __parent__ = PanelBase;
@@ -33,7 +35,10 @@ define(['js/PanelBase/PanelBase',
     _.extend(FooterControlsPanel.prototype, __parent__.prototype);
 
     FooterControlsPanel.prototype._initialize = function () {
-        this.$el.html('<div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+        this.$el.html('<div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+
+        var keyBoardManagerEl = this.$el.find('.keyBoardManager').first();
+        new KeyboardManagerWidget(keyBoardManagerEl);
 
         var logLevelManagerEl = this.$el.find('.logLevelManager').first();
         new LogLevelManagerWidget(logLevelManagerEl);
