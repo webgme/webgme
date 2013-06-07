@@ -107,12 +107,10 @@ define([], function () {
 
 
     /************** WAITPROGRESS *********************/
-    //TODO: typo fix
-    DiagramDesignerWidget.prototype.showPogressbar = function () {
+    DiagramDesignerWidget.prototype.showProgressbar = function () {
     };
 
-    //TODO: typo fix
-    DiagramDesignerWidget.prototype.hidePogressbar = function () {
+    DiagramDesignerWidget.prototype.hideProgressbar = function () {
     };
 
     /************** END OF - WAITPROGRESS *********************/

@@ -906,11 +906,11 @@ define(['logManager',
     /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
 
     /************** WAITPROGRESS *********************/
-    DiagramDesignerWidget.prototype.showPogressbar = function () {
+    DiagramDesignerWidget.prototype.showProgressbar = function () {
         this.__loader.start();
     };
 
-    DiagramDesignerWidget.prototype.hidePogressbar = function () {
+    DiagramDesignerWidget.prototype.hideProgressbar = function () {
         this.__loader.stop();
     };
 
