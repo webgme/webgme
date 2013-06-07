@@ -79,7 +79,7 @@ define(['logManager'], function (logManager) {
 
             eventArgs.combo += eventArgs.character;
 
-            this._logger.warning(JSON.stringify(eventArgs));
+            this._logger.debug(JSON.stringify(eventArgs));
 
             var ret;
 
