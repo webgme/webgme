@@ -223,7 +223,8 @@ define(['logManager',
     ModelEditorControl.prototype._getObjectDescriptor = function (nodeId) {
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
-            pos;
+            pos,
+            defaultPos = 0;
 
         if (nodeObj) {
             objDescriptor = {};
@@ -248,21 +249,21 @@ define(['logManager',
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
 
                     if (pos) {
-                        objDescriptor.position = { "x": pos.x || 30, "y": pos.y || 30};
+                        objDescriptor.position = { "x": pos.x, "y": pos.y};
                     } else {
-                        objDescriptor.position = { "x": 30, "y": 30};
+                        objDescriptor.position = { "x": defaultPos, "y": defaultPos};
                     }
 
                     if (objDescriptor.position.hasOwnProperty("x")) {
-                        objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, 0);
+                        objDescriptor.position.x = this._getDefaultValueForNumber(objDescriptor.position.x, defaultPos);
                     } else {
-                        objDescriptor.position.x = 0;
+                        objDescriptor.position.x = defaultPos;
                     }
 
                     if (objDescriptor.position.hasOwnProperty("y")) {
-                        objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, 0);
+                        objDescriptor.position.y = this._getDefaultValueForNumber(objDescriptor.position.y, defaultPos);
                     } else {
-                        objDescriptor.position.y = 0;
+                        objDescriptor.position.y = defaultPos;
                     }
 
                     objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
