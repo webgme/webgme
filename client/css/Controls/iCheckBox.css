@@ -19,7 +19,11 @@ div.iCheckBox {
     border-radius: 3px;
     display: inline-block;
     position: absolute;
-    border: 1px solid #c4c4c4; }
+    border: 1px solid #c4c4c4;
+    text-align: center; }
+    div.iCheckBox .sw [class^="icon-"],
+    div.iCheckBox .sw [class*=" icon-"] {
+      margin-top: -2px; }
   div.iCheckBox .txt {
     width: 31.4px;
     height: 18px;

@@ -40,6 +40,12 @@ div.iCheckBox {
     display: inline-block;
     position: absolute;
     border: $switch-border-width solid $switch-border-color;
+    text-align: center;
+
+    [class^="icon-"],
+    [class*=" icon-"] {
+      margin-top: -2px;
+    }
   }
 
   .txt {
