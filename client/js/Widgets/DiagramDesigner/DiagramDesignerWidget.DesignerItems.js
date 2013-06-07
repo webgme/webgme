@@ -9,7 +9,7 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
     };
 
     DiagramDesignerWidgetDesignerItems.prototype.createDesignerItem = function (objD) {
-        var componentId = this.getGuid("I_"),
+        var componentId = this._getGuid("I_"),
             objDescriptor = _.extend({}, objD),
             alignedPosition = this._alignPositionToGrid(objDescriptor.position.x, objDescriptor.position.y),
             newComponent;
