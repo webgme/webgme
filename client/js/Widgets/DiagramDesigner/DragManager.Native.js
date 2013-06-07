@@ -73,14 +73,7 @@ define(['logManager',
 
             if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
 
-                //initialize drag descriptor
-                this._dragDesc = { "startX": mousePos.mX,
-                    "startY": mousePos.mY,
-                    "dX": 0,
-                    "dY": 0,
-                    "params": undefined,
-                    "mode": undefined,
-                    "dragging": false};
+                this._initDrag(mousePos.mX, mousePos.mY);
 
                 //hook up MouseMove and MouseUp
                 this._onBackgroundMouseMoveCallBack = function (event) {
@@ -97,6 +90,21 @@ define(['logManager',
 
             event.stopPropagation();
             event.preventDefault();
+        }
+    };
+
+    DragManager.prototype._initDrag = function (mX, mY) {
+        var dragEnabled = !this.canvas.getIsReadOnlyMode();
+
+        if (dragEnabled && this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+            //initialize drag descriptor
+            this._dragDesc = { "startX": mX,
+                "startY": mY,
+                "dX": 0,
+                "dY": 0,
+                "params": undefined,
+                "mode": undefined,
+                "dragging": false};
         }
     };
 
@@ -122,6 +130,7 @@ define(['logManager',
                 //minimum delta is met, start the dragging
                 this.logger.debug('Mouse delta reached the minimum to handle as a drag');
                 this._startDrag(event);
+                this._dragScroll.start();
             }
         }
     };
@@ -149,8 +158,8 @@ define(['logManager',
 
     /********* START DRAGGING *******************************/
     DragManager.prototype._startDrag = function (event) {
-        var ctrlKey = event.ctrlKey || event.metaKey,
-            shiftKey = event.shiftKey,
+        var ctrlKey = event && (event.ctrlKey || event.metaKey),
+            shiftKey = event && event.shiftKey,
             currentDragMode = this.DRAGMODE_MOVE;  //by default drag is treated as move
 
         //debug log
@@ -188,8 +197,6 @@ define(['logManager',
         }
 
         this._calculateMinStartCoordinates();
-
-        this._dragScroll.start();
 
         this.canvas.onDesignerItemDragStart(undefined, this._dragDesc.params.draggedItemIDs);
 
@@ -335,6 +342,14 @@ define(['logManager',
         //final position update for the dragged items
         this._updateDraggedItemPositions(mouseDelta.dX, mouseDelta.dY);
 
+        this._endDragAction();
+
+
+    };
+
+    DragManager.prototype._endDragAction = function () {
+        var dItems = this._dragDesc.params.draggedItemIDs;
+
         if (this._dragDesc.mode === this.DRAGMODE_MOVE) {
             this.canvas.endMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
             this._endDragModeMove();
@@ -343,7 +358,8 @@ define(['logManager',
             this._endDragModeCopy();
         }
 
-        this.canvas.onDesignerItemDragStop(undefined, this._dragDesc.params.draggedItemIDs);
+        this.canvas.onDesignerItemDragStop(undefined, dItems);
+
         this.$el.css("cursor", "");
     };
 
@@ -364,6 +380,9 @@ define(['logManager',
 
                     newPositions[id] = { "x": item.positionX, "y": item.positionY };
                 }
+
+                //clear drag descriptor object
+                this._dragDesc = undefined;
 
                 this.canvas.onDesignerItemsMove(newPositions);
             }
@@ -395,6 +414,9 @@ define(['logManager',
                     }
                 }
             }
+
+            //clear drag descriptor object
+            this._dragDesc = undefined;
 
             this.canvas.onDesignerItemsCopy(copyDesc);
         }
