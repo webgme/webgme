@@ -16,3 +16,5 @@
 
 bin/config.js
 bin/server.log
+bin/stderr.log
+bin/stdout.log
