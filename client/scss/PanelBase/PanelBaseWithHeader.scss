@@ -65,6 +65,12 @@ $sidepane-panel-border-radius: 4px;
         top: 5px;
         margin-left: 10px;
       }
+
+      ul.dropdown-menu {
+        .iCheckBox {
+          top: 1px;
+        }
+      }
     }
   }
 
