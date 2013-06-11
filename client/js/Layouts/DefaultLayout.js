@@ -48,7 +48,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 closable :false,
                 resizable: false,
                 slidable: false,
-                spacing_open: 0
+                spacing_open: 0,
+                size: 27        //has to match footer CSS settings (height + border)
             }
             ,  east: {
                 size: 202,
