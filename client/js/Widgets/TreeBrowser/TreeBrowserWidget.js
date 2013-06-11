@@ -9,9 +9,10 @@
  */
 define(['logManager',
     'js/Constants',
+    './TreeBrowserWidget.Keyboard',
     'lib/jquery/jquery.dynatree-1.2.4.min',
     'lib/jquery/jquery.contextMenu',
-    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS) {
+    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
         TREE_BROWSER_CLASS = "tree-browser";
@@ -73,7 +74,7 @@ define(['logManager',
         this._treeEl.dynatree({
             checkbox: false,
             selectMode: 2,
-            keyboard: true,
+            keyboard: false,
             imagePath : "/",
             debugLevel: 0,
             onLazyRead : function (node) {
@@ -162,6 +163,7 @@ define(['logManager',
                 return false;
             },
 
+            /*
             onKeydown: function (node, event) {
                 var sib = null,
                     parents,
@@ -252,10 +254,18 @@ define(['logManager',
 
                 return !handled;
             },
+            */
 
             onCreate: function (node/*, span*/) {
                 self._makeNodeDraggable(node);
             }
+        });
+
+        this._treeInstance = this._treeEl.dynatree("getTree");
+
+        //register keyboard handling whenever user clicks on widget
+        this._el.on('mousedown', function (event) {
+           self._registerKeyboardListener(self);
         });
     };
 
@@ -546,20 +556,14 @@ define(['logManager',
         });
     };
 
-    TreeBrowserWidget.prototype._nodeCopy = function (node) {
-        var selectedIds,
+    TreeBrowserWidget.prototype._nodeCopy = function () {
+        var selectedIds = [],
             selNodes,
             i;
 
-        //can not copy 'loading...' node
-        if (node.data.addClass === NODE_PROGRESS_CLASS) {
-            return;
-        }
-
-        selectedIds = [];
-
         selNodes = this._treeEl.dynatree("getTree").getSelectedNodes();
         for (i = 0; i < selNodes.length; i += 1) {
+            //can not copy 'loading...' node
             if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
                 selectedIds.push(selNodes[i].data.key);
             }
@@ -667,7 +671,7 @@ define(['logManager',
                 "copy": { // The "copy" menu item
                     "name": "Copy",
                     callback: function(/*key, options*/) {
-                        self._nodeCopy(node);
+                        self._nodeCopy();
                     },
                     "icon": "copy"
                 },
@@ -700,6 +704,8 @@ define(['logManager',
         //return the complete action set for this node
         return menuItems;
     };
+
+    _.extend(TreeBrowserWidget.prototype, TreeBrowserWidgetKeyboard.prototype);
 
     return TreeBrowserWidget;
 });
