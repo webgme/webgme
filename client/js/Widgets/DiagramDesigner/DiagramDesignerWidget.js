@@ -1007,6 +1007,18 @@ define(['logManager',
     /*************** END OF --- SELECTION API ******************************************/
 
 
+    /************ COPY PASTE API **********************/
+
+    DiagramDesignerWidget.prototype.onClipboardCopy = function (selectedIds) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onClipboardCopy not overridden in controller!!! selectedIds: '" + selectedIds + "'");
+    };
+
+    DiagramDesignerWidget.prototype.onClipboardPaste = function () {
+        this.logger.warning("DiagramDesignerWidget.prototype.onClipboardPaste not overridden in controller!!!");
+    };
+
+    /************ END OF --- COPY PASTE API **********************/
+
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 

@@ -148,5 +148,15 @@ define([], function () {
 
     /*************** END OF --- SELECTION API ******************************************/
 
+    /************ COPY PASTE API **********************/
+
+    DiagramDesignerWidget.prototype.onClipboardCopy = function (selectedIds) {
+    };
+
+    DiagramDesignerWidget.prototype.onClipboardPaste = function () {
+    };
+
+    /************ END OF --- COPY PASTE API **********************/
+
     return DiagramDesignerWidget;
 });
