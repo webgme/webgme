@@ -66,6 +66,14 @@ define([], function () {
                 this._moveSelection(this.gridSize, 0);
                 ret = false;
                 break;
+            case 'ctrl+c':
+                this.onClipboardCopy(this.selectionManager.selectedItemIdList);
+                ret = false;
+                break;
+            case 'ctrl+v':
+                this.onClipboardPaste();
+                ret = false;
+                break;
         }
 
         return ret;
