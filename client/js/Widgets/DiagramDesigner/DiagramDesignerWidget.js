@@ -38,27 +38,33 @@ define(['logManager',
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2;
 
     DiagramDesignerWidget = function (container, params) {
         var self = this;
 
+        //create logger instance with specified name
         this.logger = logManager.create(params.loggerName || "DiagramDesignerWidget");
 
         this.$el = container;
-        this.toolBar = params.toolBar;
 
         //transform this instance into EventDispatcher
         this._addEventDispatcherExtensions();
 
         //Get DiagramDesignerWidget parameters from options
-        //Grid size for item positioning granularity
+
+        //grid size for item positioning granularity
         this.gridSize = params.gridSize || DEFAULT_GRID_SIZE;
-        this._droppable = params.droppable !== false ? true :false;
+
+        //if the widget has to support drop feature at all
+        this._droppable = params.droppable === true;
+
+        //toolbar instance
+        this.toolBar = params.toolBar;
+
+        //END OF --- Get DiagramDesignerWidget parameters from options
 
         //define properties of its own
-        this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
         this._containerSize = { "w": 0, "h": 0 };
         this._itemIDCounter = 0;
@@ -69,19 +75,21 @@ define(['logManager',
 
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
+
+        //currently not updating anything
         this._updating = false;
 
+        //initialize all the local arrays and maps for the widget
         this._initializeCollections();
 
-        //define zoom value
-        this._zoom = 1.0;
-        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+        //zoom ratio variable
+        this._zoomRatio = 1.0;
 
         //initialize UI
         this._initializeUI();
 
         //init zoom related UI and handlers
-        this._initZoom();
+        this._initZoom(params);
 
         //initiate Selection Manager (if needed)
         this.selectionManager = params.selectionManager || new SelectionManager({"canvas": this});
@@ -338,8 +346,8 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype._resizeItemContainer = function () {
-        var zoomedWidth = this._containerSize.w / this._zoom,
-            zoomedHeight = this._containerSize.h / this._zoom;
+        var zoomedWidth = this._containerSize.w / this._zoomRatio,
+            zoomedHeight = this._containerSize.h / this._zoomRatio;
 
         this.logger.debug('MinZoomedSize: ' + zoomedWidth + ', ' + zoomedHeight);
 
@@ -368,8 +376,8 @@ define(['logManager',
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
             pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top;
 
-        pX /= this._zoom;
-        pY /= this._zoom;
+        pX /= this._zoomRatio;
+        pY /= this._zoomRatio;
 
         return { "mX": pX > 0 ? pX : 0,
             "mY": pY > 0 ? pY : 0 };
@@ -377,8 +385,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.getAdjustedOffset = function (offset) {
         var childrenContainerOffset = this._offset,
-            left = (offset.left - childrenContainerOffset.left) / this._zoom + childrenContainerOffset.left,
-            top = (offset.top - childrenContainerOffset.top) / this._zoom + childrenContainerOffset.top;
+            left = (offset.left - childrenContainerOffset.left) / this._zoomRatio + childrenContainerOffset.left,
+            top = (offset.top - childrenContainerOffset.top) / this._zoomRatio + childrenContainerOffset.top;
 
         return { "left": left,
             "top": top };
