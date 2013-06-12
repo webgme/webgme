@@ -19,7 +19,6 @@ define([], function () {
         this._zoomLevelMax = this._zoomValues.length - 1;
         this._zoomLevel = this._zoomValues.indexOf(1);
 
-        params.zoomUIControls = true;
         if (params.zoomUIControls === true) {
             this._initZoomUIControl();
         }
