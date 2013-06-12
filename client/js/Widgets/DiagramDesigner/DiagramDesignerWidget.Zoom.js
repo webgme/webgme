@@ -2,11 +2,9 @@
 
 define([], function () {
 
-    var DiagramDesignerWidgetZoom,
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5];
+    var DiagramDesignerWidgetZoom;
 
     DiagramDesignerWidgetZoom = function () {
-
     };
 
     DiagramDesignerWidgetZoom.prototype._initZoom = function (params) {

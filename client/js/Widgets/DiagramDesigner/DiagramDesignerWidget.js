@@ -34,18 +34,28 @@ define(['logManager',
                                                       DiagramDesignerWidgetKeyboard) {
 
     var DiagramDesignerWidget,
-        DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2;
 
+    var defaultParams = {'loggerName': 'DiagramDesignerWidget',
+                         'gridSize': 10,
+                         'droppable': true,
+                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+                         'zoomUIControls': true
+    };
+
     DiagramDesignerWidget = function (container, params) {
         var self = this;
 
-        //create logger instance with specified name
-        this.logger = logManager.create(params.loggerName || "DiagramDesignerWidget");
+        //merge dfault values with the given parameters
+        params = _.extend(defaultParams, params);
 
+        //create logger instance with specified name
+        this.logger = logManager.create(params.loggerName);
+
+        //save DOM container
         this.$el = container;
 
         //transform this instance into EventDispatcher
@@ -54,10 +64,10 @@ define(['logManager',
         //Get DiagramDesignerWidget parameters from options
 
         //grid size for item positioning granularity
-        this.gridSize = params.gridSize || DEFAULT_GRID_SIZE;
+        this.gridSize = params.gridSize;
 
         //if the widget has to support drop feature at all
-        this._droppable = params.droppable === true;
+        this._droppable = params.droppable;
 
         //toolbar instance
         this.toolBar = params.toolBar;
