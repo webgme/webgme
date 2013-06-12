@@ -1,9 +1,10 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+                                                                             DiagramDesignerWidgetConstants) {
 
     var DesignerItem,
-        DESIGNER_ITEM_CLASS = "designer-item",
         EVENT_POSTFIX = "DesignerItem",
         HOVER_CLASS = "hover",
         SELECTABLE_CLASS = "selectable";
@@ -57,7 +58,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
+    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS });
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it

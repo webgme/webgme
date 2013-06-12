@@ -1,13 +1,14 @@
 "use strict";
 
 define(['logManager',
-        'js/Widgets/DiagramDesigner/DragScroll'], function (logManager,
-                                                    DragScroll) {
+        'js/Widgets/DiagramDesigner/DragScroll',
+        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+                                                    DragScroll,
+                                                    DiagramDesignerWidgetConstants) {
 
     var DragManager,
         MOVE_CURSOR = "move",
         COPY_CURSOR = "copy",
-        DESIGNER_ITEM_CLASS = "designer-item",
         MIN_DELTA_TO_DRAG = 10;
 
     DragManager = function (options) {
@@ -40,7 +41,7 @@ define(['logManager',
             self._canvasItemPositionChanged(event);
         });
 
-        this.$el.on('mousedown.DragManager', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
+        this.$el.on('mousedown.DragManager', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             self._onItemMouseDown(event);
         });
 
@@ -617,6 +618,10 @@ define(['logManager',
         }
     };
     /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
+
+    DragManager.prototype.readOnlyMode = function (readOnly) {
+
+    };
 
     return DragManager;
 });

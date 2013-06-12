@@ -153,9 +153,13 @@ define(['logManager',
         this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
 
+        /*subcomponent accounting*/
         this._itemSubcomponentsMap = {};
     };
 
+    /*
+     * Generated a new ID for the box/line (internal use only)
+     */
     DiagramDesignerWidget.prototype._getGuid = function (prefix) {
         var nextID = (prefix || "") + this._itemIDCounter + "";
 
@@ -200,6 +204,7 @@ define(['logManager',
         var i;
         this.selectionManager.readOnlyMode(readOnly);
         this.connectionDrawingManager.readOnlyMode(readOnly);
+        this.dragManager.readOnlyMode(readOnly);
 
         i = this.itemIds.length;
         while (i--) {

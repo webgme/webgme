@@ -10,6 +10,10 @@ define([], function () {
         /*
          * TERRITORY EVENTS
          */
-        SELF : "__SELF__"
+        SELF : "__SELF__",
+        /*
+         * CLASS DEFINITIONS
+         */
+        DESIGNER_ITEM_CLASS : "designer-item"
     };
 });

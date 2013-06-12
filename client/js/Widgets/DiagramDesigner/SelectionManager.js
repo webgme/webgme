@@ -1,14 +1,15 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil'], function (logManager,
-                            clientUtil) {
+    'clientUtil',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+                            clientUtil,
+                            DiagramDesignerWidgetConstants) {
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
         DESIGNER_CONNECTION_CLASS = "designer-connection", //TODO: need a common constants file
         PATH_SHADOW_ID_PREFIX = "p_",
-        DESIGNER_ITEM_CLASS = "designer-item",
         SELECTION_OUTLINE_MARGIN = 15,
         SELECTION_OUTLINE_MIN_WIDTH = 100;
 
@@ -36,7 +37,7 @@ define(['logManager',
 
         this.$el = $el;
 
-        $el.on('mousedown.SelectionManagerItem', 'div.' + DESIGNER_ITEM_CLASS,  function (event) {
+        $el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id");
             self.canvas.onItemMouseDown(event, itemId);
             event.stopPropagation();
@@ -57,7 +58,7 @@ define(['logManager',
                 /*var t = $(event.target),
                     childCapture = false;
                 while (t[0] !== $el[0]) {
-                    if (t.hasClass(DESIGNER_ITEM_CLASS)) {
+                    if (t.hasClass(DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS)) {
                         childCapture = true;
                         break;
                     } else {
