@@ -55,8 +55,8 @@ define(['logManager',
             self._onBackgroundMouseDown(event);
         });
 
-        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENTS_DELETE, function (__diagramDesigner, idList) {
-            self._onComponentsDelete(idList);
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (__diagramDesigner, componentId) {
+            self._onComponentDelete(componentId);
         });
     };
 
@@ -396,20 +396,15 @@ define(['logManager',
     /*********************** END OF --- SET SELECTION *********************************/
 
     /*********************** COMPONENT DELETE HANDLER *******************/
-    SelectionManager.prototype._onComponentsDelete = function (idList) {
-        var i = idList.length,
-            idx,
-            id,
+    SelectionManager.prototype._onComponentDelete = function (componentId) {
+        var idx,
             changed = false;
 
         //items are already deleted, we just need to remove them from the selectedIdList (if there)
-        while (i--) {
-            id = idList[i];
-            idx = this._selectedElements.indexOf(id);
-            if (idx !== -1) {
-                this._selectedElements.splice(idx, 1);
-                changed = true;
-            }
+        idx = this._selectedElements.indexOf(componentId);
+        if (idx !== -1) {
+            this._selectedElements.splice(idx, 1);
+            changed = true;
         }
 
         if (changed) {

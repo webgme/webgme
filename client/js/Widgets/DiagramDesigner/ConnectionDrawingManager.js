@@ -51,6 +51,14 @@ define(['logManager',
             self._canvasItemPositionChanged(event);
         });
 
+        this.canvas.addEventListener(this.canvas.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
+            self._onComponentDelete(componentId);
+        });
+
+        this.canvas.addEventListener(this.canvas.events.ON_UNREGISTER_SUBCOMPONENT, function (_canvas, eventArgs) {
+            self._onComponentDelete(eventArgs.objectID, eventArgs.subComponentID);
+        });
+
         this._dragScroll = new DragScroll(this.canvas.skinParts.$diagramDesignerWidgetBody);
     };
 
@@ -537,7 +545,7 @@ define(['logManager',
 
     /***************** COMPONENT DELETED FROM CANVAS *****************/
 
-    ConnectionDrawingManager.prototype.componentDelete = function (objID, sCompID) {
+    ConnectionDrawingManager.prototype._onComponentDelete = function (objID, sCompID) {
         var cancelDraw = false,
             el;
 
@@ -571,8 +579,6 @@ define(['logManager',
                 this._connectionInDrawProps = {};
                 //imitate mouseup
                 el.trigger('mouseup');
-
-                
             }
         }
     };

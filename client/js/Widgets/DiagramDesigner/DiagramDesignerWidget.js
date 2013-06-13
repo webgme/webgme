@@ -427,25 +427,8 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.deleteComponent = function (componentId) {
-        //TODO: fix --> if connectiondraw is in progress and the source of the in-drawn-connection is deleted, cancel the draw
-
-        //let the selection manager know about item deletion
-        //NOTE: it is handled in _refreshScreen()
-
-        //if there is dragging and let the dragmanager know about the deletion
-        if (this.mode === this.OPERATING_MODES.MOVE_ITEMS ||
-            this.mode === this.OPERATING_MODES.COPY_ITEMS) {
-            this.dragManager.componentDelete(componentId);
-        }
-
-        //if there is connection draw or redraw, let the connection manager know about the deletion
-        if (this.mode === this.OPERATING_MODES.CREATE_CONNECTION ||
-            this.mode === this.OPERATING_MODES.RECONNECT_CONNECTION) {
-            this.connectionDrawingManager.componentDelete(componentId);
-        }
-
-        //let the selection manager know about the deletion
-        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, [componentId]);
+        //let the selection manager / drag-manager / connection drawing manager / etc know about the deletion
+        this.dispatchEvent(this.events.ON_COMPONENT_DELETE, componentId);
 
         //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -604,7 +587,15 @@ define(['logManager',
         this._resizeItemContainer();
 
         //let the selection manager know about deleted items and connections
-        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
+        /*i = this._deletedDesignerItemIDs.length;
+        while (i--) {
+            this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedDesignerItemIDs[i]);
+        }
+
+        i = this._deletedConnectionIDs.length;
+        while (i--) {
+            this.dispatchEvent(this.events.ON_COMPONENT_DELETE, this._deletedConnectionIDs[i]);
+        }*/
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];

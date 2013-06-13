@@ -46,6 +46,10 @@ define(['logManager',
         });
 
         this._dragScroll = new DragScroll(this.$el.parent());
+
+        this.canvas.addEventListener(this.canvas.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
+            self._onComponentDelete(componentId);
+        });
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -486,23 +490,27 @@ define(['logManager',
     };
 
     DragManager.prototype._calculateMinStartCoordinates = function () {
-        var i = this._dragDesc.params.originalPositions.length;
+        var i;
 
-        this._dragDesc.params.minStartCoordinates.x = undefined;
-        this._dragDesc.params.minStartCoordinates.y = undefined;
+        if (this._dragDesc) {
+            i = this._dragDesc.params.originalPositions.length;
 
-        //figure out minimum coordinates from originalPositions
-        while (i--) {
-            if (this._dragDesc.params.minStartCoordinates.x) {
-                this._dragDesc.params.minStartCoordinates.x = Math.min(this._dragDesc.params.minStartCoordinates.x, this._dragDesc.params.originalPositions[i].x);
-            } else {
-                this._dragDesc.params.minStartCoordinates.x = this._dragDesc.params.originalPositions[i].x;
-            }
+            this._dragDesc.params.minStartCoordinates.x = undefined;
+            this._dragDesc.params.minStartCoordinates.y = undefined;
 
-            if (this._dragDesc.params.minStartCoordinates.y) {
-                this._dragDesc.params.minStartCoordinates.y = Math.min(this._dragDesc.params.minStartCoordinates.y, this._dragDesc.params.originalPositions[i].y);
-            } else {
-                this._dragDesc.params.minStartCoordinates.y = this._dragDesc.params.originalPositions[i].y;
+            //figure out minimum coordinates from originalPositions
+            while (i--) {
+                if (this._dragDesc.params.minStartCoordinates.x) {
+                    this._dragDesc.params.minStartCoordinates.x = Math.min(this._dragDesc.params.minStartCoordinates.x, this._dragDesc.params.originalPositions[i].x);
+                } else {
+                    this._dragDesc.params.minStartCoordinates.x = this._dragDesc.params.originalPositions[i].x;
+                }
+
+                if (this._dragDesc.params.minStartCoordinates.y) {
+                    this._dragDesc.params.minStartCoordinates.y = Math.min(this._dragDesc.params.minStartCoordinates.y, this._dragDesc.params.originalPositions[i].y);
+                } else {
+                    this._dragDesc.params.minStartCoordinates.y = this._dragDesc.params.originalPositions[i].y;
+                }
             }
         }
     };
@@ -510,20 +518,22 @@ define(['logManager',
 
     /***************** COMPONENT DELETED FROM CANVAS *****************/
 
-    DragManager.prototype.componentDelete = function (componentId) {
+    DragManager.prototype._onComponentDelete = function (componentId) {
         var idx,
             copiedComponentId,
-            modeSpecificData = this._dragDesc.params.modeSpecificData,
+            modeSpecificData,
             itemDeleted = false;
 
         if (this._dragDesc) {
+            modeSpecificData = this._dragDesc.params.modeSpecificData;
+
             //handle COPY / MOVE mode
             switch(this._dragDesc.mode) {
                 case this.DRAGMODE_MOVE:
                     idx = this._dragDesc.params.draggedItemIDs.indexOf(componentId);
                     if (idx !== -1) {
                         //one of the dragged items has been deleted
-                        this.logger.warning('One of the currently moved items is being deleted: ' + componentId);
+                        this.logger.debug('One of the currently moved items is being deleted: ' + componentId);
 
                         //remove the component's information from the drag list
                         this._dragDesc.params.draggedItemIDs.splice(idx, 1);
@@ -535,7 +545,7 @@ define(['logManager',
                 case this.DRAGMODE_COPY:
                     if (modeSpecificData.hasOwnProperty(componentId)) {
                         //one of the dragged items has been deleted
-                        this.logger.warning('One of the currently copied items is being deleted: ' + componentId);
+                        this.logger.debug('One of the currently copied items is being deleted: ' + componentId);
 
                         copiedComponentId = modeSpecificData[componentId].copiedItemId ||
                             modeSpecificData[componentId].copiedConnectionId;
@@ -577,7 +587,7 @@ define(['logManager',
     };
 
     DragManager.prototype._cancelDrag = function () {
-        this.logger.warning('Cancelling drag artificially...');
+        this.logger.debug('Cancelling drag artificially...');
         this.$el.trigger('mouseup');
     };
 

@@ -19,10 +19,8 @@ define([], function () {
         var idx;
 
         //if there is connection draw or redraw, let the connection manager know about the deletion
-        if (this.mode === this.OPERATING_MODES.CREATE_CONNECTION ||
-            this.mode === this.OPERATING_MODES.RECONNECT_CONNECTION) {
-            this.connectionDrawingManager.componentDelete(objID, sCompID);
-        }
+        this.dispatchEvent(this.events.ON_UNREGISTER_SUBCOMPONENT, {'objectID': objID,
+                                                                    'subComponentID': sCompID});
 
         //store that a subcomponent with a given ID has been removed from object with objID
         idx = this._itemSubcomponentsMap[objID].indexOf(sCompID);
