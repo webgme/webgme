@@ -7,7 +7,6 @@ define(['logManager',
     var ConnectionDrawingManager,
         EVENTPOSTFIX = 'ConnectionDrawingManager',
         MOUSEDOWN = 'mousedown.' + EVENTPOSTFIX,
-        MOUSEMOVE = 'mousemove.' + EVENTPOSTFIX,
         MOUSEUP = 'mouseup.' + EVENTPOSTFIX,
         MOUSEENTER = 'mouseenter.' + EVENTPOSTFIX,
         MOUSELEAVE = 'mouseleave.' + EVENTPOSTFIX,
@@ -146,11 +145,11 @@ define(['logManager',
 
         if (droppableEl && droppableEl.length > 0) {
 
-            droppableEl.on(MOUSEENTER, function (event) {
+            droppableEl.on(MOUSEENTER, function (/*event*/) {
                 //TODO: potentially more complex 'OK' function needs to be provided
                 //ie: can the connection really be drawn here from source
                 $(this).addClass(HOVER_CLASS);
-            }).on(MOUSELEAVE, function (event) {
+            }).on(MOUSELEAVE, function (/*event*/) {
                 $(this).removeClass(HOVER_CLASS);
             }).on(MOUSEUP, function (event) {
                 if (self.canvas.mode === self.canvas.OPERATING_MODES.CREATE_CONNECTION ||
@@ -588,7 +587,7 @@ define(['logManager',
     /************** EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
     ConnectionDrawingManager.prototype._canvasItemPositionChanged = function (event) {
         var id = event.ID || event.ItemID,
-            subComponentID = event.SubComponentID,
+            /*subComponentID = event.SubComponentID,*/
             srcCoord;
 
         if (this._connectionInDraw === false) {
