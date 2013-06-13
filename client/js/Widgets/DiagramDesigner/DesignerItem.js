@@ -196,9 +196,8 @@ define(['logManager',
 
         //add few classes by default
         classes.push(HOVER_CLASS);
-        if (this.canvas.selectionManager.allowSelection === true) {
-            classes.push(SELECTABLE_CLASS);
-        }
+        classes.push(SELECTABLE_CLASS);
+
         this.$el.addClass(classes.join(' '));
 
         //in edit mode and when not participating in a multiple selection,

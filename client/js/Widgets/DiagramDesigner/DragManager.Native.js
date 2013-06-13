@@ -207,7 +207,7 @@ define(['logManager',
 
     //initialize the drag descriptor for 'MOVE' operation
     DragManager.prototype._startDragModeMove = function () {
-        var selectedItemIDs = this.canvas.selectionManager.selectedItemIdList,
+        var selectedItemIDs = this.canvas.selectionManager.getSelectedElements(),
             items = this.canvas.items,
             itemIDs = this.canvas.itemIds,
             i = selectedItemIDs.length,
@@ -233,7 +233,7 @@ define(['logManager',
 
     //initialize the drag descriptor for 'COPY' operation
     DragManager.prototype._startDragModeCopy = function () {
-        var selectedItemIDs = this.canvas.selectionManager.selectedItemIdList,
+        var selectedItemIDs = this.canvas.selectionManager.getSelectedElements(),
             items = this.canvas.items,
             itemIDs = this.canvas.itemIds,
             connectionIDs = this.canvas.connectionIds,
@@ -318,7 +318,7 @@ define(['logManager',
         this.canvas.endUpdate();
 
         this.canvas.selectionManager._clearSelection();
-        this.canvas.selectionManager.setSelection(newSelectionIDs);
+        this.canvas.selectionManager.setSelection(newSelectionIDs, false);
 
         //set cursor
         this.$el.css("cursor", COPY_CURSOR);

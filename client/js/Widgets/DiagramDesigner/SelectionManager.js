@@ -15,91 +15,106 @@ define(['logManager',
     SelectionManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
 
-        this.canvas = options ? options.canvas : null;
+        this._diagramDesigner = options ? options.diagramDesigner : null;
 
-        if (this.canvas === undefined || this.canvas === null) {
-            this.logger.error("Trying to initialize a SelectionManager without a canvas...");
+        if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
+            this.logger.error("Trying to initialize a SelectionManager without a diagramDesigner...");
             throw ("SelectionManager can not be created");
         }
 
-        this.selectedItemIdList = [];
-
-        this.allowRubberBandSelection = true;
-        this.allowSelection = true;
-        this.allowMultiSelection = true;
+        this._selectedElements = [];
 
         this.logger.debug("SelectionManager ctor finished");
     };
 
-    SelectionManager.prototype.initialize = function ($el) {
+    SelectionManager.prototype.initialize = function (el) {
         var self = this;
 
-        this.$el = $el;
+        this.$el = el;
 
-        $el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+        //handle mouse down in designer-items
+        this.$el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id");
-            self.canvas.onItemMouseDown(event, itemId);
+            self._diagramDesigner.onElementMouseDown(itemId);
+            self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(event));
             event.stopPropagation();
             event.preventDefault();
         });
 
-        $el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var itemId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
-            self.canvas.onConnectionMouseDown(event, itemId);
+        //handle mouse down in designer-connections
+        this.$el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
+            var connId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
+            self._diagramDesigner.onElementMouseDown(connId);
+            self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(event));
             event.stopPropagation();
             event.preventDefault();
         });
 
-        if (this.allowRubberBandSelection === true) {
-            //hook up mousedown on background
-            $el.on('mousedown.SelectionManager', function (event) {
-                self._onBackgroundMouseDown(event);
-                /*var t = $(event.target),
-                    childCapture = false;
-                while (t[0] !== $el[0]) {
-                    if (t.hasClass(DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS)) {
-                        childCapture = true;
-                        break;
-                    } else {
-                        t = t.parent();
-                    }
-                }
-                if (childCapture === false) {
-                    self._onBackgroundMouseDown(event);
-                }
-                event.stopPropagation();*/
-            });
-        }
+        //handle mouse down on background --> start rubberband selection
+        this.$el.on('mousedown.SelectionManager', function (event) {
+            self._onBackgroundMouseDown(event);
+        });
     };
+
+    SelectionManager.prototype.getSelectedElements = function () {
+        return this._selectedElements;
+    };
+
+    SelectionManager.prototype.clear = function () {
+        this._clearSelection();
+    };
+
+    SelectionManager.prototype.setSelection = function (idList, addToExistingSelection) {
+        this._setSelection(idList, addToExistingSelection);
+    };
+
+    SelectionManager.prototype.onSelectionCommandClicked = function (command, selectedIds) {
+        this.logger.warning("SelectionManager.prototype.onSelectionCommandClicked IS NOT OVERRIDDEN IN HOST COMPONENT. command: '" + command + "', selectedIds: " + selectedIds);
+    };
+
+    SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
+        this.logger.warning("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
+    };
+
+    SelectionManager.prototype.readOnlyMode = function (/*readOnly*/) {
+        this.showSelectionOutline();
+    };
+
+    /********************** MULTIPLE SELECTION MODIFIER KEY CHECK ********************/
+    SelectionManager.prototype._isMultiSelectionModifierKeyPressed = function (event) {
+        return event.ctrlKey || event.metaKey;
+    };
+    /***************END OF --- MULTIPLE SELECTION MODIFIER KEY CHECK *****************/
+
 
     /*********************** RUBBERBAND SELECTION *************************************/
 
     SelectionManager.prototype._onBackgroundMouseDown = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event),
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             self = this,
             leftButton = event.which === 1;
 
         this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
 
-        this.canvas._registerKeyboardListener();
+        this._diagramDesigner._registerKeyboardListener();
 
         if (leftButton === true) {
 
-            if ((event.ctrlKey || event.metaKey) !== true) {
-                this._clearSelection();
-
-            }
-
-            if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
-                this.canvas.beginMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
+            if (this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.NORMAL) {
+                this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.RUBBERBAND_SELECTION);
 
                 //start drawing selection rubber-band
-                this.rubberbandSelection = { "x": mousePos.mX,
+                this._rubberbandSelection = { "x": mousePos.mX,
                     "y": mousePos.mY,
                     "x2": mousePos.mX,
-                    "y2": mousePos.mY };
+                    "y2": mousePos.mY,
+                    "addToExistingSelection": this._isMultiSelectionModifierKeyPressed(event)};
 
-                this.$rubberBand = this.createRubberBand();
+                if (this._rubberbandSelection.addToExistingSelection !== true) {
+                    this._clearSelection();
+                }
+
+                this.$rubberBand = this._createRubberBand();
 
                 this.$el.append(this.$rubberBand);
 
@@ -114,15 +129,13 @@ define(['logManager',
 
                 $(document).on('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
                 $(document).on('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
-            } else {
-                this.onSelectionChanged([]);
             }
 
             event.stopPropagation();
         }
     };
 
-    SelectionManager.prototype.createRubberBand = function () {
+    SelectionManager.prototype._createRubberBand = function () {
         //create rubberband DOM element
         var rubberBand = $('<div/>', {
             "class" : "rubberband"
@@ -134,20 +147,20 @@ define(['logManager',
     };
 
     SelectionManager.prototype._onBackgroundMouseMove = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event);
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event);
 
-        if (this.rubberbandSelection) {
-            this.rubberbandSelection.x2 = mousePos.mX;
-            this.rubberbandSelection.y2 = mousePos.mY;
+        if (this._rubberbandSelection) {
+            this._rubberbandSelection.x2 = mousePos.mX;
+            this._rubberbandSelection.y2 = mousePos.mY;
             this._drawSelectionRubberBand();
         }
     };
 
     SelectionManager.prototype._onBackgroundMouseUp = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event),
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             params;
 
-        if (this.rubberbandSelection) {
+        if (this._rubberbandSelection) {
             //unbind mousemove and mouseup handlers
             $(document).off('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
             $(document).off('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
@@ -157,16 +170,16 @@ define(['logManager',
             delete this._onBackgroundMouseUpCallBack;
 
             //
-            this.rubberbandSelection.x2 = mousePos.mX;
-            this.rubberbandSelection.y2 = mousePos.mY;
+            this._rubberbandSelection.x2 = mousePos.mX;
+            this._rubberbandSelection.y2 = mousePos.mY;
 
             this._drawSelectionRubberBand();
 
-            params = {"event": event,
-                "x": Math.min(this.rubberbandSelection.x, this.rubberbandSelection.x2),
-                "x2": Math.max(this.rubberbandSelection.x, this.rubberbandSelection.x2),
-                "y": Math.min(this.rubberbandSelection.y, this.rubberbandSelection.y2),
-                "y2": Math.max(this.rubberbandSelection.y, this.rubberbandSelection.y2)};
+            params = {"addToExistingSelection": this._rubberbandSelection.addToExistingSelection,
+                "x": Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                "x2": Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+                "y": Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
+                "y2": Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2)};
 
             this._selectItemsByRubberBand(params);
 
@@ -174,18 +187,18 @@ define(['logManager',
             this.$rubberBand.remove();
             this.$rubberBand = null;
 
-            delete this.rubberbandSelection;
+            delete this._rubberbandSelection;
 
-            this.canvas.endMode(this.canvas.OPERATING_MODES.RUBBERBAND_SELECTION);
+            this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.RUBBERBAND_SELECTION);
         }
     };
 
     SelectionManager.prototype._drawSelectionRubberBand = function () {
         var minEdgeLength = 2,
-            x = Math.min(this.rubberbandSelection.x, this.rubberbandSelection.x2),
-            x2 = Math.max(this.rubberbandSelection.x, this.rubberbandSelection.x2),
-            y = Math.min(this.rubberbandSelection.y, this.rubberbandSelection.y2),
-            y2 = Math.max(this.rubberbandSelection.y, this.rubberbandSelection.y2);
+            x = Math.min(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+            x2 = Math.max(this._rubberbandSelection.x, this._rubberbandSelection.x2),
+            y = Math.min(this._rubberbandSelection.y, this._rubberbandSelection.y2),
+            y2 = Math.max(this._rubberbandSelection.y, this._rubberbandSelection.y2);
 
         if (x2 - x < minEdgeLength || y2 - y < minEdgeLength) {
             this.$rubberBand.hide();
@@ -207,7 +220,7 @@ define(['logManager',
                 "y2": params.y2 },
             itemsInSelection = [],
             selectionContainsBBox,
-            items = this.canvas.items,
+            items = this._diagramDesigner.items,
             minRubberBandSize = 10;
 
         if (rbBBox.x2 - rbBBox.x < minRubberBandSize ||
@@ -249,28 +262,22 @@ define(['logManager',
             }
         }
 
-        if (itemsInSelection.length > 0) {
-            this.setSelection(itemsInSelection, params.event);
-        } else {
-            this.onSelectionChanged([]);
-        }
+        this._setSelection(itemsInSelection, params.addToExistingSelection);
     };
 
     /*********************** END OF - RUBBERBAND SELECTION *************************************/
 
-    SelectionManager.prototype.clear = function () {
-        this._clearSelection();
-    };
 
+    /*********************** CLEAR SELECTION *********************************/
     SelectionManager.prototype._clearSelection = function () {
-        var i = this.selectedItemIdList.length,
+        var i = this._selectedElements.length,
             itemId,
-            items = this.canvas.items,
+            items = this._diagramDesigner.items,
             item,
             changed = false;
 
         while (i--) {
-            itemId = this.selectedItemIdList[i];
+            itemId = this._selectedElements[i];
             item = items[itemId];
 
             if (item) {
@@ -282,129 +289,114 @@ define(['logManager',
             changed = true;
         }
 
-        this.selectedItemIdList = [];
+        this._selectedElements = [];
 
         this.hideSelectionOutline();
 
         if (changed) {
-            this.onSelectionChanged(this.selectedItemIdList);
+            this.onSelectionChanged(this._selectedElements);
         }
     };
+    /*********************** END OF --- CLEAR SELECTION ****************************/
 
-    SelectionManager.prototype.setSelection = function (idList, event) {
+
+    /*********************** SET SELECTION *********************************/
+    SelectionManager.prototype._setSelection = function (idList, addToExistingSelection) {
         var i,
-            multiSelectionModifier = event ? event.ctrlKey || event.metaKey : false,
             len = idList.length,
             item,
-            items = this.canvas.items,
+            items = this._diagramDesigner.items,
             itemId,
             changed = false;
 
-        this.logger.debug("setSelection: " + idList + ", multiSelectionModifier: " + multiSelectionModifier);
+        this.logger.debug("setSelection: " + idList + ", addToExistingSelection: " + addToExistingSelection);
 
-        if (this.allowSelection !== true) {
-            this.logger.debug("Selection of items are not allowed...");
-        } else {
-            if (len > 0) {
+        if (len > 0) {
+            //check if the new selection has to be added to the existing selection
+            if (addToExistingSelection === true) {
+                //if not in the selection yet, add IDs to the selection
 
-                //if multiple selection is not allowed for any reason
-                // - clear current selection
-                // - keep the first item from the list since only 1 item can be selected
-                if (this.allowMultiSelection !== true) {
+                //first let the already selected items know that they are participating in a multiple selection from now on
+                i = this._selectedElements.length;
+                while(i--) {
+                    item = items[this._selectedElements[i]];
+
+                    if ($.isFunction(item.onDeselect)) {
+                        item.onDeselect();
+                    }
+
+                    if ($.isFunction(item.onSelect)) {
+                        item.onSelect(true);
+                    }
+                }
+
+                i = idList.length;
+                len = idList.length + this._selectedElements.length;
+
+                while (i--) {
+                    itemId = idList[i];
+
+                    if (this._selectedElements.indexOf(itemId) === -1) {
+                        this._selectedElements.push(itemId);
+
+                        item = items[itemId];
+
+                        if ($.isFunction(item.onSelect)) {
+                            item.onSelect(len > 1);
+                        }
+
+                        changed = true;
+                    }
+                }
+            } else {
+                //the existing selection (if any) has to be cleared out first
+                if (idList.length > 1) {
                     this._clearSelection();
-                    idList.splice(0, len - 1);
+
                     changed = true;
+
+                    i = idList.length;
+                    while(i--) {
+                        itemId = idList[i];
+                        item = items[itemId];
+
+                        this._selectedElements.push(itemId);
+
+                        if ($.isFunction(item.onSelect)) {
+                            item.onSelect(true);
+                        }
+                    }
                 } else {
-                    //by definition multiselection is allowed
-                    //check if user pressed the necessary modifier keys for multiselection
-                    if (multiSelectionModifier === true) {
-                        //if not in the selection yet, add IDs to the selection
+                    itemId = idList[0];
 
-                        //first let the already selected items know that they are participating in a multiple selection from now on
-                        i = this.selectedItemIdList.length;
-                        while(i--) {
-                            item = items[this.selectedItemIdList[i]];
+                    //if not yet in selection
+                    if (this._selectedElements.indexOf(itemId) === -1) {
+                        this._clearSelection();
 
-                            if ($.isFunction(item.onDeselect)) {
-                                item.onDeselect();
-                            }
+                        this._selectedElements.push(itemId);
 
-                            if ($.isFunction(item.onSelect)) {
-                                item.onSelect(true);
-                            }
+                        item = items[itemId];
+
+                        if ($.isFunction(item.onSelect)) {
+                            item.onSelect(false);
                         }
 
-                        i = idList.length;
-                        len = idList.length + this.selectedItemIdList.length;
-
-                        while (i--) {
-                            itemId = idList[i];
-
-                            if (this.selectedItemIdList.indexOf(itemId) === -1) {
-                                this.selectedItemIdList.push(itemId);
-
-                                item = items[itemId];
-
-                                if ($.isFunction(item.onSelect)) {
-                                    item.onSelect(len > 1);
-                                }
-
-                                if (idList.length === 1) {
-                                    this._lastSelected = idList[0];
-                                }
-
-                                changed = true;
-                            }
-                        }
-                    } else {
-                        //multiselection modifier key is not pressed
-                        if (idList.length > 1) {
-                            this._clearSelection();
-
-                            i = idList.length;
-                            while(i--) {
-                                itemId = idList[i];
-                                item = items[itemId];
-
-                                this.selectedItemIdList.push(itemId);
-
-                                if ($.isFunction(item.onSelect)) {
-                                    item.onSelect(true);
-                                }
-
-                                changed = true;
-                            }
-                        } else {
-                            itemId = idList[0];
-
-                            //if not yet in selection
-                            if (this.selectedItemIdList.indexOf(itemId) === -1) {
-                                this._clearSelection();
-
-                                this.selectedItemIdList.push(itemId);
-
-                                item = items[itemId];
-
-                                if ($.isFunction(item.onSelect)) {
-                                    item.onSelect(false);
-                                }
-
-                                changed = true;
-                            }
-                        }
+                        changed = true;
                     }
                 }
             }
         }
 
-        this.logger.debug("selected items: " + this.selectedItemIdList);
+
+        this.logger.debug("selected elements: " + this._selectedElements);
 
         this.showSelectionOutline();
 
         if (changed) {
-            this.onSelectionChanged(this.selectedItemIdList);
+            this.onSelectionChanged(this._selectedElements);
         }
     };
+    /*********************** END OF --- SET SELECTION *********************************/
 
     SelectionManager.prototype.componentsDeleted = function (idList) {
         var i = idList.length,
@@ -415,22 +407,23 @@ define(['logManager',
         //items are already deleted, we just need to remove them from the selectedIdList (if there)
         while (i--) {
             id = idList[i];
-            idx = this.selectedItemIdList.indexOf(id);
+            idx = this._selectedElements.indexOf(id);
             if (idx !== -1) {
-                this.selectedItemIdList.splice(idx, 1);
+                this._selectedElements.splice(idx, 1);
                 changed = true;
             }
         }
 
         if (changed) {
-            this.onSelectionChanged(this.selectedItemIdList);
+            this.onSelectionChanged(this._selectedElements);
         }
     };
 
+    /*********************** SHOW SELECTION OUTLINE *********************************/
     SelectionManager.prototype.showSelectionOutline = function () {
         var bBox = this._getSelectionBoundingBox(),
-            cW = this.canvas._actualSize.w,
-            cH = this.canvas._actualSize.h;
+            cW = this._diagramDesigner._actualSize.w,
+            cH = this._diagramDesigner._actualSize.h;
 
         if (bBox && bBox.hasOwnProperty("x")) {
 
@@ -463,54 +456,62 @@ define(['logManager',
                 bBox.w = bBox.x2 - bBox.x;
             }
 
-            if (this.canvas.skinParts.$selectionOutline) {
-                this.canvas.skinParts.$selectionOutline.empty();
+            if (this._diagramDesigner.skinParts.$selectionOutline) {
+                this._diagramDesigner.skinParts.$selectionOutline.empty();
             } else {
-                this.canvas.skinParts.$selectionOutline = $('<div/>', {
+                this._diagramDesigner.skinParts.$selectionOutline = $('<div/>', {
                     "class" : "selection-outline"
                 });
 
-                this.canvas.skinParts.$itemsContainer.append(this.canvas.skinParts.$selectionOutline);
+                this._diagramDesigner.skinParts.$itemsContainer.append(this._diagramDesigner.skinParts.$selectionOutline);
             }
 
-            this.canvas.skinParts.$selectionOutline.css({ "left": bBox.x,
+            this._diagramDesigner.skinParts.$selectionOutline.css({ "left": bBox.x,
                 "top": bBox.y,
                 "width": bBox.w,
                 "height": bBox.h });
 
             //in non-readonly mode show action options on selection outline
-            if (this.canvas.mode !== this.canvas.OPERATING_MODES.READ_ONLY) {
+            if (this._diagramDesigner.mode !== this._diagramDesigner.OPERATING_MODES.READ_ONLY) {
                 this._renderSelectionActions();
             }
         } else {
             this.hideSelectionOutline();
         }
     };
+    /*********************** END OF --- SHOW SELECTION OUTLINE *********************************/
 
+
+    /*********************** HIDE SELECTION OUTLINE *********************************/
     SelectionManager.prototype.hideSelectionOutline = function () {
-        if (this.canvas.skinParts.$selectionOutline) {
-            this.canvas.skinParts.$selectionOutline.empty();
-            this.canvas.skinParts.$selectionOutline.remove();
-            this.canvas.skinParts.$selectionOutline = null;
+        if (this._diagramDesigner.skinParts.$selectionOutline) {
+            this._diagramDesigner.skinParts.$selectionOutline.empty();
+            this._diagramDesigner.skinParts.$selectionOutline.remove();
+            this._diagramDesigner.skinParts.$selectionOutline = null;
         }
     };
+    /*********************** END OF --- HIDE SELECTION OUTLINE *********************************/
 
+
+    /************* GET SELECTION OUTLINE COORDINATES AND DIMENSIONS ************************/
     SelectionManager.prototype._getSelectionBoundingBox = function () {
-        var i = this.selectedItemIdList.length,
+        var i = this._selectedElements.length,
             bBox,
             id,
             childBBox,
-            items = this.canvas.items;
+            items = this._diagramDesigner.items;
 
         while (i--) {
-            id = this.selectedItemIdList[i];
+            id = this._selectedElements[i];
 
             if (items[id]) {
 
-                bBox = bBox || { "x": this.canvas._actualSize.w,
-                    "y": this.canvas._actualSize.h,
-                    "x2": 0,
-                    "y2": 0};
+                if (!bBox) {
+                    bBox = { "x": this._diagramDesigner._actualSize.w,
+                        "y": this._diagramDesigner._actualSize.h,
+                        "x2": 0,
+                        "y2": 0};
+                }
 
                 childBBox = items[id].getBoundingBox();
 
@@ -531,16 +532,18 @@ define(['logManager',
 
         return bBox;
     };
+    /************* END OF --- GET SELECTION OUTLINE COORDINATES AND DIMENSIONS ************************/
 
+    /************* RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn;
 
         deleteBtn = $('<div/>', {
             "class" : "s-btn delete",
-            "data-id" : "delete"
+            "command" : "delete"
         });
-        this.canvas.skinParts.$selectionOutline.append(deleteBtn);
+        this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
         deleteBtn.html('<i class="icon-remove"></i>');
 
         /*this._skinParts.copySelection = $('<div/>', {
@@ -548,37 +551,21 @@ define(['logManager',
         });
         this._skinParts.selectionOutline.append(this._skinParts.copySelection);*/
 
-        this.canvas.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
+        this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
 
-        this.canvas.skinParts.$selectionOutline.on("mousedown", function (event) {
+        this._diagramDesigner.skinParts.$selectionOutline.on("mousedown", function (event) {
             event.stopPropagation();
         }).on("click", ".s-btn", function (event) {
-            var dataId = $(this).attr("data-id");
-            self.logger.debug("Selection button clicked with data-id: '" + dataId + "'");
+            var command = $(this).attr("command");
+            self.logger.debug("Selection button clicked with command: '" + command + "'");
 
-            switch (dataId) {
-                case "delete":
-                    self.onSelectionDeleteClicked(self.selectedItemIdList);
-                    break;
-                default:
-            }
+            self.onSelectionCommandClicked(command, self._selectedElements);
 
             event.stopPropagation();
             event.preventDefault();
         });
     };
-
-    SelectionManager.prototype.onSelectionDeleteClicked = function (selectedIds) {
-        //NOTE: overridden in DesignerCanvas
-    };
-
-    SelectionManager.prototype.onSelectionChanged = function (selectedIDs) {
-        //NOTE: overridden in DesignerCanvas
-    };
-
-    SelectionManager.prototype.readOnlyMode = function (readOnly) {
-        this.showSelectionOutline();
-    };
+    /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
 
     return SelectionManager;
 });
