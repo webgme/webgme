@@ -10,7 +10,6 @@ define([], function () {
     DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES = {
         READ_ONLY: 0,
         NORMAL: 1,
-        RUBBERBAND_SELECTION: 2,
         MOVE_ITEMS: 3,
         COPY_ITEMS: 4,
         CREATE_CONNECTION: 5,

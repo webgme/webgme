@@ -99,37 +99,32 @@ define(['logManager',
         this._diagramDesigner._registerKeyboardListener();
 
         if (leftButton === true) {
+            //start drawing selection rubber-band
+            this._rubberbandSelection = { "x": mousePos.mX,
+                "y": mousePos.mY,
+                "x2": mousePos.mX,
+                "y2": mousePos.mY,
+                "addToExistingSelection": this._isMultiSelectionModifierKeyPressed(event)};
 
-            if (this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.NORMAL) {
-                this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.RUBBERBAND_SELECTION);
-
-                //start drawing selection rubber-band
-                this._rubberbandSelection = { "x": mousePos.mX,
-                    "y": mousePos.mY,
-                    "x2": mousePos.mX,
-                    "y2": mousePos.mY,
-                    "addToExistingSelection": this._isMultiSelectionModifierKeyPressed(event)};
-
-                if (this._rubberbandSelection.addToExistingSelection !== true) {
-                    this._clearSelection();
-                }
-
-                this.$rubberBand = this._createRubberBand();
-
-                this.$el.append(this.$rubberBand);
-
-                //hook up MouseMove and MouseUp
-                this._onBackgroundMouseMoveCallBack = function (event) {
-                    self._onBackgroundMouseMove(event);
-                };
-
-                this._onBackgroundMouseUpCallBack = function (event) {
-                    self._onBackgroundMouseUp(event);
-                };
-
-                $(document).on('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
-                $(document).on('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
+            if (this._rubberbandSelection.addToExistingSelection !== true) {
+                this._clearSelection();
             }
+
+            this.$rubberBand = this._createRubberBand();
+
+            this.$el.append(this.$rubberBand);
+
+            //hook up MouseMove and MouseUp
+            this._onBackgroundMouseMoveCallBack = function (event) {
+                self._onBackgroundMouseMove(event);
+            };
+
+            this._onBackgroundMouseUpCallBack = function (event) {
+                self._onBackgroundMouseUp(event);
+            };
+
+            $(document).on('mousemove.SelectionManager', this._onBackgroundMouseMoveCallBack);
+            $(document).on('mouseup.SelectionManager', this._onBackgroundMouseUpCallBack);
 
             event.stopPropagation();
         }
@@ -188,8 +183,6 @@ define(['logManager',
             this.$rubberBand = null;
 
             delete this._rubberbandSelection;
-
-            this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.RUBBERBAND_SELECTION);
         }
     };
 
@@ -471,10 +464,7 @@ define(['logManager',
                 "width": bBox.w,
                 "height": bBox.h });
 
-            //in non-readonly mode show action options on selection outline
-            if (this._diagramDesigner.mode !== this._diagramDesigner.OPERATING_MODES.READ_ONLY) {
-                this._renderSelectionActions();
-            }
+            this._renderSelectionActions();
         } else {
             this.hideSelectionOutline();
         }
@@ -539,20 +529,16 @@ define(['logManager',
         var self = this,
             deleteBtn;
 
-        deleteBtn = $('<div/>', {
-            "class" : "s-btn delete",
-            "command" : "delete"
-        });
-        this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
-        deleteBtn.html('<i class="icon-remove"></i>');
-
-        /*this._skinParts.copySelection = $('<div/>', {
-            "class" : "copySelectionBtn selectionBtn"
-        });
-        this._skinParts.selectionOutline.append(this._skinParts.copySelection);*/
+        if (this._diagramDesigner.getIsReadOnlyMode() !== true) {
+            deleteBtn = $('<div/>', {
+                "class" : "s-btn delete",
+                "command" : "delete"
+            });
+            this._diagramDesigner.skinParts.$selectionOutline.append(deleteBtn);
+            deleteBtn.html('<i class="icon-remove"></i>');
+        }
 
         this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
-
         this._diagramDesigner.skinParts.$selectionOutline.on("mousedown", function (event) {
             event.stopPropagation();
         }).on("click", ".s-btn", function (event) {
