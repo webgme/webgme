@@ -54,6 +54,10 @@ define(['logManager',
         this.$el.on('mousedown.SelectionManager', function (event) {
             self._onBackgroundMouseDown(event);
         });
+
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENTS_DELETE, function (__diagramDesigner, idList) {
+            self._onComponentsDelete(idList);
+        });
     };
 
     SelectionManager.prototype.getSelectedElements = function () {
@@ -391,7 +395,8 @@ define(['logManager',
     };
     /*********************** END OF --- SET SELECTION *********************************/
 
-    SelectionManager.prototype.componentsDeleted = function (idList) {
+    /*********************** COMPONENT DELETE HANDLER *******************/
+    SelectionManager.prototype._onComponentsDelete = function (idList) {
         var i = idList.length,
             idx,
             id,
@@ -411,6 +416,7 @@ define(['logManager',
             this.onSelectionChanged(this._selectedElements);
         }
     };
+    /*********************** COMPONENT DELETE HANDLER *******************/
 
     /*********************** SHOW SELECTION OUTLINE *********************************/
     SelectionManager.prototype.showSelectionOutline = function () {

@@ -445,7 +445,7 @@ define(['logManager',
         }
 
         //let the selection manager know about the deletion
-        this.selectionManager.componentsDeleted([componentId]);
+        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, [componentId]);
 
         //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -604,7 +604,7 @@ define(['logManager',
         this._resizeItemContainer();
 
         //let the selection manager know about deleted items and connections
-        this.selectionManager.componentsDeleted(this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
+        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];
