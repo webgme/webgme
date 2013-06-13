@@ -49,6 +49,12 @@ define([], function () {
         this._zoomSlider.find('.ui-slider-handle').append(this._zoomLabel);
 
         this.setZoom(this._zoomRatio);
+
+        this._zoomSlider.find('.ui-slider-handle').on('dblclick', function (event) {
+            self.setZoom(1);
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
     DiagramDesignerWidgetZoom.prototype._setZoomLevel = function (val) {
