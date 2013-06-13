@@ -8,7 +8,6 @@ define(['logManager',
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
-        DESIGNER_CONNECTION_CLASS = "designer-connection", //TODO: need a common constants file
         PATH_SHADOW_ID_PREFIX = "p_",
         SELECTION_OUTLINE_MARGIN = 15,
         SELECTION_OUTLINE_MIN_WIDTH = 100;
@@ -44,7 +43,7 @@ define(['logManager',
             event.preventDefault();
         });
 
-        $el.on('mousedown.SelectionManagerConnection', 'path[class="' + DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
+        $el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
             var itemId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
             self.canvas.onConnectionMouseDown(event, itemId);
             event.stopPropagation();

@@ -1,10 +1,11 @@
 "use strict";
 
 define(['logManager',
-    'raphaeljs'], function (logManager) {
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'raphaeljs'], function (logManager,
+                            DiagramDesignerWidgetConstants) {
 
     var ConnectionComponent,
-        DESIGNER_CONNECTION_CLASS = "designer-connection",
         PATH_SHADOW_ID_PREFIX = "p_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DRAGGABLE_END_CLASS = "connectionDraggableEnd",
@@ -25,8 +26,6 @@ define(['logManager',
         this.logger.debug("Created");
 
     };
-
-    ConnectionComponent.prototype._DOMBase = $('<div/>').attr({ "class": "connection" });
 
     ConnectionComponent.prototype._initialize = function (objDescriptor) {
         /*MODELEDITORCONNECTION CONSTANTS***/
@@ -249,7 +248,7 @@ define(['logManager',
                     /*CREATE PATH*/
                     this.skinParts.path = this.paper.path(pathDef);
                     $(this.skinParts.path.node).attr({"id": this.id,
-                                                      "class": DESIGNER_CONNECTION_CLASS});
+                                                      "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
                     this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                         "arrow-end": this.designerAttributes.arrowEnd,
@@ -572,7 +571,7 @@ define(['logManager',
             this._updatePathShadow(segPoints);
 
             $(this.skinParts.pathShadow.node).attr({"id": PATH_SHADOW_ID_PREFIX + this.id,
-                "class": DESIGNER_CONNECTION_CLASS});
+                "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
             this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
                 "stroke-width": this.designerAttributes.shadowWidth,

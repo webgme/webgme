@@ -14,6 +14,7 @@ define([], function () {
         /*
          * CLASS DEFINITIONS
          */
-        DESIGNER_ITEM_CLASS : "designer-item"
+        DESIGNER_ITEM_CLASS : "designer-item",
+        DESIGNER_CONNECTION_CLASS : "designer-connection"
     };
 });
