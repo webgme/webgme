@@ -34,31 +34,47 @@ define(['logManager',
                                                       DiagramDesignerWidgetKeyboard) {
 
     var DiagramDesignerWidget,
-        DEFAULT_GRID_SIZE = 10,
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2;
+
+    var defaultParams = {'loggerName': 'DiagramDesignerWidget',
+                         'gridSize': 10,
+                         'droppable': true,
+                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+                         'zoomUIControls': true
+    };
 
     DiagramDesignerWidget = function (container, params) {
         var self = this;
 
-        this.logger = logManager.create(params.loggerName || "DiagramDesignerWidget");
+        //merge dfault values with the given parameters
+        params = _.extend(defaultParams, params);
 
+        //create logger instance with specified name
+        this.logger = logManager.create(params.loggerName);
+
+        //save DOM container
         this.$el = container;
-        this.toolBar = params.toolBar;
 
         //transform this instance into EventDispatcher
         this._addEventDispatcherExtensions();
 
         //Get DiagramDesignerWidget parameters from options
-        //Grid size for item positioning granularity
-        this.gridSize = params.gridSize || DEFAULT_GRID_SIZE;
-        this._droppable = params.droppable !== false ? true :false;
+
+        //grid size for item positioning granularity
+        this.gridSize = params.gridSize;
+
+        //if the widget has to support drop feature at all
+        this._droppable = params.droppable;
+
+        //toolbar instance
+        this.toolBar = params.toolBar;
+
+        //END OF --- Get DiagramDesignerWidget parameters from options
 
         //define properties of its own
-        this._defaultSize = { "w": 10, "h": 10 };
         this._actualSize = { "w": 0, "h": 0 };
         this._containerSize = { "w": 0, "h": 0 };
         this._itemIDCounter = 0;
@@ -69,29 +85,31 @@ define(['logManager',
 
         //set default mode to NORMAL
         this.mode = this.OPERATING_MODES.NORMAL;
+
+        //currently not updating anything
         this._updating = false;
 
+        //initialize all the local arrays and maps for the widget
         this._initializeCollections();
 
-        //define zoom value
-        this._zoom = 1.0;
-        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
+        //zoom ratio variable
+        this._zoomRatio = 1.0;
 
         //initialize UI
         this._initializeUI();
 
         //init zoom related UI and handlers
-        this._initZoom();
+        this._initZoom(params);
 
         //initiate Selection Manager (if needed)
-        this.selectionManager = params.selectionManager || new SelectionManager({"canvas": this});
+        this.selectionManager = params.selectionManager || new SelectionManager({"diagramDesigner": this});
         this.selectionManager.initialize(this.skinParts.$itemsContainer);
-        this.selectionManager.onSelectionDeleteClicked = function (selectedIds) {
-            self._onSelectionDeleteClicked(selectedIds);
+        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
+            self._onSelectionCommandClicked(command, selectedIds);
         };
 
         this.selectionManager.onSelectionChanged = function (selectedIds) {
-            self._onSelectionChanged(selectedIds);
+            self.onSelectionChanged(selectedIds);
         };
 
         //initiate Drag Manager (if needed)
@@ -135,9 +153,13 @@ define(['logManager',
         this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
 
+        /*subcomponent accounting*/
         this._itemSubcomponentsMap = {};
     };
 
+    /*
+     * Generated a new ID for the box/line (internal use only)
+     */
     DiagramDesignerWidget.prototype._getGuid = function (prefix) {
         var nextID = (prefix || "") + this._itemIDCounter + "";
 
@@ -182,6 +204,7 @@ define(['logManager',
         var i;
         this.selectionManager.readOnlyMode(readOnly);
         this.connectionDrawingManager.readOnlyMode(readOnly);
+        this.dragManager.readOnlyMode(readOnly);
 
         i = this.itemIds.length;
         while (i--) {
@@ -338,8 +361,8 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype._resizeItemContainer = function () {
-        var zoomedWidth = this._containerSize.w / this._zoom,
-            zoomedHeight = this._containerSize.h / this._zoom;
+        var zoomedWidth = this._containerSize.w / this._zoomRatio,
+            zoomedHeight = this._containerSize.h / this._zoomRatio;
 
         this.logger.debug('MinZoomedSize: ' + zoomedWidth + ', ' + zoomedHeight);
 
@@ -368,8 +391,8 @@ define(['logManager',
             pX = e.pageX - childrenContainerOffset.left + childrenContainerScroll.left,
             pY = e.pageY - childrenContainerOffset.top + childrenContainerScroll.top;
 
-        pX /= this._zoom;
-        pY /= this._zoom;
+        pX /= this._zoomRatio;
+        pY /= this._zoomRatio;
 
         return { "mX": pX > 0 ? pX : 0,
             "mY": pY > 0 ? pY : 0 };
@@ -377,8 +400,8 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.getAdjustedOffset = function (offset) {
         var childrenContainerOffset = this._offset,
-            left = (offset.left - childrenContainerOffset.left) / this._zoom + childrenContainerOffset.left,
-            top = (offset.top - childrenContainerOffset.top) / this._zoom + childrenContainerOffset.top;
+            left = (offset.left - childrenContainerOffset.left) / this._zoomRatio + childrenContainerOffset.left,
+            top = (offset.top - childrenContainerOffset.top) / this._zoomRatio + childrenContainerOffset.top;
 
         return { "left": left,
             "top": top };
@@ -422,7 +445,7 @@ define(['logManager',
         }
 
         //let the selection manager know about the deletion
-        this.selectionManager.componentsDeleted([componentId]);
+        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, [componentId]);
 
         //finally delete the component
         if (this.itemIds.indexOf(componentId) !== -1) {
@@ -581,7 +604,7 @@ define(['logManager',
         this._resizeItemContainer();
 
         //let the selection manager know about deleted items and connections
-        this.selectionManager.componentsDeleted(this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
+        this.dispatchEvent(this.events.ON_COMPONENTS_DELETE, this._deletedDesignerItemIDs.concat(this._deletedConnectionIDs));
 
         /* clear collections */
         this._insertedDesignerItemIDs = [];
@@ -656,22 +679,10 @@ define(['logManager',
         }
     };
 
-    DiagramDesignerWidget.prototype.onItemMouseDown = function (event, itemId) {
-        this.logger.debug("onItemMouseDown: " + itemId);
+    DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
+        this.logger.debug("onElementMouseDown: " + elementId);
 
         this._registerKeyboardListener();
-
-        //mousedown initiates a component selection
-        this.selectionManager.setSelection([itemId], event);
-    };
-
-    DiagramDesignerWidget.prototype.onConnectionMouseDown = function (event, connId) {
-        this.logger.debug("onConnectionMouseDown: " + connId);
-
-        this._registerKeyboardListener();
-
-        //mousedown initiates a connection selection
-        this.selectionManager.setSelection([connId], event);
     };
 
     /************************** DRAG ITEM ***************************/
@@ -730,8 +741,12 @@ define(['logManager',
 
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
-    DiagramDesignerWidget.prototype._onSelectionDeleteClicked = function (selectedIds) {
-        this.onSelectionDelete(selectedIds);
+    DiagramDesignerWidget.prototype._onSelectionCommandClicked = function (command, selectedIds) {
+        switch(command) {
+            case 'delete':
+                this.onSelectionDelete(selectedIds);
+                break;
+        }
     };
 
     DiagramDesignerWidget.prototype.onSelectionDelete = function (selectedIds) {
@@ -741,10 +756,6 @@ define(['logManager',
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
     /************************** SELECTION CHANGED HANDLER ****************************/
-
-    DiagramDesignerWidget.prototype._onSelectionChanged = function (selectedIds) {
-        this.onSelectionChanged(selectedIds);
-    };
 
     DiagramDesignerWidget.prototype.onSelectionChanged = function (selectedIds) {
         this.logger.debug("DiagramDesignerWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
@@ -980,7 +991,7 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.selectAll = function () {
         this.selectionManager.clear();
-        this.selectionManager.setSelection(this.itemIds.concat(this.connectionIds), undefined);
+        this.selectionManager.setSelection(this.itemIds.concat(this.connectionIds), false);
     };
 
     DiagramDesignerWidget.prototype.selectNone = function () {
@@ -988,20 +999,20 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.selectInvert = function () {
-        var invertList = _.difference(this.itemIds.concat(this.connectionIds), this.selectionManager.selectedItemIdList);
+        var invertList = _.difference(this.itemIds.concat(this.connectionIds), this.selectionManager.getSelectedElements());
 
         this.selectionManager.clear();
-        this.selectionManager.setSelection(invertList, undefined);
+        this.selectionManager.setSelection(invertList, false);
     };
 
     DiagramDesignerWidget.prototype.selectItems = function () {
         this.selectionManager.clear();
-        this.selectionManager.setSelection(this.itemIds, undefined);
+        this.selectionManager.setSelection(this.itemIds, false);
     };
 
     DiagramDesignerWidget.prototype.selectConnections = function () {
         this.selectionManager.clear();
-        this.selectionManager.setSelection(this.connectionIds, undefined);
+        this.selectionManager.setSelection(this.connectionIds, false);
     };
 
     /*************** END OF --- SELECTION API ******************************************/

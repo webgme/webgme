@@ -162,3 +162,8 @@ input.input-mini {
     font-size: 12px;
 }
 
+/*** DROPDOWN-MENU extension **/
+ul.dropdown-menu {
+    max-height: 600px;
+    overflow: auto;
+}

@@ -33,6 +33,8 @@
     .panel-base-wh .panel-header .panel-header-toolbar .iCheckBox {
       top: 5px;
       margin-left: 10px; }
+    .panel-base-wh .panel-header .panel-header-toolbar ul.dropdown-menu .iCheckBox {
+      top: 1px; }
   .panel-base-wh .panel-body {
     position: relative;
     overflow: auto;

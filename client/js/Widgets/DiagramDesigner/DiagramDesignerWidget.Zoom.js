@@ -5,10 +5,10 @@ define([], function () {
     var DiagramDesignerWidgetZoom;
 
     DiagramDesignerWidgetZoom = function () {
-
     };
 
-    DiagramDesignerWidgetZoom.prototype._initZoom = function () {
+    DiagramDesignerWidgetZoom.prototype._initZoom = function (params) {
+        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
         if (this._zoomValues.indexOf(1) === -1) {
             this._zoomValues.push(1);
         }
@@ -17,7 +17,12 @@ define([], function () {
         this._zoomLevelMax = this._zoomValues.length - 1;
         this._zoomLevel = this._zoomValues.indexOf(1);
 
-        this._initZoomUIControl();
+        if (params.zoomUIControls === true) {
+            this._initZoomUIControl();
+        }
+
+        //add zoom level UI and handlers
+        this._addZoomMouseHandler(this.$el);
     };
 
     DiagramDesignerWidgetZoom.prototype._initZoomUIControl = function () {
@@ -33,7 +38,7 @@ define([], function () {
             max: this._zoomLevelMax,
             value: this._zoomLevel,
             slide: function( event, ui ) {
-                self.setZoomLevel(ui.value);
+                self._setZoomLevel(ui.value);
             }
         });
 
@@ -43,41 +48,60 @@ define([], function () {
 
         this._zoomSlider.find('.ui-slider-handle').append(this._zoomLabel);
 
-        this.zoom(this._zoom);
+        this.setZoom(this._zoomRatio);
 
-        //add zoom level UI and handlers
-        this._addZoomMouseHandler(this.$el);
+        this._zoomSlider.find('.ui-slider-handle').on('dblclick', function (event) {
+            self.setZoom(1);
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
-    DiagramDesignerWidgetZoom.prototype.setZoomLevel = function (val) {
+    DiagramDesignerWidgetZoom.prototype._setZoomLevel = function (val) {
         if (val >= this._zoomLevelMin && val <= this._zoomLevelMax) {
             if (this._zoomLevel !== val) {
                 this._zoomLevel = val;
-
-                this.zoom(this._zoomValues[this._zoomLevel]);
-
-                this._zoomSlider.slider( "option", "value", this._zoomLevel );
+                this.setZoom(this._zoomValues[this._zoomLevel]);
             }
         }
     };
 
-    DiagramDesignerWidgetZoom.prototype.zoom = function (val) {
-        this._zoom = val;
+    DiagramDesignerWidgetZoom.prototype.setZoom = function (val) {
+        this._zoomRatio = val;
 
         this.skinParts.$itemsContainer.css({'transform-origin': '0 0',
-            'transform': 'scale('+ this._zoom + ', ' + this._zoom + ')'});
+            'transform': 'scale('+ this._zoomRatio + ', ' + this._zoomRatio + ')'});
 
-        this._zoomLabel.text( this._zoom + "x" );
+        if (this._zoomLabel) {
+            this._zoomLabel.text( this._zoomRatio + "x" );
+        }
+
+        if (this._zoomSlider) {
+            this._zoomLevel = this._zoomValues.indexOf(this._zoomRatio);
+            if (this._zoomLevel === -1) {
+                //get the value which is closest to the selected zoomRatio
+                this._zoomLevel = 0;
+                while (this._zoomLevel <= this._zoomLevelMax && this._zoomValues[this._zoomLevel] <= this._zoomRatio) {
+                    this._zoomLevel += 1;
+                }
+            }
+
+            this._zoomSlider.slider( "option", "value", this._zoomLevel );
+        }
 
         this._resizeItemContainer();
     };
 
+    DiagramDesignerWidgetZoom.prototype.getZoom = function () {
+        return this._zoomRatio;
+    };
+
     DiagramDesignerWidgetZoom.prototype.zoomIn = function () {
-        this.setZoomLevel(this._zoomLevel + 1);
+        this._setZoomLevel(this._zoomLevel + 1);
     };
 
     DiagramDesignerWidgetZoom.prototype.zoomOut = function () {
-        this.setZoomLevel(this._zoomLevel - 1);
+        this._setZoomLevel(this._zoomLevel - 1);
     };
 
     DiagramDesignerWidgetZoom.prototype._addZoomMouseHandler = function (el) {

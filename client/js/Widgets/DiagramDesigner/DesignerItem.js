@@ -1,9 +1,10 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+                                                                             DiagramDesignerWidgetConstants) {
 
     var DesignerItem,
-        DESIGNER_ITEM_CLASS = "designer-item",
         EVENT_POSTFIX = "DesignerItem",
         HOVER_CLASS = "hover",
         SELECTABLE_CLASS = "selectable";
@@ -57,7 +58,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DESIGNER_ITEM_CLASS });
+    DesignerItem.prototype.$_DOMBase = $('<div/>').attr({ "class": DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS });
 
     DesignerItem.prototype._initializeUI = function () {
         //generate skin DOM and cache it
@@ -80,11 +81,11 @@ define(['logManager'], function (logManager) {
         this._events = {"mouseenter": { "fn": "onMouseEnter",
                                         "stopPropagation": true,
                                         "preventDefault": true,
-                                        "enabledInReadOnlyMode": false},
+                                        "enabledInReadOnlyMode": true},
                         "mouseleave": { "fn": "onMouseLeave",
                                         "stopPropagation": true,
                                         "preventDefault": true,
-                                        "enabledInReadOnlyMode": false},
+                                        "enabledInReadOnlyMode": true},
                         "dblclick": { "fn": "onDoubleClick",
                                         "stopPropagation": true,
                                         "preventDefault": true,
@@ -195,9 +196,8 @@ define(['logManager'], function (logManager) {
 
         //add few classes by default
         classes.push(HOVER_CLASS);
-        if (this.canvas.selectionManager.allowSelection === true) {
-            classes.push(SELECTABLE_CLASS);
-        }
+        classes.push(SELECTABLE_CLASS);
+
         this.$el.addClass(classes.join(' '));
 
         //in edit mode and when not participating in a multiple selection,

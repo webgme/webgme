@@ -1,7 +1,7 @@
 "use strict";
 
 define(['js/Widgets/DiagramDesigner/Connection',
-        'js/Widgets/DiagramDesigner/Constants'], function (Connection,
+        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Connection,
                                                    DiagramDesignerWidgetConstants) {
 
     var DiagramDesignerWidget;

@@ -706,7 +706,7 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._printNodeData = function () {
-        var idList = this.designerCanvas.selectionManager.selectedItemIdList,
+        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
             len = idList.length,
             node;
 

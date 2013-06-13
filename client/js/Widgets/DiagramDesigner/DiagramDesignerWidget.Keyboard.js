@@ -27,7 +27,7 @@ define([], function () {
 
         switch (eventArgs.combo) {
             case 'del':
-                this.onSelectionDelete(this.selectionManager.selectedItemIdList);
+                this.onSelectionDelete(this.selectionManager.getSelectedElements());
                 ret = false;
                 break;
             case 'ctrl+a':
@@ -67,7 +67,7 @@ define([], function () {
                 ret = false;
                 break;
             case 'ctrl+c':
-                this.onClipboardCopy(this.selectionManager.selectedItemIdList);
+                this.onClipboardCopy(this.selectionManager.getSelectedElements());
                 ret = false;
                 break;
             case 'ctrl+v':
