@@ -60,7 +60,8 @@ if (typeof define !== "function") {
                 console.log("  -mongo [database [host [port]]]\topens a mongo database");
                 console.log("  -proj <project>\t\t\tselects the given project");
                 console.log("  -branch <branch>\t\t\tthe branch to serialize");
-                console.log("  -hash <hash>\t\t\tthe root hash to serialize");
+                console.log("  -hash <hash>\t\t\t\tthe root hash to serialize");
+                console.log("  -commit <hash>\t\t\tthe commit hash to serialize");
                 console.log("  -help\t\t\t\t\tprints out this help message");
                 console.log("");
                 return;
@@ -80,31 +81,54 @@ if (typeof define !== "function") {
             if(project){
                 project = project[0];
             }
+            var commit = COMMON.getParameters('commit');
+            if(commit){
+                commit = commit[0];
+            }
 
             var done = TASYNC.call(COMMON.openDatabase);
             done = TASYNC.call(COMMON.openProject, done);
             var core = TASYNC.call(COMMON.getCore, done);
             if(!hash){
-                hash = TASYNC.call(getRootHash,branch,done);
+                if(branch){
+                    hash = TASYNC.call(getRootHashOfBranch,branch,done);
+                } else if(commit){
+                    hash = TASYNC.call(getRootHashOfCommit,commit,done);
+                } else {
+                    done = TASYNC.call(COMMON.closeProject, done);
+                    done = TASYNC.call(COMMON.closeDatabase, done);
+                    return done;
+                }
             }
-            done = TASYNC.call(serializer, core, hash, xmlfile, project);
+
+            done = TASYNC.call(serializer,core,hash,xmlfile);
+            done = TASYNC.call(function(object){
+                console.log(object);
+                return;
+            },done);
+            //done = TASYNC.call(serializer, core, hash, xmlfile, project);
             done = TASYNC.call(COMMON.closeProject, done);
             done = TASYNC.call(COMMON.closeDatabase, done);
-
             return done;
         }
 
-        function getRootHash (branch){
+        function getRootHashOfBranch (branch){
             var project = COMMON.getProject();
-
-            console.log(branch);
             var commitHash = project.getBranchHash(branch,null);
             var done = TASYNC.call(project.loadObject,commitHash);
             done = TASYNC.call(function(object){
-                console.log(object)
+                console.log('getRootHashOfBranch',branch,object.root);
                 return object.root;
             },done);
             return done;
+        }
+
+        function getRootHashOfCommit (commit){
+            var project = COMMON.getProject();
+            return TASYNC.call(function(object){
+                console.log('getRootHashOfCommit',commit,object.root);
+                return object.root;
+            },TASYNC.call(project.loadObject,commit));
         }
 
     });
@@ -146,80 +170,142 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         isprimary: "isprimary"
     };
     var webOnly = ['position','isPort','isConnection','metameta','author','comment'];
-    function nodeToJsonSync (node){
-        //console.log('node',_core.getPath(node));
-        //inner functions - for shallow children creation and other stuff
-        var initJsonObject = function(gmeNode){
-            var initJ = {};
-            initJ._type = _core.getRegistry(gmeNode,'metameta');
-            initJ._empty = false;
-            initJ._children = [];
-            initJ._attr = {};
+    function initJsonObject(gmeNode){
+        var initJ = {};
+        initJ._type = _core.getRegistry(gmeNode,'metameta');
+        initJ._empty = false;
+        initJ._children = [];
+        initJ._attr = {};
 
 
-            for(var i in registry){
-                var value = _core.getRegistry(gmeNode,i);
-                if(value !== undefined && value !== null){
-                    initJ._attr[registry[i]] = value;
-                }
+        for(var i in registry){
+            var value = _core.getRegistry(gmeNode,i);
+            if(value !== undefined && value !== null){
+                initJ._attr[registry[i]] = value;
             }
+        }
 
-            //now we should add the children to the node
-            //first come the name
-            //then the registry nodes
-            //then the attributes
+        //now we should add the children to the node
+        //first come the name
+        //then the registry nodes
+        //then the attributes
 
-            //name
+        //name
+        initJ._children.push({
+            _type:"name",
+            _empty:false,
+            _string:_core.getAttribute(gmeNode,'name')
+        });
+
+        //comment and author
+        if(initJ._type === 'project'){
             initJ._children.push({
-                _type:"name",
+                _type:'comment',
                 _empty:false,
-                _string:_core.getAttribute(gmeNode,'name')
+                _string:_core.getRegistry(gmeNode,'comment') || ""
             });
+            initJ._children.push({
+                _type:'author',
+                _empty:false,
+                _string:_core.getRegistry(gmeNode,'author') || ""
+            });
+        }
 
-            //comment and author
-            if(initJ._type === 'project'){
+        //regnodes
+        initJ._children = initJ._children.concat(createRegistryObject(gmeNode));
+
+        //attributes
+        var attrNames = _core.getAttributeNames(gmeNode);
+        for(i=0;i<attrNames.length;i++){
+            if(attrNames[i] !== 'name'){
                 initJ._children.push({
-                    _type:'comment',
+                    _type:"attribute",
                     _empty:false,
-                    _string:_core.getRegistry(gmeNode,'comment') || ""
-                });
-                initJ._children.push({
-                    _type:'author',
-                    _empty:false,
-                    _string:_core.getRegistry(gmeNode,'author') || ""
+                    _attr:{
+                        kind:attrNames[i]
+                    },
+                    _children:[
+                        {
+                            _type:"value",
+                            _empty:false,
+                            _string:_core.getAttribute(gmeNode,attrNames[i])
+                        }
+                    ]
                 });
             }
+        }
 
-            //regnodes
-            initJ._children = initJ._children.concat(createRegistryObject(gmeNode));
-
-            //attributes
-            var attrNames = _core.getAttributeNames(gmeNode);
-            for(i=0;i<attrNames.length;i++){
-                if(attrNames[i] !== 'name'){
-                    initJ._children.push({
-                        _type:"attribute",
-                        _empty:false,
-                        _attr:{
-                            kind:attrNames[i]
-                        },
-                        _children:[
-                            {
-                                _type:"value",
-                                _empty:false,
-                                _string:_core.getAttribute(gmeNode,attrNames[i])
-                            }
-                        ]
-                    });
+        return initJ;
+    };
+    function registryToChildrenArray_(registryObj){
+        ASSERT(typeof registryObj === 'object' );
+        var regJSON = [];
+        for(var i in registryObj){
+            regJSON.unshift({
+                _type:"regnode",
+                _empty:false,
+                _attr:{
+                    name:i
+                },
+                _children:[]
+            });
+            if(typeof registryObj[i] !== 'object'){
+                regJSON[0]._children.push({
+                    _type:"value",
+                    _empty:false,
+                    _string:""+registryObj[i]
+                });
+                regJSON[0]._attr.isopaque = 'yes';
+            } else {
+                regJSON[0]._children = registryToChildrenArray(registryObj[i]);
+                regJSON[0]._children.unshift({
+                    _type:"value",
+                    _empty:false,
+                    _string:""
+                });
+            }
+        }
+        return regJSON;
+    }
+    function createRegistryObject_(gmeNode){
+        if(theCore.getPath(gmeNode) === '/-1/-2579/-3126/-3177/-8395/-8408/-9224/-9227/-9842/-9844/-9849/-9851'){
+            console.log('ehune');
+            var names = theCore.getRegistryNames(gmeNode);
+            var values = [];
+            for(var i=0;i<names.length;i++){
+                values.push(theCore.getRegistry(gmeNode,names[i]));
+            }
+            console.log(names,values);
+        }
+        var regNames = _core.getRegistryNames(gmeNode);
+        var regObject = {};
+        for(i=0;i<regNames.length;i++){
+            if((registry[regNames[i]] === undefined || registry[regNames[i]] === null)&& webOnly.indexOf(regNames[i]) === -1){
+                var nameArray = regNames[i].split('/');
+                var tObj = regObject;
+                for(var j=0;j<nameArray.length;j++){
+                    if(tObj[nameArray[j]]){
+                        tObj = tObj[nameArray[j]];
+                    } else {
+                        if(j === nameArray.length-1){
+                            tObj[nameArray[j]] = _core.getRegistry(gmeNode,regNames[i]);
+                        } else {
+                            tObj[nameArray[j]] = {};
+                            tObj = tObj[nameArray[j]];
+                        }
+                    }
                 }
             }
+        }
 
-            return initJ;
-        };
-        var registryToChildrenArray = function(registryObj){
-            ASSERT(typeof registryObj === 'object' );
-            var regJSON = [];
-            for(var i in registryObj){
+        //no we should convert into the correct JSON form
+        return registryToChildrenArray(regObject);
+    }
+    function registryToChildrenArray(registryObj){
+        ASSERT(typeof registryObj === 'object' );
+        var regJSON = [];
+        for(var i in registryObj){
+            if(i !== '_value'){
                 regJSON.unshift({
                     _type:"regnode",
                     _empty:false,
@@ -228,49 +314,49 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     },
                     _children:[]
                 });
-                if(typeof registryObj[i] !== 'object'){
-                    regJSON[0]._children.push({
-                        _type:"value",
-                        _empty:false,
-                        _string:""+registryObj[i]
-                    });
-                    regJSON[0]._attr.isopaque = 'yes';
-                } else {
-                    regJSON[0]._children = registryToChildrenArray(registryObj[i]);
-                    regJSON[0]._children.unshift({
-                        _type:"value",
-                        _empty:false,
-                        _string:""
-                    });
-                }
+
+                regJSON[0]._children = registryToChildrenArray(registryObj[i]);
+                regJSON[0]._children.unshift({
+                    _type:"value",
+                    _empty:false,
+                    _string: (registryObj._value === null || registryObj._value === undefined) ? "" : registryObj._value
+                });
             }
-            return regJSON;
-        };
-        var createRegistryObject = function(gmeNode){
-            var regNames = _core.getRegistryNames(gmeNode);
-            var regObject = {};
-            for(i=0;i<regNames.length;i++){
-                if((registry[regNames[i]] === undefined || registry[regNames[i]] === null)&& webOnly.indexOf(regNames[i]) === -1){
-                    var nameArray = regNames[i].split('/');
-                    var tObj = regObject;
-                    for(var j=0;j<nameArray.length;j++){
-                        if(tObj[nameArray[j]]){
-                            tObj = tObj[nameArray[j]];
+        }
+        return regJSON;
+    }
+    function createRegistryObject(gmeNode){
+        var regNames = _core.getRegistryNames(gmeNode);
+        var regObject = {};
+        for(i=0;i<regNames.length;i++){
+            if((registry[regNames[i]] === undefined || registry[regNames[i]] === null)&& webOnly.indexOf(regNames[i]) === -1){
+                var nameArray = regNames[i].split('/');
+                var tObj = regObject;
+                for(var j=0;j<nameArray.length;j++){
+                    if(tObj[nameArray[j]]){
+                        tObj = tObj[nameArray[j]];
+                    } else {
+                        /*if(j === nameArray.length-1){
+                            tObj[nameArray[j]] = _core.getRegistry(gmeNode,regNames[i]);
                         } else {
-                            if(j === nameArray.length-1){
-                                tObj[nameArray[j]] = _core.getRegistry(gmeNode,regNames[i]);
-                            } else {
-                                tObj[nameArray[j]] = {};
-                                tObj = tObj[nameArray[j]];
-                            }
-                        }
+                            tObj[nameArray[j]] = {};
+                            tObj = tObj[nameArray[j]];
+                        }*/
+                        tObj[nameArray[j]] = {};
+                        tObj = tObj[nameArray[j]];
                     }
                 }
+                tObj._value = theCore.getRegistry(gmeNode,regNames[i]);
             }
+        }
 
-            //no we should convert into the correct JSON form
-            return registryToChildrenArray(regObject);
-        };
+        //no we should convert into the correct JSON form
+        return registryToChildrenArray(regObject);
+    }
+    function nodeToJsonSync (node){
+        //console.log('node',_core.getPath(node));
+        //inner functions - for shallow children creation and other stuff
+
         var createConnectionChild = function(connNode){
             //console.log('connection',_core.getPath(connNode));
             if(_core.getPath(connNode) === '/-1/-2/-2382/-2383/-2403'){
@@ -328,7 +414,10 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
 
         return jsonObject;
     }
-    function jsonToString(jsonObject,indent){
+    function fullJsonToString(jsonObject,indent){
+        if(jsonObject === null){
+            return "";
+        }
         ASSERT(jsonObject._type);
         var outString = indent;
 
@@ -359,16 +448,59 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         if(jsonObject._children){
             ASSERT(jsonObject._children.length);
             for(i=0;i<jsonObject._children.length;i++){
-                outString+=jsonToString(jsonObject._children[i],indent+"  ");
+                outString+=fullJsonToString(jsonObject._children[i],indent+"  ");
             }
         }
 
         outString += indent+"</"+jsonObject._type+">\n";
         return outString;
     }
+    function partialJsonToString(jsonObject,indent){
+        ASSERT(jsonObject._type);
+        var outString = indent;
+
+        //starting with the type of the object
+        outString += "<"+jsonObject._type;
+
+        //adding XML attributes
+        if(jsonObject._attr){
+            for(var i in jsonObject._attr){
+                outString += " "+i+"=\""+jsonObject._attr[i]+"\"";
+            }
+        }
+
+        //checking _empty
+        if(jsonObject._empty){
+            outString += "/>\n";
+            return outString;
+        }
+
+        //checking _string
+        if(jsonObject._string !== undefined && jsonObject._string !== null){
+            outString += ">"+jsonObject._string+"</"+jsonObject._type+">\n";
+            return outString;
+        }
+        outString += ">\n";
+
+        //creating children texts
+        if(jsonObject._children){
+            ASSERT(jsonObject._children.length);
+            for(i=0;i<jsonObject._children.length;i++){
+                outString+=fullJsonToString(jsonObject._children[i],indent+"  ");
+            }
+        }
+
+        //in this version we are not closing the object
+        //outString += indent+"</"+jsonObject._type+">\n";
+        return outString;
+    }
+    function closeJsonToString(jsonObject,indent){
+        return indent+"</"+jsonObject._type+">\n";
+    }
     function createXMLStart(){
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n"
     }
+
     function serialize(corr,rootHash,outPath,projectName,callback){
         //temporary hack
         console.log('serialize',(new Date()));
@@ -430,7 +562,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                         console.log('_serialize - loaded',(new Date()));
                         _core = core; //just for sure
                         var jsonProject = nodeToJsonSync(root);
-                        var stringProject = createXMLStart() + jsonToString(jsonProject,"");
+                        var stringProject = createXMLStart() + fullJsonToString(jsonProject,"");
                         fs.writeFileSync(outPath,stringProject);
                         callback(null);
                     } else {
@@ -443,5 +575,122 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         });
     }
 
-    return TASYNC.wrap(serialize);
+    //new TASYNC compatible functions
+    function connectionToJson(object){
+        var src = theCore.loadPointer(object,'source');
+        var dst = theCore.loadPointer(object,'target');
+        return TASYNC.call(function(s,d){
+            if(theCore.isValidNode(s) && theCore.isValidNode(d)){
+                var jsonObject = initJsonObject(object);
+                //now we should add the two connection point tag
+                jsonObject._children.push({
+                    _type:'connpoint',
+                    _empty:true,
+                    _attr:{
+                        role:"src",
+                        target:theCore.getRegistry(s,'id')
+                    }
+                });
+                jsonObject._children.push({
+                    _type:'connpoint',
+                    _empty:true,
+                    _attr:{
+                        role:"dst",
+                        target:theCore.getRegistry(d,'id')
+                    }
+                });
+                return jsonObject;
+            } else {
+                return null;
+            }
+        },src,dst);
+    }
+    function getObject(core,path){
+        return core.loadByPath(path);
+    }
+
+    var theCore;
+    var theNodes = [];
+    var thePaths = [];
+    var theString = "";
+
+    function getChildrens(object,indent){
+        console.log(theCore.getPath(object));
+        var children = theCore.loadChildren(object);
+        //object tasks pre children loading
+        var isConnection = theCore.getRegistry(object,'metameta') === 'connection';
+        if(isConnection){
+            var jsonObject = connectionToJson(object);
+            var done = TASYNC.call(function(obj){
+                theString += fullJsonToString(obj,indent);
+                return;
+            },jsonObject);
+            return done;
+        } else {
+            var jsonObject = initJsonObject(object);
+            theString += partialJsonToString(jsonObject,indent);
+
+            //handling children
+            var done = TASYNC.call(function(objectArray){
+                var mydone;
+                for(var i=0;i<objectArray.length;i++){
+                    theNodes.push(objectArray[i]);
+                    thePaths.push(theCore.getPath(objectArray[i]));
+                    mydone = TASYNC.call(getChildrens,objectArray[i],indent+"  ",mydone);
+                }
+                return mydone;
+            },children);
+
+            //post-children tasks
+            done = TASYNC.call(function(){
+                theString += closeJsonToString(jsonObject,indent);
+            },done);
+
+            return done;
+        }
+    }
+    function getFromPath(path){
+        return theCore.loadByPath(path);
+    }
+    function alter(core,hash,outPath){
+        theCore = core;
+        console.log('1');
+        var root = core.loadRoot(hash);
+        console.log('2');
+        var done = TASYNC.call(function(object){
+            theNodes.push(object);
+            thePaths.push(theCore.getPath(object));
+            return;
+        },root);
+
+        /*var children = TASYNC.call(theCore.loadChildren,root);
+        done = TASYNC.call(function(objectArray){
+            for(var i=0;i<objectArray.length;i++){
+                theNodes.push(objectArray[i]);
+            }
+            return;
+        },children);
+        */
+        theString += createXMLStart();
+        _core = theCore;
+        done = TASYNC.call(getChildrens,root,"  ");
+        /*done = TASYNC.call(function(csak){
+            console.log(csak);
+            var mydone = getFromPath('/-1');
+            return TASYNC.call(function(object){
+                thePaths.push(theCore.getPath(object));
+                return;
+            },mydone);
+        },root);*/
+        done = TASYNC.call(function(){
+            //console.log(thePaths);
+            fs.writeFileSync(outPath,theString);
+            return;
+        },done);
+
+        return done;
+    }
+
+    //return TASYNC.wrap(serialize);
+    return alter;
 });
