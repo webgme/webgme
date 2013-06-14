@@ -24,7 +24,6 @@ define(['logManager',
 
         this.logger = logManager.create("Connection_" + this.id);
         this.logger.debug("Created");
-
     };
 
     ConnectionComponent.prototype._initialize = function (objDescriptor) {

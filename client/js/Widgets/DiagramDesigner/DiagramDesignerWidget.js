@@ -121,7 +121,7 @@ define(['logManager',
         this.connectionRouteManager.initialize();
 
         //initiate Connection drawer component (if needed)
-        this.connectionDrawingManager = params.connectionDrawingManager || new ConnectionDrawingManager({"canvas": this});
+        this.connectionDrawingManager = params.connectionDrawingManager || new ConnectionDrawingManager({"diagramDesigner": this});
         this.connectionDrawingManager.initialize();
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
