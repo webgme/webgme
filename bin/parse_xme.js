@@ -92,7 +92,13 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 				tag.node = root;
 			} else if (name === "folder" || name === "model" || name === "atom" || name === "connection" || name === "reference" || name === "set") {
 				ASSERT(stack.length >= 1);
-				tag.node = core.createNode(stack[stack.length - 1].node);
+                //**********
+                var relid = Number(tag.attributes['relid'])+"";
+                if(relid === "NaN"){
+                    relid = undefined;
+                }
+				tag.node = core.createNode(stack[stack.length - 1].node,relid);
+                //**********
 				objects += 1;
 			}
 
