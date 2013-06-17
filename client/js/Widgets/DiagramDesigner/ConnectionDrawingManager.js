@@ -229,17 +229,23 @@ define(['logManager',
      * Note: connection end cannot be dropped on the same connector it is drawn from
      */
     ConnectionDrawingManager.prototype._acceptConnectionEndDrop = function (el) {
-        var accept = false;
+        var accept = false,
+            objId = el.attr("data-oid"),
+            sCompId = el.attr("data-sid");
 
-        //TODO: potentially more complex 'OK' function needs to be provided
-        //TODO: controller callback --> user specified ???
-
-        if (this._connectionInDrawProps.srcEl) {
+        if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
             if (this._connectionInDrawProps.srcEl[0] !== el[0]) {
-                accept = true;
+                accept = this._diagramDesigner.onConnectionCreateConnectableAccept({"srcObjId": this._connectionInDrawProps.src,
+                    "srcSubCompId": this._connectionInDrawProps.sCompId,
+                    "connEndId": objId,
+                    "connEndSubCompId": sCompId,
+                    "metaInfo": this._metaInfo});
             }
         } else {
-            accept = true;
+            accept = this._diagramDesigner.onConnectionReconnectConnectableAccept({"connId": this._connectionInDrawProps.connId,
+                "draggedEnd": this._connectionInDrawProps.draggedEnd,
+                "connEndId": objId,
+                "connEndSubCompId": sCompId});
         }
 
         return accept;
@@ -539,6 +545,9 @@ define(['logManager',
         }
 
         this._connectionInDrawProps = undefined;
+
+        this._el.find('.' + CONNECTION_END_ACCEPT_CLASS).removeClass(CONNECTION_END_ACCEPT_CLASS);
+        this._el.find('.' + CONNECTION_END_REJECT_CLASS).removeClass(CONNECTION_END_REJECT_CLASS);
 
         if (type === DRAW_TYPE_CREATE) {
             this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION);

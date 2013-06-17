@@ -1021,6 +1021,18 @@ define(['logManager',
 
     /************ END OF --- COPY PASTE API **********************/
 
+    /************ CONNECTION END DROPPABLE ACCEPT **********************/
+    DiagramDesignerWidget.prototype.onConnectionCreateConnectableAccept = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionCreateConnectableAccept not overridden in controller, returning TRUE. params: " + JSON.stringify(params));
+        return true;
+    };
+
+    DiagramDesignerWidget.prototype.onConnectionReconnectConnectableAccept = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionReconnectConnectableAccept not overridden in controller, returning TRUE. params: " + JSON.stringify(params));
+        return true;
+    };
+    /************ END OF --- CONNECTION END DROPPABLE ACCEPT **********************/
+
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
