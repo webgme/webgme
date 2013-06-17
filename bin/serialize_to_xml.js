@@ -581,8 +581,77 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         var dst = theCore.loadPointer(object,'target');
         return TASYNC.call(function(s,d){
             if(theCore.isValidNode(s) && theCore.isValidNode(d)){
+                var sRefPort;
+                if(theCore.getRegistry(s,'metameta') === 'refport'){
+                    sRefPort = theCore.loadPointer(s,'source');
+                } else {
+                    sRefPort = null;
+                }
+                var dRefPort;
+                if(theCore.getRegistry(d,'metameta') === 'refport'){
+                    dRefPort = theCore.loadPointer(d,'target');
+                } else {
+                    dRefPort = null;
+                }
+                return TASYNC.call(function(s,sP,d,dP){
+                    if((theCore.isValidNode(sP) || sP === null) && (theCore.isValidNode(dP) || dP === null)){
+                        var jsonObject = initJsonObject(object);
+                        if(sP){
+                            var sA = theCore.getParent(s);
+                            jsonObject._children.push({
+                                _type:'connpoint',
+                                _empty:true,
+                                _attr:{
+                                    role:"src",
+                                    target:theCore.getRegistry(sP,'id'),
+                                    refs:theCore.getRegistry(sA,'id')
+                                }
+                            });
+                        } else {
+                            jsonObject._children.push({
+                                _type:'connpoint',
+                                _empty:true,
+                                _attr:{
+                                    role:"src",
+                                    target:theCore.getRegistry(s,'id')
+                                }
+                            });
+                        }
+                        if(dP){
+                            var dA = theCore.getParent(d);
+                            jsonObject._children.push({
+                                _type:'connpoint',
+                                _empty:true,
+                                _attr:{
+                                    role:"dst",
+                                    target:theCore.getRegistry(dP,'id'),
+                                    refs:theCore.getRegistry(dA,'id')
+                                }
+                            });
+                        } else {
+                            jsonObject._children.push({
+                                _type:'connpoint',
+                                _empty:true,
+                                _attr:{
+                                    role:"dst",
+                                    target:theCore.getRegistry(d,'id')
+                                }
+                            });
+                        }
+                        return jsonObject;
+                    } else {
+                        return null;
+                    }
+                },s,sRefPort,d,dRefPort);
+            } else {
+                return null;
+            }
+            /*if(theCore.isValidNode(s) && theCore.isValidNode(d)){
                 var jsonObject = initJsonObject(object);
                 //now we should add the two connection point tag
+                if(theCore.getRegistry(s,'metameta') === 'refport'){
+
+                }
                 jsonObject._children.push({
                     _type:'connpoint',
                     _empty:true,
@@ -602,66 +671,120 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 return jsonObject;
             } else {
                 return null;
-            }
+            }*/
         },src,dst);
     }
-    function getObject(core,path){
-        return core.loadByPath(path);
+    function objectIdScanningSync(object){
+        var path = theCore.getPath(object);
+        var id = theCore.getRegistry(object,'id');
+
+    }
+    function relIdScanningSync(objectArray){
+        var relIds = {};
+        var generate = [];
+        var max = 0;
+        for(var i=0;i<objectArray.length;i++){
+            var rId = theCore.getRegistry(objectArray[i],'relid');
+            var wId = theCore.getRelid(objectArray[i]);
+
+            if(rId !== null && rId !== undefined){
+                if(Number(rId) > max){
+                    max = Number(rId);
+                }
+
+                if(Number(rId) === Number(wId)){
+                    //original node
+                    if(relIds[rId]){
+                        generate.push(relIds[rId]);
+                    }
+                    relIds[rId] = i;
+
+                } else {
+                    if(relIds[rId]){
+                        generate.push(i);
+                    } else {
+                        relIds[rId] = i;
+                    }
+                }
+            }
+        }
+
+        for(var i=0;i<generate.length;i++){
+            theCore.setRegistry(objectArray[generate[i]],'relid','0x'+(++max).toString(16));
+        }
+    }
+    function idChecking(object){
+        var children = theCore.loadChildren(object);
+
+        objectIdScanningSync(object);
+
+        return TASYNC.call(function(objectArray){
+
+            relIdScanningSync(objectArray);
+
+            var done;
+            for(var i=0;i<objectArray.length;i++){
+                done = TASYNC.call(idChecking,objectArray[i],done);
+            }
+            return done;
+        },children);
     }
 
     var theCore;
     var theNodes = [];
     var thePaths = [];
     var theString = "";
+    var theIds = {
+        '0065':{max:0,ids:{}},
+        '0066':{max:0,ids:{}},
+        '0067':{max:0,ids:{}},
+        '0068':{max:0,ids:{}},
+        '0069':{max:0,ids:{}},
+        '006a':{max:0,ids:{}}
+    };
 
-    function getChildrens(object,indent){
+    function getChildren(object,indent){
         console.log(theCore.getPath(object));
         var children = theCore.loadChildren(object);
         //object tasks pre children loading
         var isConnection = theCore.getRegistry(object,'metameta') === 'connection';
-        if(isConnection){
-            var jsonObject = connectionToJson(object);
-            var done = TASYNC.call(function(obj){
-                theString += fullJsonToString(obj,indent);
+        switch(theCore.getRegistry(object,'metameta')){
+            case 'connection':
+                var jsonObject = connectionToJson(object);
+                var done = TASYNC.call(function(obj){
+                    theString += fullJsonToString(obj,indent);
+                    return;
+                },jsonObject);
+                return done;
+            case 'refport':
+                //we deal these kind of nodes during connection handling
                 return;
-            },jsonObject);
-            return done;
-        } else {
-            var jsonObject = initJsonObject(object);
-            theString += partialJsonToString(jsonObject,indent);
+            default:
+                var jsonObject = initJsonObject(object);
+                theString += partialJsonToString(jsonObject,indent);
 
-            //handling children
-            var done = TASYNC.call(function(objectArray){
-                var mydone;
-                for(var i=0;i<objectArray.length;i++){
-                    theNodes.push(objectArray[i]);
-                    thePaths.push(theCore.getPath(objectArray[i]));
-                    mydone = TASYNC.call(getChildrens,objectArray[i],indent+"  ",mydone);
-                }
-                return mydone;
-            },children);
+                //handling children
+                var done = TASYNC.call(function(objectArray){
+                    var mydone;
+                    for(var i=0;i<objectArray.length;i++){
+                        theNodes.push(objectArray[i]);
+                        thePaths.push(theCore.getPath(objectArray[i]));
+                        mydone = TASYNC.call(getChildren,objectArray[i],indent+"  ",mydone);
+                    }
+                    return mydone;
+                },children);
 
-            //post-children tasks
-            done = TASYNC.call(function(){
-                theString += closeJsonToString(jsonObject,indent);
-            },done);
+                //post-children tasks
+                done = TASYNC.call(function(){
+                    theString += closeJsonToString(jsonObject,indent);
+                },done);
 
-            return done;
+                return done;
         }
-    }
-    function getFromPath(path){
-        return theCore.loadByPath(path);
     }
     function alter(core,hash,outPath){
         theCore = core;
-        console.log('1');
         var root = core.loadRoot(hash);
-        console.log('2');
-        var done = TASYNC.call(function(object){
-            theNodes.push(object);
-            thePaths.push(theCore.getPath(object));
-            return;
-        },root);
 
         /*var children = TASYNC.call(theCore.loadChildren,root);
         done = TASYNC.call(function(objectArray){
@@ -673,7 +796,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         */
         theString += createXMLStart();
         _core = theCore;
-        done = TASYNC.call(getChildrens,root,"  ");
+        done = TASYNC.call(getChildren,root,"  ");
         /*done = TASYNC.call(function(csak){
             console.log(csak);
             var mydone = getFromPath('/-1');
