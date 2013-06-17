@@ -1,9 +1,10 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+                                                                                 DiagramDesignerWidgetConstants) {
 
     var Port,
-        CONNECTOR_CLASS = ".connector",
         EVENT_POSTFIX = "Port",
         MOUSE_ENTER = "mouseenter",
         MOUSE_LEAVE = "mouseleave",
@@ -52,7 +53,10 @@ define(['logManager'], function (logManager) {
         this.$portTitle = this.$el.find(".title");
         this.$portTitle.text(this.title);
 
-        this.$connectors = this.$el.find(CONNECTOR_CLASS);
+        this.$connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        if (this.decorator.hostDesignerItem) {
+            this.decorator.hostDesignerItem.registerConnectors(this.$connectors, this.id);
+        }
         this.hideConnectors();
 
         this.$portDot = this.$el.find(".dot");
@@ -133,18 +137,10 @@ define(['logManager'], function (logManager) {
     //Shows the 'connectors' - appends them to the DOM
     Port.prototype.showConnectors = function () {
         this.$connectors.show();
-
-        //hook up connection drawing capability
-        this.decorator.attachConnectableSubcomponent(this.$connectors, this.id);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
     Port.prototype.hideConnectors = function () {
-        //remove up connection drawing capability
-        if (this.decorator) {
-            this.decorator.detachConnectableSubcomponent(this.$connectors);
-        }
-
         this.$connectors.hide();
     };
 

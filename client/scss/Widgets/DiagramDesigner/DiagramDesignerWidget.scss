@@ -62,7 +62,7 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
       }
     }
 
-    .connectionDraggableEnd {
+    .c-d-end {
       @include connector_basics;
       margin-top: $connector-size / -2;
       margin-left: $connector-size / -2;

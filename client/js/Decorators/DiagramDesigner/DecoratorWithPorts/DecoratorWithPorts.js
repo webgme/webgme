@@ -100,12 +100,12 @@ define(['logManager',
             this.hostDesignerItem.width = this.$el.outerWidth(true);
             this.hostDesignerItem.height = this.$el.outerHeight(true);
             this.offset = this.hostDesignerItem.canvas.getAdjustedOffset(this.$el.offset());
-        }
 
-        var i = this._portIDs.length;
+            var i = this._portIDs.length;
 
-        while (i--) {
-            this._ports[this._portIDs[i]].calculatePortConnectionArea();
+            while (i--) {
+                this._ports[this._portIDs[i]].calculatePortConnectionArea();
+            }
         }
     };
 
@@ -286,18 +286,6 @@ define(['logManager',
                 this.hostDesignerItem.canvas.dispatchEvent(this.hostDesignerItem.canvas.events.ITEM_SUBCOMPONENT_POSITION_CHANGED, {"ItemID": this.hostDesignerItem.id,
                     "SubComponentID": portId});
             }
-        }
-    };
-
-    DecoratorWithPorts.prototype.attachConnectableSubcomponent = function (el, sCompID) {
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.attachConnectable(el, sCompID);
-        }
-    };
-
-    DecoratorWithPorts.prototype.detachConnectableSubcomponent = function (el) {
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.detachConnectable(el);
         }
     };
 

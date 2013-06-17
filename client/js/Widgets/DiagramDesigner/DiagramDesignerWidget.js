@@ -122,7 +122,7 @@ define(['logManager',
 
         //initiate Connection drawer component (if needed)
         this.connectionDrawingManager = params.connectionDrawingManager || new ConnectionDrawingManager({"diagramDesigner": this});
-        this.connectionDrawingManager.initialize();
+        this.connectionDrawingManager.initialize(this.skinParts.$itemsContainer);
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
     };

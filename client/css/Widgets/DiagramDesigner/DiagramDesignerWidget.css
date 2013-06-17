@@ -34,7 +34,7 @@
         .diagram-designer .items .selection-outline .s-btn.delete {
           top: -13px;
           right: -13px; }
-    .diagram-designer .items .connectionDraggableEnd {
+    .diagram-designer .items .c-d-end {
       background-color: #fefefe;
       height: 10px;
       width: 10px;
@@ -43,13 +43,15 @@
       border: 1px solid #883333;
       margin-top: -6px;
       margin-left: -6px; }
-      .diagram-designer .items .connectionDraggableEnd:hover {
+      .diagram-designer .items .c-d-end:hover {
         border-color: rgba(255, 43, 43, 0.8);
         -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
         -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
         box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6); }
-      .diagram-designer .items .connectionDraggableEnd.connection-end-state-hover {
+      .diagram-designer .items .c-d-end.connection-end-accept {
         background-color: lime; }
+      .diagram-designer .items .c-d-end.connection-end-reject {
+        background-color: red; }
   .diagram-designer .dropRegion {
     width: 0;
     height: 0;

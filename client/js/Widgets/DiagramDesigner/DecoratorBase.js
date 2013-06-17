@@ -1,15 +1,16 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        './DiagramDesignerWidget.Constants'], function (logManager,
+                                                        DiagramDesignerWidgetConstants) {
 
     var DecoratorBase,
-        CONNECTOR_CLASS = ".connector",
         DECORATOR_ID = "DecoratorBase";
 
-    DecoratorBase = function (options) {
-        this.hostDesignerItem = null;
+    DecoratorBase = function (params) {
 
-        this.logger = options.logger || logManager.create(this.DECORATORID);
+        this.hostDesignerItem = params.host;
+        this.logger = params.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};
         this.$connectors = null;
@@ -62,25 +63,22 @@ define(['logManager'], function (logManager) {
     //NODE - CAN BE OVERRIDDEN WHEN NEEDED
     DecoratorBase.prototype.initializeConnectors = function () {
         //find connectors
-        this.$connectors = this.$el.find(CONNECTOR_CLASS);
+        this.$connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.registerConnectors(this.$connectors);
+        }
+
         this.hideConnectors();
     };
 
     //Shows the 'connectors' - appends them to the DOM
     DecoratorBase.prototype.showConnectors = function () {
         this.$connectors.appendTo(this.$el);
-
-        //hook up connection drawing capability
-        this.hostDesignerItem.attachConnectable(this.$connectors);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
     DecoratorBase.prototype.hideConnectors = function () {
-        //remove up connection drawing capability
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.detachConnectable(this.$connectors);
-        }
-
         this.$connectors.detach();
     };
 

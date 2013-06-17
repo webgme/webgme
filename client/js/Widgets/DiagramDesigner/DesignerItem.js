@@ -51,10 +51,9 @@ define(['logManager',
 
             this._decoratorClass = decoratorClass;
 
-            this._decoratorInstance = new decoratorClass();
+            this._decoratorInstance = new decoratorClass({'host': this});
             this._decoratorInstance.setControl(control);
             this._decoratorInstance.setMetaInfo(metaInfo);
-            this._decoratorInstance.hostDesignerItem = this;
         }
     };
 
@@ -351,12 +350,11 @@ define(['logManager',
         this.canvas.unregisterSubcomponent(this.id, subComponentId);
     };
 
-    DesignerItem.prototype.attachConnectable = function (el, subComponentId) {
-        this.canvas.connectionDrawingManager.attachConnectable(el, this.id, subComponentId);
-    };
-
-    DesignerItem.prototype.detachConnectable = function (el) {
-        this.canvas.connectionDrawingManager.detachConnectable(el);
+    DesignerItem.prototype.registerConnectors = function (el, subComponentId) {
+        el.attr("data-oid", this.id);
+        if (subComponentId !== undefined && subComponentId !== null) {
+            el.attr("data-sid", subComponentId);
+        }
     };
 
     DesignerItem.prototype.updateSubcomponent = function (subComponentId) {

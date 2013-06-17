@@ -8,7 +8,6 @@ define(['logManager',
     var ConnectionComponent,
         PATH_SHADOW_ID_PREFIX = "p_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
-        CONNECTION_DRAGGABLE_END_CLASS = "connectionDraggableEnd",
         CONNECTION_DEFAULT_WIDTH = 2,
         CONNECTION_DEFAULT_COLOR = "#000000",
         CONNECTION_NO_END = "none",
@@ -648,8 +647,9 @@ define(['logManager',
         if (this.reconnectable) {
             //editor handle at src
             this.skinParts.srcDragPoint = this.skinParts.srcDragPoint || $('<div/>', {
-                "id": "srcDragPoint_" + this.id,
-                "class": CONNECTION_DRAGGABLE_END_CLASS
+                "data-end": DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
+                "data-id": this.id,
+                "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS
             });
 
             this.skinParts.srcDragPoint.css({"position": "absolute",
@@ -660,8 +660,9 @@ define(['logManager',
 
 
             this.skinParts.dstDragPoint = this.skinParts.dstDragPoint || $('<div/>', {
-                "id": "dstDragPoint_" + this.id,
-                "class": CONNECTION_DRAGGABLE_END_CLASS
+                "data-end": DiagramDesignerWidgetConstants.CONNECTION_END_DST,
+                "data-id": this.id,
+                "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS
             });
 
             this.skinParts.dstDragPoint.css({"position": "absolute",
@@ -669,16 +670,6 @@ define(['logManager',
                 "left": this.endCoordinates.x});
 
             this.canvas.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
-
-
-            var srcParams = { "el": this.skinParts.srcDragPoint };
-
-            var dstParams = { "el": this.skinParts.dstDragPoint };
-
-            var connParams = { "id": this.id,
-                "props": this.getConnectionProps() };
-
-            this.canvas.connectionDrawingManager._attachConnectionDraggableEndHandler(srcParams, dstParams, connParams);
         }
     };
 
