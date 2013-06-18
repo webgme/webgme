@@ -215,12 +215,20 @@ define(['logManager'], function (logManager) {
 
             if (targetCoordinates.len !== 0) {
                 connectorDelta = this._getConnectorDelta(targetCoordinates);
-                connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
-                    "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)});
+                connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
+                    "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)});
             }
 
             connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2],
                 "y": targetCoordinates.y + slicey * targetConnectionPoint[2]});
+        }
+
+        len = connectionPathPoints.length;
+        while (len-- > 1) {
+            if ((connectionPathPoints[len].x === connectionPathPoints[len - 1].x) &&
+                (connectionPathPoints[len].y === connectionPathPoints[len - 1].y)) {
+                connectionPathPoints.splice(len,1);
+            }
         }
 
         //only vertical or horizontal lines are allowed, so insert extra segment points if needed
