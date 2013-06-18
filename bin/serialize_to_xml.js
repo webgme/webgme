@@ -103,7 +103,10 @@ if (typeof define !== "function") {
 
             done = TASYNC.call(serializer,core,hash,xmlfile);
             done = TASYNC.call(function(object){
-                console.log(object);
+                console.log('the root after serializing and normalizing:',object);
+                if(branch || commit){
+                    //we should make a commit
+                }
                 return;
             },done);
             //done = TASYNC.call(serializer, core, hash, xmlfile, project);
@@ -112,6 +115,11 @@ if (typeof define !== "function") {
             return done;
         }
 
+        function makeCommit (xmlfile, hash) {
+            var project = COMMON.getProject();
+            hash = project.makeCommit([], hash, "normalizing during serialization to " + xmlfile);
+            return hash;
+        }
         function getRootHashOfBranch (branch){
             var project = COMMON.getProject();
             var commitHash = project.getBranchHash(branch,null);
@@ -675,9 +683,35 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         },src,dst);
     }
     function objectIdScanningSync(object){
-        var path = theCore.getPath(object);
-        var id = theCore.getRegistry(object,'id');
+        var metameta = theCore.getRegistry(object,'metameta');
+        switch (metameta){
+            case 'folder':
+            case 'atom':
+            case 'model':
+            case 'connection':
+            case 'reference':
+            case 'set':
+                var path = theCore.getPath(object);
+                var id = theCore.getRegistry(object,'id');
+                var wId = theCore.getRelid(object);
+                var relId = theCore.getRegistry(object,'relid');
+                ASSERT(path && id && wId && relId);
+                var idArr = id.split('-');
+                ASSERT(idArr.length === 3);
 
+                if(Number(wId) === Number(relId)){
+                    theIds[idArr[1]].ids[Number('0x'+idArr[2])] = path;
+                    theIds[idArr[1]].paths[path] = true;
+                }
+                if(!theIds[idArr[1]].ids[Number('0x'+idArr[2])]){
+                    theIds[idArr[1]].ids[Number('0x'+idArr[2])] = path;
+                    theIds[idArr[1]].paths[path] = true;
+                }
+                if(Number('0x'+idArr[2]) > theIds[idArr[1]].max){
+                    theIds[idArr[1]].max = Number('0x'+idArr[2]);
+                }
+                break;
+        }
     }
     function relIdScanningSync(objectArray){
         var relIds = {};
@@ -729,25 +763,82 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
             return done;
         },children);
     }
+    function padding(length){
+        var pad = '';
+        for(var i=0;i<length;i++){
+            pad+='0';
+        }
+        return pad;
+    }
+    function idReallocationSync(object){
+        var needId = false;
+        var idType = "";
+        switch(theCore.getRegistry(object,'metameta')){
+            case 'folder':
+                needId = true;
+                idType = '006a';
+                break;
+            case 'atom':
+                needId = true;
+                idType = '0066';
+                break;
+            case 'model':
+                needId = true;
+                idType = '0065';
+                break;
+            case 'connection':
+                needId = true;
+                idType = '0068';
+                break;
+            case 'reference':
+                needId = true;
+                idType = '0067';
+                break;
+            case 'set':
+                needId = true;
+                idType = '0069';
+                break;
+        }
+        if(needId){
+            if(!theIds[idType].paths[theCore.getPath(object)]){
+                //we need to allocate a new id for the node
+                var maxIdEnd = (++theIds[idType].max).toString(16);
+                var newId = 'id-'+idType+'-'+padding(8-maxIdEnd.length)+maxIdEnd;
+                theCore.setRegistry(object,'id',newId);
+                //these nodes needs new GUIDs as well, so let's generate them
+                var newGuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+                    return v.toString(16);
+                });
+                theCore.setRegistry(object,'guid','{'+newGuid+'}');
+            }
+        }
+    }
+    function persist (root) {
+        console.log("Waiting for objects to be saved ...");
+        var done = theCore.persist(root);
+        var hash = theCore.getHash(root);
+        return TASYNC.join(hash, done);
+    }
 
     var theCore;
     var theNodes = [];
     var thePaths = [];
     var theString = "";
     var theIds = {
-        '0065':{max:0,ids:{}},
-        '0066':{max:0,ids:{}},
-        '0067':{max:0,ids:{}},
-        '0068':{max:0,ids:{}},
-        '0069':{max:0,ids:{}},
-        '006a':{max:0,ids:{}}
+        '0065':{max:0,ids:{},paths:{}},
+        '0066':{max:0,ids:{},paths:{}},
+        '0067':{max:0,ids:{},paths:{}},
+        '0068':{max:0,ids:{},paths:{}},
+        '0069':{max:0,ids:{},paths:{}},
+        '006a':{max:0,ids:{},paths:{}}
     };
 
     function getChildren(object,indent){
-        console.log(theCore.getPath(object));
+
+        idReallocationSync(object);
         var children = theCore.loadChildren(object);
         //object tasks pre children loading
-        var isConnection = theCore.getRegistry(object,'metameta') === 'connection';
         switch(theCore.getRegistry(object,'metameta')){
             case 'connection':
                 var jsonObject = connectionToJson(object);
@@ -796,21 +887,15 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         */
         theString += createXMLStart();
         _core = theCore;
-        done = TASYNC.call(getChildren,root,"  ");
-        /*done = TASYNC.call(function(csak){
-            console.log(csak);
-            var mydone = getFromPath('/-1');
-            return TASYNC.call(function(object){
-                thePaths.push(theCore.getPath(object));
-                return;
-            },mydone);
-        },root);*/
+
+        var done = TASYNC.call(idChecking,root);
+        done = TASYNC.call(getChildren,root,"  ",done);
         done = TASYNC.call(function(){
             //console.log(thePaths);
             fs.writeFileSync(outPath,theString);
             return;
         },done);
-
+        done = TASYNC.call(persist,root,done);
         return done;
     }
 
