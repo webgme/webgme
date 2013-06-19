@@ -17,7 +17,8 @@ define(['logManager',
         GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
-        DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
+        DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
+        DEFAULT_DECORATOR = 'DecoratorWithPorts' /*"DefaultDecorator"*/;
 
     ModelEditorControl = function (options) {
         var self = this,
@@ -271,7 +272,7 @@ define(['logManager',
 
                     objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "";
                     if (DECORATORS.indexOf(objDescriptor.decorator) === -1) {
-                        objDescriptor.decorator = "DefaultDecorator";
+                        objDescriptor.decorator = DEFAULT_DECORATOR;
                     }
                 }
             }
