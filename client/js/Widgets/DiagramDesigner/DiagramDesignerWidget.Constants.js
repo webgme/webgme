@@ -19,6 +19,9 @@ define([], function () {
         CONNECTION_DRAGGABLE_END_CLASS : "c-d-end",
         CONNECTOR_CLASS : "connector",
         CONNECTION_END_SRC : 'src',
-        CONNECTION_END_DST : 'dst'
+        CONNECTION_END_DST : 'dst',
+        /*DOM ELEMENT ATTRIBUTES*/
+        DATA_ITEM_ID : 'data-oid',
+        DATA_SUBCOMPONENT_ID : 'data-sid'
     };
 });

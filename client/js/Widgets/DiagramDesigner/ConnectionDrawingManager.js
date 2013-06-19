@@ -85,11 +85,11 @@ define(['logManager',
         //MOUSE LISTENER FOR CONNECTOR MOUSEDOWN --> CREATE NEW CONNECTION
         this._el.on(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (event) {
             var el = $(this),
-                objId = el.attr("data-oid"),
-                sCompId = el.attr("data-sid");
+                objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
+                sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
 
             if (objId === undefined || objId === null) {
-                self.logger.error('MOUSEDOWN on "connector" element but "data-oid" is not specified');
+                self.logger.error('MOUSEDOWN on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
             } else {
                 if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.NORMAL) {
                     self._startConnectionCreate(objId, sCompId, el, self._diagramDesigner.getAdjustedMousePos(event));
@@ -132,14 +132,14 @@ define(['logManager',
             }
         }).on(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
             var el = $(this),
-                objId = el.attr("data-oid"),
-                sCompId = el.attr("data-sid");
+                objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
+                sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
 
             if (self._connectionInDraw === true) {
                 $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
 
                 if (objId === undefined || objId === null) {
-                    self.logger.error('MOUSEUP on "connector" element but "data-oid" is not specified');
+                    self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
                     if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION ||
                         self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION) {
@@ -230,8 +230,8 @@ define(['logManager',
      */
     ConnectionDrawingManager.prototype._acceptConnectionEndDrop = function (el) {
         var accept = false,
-            objId = el.attr("data-oid"),
-            sCompId = el.attr("data-sid");
+            objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
+            sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
             if (this._connectionInDrawProps.srcEl[0] !== el[0]) {
