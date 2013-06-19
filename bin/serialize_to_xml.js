@@ -309,15 +309,6 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         return regJSON;
     }
     function createRegistryObject_(gmeNode){
-        if(theCore.getPath(gmeNode) === '/-1/-2579/-3126/-3177/-8395/-8408/-9224/-9227/-9842/-9844/-9849/-9851'){
-            console.log('ehune');
-            var names = theCore.getRegistryNames(gmeNode);
-            var values = [];
-            for(var i=0;i<names.length;i++){
-                values.push(theCore.getRegistry(gmeNode,names[i]));
-            }
-            console.log(names,values);
-        }
         var regNames = _core.getRegistryNames(gmeNode);
         var regObject = {};
         for(i=0;i<regNames.length;i++){
@@ -360,7 +351,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 regJSON[0]._children.unshift({
                     _type:"value",
                     _empty:false,
-                    _string: (registryObj._value === null || registryObj._value === undefined) ? "" : registryObj._value
+                    _string: (registryObj[i]._value === null || registryObj[i]._value === undefined) ? "" : registryObj[i]._value
                 });
             }
         }
