@@ -4,17 +4,21 @@ define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
-    './ModelEditorControl.DEBUG'], function (logManager,
+    './ModelEditorControl.DEBUG',
+    'js/Decorators/DecoratorDB'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
-                                                        ModelEditorControlDEBUG) {
+                                                        ModelEditorControlDEBUG,
+                                                        DecoratorDB) {
 
     var ModelEditorControl,
         DECORATOR_PATH = "js/Decorators/DiagramDesigner/",      //TODO: fix path;
         GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
-        BACKGROUND_TEXT_SIZE = 30;
+        BACKGROUND_TEXT_SIZE = 30,
+        DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
+        DEFAULT_DECORATOR = 'DecoratorWithPorts' /*"DefaultDecorator"*/;
 
     ModelEditorControl = function (options) {
         var self = this,
@@ -266,15 +270,10 @@ define(['logManager',
                         objDescriptor.position.y = defaultPos;
                     }
 
-                    objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator);
-                    if (objDescriptor.decorator !== "DefaultDecorator" &&
-                            objDescriptor.decorator !== "CircleDecorator" &&
-                            objDescriptor.decorator !== "DecoratorWithPorts" &&
-                            objDescriptor.decorator !== "AttributesDecorator") {
-                        objDescriptor.decorator = "DecoratorWithPorts";
+                    objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "";
+                    if (DECORATORS.indexOf(objDescriptor.decorator) === -1) {
+                        objDescriptor.decorator = DEFAULT_DECORATOR;
                     }
-                    
-                    //objDescriptor.decorator = "DefaultDecorator";
                 }
             }
         }

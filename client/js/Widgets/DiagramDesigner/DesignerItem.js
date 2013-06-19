@@ -1,8 +1,10 @@
 "use strict";
 
 define(['logManager',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
-                                                                             DiagramDesignerWidgetConstants) {
+    './DiagramDesignerWidget.Constants',
+    './ErrorDecorator'], function (logManager,
+                                                                             DiagramDesignerWidgetConstants,
+                                                                             ErrorDecorator) {
 
     var DesignerItem,
         EVENT_POSTFIX = "DesignerItem",
@@ -21,7 +23,7 @@ define(['logManager',
 
     DesignerItem.prototype.__initialize = function () {
         this._decoratorInstance = null;
-        this.decoratorClass = null;
+        this._decoratorClass = null;
 
         this._decoratorID = "";
 
@@ -38,7 +40,13 @@ define(['logManager',
         this._initializeUI();
     };
 
-    DesignerItem.prototype.__setDecorator = function (decoratorClass, control, metaInfo) {
+    DesignerItem.prototype.__setDecorator = function (decoratorName, decoratorClass, control, metaInfo) {
+        if (decoratorClass === undefined) {
+            //the required decorator is not available
+            metaInfo = metaInfo || {};
+            metaInfo["__missingdecorator__"] = decoratorName;
+            decoratorClass = ErrorDecorator;
+        }
         if (this._decoratorID !== decoratorClass.prototype.DECORATORID) {
 
             if (this._decoratorInstance) {
@@ -126,8 +134,6 @@ define(['logManager',
                 });
             }
         }
-
-        this.canvas.dragManager.attachDraggable(this);
     };
 
     DesignerItem.prototype._detachUserInteractions = function () {
@@ -138,8 +144,6 @@ define(['logManager',
                 this.$el.off( i + '.' + EVENT_POSTFIX);
             }
         }
-
-        this.canvas.dragManager.detachDraggable(this);
     };
 
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
@@ -180,12 +184,12 @@ define(['logManager',
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        return { "x": this.positionX,
-            "y": this.positionY,
-            "width": this.width,
-            "height": this.height,
-            "x2": this.positionX + this.width,
-            "y2":  this.positionY + this.height};
+        return {"x": this.positionX,
+                "y": this.positionY,
+                "width": this.width,
+                "height": this.height,
+                "x2": this.positionX + this.width,
+                "y2":  this.positionY + this.height};
     };
 
     DesignerItem.prototype.onMouseEnter = function (/*event*/) {
@@ -205,7 +209,7 @@ define(['logManager',
             this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION ||
             this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
 
-            if (this.selected === false) {
+            if (this.selectedInMultiSelection === false) {
                 this.showConnectors();
             }
         }
@@ -237,7 +241,9 @@ define(['logManager',
         this.$el.addClass("selected");
 
         //when selected, no connectors are available
-        this.hideConnectors();
+        if (multiSelection === true) {
+            this.hideConnectors();
+        }
 
         //let the decorator know that this item became selected
         this._callDecoratorMethod("onSelect");
@@ -291,7 +297,7 @@ define(['logManager',
             var oldControl = this._decoratorInstance.getControl();
             var oldMetaInfo = this._decoratorInstance.getMetaInfo();
 
-            this.__setDecorator(objDescriptor.decoratorClass, oldControl, oldMetaInfo);
+            this.__setDecorator(objDescriptor.decorator, objDescriptor.decoratorClass, oldControl, oldMetaInfo);
 
             //attach new one
             this.$el.html(this._decoratorInstance.$el);

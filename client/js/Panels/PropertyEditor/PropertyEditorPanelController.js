@@ -2,9 +2,11 @@
 
 define(['logManager',
     'clientUtil',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames',
+    'js/Decorators/DecoratorDB'], function (logManager,
                                         util,
-                                        nodePropertyNames) {
+                                        nodePropertyNames,
+                                        DecoratorDB) {
 
     var PropertyEditorController;
 
@@ -173,7 +175,8 @@ define(['logManager',
                         //decorator value should be rendered as an option list
                         if (i === nodePropertyNames.Registry.decorator) {
                             //dstList[extKey].valueType = "option";
-                            dstList[extKey].valueItems = ['DefaultDecorator', 'CircleDecorator', 'DecoratorWithPorts', 'AttributesDecorator'];
+                            //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
+                            dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
                         }
                     }
                 }

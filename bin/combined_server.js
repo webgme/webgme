@@ -76,7 +76,7 @@ requirejs(['logManager',
             require('fs').readFile(dirname + req.url, function(err,data){
                 if(err){
                     res.writeHead(500);
-                    console.log(req.url);
+                    console.log("Error getting the file:" + req.url);
                     logger.error("Error getting the file:" + dirname + req.url);
                     return res.end('Error loading ' + req.url);
                 }
