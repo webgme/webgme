@@ -23,7 +23,7 @@ define(['logManager',
 
     DesignerItem.prototype.__initialize = function () {
         this._decoratorInstance = null;
-        this.decoratorClass = null;
+        this._decoratorClass = null;
 
         this._decoratorID = "";
 
@@ -134,8 +134,6 @@ define(['logManager',
                 });
             }
         }
-
-        this.canvas.dragManager.attachDraggable(this);
     };
 
     DesignerItem.prototype._detachUserInteractions = function () {
@@ -146,8 +144,6 @@ define(['logManager',
                 this.$el.off( i + '.' + EVENT_POSTFIX);
             }
         }
-
-        this.canvas.dragManager.detachDraggable(this);
     };
 
     DesignerItem.prototype.addToDocFragment = function (docFragment) {
@@ -188,12 +184,12 @@ define(['logManager',
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        return { "x": this.positionX,
-            "y": this.positionY,
-            "width": this.width,
-            "height": this.height,
-            "x2": this.positionX + this.width,
-            "y2":  this.positionY + this.height};
+        return {"x": this.positionX,
+                "y": this.positionY,
+                "width": this.width,
+                "height": this.height,
+                "x2": this.positionX + this.width,
+                "y2":  this.positionY + this.height};
     };
 
     DesignerItem.prototype.onMouseEnter = function (/*event*/) {

@@ -58,14 +58,6 @@ define(['logManager',
         }
     };
 
-    //TODO: here because of DesignerItem calls this - obsolete with this version
-    DragManager.prototype.detachDraggable = function (designerItem) {
-    };
-
-    //TODO: here because of DesignerItem calls this - obsolete with this version
-    DragManager.prototype.attachDraggable = function (designerItem) {
-    };
-
     /******** ITEM MOUSE DOWN EVENT HANDLER ****************/
     DragManager.prototype._onItemMouseDown = function (event) {
         var mousePos = this.canvas.getAdjustedMousePos(event),
