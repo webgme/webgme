@@ -7,9 +7,13 @@ define(['logManager',
                                                     DiagramDesignerWidgetConstants) {
 
     var DragManager,
-        MOVE_CURSOR = "move",
-        COPY_CURSOR = "copy",
-        MIN_DELTA_TO_DRAG = 10;
+        MOVE_CURSOR = 'move',
+        COPY_CURSOR = 'copy',
+        MIN_DELTA_TO_DRAG = 10,
+        EVENT_POSTFIX = 'DragManager',
+        MOUSE_DOWN = 'mousedown.' + EVENT_POSTFIX,
+        MOUSE_MOVE = 'mousemove.' + EVENT_POSTFIX,
+        MOUSE_UP = 'mouseup.' + EVENT_POSTFIX;
 
     DragManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
@@ -41,7 +45,7 @@ define(['logManager',
             self._canvasItemPositionChanged(event);
         });
 
-        this.$el.on('mousedown.DragManager', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+        this.$el.on(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             self._onItemMouseDown(event);
         });
 
@@ -81,8 +85,8 @@ define(['logManager',
                     self._onBackgroundMouseUp(event);
                 };
 
-                $(document).on('mousemove.DragManager', this._onBackgroundMouseMoveCallBack);
-                $(document).on('mouseup.DragManager', this._onBackgroundMouseUpCallBack);
+                $(document).on(MOUSE_MOVE, this._onBackgroundMouseMoveCallBack);
+                $(document).on(MOUSE_UP, this._onBackgroundMouseUpCallBack);
             }
 
             event.stopPropagation();
@@ -134,8 +138,8 @@ define(['logManager',
 
     DragManager.prototype._onBackgroundMouseUp = function (event) {
         //unbind mousemove and mouseup handlers
-        $(document).off('mousemove.DragManager', this._onBackgroundMouseMoveCallBack);
-        $(document).off('mouseup.DragManager', this._onBackgroundMouseUpCallBack);
+        $(document).off(MOUSE_MOVE, this._onBackgroundMouseMoveCallBack);
+        $(document).off(MOUSE_UP, this._onBackgroundMouseUpCallBack);
 
         //delete unnecessary instance members
         delete this._onBackgroundMouseMoveCallBack;
