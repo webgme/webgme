@@ -14,6 +14,8 @@ $connector-border: 1px solid #883333;
 $connector-hover-border-color: rgba( 255, 43, 43, 0.8);
 $connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
 $connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
+/*error decorator properties*/
+$error-decorator-background-color: #F2DEDE;
 
 $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
 
@@ -66,6 +68,13 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
       @include connector_basics;
       margin-top: $connector-size / -2;
       margin-left: $connector-size / -2;
+    }
+
+    .error-decorator {
+      background-color: $error-decorator-background-color;
+      padding: 3px;
+      text-align: center;
+      border: 2px solid #000000;
     }
   }
 
