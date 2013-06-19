@@ -3,8 +3,8 @@
 define(['logManager',
     './DiagramDesignerWidget.Constants',
     './ErrorDecorator'], function (logManager,
-                                                                             DiagramDesignerWidgetConstants,
-                                                                             ErrorDecorator) {
+                                 DiagramDesignerWidgetConstants,
+                                 ErrorDecorator) {
 
     var DesignerItem,
         EVENT_POSTFIX = "DesignerItem",
@@ -357,9 +357,9 @@ define(['logManager',
     };
 
     DesignerItem.prototype.registerConnectors = function (el, subComponentId) {
-        el.attr("data-oid", this.id);
+        el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID, this.id);
         if (subComponentId !== undefined && subComponentId !== null) {
-            el.attr("data-sid", subComponentId);
+            el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID, subComponentId);
         }
     };
 
