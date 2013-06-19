@@ -48,6 +48,11 @@ if (typeof define !== "function") {
             COMMON.closeProject();
             COMMON.closeDatabase();
         });
+        var _commit = null,
+            _startHash = null,
+            _branch = null,
+            _projectName = null,
+            _outFile = null;
 
         function main () {
             var args = COMMON.getParameters(null);
@@ -67,58 +72,68 @@ if (typeof define !== "function") {
                 return;
             }
 
-            var xmlfile = args[0];
+            _outFile = args[0];
 
-            var branch = COMMON.getParameters("branch");
-            if (branch) {
-                branch = branch[0] || "parsed";
+            _branch = COMMON.getParameters("branch");
+            if (_branch) {
+                _branch = _branch[0] || "parsed";
             }
-            var hash = COMMON.getParameters("hash");
-            if(hash){
-                hash = hash[0];
+            _startHash = COMMON.getParameters("hash");
+            if(_startHash){
+                _startHash = _startHash[0];
             }
-            var project = COMMON.getParameters("proj");
-            if(project){
-                project = project[0];
+            _projectName = COMMON.getParameters("proj");
+            if(_projectName){
+                _projectName = _projectName[0];
             }
-            var commit = COMMON.getParameters('commit');
-            if(commit){
-                commit = commit[0];
+            _commit = COMMON.getParameters('commit');
+            if(_commit){
+                _commit = _commit[0];
             }
 
             var done = TASYNC.call(COMMON.openDatabase);
             done = TASYNC.call(COMMON.openProject, done);
             var core = TASYNC.call(COMMON.getCore, done);
-            if(!hash){
-                if(branch){
-                    hash = TASYNC.call(getRootHashOfBranch,branch,done);
-                } else if(commit){
-                    hash = TASYNC.call(getRootHashOfCommit,commit,done);
+            console.log('kecso',_branch);
+            if(!_startHash){
+                if(_branch){
+                    _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
+                    TASYNC.call(settingCommitHashOfBranch,_branch,done);
+                } else if(_commit){
+                    _startHash = TASYNC.call(getRootHashOfCommit,_commit,done);
                 } else {
                     done = TASYNC.call(COMMON.closeProject, done);
                     done = TASYNC.call(COMMON.closeDatabase, done);
                     return done;
                 }
             }
-
-            done = TASYNC.call(serializer,core,hash,xmlfile);
+            done = TASYNC.call(serializer,core,_startHash,_outFile);
             done = TASYNC.call(function(object){
                 console.log('the root after serializing and normalizing:',object);
-                if(branch || commit){
+                console.log('the commit hash what we modified:',_commit);
+                if(_commit){
                     //we should make a commit
+                    console.log('kecso1',_branch);
+                    var newCommit = makeCommit(_outFile,object,_commit);
+                    if(_branch){
+                        console.log('kecso2');
+                        //we also should update the branch
+                        return TASYNC.call(writeBranch,newCommit);
+                    } else {
+                        return null;
+                    }
+                } else {
+                    return null;
                 }
-                return;
             },done);
-            //done = TASYNC.call(serializer, core, hash, xmlfile, project);
             done = TASYNC.call(COMMON.closeProject, done);
             done = TASYNC.call(COMMON.closeDatabase, done);
             return done;
         }
 
-        function makeCommit (xmlfile, hash) {
+        function makeCommit (xmlfile, rootHash, commitHash) {
             var project = COMMON.getProject();
-            hash = project.makeCommit([], hash, "normalizing during serialization to " + xmlfile);
-            return hash;
+            return project.makeCommit([commitHash], rootHash, "normalizing during serialization to " + xmlfile);
         }
         function getRootHashOfBranch (branch){
             var project = COMMON.getProject();
@@ -126,9 +141,19 @@ if (typeof define !== "function") {
             var done = TASYNC.call(project.loadObject,commitHash);
             done = TASYNC.call(function(object){
                 console.log('getRootHashOfBranch',branch,object.root);
+                _branch = branch;
                 return object.root;
             },done);
             return done;
+        }
+
+        function settingCommitHashOfBranch (branch){
+            var project = COMMON.getProject();
+            var cHash = project.getBranchHash(branch,null);
+            return TASYNC.call(function(hash){
+                _commit = hash;
+                return hash;
+            },cHash);
         }
 
         function getRootHashOfCommit (commit){
@@ -137,6 +162,14 @@ if (typeof define !== "function") {
                 console.log('getRootHashOfCommit',commit,object.root);
                 return object.root;
             },TASYNC.call(project.loadObject,commit));
+        }
+
+        function writeBranch (hash) {
+            var project = COMMON.getProject();
+            var done = project.setBranchHash(_branch, _commit, hash);
+            return TASYNC.call(function () {
+                console.log("Commit " + hash + " written to branch " + _branch);
+            }, done);
         }
 
     });
