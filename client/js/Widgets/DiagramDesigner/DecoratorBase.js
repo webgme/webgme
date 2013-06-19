@@ -118,6 +118,10 @@ define(['logManager',
     //Please set it correctly
     //NOTE - SHALL BE OVERRIDDEN
     DecoratorBase.prototype.calculateDimension = function () {
+        if (this.hostDesignerItem) {
+            this.hostDesignerItem.width = this.$el.outerWidth(true);
+            this.hostDesignerItem.height = this.$el.outerHeight(true);
+        }
     };
 
     //Should return the connection areas for the component with the given 'id'

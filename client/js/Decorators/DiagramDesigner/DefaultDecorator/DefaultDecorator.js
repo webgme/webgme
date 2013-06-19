@@ -80,13 +80,6 @@ define(['logManager',
         this.skinParts.$name.text(this.name);
     };
 
-    DefaultDecorator.prototype.calculateDimension = function () {
-        if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = this.$el.outerWidth(true);
-            this.hostDesignerItem.height = this.$el.outerHeight(true);
-        }
-    };
-
     DefaultDecorator.prototype.update = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
