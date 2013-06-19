@@ -209,7 +209,7 @@ define(['logManager',
             this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION ||
             this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
 
-            if (this.selected === false) {
+            if (this.selectedInMultiSelection === false) {
                 this.showConnectors();
             }
         }
@@ -241,7 +241,9 @@ define(['logManager',
         this.$el.addClass("selected");
 
         //when selected, no connectors are available
-        this.hideConnectors();
+        if (multiSelection === true) {
+            this.hideConnectors();
+        }
 
         //let the decorator know that this item became selected
         this._callDecoratorMethod("onSelect");
