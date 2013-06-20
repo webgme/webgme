@@ -87,14 +87,14 @@ define(['jquery',
         this._logger.debug("_containerBoundaries: " + JSON.stringify(this._containerBoundaries));
     };
 
-    DragScroll.prototype._isInContainerBounds = function(x, y) {
+    DragScroll.prototype._isInContainerBounds = function (x, y) {
         return this._containerBoundaries.left <= x &&
             this._containerBoundaries.left + this._containerBoundaries.width >= x &&
             this._containerBoundaries.top <= y &&
             this._containerBoundaries.top + this._containerBoundaries.height >= y;
     };
 
-    DragScroll.prototype._calculateScrollDelta = function(x, y) {
+    DragScroll.prototype._calculateScrollDelta = function (x, y) {
         var dx = 0,
             dy = 0;
 
@@ -109,7 +109,7 @@ define(['jquery',
         } else if (y > this._containerBoundaries.top + this._containerBoundaries.height) {
             dy = DragScroll._SCROLL_STEP;
         }
-        
+
         return { "x": dx, "y": dy };
     };
 
@@ -119,8 +119,7 @@ define(['jquery',
         this._logger.debug("doScroll - " + JSON.stringify(this._scrollDelta));
         this._timer = undefined;
         if (this._scrollDelta) {
-            if (this._scrollDelta.x !== 0 ||
-                this._scrollDelta.y !== 0) {
+            if (this._scrollDelta.x !== 0 || this._scrollDelta.y !== 0) {
                 sTop = this._containerNode[0].scrollTop;
                 sLeft = this._containerNode[0].scrollLeft;
 
@@ -128,12 +127,12 @@ define(['jquery',
                 this._containerNode[0].scrollLeft += this._scrollDelta.x;
 
                 if (this._containerNode[0].scrollTop === 0 ||
-                    this._containerNode[0].scrollTop < sTop + this._scrollDelta.y) {
+                        this._containerNode[0].scrollTop < sTop + this._scrollDelta.y) {
                     this._scrollDelta.y = 0;
                 }
 
                 if (this._containerNode[0].scrollLeft === 0 ||
-                    this._containerNode[0].scrollLeft < sLeft + this._scrollDelta.x) {
+                        this._containerNode[0].scrollLeft < sLeft + this._scrollDelta.x) {
                     this._scrollDelta.x = 0;
                 }
 
