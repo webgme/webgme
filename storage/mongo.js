@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "mongodb", "util/assert", "util/sha1" ], function (MONGODB, ASSERT, SHA1) {
+define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 	"use strict";
 
 	var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");
