@@ -1,29 +1,3 @@
-/*var mynumber = 0x2
-console.log(Number(mynumber));
-var othernumber = 1115;
-console.log('0x'+othernumber.toString(16));
-console.log(Number('0x'+othernumber.toString(16)));
-console.log((new Date()));
-var fs = require('fs');
-var hugeString = "";
-var item = "abcdefghijklmnopqrstuvwxyz";
-for(var i=0;i<10000000;i++){
-    hugeString+=item+"\n";
-}
-console.log((new Date()));
-fs.appendFileSync('mytest.txt', hugeString);
-console.log((new Date()));
-
-console.log('big loading test');
-console.log((new Date()));
-var file1 = fs.readFileSync('IFV.xme','utf8');
-console.log((new Date()));
-var file2 = fs.readFileSync('IFV.xme','utf8');
-console.log((new Date()));
-var file3 = fs.readFileSync('IFV.xme','utf8');
-console.log((new Date()));
-
-var ASSERT = function(value){};*/
 /*
  * Copyright (C) 2013 Vanderbilt University, All rights reserved.
  *
@@ -277,68 +251,13 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         }
 
         return initJ;
-    };
-    function registryToChildrenArray_(registryObj){
-        ASSERT(typeof registryObj === 'object' );
-        var regJSON = [];
-        for(var i in registryObj){
-            regJSON.unshift({
-                _type:"regnode",
-                _empty:false,
-                _attr:{
-                    name:i
-                },
-                _children:[]
-            });
-            if(typeof registryObj[i] !== 'object'){
-                regJSON[0]._children.push({
-                    _type:"value",
-                    _empty:false,
-                    _string:""+registryObj[i]
-                });
-                regJSON[0]._attr.isopaque = 'yes';
-            } else {
-                regJSON[0]._children = registryToChildrenArray(registryObj[i]);
-                regJSON[0]._children.unshift({
-                    _type:"value",
-                    _empty:false,
-                    _string:""
-                });
-            }
-        }
-        return regJSON;
-    }
-    function createRegistryObject_(gmeNode){
-        var regNames = _core.getRegistryNames(gmeNode);
-        var regObject = {};
-        for(i=0;i<regNames.length;i++){
-            if((registry[regNames[i]] === undefined || registry[regNames[i]] === null)&& webOnly.indexOf(regNames[i]) === -1){
-                var nameArray = regNames[i].split('/');
-                var tObj = regObject;
-                for(var j=0;j<nameArray.length;j++){
-                    if(tObj[nameArray[j]]){
-                        tObj = tObj[nameArray[j]];
-                    } else {
-                        if(j === nameArray.length-1){
-                            tObj[nameArray[j]] = _core.getRegistry(gmeNode,regNames[i]);
-                        } else {
-                            tObj[nameArray[j]] = {};
-                            tObj = tObj[nameArray[j]];
-                        }
-                    }
-                }
-            }
-        }
-
-        //no we should convert into the correct JSON form
-        return registryToChildrenArray(regObject);
     }
     function registryToChildrenArray(registryObj){
         ASSERT(typeof registryObj === 'object' );
         var regJSON = [];
         for(var i in registryObj){
             if(i !== '_value'){
-                regJSON.unshift({
+                var length = regJSON.push({
                     _type:"regnode",
                     _empty:false,
                     _attr:{
@@ -347,8 +266,8 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     _children:[]
                 });
 
-                regJSON[0]._children = registryToChildrenArray(registryObj[i]);
-                regJSON[0]._children.unshift({
+                regJSON[length-1]._children = registryToChildrenArray(registryObj[i]);
+                regJSON[length-1]._children.unshift({
                     _type:"value",
                     _empty:false,
                     _string: (registryObj[i]._value === null || registryObj[i]._value === undefined) ? "" : registryObj[i]._value
@@ -383,7 +302,8 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         }
 
         //no we should convert into the correct JSON form
-        return registryToChildrenArray(regObject);
+        var regChildren = registryToChildrenArray(regObject);
+        return regChildren;
     }
     function nodeToJsonSync (node){
         //console.log('node',_core.getPath(node));
@@ -530,7 +450,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         return indent+"</"+jsonObject._type+">\n";
     }
     function createXMLStart(){
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n"
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n\n"
     }
 
     function serialize(corr,rootHash,outPath,projectName,callback){
