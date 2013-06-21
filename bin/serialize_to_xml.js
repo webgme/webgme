@@ -184,6 +184,14 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         isprimary: "isprimary"
     };
     var webOnly = ['position','isPort','isConnection','metameta','author','comment'];
+    function stringToXMLString(text){
+        text = text.replace(/\&/g,'&amp;');
+        text = text.replace(/\"/g,'&quot;');
+        text = text.replace(/\'/g,'&apos;');
+        text = text.replace(/</g,'&lt;');
+        text = text.replace(/>/g,'&gt;');
+        return text;
+    }
     function initJsonObject(gmeNode){
         var initJ = {};
         initJ._type = theCore.getRegistry(gmeNode,'metameta');
@@ -208,7 +216,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         initJ._children.push({
             _type:"name",
             _empty:false,
-            _string:theCore.getAttribute(gmeNode,'name')
+            _string:stringToXMLString(theCore.getAttribute(gmeNode,'name'))
         });
 
         //comment and author
@@ -216,12 +224,12 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
             initJ._children.push({
                 _type:'comment',
                 _empty:false,
-                _string:theCore.getRegistry(gmeNode,'comment') || ""
+                _string:stringToXMLString(theCore.getRegistry(gmeNode,'comment') || "")
             });
             initJ._children.push({
                 _type:'author',
                 _empty:false,
-                _string:theCore.getRegistry(gmeNode,'author') || ""
+                _string:stringToXMLString(theCore.getRegistry(gmeNode,'author') || "")
             });
         }
 
@@ -242,7 +250,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                         {
                             _type:"value",
                             _empty:false,
-                            _string:theCore.getAttribute(gmeNode,attrNames[i])
+                            _string:stringToXMLString(theCore.getAttribute(gmeNode,attrNames[i]))
                         }
                     ]
                 });
@@ -269,7 +277,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 regJSON[length-1]._children.unshift({
                     _type:"value",
                     _empty:false,
-                    _string: (registryObj[i]._value === null || registryObj[i]._value === undefined) ? "" : registryObj[i]._value
+                    _string:stringToXMLString( (registryObj[i]._value === null || registryObj[i]._value === undefined) ? "" : registryObj[i]._value )
                 });
             }
         }
@@ -409,76 +417,64 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
 
     //new TASYNC compatible functions
     function connectionToJson(object){
-        var src = theCore.loadPointer(object,'source');
-        var dst = theCore.loadPointer(object,'target');
+        var pointerNames = theCore.getPointerNames(object);
+        var src = null;
+        var dst = null;
+        if(pointerNames.indexOf('source') !== -1){
+            src = theCore.loadPointer(object,'source');
+        }
+        if(pointerNames.indexOf('target') !== -1){
+            dst = theCore.loadPointer(object,'target');
+        }
         return TASYNC.call(function(s,d){
-            if(theCore.isValidNode(s) && theCore.isValidNode(d)){
-                var sRefPort;
+            var jsonObject = initJsonObject(object);
+            if(s !== null){
                 if(theCore.getRegistry(s,'metameta') === 'refport'){
-                    sRefPort = theCore.loadPointer(s,'source');
-                } else {
-                    sRefPort = null;
-                }
-                var dRefPort;
-                if(theCore.getRegistry(d,'metameta') === 'refport'){
-                    dRefPort = theCore.loadPointer(d,'target');
-                } else {
-                    dRefPort = null;
-                }
-                return TASYNC.call(function(s,sP,d,dP){
-                    if((sP === null || theCore.isValidNode(sP)) && (dP === null || theCore.isValidNode(dP))){
-                        var jsonObject = initJsonObject(object);
-                        if(sP){
-                            var sA = theCore.getParent(s);
-                            jsonObject._children.push({
-                                _type:'connpoint',
-                                _empty:true,
-                                _attr:{
-                                    role:"src",
-                                    target:theCore.getRegistry(sP,'id'),
-                                    refs:theCore.getRegistry(sA,'id')
-                                }
-                            });
-                        } else {
-                            jsonObject._children.push({
-                                _type:'connpoint',
-                                _empty:true,
-                                _attr:{
-                                    role:"src",
-                                    target:theCore.getRegistry(s,'id')
-                                }
-                            });
+                    var sA = theCore.getParent(s);
+                    jsonObject._children.push({
+                        _type:'connpoint',
+                        _empty:true,
+                        _attr:{
+                            role:"src",
+                            target:theCore.getRegistry(s,'id'),
+                            refs:theCore.getRegistry(sA,'id')
                         }
-                        if(dP){
-                            var dA = theCore.getParent(d);
-                            jsonObject._children.push({
-                                _type:'connpoint',
-                                _empty:true,
-                                _attr:{
-                                    role:"dst",
-                                    target:theCore.getRegistry(dP,'id'),
-                                    refs:theCore.getRegistry(dA,'id')
-                                }
-                            });
-                        } else {
-                            jsonObject._children.push({
-                                _type:'connpoint',
-                                _empty:true,
-                                _attr:{
-                                    role:"dst",
-                                    target:theCore.getRegistry(d,'id')
-                                }
-                            });
+                    });
+                } else {
+                    jsonObject._children.push({
+                        _type:'connpoint',
+                        _empty:true,
+                        _attr:{
+                            role:"src",
+                            target:theCore.getRegistry(s,'id')
                         }
-                        return jsonObject;
-                    } else {
-                        return null;
-                    }
-                },s,sRefPort,d,dRefPort);
-            } else {
-                console.log('hiba',object);
-                return null;
+                    });
+                }
             }
+            if(d !== null){
+                if(theCore.getRegistry(d,'metameta') === 'refport'){
+                    var dA = theCore.getParent(d);
+                    jsonObject._children.push({
+                        _type:'connpoint',
+                        _empty:true,
+                        _attr:{
+                            role:"dst",
+                            target:theCore.getRegistry(d,'id'),
+                            refs:theCore.getRegistry(dA,'id')
+                        }
+                    });
+                } else {
+                    jsonObject._children.push({
+                        _type:'connpoint',
+                        _empty:true,
+                        _attr:{
+                            role:"dst",
+                            target:theCore.getRegistry(d,'id')
+                        }
+                    });
+                }
+            }
+            return jsonObject;
         },src,dst);
     }
     function objectIdScanningSync(object){
@@ -494,7 +490,9 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 var id = theCore.getRegistry(object,'id');
                 var wId = theCore.getRelid(object);
                 var relId = theCore.getRegistry(object,'relid');
-                ASSERT(path && id && wId && relId);
+                ASSERT(path);
+                ASSERT(id);
+                ASSERT(wId);
                 var idArr = id.split('-');
                 ASSERT(idArr.length === 3);
 
