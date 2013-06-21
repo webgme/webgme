@@ -68,7 +68,6 @@ if (typeof define !== "function") {
             var done = TASYNC.call(COMMON.openDatabase);
             done = TASYNC.call(COMMON.openProject, done);
             var core = TASYNC.call(COMMON.getCore, done);
-            console.log('kecso',_branch);
             if(!_startHash){
                 if(_branch){
                     _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
@@ -87,10 +86,8 @@ if (typeof define !== "function") {
                 console.log('the commit hash what we modified:',_commit);
                 if(_commit){
                     //we should make a commit
-                    console.log('kecso1',_branch);
                     var newCommit = makeCommit(_outFile,object,_commit);
                     if(_branch){
-                        console.log('kecso2');
                         //we also should update the branch
                         return TASYNC.call(writeBranch,newCommit);
                     } else {
@@ -158,10 +155,8 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
 // _empty : true/false show if the object has inner content or not (if not it will be written in <tag/> form
 // _children : [] - ordered list of inner XML objects
 // _string : if this tag exists then the inner part of the XML object will be this string
-    var _core = null;
     var _nodes = [];
     var _prefix = "*&*";
-    var _core = null;
     var _idCounter = {
         atom:0,
         model:0,
@@ -187,14 +182,14 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
     var webOnly = ['position','isPort','isConnection','metameta','author','comment'];
     function initJsonObject(gmeNode){
         var initJ = {};
-        initJ._type = _core.getRegistry(gmeNode,'metameta');
+        initJ._type = theCore.getRegistry(gmeNode,'metameta');
         initJ._empty = false;
         initJ._children = [];
         initJ._attr = {};
 
 
         for(var i in registry){
-            var value = _core.getRegistry(gmeNode,i);
+            var value = theCore.getRegistry(gmeNode,i);
             if(value !== undefined && value !== null){
                 initJ._attr[registry[i]] = value;
             }
@@ -209,7 +204,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         initJ._children.push({
             _type:"name",
             _empty:false,
-            _string:_core.getAttribute(gmeNode,'name')
+            _string:theCore.getAttribute(gmeNode,'name')
         });
 
         //comment and author
@@ -217,12 +212,12 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
             initJ._children.push({
                 _type:'comment',
                 _empty:false,
-                _string:_core.getRegistry(gmeNode,'comment') || ""
+                _string:theCore.getRegistry(gmeNode,'comment') || ""
             });
             initJ._children.push({
                 _type:'author',
                 _empty:false,
-                _string:_core.getRegistry(gmeNode,'author') || ""
+                _string:theCore.getRegistry(gmeNode,'author') || ""
             });
         }
 
@@ -230,7 +225,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         initJ._children = initJ._children.concat(createRegistryObject(gmeNode));
 
         //attributes
-        var attrNames = _core.getAttributeNames(gmeNode);
+        var attrNames = theCore.getAttributeNames(gmeNode);
         for(i=0;i<attrNames.length;i++){
             if(attrNames[i] !== 'name'){
                 initJ._children.push({
@@ -243,7 +238,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                         {
                             _type:"value",
                             _empty:false,
-                            _string:_core.getAttribute(gmeNode,attrNames[i])
+                            _string:theCore.getAttribute(gmeNode,attrNames[i])
                         }
                     ]
                 });
@@ -277,7 +272,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         return regJSON;
     }
     function createRegistryObject(gmeNode){
-        var regNames = _core.getRegistryNames(gmeNode);
+        var regNames = theCore.getRegistryNames(gmeNode);
         var regObject = {};
         for(i=0;i<regNames.length;i++){
             if((registry[regNames[i]] === undefined || registry[regNames[i]] === null)&& webOnly.indexOf(regNames[i]) === -1){
@@ -287,12 +282,6 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     if(tObj[nameArray[j]]){
                         tObj = tObj[nameArray[j]];
                     } else {
-                        /*if(j === nameArray.length-1){
-                            tObj[nameArray[j]] = _core.getRegistry(gmeNode,regNames[i]);
-                        } else {
-                            tObj[nameArray[j]] = {};
-                            tObj = tObj[nameArray[j]];
-                        }*/
                         tObj[nameArray[j]] = {};
                         tObj = tObj[nameArray[j]];
                     }
@@ -304,67 +293,6 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         //no we should convert into the correct JSON form
         var regChildren = registryToChildrenArray(regObject);
         return regChildren;
-    }
-    function nodeToJsonSync (node){
-        //console.log('node',_core.getPath(node));
-        //inner functions - for shallow children creation and other stuff
-
-        var createConnectionChild = function(connNode){
-            //console.log('connection',_core.getPath(connNode));
-            if(_core.getPath(connNode) === '/-1/-2/-2382/-2383/-2403'){
-                console.log('ehune');
-            }
-            var jsonConnection = initJsonObject(connNode);
-            //now we should add the two connection point tag
-            jsonConnection._children.push({
-                _type:'connpoint',
-                _empty:true,
-                _attr:{
-                    role:"src",
-                    target:_core.getRegistry(_nodes[_prefix+_core.getPointerPath(connNode,'source')],'id')
-                }
-            });
-            jsonConnection._children.push({
-                _type:'connpoint',
-                _empty:true,
-                _attr:{
-                    role:"dst",
-                    target:_core.getRegistry(_nodes[_prefix+_core.getPointerPath(connNode,'target')],'id')
-                }
-            });
-
-            return jsonConnection;
-        };
-
-        //start
-        var jsonObject = initJsonObject(node);
-
-        //now we should add the children to the node
-        //then the model/atom
-        //then the connection
-
-        var childrenPaths = _core.getChildrenPaths(node);
-        var ordinaryChildren = [];
-        var connections = [];
-        for(var i=0;i<childrenPaths.length;i++){
-            if(_core.getRegistry(_nodes[_prefix+childrenPaths[i]],'metameta') === 'connection'){
-                connections.push(childrenPaths[i]);
-            } else {
-                ordinaryChildren.push(childrenPaths[i]);
-            }
-        }
-
-        //ordinary children recursively
-        for(var i=0;i<ordinaryChildren.length;i++){
-            jsonObject._children.push(nodeToJsonSync(_nodes[_prefix+""+ordinaryChildren[i]]));
-        }
-
-        //connections
-        for(var j=0;j<connections.length;j++){
-            jsonObject._children.push(createConnectionChild(_nodes[ _prefix+""+connections[j]]));
-        }
-
-        return jsonObject;
     }
     function fullJsonToString(jsonObject,indent){
         if(jsonObject === null){
@@ -474,58 +402,6 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
             }
         });
     }
-    function _serialize(core,rootHash,outPath,callback){
-        _core = core;
-        console.log('_serialize',(new Date()));
-        var loadObject = function(object,cb){
-            var waiting = (core.getChildrenRelids(object)).length;
-            if(waiting>0){
-                core.loadChildren(object,function(err,children){
-                    if(!err && children && children.length>0){
-                        var myErr = null;
-                        var myCb = function(err){
-                            if(myErr == null){
-                                myErr = err;
-                            }
-
-                            if(--waiting === 0){
-                                cb(myErr);
-                            }
-                        };
-                        for(var i=0;i<children.length;i++){
-                            _nodes[_prefix+core.getPath(children[i])] = children[i];
-                            loadObject(children[i],myCb);
-                        }
-                    } else {
-                        cb(err);
-                    }
-                });
-            } else {
-                cb(null);
-            }
-        };
-
-        core.loadRoot(rootHash,function(err,root){
-            if(!err && root){
-                _nodes[_prefix+core.getPath(root)] = root;
-                loadObject(root,function(err){
-                    if(!err){
-                        //now every node is loaded
-                        console.log('_serialize - loaded',(new Date()));
-                        _core = core; //just for sure
-                        var jsonProject = nodeToJsonSync(root);
-                        var stringProject = createXMLStart() + fullJsonToString(jsonProject,"");
-                        fs.writeFileSync(outPath,stringProject);
-                        callback(null);
-                    } else {
-                        callback(err);
-                    }
-                });
-            } else {
-                callback(err);
-            }
-        });
-    }
 
     //new TASYNC compatible functions
     function connectionToJson(object){
@@ -546,7 +422,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     dRefPort = null;
                 }
                 return TASYNC.call(function(s,sP,d,dP){
-                    if((theCore.isValidNode(sP) || sP === null) && (theCore.isValidNode(dP) || dP === null)){
+                    if((sP === null || theCore.isValidNode(sP)) && (dP === null || theCore.isValidNode(dP))){
                         var jsonObject = initJsonObject(object);
                         if(sP){
                             var sA = theCore.getParent(s);
@@ -596,34 +472,9 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     }
                 },s,sRefPort,d,dRefPort);
             } else {
+                console.log('hiba',object);
                 return null;
             }
-            /*if(theCore.isValidNode(s) && theCore.isValidNode(d)){
-                var jsonObject = initJsonObject(object);
-                //now we should add the two connection point tag
-                if(theCore.getRegistry(s,'metameta') === 'refport'){
-
-                }
-                jsonObject._children.push({
-                    _type:'connpoint',
-                    _empty:true,
-                    _attr:{
-                        role:"src",
-                        target:theCore.getRegistry(s,'id')
-                    }
-                });
-                jsonObject._children.push({
-                    _type:'connpoint',
-                    _empty:true,
-                    _attr:{
-                        role:"dst",
-                        target:theCore.getRegistry(d,'id')
-                    }
-                });
-                return jsonObject;
-            } else {
-                return null;
-            }*/
         },src,dst);
     }
     function objectIdScanningSync(object){
@@ -817,20 +668,10 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 return done;
         }
     }
-    function alter(core,hash,outPath){
+    function serialize(core,hash,outPath){
         theCore = core;
         var root = core.loadRoot(hash);
-
-        /*var children = TASYNC.call(theCore.loadChildren,root);
-        done = TASYNC.call(function(objectArray){
-            for(var i=0;i<objectArray.length;i++){
-                theNodes.push(objectArray[i]);
-            }
-            return;
-        },children);
-        */
         theString += createXMLStart();
-        _core = theCore;
 
         var done = TASYNC.call(idChecking,root);
         done = TASYNC.call(getChildren,root,"  ",done);
@@ -844,5 +685,5 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
     }
 
     //return TASYNC.wrap(serialize);
-    return alter;
+    return serialize;
 });
