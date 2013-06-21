@@ -46,6 +46,7 @@ if (typeof define !== "function") {
                 return;
             }
 
+            console.log('starting serialization',new Date());
             _outFile = args[0];
 
             _branch = COMMON.getParameters("branch");
@@ -99,6 +100,9 @@ if (typeof define !== "function") {
             },done);
             done = TASYNC.call(COMMON.closeProject, done);
             done = TASYNC.call(COMMON.closeDatabase, done);
+            done = TASYNC.call(function(){
+                console.log('finished',new Date());
+            },done);
             return done;
         }
 
