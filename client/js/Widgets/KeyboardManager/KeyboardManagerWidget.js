@@ -30,7 +30,7 @@ define(['logManager',
                 WebGMEGlobal.KeyboardManager.setEnabled(isChecked);
             }});
 
-        this.__checkbox.setChecked(false);
+        //this.__checkbox.setChecked(false);
 
         this.__checkbox.el.find('.sw').append('<i class="icon-keyboard"></i>');
 
