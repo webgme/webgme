@@ -647,6 +647,36 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
             case 'refport':
                 //we deal these kind of nodes during connection handling
                 return;
+            case 'reference':
+                var pointerNames = theCore.getPointerNames(object);
+                var ref = null;
+                if(pointerNames.indexOf('target') !== -1){
+                    ref = theCore.loadPointer(object,'target');
+                }
+                var jsonObject = initJsonObject(object);
+
+                var done = TASYNC.call(function(objectArray,referred){
+                    if(referred !== null){
+                        jsonObject._attr['referred'] = theCore.getRegistry(referred,'id');
+                    }
+                    theString += partialJsonToString(jsonObject,indent);
+
+                    var mydone;
+                    for(var i=0;i<objectArray.length;i++){
+                        theNodes.push(objectArray[i]);
+                        thePaths.push(theCore.getPath(objectArray[i]));
+                        mydone = TASYNC.call(getChildren,objectArray[i],indent+"  ",mydone);
+                    }
+                    return mydone;
+
+                },children,ref);
+
+                //post-children tasks
+                done = TASYNC.call(function(){
+                    theString += closeJsonToString(jsonObject,indent);
+                },done);
+
+                return done;
             default:
                 var jsonObject = initJsonObject(object);
                 theString += partialJsonToString(jsonObject,indent);
