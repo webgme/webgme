@@ -161,6 +161,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 	}
 
 	function makeCommit (xmlfile, hash) {
+        console.log('Making commit for root hash:',hash);
 		var project = COMMON.getProject();
 		hash = project.makeCommit([], hash, "parsed " + xmlfile);
 		return hash;

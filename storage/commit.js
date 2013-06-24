@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/sha1" ], function (ASSERT, SHA1) {
+define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT, SHA1, CANON) {
 	"use strict";
 	var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
 
@@ -52,7 +52,7 @@ define([ "util/assert", "util/sha1" ], function (ASSERT, SHA1) {
 					type: "commit"
 				};
 
-				var id = '#' + SHA1(JSON.stringify(commitObj));
+				var id = '#' + SHA1(CANON.stringify(commitObj));
 				commitObj[_project.ID_NAME] = id;
 
 				_project.insertObject(commitObj, function (err) {
