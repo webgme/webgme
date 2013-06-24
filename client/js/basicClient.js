@@ -1354,7 +1354,7 @@ define([
                             }
                         }
 
-                        _core.setRegistry(child,"decorator","DefaultDecorator");
+                        _core.setRegistry(child,"decorator","");
 
                         storeNode(child);
                         saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
@@ -1387,6 +1387,7 @@ define([
                         _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
                         _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
                         _core.setRegistry(connection,"isConnection",true);
+                        _core.setRegistry(connection,"decorator","");
                         storeNode(connection);
                         saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
                     }
