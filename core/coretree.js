@@ -687,7 +687,6 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-					//hash = "#" + SHA1(JSON.stringify(data));
                     hash = "#" + SHA1(CANON.stringify(data));
 					data[ID_NAME] = hash;
 

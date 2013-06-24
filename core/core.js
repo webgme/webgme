@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function (ASSERT, CoreTree, SHA1, TASYNC) {
+define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon" ], function (ASSERT, CoreTree, SHA1, TASYNC, CANON) {
 	"use strict";
 
 	// ----------------- RELID -----------------
@@ -285,7 +285,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync" ], function 
 				node = coretree.getParent(node);
 			}
 
-			return SHA1(JSON.stringify(data));
+			return SHA1(CANON.stringify(data));
 		};
 
 		var deleteNode = function (node) {

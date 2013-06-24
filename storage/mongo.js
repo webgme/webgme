@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
+define([ "mongodb", "util/assert", "util/canon" ], function (MONGODB, ASSERT, CANON) {
 	"use strict";
 
 	var PROJECT_REGEXP = new RegExp("^[0-9a-zA-Z_]*$");
@@ -201,7 +201,7 @@ define([ "mongodb", "util/assert" ], function (MONGODB, ASSERT) {
 						collection.findOne({
 							_id: object._id
 						}, function (err2, data) {
-							if (!err2 && JSON.stringify(object) === JSON.stringify(data)) {
+							if (!err2 && CANON.stringify(object) === CANON.stringify(data)) {
 								callback(null);
 							} else {
 								callback(err);
