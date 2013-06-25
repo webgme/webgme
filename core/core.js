@@ -164,6 +164,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
 				array = array.slice(0);
 				array.push(source);
+                array.sort();
 			} else {
 				array = [ source ];
 			}

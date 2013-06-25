@@ -98,6 +98,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
                     relid = undefined;
                 }
 				tag.node = core.createNode(stack[stack.length - 1].node,relid);
+                core.setRegistry(tag.node,'refPortCount',0);
                 //**********
 				objects += 1;
 			}
@@ -386,7 +387,8 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 		}
 
 		if (!refport) {
-			refport = core.createNode(reference);
+			refport = core.createNode(reference,""+core.getRegistry(reference,"refPortCount"));
+            core.setRegistry(reference,'refPortCount',core.getRegistry(reference,"refPortCount")+1);
 			core.setAttribute(refport, "name", core.getAttribute(target, "name"));
 			core.setRegistry(refport, "position", core.getRegistry(target, "position"));
 			core.setRegistry(refport, "id", targetid);

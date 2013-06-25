@@ -183,7 +183,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         isinstance: "isinstance",
         isprimary: "isprimary"
     };
-    var webOnly = ['position','isPort','isConnection','metameta','author','comment'];
+    var webOnly = ['position','isPort','isConnection','metameta','author','comment','refPortCount'];
     function stringToXMLString(text){
         text = text.replace(/\&/g,'&amp;');
         text = text.replace(/\"/g,'&quot;');

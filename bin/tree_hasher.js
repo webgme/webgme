@@ -141,6 +141,21 @@ define([ "util/assert", "core/tasync", "util/common", "util/canon", "util/sha1" 
 
         return done;
     }
+    function prettify(){
+        var pretty = "printing the hashes of the tree:\n\n";
+        pretty+=prettifyObject(theTree,"");
+        pretty+="\n\nprintout finished"
+        return pretty;
+    }
+    function prettifyObject(treeObject,indent){
+        var pretty = "";
+
+        for(var i in treeObject){
+            pretty+=indent+i+'\n';
+            pretty+=prettifyObject(treeObject[i],indent+"  ");
+        }
+        return pretty;
+    }
     function hasher(core,hash){
         theCore = core;
         theTree = {};
@@ -148,7 +163,7 @@ define([ "util/assert", "core/tasync", "util/common", "util/canon", "util/sha1" 
 
         var done = TASYNC.call(getChildren,theTree,root);
         return TASYNC.call(function(){
-            console.log('kecso\n',theTree);
+            console.log(prettify());
             return SHA1(CANON.stringify(theTree));
         },done);
     }
