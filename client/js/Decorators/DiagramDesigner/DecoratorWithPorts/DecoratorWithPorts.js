@@ -220,7 +220,7 @@ define(['logManager',
             isPort = (isPort === true || isPort === false) ? isPort : false;
         }
 
-        return isPort;
+        return true || isPort;
     };
 
     DecoratorWithPorts.prototype._removePort = function (portId) {

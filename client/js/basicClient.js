@@ -774,6 +774,10 @@ define([
                 } else {
                     core.loadByPath(id,function(err,node){
                         if(!err && node){
+                            var path = core.getPath(node);
+                            if(!nodesSoFar[path]){
+                                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
+                            }
                             base = node;
                             baseLoaded();
                         } else {
