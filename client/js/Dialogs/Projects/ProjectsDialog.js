@@ -75,7 +75,7 @@ define(['logManager',
             self._btnDelete.addClass("disabled");
 
             self._client.selectProjectAsync(selectedId,function(){
-                self._refreshProjectList();
+                self._dialog.modal('hide');
             });
 
             event.stopPropagation();
