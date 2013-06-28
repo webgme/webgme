@@ -95,11 +95,21 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
         if (params.clickFn) {
             $btn.on("click", function (event) {
-                params.clickFn.call(this, event, $(this).data());
+                if (!$btn.hasClass("disabled")) {
+                    params.clickFn.call(this, event, $(this).data());
+                }
                 event.stopPropagation();
                 event.preventDefault();
             });
         }
+
+        $btn.enabled = function (enabled) {
+            if (enabled === true) {
+                $btn.removeClass("disabled");
+            } else {
+                $btn.addClass("disabled");
+            }
+        };
 
         return $btn;
     };
