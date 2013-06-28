@@ -315,14 +315,21 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
             len = selectedIds.length,
-            id;
+            id,
+            connectionSelected = false;
 
         while (len--) {
             id = this._ComponentID2GmeID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
             }
+
+            if (this.designerCanvas.connectionIds.indexOf(selectedIds[len]) !== -1) {
+                connectionSelected = true;
+            }
         }
+
+        this.$btnConnectionVisualStyleRegistryFields.enabled(connectionSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy

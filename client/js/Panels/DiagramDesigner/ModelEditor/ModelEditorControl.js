@@ -20,7 +20,16 @@ define(['logManager',
         BACKGROUND_TEXT_SIZE = 30,
         DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
         DEFAULT_DECORATOR = "DecoratorWithPorts", /*'DefaultDecorator'*/
-        WIDGET_NAME = 'DiagramDesigner';
+        WIDGET_NAME = 'DiagramDesigner',
+        DEFAULT_LINE_STYLE = {};
+
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 2;
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
 
     ModelEditorControl = function (options) {
         var self = this,
@@ -69,6 +78,21 @@ define(['logManager',
             "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp);
 
         this.$btnGroupModelHierarchyUp.hide();
+
+        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
+
+        /************** VISUAL STYLES HIERARCHY BUTTON ****************/
+        this.$btnGroupVisualStyles = this.designerCanvas.toolBar.addButtonGroup();
+
+        this.$btnConnectionVisualStyleRegistryFields = this.designerCanvas.toolBar.addButton(
+             { "title": "Add connection visual style registry fields",
+                "icon": "icon-random",
+                "clickFn": function (/*event, data*/) {
+                    self._createConnectionVisualStyleRegistryFields();
+                }
+             }, this.$btnGroupVisualStyles);
+
+        this.$btnConnectionVisualStyleRegistryFields.enabled(false);
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
@@ -232,10 +256,30 @@ define(['logManager',
             lineStyle,
             getValue;
 
-        getValue = function (srcObj, srcKey, dstObj, dstKey) {
+        getValue = function (srcObj, srcKey, dstObj, dstKey, type) {
             if (srcObj) {
                 if (srcObj[srcKey]) {
-                    dstObj[dstKey] = srcObj[srcKey];
+                      switch(type) {
+                        case 'int':
+                            try {
+                                dstObj[dstKey] = parseInt(srcObj[srcKey], 10);
+                            } catch (e) {
+
+                            }
+                            break;
+                        case 'array':
+                            try {
+                                dstObj[dstKey] = JSON.parse(srcObj[srcKey]);
+                                if (!_.isArray(dstObj[dstKey])) {
+                                    delete dstObj[dstKey];
+                                }
+                            } catch (e) {
+
+                            }
+                            break;
+                        default:
+                            dstObj[dstKey] = srcObj[srcKey];
+                     }
                 }
             }
         };
@@ -258,13 +302,13 @@ define(['logManager',
                     }
                     lineStyle =  nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
 
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.WIDTH, objDescriptor, DiagramDesignerWidgetConstants.LINE_WIDTH);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.WIDTH, objDescriptor, DiagramDesignerWidgetConstants.LINE_WIDTH, 'int');
                     getValue(lineStyle, CONSTANTS.LINE_STYLE.COLOR, objDescriptor, DiagramDesignerWidgetConstants.LINE_COLOR);
                     getValue(lineStyle, CONSTANTS.LINE_STYLE.PATTERN, objDescriptor, DiagramDesignerWidgetConstants.LINE_PATTERN);
                     getValue(lineStyle, CONSTANTS.LINE_STYLE.TYPE, objDescriptor, DiagramDesignerWidgetConstants.LINE_TYPE);
                     getValue(lineStyle, CONSTANTS.LINE_STYLE.START_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_START_ARROW);
                     getValue(lineStyle, CONSTANTS.LINE_STYLE.END_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_END_ARROW);
-                    getValue(lineStyle, CONSTANTS.LINE_STYLE.POINTS, objDescriptor, DiagramDesignerWidgetConstants.LINE_POINTS);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.POINTS, objDescriptor, DiagramDesignerWidgetConstants.LINE_POINTS, 'array');
                 } else {
                     objDescriptor.kind = "MODEL";
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
@@ -735,6 +779,33 @@ define(['logManager',
                 node.printData();
             }
         }
+    };
+
+    ModelEditorControl.prototype._createConnectionVisualStyleRegistryFields = function () {
+        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
+            len = idList.length,
+            nodeObj,
+            resultLineStyle = {},
+            existingLineStyle;
+
+
+        this._client.startTransaction();
+
+        while (len--) {
+            if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {
+                nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
+
+                if (nodeObj) {
+                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+
+                    _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
+
+                    this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, resultLineStyle);
+                }
+            }
+        }
+
+        this._client.completeTransaction();
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
