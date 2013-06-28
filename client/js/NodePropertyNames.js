@@ -9,8 +9,7 @@ define([], function () {
         registryNames = {   "position" : "position",
                             "decorator": "decorator",
                             "isPort": "isPort",
-                            "segmentPoints": "segmentPoints",
-                            "lineType": "lineType" };
+                            "lineStyle": "lineStyle" };
 
     return { "Attributes": attributeNames,
              "Registry": registryNames };

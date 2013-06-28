@@ -3,11 +3,13 @@
 define(['logManager',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     './ModelEditorControl.DEBUG',
     'js/Decorators/DecoratorDB'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         ModelEditorControlDEBUG,
                                                         DecoratorDB) {
@@ -226,7 +228,17 @@ define(['logManager',
         var nodeObj = this._client.getNode(nodeId),
             objDescriptor,
             pos,
-            defaultPos = 0;
+            defaultPos = 0,
+            lineStyle,
+            getValue;
+
+        getValue = function (srcObj, srcKey, dstObj, dstKey) {
+            if (srcObj) {
+                if (srcObj[srcKey]) {
+                    dstObj[dstKey] = srcObj[srcKey];
+                }
+            }
+        };
 
         if (nodeObj) {
             objDescriptor = {};
@@ -244,8 +256,15 @@ define(['logManager',
                     if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
                         objDescriptor.arrowEnd = "block";
                     }
-                    objDescriptor.lineType =  nodeObj.getRegistry(nodePropertyNames.Registry.lineType) || "L";
-                    objDescriptor.segmentPoints = nodeObj.getRegistry(nodePropertyNames.Registry.segmentPoints);
+                    lineStyle =  nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
+
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.WIDTH, objDescriptor, DiagramDesignerWidgetConstants.LINE_WIDTH);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.COLOR, objDescriptor, DiagramDesignerWidgetConstants.LINE_COLOR);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.PATTERN, objDescriptor, DiagramDesignerWidgetConstants.LINE_PATTERN);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.TYPE, objDescriptor, DiagramDesignerWidgetConstants.LINE_TYPE);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.START_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_START_ARROW);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.END_ARROW, objDescriptor, DiagramDesignerWidgetConstants.LINE_END_ARROW);
+                    getValue(lineStyle, CONSTANTS.LINE_STYLE.POINTS, objDescriptor, DiagramDesignerWidgetConstants.LINE_POINTS);
                 } else {
                     objDescriptor.kind = "MODEL";
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);

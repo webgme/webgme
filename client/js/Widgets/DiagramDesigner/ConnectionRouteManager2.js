@@ -200,9 +200,11 @@ define(['logManager'], function (logManager) {
             slicex = sourceCoordinates.w / (this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1);
             slicey = sourceCoordinates.h / (this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1);
 
+            /***************startpoint's coordinates*********************/
             connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2],
                                         "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] });
 
+            /***************startpoint's defined connector length*********************/
             if (sourceCoordinates.len !== 0) {
                 connectorDelta = this._getConnectorDelta(sourceCoordinates);
                 connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
@@ -213,12 +215,22 @@ define(['logManager'], function (logManager) {
             slicex = targetCoordinates.w / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
             slicey = targetCoordinates.h / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
 
+            if (segmentPoints && segmentPoints.length > 0) {
+                len = segmentPoints.length;
+                for (i = 0; i < len; i += 1) {
+                    connectionPathPoints.push({ "x": segmentPoints[i][0],
+                        "y": segmentPoints[i][1]});
+                }
+            }
+
+            /***************endpoint's defined connector length*********************/
             if (targetCoordinates.len !== 0) {
                 connectorDelta = this._getConnectorDelta(targetCoordinates);
                 connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
                     "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)});
             }
 
+            /***************endpoint's coordinates*********************/
             connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2],
                 "y": targetCoordinates.y + slicey * targetConnectionPoint[2]});
         }
@@ -231,34 +243,37 @@ define(['logManager'], function (logManager) {
             }
         }
 
-        //only vertical or horizontal lines are allowed, so insert extra segment points if needed
-        connectionPathPointsTemp = connectionPathPoints.slice(0);
-        len = connectionPathPointsTemp.length;
-        connectionPathPoints = [];
+        //when no segment points are defined route with horizontal and vertical lines
+        if (segmentPoints.length === 0) {
+            //only vertical or horizontal lines are allowed, so insert extra segment points if needed
+            connectionPathPointsTemp = connectionPathPoints.slice(0);
+            len = connectionPathPointsTemp.length;
+            connectionPathPoints = [];
 
-        if (len > 0) {
-            p1 = connectionPathPointsTemp[0];
-            connectionPathPoints.push(p1);
+            if (len > 0) {
+                p1 = connectionPathPointsTemp[0];
+                connectionPathPoints.push(p1);
 
-            for (i = 1; i < len; i += 1) {
-                p1 = connectionPathPointsTemp[i - 1];
-                p2 = connectionPathPointsTemp[i];
+                for (i = 1; i < len; i += 1) {
+                    p1 = connectionPathPointsTemp[i - 1];
+                    p2 = connectionPathPointsTemp[i];
 
-                //see if there is horizontal and vertical difference between p1 and p2
-                dx = p2.x - p1.x;
-                dy = p2.y - p1.y;
+                    //see if there is horizontal and vertical difference between p1 and p2
+                    dx = p2.x - p1.x;
+                    dy = p2.y - p1.y;
 
-                if (dx !== 0 && dy !== 0) {
-                    //insert 2 extra points in the center to fix the difference
-                    connectionPathPoints.push({ "x": p1.x,
-                                                "y": p1.y + dy / 2 });
+                    if (dx !== 0 && dy !== 0) {
+                        //insert 2 extra points in the center to fix the difference
+                        connectionPathPoints.push({ "x": p1.x,
+                            "y": p1.y + dy / 2 });
 
-                    connectionPathPoints.push({ "x": p1.x + dx,
-                                                "y": p1.y + dy / 2 });
+                        connectionPathPoints.push({ "x": p1.x + dx,
+                            "y": p1.y + dy / 2 });
+                    }
+
+                    //p2 always goes to the list
+                    connectionPathPoints.push(p2);
                 }
-
-                //p2 always goes to the list
-                connectionPathPoints.push(p2);
             }
         }
 

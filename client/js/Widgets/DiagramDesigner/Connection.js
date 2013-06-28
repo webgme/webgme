@@ -16,7 +16,7 @@ define(['logManager',
         CONNECTION_SHADOW_DEFAULT_WIDTH = 4,
         CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
         CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
-        CONNECTION_DEFAULT_LINE_TYPE = "L";
+        CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
 
     ConnectionComponent = function (objId) {
         this.id = objId;
@@ -46,19 +46,19 @@ define(['logManager',
     };
 
     ConnectionComponent.prototype._initializeConnectionProps = function (objDescriptor) {
-        this.segmentPoints = objDescriptor.segmentPoints ? objDescriptor.segmentPoints.slice(0) : [];
+        this.segmentPoints = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS] ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].slice(0) : [];
         this.reconnectable = objDescriptor.reconnectable === true ? true : false;
 
         /*PathAttributes*/
-        this.designerAttributes.arrowStart = objDescriptor.arrowStart || CONNECTION_DEFAULT_END;
-        this.designerAttributes.arrowEnd = objDescriptor.arrowEnd || CONNECTION_DEFAULT_END;
-        this.designerAttributes.color = objDescriptor.color || CONNECTION_DEFAULT_COLOR;
-        this.designerAttributes.width = objDescriptor.width || CONNECTION_DEFAULT_WIDTH;
-        this.designerAttributes.shadowWidth = parseInt(this.designerAttributes.width, 10) + CONNECTION_SHADOW_DEFAULT_WIDTH;
+        this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] || CONNECTION_DEFAULT_END;
+        this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
+        this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
+        this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
-        this.designerAttributes.shadowColor = objDescriptor.shadowColor || CONNECTION_SHADOW_DEFAULT_COLOR;
-        this.designerAttributes.lineType = objDescriptor.lineType || CONNECTION_DEFAULT_LINE_TYPE;
+        this.designerAttributes.shadowColor = CONNECTION_SHADOW_DEFAULT_COLOR;
+        this.designerAttributes.lineType = objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] || CONNECTION_DEFAULT_LINE_TYPE;
 
         this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowWidth, this.designerAttributes.width, false);
         this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowWidth, this.designerAttributes.width, true);
