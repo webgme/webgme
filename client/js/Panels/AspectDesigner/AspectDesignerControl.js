@@ -28,7 +28,10 @@ define(['logManager',
 
         CONN_TYPE_HIERARCHY_PARENT = 'HIERARCHY_PARENT',
 
-        SET_PREFIX = 'SET_';
+        SET_PREFIX = 'SET_',
+
+        DEFAULT_DECORATOR = "DefaultDecorator",
+        WIDGET_NAME = 'DiagramDesigner';
 
     AspectDesignerControl = function (options) {
         var self = this,
@@ -252,26 +255,17 @@ define(['logManager',
                         itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                         if (itemDecorator && itemDecorator !== "") {
-                            decoratorsToDownload.pushUnique(this._getFullDecoratorName("DefaultDecorator"));
+                            decoratorsToDownload.pushUnique(DEFAULT_DECORATOR);
                         }
                     }
                 }
             }
 
-            if (decoratorsToDownload.length === 0) {
-                //all the required decorators are already available
-                this._dispatchEvents(nextBatchInQueue);
-            } else {
-                //few decorators need to be downloaded
-                this._client.decoratorManager.download(decoratorsToDownload, function () {
-                    self._dispatchEvents(nextBatchInQueue);
-                });
-            }
+            //few decorators need to be downloaded
+            this._client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+                self._dispatchEvents(nextBatchInQueue);
+            });
         }
-    };
-
-    AspectDesignerControl.prototype._getFullDecoratorName = function (decorator) {
-        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     AspectDesignerControl.prototype._dispatchEvents = function (events) {
@@ -326,7 +320,7 @@ define(['logManager',
 
         _getSetMembershipInfo = function (node) {
             var result = {},
-                availableSets = node.getSetNames(),
+                availableSets = node.getValidSetNames(),
                 len = availableSets.length;
 
             while (len--) {
@@ -457,7 +451,7 @@ define(['logManager',
         //update selfRegistry (for node positions)
         this._selfRegistry = aspectRegistry;
 
-        //check added nodes
+        //check deleted nodes
         diff = _.difference(this.currentNodeInfo.members, aspectRegistry.Members);
         len = diff.length;
         while (len--) {
@@ -465,7 +459,7 @@ define(['logManager',
             territoryChanged = true;
         }
 
-        //check removed nodes
+        //check added nodes
         diff = _.difference(aspectRegistry.Members, this.currentNodeInfo.members);
         len = diff.length;
         while (len--) {
@@ -480,10 +474,12 @@ define(['logManager',
             gmeID = diff[len];
             objDesc = this._getObjectDescriptor(gmeID);
 
-            i = this._GmeID2ComponentID[gmeID].length;
-            while (i--) {
-                componentID = this._GmeID2ComponentID[gmeID][i];
-                this.designerCanvas.updateDesignerItem(componentID, objDesc);
+            if (this._GmeID2ComponentID[gmeID]) {
+                i = this._GmeID2ComponentID[gmeID].length;
+                while (i--) {
+                    componentID = this._GmeID2ComponentID[gmeID][i];
+                    this.designerCanvas.updateDesignerItem(componentID, objDesc);
+                }
             }
         }
 
@@ -630,7 +626,7 @@ define(['logManager',
                 this._GmeID2ComponentID[gmeID] = [];
                 this._GMEModels.push(gmeID);
 
-                decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+                decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
 
                 objDesc.decoratorClass = decClass;
                 objDesc.control = this;
@@ -934,7 +930,7 @@ define(['logManager',
         while (len--) {
             componentID = this._GmeID2ComponentID[gmeID][len];
 
-            decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+            decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
 
             objDesc.decoratorClass = decClass;
 

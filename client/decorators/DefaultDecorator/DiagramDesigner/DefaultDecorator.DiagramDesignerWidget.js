@@ -1,21 +1,17 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
-    'js/Constants',
+define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Widgets/DiagramDesigner/DecoratorBase',
-    'text!./DefaultDecoratorTemplate.html',
-    'css!/css/Decorators/DiagramDesigner/DefaultDecorator/DefaultDecorator'], function (logManager,
-                                                       util,
-                                                       CONSTANTS,
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
+    'text!./DefaultDecorator.DiagramDesignerWidget.html',
+    'css!./DefaultDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                        nodePropertyNames,
-                                                       DecoratorBase,
+                                                       DiagramDesignerWidgetDecoratorBase,
                                                        defaultDecoratorTemplate) {
 
     var DefaultDecorator,
-        __parent__ = DecoratorBase,
-        __parent_proto__ = DecoratorBase.prototype,
+        __parent__ = DiagramDesignerWidgetDecoratorBase,
+        __parent_proto__ = DiagramDesignerWidgetDecoratorBase.prototype,
         DECORATOR_ID = "DefaultDecorator";
 
     DefaultDecorator = function (options) {
@@ -31,13 +27,12 @@ define(['logManager',
     _.extend(DefaultDecorator.prototype, __parent_proto__);
     DefaultDecorator.prototype.DECORATORID = DECORATOR_ID;
 
-    /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
+    /*********************** OVERRIDE DiagramDesignerWidgetDecoratorBase MEMBERS **************************/
 
     DefaultDecorator.prototype.$DOMBase = $(defaultDecoratorTemplate);
 
     DefaultDecorator.prototype.on_addTo = function () {
-        var gmeID = this._metaInfo[CONSTANTS.GME_ID],
-            self = this;
+        var self = this;
 
         this._renderName();
 
@@ -55,13 +50,6 @@ define(['logManager',
 
         //let the parent decorator class do its job first
         __parent_proto__.on_addTo.apply(this, arguments);
-    };
-
-    DefaultDecorator.prototype.on_addToPartBrowser = function () {
-        this._renderName();
-
-        //let the parent decorator class do its job first
-        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
     };
 
     DefaultDecorator.prototype._renderName = function () {

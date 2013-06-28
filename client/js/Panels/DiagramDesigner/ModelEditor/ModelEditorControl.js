@@ -13,12 +13,12 @@ define(['logManager',
                                                         DecoratorDB) {
 
     var ModelEditorControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/",      //TODO: fix path;
         GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
         DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
-        DEFAULT_DECORATOR = 'DecoratorWithPorts' /*"DefaultDecorator"*/;
+        DEFAULT_DECORATOR = "DecoratorWithPorts", /*'DefaultDecorator'*/
+        WIDGET_NAME = 'DiagramDesigner';
 
     ModelEditorControl = function (options) {
         var self = this,
@@ -44,8 +44,6 @@ define(['logManager',
             this.logger.error("ModelEditorControl's DesignerCanvas is not specified...");
             throw ("ModelEditorControl can not be created");
         }
-
-
 
         this._selfPatterns = {};
         this._components = {};
@@ -327,25 +325,15 @@ define(['logManager',
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                     if (itemDecorator && itemDecorator !== "") {
-                        decoratorsToDownload.pushUnique( this._getFullDecoratorName(itemDecorator));
+                        decoratorsToDownload.pushUnique(itemDecorator);
                     }
                 }
             }
 
-            if (decoratorsToDownload.length === 0) {
-                //all the required decorators are already available
-                this._dispatchEvents(nextBatchInQueue);
-            } else {
-                //few decorators need to be downloaded
-                this._client.decoratorManager.download(decoratorsToDownload, function () {
-                    self._dispatchEvents(nextBatchInQueue);
-                });
-            }
+            this._client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+                self._dispatchEvents(nextBatchInQueue);
+            });
         }
-    };
-
-    ModelEditorControl.prototype._getFullDecoratorName = function (decorator) {
-        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
@@ -402,6 +390,18 @@ define(['logManager',
         this.processNextInQueue();
     };
 
+    ModelEditorControl.prototype._getItemDecorator = function (decorator) {
+        var result;
+
+        result = this._client.decoratorManager.getDecoratorForWidget(decorator, WIDGET_NAME);
+
+        if (!result) {
+            result = this._client.decoratorManager.getDecoratorForWidget(DEFAULT_DECORATOR, WIDGET_NAME);
+        }
+
+        return result;
+    };
+
     // PUBLIC METHODS
     ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
         var uiComponent,
@@ -425,7 +425,7 @@ define(['logManager',
 
                         this._GMEModels.push(gmeID);
 
-                        decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+                        decClass = this._getItemDecorator(objDesc.decorator);
 
                         objDesc.decoratorClass = decClass;
                         objDesc.control = this;
@@ -546,7 +546,7 @@ define(['logManager',
                             while (len--) {
                                 componentID = this._GmeID2ComponentID[gmeID][len];
 
-                                decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+                                decClass = this._getItemDecorator(objDesc.decorator);
 
                                 objDesc.decoratorClass = decClass;
 

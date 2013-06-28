@@ -43,7 +43,7 @@ define(['logManager',
             decoratorInstance;
 
         if (partContainerDiv.length > 0) {
-            this.updatePart(partId, partDesc);
+            return this.updatePart(partId, partDesc);
         } else {
             decoratorInstance = new DecoratorClass();
             decoratorInstance.setControl(partDesc.control);
@@ -53,14 +53,14 @@ define(['logManager',
             partContainerDiv.attr({"id": partId});
 
             //render the part inside 'partContainerDiv'
-            decoratorInstance.on_addToPartBrowser();
+            decoratorInstance.beforeAppend();
             partContainerDiv.append(decoratorInstance.$el);
+
 
             //add part's GUI
             this._list.append(partContainerLi.append(partContainerDiv));
 
-            decoratorInstance.onRenderGetLayoutInfo();
-            decoratorInstance.onRenderSetLayoutInfo();
+            decoratorInstance.afterAppend();
 
             this._makeDraggable({ "el": partContainerDiv,
                 "partDesc": partDesc,
@@ -68,6 +68,8 @@ define(['logManager',
 
             this._parts[partId] = {"decoratorInstance": decoratorInstance,
                 "decoratorClass": partDesc.decoratorClass} ;
+
+            return decoratorInstance;
         }
     };
 
@@ -91,14 +93,13 @@ define(['logManager',
                 decoratorInstance.setMetaInfo(metaInfo);
 
                 //render the part inside 'draggedEl'
-                decoratorInstance.on_addToPartBrowser();
+                decoratorInstance.beforeAppend();
                 draggedEl.append(decoratorInstance.$el);
 
                 //add part's GUI
                 self._list.append(partContainerLi.append(draggedEl));
 
-                decoratorInstance.onRenderGetLayoutInfo();
-                decoratorInstance.onRenderSetLayoutInfo();
+                decoratorInstance.afterAppend();
 
                 draggedEl.remove();
                 partContainerLi.remove();
@@ -131,7 +132,7 @@ define(['logManager',
     };
 
     PartBrowserWidget.prototype.updatePart = function (partId, partDesc) {
-        var partDecoratorInstance = this._parts[partId].decoratorInstance,
+        var partDecoratorInstance = this._parts[partId] ? this._parts[partId].decoratorInstance : undefined,
             DecoratorClass = partDesc.decoratorClass,
             partContainerDiv = this._list.find("div[id='" + partId + "']");
 
@@ -153,23 +154,27 @@ define(['logManager',
                 partDecoratorInstance.setMetaInfo(oldMetaInfo);
 
                 //attach new one
-                partDecoratorInstance.on_addToPartBrowser();
+                partDecoratorInstance.beforeAppend();
                 partContainerDiv.append(partDecoratorInstance.$el);
-
-                partDecoratorInstance.onRenderGetLayoutInfo();
-                partDecoratorInstance.onRenderSetLayoutInfo();
+                partDecoratorInstance.afterAppend();
 
                 //update in partList
                 this._parts[partId].decoratorInstance = partDecoratorInstance;
                 this._parts[partId].decoratorClass = partDesc.decoratorClass;
 
                 this._logger.debug("DesignerItem's ['" + this.id + "'] decorator  has been updated.");
+
+                return partDecoratorInstance;
             } else {
                 //if decorator instance not changed
                 //let the decorator instance know about the update
                 partDecoratorInstance.update();
+
+                return undefined;
             }
         }
+
+        return undefined;
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
@@ -179,6 +184,15 @@ define(['logManager',
             this._list.find('.' + PART_CLASS).draggable('disable');
         } else {
             this._list.find('.' + PART_CLASS).draggable('enable');
+        }
+    };
+
+
+    PartBrowserWidget.prototype.notifyPart = function (partId, componentList) {
+        var partDecoratorInstance = this._parts[partId] ? this._parts[partId].decoratorInstance : undefined;
+
+        if (partDecoratorInstance) {
+            partDecoratorInstance.notifyComponentEvent(componentList);
         }
     };
 

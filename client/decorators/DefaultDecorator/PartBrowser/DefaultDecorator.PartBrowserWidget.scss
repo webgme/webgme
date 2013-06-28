@@ -1,0 +1,14 @@
+$part-browser-max-width: 150px;
+
+
+
+.part-browser {
+  .default-decorator {
+    .name {
+      max-width: $part-browser-max-width;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+

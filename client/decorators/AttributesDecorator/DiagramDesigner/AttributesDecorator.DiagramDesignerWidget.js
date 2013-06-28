@@ -1,23 +1,19 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
-    'js/Constants',
+define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Widgets/DiagramDesigner/DecoratorBase',
-    'text!./AttributesDecoratorTemplate.html',
+    '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
+    'text!./AttributesDecorator.DiagramDesignerWidget.html',
     './Attribute',
-    'css!/css/Decorators/DiagramDesigner/AttributesDecorator/AttributesDecorator'], function (logManager,
-                                                          util,
-                                                          CONSTANTS,
+    'css!./AttributesDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
-                                                          DecoratorBase,
+                                                          DefaultDecoratorDiagramDesignerWidget,
                                                           AttributesDecoratorTemplate,
                                                           Attribute) {
 
     var AttributesDecorator,
-        __parent__ = DecoratorBase,
-        __parent_proto__ = DecoratorBase.prototype,
+        __parent__ = DefaultDecoratorDiagramDesignerWidget,
+        __parent_proto__ = DefaultDecoratorDiagramDesignerWidget.prototype,
         DECORATOR_ID = "AttributesDecorator";
 
     AttributesDecorator = function (options) {
@@ -70,14 +66,6 @@ define(['logManager',
         });
     };
 
-    //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    AttributesDecorator.prototype.on_addToPartBrowser = function () {
-        //let the parent decorator class do its job first
-        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
-
-        this._renderContent();
-    };
-
     AttributesDecorator.prototype._renderContent = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
@@ -91,12 +79,8 @@ define(['logManager',
         this._skinParts.$attributesContainer = this.$el.find(".attributes");
         this._skinParts.$addAttributeContainer = this.$el.find(".add-new");
 
-        if (this.renderedInPartBrowser === true) {
-            this._skinParts.$addAttributeContainer.remove();
-        } else {
-            if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
-                this._skinParts.$addAttributeContainer.detach();
-            }
+        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
+            this._skinParts.$addAttributeContainer.detach();
         }
 
         /* FILL WITH DATA */

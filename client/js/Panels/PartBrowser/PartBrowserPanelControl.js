@@ -9,13 +9,16 @@ define(['logManager',
                              nodePropertyNames) {
 
     var PartBrowserControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/";      //TODO: fix path;
+        WIDGET_NAME = 'PartBrowser',
+        DEFAULT_DECORATOR = "DefaultDecorator";
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
         this._currentNodeId = null;
+        this._currentNodeParts = [];
+        this._componentIDPartIDMap = {};
 
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
@@ -31,13 +34,13 @@ define(['logManager',
         }
 
         this._currentNodeId = nodeId;
+        this._currentNodeParts = [];
+        this._componentIDPartIDMap = {};
 
         if (this._currentNodeId) {
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
-
-            this._displayedParts = [];
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
@@ -53,23 +56,23 @@ define(['logManager',
             objDescriptor = {};
 
             objDescriptor.id = nodeObj.getId();
-            objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
-            objDescriptor.kind = nodeObj.getBaseId();
-            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "DefaultDecorator";
+            objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
         }
 
         return objDescriptor;
-    };
-
-    PartBrowserControl.prototype._getFullDecoratorName = function (decorator) {
-        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     PartBrowserControl.prototype.onOneEvent = function (events) {
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("onOneEvent '" + i + "' items");
+        this._logger.debug("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
+
+        this._updatePackage = {'inserted': [],
+                               'updated': [],
+                               'decorators': [DEFAULT_DECORATOR]};
+
+        this._notifyPackage = {};
 
         while (i--) {
             e = events[i];
@@ -86,42 +89,69 @@ define(['logManager',
             }
         }
 
+        this._handleUpdatePackageDecorators(this._updatePackage);
+
+        this._handleDecoratorNotification(this._notifyPackage);
+
         this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
     // PUBLIC METHODS
     PartBrowserControl.prototype._onLoad = function (gmeID) {
+        var decorator;
+
         if (this._currentNodeId === gmeID) {
-            this._refreshParts(gmeID);
+            this._processPartsOwnerNode(gmeID);
+        } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
+            //part item got loaded
+            this._updatePackage.inserted.push(gmeID);
+
+            decorator = this._getObjectDescriptor(gmeID).decorator;
+            if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                this._updatePackage.decorators.push(decorator);
+            }
         }
+
+        this._buildNotifyPackageByID(gmeID);
     };
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
+        var decorator;
+
         if (this._currentNodeId === gmeID) {
-            this._refreshParts(gmeID);
-        } else if (this._displayedParts.indexOf(gmeID) !== -1) {
-            //update on one of the parts
-            this._refreshOnePart(gmeID);
+            this._processPartsOwnerNode(gmeID);
+        } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
+            //part item got updated
+            this._updatePackage.updated.push(gmeID);
+
+            decorator = this._getObjectDescriptor(gmeID).decorator;
+            if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                this._updatePackage.decorators.push(decorator);
+            }
         }
+
+        this._buildNotifyPackageByID(gmeID);
     };
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._currentNodeId === gmeID) {
-            this._refreshParts(gmeID);
+
         }
+
+        this._notifyPartsByID(gmeID);
     };
 
-    PartBrowserControl.prototype._refreshParts = function (gmeID) {
+    PartBrowserControl.prototype._processPartsOwnerNode = function (gmeID) {
         var node = this._client.getNode(gmeID),
             currentMembers = node ? node.getValidChildrenTypes() : [],
-            oldMembers = this._displayedParts.slice(0),
+            oldMembers = this._currentNodeParts.slice(0),
             len,
             diff,
             idx,
             id,
-            requiredDecorators = [],
             diffInserted,
-            self = this;
+            self = this,
+            territoryChanged = false;
 
         if (node) {
 
@@ -131,11 +161,16 @@ define(['logManager',
             while (len--) {
                 id = diff[len];
                 this._partBrowserView.removePart(id);
-                idx = this._displayedParts.indexOf(id);
-                this._displayedParts.splice(idx, 1);
+
+                idx = this._currentNodeParts.indexOf(id);
+                this._currentNodeParts.splice(idx, 1);
 
                 //remove it from the territory
                 delete this._selfPatterns[id];
+
+                this._logger.debug('Removing id "' + id + '" from territory...');
+
+                territoryChanged = true;
             }
 
             //check the added ones
@@ -143,73 +178,163 @@ define(['logManager',
             len = diffInserted.length;
             while (len--) {
                 id = diffInserted[len];
-                requiredDecorators.pushUnique(this._getFullDecoratorName(this._getObjectDescriptor(id).decorator));
+                this._currentNodeParts.push(id);
+
+                this._logger.debug('Adding id "' + id + '" to territory...');
 
                 //add to the territory
                 this._selfPatterns[id] = { "children": 0 };
+                territoryChanged = true;
             }
 
             //update the territory
-            this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            if (territoryChanged) {
+                //TODO: review this async here
+                setTimeout(function () {
+                    self._logger.debug('Updating territory with ruleset: ' + JSON.stringify(self._selfPatterns));
+                    self._client.updateTerritory(self._territoryId, self._selfPatterns);
+                }, 10);
+            }
+        }
+    };
 
-            //download the required decorators
-            //few decorators need to be downloaded
-            this._client.decoratorManager.download(requiredDecorators, function () {
-                self._refreshInsertedUpdatedParts({ "inserted": diffInserted,
-                                                    "updated": [] });
+
+    PartBrowserControl.prototype._handleUpdatePackageDecorators = function (updatePackage) {
+        var self = this;
+
+        if (updatePackage.decorators.length > 0) {
+            this._client.decoratorManager.download(updatePackage.decorators, WIDGET_NAME, function () {
+                self._decoratorsDownloaded(updatePackage);
             });
         }
     };
 
-    PartBrowserControl.prototype._refreshInsertedUpdatedParts = function (params) {
-        var inserted = params.inserted,
-            updated = params.updated,
-            len,
-            id,
-            desc,
-            decClass;
 
-        len = inserted.length;
-        while (len--) {
-            id = inserted[len];
-            desc = this._getObjectDescriptor(id);
+    PartBrowserControl.prototype._getItemDecorator = function (decorator) {
+        var result;
 
-            decClass = this._client.decoratorManager.get(this._getFullDecoratorName(desc.decorator));
-
-            desc.decoratorClass = decClass;
-            desc.control = this;
-            desc.metaInfo = {};
-            desc.metaInfo[CONSTANTS.GME_ID] = id;
-
-            this._partBrowserView.addPart(id, desc);
-            this._displayedParts.push(id);
+        result = this._client.decoratorManager.getDecoratorForWidget(decorator, WIDGET_NAME);
+        if (!result) {
+            result = this._client.decoratorManager.getDecoratorForWidget(DEFAULT_DECORATOR, WIDGET_NAME);
         }
 
-        len = updated.length;
-        while (len--) {
-            id = updated[len];
-            desc = this._getObjectDescriptor(id);
-
-            decClass = this._client.decoratorManager.get(this._getFullDecoratorName(desc.decorator));
-
-            desc.decoratorClass = decClass;
-            desc.control = this;
-            desc.metaInfo = {};
-            desc.metaInfo[CONSTANTS.GME_ID] = id;
-
-            this._partBrowserView.updatePart(id, desc);
-        }
+        return result;
     };
 
-    PartBrowserControl.prototype._refreshOnePart = function (gmeID) {
-        var decorator = this._getObjectDescriptor(gmeID).decorator,
+
+    PartBrowserControl.prototype._decoratorsDownloaded = function (updatePackage) {
+        var i,
+            id,
+            decoratorInstance,
+            getDecoratorTerritoryQueries,
+            territoryChanged = false,
             self = this;
 
-        if (decorator !== null && decorator !== undefined) {
-            this._client.decoratorManager.download([this._getFullDecoratorName(decorator)], function () {
-                self._refreshInsertedUpdatedParts({ "inserted": [],
-                    "updated": [gmeID] });
-            });
+        this._logger.debug('_decoratorsDownloaded: ' + updatePackage.inserted + ', ' + updatePackage.updated + ', ' + updatePackage.decorators);
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            self._selfPatterns[entry] = query[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
+
+        //handle inserted
+        i = updatePackage.inserted.length;
+        while (i--) {
+            id = updatePackage.inserted[i];
+
+            if (this._currentNodeParts.indexOf(id) !== -1) {
+                decoratorInstance = this._partBrowserView.addPart(id, this._getPartDescriptor(id));
+                getDecoratorTerritoryQueries(decoratorInstance);
+            } else {
+                //this should not happen at all
+                this._logger.debug('_decoratorsDownloaded updatePackage.inserted contains id "' + id + '" that is not part of the current object "' + this._currentNodeId + '"');
+            }
+        }
+
+        //handle updated
+        i = updatePackage.updated.length;
+        while (i--) {
+            id = updatePackage.updated[i];
+
+            if (this._currentNodeParts.indexOf(id) !== -1) {
+                decoratorInstance = this._partBrowserView.updatePart(id, this._getPartDescriptor(id));
+                getDecoratorTerritoryQueries(decoratorInstance);
+            } else {
+                //this should not happen at all
+                this._logger.debug('_decoratorsDownloaded updatePackage.updated contains id "' + id + '" that is not part of the current object "' + this._currentNodeId + '"');
+            }
+        }
+
+        //update the territory
+        if (territoryChanged) {
+            //TODO: review this async here
+            setTimeout(function () {
+                self._logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
+                self._client.updateTerritory(self._territoryId, self._selfPatterns);
+            }, 10);
+        }
+    };
+
+    PartBrowserControl.prototype._getPartDescriptor = function (id) {
+        var desc = this._getObjectDescriptor(id);
+
+        desc.decoratorClass = this._getItemDecorator(desc.decorator);
+        desc.control = this;
+        desc.metaInfo = {};
+        desc.metaInfo[CONSTANTS.GME_ID] = id;
+
+        return desc;
+    };
+
+    PartBrowserControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
+        this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
+        this._componentIDPartIDMap[componentID].push(partId);
+    };
+
+    PartBrowserControl.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {
+        var idx;
+
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[componentID]) {
+           idx = this._componentIDPartIDMap[componentID].indexOf(partId);
+            if (idx !== -1) {
+                this._componentIDPartIDMap[componentID].splice(idx, 1);
+            }
+        }
+    };
+
+    PartBrowserControl.prototype._buildNotifyPackageByID = function (gmeID) {
+        var len;
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
+            len = this._componentIDPartIDMap[gmeID].length;
+            while (len--) {
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push(gmeID);
+            }
+        }
+    };
+
+    PartBrowserControl.prototype._handleDecoratorNotification = function (notifyPackage) {
+        var partId;
+        if (notifyPackage) {
+            for (partId in notifyPackage) {
+                if (notifyPackage.hasOwnProperty(partId)) {
+                    this._logger.debug('NotifyPartDecorator: ' + partId + ', GME_IDs: ' + notifyPackage[partId]);
+                    this._partBrowserView.notifyPart(partId, notifyPackage[partId]);
+                }
+            }
         }
     };
 

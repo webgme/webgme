@@ -1,54 +1,43 @@
 "use strict";
 
-define(['logManager',
-    'clientUtil',
-    'js/Decorators/DiagramDesigner/DefaultDecorator/DefaultDecorator',
-    'text!./CircleDecoratorTemplate.html',
-    'css!/css/Decorators/DiagramDesigner/CircleDecorator/CircleDecorator'], function (logManager,
-                                                          util,
-                                                          DefaultDecorator,
-                                                          circleDecoratorTemplate) {
+define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
+    'text!./CircleDecorator.DiagramDesignerWidget.html',
+    'css!./CircleDecorator.DiagramDesignerWidget'], function (
+                                                          DefaultDecoratorDiagramDesignerWidget,
+                                                        circleDecoratorDiagramDesignerWidgetTemplate) {
 
-    var CircleDecorator,
-        __parent__ = DefaultDecorator,
-        __parent_proto__ = DefaultDecorator.prototype,
-        DECORATOR_ID = "CircleDecorator",
+    var CircleDecoratorDiagramDesignerWidget,
+        __parent__ = DefaultDecoratorDiagramDesignerWidget,
+        DECORATOR_ID = "CircleDecoratorDiagramDesignerWidget",
         CANVAS_SIZE = 40,
         FILL_COLOR = '#000000';
 
-    CircleDecorator = function (options) {
+    CircleDecoratorDiagramDesignerWidget = function (options) {
         var opts = _.extend( {}, options);
 
         __parent__.apply(this, [opts]);
 
-        this.logger.debug("CircleDecorator ctor");
+        this.logger.debug("CircleDecoratorDiagramDesignerWidget ctor");
     };
 
-    _.extend(CircleDecorator.prototype, __parent_proto__);
-    CircleDecorator.prototype.DECORATORID = DECORATOR_ID;
+    _.extend(CircleDecoratorDiagramDesignerWidget.prototype, __parent__.prototype);
+    CircleDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    CircleDecorator.prototype.$DOMBase = $(circleDecoratorTemplate);
+    CircleDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(circleDecoratorDiagramDesignerWidgetTemplate);
 
     //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    CircleDecorator.prototype.on_addTo = function () {
+    CircleDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         this._renderCircle();
 
         //let the parent decorator class do its job first
-        __parent_proto__.on_addTo.apply(this, arguments);
+        __parent__.prototype.on_addTo.apply(this, arguments);
     };
 
-    //Called right after on_addTo and before the host designer item is added to the canvas DOM
-    CircleDecorator.prototype.on_addToPartBrowser = function () {
-        this._renderCircle();
 
-        //let the parent decorator class do its job first
-        __parent_proto__.on_addToPartBrowser.apply(this, arguments);
-    };
-
-    CircleDecorator.prototype._renderCircle = function () {
-        //find additional CircleDecorator specific UI components
+    CircleDecoratorDiagramDesignerWidget.prototype._renderCircle = function () {
+        //find additional CircleDecoratorDiagramDesignerWidget specific UI components
         this.skinParts.$circleCanvas = this.$el.find('[id="circleCanvas"]');
         this.skinParts.$circleCanvas.height(CANVAS_SIZE);
         this.skinParts.$circleCanvas.width(CANVAS_SIZE);
@@ -56,33 +45,31 @@ define(['logManager',
         this.skinParts.svgPaper.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1).attr('fill',FILL_COLOR);
     };
 
-    CircleDecorator.prototype.onRenderGetLayoutInfo = function () {
+    CircleDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
         //let the parent decorator class do its job first
-        __parent_proto__.onRenderGetLayoutInfo.apply(this, arguments);
+        __parent__.prototype.onRenderGetLayoutInfo.apply(this, arguments);
 
         this.renderLayoutInfo.nameWidth = this.skinParts.$name.outerWidth();
     };
 
-    CircleDecorator.prototype.onRenderSetLayoutInfo = function () {
+    CircleDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
         var shift = (CANVAS_SIZE - this.renderLayoutInfo.nameWidth) / 2;
 
         this.skinParts.$name.css({ "left": shift });
 
         //let the parent decorator class do its job finally
-        __parent_proto__.onRenderSetLayoutInfo.apply(this, arguments);
+        __parent__.prototype.onRenderSetLayoutInfo.apply(this, arguments);
     };
 
-    CircleDecorator.prototype.calculateDimension = function () {
+    CircleDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
             this.hostDesignerItem.width = CANVAS_SIZE;
             this.hostDesignerItem.height = CANVAS_SIZE + this.skinParts.$name.outerHeight(true);
         }
     };
 
-    CircleDecorator.prototype.getConnectionAreas = function (/*id*/) {
-        var result = [],
-            width = CANVAS_SIZE,
-            height = CANVAS_SIZE;
+    CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id*/) {
+        var result = [];
 
         //by default return the bounding box edges midpoints
         //NOTE: it returns the connection point regardless of being asked for
@@ -90,7 +77,7 @@ define(['logManager',
 
         //top left
         result.push( {"id": "0",
-            "x": width / 2,
+            "x": CANVAS_SIZE / 2,
             "y": 0,
             "w": 0,
             "h": 0,
@@ -98,8 +85,8 @@ define(['logManager',
             "len": 10} );
 
         result.push( {"id": "1",
-            "x": width / 2,
-            "y": height,
+            "x": CANVAS_SIZE / 2,
+            "y": CANVAS_SIZE,
             "w": 0,
             "h": 0,
             "orientation": "S",
@@ -107,15 +94,15 @@ define(['logManager',
 
         result.push( {"id": "2",
             "x": 0,
-            "y": height / 2,
+            "y": CANVAS_SIZE / 2,
             "w": 0,
             "h": 0,
             "orientation": "W",
             "len": 10} );
 
         result.push( {"id": "3",
-            "x": width,
-            "y": height / 2,
+            "x": CANVAS_SIZE,
+            "y": CANVAS_SIZE / 2,
             "w": 0,
             "h": 0,
             "orientation": "E",
@@ -124,5 +111,5 @@ define(['logManager',
         return result;
     };
 
-    return CircleDecorator;
+    return CircleDecoratorDiagramDesignerWidget;
 });

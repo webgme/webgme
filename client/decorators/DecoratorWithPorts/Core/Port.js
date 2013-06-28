@@ -5,9 +5,6 @@ define(['logManager',
                                                                                  DiagramDesignerWidgetConstants) {
 
     var Port,
-        EVENT_POSTFIX = "Port",
-        MOUSE_ENTER = "mouseenter",
-        MOUSE_LEAVE = "mouseleave",
         PORT_CONNECTOR_LEN = 20;
 
     Port = function (id, options) {
@@ -54,23 +51,16 @@ define(['logManager',
         this.$portTitle.text(this.title);
 
         this.$connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
-        if (this.decorator.hostDesignerItem) {
-            this.decorator.hostDesignerItem.registerConnectors(this.$connectors, this.id);
-        }
-        this.hideConnectors();
 
         this.$portDot = this.$el.find(".dot");
 
-        if (this.decorator.renderedInPartBrowser !== true) {
-            this.$el.on( MOUSE_ENTER + '.' + EVENT_POSTFIX, null, null, function (event) {
-                self._mouseEnter();
-                event.preventDefault();
-                event.stopPropagation();
-            }).on( MOUSE_LEAVE + '.' + EVENT_POSTFIX, null, null, function (event) {
-                    self._mouseLeave();
-                    event.preventDefault();
-                    event.stopPropagation();
-                });
+        if (this.decorator._displayConnectors === true) {
+            if (this.decorator.hostDesignerItem) {
+                this.decorator.hostDesignerItem.registerConnectors(this.$connectors, this.id);
+            }
+            this.hideConnectors();
+        } else {
+            this.$connectors.remove();
         }
     };
 
@@ -128,7 +118,6 @@ define(['logManager',
         this.hideConnectors();
         //finally remove itself from DOM
         if (this.$el) {
-            this.$el.off( MOUSE_ENTER + '.' + EVENT_POSTFIX).off( MOUSE_LEAVE + '.' + EVENT_POSTFIX);
             this.$el.remove();
             this.$el.empty();
         }
@@ -142,14 +131,6 @@ define(['logManager',
     //Hides the 'connectors' - detaches them from the DOM
     Port.prototype.hideConnectors = function () {
         this.$connectors.hide();
-    };
-
-    Port.prototype._mouseEnter = function () {
-        this.showConnectors();
-    };
-
-    Port.prototype._mouseLeave = function () {
-        this.hideConnectors();
     };
 
     Port.prototype.calculatePortConnectionArea = function () {

@@ -13,10 +13,10 @@ define(['logManager',
                                                      SetVisualHelper) {
 
     var SetEditorControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/",      //TODO: fix path;
-        DECORATOR_CLASS = "DefaultDecorator",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
-        BACKGROUND_TEXT_SIZE = 30;
+        BACKGROUND_TEXT_SIZE = 30,
+        DEFAULT_DECORATOR = "DefaultDecorator",
+        WIDGET_NAME = 'DiagramDesigner';
 
 
     SetEditorControl = function (options) {
@@ -205,25 +205,15 @@ define(['logManager',
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                     if (itemDecorator && itemDecorator !== "") {
-                        decoratorsToDownload.pushUnique(this._getFullDecoratorName(itemDecorator));
+                        decoratorsToDownload.pushUnique(itemDecorator);
                     }
                 }
             }
 
-            if (decoratorsToDownload.length === 0) {
-                //all the required decorators are already available
-                this._dispatchEvents(nextBatchInQueue);
-            } else {
-                //few decorators need to be downloaded
-                this._client.decoratorManager.download(decoratorsToDownload, function () {
-                    self._dispatchEvents(nextBatchInQueue);
-                });
-            }
+            this._client.decoratorManager.download(decoratorsToDownload, WIDGET_NAME, function () {
+                self._dispatchEvents(nextBatchInQueue);
+            });
         }
-    };
-
-    SetEditorControl.prototype._getFullDecoratorName = function (decorator) {
-        return DECORATOR_PATH + decorator + "/" + decorator;
     };
 
     SetEditorControl.prototype._getObjectDescriptor = function (nodeId) {
@@ -237,7 +227,7 @@ define(['logManager',
                               "parentId": undefined,
                               "name": "",
                               "position": { "x": 100, "y": 100 },
-                              "decorator": DECORATOR_CLASS };
+                              "decorator": DEFAULT_DECORATOR };
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.parentId = nodeObj.getParentId();
@@ -333,7 +323,7 @@ define(['logManager',
 
                     objDesc = _.extend({}, objD);
 
-                    decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+                    decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
 
                     objDesc.decoratorClass = decClass;
                     objDesc.control = this;
@@ -371,7 +361,7 @@ define(['logManager',
                     while (len--) {
                         componentID = this._GmeID2ComponentID[gmeID][len];
 
-                        decClass = this._client.decoratorManager.get(this._getFullDecoratorName(objDesc.decorator));
+                        decClass = this._client.decoratorManager.getDecoratorForWidget(objDesc.decorator, WIDGET_NAME);
 
                         objDesc.decoratorClass = decClass;
 

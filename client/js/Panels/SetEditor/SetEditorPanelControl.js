@@ -130,7 +130,8 @@ define(['logManager',
             currentMembers,
             diff,
             idx,
-            id;
+            id,
+            objDesc;
 
         if (node) {
             setNames = node.getValidSetNames();
@@ -163,7 +164,9 @@ define(['logManager',
                 len = diff.length;
                 while (len--) {
                     id = diff[len];
-                    this._setEditorView.addSetMember(setNames[num], this._getObjectDescriptor(id));
+                    //TODO: the set's member might not be available on the client....
+                    objDesc = this._getObjectDescriptor(id) || {"id": id, "name": "Not available...TODO"};
+                    this._setEditorView.addSetMember(setNames[num], objDesc);
                     this._setItems[setNames[num]].push(id);
                 }
             }
