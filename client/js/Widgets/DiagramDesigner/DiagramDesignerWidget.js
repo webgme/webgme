@@ -211,6 +211,17 @@ define(['logManager',
             this.items[this.itemIds[i]].readOnlyMode(readOnly);
         }
 
+        i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].renderGetLayoutInfo();
+        }
+        i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].renderSetLayoutInfo();
+        }
+
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
+
         i = this.connectionIds.length;
         while (i--) {
             this.items[this.connectionIds[i]].readOnlyMode(readOnly);
