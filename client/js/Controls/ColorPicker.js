@@ -49,10 +49,10 @@ define(['jquery',
     };
 
     ColorPicker.prototype.setEnabled = function (isEnabled) {
-        if (isEnabled) {
-            this.el.removeClass(DISABLED_CLASS);
+        if (isEnabled === true) {
+            this.el.removeAttr('disabled');
         } else {
-            this.el.addClass(DISABLED_CLASS);
+            this.el.attr('disabled', 'disabled');
         }
     };
 
