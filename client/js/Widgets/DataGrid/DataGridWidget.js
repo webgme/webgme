@@ -512,7 +512,7 @@ i,
         }
 
         if (_.isArray(data) && type === 'display') {
-            return data.join('<br/>');
+            return JSON.stringify(data);
         }
 
         return data;
