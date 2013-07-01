@@ -269,7 +269,12 @@ define(['logManager',
                             break;
                         case 'array':
                             try {
-                                dstObj[dstKey] = JSON.parse(srcObj[srcKey]);
+                                if (!_.isArray(srcObj[srcKey])) {
+                                    dstObj[dstKey] = JSON.parse(srcObj[srcKey]);
+                                } else {
+                                    dstObj[dstKey] = srcObj[srcKey].slice(0);
+                                }
+
                                 if (!_.isArray(dstObj[dstKey])) {
                                     delete dstObj[dstKey];
                                 }
