@@ -205,6 +205,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 
 		core.setRegistry(tag.node, "metameta", tag.name);
 		core.setRegistry(tag.node, "isPort", tag.name === "atom");
+        core.setRegistry(tag.node, "decorator", "");
 
 		if (tag.name === "connection") {
 			core.setRegistry(tag.node, "isConnection", true);
@@ -300,7 +301,13 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 
 				// this actually happens
 				if (path !== "" && tag.text !== "") {
-					core.setRegistry(parent.node, path, tag.text);
+                    var val;
+                    try {
+                        val = JSON.parse(tag.text);
+                    } catch (e) {
+                        val = tag.text;
+                    }
+					core.setRegistry(parent.node, path, val);
 				}
 			}
 		}
