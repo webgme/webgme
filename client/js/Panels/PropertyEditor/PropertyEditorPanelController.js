@@ -130,9 +130,6 @@ define(['logManager',
 
                     flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
 
-                    //TODO: temporal fix so everyone will have a decorator
-                    flattenedRegs.decorator = flattenedRegs.decorator || "";
-
                     _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
                 }
             }
