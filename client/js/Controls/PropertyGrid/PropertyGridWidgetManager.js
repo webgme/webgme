@@ -7,14 +7,16 @@ define([
     'js/Controls/PropertyGrid/Widgets/LabelWidget',
     'js/Controls/PropertyGrid/Widgets/iCheckBoxWidget',
     'js/Controls/PropertyGrid/Widgets/OptionWidget',
-    'js/Controls/PropertyGrid/Widgets/ColorPickerWidget'],
+    'js/Controls/PropertyGrid/Widgets/ColorPickerWidget',
+    'js/Utils/ColorUtil'],
     function (StringWidget,
               NumberBoxWidget,
               BooleanWidget,
               LabelWidget,
               iCheckBoxWidget,
               OptionWidget,
-              ColorPickerWidget) {
+              ColorPickerWidget,
+              colorUtil) {
 
         var PropertyGridWidgetManager;
 
@@ -26,7 +28,7 @@ define([
             var _type = propDesc.valueType || typeof propDesc.value,
                 _readOnly = propDesc.readOnly === true ?  true : false,
                 _isOption = _.isArray(propDesc.valueItems),
-                _isColor = this._isColor(propDesc.value);
+                _isColor = colorUtil.isColor(propDesc.value);
 
             if (_readOnly) {
                 return new LabelWidget(propDesc);
@@ -56,20 +58,6 @@ define([
             } else {
                 this._registeredWidgets[type] = widget;
             }
-        };
-
-        //TODO: more precise color match
-        PropertyGridWidgetManager.prototype._isColor = function (val) {
-            if (typeof val === 'string' && val.length === 7 && val.indexOf('#') === 0) {
-                return true;
-            }
-
-            if (typeof val === 'string' && (val.indexOf('rgb(') === 0 || val.indexOf('rgba(') === 0)) {
-                return true;
-            }
-
-            return false;
-
         };
 
         return PropertyGridWidgetManager;

@@ -8,8 +8,10 @@
 
 define(['jquery',
         'jscolor',
+        'js/Utils/ColorUtil',
         'css!/css/Controls/ColorPicker'], function (_jquery,
-                              _jscolor) {
+                              _jscolor,
+                              colorUtil) {
 
     var ColorPicker,
         DISABLED_CLASS = 'disabled';
@@ -20,7 +22,8 @@ define(['jquery',
         jscolor.binding = false;
 
         this.el = $('<input type="text" class="color-picker"/>');
-        this._colorPicker = new jscolor.color(this.el[0], {'hash': true});
+        this._colorPicker = new jscolor.color(this.el[0], {'hash': true,
+                                                            'pickerFace': 5});
 
         this.el.on('change', function (/*e*/) {
             self.onColorChanged(self.el.val());
@@ -36,7 +39,7 @@ define(['jquery',
     };
 
     ColorPicker.prototype.setColor = function (color) {
-        this._colorPicker.fromString(color);
+        this._colorPicker.fromString(colorUtil.getHexColor(color));
     };
 
     ColorPicker.prototype.onColorChanged = function (color) {
