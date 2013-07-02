@@ -104,16 +104,34 @@ define(['logManager'], function (logManager) {
             targetConnectionPoints = this.endpointConnectionAreaInfo[tId] || [],
             sourceCoordinates = null,
             targetCoordinates = null,
-            closestConnPoints;
+            closestConnPoints,
+            connectionPathPoints = [],
+            len,
+            i;
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
             closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
             sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
             targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+
+            //source point
+            connectionPathPoints.push(sourceCoordinates);
+
+            //segment points
+            if (segmentPoints && segmentPoints.length > 0) {
+                len = segmentPoints.length;
+                for (i = 0; i < len; i += 1) {
+                    connectionPathPoints.push({ "x": segmentPoints[i][0],
+                        "y": segmentPoints[i][1]});
+                }
+            }
+
+            //end point
+            connectionPathPoints.push(targetCoordinates);
         }
 
-        canvas.items[connectionId].setConnectionRenderData([ sourceCoordinates, targetCoordinates ]);
+        canvas.items[connectionId].setConnectionRenderData(connectionPathPoints);
     };
 
     //figure out the shortest side to choose between the two
