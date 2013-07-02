@@ -14,7 +14,16 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
+        CONNECTION_TARGET_NAME = "target",
+        DEFAULT_LINE_STYLE = {};
+
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 2;
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -153,10 +162,15 @@ define(['logManager',
             targetId = this._ComponentID2GmeID[params.dst];
         }
 
+        var registry = {};
+        registry[nodePropertyNames.Registry.lineStyle] = {};
+        _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
+
         this._client.makeConnection({   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,
             "targetId": targetId,
-            "directed": true });
+            "directed": true,
+            "registry": registry});
 
         var p = {   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,

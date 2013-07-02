@@ -1392,6 +1392,13 @@ define([
                         _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
                         _core.setRegistry(connection,"isConnection",true);
                         _core.setRegistry(connection,"decorator","");
+                        if (parameters.registry) {
+                            for (var regEntry in parameters.registry) {
+                                if (parameters.registry.hasOwnProperty(regEntry)) {
+                                    _core.setRegistry(connection,regEntry,parameters.registry[regEntry]);
+                                }
+                            }
+                        }
                         storeNode(connection);
                         saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
                     }
