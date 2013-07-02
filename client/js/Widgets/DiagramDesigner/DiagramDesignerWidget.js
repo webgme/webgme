@@ -6,6 +6,7 @@ define(['logManager',
     'loaderCircles',
     'js/Widgets/DiagramDesigner/SelectionManager',
     'js/Widgets/DiagramDesigner/DragManager.Native',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.OperatingModes',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DesignerItems',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Connections',
@@ -22,6 +23,7 @@ define(['logManager',
                                                       LoaderCircles,
                                                       SelectionManager,
                                                       DragManager,
+                                                      DiagramDesignerWidgetConstants,
                                                       DiagramDesignerWidgetOperatingModes,
                                                       DiagramDesignerWidgetDesignerItems,
                                                       DiagramDesignerWidgetConnections,
@@ -313,6 +315,7 @@ define(['logManager',
         //initialize Raphael paper from children container and set it to be full size of the HTML container
         this.skinParts.SVGPaper = Raphael(this.skinParts.$itemsContainer[0]);
         this.skinParts.SVGPaper.canvas.style.pointerEvents = "visiblePainted";
+        this.skinParts.SVGPaper.canvas.className.baseVal = DiagramDesignerWidgetConstants.CONNECTION_CONTAINER_SVG_CLASS;
 
         //finally resize the whole content according to available space
         this._containerSize.w = this.$el.width();
@@ -833,6 +836,8 @@ define(['logManager',
         this.connectionRouteManager.initialize();
 
         this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
+
+        this.selectionManager.showSelectionOutline();
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
@@ -1044,6 +1049,11 @@ define(['logManager',
     };
     /************ END OF --- CONNECTION END DROPPABLE ACCEPT **********************/
 
+    /************************* CONNECTION SEGMENT POINTS CHANGE ************************/
+    DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange not overridden in controller. params: " + JSON.stringify(params));
+    };
+    /************************* END OF --- CONNECTION SEGMENT POINTS CHANGE ************************/
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 

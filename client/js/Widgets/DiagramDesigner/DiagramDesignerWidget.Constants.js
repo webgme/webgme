@@ -20,6 +20,11 @@ define([], function () {
         CONNECTOR_CLASS : "connector",
         CONNECTION_END_SRC : 'src',
         CONNECTION_END_DST : 'dst',
+        CONNECTION_CONTAINER_SVG_CLASS : 'connection-container',
+        PATH_EDIT_SEGMENT_CLASS: 'path-edit-segment',
+        PATH_EDIT_SEGMENT_NEW_SEGMENT_POINT_MARKER_CLASS: 'new-segment-point-marker',
+        CONNECTION_SEGMENT_POINT_CLASS: 'segment-point',
+        SEGMENT_POINT_MOVE_PATH_CLASS : 'segment-point-move-path',
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',

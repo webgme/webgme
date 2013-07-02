@@ -3,10 +3,12 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
                                                         util,
                                                         CONSTANTS,
-                                                        nodePropertyNames) {
+                                                        nodePropertyNames,
+                                                        DiagramDesignerWidgetConstants) {
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
@@ -71,6 +73,10 @@ define(['logManager',
 
         this.designerCanvas.onClipboardPaste = function () {
             self._onClipboardPaste();
+        };
+
+        this.designerCanvas.onConnectionSegmentPointsChange = function (params) {
+            self._onConnectionSegmentPointsChange(params);
         };
 
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
@@ -362,6 +368,24 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onClipboardPaste = function () {
         if (this.currentNodeInfo.id) {
             this._client.pasteNodes(this.currentNodeInfo.id);
+        }
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onConnectionSegmentPointsChange = function (params) {
+        var connID = params.connectionID,
+            points = params.points,
+            gmeID = this._ComponentID2GmeID[connID],
+            nodeObj,
+            lineStyle;
+
+        if (gmeID) {
+            nodeObj = this._client.getNode(gmeID);
+            if (nodeObj) {
+                lineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                lineStyle[DiagramDesignerWidgetConstants.LINE_POINTS] = points;
+
+                this._client.setRegistry(gmeID, nodePropertyNames.Registry.lineStyle, lineStyle);
+            }
         }
     };
     

@@ -58,6 +58,21 @@
       padding: 3px;
       text-align: center;
       border: 2px solid #000000; }
+    .diagram-designer .items svg.connection-container .new-segment-point-marker {
+      pointer-events: none;
+      fill: yellow;
+      stroke: red; }
+    .diagram-designer .items svg.connection-container .path-edit-segment {
+      stroke: rgba(0, 0, 0, 0);
+      opacity: 0.5; }
+    .diagram-designer .items svg.connection-container .segment-point {
+      fill: yellow;
+      stroke: black;
+      cursor: pointer; }
+      .diagram-designer .items svg.connection-container .segment-point:hover {
+        fill: #ff7800; }
+    .diagram-designer .items svg.connection-container .segment-point-move-path {
+      stroke: #ff7800; }
   .diagram-designer .dropRegion {
     width: 0;
     height: 0;

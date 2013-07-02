@@ -2,8 +2,12 @@
 
 define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    './Connection.EditSegment',
+    './Connection.SegmentPoint',
     'raphaeljs'], function (logManager,
-                            DiagramDesignerWidgetConstants) {
+                            DiagramDesignerWidgetConstants,
+                            ConnectionEditSegment,
+                            ConnectionSegmentPoint) {
 
     var ConnectionComponent,
         PATH_SHADOW_ID_PREFIX = "p_",
@@ -16,7 +20,8 @@ define(['logManager',
         CONNECTION_SHADOW_DEFAULT_WIDTH = 4,
         CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
         CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
-        CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
+        CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
+        CONNECTION_SEGMENT_POINT_MIN_SIZE = 4;
 
     ConnectionComponent = function (objId) {
         this.id = objId;
@@ -27,8 +32,8 @@ define(['logManager',
 
     ConnectionComponent.prototype._initialize = function (objDescriptor) {
         /*MODELEDITORCONNECTION CONSTANTS***/
-        this.canvas = objDescriptor.designerCanvas;
-        this.paper = this.canvas.skinParts.SVGPaper;
+        this.diagramDesigner = objDescriptor.designerCanvas;
+        this.paper = this.diagramDesigner.skinParts.SVGPaper;
 
         this.skinParts = {};
 
@@ -38,6 +43,11 @@ define(['logManager',
         this.selectedInMultiSelection = false;
 
         this.designerAttributes = {};
+
+        this._segmentPointMarkers = [];
+        this._editMode = false;
+        this._readOnly = false;
+        this._connectionEditSegments = [];
         
         /*MODELEDITORCONNECTION CONSTANTS*/
 
@@ -62,6 +72,8 @@ define(['logManager',
 
         this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowWidth, this.designerAttributes.width, false);
         this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowWidth, this.designerAttributes.width, true);
+
+        this._segmentPointSize = Math.max(CONNECTION_SEGMENT_POINT_MIN_SIZE, this.designerAttributes.width);
     };
 
     ConnectionComponent.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
@@ -180,6 +192,9 @@ define(['logManager',
             points = [],
             validPath = segPoints && segPoints.length > 1;
 
+        //remove edit features
+        this._removeEditModePath();
+
         if (validPath) {
             //there is a points list given and has at least 2 points
             //remove the null points from the list (if any)
@@ -206,6 +221,7 @@ define(['logManager',
 
             this._pathPoints = points;
 
+            //non-edit mode, one path builds the connection
             p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
 
@@ -246,7 +262,7 @@ define(['logManager',
                     /*CREATE PATH*/
                     this.skinParts.path = this.paper.path(pathDef);
                     $(this.skinParts.path.node).attr({"id": this.id,
-                                                      "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+                        "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
                     this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                         "arrow-end": this.designerAttributes.arrowEnd,
@@ -257,6 +273,11 @@ define(['logManager',
                         this._createPathShadow(this._pathPoints);
                     }
                 }
+            }
+
+            //in edit mode add edit features
+            if (this._editMode === true) {
+                this._drawEditModePath(points);
             }
         } else {
             this.pathDef = null;
@@ -473,7 +494,10 @@ define(['logManager',
     ConnectionComponent.prototype.destroy = function () {
         this._destroying = true;
 
+        this._hideSegmentPoints();
         this.hideConnectors();
+
+        this._removeEditModePath();
 
         //remove from DOM
         this._removePath();
@@ -494,11 +518,13 @@ define(['logManager',
         //show endpoint connectors
         if (this.selectedInMultiSelection === true) {
             this.hideConnectors();
+            this._setEditMode(false);
         } else {
             //in edit mode and when not participating in a multiple selection,
             //show connectors
-            if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+            if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.NORMAL) {
                 this.showConnectors();
+                this._setEditMode(true);
             }
         }
 
@@ -511,6 +537,7 @@ define(['logManager',
 
         this._unHighlightPath();
         this.hideConnectors();
+        this._setEditMode(false);
     };
 
     ConnectionComponent.prototype._highlightPath = function () {
@@ -656,7 +683,7 @@ define(['logManager',
                                              "top": this.sourceCoordinates.y,
                                              "left": this.sourceCoordinates.x});
 
-            this.canvas.skinParts.$itemsContainer.append(this.skinParts.srcDragPoint);
+            this.diagramDesigner.skinParts.$itemsContainer.append(this.skinParts.srcDragPoint);
 
 
             this.skinParts.dstDragPoint = this.skinParts.dstDragPoint || $('<div/>', {
@@ -669,7 +696,7 @@ define(['logManager',
                 "top": this.endCoordinates.y,
                 "left": this.endCoordinates.x});
 
-            this.canvas.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
+            this.diagramDesigner.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
         }
     };
 
@@ -690,10 +717,169 @@ define(['logManager',
     /************** END OF - HANDLING SELECTION EVENT *********************/
 
     ConnectionComponent.prototype.readOnlyMode = function (readOnly) {
+        this._readOnly = readOnly;
         if (readOnly === true) {
             this.hideConnectors();
+            this._setEditMode(false);
         }
     };
+
+    ConnectionComponent.prototype._setEditMode = function (editMode) {
+        if (this._readOnly === false && this._editMode !== editMode) {
+            this._editMode = editMode;
+            this.setConnectionRenderData(this._pathPoints);
+        }
+    };
+
+    ConnectionComponent.prototype._drawEditModePath = function (routingPoints) {
+        var routingPointsLen = routingPoints.length,
+            segmentPointsLen = this.segmentPoints.length,
+            rIt,
+            sIt = 0,
+            pathSegmentPoints = [],
+            pNum = 0;
+
+        this._removeEditModePath();
+
+        //iterate through the given points from the auto-router and the connection's segment points
+        //the connection's segment points will be the movable points
+        //the extra routing points that are not segment points, they are not movable
+        for (rIt = 0; rIt < routingPointsLen; rIt += 1) {
+            //till we reach the next segment point in the list, all routing points go to the same path-segment
+            if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {'x': this.segmentPoints[sIt][0], 'y': this.segmentPoints[sIt][1]})) {
+                //found the end of a segment
+                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+
+                //create segment
+                this._createEditSegment(pathSegmentPoints, pNum);
+
+                //increase segment point counter
+                sIt += 1;
+
+                //increase path counter
+                pNum += 1;
+
+                //start new pathSegmentPoint list
+                pathSegmentPoints = [];
+                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+            } else {
+                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+            }
+        };
+
+        //final segment's points are in pathSegmentPoints
+        //create segment
+        this._createEditSegment(pathSegmentPoints, pNum);
+
+        //finally show segment points
+        this._showSegmentPoints();
+    };
+
+    ConnectionComponent.prototype._removeEditModePath = function () {
+        this._hideSegmentPoints();
+        this._removeConnectionEditSegments();
+    };
+
+    ConnectionComponent.prototype._isSamePoint = function (pointA, pointB) {
+        if (pointA.x === pointB.x &&
+            pointA.y === pointB.y) {
+            return true;
+        }
+
+        return false;
+    };
+
+    ConnectionComponent.prototype._removeConnectionEditSegments = function () {
+        var len = this._connectionEditSegments.length;
+
+        while(len--) {
+            this._connectionEditSegments[len].destroy();
+        }
+
+        this._connectionEditSegments = [];
+    };
+
+    ConnectionComponent.prototype._createEditSegment = function (points, num) {
+        var segment;
+
+        this.logger.debug('_createEditSegment: #' + num + ', ' + JSON.stringify(points));
+
+        segment = new ConnectionEditSegment({'connection': this,
+                                             'id': num,
+                                             'points': points});
+
+        this._connectionEditSegments.push(segment);
+    };
+
+    ConnectionComponent.prototype.addSegmentPoint = function (idx, x, y, cx, cy) {
+        var d = [x, y],
+            newSegmentPoints = this.segmentPoints.slice(0);
+
+        if (cx && cy) {
+            d.push(cx);
+            d.push(cy);
+        }
+
+        newSegmentPoints.splice(idx,0,d);
+
+        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
+                                                              'points': newSegmentPoints});
+    };
+
+    ConnectionComponent.prototype.removeSegmentPoint = function (idx) {
+        var newSegmentPoints = this.segmentPoints.slice(0);
+
+        newSegmentPoints.splice(idx,1);
+
+        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
+            'points': newSegmentPoints});
+    };
+
+    ConnectionComponent.prototype.setSegmentPoint = function (idx, x, y, cx, cy) {
+        var d = [x, y],
+            newSegmentPoints = this.segmentPoints.slice(0);
+
+        if (cx && cy) {
+            d.push(cx);
+            d.push(cy);
+        }
+
+        newSegmentPoints[idx] = d;
+
+        this.diagramDesigner.onConnectionSegmentPointsChange({'connectionID': this.id,
+            'points': newSegmentPoints});
+    };
+
+    /********************** SEGMENT POINT MARKERS ******************************/
+    ConnectionComponent.prototype._showSegmentPoints = function () {
+        var len = this.segmentPoints.length,
+            i = len,
+            marker,
+            pointsLastIdx = this._pathPoints.length - 1;
+
+        this._hideSegmentPoints();
+
+        while (i--) {
+            marker = new ConnectionSegmentPoint({'connection': this,
+                'id': i,
+                'point': this.segmentPoints[i],
+                'pointAfter': i === len - 1 ? [this._pathPoints[pointsLastIdx].x, this._pathPoints[pointsLastIdx].y] : this.segmentPoints[i + 1],
+                'pointBefore': i === 0 ? [this._pathPoints[0].x, this._pathPoints[0].y] : this.segmentPoints[i - 1]});
+
+            this._segmentPointMarkers.push(marker);
+        }
+    };
+
+    ConnectionComponent.prototype._hideSegmentPoints = function () {
+        var len = this._segmentPointMarkers.length;
+        while (len--) {
+            this._segmentPointMarkers[len].destroy();
+        }
+
+        this._segmentPointMarkers = [];
+    };
+
+    /********************** END OF --- SEGMENT POINT MARKERS ******************************/
 
     return ConnectionComponent;
 });

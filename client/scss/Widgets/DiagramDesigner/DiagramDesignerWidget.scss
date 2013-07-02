@@ -19,6 +19,14 @@ $error-decorator-background-color: #F2DEDE;
 
 $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
 
+$path-edit-segment-color: rgba(0, 0, 0, 0);
+$new-segment-point-marker-background-color: #FFFF00;
+$new-segment-point-marker-border-color: #FF0000;
+$segment-point-marker-background-color: #FFFF00;
+$segment-point-marker-border-color: #000000;
+$segment-point-marker-hover-background-color: #FF7800;
+$segment-point-move-path-color: #FF7800;
+
 .diagram-designer {
   outline: none;
 
@@ -75,6 +83,36 @@ $items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
       padding: 3px;
       text-align: center;
       border: 2px solid #000000;
+    }
+
+    svg.connection-container {
+      .designer-connection {
+      }
+
+      .new-segment-point-marker {
+        pointer-events: none;
+        fill: $new-segment-point-marker-background-color;
+        stroke: $new-segment-point-marker-border-color;
+      }
+
+      .path-edit-segment {
+        stroke: $path-edit-segment-color;
+        opacity: 0.5;
+      }
+
+      .segment-point {
+        fill: $segment-point-marker-background-color;
+        stroke: $segment-point-marker-border-color;
+        cursor: pointer;
+
+        &:hover {
+          fill: $segment-point-marker-hover-background-color;
+        }
+      }
+
+      .segment-point-move-path {
+        stroke: $segment-point-move-path-color;
+      }
     }
   }
 
