@@ -1,0 +1,59 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Authors:
+ * Zsolt Lattmann
+ * Robert Kereskenyi
+ */
+
+@import "../../../scss/Widgets/DiagramDesigner/Connector";
+
+$selected-background-color: rgba(219, 234, 252, 0.5);
+
+.designer-item {
+  .modelica-decorator {
+    text-align: center;
+
+    .connector {
+      @include connector_basics;
+
+      //margin-left: $connector-size / -2;
+      left: 50%;
+
+      &.top {
+        top: $connector-size / -2;
+      }
+
+      &.bottom {
+        bottom: $connector-size / -2;
+      }
+    }
+
+    // EXTRA
+    .svg-container {
+      //position: absolute;
+    }
+
+    .connector-container {
+      position: absolute;
+      top: 0px;
+      left: 0px;
+      transform-origin: 0 0;
+      -webkit-transform-origin: 0 0;
+      -moz-transform-origin: 0 0;
+    }
+
+  }
+
+  &.selectable {
+    .modelica-decorator {
+      cursor: pointer;
+    }
+  }
+
+  &.selected {
+    .modelica-decorator {
+      background-color: $selected-background-color;
+    }
+  }
+}
