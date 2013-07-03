@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Authors:
+ * Zsolt Lattmann
+ * Robert Kereskenyi
+ */
 .designer-item .modelica-decorator {
   text-align: center; }
   .designer-item .modelica-decorator .connector {
@@ -21,6 +28,25 @@
       top: -6px; }
     .designer-item .modelica-decorator .connector.bottom {
       bottom: -6px; }
+    .designer-item .modelica-decorator .connector .port_info {
+      z-index: 10;
+      display: none;
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      padding: 8px;
+      background-color: whitesmoke;
+      border: 1px solid #555555;
+      border-radius: 5px; }
+      .designer-item .modelica-decorator .connector .port_info .name {
+        color: black;
+        font-weight: bold; }
+      .designer-item .modelica-decorator .connector .port_info .class_name {
+        color: darkred; }
+      .designer-item .modelica-decorator .connector .port_info .description {
+        color: darkgreen; }
+  .designer-item .modelica-decorator .connector:hover .port_info {
+    display: block; }
   .designer-item .modelica-decorator .connector-container {
     position: absolute;
     top: 0px;

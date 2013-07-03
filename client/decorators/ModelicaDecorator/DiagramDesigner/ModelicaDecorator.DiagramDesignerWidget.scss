@@ -27,6 +27,43 @@ $selected-background-color: rgba(219, 234, 252, 0.5);
       &.bottom {
         bottom: $connector-size / -2;
       }
+
+
+      .port_info
+      {
+        z-index: 10;
+        display: none;
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        padding: 8px;
+        background-color: whitesmoke;
+        border: 1px solid rgb(85, 85, 85);
+        border-radius: 5px;
+
+        .name
+        {
+          color: black;
+          font-weight: bold;
+        }
+
+        .class_name
+        {
+          color: darkred;
+        }
+
+        .description
+        {
+          color: darkgreen;
+        }
+      }
+    }
+
+    .connector:hover
+    {
+      .port_info {
+        display: block;
+      }
     }
 
     // EXTRA

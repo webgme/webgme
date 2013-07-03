@@ -167,6 +167,32 @@ define(['js/Constants',
     };
 
 
+    ModelicaDecoratorDiagramDesignerWidget.prototype._toolTipBase = $('<div class="port_info"> \
+            <span class="name">NAME</span> \
+            <span class="class_name">CLASS NAME</span> \
+            <span class="description">DESCRIPTION</span> \
+        </div>');
+
+    ModelicaDecoratorDiagramDesignerWidget.prototype._buildToolTip = function (portConnector, svgPort) {
+
+        var tooltip = this._toolTipBase.clone(),
+            svgInfo = $(svgPort).find('#info');
+
+        if (svgInfo.length === 0) {
+            return;
+        }
+
+        svgInfo = $(svgInfo[0]);
+
+        tooltip.find('.name').text(svgInfo.find('#name').text());
+        tooltip.find('.class_name').text(svgInfo.find('#class_name').text());
+        tooltip.find('.description').text(svgInfo.find('#description').text());
+
+        svgInfo.remove();
+
+        portConnector.append(tooltip);
+    };
+
     ModelicaDecoratorDiagramDesignerWidget.prototype._renderPorts = function () {
         var client = this._control._client,
                 nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
@@ -194,6 +220,8 @@ define(['js/Constants',
                     svgPort = svgPort[0];
 
                     portConnector = $('<div/>', {'class':'connector'});
+
+                    this._buildToolTip(portConnector, svgPort);
 
                     var bbox = svgPort.getBBox();
 
