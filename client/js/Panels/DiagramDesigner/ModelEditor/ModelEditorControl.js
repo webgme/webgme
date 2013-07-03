@@ -94,6 +94,16 @@ define(['logManager',
 
         this.$btnConnectionVisualStyleRegistryFields.enabled(false);
 
+        this.$btnConnectionRemoveSegmentPoints = this.designerCanvas.toolBar.addButton(
+            { "title": "Remove segment points",
+                "icon": "icon-remove-circle",
+                "clickFn": function (/*event, data*/) {
+                    self._removeConnectionSegmentPoints();
+                }
+            }, this.$btnGroupVisualStyles);
+
+        this.$btnConnectionRemoveSegmentPoints.enabled(false);
+
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
 
@@ -806,6 +816,32 @@ define(['logManager',
                     _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
 
                     this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, resultLineStyle);
+                }
+            }
+        }
+
+        this._client.completeTransaction();
+    };
+
+    ModelEditorControl.prototype._removeConnectionSegmentPoints = function () {
+        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
+            len = idList.length,
+            nodeObj,
+            existingLineStyle;
+
+
+        this._client.startTransaction();
+
+        while (len--) {
+            if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {
+                nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
+
+                if (nodeObj) {
+                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+
+                    existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
+
+                    this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, existingLineStyle);
                 }
             }
         }

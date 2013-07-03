@@ -350,6 +350,7 @@ define(['logManager',
         }
 
         this.$btnConnectionVisualStyleRegistryFields.enabled(connectionSelected);
+        this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
