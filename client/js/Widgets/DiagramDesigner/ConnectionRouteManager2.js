@@ -318,11 +318,11 @@ define(['logManager'], function (logManager) {
         if (segmentPoints && segmentPoints.length > 0) {
             for (i = 0; i < srcConnectionPoints.length; i += 1) {
                 for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0].x),
-                        "tgt": Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1].x)};
+                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][0]),
+                        "tgt": Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
 
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0].y),
-                        "tgt": Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1].y)};
+                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        "tgt": Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
 
                     cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
 
