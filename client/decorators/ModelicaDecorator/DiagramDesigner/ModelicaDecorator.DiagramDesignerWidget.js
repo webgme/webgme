@@ -227,7 +227,27 @@ define(['js/Constants',
 
                     var bbox = svgPort.getBBox();
 
+
+//                    var portConnectorSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+//                    portConnectorSvg.setAttribute("version", "1.1");
+//                    portConnectorSvg.setAttribute("baseProfile", "full");
+
+//                    var defs = $('<defs> \
+//<clippath id="rectClipPath"> \
+//    <rect id="rectClip" x="0" y="0" width="0" height="0" style="stroke: gray; fill: none;"> \
+//</rect></clippath><defs>')[0];
+
+                    //portConnectorSvg.appendChild(defs);
+
+                    //var use = $('<use x="0" y="0" style="clip-path: url(#rectClipPath);" ></use>')[0];
+                    //portConnectorSvg.appendChild(use);
+
+                    //defs.appendChild($(svgPort).clone()[0]);
+
+                    //portConnector[0].appendChild(portConnectorSvg);
+
                     portConnector.css({'left':bbox.x, 'top':bbox.y, 'width':bbox.width, 'height':bbox.height});
+
 
                     var rect = $(svgPort).find('rect');
 
@@ -333,6 +353,21 @@ define(['js/Constants',
                 var y = bbox.y * this._svg_scale - (h - bbox.height * this._svg_scale) / 2 - 1; // border width
 
                 portConnector.css({'left':x, 'top':y, 'width':w, 'height':h});
+                //var portConnectorSvg = portConnector.find('svg')[0]
+                //portConnectorSvg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+                //portConnectorSvg.setAttribute('width', w);
+                //portConnectorSvg.setAttribute('height', h);
+
+                //var rectClip = $(portConnectorSvg).find('#rectClip')[0];
+                //rectClip.setAttribute('x', bbox.x);
+                //rectClip.setAttribute('y', bbox.y);
+                //rectClip.setAttribute('width', bbox.width);
+                //rectClip.setAttribute('height', bbox.height);
+
+                //var use = $(portConnectorSvg).find('use')[0];
+                //use.setAttribute('x', -bbox.x);
+                //use.setAttribute('y', -bbox.y);
+                //use.setAttribute('xlink:href', '#' + $(portConnectorSvg).find('g').attr('id'));
 
                 // scale it
                 this._portCoordinates[ this._svgPortConnectors[len][3]] = {
