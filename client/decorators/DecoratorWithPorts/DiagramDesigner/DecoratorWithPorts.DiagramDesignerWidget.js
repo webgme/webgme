@@ -155,13 +155,58 @@ define(['js/Constants',
     /**************** END OF - EDIT NODE TITLE ************************/
 
         //Shows the 'connectors' - appends them to the DOM
-    DecoratorWithPorts.prototype.showConnectors = function () {
-        this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).show();
+    DecoratorWithPorts.prototype.showSourceConnectors = function (params) {
+        var connectors,
+            i;
+
+        if (!params) {
+            this.$sourceConnectors.show();
+            if (this._portIDs) {
+                i = this._portIDs.length;
+                while (i--) {
+                    this._ports[this._portIDs[i]].showConnectors();
+                }
+            }
+        } else {
+            connectors = params.connectors;
+            i = connectors.length;
+            while (i--) {
+                if (connectors[i] === undefined) {
+                    //show connector for the represented item itself
+                    this.$sourceConnectors.show();
+                } else {
+                    //one of the ports' connector should be displayed
+                    if (this._ports[connectors[i]]) {
+                        this._ports[connectors[i]].showConnectors();
+                    }
+                }
+            }
+        }
     };
 
     //Hides the 'connectors' - detaches them from the DOM
-    DecoratorWithPorts.prototype.hideConnectors = function () {
-        this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).hide();
+    DecoratorWithPorts.prototype.hideSourceConnectors = function () {
+        var i;
+
+        this.$sourceConnectors.hide();
+
+        if (this._portIDs) {
+            i = this._portIDs.length;
+            while (i--) {
+                this._ports[this._portIDs[i]].hideConnectors();
+            }
+        }
+    };
+
+
+    //should highlight the connectors for the given elements
+    DecoratorWithPorts.prototype.showEndConnectors = function (params) {
+       this.showSourceConnectors(params);
+    };
+
+    //Hides the 'connectors' - detaches them from the DOM
+    DecoratorWithPorts.prototype.hideEndConnectors = function () {
+        this.hideSourceConnectors();
     };
 
     return DecoratorWithPorts;

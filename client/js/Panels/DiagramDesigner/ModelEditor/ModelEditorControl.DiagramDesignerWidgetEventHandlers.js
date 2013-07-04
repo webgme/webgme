@@ -88,6 +88,14 @@ define(['logManager',
             self._onConnectionSegmentPointsChange(params);
         };
 
+        this.designerCanvas.onFilterAvailableConnectionEnd = function (params) {
+            return self._onFilterAvailableConnectionEnd(params);
+        };
+
+        this.designerCanvas.onFilterAvailableConnectionReconnectSourceEnd = function (params) {
+            return self._onFilterAvailableConnectionReconnectSourceEnd(params);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -197,13 +205,8 @@ define(['logManager',
         var gmeID = this._ComponentID2GmeID[id];
 
         if (gmeID) {
-            //TODO: somewhat tricked here for DEBUG purposes
-            if (event.offsetX < 20 && event.offsetY < 20) {
-                this._switchToNextDecorator(gmeID);
-            } else {
-                this.logger.debug("Opening model with id '" + gmeID + "'");
-                this._client.setSelectedObjectId(gmeID);
-            }
+            this.logger.debug("Opening model with id '" + gmeID + "'");
+            this._client.setSelectedObjectId(gmeID);
         }
     };
 
@@ -402,6 +405,66 @@ define(['logManager',
                 this._client.setRegistry(gmeID, nodePropertyNames.Registry.lineStyle, lineStyle);
             }
         }
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterAvailableConnectionEnd = function (params) {
+        var srcItemID = params.src,
+            srcSubCompID = params.srcSubCompId,
+            srcItemMetaInfo = params.srcItemMetaInfo,
+            srcSubCompMetaInfo = params.srcSubComponentMetaInfo,
+            availableConnectionEnds = params.availableConnectionEnds,
+            result = [],
+            i = availableConnectionEnds.length,
+            sourceId,
+            targetId;
+
+        if (params.srcSubCompId !== undefined) {
+            sourceId = this._Subcomponent2GMEID[params.src][params.srcSubCompId];
+        } else {
+            sourceId = this._ComponentID2GmeID[params.src];
+        }
+
+        while (i--) {
+            var p = availableConnectionEnds[i];
+            if (p.dstSubCompID !== undefined) {
+                targetId = this._Subcomponent2GMEID[p.dstItemID][p.dstSubCompID];
+            } else {
+                targetId = this._ComponentID2GmeID[p.dstItemID];
+            }
+
+            if (this._client.canMakeConnection({   "parentId": this.currentNodeInfo.id,
+                "sourceId": sourceId,
+                "targetId": targetId }) ) {
+                result.push(availableConnectionEnds[i]);
+            }
+        }
+
+        return result;
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterAvailableConnectionReconnectSourceEnd = function (params) {
+        var connID = params.connId,
+            srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
+            srcItemID,
+            srcSubCompID,
+            dstItemID,
+            dstSubCompID,
+            availableEndPoints = [],
+            availableSourcePoints = [],
+            srcItemMetaInfo,
+            srcSubCompMetaInfo,
+            dstItemMetaInfo,
+            dstSubCompMetaInfo,
+            i,
+            objID,
+            filteredResult,
+            result = [];
+
+        this.logger.warning(JSON.stringify(params));
+
+        return result;
     };
     
 

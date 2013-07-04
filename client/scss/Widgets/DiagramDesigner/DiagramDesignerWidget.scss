@@ -74,8 +74,18 @@ $segment-point-move-path-color: #FF7800;
 
     .c-d-end {
       @include connector_basics;
-      margin-top: $connector-size / -2;
-      margin-left: $connector-size / -2;
+      margin-top: ($connector-size + 2) / -2;
+      margin-left: ($connector-size +2) / -2;
+
+      &.src {
+        border-color: #FF0000;
+        border-width: 2px;
+      }
+
+      &.dst {
+        border-color: #0000FF;
+        border-width: 2px;
+      }
     }
 
     .error-decorator {

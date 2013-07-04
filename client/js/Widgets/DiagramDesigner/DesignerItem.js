@@ -205,12 +205,9 @@ define(['logManager',
 
         //in edit mode and when not participating in a multiple selection,
         //show connectors
-        if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL ||
-            this.canvas.mode === this.canvas.OPERATING_MODES.CREATE_CONNECTION ||
-            this.canvas.mode === this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
-
+        if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
             if (this.selectedInMultiSelection === false) {
-                this.showConnectors();
+                this.showSourceConnectors();
             }
         }
 
@@ -224,8 +221,10 @@ define(['logManager',
         this.logger.debug("onMouseLeave: " + this.id);
 
         this.$el.removeClass(classes.join(' '));
-
-        this.hideConnectors();
+        if (this.canvas.mode !== this.canvas.OPERATING_MODES.CREATE_CONNECTION &&
+            this.canvas.mode !== this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+            this.hideSourceConnectors();
+        }
 
         //sign we need the default preventDefault and stopPropagation to be executed
         return false;
@@ -242,7 +241,7 @@ define(['logManager',
 
         //when selected, no connectors are available
         if (multiSelection === true) {
-            this.hideConnectors();
+            this.hideSourceConnectors();
         }
 
         //let the decorator know that this item became selected
@@ -256,14 +255,6 @@ define(['logManager',
 
         //let the decorator know that this item became deselected
         this._callDecoratorMethod("onDeselect");
-    };
-
-    DesignerItem.prototype.showConnectors = function () {
-        this._callDecoratorMethod("showConnectors");
-    };
-
-    DesignerItem.prototype.hideConnectors = function () {
-        this._callDecoratorMethod("hideConnectors");
     };
 
     DesignerItem.prototype._callDecoratorMethod = function (fnName, args) {
@@ -372,6 +363,26 @@ define(['logManager',
     DesignerItem.prototype.readOnlyMode = function (readOnly) {
         this._decoratorInstance.readOnlyMode(readOnly);
     };
+
+    /*********************** CONNECTION END CONNECTOR HIGHLIGHT ************************/
+
+    DesignerItem.prototype.showSourceConnectors = function (params) {
+        this._decoratorInstance.showSourceConnectors(params);
+    };
+
+    DesignerItem.prototype.hideSourceConnectors = function () {
+        this._decoratorInstance.hideSourceConnectors();
+    };
+
+    DesignerItem.prototype.showEndConnectors = function (params) {
+        this._decoratorInstance.showEndConnectors(params);
+    };
+
+    DesignerItem.prototype.hideEndConnectors = function () {
+        this._decoratorInstance.hideEndConnectors();
+    };
+
+
 
     return DesignerItem;
 });

@@ -1404,6 +1404,35 @@ define([
                     }
                 }
             }
+            /**************TEST canMakeConnection **********************/
+            function canMakeConnection(parameters) {
+                var result = false;
+
+                if(parameters.parentId && parameters.sourceId && parameters.targetId){
+                    if(_core &&
+                        _nodes[parameters.parentId] &&
+                        _nodes[parameters.sourceId] &&
+                        _nodes[parameters.parentId] &&
+                        typeof _nodes[parameters.parentId].node === 'object' &&
+                        typeof _nodes[parameters.sourceId].node === 'object' &&
+                        typeof _nodes[parameters.targetId].node === 'object'){
+                        var sourceName = _core.getAttribute(_nodes[parameters.sourceId].node,"name").toLowerCase();
+                        var targetName = _core.getAttribute(_nodes[parameters.targetId].node,"name").toLowerCase();
+
+                        //TODO: basic rule: if all necessary parameters are present they can be connected
+                        result = true;
+
+                        //TODO: ENFORCE META AND CONSTRAINS RULES
+                        //DEMO RULE #1: OUTxxxx can be connected to only INxxx (and vica versa)
+                        if ((sourceName.indexOf('out') === 0) && (targetName.indexOf('in') !== 0) ||
+                            (sourceName.indexOf('in') === 0) && (targetName.indexOf('out') !== 0) ) {
+                            result = false;
+                        }
+                    }
+                }
+                return result;
+            }
+            /**********************************************************/
             function intellyPaste(parameters) {
                 var pathestocopy = [],
                     simplepaste = true;
@@ -1845,6 +1874,7 @@ define([
                 makePointer: makePointer,
                 delPointer: delPointer,
                 makeConnection: makeConnection,
+                canMakeConnection: canMakeConnection,
                 intellyPaste: intellyPaste,
                 addMember: addMember,
                 removeMember: removeMember,

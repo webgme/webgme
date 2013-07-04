@@ -42,8 +42,8 @@
       position: absolute;
       cursor: pointer;
       border: 1px solid #883333;
-      margin-top: -6px;
-      margin-left: -6px; }
+      margin-top: -7px;
+      margin-left: -7px; }
       .diagram-designer .items .c-d-end:hover {
         border-color: rgba(255, 43, 43, 0.8);
         -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(255, 43, 43, 0.6);
@@ -53,6 +53,12 @@
         background-color: lime; }
       .diagram-designer .items .c-d-end.connection-end-reject {
         background-color: red; }
+      .diagram-designer .items .c-d-end.src {
+        border-color: #FF0000;
+        border-width: 2px; }
+      .diagram-designer .items .c-d-end.dst {
+        border-color: #0000FF;
+        border-width: 2px; }
     .diagram-designer .items .error-decorator {
       background-color: #f2dede;
       padding: 3px;

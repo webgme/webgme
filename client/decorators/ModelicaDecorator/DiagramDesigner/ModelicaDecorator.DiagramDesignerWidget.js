@@ -156,14 +156,20 @@ define(['js/Constants',
 
 
     //Shows the 'connectors' - appends them to the DOM
+    //TODO: showConnector and hideConnectors do not exist anymore
+    //TODO: overwrite showSourceConnectors(params)
+    //TODO:     hideSourceConnectors()
+    //TODO:     showEndConnectors(params)
+    //TODO:     hideEndConnectors()
+    //TODO: instead
     ModelicaDecoratorDiagramDesignerWidget.prototype.showConnectors = function () {
-        this.$connectors.show();
+        //this.$connectors.show();
     };
 
 
     //Hides the 'connectors' - detaches them from the DOM
     ModelicaDecoratorDiagramDesignerWidget.prototype.hideConnectors = function () {
-        this.$connectors.hide();
+        //this.$connectors.hide();
     };
 
 

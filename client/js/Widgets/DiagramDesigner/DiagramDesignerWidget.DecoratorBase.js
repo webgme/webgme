@@ -13,7 +13,8 @@ define(['logManager',
         this.logger = params.logger || logManager.create(this.DECORATORID);
 
         this.skinParts = {};
-        this.$connectors = null;
+        this.$sourceConnectors = null;
+        this.$endConnectors = null;
 
         this._initialize();
 
@@ -21,9 +22,6 @@ define(['logManager',
     };
 
     DiagramDesignerWidgetDecoratorBase.prototype.DECORATORID = DECORATOR_ID;
-
-    /*DiagramDesignerWidgetDecoratorBase.prototype.setControlSpecificAttributes = function () {
-    };*/
 
     DiagramDesignerWidgetDecoratorBase.prototype.setControl = function (control) {
         this._control = control;
@@ -61,23 +59,55 @@ define(['logManager',
     //NODE - CAN BE OVERRIDDEN WHEN NEEDED
     DiagramDesignerWidgetDecoratorBase.prototype.initializeConnectors = function () {
         //find connectors
-        this.$connectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        this.$sourceConnectors = this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        this.$endConnectors = this.$sourceConnectors;
 
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.registerConnectors(this.$connectors);
+            this.hostDesignerItem.registerConnectors(this.$sourceConnectors);
+        } else {
+            this.logger.error("Decorator's hostDesignerItem is not set");
         }
 
-        this.hideConnectors();
+        this.hideSourceConnectors();
     };
 
     //Shows the 'connectors' - appends them to the DOM
-    DiagramDesignerWidgetDecoratorBase.prototype.showConnectors = function () {
-        this.$connectors.appendTo(this.$el);
+    //Called when a connection drawing starts from a source point and the decorator is notified
+    //to highlight the connectors for its subcomponents with the given IDs
+    //params:
+    //  - srcItemMetaInfo: metaInfo of the connection source's host item
+    //  - srcSubCompMetaInfo: metaInfo of the connection source's subcomponent (if present)
+    //  - connectors: the IDs of the connectors the decorator should highlight
+    //            these IDs were defined by the decorator itself
+    //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
+    //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
+    DiagramDesignerWidgetDecoratorBase.prototype.showSourceConnectors = function (params) {
+        this.logger.warning('showSourceConnectors: ' + JSON.stringify(params));
+        this.$sourceConnectors.appendTo(this.$el);
     };
 
     //Hides the 'connectors' - detaches them from the DOM
-    DiagramDesignerWidgetDecoratorBase.prototype.hideConnectors = function () {
-        this.$connectors.detach();
+    DiagramDesignerWidgetDecoratorBase.prototype.hideSourceConnectors = function () {
+        this.$sourceConnectors.detach();
+    };
+
+    //Called when a connection drawing starts from a source point and the decorator is notified
+    //to highlight the connectors for its subcomponents with the given IDs
+    //params:
+    //  - srcItemMetaInfo: metaInfo of the connection source's host item
+    //  - srcSubCompMetaInfo: metaInfo of the connection source's subcomponent (if present)
+    //  - connectors: the IDs of the connectors the decorator should highlight
+    //            these IDs were defined by the decorator itself
+    //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
+    //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
+    DiagramDesignerWidgetDecoratorBase.prototype.showEndConnectors = function (params) {
+        this.logger.warning('showEndConnectors: ' + JSON.stringify(params));
+        this.$endConnectors.appendTo(this.$el);
+    };
+
+    //Hides the 'connectors' - detaches them from the DOM
+    DiagramDesignerWidgetDecoratorBase.prototype.hideEndConnectors = function () {
+        this.$endConnectors.detach();
     };
 
     //Called before the host designer item is added to the canvas DOM (DocumentFragment more precisely)
@@ -217,6 +247,17 @@ define(['logManager',
     };
 
     DiagramDesignerWidgetDecoratorBase.prototype.readOnlyMode = function (readOnlyMode) {
+    };
+
+    //Called when connection is being drawn from this item's or one of its subcomponents' connector
+    //need to return an object that will be passed to other decorators along with showEndConnector() so
+    //other decorators will be able to decide what connectors to display as 'endpoint' for the connection being drawn
+    //same applies for reconnection an endpoint of an existing connection
+    //paramters:
+    //  - id: if undefined, need to return the metainfo descriptor for the decorated object
+    //  -     if has a value, need to return the metainfo of the subcomponent with the given id
+    DiagramDesignerWidgetDecoratorBase.prototype.getConnectorMetaInfo = function (id) {
+        return undefined;
     };
 
     return DiagramDesignerWidgetDecoratorBase;
