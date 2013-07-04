@@ -168,9 +168,10 @@ define(['js/Constants',
 
 
     ModelicaDecoratorDiagramDesignerWidget.prototype._toolTipBase = $('<div class="port_info"> \
-            <span class="name">NAME</span> \
             <span class="class_name">CLASS NAME</span> \
-            <span class="description">DESCRIPTION</span> \
+            <span class="name">NAME</span> \
+            <span class="desc">DESCRIPTION</span> \
+            <span class="class_desc">CLASS DESCRIPTION</span> \
         </div>');
 
     ModelicaDecoratorDiagramDesignerWidget.prototype._buildToolTip = function (portConnector, svgPort) {
@@ -185,8 +186,9 @@ define(['js/Constants',
         svgInfo = $(svgInfo[0]);
 
         tooltip.find('.name').text(svgInfo.find('#name').text());
-        tooltip.find('.class_name').text(svgInfo.find('#class_name').text());
-        tooltip.find('.description').text(svgInfo.find('#description').text());
+        tooltip.find('.class_name').text(svgInfo.find('#type').text());
+        tooltip.find('.desc').text(svgInfo.find('#desc').text());
+        tooltip.find('.class_desc').text(svgInfo.find('#classDesc').text());
 
         svgInfo.remove();
 

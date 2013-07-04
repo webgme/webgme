@@ -35,16 +35,19 @@
       top: 20px;
       left: 20px;
       padding: 8px;
-      background-color: whitesmoke;
-      border: 1px solid #555555;
+      background-color: #eff0f6;
+      border: 1px solid #8f8f8f;
       border-radius: 5px; }
       .designer-item .modelica-decorator .connector .port_info .name {
         color: black;
         font-weight: bold; }
       .designer-item .modelica-decorator .connector .port_info .class_name {
-        color: darkred; }
-      .designer-item .modelica-decorator .connector .port_info .description {
-        color: darkgreen; }
+        color: #ff3a3a;
+        font-weight: bold; }
+      .designer-item .modelica-decorator .connector .port_info .desc {
+        color: green; }
+      .designer-item .modelica-decorator .connector .port_info .class_desc {
+        color: green; }
   .designer-item .modelica-decorator .connector:hover .port_info {
     display: block; }
   .designer-item .modelica-decorator .connector-container {

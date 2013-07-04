@@ -37,8 +37,8 @@ $selected-background-color: rgba(219, 234, 252, 0.5);
         top: 20px;
         left: 20px;
         padding: 8px;
-        background-color: whitesmoke;
-        border: 1px solid rgb(85, 85, 85);
+        background-color: rgb(239, 240, 246);
+        border: 1px solid rgb(143, 143, 143);
         border-radius: 5px;
 
         .name
@@ -49,13 +49,20 @@ $selected-background-color: rgba(219, 234, 252, 0.5);
 
         .class_name
         {
-          color: darkred;
+          color: rgb(255, 58, 58);
+          font-weight: bold;
         }
 
-        .description
+        .desc
         {
-          color: darkgreen;
+          color: rgb(0, 128, 0);
         }
+
+        .class_desc
+        {
+          color: rgb(0, 128, 0);
+        }
+
       }
     }
 
