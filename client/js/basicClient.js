@@ -1365,12 +1365,6 @@ define([
                     }
                 }
             }
-            function makePointer(id, name, to) {
-                if(_core && _nodes[id] && _nodes[to] && typeof _nodes[id].node === 'object' && typeof _nodes[to].node === 'object' ){
-                    _core.setPointer(_nodes[id].node,name,_nodes[to].node);
-                    saveRoot('makePointer('+id+','+name+','+to+')');
-                }
-            }
             /************** TEST CAN-MAKEPOINTER ******************/
             function canMakePointer(id, name, to) {
                 var result = false;
@@ -1390,37 +1384,22 @@ define([
                 return result;
             }
             /************** END OF --- TEST CAN_MAKEPOINTER ******************/
+            function makePointer(id, name, to) {
+                if(canMakePointer(id, name, to) &&
+                    _core &&
+                    _nodes[id] &&
+                    _nodes[to] &&
+                    typeof _nodes[id].node === 'object' &&
+                    typeof _nodes[to].node === 'object' ){
+                        _core.setPointer(_nodes[id].node,name,_nodes[to].node);
+                        saveRoot('makePointer('+id+','+name+','+to+')');
+                }
+            }
+
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name);
                     saveRoot('delPointer('+path+','+name+')');
-                }
-            }
-            function makeConnection(parameters) {
-                if(parameters.parentId && parameters.sourceId && parameters.targetId){
-                    if(_core &&
-                        _nodes[parameters.parentId] &&
-                        _nodes[parameters.sourceId] &&
-                        _nodes[parameters.parentId] &&
-                        typeof _nodes[parameters.parentId].node === 'object' &&
-                        typeof _nodes[parameters.sourceId].node === 'object' &&
-                        typeof _nodes[parameters.targetId].node === 'object'){
-                        var connection = _core.createNode(_nodes[parameters.parentId].node);
-                        _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
-                        _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
-                        _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
-                        _core.setRegistry(connection,"isConnection",true);
-                        _core.setRegistry(connection,"decorator","");
-                        if (parameters.registry) {
-                            for (var regEntry in parameters.registry) {
-                                if (parameters.registry.hasOwnProperty(regEntry)) {
-                                    _core.setRegistry(connection,regEntry,parameters.registry[regEntry]);
-                                }
-                            }
-                        }
-                        storeNode(connection);
-                        saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
-                    }
                 }
             }
             /**************TEST canMakeConnection **********************/
@@ -1452,6 +1431,37 @@ define([
                 return result;
             }
             /**********************************************************/
+            function makeConnection(parameters) {
+                if( canMakeConnection(parameters) &&
+                    parameters.parentId &&
+                    parameters.sourceId &&
+                    parameters.targetId){
+                        if(_core &&
+                            _nodes[parameters.parentId] &&
+                            _nodes[parameters.sourceId] &&
+                            _nodes[parameters.parentId] &&
+                            typeof _nodes[parameters.parentId].node === 'object' &&
+                            typeof _nodes[parameters.sourceId].node === 'object' &&
+                            typeof _nodes[parameters.targetId].node === 'object'){
+                            var connection = _core.createNode(_nodes[parameters.parentId].node);
+                            _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
+                            _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
+                            _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
+                            _core.setRegistry(connection,"isConnection",true);
+                            _core.setRegistry(connection,"decorator","");
+                            if (parameters.registry) {
+                                for (var regEntry in parameters.registry) {
+                                    if (parameters.registry.hasOwnProperty(regEntry)) {
+                                        _core.setRegistry(connection,regEntry,parameters.registry[regEntry]);
+                                    }
+                                }
+                            }
+                            storeNode(connection);
+                            saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
+                        }
+                }
+            }
+
             function intellyPaste(parameters) {
                 var pathestocopy = [],
                     simplepaste = true;
