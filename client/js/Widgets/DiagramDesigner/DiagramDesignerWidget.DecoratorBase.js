@@ -82,7 +82,7 @@ define(['logManager',
     //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
     //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
     DiagramDesignerWidgetDecoratorBase.prototype.showSourceConnectors = function (params) {
-        this.logger.warning('showSourceConnectors: ' + JSON.stringify(params));
+        this.logger.debug('showSourceConnectors: ' + JSON.stringify(params));
         this.$sourceConnectors.appendTo(this.$el);
     };
 
@@ -101,7 +101,7 @@ define(['logManager',
     //            NOTE: if the value is undefined, the connectors for the host item should be highlighted
     //                  if the value is not undefined, the connector for the corresponding subcomponent should be highlighted
     DiagramDesignerWidgetDecoratorBase.prototype.showEndConnectors = function (params) {
-        this.logger.warning('showEndConnectors: ' + JSON.stringify(params));
+        this.logger.debug('showEndConnectors: ' + JSON.stringify(params));
         this.$endConnectors.appendTo(this.$el);
     };
 
