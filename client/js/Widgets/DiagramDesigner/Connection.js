@@ -678,6 +678,7 @@ define(['logManager',
                 "data-id": this.id,
                 "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS + " " + DiagramDesignerWidgetConstants.CONNECTION_END_SRC
             });
+            this.skinParts.srcDragPoint.html('S');
 
             this.skinParts.srcDragPoint.css({"position": "absolute",
                                              "top": this.sourceCoordinates.y,
@@ -691,6 +692,7 @@ define(['logManager',
                 "data-id": this.id,
                 "class": DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS+ " " + DiagramDesignerWidgetConstants.CONNECTION_END_DST
             });
+            this.skinParts.dstDragPoint.html('D');
 
             this.skinParts.dstDragPoint.css({"position": "absolute",
                 "top": this.endCoordinates.y,

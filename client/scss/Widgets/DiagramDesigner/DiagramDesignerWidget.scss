@@ -27,6 +27,9 @@ $segment-point-marker-border-color: #000000;
 $segment-point-marker-hover-background-color: #FF7800;
 $segment-point-move-path-color: #FF7800;
 
+$connection-end-src-connector-border-color: #FF0000;
+$connection-end-dst-connector-border-color: #0000FF;
+
 .diagram-designer {
   outline: none;
 
@@ -74,17 +77,22 @@ $segment-point-move-path-color: #FF7800;
 
     .c-d-end {
       @include connector_basics;
-      margin-top: ($connector-size + 2) / -2;
-      margin-left: ($connector-size +2) / -2;
+      margin-top: $connector-size / -2;
+      margin-left: $connector-size / -2;
+      line-height: $connector-size - $connector-border-width * 2;
+      font-size: $connector-size - $connector-border-width * 2 - 2;
+      text-align: center;
+      font-weight: bold;
+      font-family: Verdana;
 
       &.src {
-        border-color: #FF0000;
-        border-width: 2px;
+        border-color: $connection-end-src-connector-border-color;
+        color: $connection-end-src-connector-border-color;
       }
 
       &.dst {
-        border-color: #0000FF;
-        border-width: 2px;
+        border-color: $connection-end-dst-connector-border-color;
+        color: $connection-end-dst-connector-border-color;
       }
     }
 
