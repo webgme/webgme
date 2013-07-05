@@ -88,12 +88,12 @@ define(['logManager',
             self._onConnectionSegmentPointsChange(params);
         };
 
-        this.designerCanvas.onFilterAvailableConnectionEnd = function (params) {
-            return self._onFilterAvailableConnectionEnd(params);
+        this.designerCanvas.onFilterNewConnectionDroppableEnds = function (params) {
+            return self._onFilterNewConnectionDroppableEnds(params);
         };
 
-        this.designerCanvas.onFilterAvailableConnectionReconnectSourceEnd = function (params) {
-            return self._onFilterAvailableConnectionReconnectSourceEnd(params);
+        this.designerCanvas.onFilterReconnectionDroppableEnds = function (params) {
+            return self._onFilterReconnectionDroppableEnds(params);
         };
 
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
@@ -408,23 +408,20 @@ define(['logManager',
     };
 
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterAvailableConnectionEnd = function (params) {
-        var srcItemID = params.src,
-            srcSubCompID = params.srcSubCompId,
-            srcItemMetaInfo = params.srcItemMetaInfo,
-            srcSubCompMetaInfo = params.srcSubComponentMetaInfo,
-            availableConnectionEnds = params.availableConnectionEnds,
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterNewConnectionDroppableEnds = function (params) {
+        var availableConnectionEnds = params.availableConnectionEnds,
             result = [],
             i = availableConnectionEnds.length,
             sourceId,
             targetId;
 
         if (params.srcSubCompId !== undefined) {
-            sourceId = this._Subcomponent2GMEID[params.src][params.srcSubCompId];
+            sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
         } else {
-            sourceId = this._ComponentID2GmeID[params.src];
+            sourceId = this._ComponentID2GmeID[params.srcId];
         }
 
+        //need to test for each source-destination pair if the connection can be made or not?
         while (i--) {
             var p = availableConnectionEnds[i];
             if (p.dstSubCompID !== undefined) {
@@ -444,25 +441,55 @@ define(['logManager',
     };
 
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterAvailableConnectionReconnectSourceEnd = function (params) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onFilterReconnectionDroppableEnds = function (params) {
         var connID = params.connId,
             srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
-            srcItemID,
-            srcSubCompID,
-            dstItemID,
-            dstSubCompID,
-            availableEndPoints = [],
-            availableSourcePoints = [],
-            srcItemMetaInfo,
-            srcSubCompMetaInfo,
-            dstItemMetaInfo,
-            dstSubCompMetaInfo,
+            srcItemID = params.srcItemID,
+            srcSubCompID = params.srcSubCompID,
+            dstItemID = params.dstItemID,
+            dstSubCompID = params.dstSubCompID,
+            availableConnectionEnds = params.availableConnectionEnds,
+            availableConnectionSources = params.availableConnectionSources,
             i,
-            objID,
-            filteredResult,
-            result = [];
+            gmeID = this._ComponentID2GmeID[connID],
+            result = [],
+            newEndPointGMEID;
 
-        this.logger.warning(JSON.stringify(params));
+        if (srcDragged === true) {
+            //'src' end of the connection is being dragged
+            //'dst end is fix
+            //need to check for all possible 'src' if the connection's end could be changed to that value
+            i = availableConnectionSources.length;
+            while (i--) {
+                srcItemID = availableConnectionSources[i].srcItemID;
+                srcSubCompID = availableConnectionSources[i].srcSubCompID;
+                if (srcSubCompID !== undefined ) {
+                    newEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
+                } else {
+                    newEndPointGMEID = this._ComponentID2GmeID[srcItemID];
+                }
+                if (this._client.canMakePointer(gmeID, CONNECTION_SOURCE_NAME, newEndPointGMEID)) {
+                    result.push(availableConnectionSources[i]);
+                }
+            }
+        } else {
+            //'dst' end of the connection is being dragged
+            //'src end is fix
+            //need to check for all possible 'dst' if the connection's end could be changed to that value
+            i = availableConnectionEnds.length;
+            while (i--) {
+                dstItemID = availableConnectionEnds[i].dstItemID;
+                dstSubCompID = availableConnectionEnds[i].dstSubCompID;
+                if (dstSubCompID !== undefined ) {
+                    newEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
+                } else {
+                    newEndPointGMEID = this._ComponentID2GmeID[dstItemID];
+                }
+                if (this._client.canMakePointer(gmeID, CONNECTION_TARGET_NAME, newEndPointGMEID)) {
+                    result.push(availableConnectionEnds[i]);
+                }
+            }
+        }
 
         return result;
     };

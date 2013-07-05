@@ -378,8 +378,6 @@ define(['logManager',
     ConnectionDrawingManager.prototype._startConnectionCreate = function (objId, sCompId, el, mousePos) {
         var srcCoord;
 
-        this._diagramDesigner.selectionManager.clear();
-
         this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION);
 
         this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
@@ -402,8 +400,16 @@ define(['logManager',
         //init auto-scroll if mouse moves out of widget
         this._dragScroll.start();
 
-        this._diagramDesigner._onStartConnectionCreate({'src': objId,
+        //fire event
+        this.onStartConnectionCreate({'srcId': objId,
             'srcSubCompId': sCompId});
+    };
+
+    /*
+     * Called on connection drawing start, should be overridden to handle the event
+     */
+    ConnectionDrawingManager.prototype.onStartConnectionCreate = function (params) {
+        this.logger.warning("onStartConnectionCreate with params: '" + JSON.stringify(params));
     };
 
 
@@ -415,8 +421,6 @@ define(['logManager',
      * mousePos: mouse position event belongs to the 'mousedown' event on the connector
      */
     ConnectionDrawingManager.prototype._startConnectionReconnect = function (connectionId, draggedEnd, mousePos) {
-        this._diagramDesigner.selectionManager.hideSelectionOutline();
-
         this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION);
 
         this.logger.debug('_startConnectionReconnect connectionId:' + connectionId + ', draggedEnd:' + draggedEnd);
@@ -438,8 +442,16 @@ define(['logManager',
         //init auto-scroll if mouse moves out of widget
         this._dragScroll.start();
 
-        this._diagramDesigner._onStartConnectionReconnect({'connId': connectionId,
+        //fire event
+        this.onStartConnectionReconnect({'connId': connectionId,
             'draggedEnd': draggedEnd});
+    };
+
+    /*
+     * Called on connection reconnect start, should be overridden to handle the event
+     */
+    ConnectionDrawingManager.prototype.onStartConnectionReconnect = function (params) {
+        this.logger.warning("onStartConnectionReconnect with params: '" + JSON.stringify(params));
     };
 
 
@@ -536,13 +548,10 @@ define(['logManager',
     ConnectionDrawingManager.prototype._onBackgroundMouseUp = function (/*event*/) {
         this.logger.debug('_onBackgroundMouseUp');
 
-        this._diagramDesigner._onEndConnectionCreate();
-
         this._detachMouseListeners();
 
         this._endConnectionDraw();
     };
-
 
     /*
      * Finish the drawing of the connection
@@ -570,7 +579,17 @@ define(['logManager',
             this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION);
         }
 
+        //fire event
+        this.onEndConnectionDraw();
+
         this.logger.debug("Stopped connection drawing");
+    };
+
+    /*
+     * Called on connection create/reconnect end, should be overridden to handle the event
+     */
+    ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
+        this.logger.warning("onEndConnectionDraw");
     };
 
 

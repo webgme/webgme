@@ -1371,6 +1371,25 @@ define([
                     saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             }
+            /************** TEST CAN-MAKEPOINTER ******************/
+            function canMakePointer(id, name, to) {
+                var result = false;
+
+                if( _core &&
+                    _nodes[id] &&
+                    _nodes[to] &&
+                    typeof _nodes[id].node === 'object' &&
+                    typeof _nodes[to].node === 'object' &&
+                    typeof name === 'string' &&
+                    name !== ""){
+
+                    //TODO: ENFORCE META AND CONSTRAINS RULES
+                    result = true;
+                }
+
+                return result;
+            }
+            /************** END OF --- TEST CAN_MAKEPOINTER ******************/
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setPointer(_nodes[path].node,name);
@@ -1872,6 +1891,7 @@ define([
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
                 makePointer: makePointer,
+                canMakePointer: canMakePointer,
                 delPointer: delPointer,
                 makeConnection: makeConnection,
                 canMakeConnection: canMakeConnection,

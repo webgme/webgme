@@ -160,5 +160,229 @@ define(['js/Widgets/DiagramDesigner/Connection',
         }
     };
 
+
+    /**************** ON_END_CONNECTION_DRAW EVENT HANDLER *******************/
+    DiagramDesignerWidget.prototype._onEndConnectionDraw = function () {
+        var i = this.itemIds.length;
+
+        while (i--) {
+            this.items[this.itemIds[i]].hideEndConnectors();
+        }
+    };
+
+    /**************** ON _TART_CONNECTION_CREATE EVENT HANDLER *******************/
+    DiagramDesignerWidget.prototype._onStartConnectionCreate = function (params) {
+        var srcItemID = params.srcId,
+            srcSubCompID = params.srcSubCompId,
+            availableEndPoints = [],
+            srcItemMetaInfo = this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(),
+            srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined,
+            i,
+            objID,
+            filteredDroppableEnds;
+
+        //clear out selection
+        this.selectionManager.clear();
+
+        //hide all the source connectors on the 'src' item
+        this.items[srcItemID].hideSourceConnectors();
+
+        //iterate through all the known items to build the available connection end list
+        i = this.itemIds.length;
+        while (i--) {
+            availableEndPoints.push({'dstItemID': this.itemIds[i],
+                'dstSubCompID': undefined});
+        }
+
+        //iterate through all the known items' subcomponents to build the available connection end list
+        for (objID in this._itemSubcomponentsMap) {
+            if (this._itemSubcomponentsMap.hasOwnProperty(objID)) {
+                i = this._itemSubcomponentsMap[objID].length;
+                while (i--) {
+                    availableEndPoints.push({'dstItemID': objID,
+                        'dstSubCompID': this._itemSubcomponentsMap[objID][i]});
+                }
+            }
+        }
+
+        //all available items and their subcomponent is a valid connection-destination by default
+        params.availableConnectionEnds = availableEndPoints;
+
+        //call optional filtering
+        filteredDroppableEnds = this.onFilterNewConnectionDroppableEnds(params) || [];
+        this.logger.debug('_onStartConnectionCreate filteredDroppableEnds: ' + JSON.stringify(filteredDroppableEnds));
+
+        //iterate through all the filteredDroppableEnds and
+        //ask the decorators to display the connectors for the given item/subcomponent
+        var processedIndices = [];
+        var decoratorPackages = [];
+        while (filteredDroppableEnds.length > 0) {
+            i = filteredDroppableEnds.length;
+            objID = filteredDroppableEnds[0].dstItemID;
+            var decoratorUpdatePackage = [];
+            processedIndices = [];
+            while (i--) {
+                if (objID === filteredDroppableEnds[i].dstItemID) {
+                    processedIndices.push(i);
+                    decoratorUpdatePackage.push(filteredDroppableEnds[i].dstSubCompID);
+                }
+            }
+            decoratorPackages.push([objID, srcItemMetaInfo, srcSubCompMetaInfo, decoratorUpdatePackage]);
+            processedIndices.sort(function(a,b){return a-b});
+            i = processedIndices.length;
+            while(i--) {
+                filteredDroppableEnds.splice(processedIndices[i], 1);
+            }
+        }
+
+        this.logger.debug('_onStartConnectionCreate decorator update package: ' + JSON.stringify(decoratorPackages));
+        i = decoratorPackages.length;
+        while (i--) {
+            objID = decoratorPackages[i][0];
+            this.items[objID].showEndConnectors({'srcItemMetaInfo': decoratorPackages[i][1],
+                'srcSubCompMetaInfo': decoratorPackages[i][2],
+                'connectors': decoratorPackages[i][3]} );
+        }
+    };
+
+    DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+
+        return params.availableConnectionEnds;
+    };
+
+    /**************** ON_START_CONNECTION_RECONNECT EVENT HANDLER *******************/
+    DiagramDesignerWidget.prototype._onStartConnectionReconnect = function (params) {
+        var connID = params.connId,
+            srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC,
+            srcItemID,
+            srcSubCompID,
+            dstItemID,
+            dstSubCompID,
+            availableEndPoints = [],
+            availableSourcePoints = [],
+            srcItemMetaInfo,
+            srcSubCompMetaInfo,
+            dstItemMetaInfo,
+            dstSubCompMetaInfo,
+            i,
+            objID,
+            filteredResult;
+
+        //don't clear the selection but remove the highlight
+        this.selectionManager.hideSelectionOutline();
+
+        //based on 'src' or 'dst' end of the connection is being dragged,
+        //set src/dst values and meta descriptors
+        if (srcDragged === true ) {
+            //source end of the connection is dragged
+            //destination is fix
+            if (this.connectionEndIDs[connID]) {
+                dstItemID = this.connectionEndIDs[connID].dstObjId;
+                dstSubCompID = this.connectionEndIDs[connID].dstSubCompId;
+                dstItemMetaInfo = this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo();
+                dstSubCompMetaInfo = dstSubCompID ? this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo(dstSubCompID) : undefined;
+            }
+        } else {
+            //destination end of the connection is dragged
+            //source is fix
+            if (this.connectionEndIDs[connID]) {
+                srcItemID = this.connectionEndIDs[connID].srcObjId;
+                srcSubCompID = this.connectionEndIDs[connID].srcSubCompId;
+                srcItemMetaInfo = this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo();
+                srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined;
+            }
+        }
+
+        //iterate through all the known items to build the available connection src/dst list
+        i = this.itemIds.length;
+        while (i--) {
+            if (srcDragged === true ) {
+                availableSourcePoints.push({'srcItemID': this.itemIds[i],
+                    'srcSubCompID': undefined});
+            } else {
+                availableEndPoints.push({'dstItemID': this.itemIds[i],
+                    'dstSubCompID': undefined});
+            }
+        }
+
+        //iterate through all the known items' subcomponents to build the available connection src/dst list
+        for (objID in this._itemSubcomponentsMap) {
+            if (this._itemSubcomponentsMap.hasOwnProperty(objID)) {
+                i = this._itemSubcomponentsMap[objID].length;
+                while (i--) {
+                    if (srcDragged === true ) {
+                        availableSourcePoints.push({'srcItemID': objID,
+                            'srcSubCompID': this._itemSubcomponentsMap[objID][i]});
+                    } else {
+                        availableEndPoints.push({'dstItemID': objID,
+                            'dstSubCompID': this._itemSubcomponentsMap[objID][i]});
+                    }
+                }
+            }
+        }
+
+        //all available items and their subcomponent is a valid connection destination by default
+        params.availableConnectionEnds = availableEndPoints;
+        params.availableConnectionSources = availableSourcePoints;
+        params.srcItemID = srcItemID;
+        params.srcSubCompID = srcSubCompID;
+        params.dstItemID = dstItemID;
+        params.dstSubCompID = dstSubCompID;
+
+        filteredResult = this.onFilterReconnectionDroppableEnds(params) || [];
+        this.logger.debug('_onStartConnectionReconnect filteredResult:' + JSON.stringify(filteredResult));
+
+        //iterate through all the filteredResult and ask the decorators to highlight the given connection endpoint's connector
+        var processedIndices = [];
+        var decoratorPackages = [];
+        var prefix = srcDragged ? 'src' : 'dst';
+        while (filteredResult.length > 0) {
+            i = filteredResult.length;
+            objID = filteredResult[0][prefix + 'ItemID'];
+            var decoratorUpdatePackage = [];
+            processedIndices = [];
+            while (i--) {
+                if (objID === filteredResult[i][prefix + 'ItemID']) {
+                    processedIndices.push(i);
+                    decoratorUpdatePackage.push(filteredResult[i][prefix + 'SubCompID']);
+                }
+            }
+            decoratorPackages.push([objID, srcDragged ? srcItemMetaInfo : dstItemMetaInfo, srcDragged ? srcSubCompMetaInfo : dstSubCompMetaInfo, decoratorUpdatePackage]);
+            processedIndices.sort(function(a,b){return a-b});
+            i = processedIndices.length;
+            while(i--) {
+                filteredResult.splice(processedIndices[i], 1);
+            }
+        }
+
+        this.logger.debug('_onStartConnectionReconnect decorator update package: ' + JSON.stringify(decoratorPackages));
+        i = decoratorPackages.length;
+        while (i--) {
+            objID = decoratorPackages[i][0];
+            if (srcDragged) {
+                this.items[objID].showSourceConnectors({'dstItemMetaInfo': decoratorPackages[i][1],
+                    'dstSubCompMetaInfo': decoratorPackages[i][2],
+                    'connectors': decoratorPackages[i][3]} );
+            } else {
+                this.items[objID].showEndConnectors({'srcItemMetaInfo': decoratorPackages[i][1],
+                    'srcSubCompMetaInfo': decoratorPackages[i][2],
+                    'connectors': decoratorPackages[i][3]} );
+            }
+        }
+    };
+
+    DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds = function (params) {
+        var srcDragged = params.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC;
+
+        this.logger.warning("DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds not overridden in controller. params: " + JSON.stringify(params));
+
+        if (srcDragged === true) {
+            return params.availableConnectionSources;
+        } else {
+            return params.availableConnectionEnds;
+        }
+    };
+
     return DiagramDesignerWidget;
 });
