@@ -155,24 +155,6 @@ define(['js/Constants',
     };
 
 
-    //Shows the 'connectors' - appends them to the DOM
-    //TODO: showConnector and hideConnectors do not exist anymore
-    //TODO: overwrite showSourceConnectors(params)
-    //TODO:     hideSourceConnectors()
-    //TODO:     showEndConnectors(params)
-    //TODO:     hideEndConnectors()
-    //TODO: instead
-    ModelicaDecoratorDiagramDesignerWidget.prototype.showConnectors = function () {
-        //this.$connectors.show();
-    };
-
-
-    //Hides the 'connectors' - detaches them from the DOM
-    ModelicaDecoratorDiagramDesignerWidget.prototype.hideConnectors = function () {
-        //this.$connectors.hide();
-    };
-
-
     ModelicaDecoratorDiagramDesignerWidget.prototype._toolTipBase = $('<div class="port_info"> \
             <span class="class_name">CLASS NAME</span> \
             <span class="name">NAME</span> \
@@ -231,7 +213,10 @@ define(['js/Constants',
 
                     this._buildToolTip(portConnector, svgPort);
 
-                    var bbox = svgPort.getBBox();
+                    var bbox = {'x': 0,
+                                'y': 0,
+                                'width': 0,
+                                'height': 0};
 
 
                     var portConnectorSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -290,7 +275,7 @@ define(['js/Constants',
             }
         }
 
-        this.showConnectors();
+        this.showSourceConnectors();
         this.initializeConnectors();
     };
 
@@ -377,6 +362,72 @@ define(['js/Constants',
 
         //let the parent decorator class do its job finally
         __parent__.prototype.onRenderSetLayoutInfo.apply(this, arguments);
+    };
+
+
+    ModelicaDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
+        this.logger.warning('showSourceConnectors: ' + JSON.stringify(params));
+        this.$sourceConnectors.show();
+    };
+
+    //Hides the 'connectors' - detaches them from the DOM
+    ModelicaDecoratorDiagramDesignerWidget.prototype.hideSourceConnectors = function () {
+        this.$sourceConnectors.hide();
+    };
+
+    ModelicaDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
+        var client = this._control._client,
+            nodeObj,
+            srcSubCompMetaInfo;
+
+        this.logger.warning('showEndConnectors: ' + JSON.stringify(params));
+
+        //no source info --> don't display any connector
+        if (!params.srcSubCompMetaInfo) {
+            return ;
+        }
+
+        //elements from same Modelica domain could be connected
+        srcSubCompMetaInfo = params.srcSubCompMetaInfo;
+        srcSubCompMetaInfo = srcSubCompMetaInfo.split('.');
+        srcSubCompMetaInfo = srcSubCompMetaInfo.slice(0, srcSubCompMetaInfo.length - 2);
+        srcSubCompMetaInfo = srcSubCompMetaInfo.join('.');
+
+        //this._svgPortConnectors.push([svgPort, portConnector, {}, portId]);
+        var i = this._svgPortConnectors.length;
+        while (i--) {
+            var portId = this._svgPortConnectors[i][3];
+            var portConnector = this._svgPortConnectors[i][1];
+            nodeObj = client.getNode(portId);
+            if (nodeObj) {
+                var attrClass = nodeObj.getAttribute('Class');
+                attrClass = attrClass.split('.');
+                attrClass = attrClass.slice(0, attrClass.length - 2);
+                attrClass = attrClass.join('.');
+                if (attrClass === srcSubCompMetaInfo) {
+                    portConnector.show();
+                }
+            }
+        }
+    };
+
+    //Hides the 'connectors' - detaches them from the DOM
+    ModelicaDecoratorDiagramDesignerWidget.prototype.hideEndConnectors = function () {
+        this.$endConnectors.hide();
+    };
+
+    /************ CUSTOM CONNACTIBILITY LOGIC **********************/
+    ModelicaDecoratorDiagramDesignerWidget.prototype.getConnectorMetaInfo = function (id) {
+        var metaInfo,
+            client = this._control._client,
+            nodeObj;
+
+        if (id) {
+            nodeObj = client.getNode(id);
+            metaInfo = nodeObj.getAttribute('Class');
+        }
+
+        return metaInfo;
     };
 
     return ModelicaDecoratorDiagramDesignerWidget;
