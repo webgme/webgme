@@ -353,17 +353,31 @@ define(['logManager',
         this.logger.debug("Connection end dropped on item: '" + endPointId + "', sCompId: '" + sCompId + "'");
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
-            this._diagramDesigner.createNewConnection({ "src": this._connectionInDrawProps.src,
+            this.onCreateNewConnection({ "src": this._connectionInDrawProps.src,
                     "srcSubCompId": this._connectionInDrawProps.sCompId,
                     "dst": endPointId,
                     "dstSubCompId": sCompId,
                     "metaInfo": this._metaInfo });
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
-            this._diagramDesigner.modifyConnectionEnd({ "id": this._connectionInDrawProps.connId,
-                "endPoint": this._connectionInDrawProps.draggedEnd === DiagramDesignerWidgetConstants.CONNECTION_END_SRC ? "SOURCE" : "END",
+            this.onModifyConnectionEnd({ "id": this._connectionInDrawProps.connId,
+                "endPoint": this._connectionInDrawProps.draggedEnd,
                 "endId": endPointId,
                 "endSubCompId": sCompId });
         }
+    };
+
+    /*
+     * Called when a new connection is drawn with the creation paramteres
+     */
+    ConnectionDrawingManager.prototype.onCreateNewConnection = function (params) {
+        this.logger.warning("onCreateNewConnection: " + JSON.stringify(params));
+    };
+
+    /*
+     * Called when a connection's 'src' or 'dst' is being reconnected to a new connector
+     */
+    ConnectionDrawingManager.prototype.onModifyConnectionEnd = function (params) {
+        this.logger.warning("onModifyConnectionEnd: " + JSON.stringify(params));
     };
 
 

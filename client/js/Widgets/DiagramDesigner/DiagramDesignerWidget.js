@@ -134,6 +134,13 @@ define(['logManager',
         this.connectionDrawingManager.onEndConnectionDraw = function () {
             self._onEndConnectionDraw();
         };
+        this.connectionDrawingManager.onCreateNewConnection = function (params) {
+            self.onCreateNewConnection(params);
+        };
+        this.connectionDrawingManager.onModifyConnectionEnd = function (params) {
+            self._onModifyConnectionEnd(params);
+        };
+
 
 
         this.logger.debug("DiagramDesignerWidget ctor finished");

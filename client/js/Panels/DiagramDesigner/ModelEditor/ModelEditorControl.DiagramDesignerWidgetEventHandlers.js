@@ -174,18 +174,14 @@ define(['logManager',
         registry[nodePropertyNames.Registry.lineStyle] = {};
         _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
 
-        this._client.makeConnection({   "parentId": this.currentNodeInfo.id,
-            "sourceId": sourceId,
-            "targetId": targetId,
-            "directed": true,
-            "registry": registry});
-
         var p = {   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,
             "targetId": targetId,
-            "directed": true };
+            "registry": registry};
 
-        this.logger.warning("onCreateNewConnection: " + JSON.stringify(p));
+        this.logger.warning("_onCreateNewConnection: " + JSON.stringify(p));
+
+        this._client.makeConnection(p);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {

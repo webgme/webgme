@@ -133,19 +133,20 @@ define(['js/Widgets/DiagramDesigner/Connection',
         delete this.items[id];
     };
 
-    DiagramDesignerWidget.prototype.createNewConnection = function (params) {
-        this.logger.debug("Creating new connection with parameters: '" + JSON.stringify(params) + "'");
-
-        this.onCreateNewConnection(params);
+    /*
+     * Called when a new connection is being created in the widget by the user
+     */
+    DiagramDesignerWidget.prototype.onCreateNewConnection = function (params) {
+        this.logger.warning("onCreateNewConnection with parameters: '" + JSON.stringify(params) + "'");
     };
 
-    DiagramDesignerWidget.prototype.modifyConnectionEnd = function (params) {
+    DiagramDesignerWidget.prototype._onModifyConnectionEnd = function (params) {
         var oConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]),
             nConnectionDesc = _.extend({}, this.connectionEndIDs[params.id]);
 
         this.logger.debug("Modifying connection with parameters: '" + JSON.stringify(params) + "'");
 
-        if (params.endPoint === "SOURCE") {
+        if (params.endPoint === DiagramDesignerWidgetConstants.CONNECTION_END_SRC) {
             nConnectionDesc.srcObjId = params.endId;
             nConnectionDesc.srcSubCompId = params.endSubCompId;
         } else {
@@ -158,6 +159,13 @@ define(['js/Widgets/DiagramDesigner/Connection',
                                          "old": oConnectionDesc,
                                          "new": nConnectionDesc });
         }
+    };
+
+    /*
+     * Called when a new connection is being created in the widget by the user
+     */
+    DiagramDesignerWidget.prototype.onModifyConnectionEnd = function (params) {
+        this.logger.warning("onModifyConnectionEnd with parameters: '" + JSON.stringify(params) + "'");
     };
 
 
