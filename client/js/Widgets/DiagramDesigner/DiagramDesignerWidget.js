@@ -118,11 +118,12 @@ define(['logManager',
         this.dragManager = params.dragManager || new DragManager({"canvas": this});
         this.dragManager.initialize(this.skinParts.$itemsContainer);
 
+        /*********** CONNECTION DRAWING COMPONENT *************/
         //initiate Connection Router (if needed)
         this.connectionRouteManager = params.connectionRouteManager || new DEFAULT_CONNECTION_ROUTE_MANAGER({"canvas": this});
         this.connectionRouteManager.initialize();
 
-        //initiate Connection drawer component (if needed) and hook up event callbacks
+        //initiate connection drawing component and hook up event callbacks
         this.connectionDrawingManager = new ConnectionDrawingManager({"diagramDesigner": this});
         this.connectionDrawingManager.initialize(this.skinParts.$itemsContainer);
         this.connectionDrawingManager.onStartConnectionCreate = function (params) {
@@ -140,6 +141,7 @@ define(['logManager',
         this.connectionDrawingManager.onModifyConnectionEnd = function (params) {
             self._onModifyConnectionEnd(params);
         };
+        /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
 
 
