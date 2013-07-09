@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -17,6 +23,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Zoom',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
+    'js/Widgets/DiagramDesigner/HighlightManager',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -33,7 +40,8 @@ define(['logManager',
                                                       ConnectionDrawingManager,
                                                       DiagramDesignerWidgetEventDispatcher,
                                                       DiagramDesignerWidgetZoom,
-                                                      DiagramDesignerWidgetKeyboard) {
+                                                      DiagramDesignerWidgetKeyboard,
+                                                      HighlightManager) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -86,7 +94,7 @@ define(['logManager',
         this._scrollPos = { "left": 0, "top": 0 };
 
         //set default mode to NORMAL
-        this.mode = this.OPERATING_MODES.NORMAL;
+        this.mode = this.OPERATING_MODES.READ_ONLY;
 
         //currently not updating anything
         this._updating = false;
@@ -143,6 +151,11 @@ define(['logManager',
         };
         /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
+            //initiate Connection Router (if needed)
+        this.highlightManager = new HighlightManager({"diagramDesigner": this});
+        this.highlightManager.initialize(this.skinParts.$itemsContainer);
+
+        this.setOperatingMode(DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
 
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
@@ -195,6 +208,7 @@ define(['logManager',
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     DiagramDesignerWidget.prototype.setReadOnly = function (isReadOnly) {
         this._setReadOnlyMode(isReadOnly);
+        this.$btnGroupOperatingMode.enabled(!isReadOnly);
     };
 
     DiagramDesignerWidget.prototype.getIsReadOnlyMode = function () {
@@ -204,48 +218,10 @@ define(['logManager',
     DiagramDesignerWidget.prototype._setReadOnlyMode = function (readOnly) {
         if (readOnly === true && this.mode !== this.OPERATING_MODES.READ_ONLY) {
             //enter READ-ONLY mode
-            this.mode = this.OPERATING_MODES.READ_ONLY;
-            this._readOnlyOn();
+            this.setOperatingMode(this.OPERATING_MODES.READ_ONLY);
         } else if (readOnly === false && this.mode === this.OPERATING_MODES.READ_ONLY) {
             //enter normal mode from read-only
-            this.mode = this.OPERATING_MODES.NORMAL;
-            this._readOnlyOff();
-        }
-    };
-
-    DiagramDesignerWidget.prototype._readOnlyOn = function () {
-        this._setManagersReadOnlyMode(true);
-    };
-
-    DiagramDesignerWidget.prototype._readOnlyOff = function () {
-        this._setManagersReadOnlyMode(false);
-    };
-
-    DiagramDesignerWidget.prototype._setManagersReadOnlyMode = function (readOnly) {
-        var i;
-        this.selectionManager.readOnlyMode(readOnly);
-        this.connectionDrawingManager.readOnlyMode(readOnly);
-        this.dragManager.readOnlyMode(readOnly);
-
-        i = this.itemIds.length;
-        while (i--) {
-            this.items[this.itemIds[i]].readOnlyMode(readOnly);
-        }
-
-        i = this.itemIds.length;
-        while (i--) {
-            this.items[this.itemIds[i]].renderGetLayoutInfo();
-        }
-        i = this.itemIds.length;
-        while (i--) {
-            this.items[this.itemIds[i]].renderSetLayoutInfo();
-        }
-
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
-
-        i = this.connectionIds.length;
-        while (i--) {
-            this.items[this.connectionIds[i]].readOnlyMode(readOnly);
+            this.setOperatingMode(this.OPERATING_MODES.DESIGN);
         }
     };
 
@@ -323,6 +299,32 @@ define(['logManager',
                     "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
             }
             /************** END OF - ROUTING MANAGER SELECTION **************************/
+
+            this.$btnGroupOperatingMode = this.toolBar.addRadioButtonGroup(function (event, data) {
+                self.setOperatingMode(data.mode);
+            });
+
+            this.toolBar.addButton(
+                {"icon": "icon-lock",
+                    "title": "Read-only mode",
+                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY}
+                },
+                this.$btnGroupOperatingMode);
+
+            this.toolBar.addButton(
+                {"icon": "icon-move",
+                    "title": "Design mode",
+                    "selected": true,
+                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN}
+                },
+                this.$btnGroupOperatingMode);
+
+            this.toolBar.addButton(
+                {"icon": "icon-eye-open",
+                    "title": "Design mode",
+                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
+                },
+                this.$btnGroupOperatingMode);
         }
 
         //CHILDREN container
@@ -364,7 +366,7 @@ define(['logManager',
                 activate: function( event, ui ) {
                     var m = 0;
                     if (ui.helper) {
-                        if (self.mode === self.OPERATING_MODES.NORMAL) {
+                        if (self.mode === self.OPERATING_MODES.DESIGN) {
                             self.skinParts.$dropRegion.css({"width": self._containerSize.w - 2 * m,
                                 "height": self._containerSize.h - 2 * m,
                                 "top": self._scrollPos.top + m,
@@ -639,7 +641,7 @@ define(['logManager',
         this._updatedConnectionIDs = [];
         this._deletedConnectionIDs = [];
 
-        if (this.mode === this.OPERATING_MODES.NORMAL ||
+        if (this.mode === this.OPERATING_MODES.DESIGN ||
             this.mode === this.OPERATING_MODES.READ_ONLY) {
             this.selectionManager.showSelectionOutline();    
         }
@@ -943,6 +945,19 @@ define(['logManager',
 
     /***** END OF - GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ****/
 
+    /**************** GET ITEMS FOR CONNECTION ******************************/
+    DiagramDesignerWidget.prototype._getItemsForConnection = function (connectionId) {
+        var items = [];
+
+        if (this.connectionEndIDs[connectionId]) {
+            items.push(this.connectionEndIDs[connectionId].srcObjId);
+            items.push(this.connectionEndIDs[connectionId].dstObjId);
+        }
+
+        return items;
+    };
+    /**************** END OF --- GET ITEMS FOR CONNECTION ******************************/
+
     /************** WAITPROGRESS *********************/
     DiagramDesignerWidget.prototype.showProgressbar = function () {
         this.__loader.start();
@@ -1073,6 +1088,60 @@ define(['logManager',
         this.logger.warning("DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange not overridden in controller. params: " + JSON.stringify(params));
     };
     /************************* END OF --- CONNECTION SEGMENT POINTS CHANGE ************************/
+
+    DiagramDesignerWidget.prototype.setOperatingMode = function (mode) {
+        if (this.mode !== mode) {
+            this.highlightManager.deactivate();
+            this.selectionManager.deactivate();
+            this.dragManager.deactivate();
+            this.connectionDrawingManager.deactivate();
+            this._setComponentsReadOnly(true);
+            switch (mode) {
+                case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
+                    this.mode = this.OPERATING_MODES.READ_ONLY;
+                    this.selectionManager.activate();
+                    break;
+                case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
+                    this.mode = this.OPERATING_MODES.DESIGN;
+                    this.selectionManager.activate();
+                    this.dragManager.activate();
+                    this.connectionDrawingManager.activate();
+                    this._setComponentsReadOnly(false);
+                    break;
+                case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
+                    this.mode = this.OPERATING_MODES.HIGHLIGHT;
+                    this.highlightManager.activate();
+                    break;
+                default:
+                    this.mode = this.OPERATING_MODES.READ_ONLY;
+                    this.selectionManager.activate();
+                    break;
+            }
+        }
+    };
+
+    DiagramDesignerWidget.prototype._setComponentsReadOnly = function (readOnly) {
+        var i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].readOnlyMode(readOnly);
+        }
+
+        i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].renderGetLayoutInfo();
+        }
+        i = this.itemIds.length;
+        while (i--) {
+            this.items[this.itemIds[i]].renderSetLayoutInfo();
+        }
+
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
+
+        i = this.connectionIds.length;
+        while (i--) {
+            this.items[this.connectionIds[i]].readOnlyMode(readOnly);
+        }
+    };
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

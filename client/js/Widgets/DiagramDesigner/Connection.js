@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -522,7 +528,7 @@ define(['logManager',
         } else {
             //in edit mode and when not participating in a multiple selection,
             //show connectors
-            if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.NORMAL) {
+            if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.DESIGN) {
                 this.showConnectors();
                 this._setEditMode(true);
             }
@@ -882,6 +888,26 @@ define(['logManager',
     };
 
     /********************** END OF --- SEGMENT POINT MARKERS ******************************/
+
+
+    /******************** HIGHLIGHT / UNHIGHLIGHT MODE *********************/
+    ConnectionComponent.prototype.highlight = function () {
+        var classes = $(this.skinParts.path.node).attr('class').split(' ');
+        if (classes.indexOf(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS) === -1) {
+            classes.push(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
+            $(this.skinParts.path.node).attr('class', classes.join(' '));
+        }
+
+    };
+
+    ConnectionComponent.prototype.unHighlight = function () {
+        var classes = $(this.skinParts.path.node).attr('class').split(' '),
+            idx = classes.indexOf(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
+        if (idx !== -1) {
+            classes.splice(idx, 1);
+            $(this.skinParts.path.node).attr('class', classes.join(' '));
+        }
+    };
 
     return ConnectionComponent;
 });

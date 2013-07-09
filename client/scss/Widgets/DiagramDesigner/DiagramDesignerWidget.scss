@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 @import "Connector";
 
 $diagram-designer-selection-rubber-band-background-color: rgba(219, 234, 252, 0.49);
@@ -35,6 +41,11 @@ $connection-end-dst-connector-border-color: #0000FF;
 
   .items {
     position: absolute;
+
+    .designer-item,
+    .designer-connection{
+      cursor: pointer;
+    }
 
     .rubberband {
       background: $diagram-designer-selection-rubber-band-background-color;
@@ -130,6 +141,19 @@ $connection-end-dst-connector-border-color: #0000FF;
 
       .segment-point-move-path {
         stroke: $segment-point-move-path-color;
+      }
+    }
+
+    &.highlight-mode {
+      .designer-item,
+      .designer-connection{
+        opacity: 0.1;
+        cursor: pointer;
+      }
+
+      .designer-item.highlighted,
+      .designer-connection.highlighted {
+        opacity: 1.0;
       }
     }
   }

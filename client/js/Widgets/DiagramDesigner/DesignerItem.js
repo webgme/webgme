@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -105,6 +111,11 @@ define(['logManager',
                         handled = false,
                         enabled = true;
 
+                    if (self.canvas.mode !== self.canvas.OPERATING_MODES.READ_ONLY &&
+                        self.canvas.mode !== self.canvas.OPERATING_MODES.DESIGN) {
+                        return;
+                    }
+
                     if (eventHandlerOpts) {
                         if (self.canvas.mode === self.canvas.OPERATING_MODES.READ_ONLY) {
                             enabled = eventHandlerOpts.enabledInReadOnlyMode;
@@ -205,7 +216,7 @@ define(['logManager',
 
         //in edit mode and when not participating in a multiple selection,
         //show connectors
-        if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+        if (this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
             if (this.selectedInMultiSelection === false) {
                 this.showSourceConnectors();
             }
@@ -221,8 +232,7 @@ define(['logManager',
         this.logger.debug("onMouseLeave: " + this.id);
 
         this.$el.removeClass(classes.join(' '));
-        if (this.canvas.mode !== this.canvas.OPERATING_MODES.CREATE_CONNECTION &&
-            this.canvas.mode !== this.canvas.OPERATING_MODES.RECONNECT_CONNECTION) {
+        if (this.canvas.connectionDrawingManager.isDrawInProgress() !== true) {
             this.hideSourceConnectors();
         }
 
@@ -382,7 +392,14 @@ define(['logManager',
         this._decoratorInstance.hideEndConnectors();
     };
 
+    /******************** HIGHLIGHT / UNHIGHLIGHT MODE *********************/
+    DesignerItem.prototype.highlight = function () {
+        this.$el.addClass(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
+    };
 
+    DesignerItem.prototype.unHighlight = function () {
+        this.$el.removeClass(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
+    };
 
     return DesignerItem;
 });

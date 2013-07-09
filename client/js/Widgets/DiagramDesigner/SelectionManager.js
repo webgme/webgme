@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -27,33 +33,60 @@ define(['logManager',
         this.logger.debug("SelectionManager ctor finished");
     };
 
-    SelectionManager.prototype.initialize = function (el) {
-        var self = this;
+    SelectionManager.prototype.activate = function () {
+        this._activateMouseListeners();
+    };
 
-        this.$el = el;
+    SelectionManager.prototype.deactivate = function () {
+        this._deactivateMouseListeners();
+        this._clearSelection();
+    };
+
+    SelectionManager.prototype._activateMouseListeners = function () {
+        //enable SelectionManager specific DOM event listeners
+        var self = this;
 
         //handle mouse down in designer-items
         this.$el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id");
-            self._diagramDesigner.onElementMouseDown(itemId);
-            self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(event));
-            event.stopPropagation();
-            event.preventDefault();
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+                self._diagramDesigner.onElementMouseDown(itemId);
+                self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(event));
+                event.stopPropagation();
+                event.preventDefault();
+            }
         });
 
         //handle mouse down in designer-connections
         this.$el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
             var connId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
-            self._diagramDesigner.onElementMouseDown(connId);
-            self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(event));
-            event.stopPropagation();
-            event.preventDefault();
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+                self._diagramDesigner.onElementMouseDown(connId);
+                self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(event));
+                event.stopPropagation();
+                event.preventDefault();
+            }
         });
 
         //handle mouse down on background --> start rubberband selection
         this.$el.on('mousedown.SelectionManager', function (event) {
-            self._onBackgroundMouseDown(event);
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+                self._onBackgroundMouseDown(event);
+            }
         });
+    };
+
+    SelectionManager.prototype._deactivateMouseListeners = function () {
+        //disable SelectionManager specific DOM event listeners
+        this.$el.off('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS);
+        this.$el.off('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]');
+        this.$el.off('mousedown.SelectionManager');
+    };
+
+    SelectionManager.prototype.initialize = function (el) {
+        var self = this;
+
+        this.$el = el;
 
         this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (__diagramDesigner, componentId) {
             self._onComponentDelete(componentId);
@@ -80,9 +113,6 @@ define(['logManager',
         this.logger.warning("SelectionManager.prototype.onSelectionChanged IS NOT OVERRIDDEN IN HOST COMPONENT. selectedIDs: " + selectedIDs);
     };
 
-    SelectionManager.prototype.readOnlyMode = function (/*readOnly*/) {
-        this.showSelectionOutline();
-    };
 
     /********************** MULTIPLE SELECTION MODIFIER KEY CHECK ********************/
     SelectionManager.prototype._isMultiSelectionModifierKeyPressed = function (event) {

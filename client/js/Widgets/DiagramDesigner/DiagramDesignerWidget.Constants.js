@@ -25,6 +25,9 @@ define([], function () {
         PATH_EDIT_SEGMENT_NEW_SEGMENT_POINT_MARKER_CLASS: 'new-segment-point-marker',
         CONNECTION_SEGMENT_POINT_CLASS: 'segment-point',
         SEGMENT_POINT_MOVE_PATH_CLASS : 'segment-point-move-path',
+        HIGHLIGHT_MODE_CLASS: 'highlight-mode',
+        ITEM_HIGHLIGHT_CLASS: 'highlighted',
+
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',
         DATA_SUBCOMPONENT_ID : 'data-sid',

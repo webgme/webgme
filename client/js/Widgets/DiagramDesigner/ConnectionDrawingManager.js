@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -81,6 +87,19 @@ define(['logManager',
 
         //save container DOM element on which ConnectionDrawingManager is listening for mouse events
         this._el = el;
+    };
+
+
+    ConnectionDrawingManager.prototype.activate = function () {
+        this._activateMouseListeners();
+    };
+
+    ConnectionDrawingManager.prototype.deactivate = function () {
+        this._deactivateMouseListeners();
+    };
+
+    ConnectionDrawingManager.prototype._activateMouseListeners = function () {
+        var self = this;
 
         //MOUSE LISTENER FOR CONNECTOR MOUSEDOWN --> CREATE NEW CONNECTION
         this._el.on(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (event) {
@@ -93,7 +112,7 @@ define(['logManager',
                 if (objId === undefined || objId === null) {
                     self.logger.error('MOUSEDOWN on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
-                    if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.NORMAL) {
+                    if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                         self._startConnectionCreate(objId, sCompId, el, self._diagramDesigner.getAdjustedMousePos(event));
                         self._attachMouseListeners();
                     }
@@ -112,7 +131,7 @@ define(['logManager',
                 buttonLeft = event.which === 1;
 
             if (buttonLeft) {
-                if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.NORMAL) {
+                if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                     self._startConnectionReconnect(connId, draggedEnd, self._diagramDesigner.getAdjustedMousePos(event));
                     self._attachMouseListeners();
                 }
@@ -124,38 +143,45 @@ define(['logManager',
 
         //MOUSE LISTENER FOR CONNECTION MOUSEENTER / MOSELEAVE / MOUSEUP MOUSEDOWN --> POTENTIAL CONNECTION END
         this._el.on(MOUSEENTER, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
-                var el = $(this);
-                if (self._connectionInDraw === true) {
-                    if (self._acceptConnectionEndDrop(el) == true) {
-                        $(this).addClass(CONNECTION_END_ACCEPT_CLASS);
-                    } else {
-                        $(this).addClass(CONNECTION_END_REJECT_CLASS);
-                    }
+            var el = $(this);
+            if (self._connectionInDraw === true) {
+                if (self._acceptConnectionEndDrop(el) == true) {
+                    $(this).addClass(CONNECTION_END_ACCEPT_CLASS);
+                } else {
+                    $(this).addClass(CONNECTION_END_REJECT_CLASS);
                 }
-            }).on(MOUSELEAVE, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
+            }
+        }).on(MOUSELEAVE, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
                 if (self._connectionInDraw === true) {
                     $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
                 }
-            }).on(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
-                var el = $(this),
-                    objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
-                    sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
+        }).on(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
+            var el = $(this),
+                objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
+                sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
 
-                if (self._connectionInDraw === true) {
-                    $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
+            if (self._connectionInDraw === true) {
+                $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
 
-                    if (objId === undefined || objId === null) {
-                        self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
-                    } else {
-                        if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION ||
-                            self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION) {
-                            if (self._acceptConnectionEndDrop(el) == true) {
-                                self._connectionEndDrop(objId, sCompId);
-                            }
+                if (objId === undefined || objId === null) {
+                    self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
+                } else {
+                    if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+                        if (self._acceptConnectionEndDrop(el) == true) {
+                            self._connectionEndDrop(objId, sCompId);
                         }
                     }
                 }
+            }
         });
+    };
+
+    ConnectionDrawingManager.prototype._deactivateMouseListeners = function () {
+        this._el.off(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        this._el.off(MOUSEDOWN, '.' + DiagramDesignerWidgetConstants.CONNECTION_DRAGGABLE_END_CLASS);
+        this._el.off(MOUSEENTER, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        this._el.off(MOUSELEAVE, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
+        this._el.off(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS);
     };
 
 
@@ -392,8 +418,6 @@ define(['logManager',
     ConnectionDrawingManager.prototype._startConnectionCreate = function (objId, sCompId, el, mousePos) {
         var srcCoord;
 
-        this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION);
-
         this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
 
         this._connectionInDraw = true;
@@ -435,8 +459,6 @@ define(['logManager',
      * mousePos: mouse position event belongs to the 'mousedown' event on the connector
      */
     ConnectionDrawingManager.prototype._startConnectionReconnect = function (connectionId, draggedEnd, mousePos) {
-        this._diagramDesigner.beginMode(this._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION);
-
         this.logger.debug('_startConnectionReconnect connectionId:' + connectionId + ', draggedEnd:' + draggedEnd);
 
         this._connectionInDraw = true;
@@ -466,6 +488,13 @@ define(['logManager',
      */
     ConnectionDrawingManager.prototype.onStartConnectionReconnect = function (params) {
         this.logger.warning("onStartConnectionReconnect with params: '" + JSON.stringify(params));
+    };
+
+    /*
+     * Returns if an actual connection drawing is in progress
+     */
+    ConnectionDrawingManager.prototype.isDrawInProgress = function () {
+        return this._connectionInDraw === true;
     };
 
 
@@ -573,8 +602,6 @@ define(['logManager',
      * - clean up connection drawing variables
      */
     ConnectionDrawingManager.prototype._endConnectionDraw = function () {
-        var type = this._connectionInDrawProps.type;
-
         this._connectionInDraw = false;
 
         if (this._connectionPath) {
@@ -587,12 +614,6 @@ define(['logManager',
         this._el.find('.' + CONNECTION_END_ACCEPT_CLASS).removeClass(CONNECTION_END_ACCEPT_CLASS);
         this._el.find('.' + CONNECTION_END_REJECT_CLASS).removeClass(CONNECTION_END_REJECT_CLASS);
 
-        if (type === DRAW_TYPE_CREATE) {
-            this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.CREATE_CONNECTION);
-        } else if (type === DRAW_TYPE_RECONNECT) {
-            this._diagramDesigner.endMode(this._diagramDesigner.OPERATING_MODES.RECONNECT_CONNECTION);
-        }
-
         //fire event
         this.onEndConnectionDraw();
 
@@ -604,15 +625,6 @@ define(['logManager',
      */
     ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
         this.logger.warning("onEndConnectionDraw");
-    };
-
-
-    /*
-     * Called when the host DiagramDesigner read-only mode changes
-     * In read-only mode no connection drawing allowed...
-     * TODO: handle accordingly
-     */
-    ConnectionDrawingManager.prototype.readOnlyMode = function (readOnly) {
     };
 
 

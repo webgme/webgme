@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define(['logManager',
@@ -45,15 +51,31 @@ define(['logManager',
             self._canvasItemPositionChanged(event);
         });
 
-        this.$el.on(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
-            self._onItemMouseDown(event);
-        });
-
         this._dragScroll = new DragScroll(this.$el.parent());
 
         this.canvas.addEventListener(this.canvas.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
             self._onComponentDelete(componentId);
         });
+    };
+
+    DragManager.prototype.activate = function () {
+        this._activateMouseListeners();
+    };
+
+    DragManager.prototype.deactivate = function () {
+        this._deactivateMouseListeners();
+    };
+
+    DragManager.prototype._activateMouseListeners = function () {
+        var self = this;
+
+        this.$el.on(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
+            self._onItemMouseDown(event);
+        });
+    };
+
+    DragManager.prototype._deactivateMouseListeners = function () {
+        this.$el.off(MOUSE_DOWN, 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS);
     };
 
     DragManager.prototype.enableMode = function (mode, enabled) {
@@ -72,7 +94,7 @@ define(['logManager',
         if (dragEnabled && leftButton) {
             this.logger.debug("DragManager._onItemMouseDown at: " + JSON.stringify(mousePos));
 
-            if (this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+            if (this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
 
                 this._initDrag(mousePos.mX, mousePos.mY);
 
@@ -97,7 +119,7 @@ define(['logManager',
     DragManager.prototype._initDrag = function (mX, mY) {
         var dragEnabled = !this.canvas.getIsReadOnlyMode();
 
-        if (dragEnabled && this.canvas.mode === this.canvas.OPERATING_MODES.NORMAL) {
+        if (dragEnabled && this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
             //initialize drag descriptor
             this._dragDesc = { "startX": mX,
                 "startY": mY,
@@ -191,10 +213,8 @@ define(['logManager',
 
         if (this._dragDesc.mode === this.DRAGMODE_MOVE) {
             this._startDragModeMove();
-            this.canvas.beginMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
         } else if (this._dragDesc.mode === this.DRAGMODE_COPY) {
             this._startDragModeCopy();
-            this.canvas.beginMode(this.canvas.OPERATING_MODES.COPY_ITEMS);
         }
 
         this._calculateMinStartCoordinates();
@@ -352,10 +372,8 @@ define(['logManager',
         var dItems = this._dragDesc.params.draggedItemIDs;
 
         if (this._dragDesc.mode === this.DRAGMODE_MOVE) {
-            this.canvas.endMode(this.canvas.OPERATING_MODES.MOVE_ITEMS);
             this._endDragModeMove();
         } else if (this._dragDesc.mode === this.DRAGMODE_COPY) {
-            this.canvas.endMode(this.canvas.OPERATING_MODES.COPY_ITEMS);
             this._endDragModeCopy();
         }
 
@@ -625,9 +643,6 @@ define(['logManager',
     };
     /******END OF - EVENT HANDLER - CANVAS ITEM POSITION CHANGED *****/
 
-    DragManager.prototype.readOnlyMode = function (readOnly) {
-
-    };
 
     return DragManager;
 });
