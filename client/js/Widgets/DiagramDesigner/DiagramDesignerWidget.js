@@ -123,7 +123,7 @@ define(['logManager',
         };
 
         //initiate Drag Manager (if needed)
-        this.dragManager = params.dragManager || new DragManager({"canvas": this});
+        this.dragManager = new DragManager({"diagramDesigner": this});
         this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
@@ -1142,6 +1142,29 @@ define(['logManager',
             this.items[this.connectionIds[i]].readOnlyMode(readOnly);
         }
     };
+
+    /************************* DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
+    DiagramDesignerWidget.prototype.onDragStartDesignerItemDraggable = function (itemID) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onDesignerItemDraggable not overridden in controller. itemID: " + itemID);
+
+        return true;
+    };
+
+
+    DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable = function (itemID) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onDragStartDesignerItemCopyable not overridden in controller. itemID: " + itemID);
+
+        return true;
+    };
+
+
+    DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable = function (connectionID) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onDragStartDesignerConnectionCopyable not overridden in controller. connectionID: " + connectionID);
+
+        return true;
+    };
+    /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
+
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

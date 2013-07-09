@@ -1298,6 +1298,24 @@ define([
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
             }
+            /************** TEST CAN-SETREGISTRY ******************/
+            //TODO: implement properly
+            function canSetRegistry(path, name, value) {
+                var result = true;
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    switch(name) {
+                        case 'position':
+                            //TODO: implement properly - if there is an attorbute with the name 'position'
+                            //TODO: and its value is false, then the position registry cannot be set
+                            //TODO: demo case
+                            var repositionable = _core.getAttribute(_nodes[path].node,name);
+                            result = repositionable != "false";
+                            break;
+                    }
+                }
+                return result;
+            }
+            /*************************************************************/
             function copyNodes(ids) {
                 if (_core) {
                     _clipboard = ids;
@@ -1895,6 +1913,7 @@ define([
                 completeTransaction: completeTransaction,
                 setAttributes: setAttributes,
                 setRegistry: setRegistry,
+                canSetRegistry: canSetRegistry,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
                 deleteNode: deleteNode,

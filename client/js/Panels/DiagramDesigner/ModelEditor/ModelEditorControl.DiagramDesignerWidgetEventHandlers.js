@@ -96,6 +96,18 @@ define(['logManager',
             return self._onFilterReconnectionDroppableEnds(params);
         };
 
+        this.designerCanvas.onDragStartDesignerItemDraggable = function (itemID) {
+            return self._onDragStartDesignerItemDraggable(itemID);
+        };
+
+        this.designerCanvas.onDragStartDesignerItemCopyable = function (itemID) {
+            return self._onDragStartDesignerItemCopyable(itemID);
+        };
+
+        this.designerCanvas.onDragStartDesignerConnectionCopyable = function (connectionID) {
+            return self._onDragStartDesignerConnectionCopyable(connectionID);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -489,7 +501,33 @@ define(['logManager',
 
         return result;
     };
-    
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerItemDraggable = function (itemID) {
+        var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
+            result = true;
+
+        if (nodeObj) {
+            result = this._client.canSetRegistry(nodeObj.getId(), nodePropertyNames.Registry.position);
+        }
+
+        return result;
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerItemCopyable = function (itemID) {
+        var nodeObj = this._client.getNode(this._ComponentID2GmeID[itemID]),
+            result = true;
+
+        if (nodeObj) {
+            result = nodeObj.getAttribute('copy') != "false";
+        }
+
+        return result;
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerConnectionCopyable = function (connectionID) {
+        return this._onDragStartDesignerItemCopyable(connectionID);
+    };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
 });

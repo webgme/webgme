@@ -24,9 +24,9 @@ define(['logManager',
     DragManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "DragManager"));
 
-        this.canvas = options ? options.canvas : null;
+        this._diagramDesigner = options ? options.diagramDesigner : null;
 
-        if (this.canvas === undefined || this.canvas === null) {
+        if (this._diagramDesigner === undefined || this._diagramDesigner === null) {
             this.logger.error("Trying to initialize a DragManager without a canvas...");
             throw ("DragManager can not be created");
         }
@@ -47,13 +47,13 @@ define(['logManager',
         this._dragModes[this.DRAGMODE_COPY] = true;
         this._dragModes[this.DRAGMODE_MOVE] = true;
 
-        this.canvas.addEventListener(this.canvas.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
             self._canvasItemPositionChanged(event);
         });
 
         this._dragScroll = new DragScroll(this.$el.parent());
 
-        this.canvas.addEventListener(this.canvas.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
+        this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (_canvas, componentId) {
             self._onComponentDelete(componentId);
         });
     };
@@ -86,15 +86,15 @@ define(['logManager',
 
     /******** ITEM MOUSE DOWN EVENT HANDLER ****************/
     DragManager.prototype._onItemMouseDown = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event),
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             self = this,
             leftButton = event.which === 1,
-            dragEnabled = !this.canvas.getIsReadOnlyMode();
+            dragEnabled = !this._diagramDesigner.getIsReadOnlyMode();
 
         if (dragEnabled && leftButton) {
             this.logger.debug("DragManager._onItemMouseDown at: " + JSON.stringify(mousePos));
 
-            if (this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
+            if (this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.DESIGN) {
 
                 this._initDrag(mousePos.mX, mousePos.mY);
 
@@ -117,9 +117,9 @@ define(['logManager',
     };
 
     DragManager.prototype._initDrag = function (mX, mY) {
-        var dragEnabled = !this.canvas.getIsReadOnlyMode();
+        var dragEnabled = !this._diagramDesigner.getIsReadOnlyMode();
 
-        if (dragEnabled && this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
+        if (dragEnabled && this._diagramDesigner.mode === this._diagramDesigner.OPERATING_MODES.DESIGN) {
             //initialize drag descriptor
             this._dragDesc = { "startX": mX,
                 "startY": mY,
@@ -133,7 +133,7 @@ define(['logManager',
 
     /******** MOUSE MOVE AND MOUSE UP EVENT HANDLERS *********************/
     DragManager.prototype._onBackgroundMouseMove = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event),
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             dx = mousePos.mX - this._dragDesc.startX,
             dy = mousePos.mY - this._dragDesc.startY;
 
@@ -219,7 +219,7 @@ define(['logManager',
 
         this._calculateMinStartCoordinates();
 
-        this.canvas.onDesignerItemDragStart(undefined, this._dragDesc.params.draggedItemIDs);
+        this._diagramDesigner.onDesignerItemDragStart(undefined, this._dragDesc.params.draggedItemIDs);
 
         //finally set the dragging initialized
         this._dragDesc.dragging = true;
@@ -227,9 +227,9 @@ define(['logManager',
 
     //initialize the drag descriptor for 'MOVE' operation
     DragManager.prototype._startDragModeMove = function () {
-        var selectedItemIDs = this.canvas.selectionManager.getSelectedElements(),
-            items = this.canvas.items,
-            itemIDs = this.canvas.itemIds,
+        var selectedItemIDs = this._diagramDesigner.selectionManager.getSelectedElements(),
+            items = this._diagramDesigner.items,
+            itemIDs = this._diagramDesigner.itemIds,
             i = selectedItemIDs.length,
             id,
             item;
@@ -240,10 +240,13 @@ define(['logManager',
 
             //check if the currently checked item is DesignerItem or Connection
             if (itemIDs.indexOf(id) !== -1) {
-                //store we are dragging this guy
-                this._dragDesc.params.draggedItemIDs.push(id);
-                this._dragDesc.params.originalPositions.push({ "x": item.positionX,
-                                                               "y": item.positionY});
+                //if the item is draggable at all?
+                if (this._diagramDesigner.onDragStartDesignerItemDraggable(id) === true) {
+                    //store we are dragging this guy
+                    this._dragDesc.params.draggedItemIDs.push(id);
+                    this._dragDesc.params.originalPositions.push({ "x": item.positionX,
+                        "y": item.positionY});
+                }
             }
         }
 
@@ -253,10 +256,10 @@ define(['logManager',
 
     //initialize the drag descriptor for 'COPY' operation
     DragManager.prototype._startDragModeCopy = function () {
-        var selectedItemIDs = this.canvas.selectionManager.getSelectedElements(),
-            items = this.canvas.items,
-            itemIDs = this.canvas.itemIds,
-            connectionIDs = this.canvas.connectionIds,
+        var selectedItemIDs = this._diagramDesigner.selectionManager.getSelectedElements(),
+            items = this._diagramDesigner.items,
+            itemIDs = this._diagramDesigner.itemIds,
+            connectionIDs = this._diagramDesigner.connectionIds,
             i = selectedItemIDs.length,
             id,
             srcItem,
@@ -267,35 +270,37 @@ define(['logManager',
 
         this._dragDesc.params.modeSpecificData = copyData = {};
 
-        this.canvas.beginUpdate();
+        this._diagramDesigner.beginUpdate();
 
         //first copy the DesignerItems
         while(i--) {
             id = selectedItemIDs[i];
 
             if (itemIDs.indexOf(id) !== -1) {
+                //if the item is copy-able at all?
+                if (this._diagramDesigner.onDragStartDesignerItemCopyable(id) === true) {
+                    objDesc = {};
+                    srcItem = items[id];
+                    objDesc.position = { "x": srcItem.positionX, "y": srcItem.positionY};
 
-                objDesc = {};
-                srcItem = items[id];
-                objDesc.position = { "x": srcItem.positionX, "y": srcItem.positionY};
+                    objDesc.decoratorClass = srcItem._decoratorClass;
+                    objDesc.control = srcItem._decoratorInstance.getControl();
+                    objDesc.metaInfo = srcItem._decoratorInstance.getMetaInfo();
 
-                objDesc.decoratorClass = srcItem._decoratorClass;
-                objDesc.control = srcItem._decoratorInstance.getControl();
-                objDesc.metaInfo = srcItem._decoratorInstance.getMetaInfo();
+                    copiedItem = this._diagramDesigner.createDesignerItem(objDesc);
 
-                copiedItem = this.canvas.createDesignerItem(objDesc);
+                    //fix the DesignerCanvas' 'try-to-avoid-overlapping-auto-shift' feature
+                    copiedItem.moveTo(srcItem.positionX, srcItem.positionY);
 
-                //fix the DesignerCanvas' 'try-to-avoid-overlapping-auto-shift' feature
-                copiedItem.moveTo(srcItem.positionX, srcItem.positionY);
+                    //store we are dragging this guy
+                    this._dragDesc.params.draggedItemIDs.push(copiedItem.id);
+                    this._dragDesc.params.originalPositions.push({ "x": copiedItem.positionX,
+                        "y": copiedItem.positionY});
 
-                //store we are dragging this guy
-                this._dragDesc.params.draggedItemIDs.push(copiedItem.id);
-                this._dragDesc.params.originalPositions.push({ "x": copiedItem.positionX,
-                    "y": copiedItem.positionY});
+                    copyData[id] = {"copiedItemId": copiedItem.id};
 
-                copyData[id] = {"copiedItemId": copiedItem.id};
-
-                newSelectionIDs.push(copiedItem.id);
+                    newSelectionIDs.push(copiedItem.id);
+                }
             }
         }
 
@@ -305,40 +310,42 @@ define(['logManager',
             id = selectedItemIDs[i];
 
             if (connectionIDs.indexOf(id) !== -1) {
-                var oConnection = items[id];
+                if (this._diagramDesigner.onDragStartDesignerConnectionCopyable(id) === true) {
+                    var oConnection = items[id];
 
-                var srcObjId = this.canvas.connectionEndIDs[id].srcObjId;
-                var srcSubCompId = this.canvas.connectionEndIDs[id].srcSubCompId;
-                var dstObjId = this.canvas.connectionEndIDs[id].dstObjId;
-                var dstSubCompId = this.canvas.connectionEndIDs[id].dstSubCompId;
+                    var srcObjId = this._diagramDesigner.connectionEndIDs[id].srcObjId;
+                    var srcSubCompId = this._diagramDesigner.connectionEndIDs[id].srcSubCompId;
+                    var dstObjId = this._diagramDesigner.connectionEndIDs[id].dstObjId;
+                    var dstSubCompId = this._diagramDesigner.connectionEndIDs[id].dstSubCompId;
 
-                if (selectedItemIDs.indexOf(srcObjId) !== -1) {
-                    srcObjId = copyData[srcObjId].copiedItemId;
+                    if (selectedItemIDs.indexOf(srcObjId) !== -1) {
+                        srcObjId = copyData[srcObjId].copiedItemId;
+                    }
+
+                    if (selectedItemIDs.indexOf(dstObjId) !== -1) {
+                        dstObjId = copyData[dstObjId].copiedItemId;
+                    }
+
+                    objDesc = _.extend({}, oConnection.getConnectionProps());
+                    objDesc.srcObjId = srcObjId;
+                    objDesc.srcSubCompId = srcSubCompId;
+                    objDesc.dstObjId = dstObjId;
+                    objDesc.dstSubCompId = dstSubCompId;
+
+                    var copiedConnection = this._diagramDesigner.createConnection(objDesc);
+
+                    this._dragDesc.params.draggedConnectionIDs.push(copiedConnection.id);
+                    copyData[id] = {"copiedConnectionId": copiedConnection.id };
+
+                    newSelectionIDs.push(copiedConnection.id);
                 }
-
-                if (selectedItemIDs.indexOf(dstObjId) !== -1) {
-                    dstObjId = copyData[dstObjId].copiedItemId;
-                }
-
-                objDesc = _.extend({}, oConnection.getConnectionProps());
-                objDesc.srcObjId = srcObjId;
-                objDesc.srcSubCompId = srcSubCompId;
-                objDesc.dstObjId = dstObjId;
-                objDesc.dstSubCompId = dstSubCompId;
-
-                var copiedConnection = this.canvas.createConnection(objDesc);
-
-                this._dragDesc.params.draggedConnectionIDs.push(copiedConnection.id);
-                copyData[id] = {"copiedConnectionId": copiedConnection.id };
-
-                newSelectionIDs.push(copiedConnection.id);
             }
         }
 
-        this.canvas.endUpdate();
+        this._diagramDesigner.endUpdate();
 
-        this.canvas.selectionManager._clearSelection();
-        this.canvas.selectionManager.setSelection(newSelectionIDs, false);
+        this._diagramDesigner.selectionManager._clearSelection();
+        this._diagramDesigner.selectionManager.setSelection(newSelectionIDs, false);
 
         //set cursor
         this.$el.css("cursor", COPY_CURSOR);
@@ -377,7 +384,7 @@ define(['logManager',
             this._endDragModeCopy();
         }
 
-        this.canvas.onDesignerItemDragStop(undefined, dItems);
+        this._diagramDesigner.onDesignerItemDragStop(undefined, dItems);
 
         this.$el.css("cursor", "");
     };
@@ -385,7 +392,7 @@ define(['logManager',
     DragManager.prototype._endDragModeMove = function () {
         var draggedItemIDs = this._dragDesc.params.draggedItemIDs,
             i = draggedItemIDs.length,
-            items = this.canvas.items,
+            items = this._diagramDesigner.items,
             newPositions = {},
             id,
             item;
@@ -403,7 +410,7 @@ define(['logManager',
                 //clear drag descriptor object
                 this._dragDesc = undefined;
 
-                this.canvas.onDesignerItemsMove(newPositions);
+                this._diagramDesigner.onDesignerItemsMove(newPositions);
             }
         }
     };
@@ -425,8 +432,8 @@ define(['logManager',
                     if (desc.hasOwnProperty("copiedItemId")) {
                         //description of a box-copy
                         copyDesc.items[desc.copiedItemId] = {"oItemId": i,
-                            "posX": this.canvas.items[desc.copiedItemId].positionX,
-                            "posY": this.canvas.items[desc.copiedItemId].positionY};
+                            "posX": this._diagramDesigner.items[desc.copiedItemId].positionX,
+                            "posY": this._diagramDesigner.items[desc.copiedItemId].positionY};
                     } else if (desc.hasOwnProperty("copiedConnectionId")) {
                         //description of a connection copy
                         copyDesc.connections[desc.copiedConnectionId] = {"oConnectionId": i};
@@ -437,7 +444,7 @@ define(['logManager',
             //clear drag descriptor object
             this._dragDesc = undefined;
 
-            this.canvas.onDesignerItemsCopy(copyDesc);
+            this._diagramDesigner.onDesignerItemsCopy(copyDesc);
         }
     };
     /********* END OF --- END DRAGGING *******************************/
@@ -464,7 +471,7 @@ define(['logManager',
 
             this._moveDraggedComponentsBy(dX, dY);
 
-            this.canvas.onDesignerItemDrag(undefined, this._dragDesc.params.draggedItemIDs);
+            this._diagramDesigner.onDesignerItemDrag(undefined, this._dragDesc.params.draggedItemIDs);
         }
     };
 
@@ -484,7 +491,7 @@ define(['logManager',
             posX = this._dragDesc.params.originalPositions[i].x + dX;
             posY = this._dragDesc.params.originalPositions[i].y + dY;
 
-            this.canvas.items[id].moveTo(posX, posY);
+            this._diagramDesigner.items[id].moveTo(posX, posY);
         }
 
         this._movingDraggedComponents = false;
@@ -492,10 +499,10 @@ define(['logManager',
 
 
     DragManager.prototype._griddedMouseDelta = function (event) {
-        var mousePos = this.canvas.getAdjustedMousePos(event),
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             dx = mousePos.mX - this._dragDesc.startX,
             dy = mousePos.mY - this._dragDesc.startY,
-            gridSize = this.canvas.gridSize,
+            gridSize = this._diagramDesigner.gridSize,
             dX = dx - dx % gridSize,
             dY = dy - dy % gridSize;
 
@@ -580,7 +587,7 @@ define(['logManager',
                         }
 
                         //delete from canvas
-                        this.canvas.deleteComponent(copiedComponentId);
+                        this._diagramDesigner.deleteComponent(copiedComponentId);
                     }
                     break;
                 default:
@@ -635,7 +642,7 @@ define(['logManager',
                     pY = origPos.y + this._dragDesc.dY;
 
                     this._movingDraggedComponents = true;
-                    this.canvas.items[id].moveTo(pX, pY);
+                    this._diagramDesigner.items[id].moveTo(pX, pY);
                     this._movingDraggedComponents = false;
                 }
             }
