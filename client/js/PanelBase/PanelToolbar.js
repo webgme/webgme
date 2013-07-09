@@ -20,11 +20,21 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
         if (clickFn) {
             $btnGroup.on("click", ".btn", function (event) {
-                clickFn.call(this, event, $(this).data());
+                if (!$(this).hasClass("disabled")) {
+                    clickFn.call(this, event, $(this).data());
+                }
                 event.stopPropagation();
                 event.preventDefault();
             });
         }
+
+        $btnGroup.enabled = function (enabled) {
+            if (enabled === true) {
+                $btnGroup.find('.btn').removeClass("disabled");
+            } else {
+                $btnGroup.find('.btn').addClass("disabled");
+            }
+        };
 
         return $btnGroup;
     };
