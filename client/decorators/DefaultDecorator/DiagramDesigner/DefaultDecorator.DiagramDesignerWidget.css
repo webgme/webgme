@@ -35,9 +35,6 @@
     .default-decorator .connector.bottom {
       bottom: -6px; }
 
-.selectable .default-decorator {
-  cursor: pointer; }
-
 .selected .default-decorator {
   border: 2px solid #52a8ec;
   background-color: #dbeafc; }

@@ -57,7 +57,5 @@
     transform-origin: 0 0;
     -webkit-transform-origin: 0 0;
     -moz-transform-origin: 0 0; }
-.designer-item.selectable .modelica-decorator {
-  cursor: pointer; }
 .designer-item.selected .modelica-decorator {
   background-color: rgba(219, 234, 252, 0.5); }

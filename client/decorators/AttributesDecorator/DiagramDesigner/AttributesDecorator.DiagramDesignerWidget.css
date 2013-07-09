@@ -66,9 +66,6 @@
     .attributes-decorator .connector.bottom {
       bottom: -6px; }
 
-.selectable .attributes-decorator {
-  cursor: pointer; }
-
 .selected .attributes-decorator {
   border: 2px solid #52a8ec;
   background-color: #dbeafc; }

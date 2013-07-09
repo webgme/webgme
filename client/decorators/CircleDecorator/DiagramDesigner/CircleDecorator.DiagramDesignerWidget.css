@@ -37,9 +37,6 @@
       top: 14px;
       left: 34px; }
 
-.selectable .circle-decorator {
-  cursor: pointer; }
-
 .selected .circle-decorator #circleCanvas {
   border-width: 2px;
   border-style: solid;
