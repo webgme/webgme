@@ -1,6 +1,8 @@
 "use strict";
 
-define(['js/Constants'], function (CONSTANTS) {
+define(['js/Constants',
+        'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
+                                                                                 DiagramDesignerWidgetConstants) {
  
     var VALIDCHILDREN_TYPE_LINE_END = "diamond-wide-long",
         VALIDINHERITOR_TYPE_LINE_END = "block-wide-long",
@@ -11,36 +13,38 @@ define(['js/Constants'], function (CONSTANTS) {
 
     return {
         getLineVisualDescriptor : function (sName) {
-            var params = { "arrowStart" : NO_END,
-                            "arrowEnd" : NO_END,
-                            "width" : "2",
-                            "color" :"#AAAAAA" };
+            var params = {};
+
+            params[DiagramDesignerWidgetConstants.LINE_WIDTH] = 2;
+            params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+            params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+            params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#AAAAAA";
 
             switch (sName) {
                 case CONSTANTS.SET_VALIDCHILDREN:
-                    params.arrowStart = VALIDCHILDREN_TYPE_LINE_END;
-                    params.arrowEnd = NO_END;
-                    params.color = "#FF0000";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = VALIDCHILDREN_TYPE_LINE_END;
+                    params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                     params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF0000";
                     break;
                 case CONSTANTS.SET_VALIDINHERITOR:
-                    params.arrowStart = VALIDINHERITOR_TYPE_LINE_END;
-                    params.arrowEnd = NO_END;
-                    params.color = "#0000FF";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = VALIDINHERITOR_TYPE_LINE_END;
+                     params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                     params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#0000FF";
                     break;
                 case CONSTANTS.SET_VALIDSOURCE:
-                    params.arrowStart = VALIDSOURCE_TYPE_LINE_END;
-                    params.arrowEnd = NO_END;
-                    params.color = "#00FF00";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = VALIDSOURCE_TYPE_LINE_END;
+                     params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                     params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#00FF00";
                     break;
                 case CONSTANTS.SET_VALIDDESTINATION:
-                    params.arrowStart = VALIDDESTINATION_TYPE_LINE_END;
-                    params.arrowEnd = NO_END;
-                    params.color = "#AA03C3";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = VALIDDESTINATION_TYPE_LINE_END;
+                     params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                     params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#AA03C3";
                     break;
                 case CONSTANTS.SET_GENERAL:
-                    params.arrowStart = GENERAL_TYPE_LINE_END;
-                    params.arrowEnd = NO_END;
-                    params.color = "#000000";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = GENERAL_TYPE_LINE_END;
+                     params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+                     params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#000000";
                     break;
                 default:
                     break;
@@ -59,9 +63,9 @@ define(['js/Constants'], function (CONSTANTS) {
             path = paper.path("M" + btnSize / 2 + ",0, L" + btnSize / 2 + "," + btnSize);
 
             path.attr({ "arrow-start": pathParams.arrowStart,
-                "arrow-end": pathParams.arrowEnd,
-                "stroke": pathParams.color,
-                "stroke-width": pathParams.width});
+                "arrow-end": pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
+                "stroke":  pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
+                "stroke-width": pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH]});
 
             return el;
         }

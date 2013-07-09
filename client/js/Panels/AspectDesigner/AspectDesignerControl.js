@@ -2,11 +2,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './AspectDesignerControl.DiagramDesignerWidgetEventHandlers',
     'js/Panels/DiagramDesigner/SetEditor/SetVisualHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        DiagramDesignerWidgetConstants,
                                                         AspectDesignerControlDiagramDesignerWidgetEventHandlers,
                                                         SetVisualHelper) {
 
@@ -1100,34 +1102,37 @@ define(['logManager',
     /*         DEFINE VISUAL STYLE FOR EACH SPECIFIC CONNECTION TYPE            */
     /****************************************************************************/
     AspectDesignerControl.prototype._getConnTypeVisualDescriptor = function (connType) {
-        var params = { "arrowStart" : "none",
-            "arrowEnd" : "none",
-            "width" : "2",
-            "color" :"#000000" };
+        var params = {};
+
+        params[DiagramDesignerWidgetConstants.LINE_WIDTH] = 2;
+        params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+        params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
+        params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#000000";
+
 
         if (connType.indexOf(SET_PREFIX) === 0) {
             params = SetVisualHelper.getLineVisualDescriptor(connType.replace(SET_PREFIX, ''));
         } else {
             switch (connType) {
                 case POINTER_PREFIX + CONSTANTS.POINTER_SOURCE:
-                    params.arrowStart = NO_END;
-                    params.arrowEnd = ARROW_END;
-                    params.color = "#FF0000";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+                    params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = ARROW_END;
+                    params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#FF0000";
                     break;
                 case POINTER_PREFIX + CONSTANTS.POINTER_TARGET:
-                    params.arrowStart = NO_END;
-                    params.arrowEnd = ARROW_END;
-                    params.color = "#0000FF";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+                    params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = ARROW_END;
+                    params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#0000FF";
                     break;
                 case POINTER_PREFIX + CONSTANTS.POINTER_REF:
-                    params.arrowStart = NO_END;
-                    params.arrowEnd = ARROW_END;
-                    params.color = "#EFA749";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+                    params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = ARROW_END;
+                    params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#EFA749";
                     break;
                 case CONN_TYPE_HIERARCHY_PARENT:
-                    params.arrowStart = NO_END;
-                    params.arrowEnd = DIAMOND_END;
-                    params.color = "#333333";
+                    params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
+                    params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = DIAMOND_END;
+                    params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#333333";
                     break;
                 default:
                     break;
