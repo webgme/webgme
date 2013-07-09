@@ -78,12 +78,6 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
   }
 }
 
-.selectable {
-  .attributes-decorator {
-    cursor: pointer;
-  }
-}
-
 .selected {
   .attributes-decorator {
     border: $selected-border;

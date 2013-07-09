@@ -89,12 +89,6 @@ $selected-background-color: rgba(219, 234, 252, 0.5);
 
   }
 
-  &.selectable {
-    .modelica-decorator {
-      cursor: pointer;
-    }
-  }
-
   &.selected {
     .modelica-decorator {
       background-color: $selected-background-color;

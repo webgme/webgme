@@ -1,9 +1,17 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Robert Kereskenyi
+ */
 /* override default connector properties for draggable connector end */
 /*error decorator properties*/
 .diagram-designer {
   outline: none; }
   .diagram-designer .items {
     position: absolute; }
+    .diagram-designer .items .designer-item,
+    .diagram-designer .items .designer-connection {
+      cursor: pointer; }
     .diagram-designer .items .rubberband {
       background: rgba(219, 234, 252, 0.49);
       border: #52a8ec solid 1px;
@@ -84,6 +92,13 @@
         fill: #ff7800; }
     .diagram-designer .items svg.connection-container .segment-point-move-path {
       stroke: #ff7800; }
+    .diagram-designer .items.highlight-mode .designer-item,
+    .diagram-designer .items.highlight-mode .designer-connection {
+      opacity: 0.1;
+      cursor: pointer; }
+    .diagram-designer .items.highlight-mode .designer-item.highlighted,
+    .diagram-designer .items.highlight-mode .designer-connection.highlighted {
+      opacity: 1.0; }
   .diagram-designer .dropRegion {
     width: 0;
     height: 0;
