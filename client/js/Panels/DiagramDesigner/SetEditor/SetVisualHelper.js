@@ -62,7 +62,7 @@ define(['js/Constants',
 
             path = paper.path("M" + btnSize / 2 + ",0, L" + btnSize / 2 + "," + btnSize);
 
-            path.attr({ "arrow-start": pathParams.arrowStart,
+            path.attr({ "arrow-start": pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
                 "arrow-end": pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
                 "stroke":  pathParams[DiagramDesignerWidgetConstants.LINE_COLOR],
                 "stroke-width": pathParams[DiagramDesignerWidgetConstants.LINE_WIDTH]});
