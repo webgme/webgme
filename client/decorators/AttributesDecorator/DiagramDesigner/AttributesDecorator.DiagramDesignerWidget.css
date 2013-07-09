@@ -68,6 +68,6 @@
 
 .selected .attributes-decorator {
   border: 2px solid #52a8ec;
-  background-color: #dbeafc; }
+  background-color: white; }
   .selected .attributes-decorator .add-new:hover {
     background-color: #ffffc0; }
