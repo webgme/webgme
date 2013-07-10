@@ -483,9 +483,6 @@ define(['logManager',
     // PUBLIC METHODS
     ModelEditorControl.prototype._onLoad = function (gmeID, objD) {
         var uiComponent,
-            i,
-            GMESrcId,
-            GMEDstId,
             decClass,
             objDesc,
             sources = [],
@@ -522,49 +519,11 @@ define(['logManager',
                                 "eid": gmeID,
                                 "desc": objD });
                         } else {
-                            GMESrcId = objDesc.source;
-                            GMEDstId = objDesc.target;
-
                             this._GMEConnections.push(gmeID);
 
-                            if (this._GmeID2ComponentID.hasOwnProperty(GMESrcId)) {
-                                //src is a DesignerItem
-                                i = this._GmeID2ComponentID[GMESrcId].length;
-                                while (i--) {
-                                    sources.push( {"objId" : this._GmeID2ComponentID[GMESrcId][i],
-                                                   "subCompId" : undefined });
-                                }
-                            } else {
-                                //src is not a DesignerItem
-                                //must be a sub_components somewhere, find the corresponding designerItem
-                                if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMESrcId)) {
-                                    for (i in this._GMEID2Subcomponent[GMESrcId]) {
-                                        if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
-                                            sources.push( {"objId" : i,
-                                                "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] });
-                                        }
-                                    }
-                                }
-                            }
-
-                            if (this._GmeID2ComponentID.hasOwnProperty(GMEDstId)) {
-                                i = this._GmeID2ComponentID[GMEDstId].length;
-                                while (i--) {
-                                    destinations.push( {"objId" : this._GmeID2ComponentID[GMEDstId][i],
-                                        "subCompId" : undefined });
-                                }
-                            } else {
-                                //dst is not a DesignerItem
-                                //must be a sub_components somewhere, find the corresponding designerItem
-                                if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMEDstId)) {
-                                    for (i in this._GMEID2Subcomponent[GMEDstId]) {
-                                        if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(i)) {
-                                            destinations.push( {"objId" : i,
-                                                "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] });
-                                        }
-                                    }
-                                }
-                            }
+                            var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
+                            sources = srcDst.sources;
+                            destinations = srcDst.destinations;
 
                             var k = sources.length;
                             var l = destinations.length;
@@ -636,14 +595,38 @@ define(['logManager',
                     //there is a connection associated with this GMEID
                     if (this._GMEConnections.indexOf(gmeID) !== -1) {
                         len = this._GmeID2ComponentID[gmeID].length;
-                        while (len--) {
-                            componentID =  this._GmeID2ComponentID[gmeID][len];
-                            this.designerCanvas.deleteComponent(componentID);
+                        var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
+                        var sources = srcDst.sources;
+                        var destinations = srcDst.destinations;
+
+                        var k = sources.length;
+                        var l = destinations.length;
+                        len -= 1;
+
+                        while (k--) {
+                            while (l--) {
+                                objDesc.srcObjId = sources[k].objId;
+                                objDesc.srcSubCompId = sources[k].subCompId;
+                                objDesc.dstObjId = destinations[l].objId;
+                                objDesc.dstSubCompId = destinations[l].subCompId;
+                                objDesc.reconnectable = true;
+
+                                delete objDesc.source;
+                                delete objDesc.target;
+
+                                componentID =  this._GmeID2ComponentID[gmeID][len];
+
+                                this.designerCanvas.updateConnection(componentID, objDesc);
+
+                                len -= 1;
+                                //TODO: len might be negative or more than 0, check
+                            }
                         }
 
-                        this.delayedEvents.push({ "etype": CONSTANTS.TERRITORY_EVENT_LOAD,
-                            "eid": gmeID,
-                            "desc": objDesc });
+                        if (len >= 0) {
+                            //some leftover connections on the widget
+                            //delete them
+                        }
                     }
                 } else {
                     //update about a subcomponent - will be handled in the decorator
@@ -847,6 +830,55 @@ define(['logManager',
         }
 
         this._client.completeTransaction();
+    };
+
+
+    ModelEditorControl.prototype._getAllSourceDestinationPairsForConnection = function (GMESrcId, GMEDstId) {
+        var sources = [],
+            destinations = [],
+            i;
+
+        if (this._GmeID2ComponentID.hasOwnProperty(GMESrcId)) {
+            //src is a DesignerItem
+            i = this._GmeID2ComponentID[GMESrcId].length;
+            while (i--) {
+                sources.push( {"objId" : this._GmeID2ComponentID[GMESrcId][i],
+                    "subCompId" : undefined });
+            }
+        } else {
+            //src is not a DesignerItem
+            //must be a sub_components somewhere, find the corresponding designerItem
+            if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMESrcId)) {
+                for (i in this._GMEID2Subcomponent[GMESrcId]) {
+                    if (this._GMEID2Subcomponent[GMESrcId].hasOwnProperty(i)) {
+                        sources.push( {"objId" : i,
+                            "subCompId" : this._GMEID2Subcomponent[GMESrcId][i] });
+                    }
+                }
+            }
+        }
+
+        if (this._GmeID2ComponentID.hasOwnProperty(GMEDstId)) {
+            i = this._GmeID2ComponentID[GMEDstId].length;
+            while (i--) {
+                destinations.push( {"objId" : this._GmeID2ComponentID[GMEDstId][i],
+                    "subCompId" : undefined });
+            }
+        } else {
+            //dst is not a DesignerItem
+            //must be a sub_components somewhere, find the corresponding designerItem
+            if (this._GMEID2Subcomponent && this._GMEID2Subcomponent.hasOwnProperty(GMEDstId)) {
+                for (i in this._GMEID2Subcomponent[GMEDstId]) {
+                    if (this._GMEID2Subcomponent[GMEDstId].hasOwnProperty(i)) {
+                        destinations.push( {"objId" : i,
+                            "subCompId" : this._GMEID2Subcomponent[GMEDstId][i] });
+                    }
+                }
+            }
+        }
+
+        return {'sources': sources,
+                'destinations': destinations};
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
