@@ -614,18 +614,27 @@ define(['logManager',
                                 delete objDesc.source;
                                 delete objDesc.target;
 
-                                componentID =  this._GmeID2ComponentID[gmeID][len];
+                                if (len >= 0) {
+                                    componentID =  this._GmeID2ComponentID[gmeID][len];
 
-                                this.designerCanvas.updateConnection(componentID, objDesc);
+                                    this.designerCanvas.updateConnection(componentID, objDesc);
 
-                                len -= 1;
-                                //TODO: len might be negative or more than 0, check
+                                    len -= 1;
+                                } else {
+                                    this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                }
                             }
                         }
 
                         if (len >= 0) {
                             //some leftover connections on the widget
                             //delete them
+                            len += 1;
+                            while (len--) {
+                                componentID =  this._GmeID2ComponentID[gmeID][len];
+                                this.designerCanvas.deleteComponent(componentID);
+                                this._GmeID2ComponentID[gmeID].splice(len, 1);
+                            }
                         }
                     }
                 } else {

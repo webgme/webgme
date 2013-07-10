@@ -523,13 +523,11 @@ define(['logManager',
         //in edit mode and when not participating in a multiple selection,
         //show endpoint connectors
         if (this.selectedInMultiSelection === true) {
-            this.hideConnectors();
             this._setEditMode(false);
         } else {
             //in edit mode and when not participating in a multiple selection,
             //show connectors
             if (this.diagramDesigner.mode === this.diagramDesigner.OPERATING_MODES.DESIGN) {
-                this.showConnectors();
                 this._setEditMode(true);
             }
         }
@@ -542,7 +540,6 @@ define(['logManager',
         this.selectedInMultiSelection = false;
 
         this._unHighlightPath();
-        this.hideConnectors();
         this._setEditMode(false);
     };
 
@@ -705,6 +702,13 @@ define(['logManager',
                 "left": this.endCoordinates.x});
 
             this.diagramDesigner.skinParts.$itemsContainer.append(this.skinParts.dstDragPoint);
+
+            //resize connectors to connection width
+            var scale = Math.max(1, this.designerAttributes.width / 10); //10px is the width of the connector end
+            this.skinParts.srcDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
+            this.skinParts.dstDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
+        } else {
+            this.hideConnectors();
         }
     };
 
@@ -727,7 +731,6 @@ define(['logManager',
     ConnectionComponent.prototype.readOnlyMode = function (readOnly) {
         this._readOnly = readOnly;
         if (readOnly === true) {
-            this.hideConnectors();
             this._setEditMode(false);
         }
     };
@@ -736,6 +739,9 @@ define(['logManager',
         if (this._readOnly === false && this._editMode !== editMode) {
             this._editMode = editMode;
             this.setConnectionRenderData(this._pathPoints);
+            if (this._editMode === false) {
+                this.hideConnectors();
+            }
         }
     };
 
@@ -781,6 +787,9 @@ define(['logManager',
 
         //finally show segment points
         this._showSegmentPoints();
+
+        //show connection end dragpoints
+        this.showConnectors();
     };
 
     ConnectionComponent.prototype._removeEditModePath = function () {
@@ -908,6 +917,30 @@ define(['logManager',
             $(this.skinParts.path.node).attr('class', classes.join(' '));
         }
     };
+
+    ConnectionComponent.prototype.update = function (objDescriptor) {
+        var i;
+
+        //read props coming from the DataBase or DiagramDesigner
+        this._initializeConnectionProps(objDescriptor);
+
+        //update path itself
+        if (this.skinParts.path) {
+            this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
+                "arrow-end": this.designerAttributes.arrowEnd,
+                "stroke": this.designerAttributes.color,
+                "stroke-width": this.designerAttributes.width});
+        }
+
+
+        if (this.skinParts.pathShadow) {
+            this.skinParts.pathShadow.attr({    "stroke-width": this.designerAttributes.shadowWidth,
+                "arrow-start": this.designerAttributes.arrowStart,
+                "arrow-end": this.designerAttributes.arrowEnd,
+                "arrow-dx-stroke-width-fix": this.designerAttributes.width });
+        }
+    };
+
 
     return ConnectionComponent;
 });
