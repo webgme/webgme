@@ -46,12 +46,7 @@ define(['logManager',
     HighlightManager.prototype.deactivate = function () {
         this._deactivateMouseListeners();
         this.$el.removeClass(DiagramDesignerWidgetConstants.HIGHLIGHT_MODE_CLASS);
-        //remove classes from each item
-        var i = this._highlightedElements.length;
-        while (i--) {
-            this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
-        }
-        this._highlightedElements = [];
+        this._clear();
     };
 
     HighlightManager.prototype._activateMouseListeners = function () {
@@ -86,6 +81,15 @@ define(['logManager',
                 event.stopImmediatePropagation();
             }
         });
+
+        //handle click on designer-items
+        this.$el.on('dblclick.HighlightManagerItem', function (event) {
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
+                self._clear();
+                event.preventDefault();
+                event.stopImmediatePropagation();
+            }
+        });
     };
 
     HighlightManager.prototype._deactivateMouseListeners = function () {
@@ -93,6 +97,7 @@ define(['logManager',
         this.$el.off('mousedown.HighlightManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS);
         this.$el.off('mousedown.HighlightManagerConnection', 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]');
         this.$el.off('contextmenu.HighlightManager');
+        this.$el.off('dblclick.HighlightManagerItem');
     };
 
 
@@ -173,6 +178,15 @@ define(['logManager',
         if (idx !== -1) {
             this._highLight(componentId, false);
         }
+    };
+
+    HighlightManager.prototype._clear = function () {
+        //unhighlight all the highlighted
+        var i = this._highlightedElements.length;
+        while (i--) {
+            this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
+        }
+        this._highlightedElements = [];
     };
 
 
