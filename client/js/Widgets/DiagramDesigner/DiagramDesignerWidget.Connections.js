@@ -35,15 +35,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
                                               "dstSubCompId": targetSubcomponentId};
 
 
-        var ssubId = sourceSubcomponentId || DiagramDesignerWidgetConstants.SELF;
-        this.connectionIDbyEndID[sourceId] = this.connectionIDbyEndID[sourceId] || {};
-        this.connectionIDbyEndID[sourceId][ssubId] = this.connectionIDbyEndID[sourceId][ssubId] || [];
-        this.connectionIDbyEndID[sourceId][ssubId].push(connectionId);
-
-        ssubId = targetSubcomponentId || DiagramDesignerWidgetConstants.SELF;
-        this.connectionIDbyEndID[targetId] = this.connectionIDbyEndID[targetId] || {};
-        this.connectionIDbyEndID[targetId][ssubId] = this.connectionIDbyEndID[targetId][ssubId] || [];
-        this.connectionIDbyEndID[targetId][ssubId].push(connectionId);
+        this._saveConnectionIDbyEndID(connectionId, sourceId, sourceSubcomponentId);
+        this._saveConnectionIDbyEndID(connectionId, targetId, targetSubcomponentId);
 
         newComponent = this.items[connectionId] = new Connection(connectionId);
         newComponent._initialize(objDescriptor);
@@ -51,70 +44,50 @@ define(['js/Widgets/DiagramDesigner/Connection',
     };
 
     DiagramDesignerWidget.prototype.updateConnection = function (id, objDescriptor) {
-        var connectionId = id,
-            srcObjId = objDescriptor.srcObjId,
+        var srcObjId = objDescriptor.srcObjId,
             srcSubCompId = objDescriptor.srcSubCompId,
             dstObjId = objDescriptor.dstObjId,
-            dstSubCompId = objDescriptor.dstSubCompId,
-            idx,
-            objId,
-            subComponentId;
+            dstSubCompId = objDescriptor.dstSubCompId;
 
         this.logger.debug("Updating connection component with ID: '" + id + "'");
 
         //add to accounting queues for performance optimization
-        this._updatedConnectionIDs.push(connectionId);
+        this._updatedConnectionIDs.push(id);
 
         /* check if any endpoint of the connection has been changed */
         //check SOURCE
         if (srcObjId !== this.connectionEndIDs[id].srcObjId &&
             srcSubCompId !== this.connectionEndIDs[id].srcSubCompId) {
 
-            objId = this.connectionEndIDs[srcObjId].srcObjId;
-            subComponentId = this.connectionEndIDs[id].srcSubCompId || DiagramDesignerWidgetConstants.SELF;
-            idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
-            if (idx !== -1) {
-                this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
-            }
+            //remove connection from source list
+            this._removeConnectionIDfromEnd(id, true);
 
             //account the new
-            var ssubId = srcSubCompId || DiagramDesignerWidgetConstants.SELF;
-            this.connectionIDbyEndID[srcObjId] = this.connectionIDbyEndID[srcObjId] || {};
-            this.connectionIDbyEndID[srcObjId][ssubId] = this.connectionIDbyEndID[srcObjId][ssubId] || [];
-            this.connectionIDbyEndID[srcObjId][ssubId].push(connectionId);
+            this._saveConnectionIDbyEndID(id, srcObjId, srcSubCompId);
         }
 
         //check TARGET
         if (dstObjId !== this.connectionEndIDs[id].dstObjId &&
             dstSubCompId !== this.connectionEndIDs[id].dstSubCompId) {
 
-            objId = this.connectionEndIDs[dstObjId].dstObjId;
-            subComponentId = this.connectionEndIDs[id].dstSubCompId || DiagramDesignerWidgetConstants.SELF;
-            idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
-            if (idx !== -1) {
-                this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
-            }
+            //remove connection from target list
+            this._removeConnectionIDfromEnd(id, false);
 
             //account the new
-            var ssubId = dstSubCompId || DiagramDesignerWidgetConstants.SELF;
-            this.connectionIDbyEndID[dstObjId] = this.connectionIDbyEndID[dstObjId] || {};
-            this.connectionIDbyEndID[dstObjId][ssubId] = this.connectionIDbyEndID[dstObjId][ssubId] || [];
-            this.connectionIDbyEndID[dstObjId][ssubId].push(connectionId);
+            this._saveConnectionIDbyEndID(id, dstObjId, dstSubCompId);
         }
 
         //accounting connection info
-        this.connectionEndIDs[connectionId] = {"srcObjId": srcObjId,
+        this.connectionEndIDs[id] = {"srcObjId": srcObjId,
             "srcSubCompId": srcSubCompId,
             "dstObjId": dstObjId,
             "dstSubCompId": dstSubCompId};
 
-        this.items[connectionId].update(objDescriptor);
+        this.items[id].update(objDescriptor);
     };
 
     DiagramDesignerWidget.prototype.deleteConnection = function (id) {
-        var idx,
-            objId,
-            subComponentId;
+        var idx;
 
         this.logger.debug("Deleting connection component with ID: '" + id + "'");
 
@@ -122,20 +95,10 @@ define(['js/Widgets/DiagramDesigner/Connection',
         this._deletedConnectionIDs.push(id);
 
         //remove connection from source list
-        objId = this.connectionEndIDs[id].srcObjId;
-        subComponentId = this.connectionEndIDs[id].srcSubCompId || DiagramDesignerWidgetConstants.SELF;
-        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
-        if (idx !== -1) {
-            this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
-        }
+        this._removeConnectionIDfromEnd(id, true);
 
         //remove connection from target list
-        objId = this.connectionEndIDs[id].dstObjId;
-        subComponentId = this.connectionEndIDs[id].dstSubCompId || DiagramDesignerWidgetConstants.SELF;
-        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
-        if (idx !== -1) {
-            this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
-        }
+        this._removeConnectionIDfromEnd(id, false);
 
         //remove connection from connection endpoint list
         delete this.connectionEndIDs[id];
@@ -147,6 +110,25 @@ define(['js/Widgets/DiagramDesigner/Connection',
         //get rid of the connection itself
         this.items[id].destroy();
         delete this.items[id];
+    };
+
+    DiagramDesignerWidget.prototype._saveConnectionIDbyEndID = function (connId, objId, subCompId) {
+        subCompId = subCompId || DiagramDesignerWidgetConstants.SELF;
+        this.connectionIDbyEndID[objId] = this.connectionIDbyEndID[objId] || {};
+        this.connectionIDbyEndID[objId][subCompId] = this.connectionIDbyEndID[objId][subCompId] || [];
+        this.connectionIDbyEndID[objId][subCompId].push(connId);
+    };
+
+    DiagramDesignerWidget.prototype._removeConnectionIDfromEnd = function (connId, isSource) {
+        var objId = isSource ? this.connectionEndIDs[connId].srcObjId : this.connectionEndIDs[connId].dstObjId,
+            subComponentId = isSource ? this.connectionEndIDs[connId].srcSubCompId : this.connectionEndIDs[connId].dstSubCompId,
+            idx;
+
+        subComponentId = subComponentId || DiagramDesignerWidgetConstants.SELF;
+        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
+        if (idx !== -1) {
+            this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
+        }
     };
 
     /*
