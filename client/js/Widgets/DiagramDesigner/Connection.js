@@ -62,6 +62,7 @@ define(['logManager',
     Connection.prototype._initializeConnectionProps = function (objDescriptor) {
         this.segmentPoints = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS] ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].slice(0) : [];
         this.reconnectable = objDescriptor.reconnectable === true;
+        this.editable = !!objDescriptor.editable;
 
         /*PathAttributes*/
         this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] || CONNECTION_DEFAULT_END;
@@ -279,6 +280,8 @@ define(['logManager',
             //in edit mode add edit features
             if (this._editMode === true) {
                 this._drawEditModePath(points);
+                //show connection end dragpoints
+                this.showConnectors();
             }
         } else {
             this.pathDef = null;
@@ -528,8 +531,6 @@ define(['logManager',
                 this._setEditMode(true);
             }
         }
-
-
     };
 
     Connection.prototype.onDeselect = function () {
@@ -734,11 +735,11 @@ define(['logManager',
 
     Connection.prototype._setEditMode = function (editMode) {
         if (this._readOnly === false && this._editMode !== editMode) {
-            this._editMode = editMode;
-            this.setConnectionRenderData(this._pathPoints);
-            if (this._editMode === false) {
-                this.hideConnectors();
-            }
+                this._editMode = editMode;
+                this.setConnectionRenderData(this._pathPoints);
+                if (this._editMode === false) {
+                    this.hideConnectors();
+                }
         }
     };
 
@@ -752,41 +753,40 @@ define(['logManager',
 
         this._removeEditModePath();
 
-        //iterate through the given points from the auto-router and the connection's segment points
-        //the connection's segment points will be the movable points
-        //the extra routing points that are not segment points, they are not movable
-        for (rIt = 0; rIt < routingPointsLen; rIt += 1) {
-            //till we reach the next segment point in the list, all routing points go to the same path-segment
-            if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {'x': this.segmentPoints[sIt][0], 'y': this.segmentPoints[sIt][1]})) {
-                //found the end of a segment
-                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+        if (this.editable === true) {
+            //iterate through the given points from the auto-router and the connection's segment points
+            //the connection's segment points will be the movable points
+            //the extra routing points that are not segment points, they are not movable
+            for (rIt = 0; rIt < routingPointsLen; rIt += 1) {
+                //till we reach the next segment point in the list, all routing points go to the same path-segment
+                if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {'x': this.segmentPoints[sIt][0], 'y': this.segmentPoints[sIt][1]})) {
+                    //found the end of a segment
+                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
 
-                //create segment
-                this._createEditSegment(pathSegmentPoints, pNum);
+                    //create segment
+                    this._createEditSegment(pathSegmentPoints, pNum);
 
-                //increase segment point counter
-                sIt += 1;
+                    //increase segment point counter
+                    sIt += 1;
 
-                //increase path counter
-                pNum += 1;
+                    //increase path counter
+                    pNum += 1;
 
-                //start new pathSegmentPoint list
-                pathSegmentPoints = [];
-                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
-            } else {
-                pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                    //start new pathSegmentPoint list
+                    pathSegmentPoints = [];
+                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                } else {
+                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                }
             }
+
+            //final segment's points are in pathSegmentPoints
+            //create segment
+            this._createEditSegment(pathSegmentPoints, pNum);
+
+            //finally show segment points
+            this._showSegmentPoints();
         }
-
-        //final segment's points are in pathSegmentPoints
-        //create segment
-        this._createEditSegment(pathSegmentPoints, pNum);
-
-        //finally show segment points
-        this._showSegmentPoints();
-
-        //show connection end dragpoints
-        this.showConnectors();
     };
 
     Connection.prototype._removeEditModePath = function () {

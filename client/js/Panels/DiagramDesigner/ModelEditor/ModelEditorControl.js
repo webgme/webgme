@@ -535,6 +535,7 @@ define(['logManager',
                                     objDesc.dstObjId = destinations[l].objId;
                                     objDesc.dstSubCompId = destinations[l].subCompId;
                                     objDesc.reconnectable = true;
+                                    objDesc.editable = true;
 
                                     delete objDesc.source;
                                     delete objDesc.target;
@@ -610,6 +611,7 @@ define(['logManager',
                                 objDesc.dstObjId = destinations[l].objId;
                                 objDesc.dstSubCompId = destinations[l].subCompId;
                                 objDesc.reconnectable = true;
+                                objDesc.editable = true;
 
                                 delete objDesc.source;
                                 delete objDesc.target;
