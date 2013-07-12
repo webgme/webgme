@@ -125,7 +125,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
             idx;
 
         subComponentId = subComponentId || DiagramDesignerWidgetConstants.SELF;
-        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(id);
+        idx = this.connectionIDbyEndID[objId][subComponentId].indexOf(connId);
         if (idx !== -1) {
             this.connectionIDbyEndID[objId][subComponentId].splice(idx, 1);
         }
