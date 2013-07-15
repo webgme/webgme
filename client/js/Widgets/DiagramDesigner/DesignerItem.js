@@ -215,8 +215,10 @@ define(['logManager',
         this.$el.addClass(classes.join(' '));
 
         //in edit mode and when not participating in a multiple selection,
-        //show connectors
-        if (this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN) {
+        //show source connectors
+        //NOTE: show only if there is no connection draw in progress
+        if (this.canvas.mode === this.canvas.OPERATING_MODES.DESIGN &&
+            this.canvas.connectionDrawingManager.isDrawInProgress() === false) {
             if (this.selectedInMultiSelection === false) {
                 this.showSourceConnectors();
             }

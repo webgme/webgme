@@ -48,7 +48,7 @@ define(['js/Constants',
                             returnSVG = ModelicaDecoratorCore.prototype._svgCache[modelicaClassName].clone();
                         })
                         .fail(function () {
-                            returnSVG = this._errorSVGBase.clone();
+                            returnSVG = ModelicaDecoratorCore.prototype._errorSVGBase.clone();
                         });
                 }
             }

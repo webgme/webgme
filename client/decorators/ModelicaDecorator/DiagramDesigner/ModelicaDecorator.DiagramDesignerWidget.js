@@ -366,7 +366,7 @@ define(['js/Constants',
 
 
     ModelicaDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
-        this.logger.warning('showSourceConnectors: ' + JSON.stringify(params));
+        this.logger.debug('showSourceConnectors: ' + JSON.stringify(params));
         this.$sourceConnectors.show();
     };
 
@@ -380,7 +380,7 @@ define(['js/Constants',
             nodeObj,
             srcSubCompMetaInfo;
 
-        this.logger.warning('showEndConnectors: ' + JSON.stringify(params));
+        this.logger.debug('showEndConnectors: ' + JSON.stringify(params));
 
         //no source info --> don't display any connector
         if (!params.srcSubCompMetaInfo) {

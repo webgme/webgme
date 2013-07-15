@@ -276,9 +276,9 @@ define(['logManager',
                 "icon": "icon-th",
                 "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
-            this.toolBar.addButton({ "title": "Diagonal",
+            /*this.toolBar.addButton({ "title": "Diagonal",
                 "icon": "icon-signal",
-                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );
+                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );*/
 
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {

@@ -33,6 +33,13 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     };
 
     ConnectionSegmentPoint.prototype.destroy = function () {
+        if (this._moving === true) {
+            //the connection point is being dragged
+            //cancel drag
+            this._detachMouseListeners();
+
+            this._removeRedrawPath();
+        }
         if (this.circle) {
             this.circle.remove();
             this.circle = undefined;
@@ -158,13 +165,17 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
             }
         }
 
+        this._removeRedrawPath();
+
+        this._moving = false;
+        this._moveType = undefined;
+    };
+
+    ConnectionSegmentPoint.prototype._removeRedrawPath = function () {
         if (this._movePath) {
             this._movePath.remove();
             this._movePath = undefined;
         }
-
-        this._moving = false;
-        this._moveType = undefined;
     };
 
     ConnectionSegmentPoint.prototype._snapCoordinate = function (point) {
