@@ -16,6 +16,16 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
         ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID : 'body',
 
         /*
+         * META-INFORMATION ABOUT THE USER ACTION
+         */
+        META_INFO: 'metaInfo',
+
+        /*
+         * DRAG SOURCE IDENTIFIER (Widget, panel, etc)
+         */
+        DRAG_SOURCE: 'dragSource',
+
+        /*
          * LINE VISUAL DESCRIPTOR CONSTANTS
          */
         LINE_STYLE : { WIDTH : 'width',

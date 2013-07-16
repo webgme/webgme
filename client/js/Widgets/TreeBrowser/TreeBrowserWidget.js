@@ -15,7 +15,8 @@ define(['logManager',
     'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
-        TREE_BROWSER_CLASS = "tree-browser";
+        TREE_BROWSER_CLASS = "tree-browser",
+        TREEBROWSERWIDGET = 'TreeBrowserWidget';
 
     var TreeBrowserWidget = function (container/*, params*/) {
         //get this._logger instance for this component
@@ -523,7 +524,8 @@ define(['logManager',
                 //add extra GME related drag info
                 metaInfo = {};
                 metaInfo[CONSTANTS.GME_ID] =  selectedIds;
-                helperEl.data("metaInfo", metaInfo);
+                helperEl.data(CONSTANTS.META_INFO, metaInfo);
+                helperEl.data(CONSTANTS.DRAG_SOURCE, TREEBROWSERWIDGET);
 
                 return helperEl;
             }
