@@ -299,7 +299,7 @@ define(['logManager',
 
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
-        var metaInfo = helper.data("metaInfo");
+        var metaInfo = helper.data(CONSTANTS.META_INFO);
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
                 return true;
@@ -310,7 +310,7 @@ define(['logManager',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
-        var metaInfo = helper.data("metaInfo"),
+        var metaInfo = helper.data(CONSTANTS.META_INFO),
             intellyPasteOpts,
             gmeID,
             i;

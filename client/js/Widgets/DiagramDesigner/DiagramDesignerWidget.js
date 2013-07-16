@@ -154,6 +154,13 @@ define(['logManager',
             //initiate Connection Router (if needed)
         this.highlightManager = new HighlightManager({"diagramDesigner": this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
+        this.highlightManager.onHighlight = function (idList) {
+            self.onHighlight(idList);
+        };
+
+        this.highlightManager.onUnhighlight = function (idList) {
+            self.onUnhighlight(idList);
+        };
 
         this.setOperatingMode(DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
 
@@ -1165,6 +1172,15 @@ define(['logManager',
     };
     /************************* END OF --- DESIGNER ITEM DRAGGABLE & COPYABLE CHECK ON DRAG START ************************/
 
+    /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
+    DiagramDesignerWidget.prototype.onHighlight = function (idList) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onHighlight not overridden in controller. idList: " + idList);
+    };
+
+    DiagramDesignerWidget.prototype.onUnhighlight = function (idList) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
+    };
+    /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

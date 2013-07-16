@@ -138,6 +138,7 @@ define(['logManager',
                 this._highlightedElements.push(elementsToHighlight[i]);
                 this._diagramDesigner.items[elementsToHighlight[i]].highlight();
             }
+            this.onHighlight(elementsToHighlight);
         } else {
             //unhighlight clicked and all associated
             elementsToHighlight.push(id);
@@ -168,6 +169,7 @@ define(['logManager',
                 this._highlightedElements.splice(idx, 1);
                 this._diagramDesigner.items[elementsToHighlight[i]].unHighlight();
             }
+            this.onUnhighlight(elementsToHighlight);
         }
     };
 
@@ -182,11 +184,22 @@ define(['logManager',
 
     HighlightManager.prototype._clear = function () {
         //unhighlight all the highlighted
-        var i = this._highlightedElements.length;
+        var i = this._highlightedElements.length,
+            unhighlighted = this._highlightedElements.slice(0);
+
         while (i--) {
             this._diagramDesigner.items[this._highlightedElements[i]].unHighlight();
         }
         this._highlightedElements = [];
+        this.onUnhighlight(unhighlighted);
+    };
+
+    HighlightManager.prototype.onHighlight = function (idList) {
+        this.logger.debug('onHighlight idList: ' + idList);
+    };
+
+    HighlightManager.prototype.onUnhighlight = function (idList) {
+        this.logger.debug('onUnhighlight idList: ' + idList);
     };
 
 

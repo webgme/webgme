@@ -7,7 +7,8 @@ define(['logManager',
 
     var PartBrowserWidget,
         PART_BROWSER_CLASS = "part-browser",
-        PART_CLASS = "part";
+        PART_CLASS = "part",
+        PARTBROWSERWIDGET = 'PartBrowserWidget';
 
     PartBrowserWidget = function (container, params) {
         this._logger = logManager.create("PartBrowserWidget");
@@ -105,7 +106,8 @@ define(['logManager',
                 partContainerLi.remove();
 
                 //set it up with GME related info
-                draggedEl.data("metaInfo", metaInfo);
+                draggedEl.data(CONSTANTS.META_INFO, metaInfo);
+                draggedEl.data(CONSTANTS.DRAG_SOURCE, PARTBROWSERWIDGET);
 
                 return draggedEl;
             },

@@ -7,10 +7,12 @@
 "use strict";
 
 define(['logManager',
+        'js/Constants',
         'js/Widgets/DiagramDesigner/DragScroll',
         './DiagramDesignerWidget.Constants'], function (logManager,
-                                                    DragScroll,
-                                                    DiagramDesignerWidgetConstants) {
+                                                        CONSTANTS,
+                                                        DragScroll,
+                                                        DiagramDesignerWidgetConstants) {
 
     var ConnectionDrawingManager,
         EVENTPOSTFIX = 'ConnectionDrawingManager',
@@ -264,15 +266,17 @@ define(['logManager',
     ConnectionDrawingManager.prototype._acceptConnectionEndDrop = function (el) {
         var accept = false,
             objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
-            sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
+            sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID),
+            desc;
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
             if (this._connectionInDrawProps.srcEl[0] !== el[0]) {
-                accept = this._diagramDesigner.onConnectionCreateConnectableAccept({"srcObjId": this._connectionInDrawProps.src,
+                desc = {"srcObjId": this._connectionInDrawProps.src,
                     "srcSubCompId": this._connectionInDrawProps.sCompId,
                     "connEndId": objId,
-                    "connEndSubCompId": sCompId,
-                    "metaInfo": this._metaInfo});
+                    "connEndSubCompId": sCompId};
+                desc[CONSTANTS.META_INFO] = this._metaInfo;
+                accept = this._diagramDesigner.onConnectionCreateConnectableAccept(desc);
             }
         } else {
             accept = this._diagramDesigner.onConnectionReconnectConnectableAccept({"connId": this._connectionInDrawProps.connId,
@@ -376,14 +380,16 @@ define(['logManager',
      * sCompId: ID of the sub-component inside the designer-item the connector represents [optional]
      */
     ConnectionDrawingManager.prototype._connectionEndDrop = function (endPointId, sCompId) {
+        var desc;
         this.logger.debug("Connection end dropped on item: '" + endPointId + "', sCompId: '" + sCompId + "'");
 
         if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
-            this.onCreateNewConnection({ "src": this._connectionInDrawProps.src,
-                    "srcSubCompId": this._connectionInDrawProps.sCompId,
-                    "dst": endPointId,
-                    "dstSubCompId": sCompId,
-                    "metaInfo": this._metaInfo });
+            desc = { "src": this._connectionInDrawProps.src,
+                "srcSubCompId": this._connectionInDrawProps.sCompId,
+                "dst": endPointId,
+                "dstSubCompId": sCompId};
+            desc[CONSTANTS.META_INFO] = this._metaInfo;
+            this.onCreateNewConnection(desc);
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
             this.onModifyConnectionEnd({ "id": this._connectionInDrawProps.connId,
                 "endPoint": this._connectionInDrawProps.draggedEnd,
