@@ -196,7 +196,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     SetEditorPanel.prototype._onDropOver = function (setLi, event, ui) {
         //ui.helper contains information about the dragging
-        var dragParams = ui.helper.data("metaInfo");
+        var dragParams = ui.helper.data(CONSTANTS.META_INFO);
 
         if (this._isAcceptableDrag(dragParams)) {
             this._highlightItemArea(setLi, true);
@@ -205,7 +205,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     SetEditorPanel.prototype._onDrop = function (setLi, event, ui) {
         //ui.helper contains information about the dragging
-        var dragParams = ui.helper.data("metaInfo");
+        var dragParams = ui.helper.data(CONSTANTS.META_INFO);
 
         if (this._isAcceptableDrag(dragParams)) {
 
