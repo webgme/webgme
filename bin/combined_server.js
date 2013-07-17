@@ -67,9 +67,31 @@ requirejs(['logManager',
                         body += data;
                     });
                     req.on('end', function () {
-                        rest.processPOST(req.url,body,function(err,data){
-
-                        })
+                        var go = function(){
+                            rest.processPOST(req.url,body,function(err,data){
+                                if(err){
+                                    sendNegativeResponse(500,err);
+                                } else {
+                                    data = JSON.stringify(data);
+                                    res.writeHead(200, {
+                                        'Content-Length': data.length,
+                                        'Content-Type': 'application/json' });
+                                    res.end(data);
+                                }
+                            });
+                        };
+                        if(restOpened){
+                            go();
+                        } else {
+                            rest.open(function(err){
+                                if(!err){
+                                    restOpened = true;
+                                    go();
+                                } else {
+                                    sendNegativeResponse(500,'rest interface cannot be opened');
+                                }
+                            });
+                        }
                     });
                     break;
                 default: //GET
@@ -77,7 +99,6 @@ requirejs(['logManager',
                     if(req.url.indexOf('/rest/') >=0){
                         var goOn = function(){
                             rest.processGET(req.url,function(err,data){
-                                console.log(err,data);
                                 if(err){
                                     sendNegativeResponse(500,err);
                                 } else {
