@@ -24,11 +24,15 @@ define([
     function Rest(_configuration){
         var _tokens = {};
         var _projects = {};
-        var _database = new Mongo({
-            host: _configuration.ip,
-            port: _configuration.port,
-            database: _configuration.database
-        });
+        var _database = new Cache(
+                            new Failsafe(
+                                new Mongo({
+                                    host: _configuration.ip,
+                                    port: _configuration.port,
+                                    database: _configuration.database
+                                })
+                            ,{})
+                        ,{});
         var token = function(){
 
             return {
@@ -187,11 +191,16 @@ define([
 
 
         var processGET = function(uri,callback){
+            var projName = null;
             var myCallback = function(err,data){
                 if(!err && data){
                     data = JSON.stringify(data);
                     data = addingSpecialChars(data);
                     data = JSON.parse(data);
+                }
+                if(projName){
+                    _projects[projName].closeProject();
+                    delete _projects[projName];
                 }
                 callback(err,data);
             };
@@ -201,7 +210,7 @@ define([
                 if(uriArray[startindex] === 'projects'){
                     getProjects(myCallback);
                 } else {
-                    var projName = uriArray[startindex++];
+                    projName = uriArray[startindex++];
                     var gotProject = function(){
                         if(uriArray[startindex] === 'branches'){
                             getBranches(projName,myCallback);
@@ -236,7 +245,7 @@ define([
             }
         };
         var processPOST = function(uri,data,callback){
-
+            callback('not implemented yet',null);
         };
 
         return {

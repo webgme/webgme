@@ -57,7 +57,7 @@ requirejs(['logManager',
         var http = require('http').createServer(function(req, res){
             var sendNegativeResponse = function(respCode,respBody){
                 res.writeHead(respCode);
-                return res.end(respBody);
+                return res.end(JSON.stringify(respBody));
             };
 
             switch(req.method){
@@ -79,17 +79,16 @@ requirejs(['logManager',
                             rest.processGET(req.url,function(err,data){
                                 console.log(err,data);
                                 if(err){
-                                    data = null;
-                                    res.writeHead(500);
+                                    sendNegativeResponse(500,err);
                                 } else {
                                     data = JSON.stringify(data);
                                     res.writeHead(200, {
                                         'Content-Length': data.length,
                                         'Content-Type': 'application/json' });
+                                    res.end(data);
                                 }
-                                res.end(data);
                             });
-                        }
+                        };
                         if(restOpened){
                             goOn();
                         } else {
@@ -126,25 +125,25 @@ requirejs(['logManager',
                             if(err){
                                 logger.error("Error getting the file:" + dirname + req.url);
                                 sendNegativeResponse(404,'Error loading ' + req.url);
-                            }
+                            } else {
+                                if(req.url.indexOf('.js')>0){
+                                    logger.debug("HTTP RESP - "+req.url);
+                                    res.writeHead(200, {
+                                        'Content-Length': data.length,
+                                        'Content-Type': 'application/x-javascript' });
 
-                            if(req.url.indexOf('.js')>0){
-                                logger.debug("HTTP RESP - "+req.url);
-                                res.writeHead(200, {
-                                    'Content-Length': data.length,
-                                    'Content-Type': 'application/x-javascript' });
+                                } else if (req.url.indexOf('.css')>0) {
+                                    logger.debug("HTTP RESP - "+req.url);
+                                    res.writeHead(200, {
+                                        'Content-Length': data.length,
+                                        'Content-Type': 'text/css' });
 
-                            } else if (req.url.indexOf('.css')>0) {
-                                logger.debug("HTTP RESP - "+req.url);
-                                res.writeHead(200, {
-                                    'Content-Length': data.length,
-                                    'Content-Type': 'text/css' });
-
+                                }
+                                else{
+                                    res.writeHead(200);
+                                }
+                                res.end(data);
                             }
-                            else{
-                                res.writeHead(200);
-                            }
-                            res.end(data);
                         });
                     }
                     break;
