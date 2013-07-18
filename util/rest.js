@@ -23,7 +23,7 @@ define([
 
     function Rest(_configuration){
         var _tokens = {};
-        var _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null};
+        var _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null,branch:null};
         var _database = new Commit(
                             new Cache(
                                 new Failsafe(
@@ -44,7 +44,7 @@ define([
 
         var clearBuffer = function(){
             delete _buffer;
-            _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null};
+            _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null,branch:null};
         };
         var specialCharHandling = function(text){
             text = text.replace(/%23/g,'#');
@@ -324,7 +324,23 @@ define([
                                } else {
                                    pars = specialCharHandling(pars);
                                    pars = pars.split('/');
-                                   getItem(project,pars,myCallback);
+
+                                   if(pars[0].indexOf('#') === 0){
+                                       getItem(project,pars,myCallback);
+                                   } else {
+                                       getBranches(project,function(err,branches){
+                                           if(err){
+                                               callback(err,null);
+                                           } else {
+                                               if(branches[pars[0]]){
+                                                   _buffer.branch = pars[0];
+                                                   callback(null,addingSpecialChars(branches[pars[0]]));
+                                               } else {
+                                                   callback('no such branch found',null);
+                                               }
+                                           }
+                                       });
+                                   }
                                }
                            } else {
                                callback('wrong request',null);
@@ -342,33 +358,50 @@ define([
                     callback('cannot get node',null);
                 } else {
                     //we have everything in the buffer, so we just need to do the modifications and create a new commit
+                    data = specialCharHandling(data);
                     data = JSON.parse(data);
-                    //attribute updates and inserts
-                    for(var i in data.attribute){
-                        _buffer.core.setAttribute(_buffer.coreNode,i,data.attribute[i]);
-                    }
-                    //attribute removals
-                    for(var i in _buffer.formattedNode.attribute){
-                        if(!data.attribute[i]){
-                            _buffer.core.delAttribute(_buffer.coreNode,i);
+                    if(typeof fNode === 'string'){
+                        fNode = specialCharHandling(fNode);
+                        //branch update
+                        if(data.oldhash && data.newhash){
+                            if(data.oldhash === fNode){
+                                _buffer.project.setBranchHash(_buffer.branch,data.oldhash,data.newhash,callback);
+                            } else {
+                                callback('hash mismatch',null);
+                            }
+                        } else {
+                            callback('not valid branch update',null);
                         }
-                    }
-                    //registry updates and inserts
-                    for(var i in data.registry){
-                        _buffer.core.setRegistry(_buffer.coreNode,i,data.registry[i]);
-                    }
-                    //registry removals
-                    for(var i in _buffer.formattedNode.registry){
-                        if(!data.registry[i]){
-                            _buffer.core.delRegistry(_buffer.coreNode,i);
-                        }
-                    }
+                    } else {
+                        //node update
 
-                    //now comes the saving part
-                    _buffer.core.persist(_buffer.root,function(err){});
-                    var newRootHash = _buffer.core.getHash(_buffer.root);
-                    var newCommitHash = _buffer.project.makeCommit([_buffer.commit],newRootHash,"REST commit",function(err){});
-                    callback(null,addingSpecialChars(newCommitHash));
+                        //attribute updates and inserts
+                        for(var i in data.attribute){
+                            _buffer.core.setAttribute(_buffer.coreNode,i,data.attribute[i]);
+                        }
+                        //attribute removals
+                        for(var i in _buffer.formattedNode.attribute){
+                            if(!data.attribute[i]){
+                                _buffer.core.delAttribute(_buffer.coreNode,i);
+                            }
+                        }
+                        //registry updates and inserts
+                        for(var i in data.registry){
+                            _buffer.core.setRegistry(_buffer.coreNode,i,data.registry[i]);
+                        }
+                        //registry removals
+                        for(var i in _buffer.formattedNode.registry){
+                            if(!data.registry[i]){
+                                _buffer.core.delRegistry(_buffer.coreNode,i);
+                            }
+                        }
+
+                        //now comes the saving part
+                        _buffer.core.persist(_buffer.root,function(err){});
+                        var newRootHash = _buffer.core.getHash(_buffer.root);
+                        var newCommitHash = _buffer.project.makeCommit([_buffer.commit],newRootHash,"REST commit",function(err){});
+                        callback(null,addingSpecialChars(newCommitHash));
+                    }
                 }
             });
         };

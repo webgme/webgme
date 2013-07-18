@@ -72,11 +72,15 @@ requirejs(['logManager',
                                 if(err){
                                     sendNegativeResponse(500,err);
                                 } else {
-                                    data = JSON.stringify(data);
-                                    res.writeHead(200, {
-                                        'Content-Length': data.length,
-                                        'Content-Type': 'application/json' });
-                                    res.end(data);
+                                    if(data){
+                                        data = JSON.stringify(data);
+                                        res.writeHead(200, {
+                                            'Content-Length': data.length,
+                                            'Content-Type': 'application/json' });
+                                        res.end(data);
+                                    } else {
+                                        res.end();
+                                    }
                                 }
                             });
                         };
