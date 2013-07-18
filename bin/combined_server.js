@@ -79,6 +79,86 @@ requirejs(['logManager',
                                             'Content-Type': 'application/json' });
                                         res.end(data);
                                     } else {
+                                        res.writeHead(200, {
+                                            'Content-Length': 0,
+                                            'Content-Type': 'application/json' });
+                                        res.end();
+                                    }
+                                }
+                            });
+                        };
+                        if(restOpened){
+                            go();
+                        } else {
+                            rest.open(function(err){
+                                if(!err){
+                                    restOpened = true;
+                                    go();
+                                } else {
+                                    sendNegativeResponse(500,'rest interface cannot be opened');
+                                }
+                            });
+                        }
+                    });
+                    break;
+                case 'DELETE':
+                    if(req.url.indexOf('/rest/') >=0){
+                        var goOn = function(){
+                            rest.processDELETE(req.url,function(err,data){
+                                if(err){
+                                    sendNegativeResponse(500,err);
+                                } else {
+                                    if(data){
+                                        data = JSON.stringify(data);
+                                        res.writeHead(200, {
+                                            'Content-Length': data.length,
+                                            'Content-Type': 'application/json' });
+                                        res.end(data);
+                                    } else {
+                                        res.writeHead(200, {
+                                            'Content-Length': 0,
+                                            'Content-Type': 'application/json' });
+                                        res.end();
+                                    }
+                                }
+                            });
+                        };
+                        if(restOpened){
+                            goOn();
+                        } else {
+                            rest.open(function(err){
+                                console.log(err);
+                                if(!err){
+                                    restOpened = true;
+                                    goOn();
+                                }
+                            });
+                        }
+                    } else {
+                       sendNegativeResponse(400,'');
+                    }
+                    break;
+                case 'PUT':
+                    var body = '';
+                    req.on('data', function (data) {
+                        body += data;
+                    });
+                    req.on('end', function () {
+                        var go = function(){
+                            rest.processPUT(req.url,body,function(err,data){
+                                if(err){
+                                    sendNegativeResponse(500,err);
+                                } else {
+                                    if(data){
+                                        data = JSON.stringify(data);
+                                        res.writeHead(200, {
+                                            'Content-Length': data.length,
+                                            'Content-Type': 'application/json' });
+                                        res.end(data);
+                                    } else {
+                                        res.writeHead(200, {
+                                            'Content-Length': 0,
+                                            'Content-Type': 'application/json' });
                                         res.end();
                                     }
                                 }
