@@ -196,11 +196,11 @@ define(['logManager',
      * arrowEnd: the Raphael defined line-end arrow at the end of the line
      */
     ConnectionDrawingManager.prototype.setConnectionInDrawProperties = function (params) {
-        this._connectionPathProps.strokeWidth = params.width || this._connectionPathProps.strokeWidth;
+        this._connectionPathProps.strokeWidth = params[DiagramDesignerWidgetConstants.LINE_WIDTH] || this._connectionPathProps.strokeWidth;
 
-        this._connectionPathProps.strokeColor = params.color || this._connectionPathProps.strokeColor;
-        this._connectionPathProps.arrowStart = params.arrowStart || this._connectionPathProps.arrowStart;
-        this._connectionPathProps.arrowEnd = params.arrowEnd || this._connectionPathProps.arrowEnd;
+        this._connectionPathProps.strokeColor = params[DiagramDesignerWidgetConstants.LINE_COLOR] || this._connectionPathProps.strokeColor;
+        this._connectionPathProps.arrowStart = params[DiagramDesignerWidgetConstants.LINE_START_ARROW] || this._connectionPathProps.arrowStart;
+        this._connectionPathProps.arrowEnd = params[DiagramDesignerWidgetConstants.LINE_END_ARROW] || this._connectionPathProps.arrowEnd;
     };
 
 
