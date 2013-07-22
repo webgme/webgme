@@ -415,18 +415,107 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
-        var i = events.length,
+        var i,
             e;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
+        /********** ORDER EVENTS BASED ON DEPENDENCY ************/
+        /** 1: items first, no dependency **/
+        /** 2: connections second, dependency if a connection is connected to an other connection **/
+        var orderedItemEvents = [];
+        var orderedConnectionEvents = [];
+        var unloadEvents = [];
+        i = events.length;
+        while (i--) {
+            e = events[i];
+            if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
+                unloadEvents.push(e);
+            } else if (e.desc.kind === "MODEL") {
+                orderedItemEvents.push(e);
+            } else if (e.desc.kind === "CONNECTION") {
+                //check to see if SRC and DST is another connection
+                //if so, put this guy AFTER them
+                var srcGMEID = e.desc.source;
+                var dstGMEID = e.desc.target;
+                var srcConnIdx = -1;
+                var dstConnIdx = -1;
+                var j = orderedConnectionEvents.length;
+                while (j--) {
+                    var ce = orderedConnectionEvents[j];
+                    if (ce.id === srcGMEID) {
+                        srcConnIdx = j;
+                    } else if (ce.id === dstGMEID) {
+                        dstConnIdx = j;
+                    }
+
+                    if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                        break;
+                    }
+                }
+
+                var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
+
+                //check to see if this guy is a DEPENDENT of any already processed CONNECTION
+                //insert BEFORE THEM
+                var MAX_VAL = 999999999;
+                var depSrcConnIdx = MAX_VAL;
+                var depDstConnIdx = MAX_VAL;
+                var j = orderedConnectionEvents.length;
+                while (j--) {
+                    var ce = orderedConnectionEvents[j];
+                    if (e.desc.id === ce.desc.source) {
+                        depSrcConnIdx = j;
+                    } else if (e.desc.id === ce.desc.target) {
+                        depDstConnIdx = j;
+                    }
+
+                    if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                        break;
+                    }
+                }
+
+                var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
+                if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
+                    orderedConnectionEvents.push(e);
+                } else {
+                    if (insertIdxAfter !== -1 &&
+                        insertIdxBefore === MAX_VAL) {
+                        orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                    } else if (insertIdxAfter === -1 &&
+                        insertIdxBefore !== MAX_VAL) {
+                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                    } else if (insertIdxAfter !== -1 &&
+                        insertIdxBefore !== MAX_VAL) {
+                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                    }
+                }
+            }
+        }
+
+        /** LOG ORDERED CONNECTION LIST ********************/
+        this.logger.debug('ITEMS: ');
+        var itemIDList = [];
+        for (i = 0; i < orderedItemEvents.length; i += 1) {
+            var x = orderedItemEvents[i];
+            //console.log("ID: " + x.desc.id);
+            itemIDList.push(x.desc.id);
+        }
+
+        this.logger.debug('CONNECTIONS: ');
+        for (i = 0; i < orderedConnectionEvents.length; i += 1) {
+            var x = orderedConnectionEvents[i];
+            var connconn = itemIDList.indexOf(x.desc.source) === -1 && itemIDList.indexOf(x.desc.target) === -1;
+            this.logger.debug("ID: " + x.desc.id + ", SRC: " + x.desc.source + ", DST: " + x.desc.target + (connconn ? " *****" : ""));
+        }
+        /** END OF --- LOG ORDERED CONNECTION LIST ********************/
+
+        events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
+        i = events.length;
+
         this.designerCanvas.beginUpdate();
 
-        this.delayedEvents = [];
-
-        this.firstRun = true;
-
-        while (i--) {
+        for (i = 0; i < events.length; i += 1) {
             e = events[i];
             switch (e.etype) {
                 case CONSTANTS.TERRITORY_EVENT_LOAD:
@@ -440,23 +529,6 @@ define(['logManager',
                     break;
             }
         }
-
-        this.firstRun = false;
-
-        i = this.delayedEvents.length;
-
-        while (i--) {
-            e = this.delayedEvents[i];
-            switch (e.etype) {
-                case CONSTANTS.TERRITORY_EVENT_LOAD:
-                    this._onLoad(e.eid, e.desc);
-                    break;
-            }
-        }
-
-
-
-        this.delayedEvents = [];
 
         this.designerCanvas.endUpdate();
 
@@ -514,37 +586,34 @@ define(['logManager',
                     }
 
                     if (objDesc.kind === "CONNECTION") {
-                        if (this.firstRun === true) {
-                            this.delayedEvents.push({ "etype": CONSTANTS.TERRITORY_EVENT_LOAD,
-                                "eid": gmeID,
-                                "desc": objD });
-                        } else {
-                            this._GMEConnections.push(gmeID);
 
-                            var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
-                            sources = srcDst.sources;
-                            destinations = srcDst.destinations;
+                        this._GMEConnections.push(gmeID);
 
-                            var k = sources.length;
-                            var l = destinations.length;
+                        var srcDst = this._getAllSourceDestinationPairsForConnection(objDesc.source, objDesc.target);
+                        sources = srcDst.sources;
+                        destinations = srcDst.destinations;
 
-                            while (k--) {
-                                while (l--) {
-                                    objDesc.srcObjId = sources[k].objId;
-                                    objDesc.srcSubCompId = sources[k].subCompId;
-                                    objDesc.dstObjId = destinations[l].objId;
-                                    objDesc.dstSubCompId = destinations[l].subCompId;
-                                    objDesc.reconnectable = true;
-                                    objDesc.editable = true;
+                        var k = sources.length;
+                        var l = destinations.length;
 
-                                    delete objDesc.source;
-                                    delete objDesc.target;
+                        while (k--) {
+                            while (l--) {
+                                objDesc.srcObjId = sources[k].objId;
+                                objDesc.srcSubCompId = sources[k].subCompId;
+                                objDesc.dstObjId = destinations[l].objId;
+                                objDesc.dstSubCompId = destinations[l].subCompId;
+                                objDesc.reconnectable = true;
+                                objDesc.editable = true;
 
-                                    uiComponent = this.designerCanvas.createConnection(objDesc);
+                                delete objDesc.source;
+                                delete objDesc.target;
 
-                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
-                                }
+                                uiComponent = this.designerCanvas.createConnection(objDesc);
+
+                                this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+
+                                this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                                this._ComponentID2GmeID[uiComponent.id] = gmeID;
                             }
                         }
                     }

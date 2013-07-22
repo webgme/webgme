@@ -16,11 +16,7 @@ $diagram-designer-selection-outline-shadow-end: rgba(0, 0, 0, 0.6);
 $diagram-designer-selection-outline-s-btn-background-color: #FFFFFF;
 $diagram-designer-selection-outline-s-btn-shadow-start: rgba(0, 0, 0, 0.075);
 $diagram-designer-selection-outline-s-btn-shadow-end: rgba(0, 0, 0, 0.6);
-/* override default connector properties for draggable connector end */
-$connector-border: 1px solid #883333;
-$connector-hover-border-color: rgba( 255, 43, 43, 0.8);
-$connector-hover-shadow-color-start: rgba(0, 0, 0, 0.075);
-$connector-hover-shadow-color-end: rgba(255, 43, 43, 0.6);
+
 /*error decorator properties*/
 $error-decorator-background-color: #F2DEDE;
 
@@ -36,6 +32,8 @@ $segment-point-move-path-color: #FF7800;
 
 $connection-end-src-connector-border-color: #FF0000;
 $connection-end-dst-connector-border-color: #0000FF;
+
+$connection-connector-background-color: #FFFFFF;
 
 .diagram-designer {
   outline: none;
@@ -58,7 +56,6 @@ $connection-end-dst-connector-border-color: #0000FF;
       background: $diagram-designer-selection-outline-background-color;
       border: $diagram-designer-selection-outline-border;
       position: absolute;
-      /*z-index: 1002;*/
       pointer-events: none;
       -webkit-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start 0 0 8px $diagram-designer-selection-outline-shadow-end;
       -moz-box-shadow: inset 0 1px 1px $diagram-designer-selection-outline-shadow-start, 0 0 8px $diagram-designer-selection-outline-shadow-end;
@@ -66,9 +63,6 @@ $connection-end-dst-connector-border-color: #0000FF;
 
       .s-btn {
         position: absolute;
-        /*z-index: 100000;*/
-        /*width: 26px;
-        height: 26px;*/
         background-color: $diagram-designer-selection-outline-s-btn-background-color;
         border: 2px solid #000000;
         line-height: 14px;
@@ -86,6 +80,29 @@ $connection-end-dst-connector-border-color: #0000FF;
         }
       }
     }
+
+    .connection-connector {
+      &.connector {
+        @include connector_basics;
+
+        background-color: $connection-connector-background-color;
+        border-radius: $connector-size;
+
+        margin-left: $connector-size / -2;
+        margin-top: $connector-size / -2;
+      }
+    }
+    
+    .c-area {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background-color: #000000;
+      border-radius: 4px;
+      margin-top: -4px;
+      margin-left: -4px;
+    }
+
 
     .c-d-end {
       @include connector_basics;

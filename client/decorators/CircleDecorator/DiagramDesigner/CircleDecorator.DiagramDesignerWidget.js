@@ -53,9 +53,12 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
     };
 
     CircleDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
-        var shift = (CANVAS_SIZE - this.renderLayoutInfo.nameWidth) / 2;
+        if (this.renderLayoutInfo) {
+            var shift = (CANVAS_SIZE - this.renderLayoutInfo.nameWidth) / 2;
 
-        this.skinParts.$name.css({ "left": shift });
+            this.skinParts.$name.css({ "left": shift });
+        }
+
 
         //let the parent decorator class do its job finally
         __parent__.prototype.onRenderSetLayoutInfo.apply(this, arguments);

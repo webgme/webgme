@@ -25,19 +25,19 @@ $selected-border: 2px solid #52A8EC;
   }
 
   .connector {
-    @include connector_basics;
+     @include connector_basics;
 
-    margin-left: $connector-size / -2;
-    left: 50%;
+     margin-left: $connector-size / -2;
+     left: 50%;
 
-    &.top {
-      top: $connector-size / -2;
-    }
+     &.top {
+       top: $connector-size / -2;
+     }
 
-    &.bottom {
-      bottom: $connector-size / -2;
-    }
-  }
+     &.bottom {
+       bottom: $connector-size / -2;
+     }
+   }
 }
 
 

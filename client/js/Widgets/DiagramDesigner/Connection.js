@@ -7,10 +7,12 @@
 "use strict";
 
 define(['logManager',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    './DiagramDesignerWidget.Constants',
+    './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
     './Connection.SegmentPoint'], function (logManager,
                             DiagramDesignerWidgetConstants,
+                            DiagramDesignerWidgetOperatingModes,
                             ConnectionEditSegment,
                             ConnectionSegmentPoint) {
 
@@ -192,7 +194,8 @@ define(['logManager',
             pathDef = [],
             p,
             points = [],
-            validPath = segPoints && segPoints.length > 1;
+            validPath = segPoints && segPoints.length > 1,
+            self = this;
 
         //remove edit features
         this._removeEditModePath();
@@ -263,6 +266,7 @@ define(['logManager',
                     this.logger.debug("Drawing connection with ID: '" + this.id + "'");
                     /*CREATE PATH*/
                     this.skinParts.path = this.paper.path(pathDef);
+
                     $(this.skinParts.path.node).attr({"id": this.id,
                         "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
@@ -281,12 +285,15 @@ define(['logManager',
             if (this._editMode === true) {
                 this._drawEditModePath(points);
                 //show connection end dragpoints
-                this.showConnectors();
+                this.showEndReconnectors();
             }
+
+            this._showConnectionAreaMarker();
         } else {
             this.pathDef = null;
             this._removePath();
             this._removePathShadow();
+            this._hideConnectionAreaMarker();
         }
     };
 
@@ -501,13 +508,17 @@ define(['logManager',
         this._destroying = true;
 
         this._hideSegmentPoints();
-        this.hideConnectors();
+        this.hideEndReconnectors();
 
         this._removeEditModePath();
 
         //remove from DOM
         this._removePath();
         this._removePathShadow();
+
+        this._hideConnectionAreaMarker();
+        this.hideSourceConnectors();
+        this.hideEndConnectors();
 
         this.logger.debug("Destroyed");
     };
@@ -590,6 +601,8 @@ define(['logManager',
     };
 
     Connection.prototype._createPathShadow = function (segPoints) {
+        var self = this;
+
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
             this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path("M0,0 L1,1");
@@ -671,7 +684,7 @@ define(['logManager',
         }
     };
 
-    Connection.prototype.showConnectors = function () {
+    Connection.prototype.showEndReconnectors = function () {
         if (this.reconnectable) {
             //editor handle at src
             this.skinParts.srcDragPoint = this.skinParts.srcDragPoint || $('<div/>', {
@@ -706,11 +719,11 @@ define(['logManager',
             this.skinParts.srcDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
             this.skinParts.dstDragPoint.css('transform', "scale(" + scale + "," + scale + ")");
         } else {
-            this.hideConnectors();
+            this.hideEndReconnectors();
         }
     };
 
-    Connection.prototype.hideConnectors = function () {
+    Connection.prototype.hideEndReconnectors = function () {
         if (this.skinParts.srcDragPoint) {
             this.skinParts.srcDragPoint.empty();
             this.skinParts.srcDragPoint.remove();
@@ -738,7 +751,7 @@ define(['logManager',
                 this._editMode = editMode;
                 this.setConnectionRenderData(this._pathPoints);
                 if (this._editMode === false) {
-                    this.hideConnectors();
+                    this.hideEndReconnectors();
                 }
         }
     };
@@ -928,6 +941,119 @@ define(['logManager',
                 "arrow-start": this.designerAttributes.arrowStart,
                 "arrow-end": this.designerAttributes.arrowEnd,
                 "arrow-dx-stroke-width-fix": this.designerAttributes.width });
+        }
+    };
+
+
+    Connection.prototype.getConnectionAreas = function (id) {
+        var result = [],
+            AREA_SIZE = 0,
+            w = 0,
+            h = 0,
+            dx = 0,
+            dy = 0,
+            o = "O";
+
+        if (this.skinParts.path) {
+            var len = this.skinParts.path.getTotalLength();
+            var pos = this.skinParts.path.getPointAtLength(len / 2);
+
+            this.positionX = 0;
+            this.positionY = 0;
+
+            if (pos.alpha === 0 || pos.alpha === 180) {
+                //horizontal line
+                w = AREA_SIZE;
+                dx = AREA_SIZE / 2;
+                o = "N";
+            } else if (pos.alpha === 90 || pos.alpha === 270) {
+                //vertical line
+                h = AREA_SIZE;
+                dy = AREA_SIZE / 2;
+                o = "E";
+            }
+
+            //by default return the center point of the item
+            //canvas will draw the connection to / from this coordinate
+            result.push( {"id": "0",
+                "x": pos.x - dx,
+                "y": pos.y - dy,
+                "w": w,
+                "h": h,
+                "orientation": o,
+                "len": 0} );
+        }
+
+
+        return result;
+    };
+
+    Connection.prototype.showSourceConnectors = function (params) {
+    };
+
+    Connection.prototype.hideSourceConnectors = function () {
+    };
+
+    Connection.prototype.showEndConnectors = function (params) {
+        this._connectionConnector = this._connectionConnector || $('<div/>', {'class': 'connector connection-connector'});
+
+        this._connectionConnector.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID, this.id);
+
+        this.diagramDesigner.skinParts.$itemsContainer.append(this._connectionConnector);
+
+        var len = this.skinParts.path.getTotalLength();
+        var pos = this.skinParts.path.getPointAtLength(len / 2);
+
+        this._connectionConnector.css({'left': pos.x,
+            'top': pos.y});
+    };
+
+    Connection.prototype.hideEndConnectors = function () {
+        if (this._connectionConnector) {
+            this._connectionConnector.remove();
+            this._connectionConnector = undefined;
+        }
+    };
+
+    Connection.prototype._showConnectionAreaMarker = function () {
+        var hasConnections = false;
+
+        this._hideConnectionAreaMarker();
+
+        if (this.diagramDesigner.connectionIDbyEndID.hasOwnProperty(this.id)) {
+            for (var i in this.diagramDesigner.connectionIDbyEndID[this.id]) {
+                if (this.diagramDesigner.connectionIDbyEndID[this.id].hasOwnProperty(i)) {
+                    for (var j in this.diagramDesigner.connectionIDbyEndID[this.id][i]) {
+                        if (this.diagramDesigner.connectionIDbyEndID[this.id][i].hasOwnProperty(j)) {
+                            if (this.diagramDesigner.connectionIDbyEndID[this.id][i][j].length > 0) {
+                                hasConnections = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (hasConnections) {
+                    break;
+                }
+            }
+        }
+
+        if (this.skinParts.path && hasConnections) {
+            var len = this.skinParts.path.getTotalLength();
+            var pos = this.skinParts.path.getPointAtLength(len / 2);
+
+            this._connectionAreaMarker = $('<div/>', {'class': 'c-area'});
+            this.diagramDesigner.skinParts.$itemsContainer.append(this._connectionAreaMarker);
+
+            this._connectionAreaMarker.css({'top': pos.y,
+                'left': pos.x});
+        }
+    };
+
+    Connection.prototype._hideConnectionAreaMarker = function () {
+        if (this._connectionAreaMarker) {
+            this._connectionAreaMarker.remove();
+            this._connectionAreaMarker = undefined;
         }
     };
 

@@ -169,10 +169,16 @@ define(['js/Widgets/DiagramDesigner/Connection',
 
     /**************** ON_END_CONNECTION_DRAW EVENT HANDLER *******************/
     DiagramDesignerWidget.prototype._onEndConnectionDraw = function () {
-        var i = this.itemIds.length;
+        var i;
 
+        i = this.itemIds.length;
         while (i--) {
             this.items[this.itemIds[i]].hideEndConnectors();
+        }
+
+        i = this.connectionIds.length;
+        while (i--) {
+            this.items[this.connectionIds[i]].hideEndConnectors();
         }
     };
 
@@ -181,7 +187,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
         var srcItemID = params.srcId,
             srcSubCompID = params.srcSubCompId,
             availableEndPoints = [],
-            srcItemMetaInfo = this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(),
+            srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo() : undefined,
             srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined,
             i,
             objID,
@@ -209,6 +215,13 @@ define(['js/Widgets/DiagramDesigner/Connection',
                         'dstSubCompID': this._itemSubcomponentsMap[objID][i]});
                 }
             }
+        }
+
+        //iterate through all the known connections to build the available connection end list
+        i = this.connectionIds.length;
+        while (i--) {
+            availableEndPoints.push({'dstItemID': this.connectionIds[i],
+                'dstSubCompID': undefined});
         }
 
         //all available items and their subcomponent is a valid connection-destination by default
@@ -286,7 +299,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
             if (this.connectionEndIDs[connID]) {
                 dstItemID = this.connectionEndIDs[connID].dstObjId;
                 dstSubCompID = this.connectionEndIDs[connID].dstSubCompId;
-                dstItemMetaInfo = this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo();
+                dstItemMetaInfo =  this.items[dstItemID]._decoratorInstance ? this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo() : undefined;
                 dstSubCompMetaInfo = dstSubCompID ? this.items[dstItemID]._decoratorInstance.getConnectorMetaInfo(dstSubCompID) : undefined;
             }
         } else {
@@ -295,7 +308,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
             if (this.connectionEndIDs[connID]) {
                 srcItemID = this.connectionEndIDs[connID].srcObjId;
                 srcSubCompID = this.connectionEndIDs[connID].srcSubCompId;
-                srcItemMetaInfo = this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo();
+                srcItemMetaInfo = this.items[srcItemID]._decoratorInstance ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(): undefined;
                 srcSubCompMetaInfo = srcSubCompID ? this.items[srcItemID]._decoratorInstance.getConnectorMetaInfo(srcSubCompID) : undefined;
             }
         }

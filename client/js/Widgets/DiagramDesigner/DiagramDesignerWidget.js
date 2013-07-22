@@ -47,7 +47,8 @@ define(['logManager',
         CANVAS_EDGE = 100,
         ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2;
+        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
+        GUID_DIGITS = 6;
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
@@ -196,15 +197,27 @@ define(['logManager',
 
         /*subcomponent accounting*/
         this._itemSubcomponentsMap = {};
+
+        //reset item counter
+        this._itemIDCounter = 0;
     };
 
     /*
      * Generated a new ID for the box/line (internal use only)
      */
     DiagramDesignerWidget.prototype._getGuid = function (prefix) {
-        var nextID = (prefix || "") + this._itemIDCounter + "";
+        var nextID = (this._itemIDCounter++) + "",
+            len;
 
-        this._itemIDCounter++;
+        //padding 0s
+        len = GUID_DIGITS - nextID.length;
+        while(len--) {
+            nextID = "0" + nextID;
+        }
+
+        if (prefix) {
+            nextID = prefix + nextID;
+        }
 
         return nextID;
     };
@@ -605,8 +618,8 @@ define(['logManager',
         //TODO: fix this, but right now we call refresh on all of the connections
         affectedItems = this._insertedDesignerItemIDs.concat(this._updatedDesignerItemIDs, this._deletedDesignerItemIDs);
 
-        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(affectedItems).concat(this._insertedConnectionIDs, this._updatedConnectionIDs);
-        connectionIDsToUpdate = _.uniq(connectionIDsToUpdate);
+        connectionIDsToUpdate = this._insertedConnectionIDs.concat(this._updatedConnectionIDs, this._getAssociatedConnectionsForItems(affectedItems));
+        connectionIDsToUpdate = _.uniq(connectionIDsToUpdate).sort();
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
@@ -753,7 +766,7 @@ define(['logManager',
         this._resizeItemContainer();
 
         //refresh only the connections that are really needed
-        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs);
+        connectionIDsToUpdate = this._getAssociatedConnectionsForItems(allDraggedItemIDs).sort();
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
@@ -863,7 +876,7 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         this.selectionManager.showSelectionOutline();
     };
@@ -1142,7 +1155,7 @@ define(['logManager',
             this.items[this.itemIds[i]].renderSetLayoutInfo();
         }
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0) || []) ;
+        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         i = this.connectionIds.length;
         while (i--) {

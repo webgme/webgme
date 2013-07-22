@@ -23,37 +23,45 @@ define(['logManager'], function (logManager) {
 
     ConnectionRouteManager2.prototype.redrawConnections = function (reqIdList) {
         var idList,
-            i;
+            i,
+            notReady;
 
         this.logger.debug('Redraw connection request: ' + reqIdList.length);
 
-        //NOTE: here it is not enought to update the connections the canvas asked for
-        //because updating one connections's endpoint (connection area switch) can cause
-        //other connections to be redrawn that was originallz not requested to do so
+        //NOTE: here it is not enough to update the connections the canvas asked for
+        //because updating one connections' endpoint (connection area switch) can cause
+        //other connections to be redrawn that was originally not requested to do so
         idList = this.canvas.connectionIds.slice(0);
-        i = idList.length;
+        while (idList.length > 0) {
 
-        this.endpointConnectionAreaInfo = {};
-        this.endpointConnectionAreaConnectionInfo = {};
-        this.connectionEndPoints = {};
 
-        //1 - update all the connection endpoint connectable area information
-        this._updateEndpointInfo(idList);
+            this.endpointConnectionAreaInfo = {};
+            this.endpointConnectionAreaConnectionInfo = {};
+            this.connectionEndPoints = {};
 
-        //2 - we have each connection end connectability info
-        //figure out the exact connection endpoints for each connection
-        while (i--) {
-            this._calculateClosestEndpoints(idList[i]);
+            //1 - update all the connection endpoint connectable area information
+            notReady = this._updateEndpointInfo(idList);
+
+            //2 - we have each connection end connectability info
+            //figure out the exact connection endpoints for each connection
+            i = idList.length;
+            while (i--) {
+                this._calculateClosestEndpoints(idList[i]);
+            }
+
+            //3 - calculate the connection path informations
+            i = idList.length;
+            while (i--) {
+                this._updateConnectionCoordinates(idList[i]);
+            }
+
+            idList = notReady;
         }
 
-        //3 - calculate the connection path informations
-        i = idList.length;
-        while (i--) {
-            this._updateConnectionCoordinates(idList[i]);
-        }
 
         //need to return the IDs of the connections that was really
         //redrawn or any other visual property chenged (width, etc)
+        idList = this.canvas.connectionIds.slice(0);
         return idList;
     };
 
@@ -64,7 +72,8 @@ define(['logManager'], function (logManager) {
             srcObjId,
             srcSubCompId,
             dstObjId,
-            dstSubCompId;
+            dstSubCompId,
+            dependantNotReadyYet = [];
 
         //first update the available connection endpoint coordinates
         while(i--) {
@@ -74,9 +83,20 @@ define(['logManager'], function (logManager) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
-            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
+            if (!this._getEndpointConnectionAreas(srcObjId, srcSubCompId)) {
+                if (canvas.connectionIds.indexOf(srcObjId) !== -1) {
+                    dependantNotReadyYet.push(connId);
+                }
+
+            }
+            if (!this._getEndpointConnectionAreas(dstObjId, dstSubCompId)) {
+                if (canvas.connectionIds.indexOf(dstObjId) !== -1) {
+                    dependantNotReadyYet.push(connId);
+                }
+            }
         }
+
+        return dependantNotReadyYet;
     };
 
     ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
@@ -86,9 +106,9 @@ define(['logManager'], function (logManager) {
             j,
             designerItem;
 
-        if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
-            this.endpointConnectionAreaInfo[longid] = [];
-            this.endpointConnectionAreaConnectionInfo[longid] = {};
+        //if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
+            this.endpointConnectionAreaInfo[longid] = this.endpointConnectionAreaInfo[longid] || [];
+            this.endpointConnectionAreaConnectionInfo[longid] = this.endpointConnectionAreaConnectionInfo[longid] || {};
 
             if (subCompId === undefined ||
                 (subCompId !== undefined && this.canvas._itemSubcomponentsMap[objId] && this.canvas._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
@@ -106,10 +126,14 @@ define(['logManager'], function (logManager) {
                         "len": res[j].len || 0,
                         "id": res[j].id};
 
-                    this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
+                    if (!this.endpointConnectionAreaConnectionInfo[longid].hasOwnProperty(res[j].id)) {
+                        this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
+                    }
                 }
             }
-        }
+        //}
+
+        return res.length > 0;
     };
 
     ConnectionRouteManager2.prototype._calculateClosestEndpoints = function (connectionId) {
