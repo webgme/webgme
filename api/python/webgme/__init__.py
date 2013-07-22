@@ -119,7 +119,10 @@ class Client(object):
         logger.debug(content)
 
         # parse the response and return it
-        return json.loads(content)
+        if content:
+            return json.loads(content)
+        else:
+            return None
 
 
     @property
@@ -193,14 +196,17 @@ class Branch(object):
     def POST(self, *args, **data):
         """ HTTP POST requests for this branch. """
         response = self.project.client.POST(self.project.name, *args, **data)
-        self._current_hash = response
-        return response
+        if response:
+            self._current_hash = response['commit']
+            return response['node']
+        else:
+            return None
 
     def PUT(self, *args, **data):
         """ HTTP PUT requests for this branch. """
         response = self.project.client.PUT(self.project.name, *args, **data)
-        self._current_hash = response
-        return response
+        self._current_hash = response['commit']
+        return response['node']
 
     # def commit(self):
     #     raise NotImplementedError
@@ -238,6 +244,16 @@ class Branch(object):
     def name(self):
         """ Gets the name of the branch. """
         return self._name
+        
+    def save(self):
+        """ Updates the branch on the server. """
+        if self.current_hash != self.original_hash:
+            updatecommit = {
+                'newhash':self.current_hash,
+                'oldhash':self.original_hash
+            }
+            self.POST(self._name, **updatecommit)
+            self._original_hash = self.current_hash
 
 
 class Node(object):
@@ -253,7 +269,7 @@ class Node(object):
     NAME_KEY = 'name'
 
     # Global static variables - default values
-    NAME_DEFAULT = ''
+    NAME_DEFAULT = 'csak'
 
     # Global static variables - default new node
     DEFAULT = {
@@ -264,39 +280,38 @@ class Node(object):
         CHILDREN_KEY: []
     }
 
-    def __init__(self, branch, rel_id=None):
+    def __init__(self, branch, path='', node = None):
         """ Creates a new Node object given a Branch object and a relative node id within the branch. """
         # set branch object
         self._branch = branch
-
-        if not rel_id:
-            # get the root object if the relative id is not defined
-            rel_id = ''
-
+        
         # set relative id
-        self._rel_id = rel_id
+        self._path = path
 
         # get the JSON representation of this object from the server
-        self._node_obj = self.GET()
+        if node:
+            self._node_obj = node
+        else:
+            self._node_obj = self.GET()
 
         # healthy
         self._status = True
 
     def DELETE(self):
         """ HTTP DELETE for this node object. """
-        return self.branch.DELETE(self.branch.current_hash + self.rel_id)
+        return self.branch.DELETE(self.branch.current_hash + self.path)
 
     def GET(self):
         """ HTTP GET for this node object. """
-        return self.branch.GET(self.branch.current_hash + self.rel_id)
+        return self.branch.GET(self.branch.current_hash + self.path)
 
     def POST(self, *args, **data):
         """ HTTP POST for this node object. """
-        return self.branch.POST(self.branch.current_hash + self.rel_id, *args, **data)
+        return self.branch.POST(self.branch.current_hash + self.path, *args, **data)
 
     def PUT(self, *args, **data):
         """ HTTP PUT for this node object. """
-        return self.branch.PUT(self.branch.current_hash + self.rel_id, *args, **data)
+        return self.branch.PUT(self.branch.current_hash + self.path, *args, **data)
 
     def create(self, data=None):
         """ Creates a new node as a child of this one. Returns with the new Node object. """
@@ -307,22 +322,12 @@ class Node(object):
         if data:
             request_data.update(data)
 
-        # save all children's relative ids before creating the object
-        rel_ids_before = list(self._node_obj[Node.CHILDREN_KEY])
-
         # send the create request to the server
-        self.PUT(**request_data)
-
+        new_node = self.PUT(**request_data)
         # update this node object (NOT the newly created one!)
         self._node_obj = self.GET()
 
-        # get all children's relative ids after the creation
-        rel_ids_after = self._node_obj[Node.CHILDREN_KEY]
-
-        # get new object's relative id
-        new_obj_relid = list(set(rel_ids_after) - set(rel_ids_before))[0]
-
-        return Node(self.branch, new_obj_relid)
+        return Node(self.branch, new_node['path'],new_node)
 
     def delete(self):
         """ Deletes this object. Further access is not allowed. """
@@ -354,9 +359,9 @@ class Node(object):
         return self._branch
 
     @property
-    def rel_id(self):
+    def path(self):
         """ Returns with the rel_id of this object. This is the primary identifier of the object. """
-        return self._rel_id
+        return self._path
 
     @property
     def name(self):
@@ -396,8 +401,8 @@ class Node(object):
     def children(self):
         # get update from server
         self._node_obj = self.GET()
-        for child_rel_id in self._node_obj[Node.CHILDREN_KEY]:
-            yield Node(self.branch, child_rel_id)
+        for child_path in self._node_obj[Node.CHILDREN_KEY]:
+            yield Node(self.branch, child_path)
 
     @property
     def pointer(self):
@@ -450,4 +455,4 @@ class CollectionDict(dict):
         dict.__setitem__(self._node._node_obj[self._collection_name], key, value)
 
         # update the values on the server
-        self._node.PUT(**self._node._node_obj)
+        self._node.POST(**self._node._node_obj)

@@ -25,3 +25,6 @@ for project in access.projects:
             for child in root.children:
                 #child.name = 'here is a new object'
                 print child.__json__
+            
+            # save the updates            
+            branch.save()

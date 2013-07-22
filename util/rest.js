@@ -75,11 +75,6 @@ define([
             }
 
             //children
-            /*outnode.children={};
-            names = core.getChildrenRelids(node);
-            for(var i=0;i<names.length;i++){
-                outnode.children[names[i]] = node.data[names[i]];
-            }*/
             outnode.children=core.getChildrenPaths(node);
 
             //pointers and collections
@@ -91,6 +86,7 @@ define([
                 if(error){
                     callback(error,null);
                 } else {
+                    outnode.path = core.getPath(node);
                     _buffer.formattedNode = outnode;
                     callback(null,outnode);
                 }
@@ -146,12 +142,24 @@ define([
                 allLoaded();
             }
         };
-        var persistProject = function(callback){
+        var persistProject = function(callback,isdelete){
             //now comes the saving part
             _buffer.core.persist(_buffer.root,function(err){});
             var newRootHash = _buffer.core.getHash(_buffer.root);
             var newCommitHash = _buffer.project.makeCommit([_buffer.commit],newRootHash,"REST commit",function(err){});
-            callback(null,addingSpecialChars(newCommitHash));
+            if(isdelete){
+                callback(null,addingSpecialChars(newCommitHash));
+            } else {
+                var retVal = {commit:newCommitHash,node:null};
+                loadingNode(_buffer.core,_buffer.coreNode,function(err,node){
+                    if(err){
+                        callback(null,JSON.parse(addingSpecialChars(JSON.stringify(retVal))));
+                    } else {
+                        retVal.node = node;
+                        callback(null,JSON.parse(addingSpecialChars(JSON.stringify(retVal))));
+                    }
+                });
+            }
         };
         var updateNode = function(data,callback){
             //the buffer should be filled, and the coreNode will be updated with the data
@@ -463,7 +471,7 @@ define([
                             if(err){
                                 callback(err,null);
                             } else {
-                                persistProject(callback);
+                                persistProject(callback,false);
                             }
                         });
                     }
@@ -493,7 +501,7 @@ define([
                                 if(err){
                                     callback(err);
                                 } else {
-                                    persistProject(callback);
+                                    persistProject(callback,false);
                                 }
                             });
                         }
@@ -516,7 +524,7 @@ define([
                             callback('cannot delete the root',null);
                         } else {
                             _buffer.core.deleteNode(_buffer.coreNode);
-                            persistProject(callback);
+                            persistProject(callback,true);
                         }
                     }
                 }
