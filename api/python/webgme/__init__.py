@@ -119,11 +119,13 @@ class Client(object):
         logger.debug(content)
 
         # parse the response and return it
-        if content:
-            return json.loads(content)
-        else:
+        parsedResponse = json.loads(content)
+        if parsedResponse['error']:
+            print parsedResponse['msg']
             return None
-
+        else:
+            return parsedResponse['data']
+        
 
     @property
     def opener(self):

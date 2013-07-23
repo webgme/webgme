@@ -59,152 +59,75 @@ requirejs(['logManager',
                 res.writeHead(respCode);
                 return res.end(JSON.stringify(respBody));
             };
+            var processRest = function(body){
+                var goOn = function(){
+                    switch(req.method){
+                        case 'GET':
+                            rest.processGET(req.url,sendRestResponse);
+                            break;
+                        case 'DELETE':
+                            rest.processDELETE(req.url,sendRestResponse);
+                            break;
+                        case 'POST':
+                            rest.processPOST(req.url,body,sendRestResponse);
+                            break;
+                        case 'PUT':
+                            rest.processPUT(req.url,body,sendRestResponse);
+                            break;
+                    }
+                };
+                if(req.url.indexOf('/rest/') >=0){
+                    if(restOpened){
+                        goOn();
+                    } else {
+                        rest.open(function(err){
+                            if(!err){
+                                restOpened = true;
+                                goOn();
+                            } else {
+                                sendNegativeResponse(500,'rest interface cannot be opened');
+                            }
+                        });
+                    }
+                } else {
+                    sendNegativeResponse(400,'');
+                }
+            };
+            var sendRestResponse = function(err,data){
+                var responseData = {error:null,msg:'',data:null};
+                if(err){
+                    //TODO how and where to make proper error handling???
+                    responseData.error = 'error during request processing';
+                    responseData.msg = JSON.stringify(err);
+                }
+                if(data){
+                    responseData.data = data;
+                }
+
+                responseData = JSON.stringify(responseData);
+                res.writeHead(200, {
+                    'Content-Length': responseData.length,
+                    'Content-Type': 'application/json' });
+                res.end(responseData);
+            };
 
             switch(req.method){
                 case 'POST':
-                    var body = '';
-                    req.on('data', function (data) {
-                        body += data;
-                    });
-                    req.on('end', function () {
-                        var go = function(){
-                            rest.processPOST(req.url,body,function(err,data){
-                                if(err){
-                                    sendNegativeResponse(500,err);
-                                } else {
-                                    if(data){
-                                        data = JSON.stringify(data);
-                                        res.writeHead(200, {
-                                            'Content-Length': data.length,
-                                            'Content-Type': 'application/json' });
-                                        res.end(data);
-                                    } else {
-                                        res.writeHead(200, {
-                                            'Content-Length': 0,
-                                            'Content-Type': 'application/json' });
-                                        res.end();
-                                    }
-                                }
-                            });
-                        };
-                        if(restOpened){
-                            go();
-                        } else {
-                            rest.open(function(err){
-                                if(!err){
-                                    restOpened = true;
-                                    go();
-                                } else {
-                                    sendNegativeResponse(500,'rest interface cannot be opened');
-                                }
-                            });
-                        }
-                    });
-                    break;
-                case 'DELETE':
-                    if(req.url.indexOf('/rest/') >=0){
-                        var goOn = function(){
-                            rest.processDELETE(req.url,function(err,data){
-                                if(err){
-                                    sendNegativeResponse(500,err);
-                                } else {
-                                    if(data){
-                                        data = JSON.stringify(data);
-                                        res.writeHead(200, {
-                                            'Content-Length': data.length,
-                                            'Content-Type': 'application/json' });
-                                        res.end(data);
-                                    } else {
-                                        res.writeHead(200, {
-                                            'Content-Length': 0,
-                                            'Content-Type': 'application/json' });
-                                        res.end();
-                                    }
-                                }
-                            });
-                        };
-                        if(restOpened){
-                            goOn();
-                        } else {
-                            rest.open(function(err){
-                                console.log(err);
-                                if(!err){
-                                    restOpened = true;
-                                    goOn();
-                                }
-                            });
-                        }
-                    } else {
-                       sendNegativeResponse(400,'');
-                    }
-                    break;
                 case 'PUT':
                     var body = '';
                     req.on('data', function (data) {
                         body += data;
                     });
                     req.on('end', function () {
-                        var go = function(){
-                            rest.processPUT(req.url,body,function(err,data){
-                                if(err){
-                                    sendNegativeResponse(500,err);
-                                } else {
-                                    if(data){
-                                        data = JSON.stringify(data);
-                                        res.writeHead(200, {
-                                            'Content-Length': data.length,
-                                            'Content-Type': 'application/json' });
-                                        res.end(data);
-                                    } else {
-                                        res.writeHead(200, {
-                                            'Content-Length': 0,
-                                            'Content-Type': 'application/json' });
-                                        res.end();
-                                    }
-                                }
-                            });
-                        };
-                        if(restOpened){
-                            go();
-                        } else {
-                            rest.open(function(err){
-                                if(!err){
-                                    restOpened = true;
-                                    go();
-                                } else {
-                                    sendNegativeResponse(500,'rest interface cannot be opened');
-                                }
-                            });
-                        }
+                        processRest(body);
                     });
                     break;
-                default: //GET
-                    logger.debug("HTTP REQ - "+req.url);
+                case 'DELETE':
+                    processRest(null);
+                    break;
+                case 'GET':
                     if(req.url.indexOf('/rest/') >=0){
-                        var goOn = function(){
-                            rest.processGET(req.url,function(err,data){
-                                if(err){
-                                    sendNegativeResponse(500,err);
-                                } else {
-                                    data = JSON.stringify(data);
-                                    res.writeHead(200, {
-                                        'Content-Length': data.length,
-                                        'Content-Type': 'application/json' });
-                                    res.end(data);
-                                }
-                            });
-                        };
-                        if(restOpened){
-                            goOn();
-                        } else {
-                            rest.open(function(err){
-                                console.log(err);
-                                if(!err){
-                                    restOpened = true;
-                                    goOn();
-                                }
-                            });
-                        }
+                        processRest(null);
                     } else {
                         if(req.url==='/'){
                             req.url = '/index.html';
@@ -252,6 +175,7 @@ requirejs(['logManager',
                         });
                     }
                     break;
+
             }
         }).listen(parameters.port);
 
