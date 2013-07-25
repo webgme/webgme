@@ -554,21 +554,21 @@ define([
                 }
 
             }
-            function addSetPaths(pathsSoFar){
+            /*function addSetPaths(pathsSoFar){
                 for(var i in pathsSoFar){
                     var sets = _core.getSetPaths(_nodes[i].node);
                     for(var j=0;j<sets.length;j++){
                         pathsSoFar[sets[j]] = true;
                     }
                 }
-            }
+            }*/
             function userEvents(userId,modifiedNodes){
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
                     patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
                 }
-                addSetPaths(newPaths);
+                //addSetPaths(newPaths);
 
                 var events = [];
                 //deleted items
@@ -594,7 +594,8 @@ define([
 
                 _users[userId].PATHS = newPaths;
 
-                //we should remove set events and add their owner instead
+
+                /*//we should remove set events and add their owner instead
                 var setEvents = {};
                 var eventsToRemove = [];
                 //first we mark the set changes
@@ -624,7 +625,7 @@ define([
                     if(setEvents[i] === false){
                         events.push({etype:'update',eid:i});
                     }
-                }
+                }*/
 
 
                 if(events.length>0){
@@ -795,11 +796,12 @@ define([
                             error = null;
                         _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
                         var allLoaded = function(){
-                            if(!error){
+                            /*if(!error){
                                 completeNodes(_core,_loadNodes,callback);
                             } else {
                                 callback(error);
-                            }
+                            }*/
+                            callback(error);
                         };
 
                         for(var i in _users){
@@ -1171,7 +1173,7 @@ define([
                 }
                 _database = new Log(
                     new Commit(
-                        new Cache(
+                        //new Cache(
                             new Failsafe(
                                 new SocketIOClient(
                                     {
@@ -1180,7 +1182,7 @@ define([
                                     }
                                 ),{}
                             ),{}
-                        ),{}
+                        //),{}
                     ),{log:LogManager.create('client-storage')}
                 );
 
@@ -1630,12 +1632,16 @@ define([
                     var missing = 0;
                     var error = null;
                     var allDone = function(){
-                        completeNodes(_core,_nodes,function(err){
+                        /*completeNodes(_core,_nodes,function(err){
                             _users[guid].PATTERNS = patterns;
                             if(!error && !err){
                                 userEvents(guid,[]);
                             }
-                        });
+                        });*/
+                        _users[guid].PATTERNS = patterns;
+                        if(!error){
+                            userEvents(guid,[]);
+                        }
                     };
                     for(var i in patterns){
                         missing++;
@@ -1668,13 +1674,7 @@ define([
                     VALIDINHERITOR   : 'ValidInheritor',
                     GENERAL          : 'General'
                 };
-                var setIds = {
-                    VALIDCHILDREN    : "2200000001",
-                    VALIDSOURCE      : "2200000002",
-                    VALIDDESTINATION : "2200000003",
-                    VALIDINHERITOR   : "2200000004",
-                    GENERAL          : "2200000000"
-                };
+
                 var getParentId = function(){
                     return _core.getPath(_core.getParent(_nodes[_id].node));
                 };
@@ -1744,21 +1744,6 @@ define([
                 var getMemberIds = function(setid){
                     return _core.getMemberPaths(_nodes[_id].node,setid);
                 };
-                var relidtosetid = function(id){
-                    for(var i in setIds){
-                        if(id === setIds[i]){
-                            return setNames[i];
-                        }
-                    }
-                    return "-";
-                };
-                var _getSetNames = function(){
-                    var setids = _core.getSetRelids(_nodes[_id].node);
-                    for(var i=0;i<setids.length;i++){
-                        setids[i] = relidtosetid(setids[i])
-                    }
-                    return setids;
-                };
                 var getSetNames = function(){
                     return _core.getSetNames(_nodes[_id].node);
                 };
@@ -1827,7 +1812,7 @@ define([
             function initialize(){
                 _database = new Log(
                     new Commit(
-                        new Cache(
+                        //new Cache(
                             new Failsafe(
                                 new SocketIOClient(
                                     {
@@ -1836,7 +1821,7 @@ define([
                                     }
                                 ),{}
                             ),{}
-                        ),{}
+                    //    ),{}
                     ),{log:LogManager.create('client-storage')}
                 );
                 _database.openDatabase(function(err){

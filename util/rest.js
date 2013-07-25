@@ -77,6 +77,13 @@ define([
             //children
             outnode.children=core.getChildrenPaths(node);
 
+            //sets
+            outnode.sets = {};
+            var setNames = core.getSetNames(node);
+            for(var i=0; i<setNames.length;i++){
+                outnode.sets[setNames[i]] = core.getMemberPaths(node,setNames[i]);
+            }
+
             //pointers and collections
             outnode.pointer = {};
             outnode.collection = {};
@@ -165,11 +172,26 @@ define([
             //the buffer should be filled, and the coreNode will be updated with the data
             var error = null;
             var needToGo = 0;
-            var needUpdate = [];
+            var pointerToUpdate = [];
+            var memberToUpdate = [];
             var updatePointer = function(pointerName,callback){
-                _buffer.core.loadByPath(_buffer.root,specialCharHandling(data.pointer[pointerName]),function(err,node){
+                _buffer.core.loadByPath(specialCharHandling(data.pointer[pointerName]),function(err,node){
                     if(!err && node){
                         _buffer.core.setPointer(_buffer.coreNode,pointerName,node);
+                        callback(null);
+                    } else {
+                        callback(err);
+                    }
+                });
+            };
+            var updateMember = function(setName,memberPath,isDelete,callback){
+                _buffer.core.loadByPath(specialCharHandling(memberPath),function(err,node){
+                    if(!err && node){
+                        if(isDelete){
+                            _buffer.core.delMember(_buffer.coreNode,setName,node);
+                        } else {
+                            _buffer.core.addMember(_buffer.coreNode,setName,node);
+                        }
                         callback(null);
                     } else {
                         callback(err);
@@ -205,6 +227,7 @@ define([
                 }
             }
 
+
             //pointer removals
             for(var i in _buffer.formattedNode.pointer){
                 if(!data.pointer[i]){
@@ -216,19 +239,63 @@ define([
             for(var i in data.pointer){
                 if(_buffer.formattedNode.pointer[i]){
                     if(data.pointer[i] !== _buffer.formattedNode.pointer[i]){
-                        needUpdate.push(i);
+                        pointerToUpdate.push(i);
                     }
                 } else {
-                    needUpdate.push(i);
+                    pointerToUpdate.push(i);
                 }
             }
-            needToGo = needUpdate.length;
+
+            //member addition and removal presetting
+            for(var i in _buffer.formattedNode.sets){
+                if(!data.sets[i]){
+                    //remove the whole set
+                    for(var j=0;j<_buffer.formattedNode.sets[i].length;j++){
+                        memberToUpdate.push({set:i,path:_buffer.formattedNode.sets[i][j],del:true});
+                    }
+                }
+            }
+            for(var i in data.sets){
+                if(!_buffer.formattedNode.sets[i]){
+                    //a new set
+                    for(var j=0;j<data.sets[i].length;j++){
+                        memberToUpdate.push({set:i,path:data.sets[i][j],del:false});
+                    }
+                } else {
+                    //first the removals
+                    for(var j=0;j<_buffer.formattedNode.sets[i].length;j++){
+                        if(data.sets[i].indexOf(_buffer.formattedNode.sets[i][j]) === -1){
+                            memberToUpdate.push({set:i,path:_buffer.formattedNode.sets[i][j],del:true});
+                        }
+                    }
+                    //then the inserts
+                    for(var j=0;j<data.sets[i].length;j++){
+                        if(_buffer.formattedNode.sets[i].indexOf(data.sets[i][j]) === -1){
+                            memberToUpdate.push({set:i,path:data.sets[i][j],del:false});
+                        }
+                    }
+                }
+            }
+
+            //the asyncronous updates
+
+            needToGo = pointerToUpdate.length + memberToUpdate.length;
 
             if(needToGo <1){
                 finished();
             } else {
-                for(var i=0;i<needUpdate.length;i++){
-                    updatePointer(needUpdate[i],function(err){
+                for(var i=0;i<pointerToUpdate.length;i++){
+                    updatePointer(pointerToUpdate[i],function(err){
+                        if(err){
+                            error = err;
+                        }
+                        if(--needToGo === 0){
+                            finished();
+                        }
+                    });
+                }
+                for(var j=0;j<memberToUpdate.length;j++){
+                    updateMember(memberToUpdate[j].set,memberToUpdate[j].path,memberToUpdate[j].del,function(err){
                         if(err){
                             error = err;
                         }
@@ -250,45 +317,6 @@ define([
         var getBranches = function(project,callback){
             project.getBranchNames(callback);
         };
-        var getSingleItem = function(projName,hash,callback){
-            var core = new Core(_projects[projName]);
-            core.loadRoot(hash,function(err,root){
-                if(err){
-                    callback(err,null);
-                } else {
-                    if(root.data.type && root.data.type === 'commit'){
-                        callback(null,root);
-                    } else {
-                        loadingNode(core,root,callback);
-                    }
-                }
-            });
-        };
-        var getItemByPath = function(projName,dataArray,callback){
-            var core = new Core(_projects[projName]);
-            var hash = dataArray[0];
-            var path = "";
-            for(var i=1;i<dataArray.length;i++){
-                path +='/'+dataArray[i]+"";
-            }
-            core.loadRoot(hash,function(err,root){
-                if(err){
-                    callback(err,null);
-                } else {
-                    if(root.data.type && root.data.type === 'commit'){
-                        callback(null,root);
-                    } else {
-                        core.loadByPath(root,path,function(err,node){
-                            if(err){
-                                callback(err,null);
-                            } else {
-                                loadingNode(core,node,callback);
-                            }
-                        });
-                    }
-                }
-            });
-        };
         var getItem = function(project,pars,callback){
             //the first element of the pars should be always a commit and then the path... empty path leads to the root
             project.loadObject(pars[0],function(err,commit){
@@ -298,7 +326,7 @@ define([
                     if(commit){
                         _buffer.commit = pars[0];
                         var hash = commit.root;
-                        var core = new Core(project);
+                        var core = new SetCore(new Core(project));
                         _buffer.core = core;
                         var path = "";
                         for(var i=1;i<pars.length;i++){
@@ -313,7 +341,7 @@ define([
                                     _buffer.coreNode = root;
                                     loadingNode(core,root,callback);
                                 } else {
-                                    core.loadByPath(root,path,function(err,node){
+                                    core.loadByPath(path,function(err,node){
                                         if(err){
                                             callback(err,null);
                                         } else {
@@ -331,63 +359,6 @@ define([
             });
         };
 
-
-
-
-        var processGET_ = function(uri,callback){
-            var projName = null;
-            var myCallback = function(err,data){
-                if(!err && data){
-                    data = JSON.stringify(data);
-                    data = addingSpecialChars(data);
-                    data = JSON.parse(data);
-                }
-                if(projName){
-                    _projects[projName].closeProject();
-                    delete _projects[projName];
-                }
-                callback(err,data);
-            };
-            var uriArray = uri.split('/');
-            var startindex = uriArray.indexOf('rest')+1;
-            if(startindex>0 && startindex<uriArray.length){
-                if(uriArray[startindex] === 'projects'){
-                    getProjects(myCallback);
-                } else {
-                    projName = uriArray[startindex++];
-                    var gotProject = function(){
-                        if(uriArray[startindex] === 'branches'){
-                            getBranches(projName,myCallback);
-                        } else {
-                            var base = uriArray[startindex];
-                            base = specialCharHandling(base);
-                            base = base.split('/');
-                            if(base.length === 1){
-                                //single hashed item
-                                getSingleItem(projName,base[0],myCallback);
-                            } else {
-                                //hash followed by path
-                                getItemByPath(projName,base,myCallback);
-                            }
-                        }
-                    };
-                    if(_projects[projName]){
-                        gotProject();
-                    } else {
-                        _database.openProject(projName,function(err,proj){
-                            if(!err && proj){
-                                _projects[projName] = proj;
-                                gotProject();
-                            } else {
-                                callback(err,null);
-                            }
-                        });
-                    }
-                }
-            } else {
-                callback('wrong URI',null);
-            }
-        };
         var processGET = function(uri,callback){
             var myCallback = function(err,data){
                 if(!err && data){

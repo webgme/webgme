@@ -68,86 +68,9 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
-        var getChildrenRelids = function(node){
-            var allChildren = _innerCore.getChildrenRelids(node);
-            var children = [];
-            for(var i=0;i<allChildren.length;i++){
-                if(VALIDSETIDS.indexOf(allChildren[i]) === -1){
-                    children.push(allChildren[i]);
-                }
-            }
-            return children;
-        };
-
-        var getSetRelids = function(node){
-            var allChildren = _innerCore.getChildrenRelids(node);
-            var children = [];
-            for(var i=0;i<allChildren.length;i++){
-                if(VALIDSETIDS.indexOf(allChildren[i]) > -1){
-                    children.push(allChildren[i]);
-                }
-            }
-            return children;
-        };
-
-        var getChildrenPaths = function(node){
-            var allrelids = _innerCore.getChildrenRelids(node);
-            var allpaths = _innerCore.getChildrenPaths(node);
-            var paths = [];
-            for(var i=0;i<allrelids.length;i++){
-                if(VALIDSETIDS.indexOf(allrelids[i]) === -1){
-                    paths.push(allpaths[i]);
-                }
-            }
-            return paths;
-        };
-
-        var getSetPaths = function(node){
-            var allrelids = _innerCore.getChildrenRelids(node);
-            var allpaths = _innerCore.getChildrenPaths(node);
-            var paths = [];
-            for(var i=0;i<allrelids.length;i++){
-                if(VALIDSETIDS.indexOf(allrelids[i]) > -1){
-                    paths.push(allpaths[i]);
-                }
-            }
-            return paths;
-        };
-
-        var loadChildren = function(node,callback){
-            _innerCore.loadChildren(node,function(err,allchildren){
-                if(!err && allchildren){
-                    var children = [];
-                    for(var i=0;i<allchildren.length;i++){
-                        if(VALIDSETIDS.indexOf(_innerCore.getRelid(allchildren[i])) === -1){
-                            children.push(allchildren[i]);
-                        }
-                    }
-                    callback(err,children);
-                } else {
-                    callback(err,null);
-                }
-            });
-        };
-
-        var loadSets = function(node,callback){
-            _innerCore.loadChildren(node,function(err,allchildren){
-                if(!err && allchildren){
-                    var children = [];
-                    for(var i=0;i<allchildren.length;i++){
-                        if(VALIDSETIDS.indexOf(_innerCore.getRelid(allchildren[i])) > -1){
-                            children.push(allchildren[i]);
-                        }
-                    }
-                    callback(err,children);
-                } else {
-                    callback(err,null);
-                }
-            });
-        };
 
         var getChildrenNumber = function(node){
-            var relIds = getChildrenRelids(node);
+            var relIds = _innerCore.getChildrenRelids(node);
             return relIds.length;
         };
 
@@ -156,26 +79,6 @@ define([ "util/assert"], function (ASSERT) {
             return relIds.length;
         };
 
-        var getSetPath = function(node,nameOrRelId){
-            var index = VALIDSETNAMES.indexOf(nameOrRelId);
-            if(index === -1){
-                index = VALIDSETIDS.indexOf(nameOrRelId);
-            }
-
-            if(index === -1){
-                return null;
-            } else {
-                var relid = VALIDSETIDS[index];
-                var relids = getSetRelids(node);
-                var paths = getSetPaths(node);
-                index = relids.indexOf(relid);
-                if(index === -1){
-                    return null;
-                } else {
-                    return paths[index];
-                }
-            }
-        };
 
         var getSetRelid = function(nameOrRelId){
             var index = VALIDSETNAMES.indexOf(nameOrRelId);
@@ -190,36 +93,9 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
-        var isSetNode = function(node){
-            var parent = _innerCore.getParent(node);
-            if(parent){
-                var path = getPath(node);
-                var sets = getSetPaths(parent);
-                return sets.indexOf(path) !== -1;
-            } else {
-                return false;
-            }
-        };
-
-        var getSetOwnerPath = function(path){
-            //return null if the original path is not set
-            if(path.length>10){
-                var ending = path.slice(path.length-10);
-                if(VALIDSETIDS.indexOf(ending) !== -1){
-                    var parent = path.replace('/'+ending,'');
-                    return parent === rootPath ? visibleRootPath : parent;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        };
-
-        //set functionality again :)
         var getMemberRelId = function(node,setName,memberPath){
             var setBase = _innerCore.getChild(node,SETS_ID);
-            var setNode = _innerCore.getChild(setBase,setName);
+            var setNode = _innerCore.getChild(setBase,getSetRelid(setName));
             var elements = _innerCore.getChildrenRelids(setNode);
 
             for(var i=0;i<elements.length;i++){
@@ -235,8 +111,8 @@ define([ "util/assert"], function (ASSERT) {
         var addMember = function(node,setName,member){
             var MAX_RELID = Math.pow(2, 31);
             var setBase = _innerCore.getChild(node,SETS_ID);
-            var setNode = _innerCore.getChild(setBase,setName);
-            if(getMemberRelId(node,setName,member) === null){
+            var setNode = _innerCore.getChild(setBase,getSetRelid(setName));
+            if(getMemberRelId(node,getSetRelid(setName),member) === null){
                 var relId;
                 do {
                     relId = Math.floor(Math.random() * MAX_RELID);
@@ -256,41 +132,39 @@ define([ "util/assert"], function (ASSERT) {
                 member = _innerCore.getPath(member);
             }
             var setBase = _innerCore.getChild(node,SETS_ID);
-            var setNode = _innerCore.getChild(setBase,setName);
-            var setMemberRelId = getMemberRelId(node,setName,member);
+            var setNode = _innerCore.getChild(setBase,getSetRelid(setName));
+            var setMemberRelId = getMemberRelId(node,getSetRelid(setName),member);
             if(setMemberRelId){
                 var setMemberNode = _innerCore.getChild(setNode,setMemberRelId);
                 _innerCore.deleteNode(setMemberNode);
                 _innerCore.setRegistry(node,'_hash_'+setName,'#'+_innerCore.getSingleNodeHash(setNode));
             }
-
-            /*var elements = _innerCore.getChildrenRelids(setNode);
-            if(elements.length === 0){
-                _innerCore.deleteNode(setNode);
-                _innerCore.delRegistry(node,'_hash_'+setName);
-            }*/
         };
 
         var getMemberPaths = function(node,setName){
             var memberPaths = [];
             var setBase = _innerCore.getChild(node,SETS_ID);
-            var setNode = _innerCore.getChild(setBase,setName);
+            var setNode = _innerCore.getChild(setBase,getSetRelid(setName));
 
             var elements = _innerCore.getChildrenRelids(setNode);
             for(var i=0;i<elements.length;i++){
                 var element = _innerCore.getChild(setNode,elements[i]);
                 var path = _innerCore.getPointerPath(element,'member');
+                if(path === rootPath){
+                    path = visibleRootPath;
+                }
                 if(path){
                     memberPaths.push(path);
                 }
             }
-            /*if(elements.length === 0){
-                _innerCore.deleteNode(setNode);
-            }*/
             return memberPaths;
         };
         var getSetNames = function(node){
-            return _innerCore.getChildrenRelids(_innerCore.getChild(node,SETS_ID));
+            var names = _innerCore.getChildrenRelids(_innerCore.getChild(node,SETS_ID));
+            for(var i=0;i<names.length;i++){
+                names[i] = VALIDSETNAMES[VALIDSETIDS.indexOf(names[i])];
+            }
+            return names;
         };
 
 
@@ -299,8 +173,6 @@ define([ "util/assert"], function (ASSERT) {
             isValidNode: _innerCore.isValidNode,
             isValidRelid: _innerCore.isValidRelid,
             isValidPath: _innerCore.isValidPath,
-            isSetNode: isSetNode,
-            getSetOwnerPath: getSetOwnerPath,
 
             // root
             getHash: _innerCore.getHash,
@@ -315,21 +187,14 @@ define([ "util/assert"], function (ASSERT) {
             getPath: getPath,
             getParent: _innerCore.getParent,
             getRelid: _innerCore.getRelid,
-            getChildrenRelids: getChildrenRelids,
-            getChildrenPaths: getChildrenPaths,
+            getChildrenRelids: _innerCore.getChildrenRelids,
+            getChildrenPaths: _innerCore.getChildrenPaths,
             getChildrenNumber: getChildrenNumber,
             loadChild: _innerCore.loadChild,
             loadByPath: loadByPath,
-            loadChildren: loadChildren,
+            loadChildren: _innerCore.loadChildren,
 
             // sets
-            getSetRelid: getSetRelid,
-            getSetRelids: getSetRelids,
-            getSetPath: getSetPath,
-            getSetPaths: getSetPaths,
-            getSetsNumber: getSetsNumber,
-            loadSets : loadSets,
-            loadSet : _innerCore.loadChild,
             addMember : addMember,
             delMember : delMember,
             getMemberPaths : getMemberPaths,
