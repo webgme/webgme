@@ -92,6 +92,18 @@ define([ "util/assert"], function (ASSERT) {
                 return VALIDSETIDS[index];
             }
         };
+        var getSetName = function(nameOrRelId){
+            var index = VALIDSETIDS.indexOf(nameOrRelId);
+            if(index === -1){
+                index = VALIDSETNAMES.indexOf(nameOrRelId);
+            }
+
+            if(index === -1){
+                return VALIDSETNAMES[0];
+            } else {
+                return VALIDSETNAMES[index];
+            }
+        };
 
         var getMemberRelId = function(node,setName,memberPath){
             var setBase = _innerCore.getChild(node,SETS_ID);
@@ -199,6 +211,8 @@ define([ "util/assert"], function (ASSERT) {
             delMember : delMember,
             getMemberPaths : getMemberPaths,
             getSetNames : getSetNames,
+            getSetName : getSetName,
+            getSetRelid : getSetRelid,
 
             // modify
             createNode: createNode,

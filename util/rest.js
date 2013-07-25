@@ -87,6 +87,7 @@ define([
             //pointers and collections
             outnode.pointer = {};
             outnode.collection = {};
+            outnode.member = {};
             var error = null;
             var needed = 0;
             var allLoaded = function(){
@@ -126,8 +127,21 @@ define([
                     } else {
                         outnode.collection[name] = [];
                         for(var i=0;i<collection.length;i++){
-                            //outnode.collection[name].push(collection[i].data._id);
-                            outnode.collection[name].push(core.getPath(collection[i]));
+                            var path = core.getPath(collection[i]);
+                            if(path.indexOf('/_sets/') === -1){
+                                outnode.collection[name].push(path);
+                            } else {
+                                //we build, the member part here
+                                path = path.split('/');
+                                var setOwner = "",jmax = path.indexOf('_sets');
+                                for(var j=0;j<jmax;j++){
+                                    setOwner+="/"+path[j];
+                                }
+                                if(!outnode.member[_buffer.core.getSetName(path[jmax+1])]){
+                                    outnode.member[_buffer.core.getSetName(path[jmax+1])] = [];
+                                }
+                                outnode.member[_buffer.core.getSetName(path[jmax+1])].push(setOwner);
+                            }
                         }
                     }
 

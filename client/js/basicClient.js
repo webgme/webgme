@@ -1173,7 +1173,7 @@ define([
                 }
                 _database = new Log(
                     new Commit(
-                        //new Cache(
+                        new Cache(
                             new Failsafe(
                                 new SocketIOClient(
                                     {
@@ -1182,7 +1182,7 @@ define([
                                     }
                                 ),{}
                             ),{}
-                        //),{}
+                        ),{}
                     ),{log:LogManager.create('client-storage')}
                 );
 
@@ -1812,7 +1812,7 @@ define([
             function initialize(){
                 _database = new Log(
                     new Commit(
-                        //new Cache(
+                        new Cache(
                             new Failsafe(
                                 new SocketIOClient(
                                     {
@@ -1821,7 +1821,7 @@ define([
                                     }
                                 ),{}
                             ),{}
-                    //    ),{}
+                        ),{}
                     ),{log:LogManager.create('client-storage')}
                 );
                 _database.openDatabase(function(err){
