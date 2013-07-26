@@ -78,38 +78,41 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
         //NOTE: it returns the connection point regardless of being asked for
         //its own connection ports or some of the subcomponent's connection ports
 
-        //top left
         result.push( {"id": "0",
-            "x": CANVAS_SIZE / 2,
-            "y": 0,
-            "w": 0,
-            "h": 0,
-            "orientation": "N",
-            "len": 10} );
+            "x1": CANVAS_SIZE / 2,
+            "y1": 0,
+            "x2": CANVAS_SIZE / 2,
+            "y2": 0,
+            "angle1": 190,
+            "angle2": 350,
+            "len": 30} );
 
         result.push( {"id": "1",
-            "x": CANVAS_SIZE / 2,
-            "y": CANVAS_SIZE,
-            "w": 0,
-            "h": 0,
-            "orientation": "S",
-            "len": 10} );
+            "x1": CANVAS_SIZE / 2,
+            "y1": CANVAS_SIZE,
+            "x2": CANVAS_SIZE / 2,
+            "y2": CANVAS_SIZE,
+            "angle1": 10,
+            "angle2": 170,
+            "len": 30} );
 
         result.push( {"id": "2",
-            "x": 0,
-            "y": CANVAS_SIZE / 2,
-            "w": 0,
-            "h": 0,
-            "orientation": "W",
-            "len": 10} );
+            "x1": 0,
+            "y1": CANVAS_SIZE / 2,
+            "x2": 0,
+            "y2": CANVAS_SIZE / 2,
+            "angle1": 100,
+            "angle2": 260,
+            "len": 30} );
 
         result.push( {"id": "3",
-            "x": CANVAS_SIZE,
-            "y": CANVAS_SIZE / 2,
-            "w": 0,
-            "h": 0,
-            "orientation": "E",
-            "len": 10} );
+            "x1": CANVAS_SIZE,
+            "y1": CANVAS_SIZE / 2,
+            "x2": CANVAS_SIZE,
+            "y2": CANVAS_SIZE / 2,
+            "angle1": -80,
+            "angle2": 80,
+            "len": 30} );
 
         return result;
     };

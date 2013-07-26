@@ -164,11 +164,12 @@ define(['logManager',
         //by default return the center point of the item
         //canvas will draw the connection to / from this coordinate
         result.push( {"id": "0",
-            "x": this.hostDesignerItem.width / 2,
-            "y": this.hostDesignerItem.height / 2,
-            "w": 0,
-            "h": 0,
-            "orientation": "N",
+            "x1": this.hostDesignerItem.width / 2,
+            "y1": this.hostDesignerItem.height / 2,
+            "x2": this.hostDesignerItem.width / 2,
+            "y2": this.hostDesignerItem.height / 2,
+            "angle1": 270,
+            "angle2": 270,
             "len": 10} );
 
         return result;

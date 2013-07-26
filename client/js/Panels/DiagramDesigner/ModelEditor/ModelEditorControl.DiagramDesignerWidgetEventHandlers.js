@@ -108,6 +108,10 @@ define(['logManager',
             return self._onDragStartDesignerConnectionCopyable(connectionID);
         };
 
+        this.designerCanvas.onSelectionRotated = function (deg, selectedIds) {
+            return self._onSelectionRotated(deg, selectedIds);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -527,6 +531,20 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onDragStartDesignerConnectionCopyable = function (connectionID) {
         return this._onDragStartDesignerItemCopyable(connectionID);
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionRotated = function (degree, selectedIds) {
+        var i = selectedIds.length,
+            regDegree,
+            gmeID;
+
+        this._client.startTransaction();
+        while(i--) {
+            gmeID = this._ComponentID2GmeID[selectedIds[i]];
+            regDegree = this._client.getNode(gmeID).getRegistry(nodePropertyNames.Registry.rotation);
+            this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, ((regDegree || 0) + degree) % 360 );
+        }
+        this._client.completeTransaction();
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

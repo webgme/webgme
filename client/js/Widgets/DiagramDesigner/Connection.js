@@ -951,8 +951,7 @@ define(['logManager',
             w = 0,
             h = 0,
             dx = 0,
-            dy = 0,
-            o = "O";
+            dy = 0;
 
         if (this.skinParts.path) {
             var len = this.skinParts.path.getTotalLength();
@@ -965,22 +964,21 @@ define(['logManager',
                 //horizontal line
                 w = AREA_SIZE;
                 dx = AREA_SIZE / 2;
-                o = "N";
             } else if (pos.alpha === 90 || pos.alpha === 270) {
                 //vertical line
                 h = AREA_SIZE;
                 dy = AREA_SIZE / 2;
-                o = "E";
             }
 
             //by default return the center point of the item
             //canvas will draw the connection to / from this coordinate
             result.push( {"id": "0",
-                "x": pos.x - dx,
-                "y": pos.y - dy,
-                "w": w,
-                "h": h,
-                "orientation": o,
+                "x1": pos.x - dx,
+                "y1": pos.y - dy,
+                "x2": pos.x - dx + w,
+                "y2": pos.y - dy + h,
+                "angle1": 0,
+                "angle2": 360,
                 "len": 0} );
         }
 

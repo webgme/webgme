@@ -8,9 +8,9 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManager2 = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
 
-        this.canvas = options ? options.canvas : null;
+        this.diagramDesigner = options ? options.diagramDesigner : null;
 
-        if (this.canvas === undefined || this.canvas === null) {
+        if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
             this.logger.error("Trying to initialize a ConnectionRouteManagerBasic without a canvas...");
             throw ("ConnectionRouteManagerBasic can not be created");
         }
@@ -31,7 +31,7 @@ define(['logManager'], function (logManager) {
         //NOTE: here it is not enough to update the connections the canvas asked for
         //because updating one connections' endpoint (connection area switch) can cause
         //other connections to be redrawn that was originally not requested to do so
-        idList = this.canvas.connectionIds.slice(0);
+        idList = this.diagramDesigner.connectionIds.slice(0);
         while (idList.length > 0) {
 
 
@@ -61,14 +61,14 @@ define(['logManager'], function (logManager) {
 
         //need to return the IDs of the connections that was really
         //redrawn or any other visual property chenged (width, etc)
-        idList = this.canvas.connectionIds.slice(0);
+        idList = this.diagramDesigner.connectionIds.slice(0);
         return idList;
     };
 
     ConnectionRouteManager2.prototype._updateEndpointInfo = function (idList) {
         var i = idList.length,
             connId,
-            canvas = this.canvas,
+            canvas = this.diagramDesigner,
             srcObjId,
             srcSubCompId,
             dstObjId,
@@ -102,7 +102,7 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
-            canvas = this.canvas,
+            canvas = this.diagramDesigner,
             j,
             designerItem;
 
@@ -111,20 +111,21 @@ define(['logManager'], function (logManager) {
             this.endpointConnectionAreaConnectionInfo[longid] = this.endpointConnectionAreaConnectionInfo[longid] || {};
 
             if (subCompId === undefined ||
-                (subCompId !== undefined && this.canvas._itemSubcomponentsMap[objId] && this.canvas._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
+                (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
                 res = designerItem.getConnectionAreas(subCompId) || [];
 
                 j = res.length;
                 while (j--) {
-                    this.endpointConnectionAreaInfo[longid][res[j].id] = {"x": res[j].x + designerItem.positionX,
-                        "y": res[j].y + designerItem.positionY,
-                        "w": res[j].w,
-                        "h": res[j].h,
-                        "orientation": res[j].orientation,
-                        "len": res[j].len || 0,
-                        "id": res[j].id};
+                    this.endpointConnectionAreaInfo[longid][res[j].id] = {"x": res[j].x1,
+                        "y": res[j].y1,
+                        "angle1": res[j].angle1,
+                        "angle2": res[j].angle2,
+                        "len": res[j].len || 10,
+                        "id": res[j].id,
+                        "w": res[j].x2 - res[j].x1,
+                        "h": res[j].y2 - res[j].y1};
 
                     if (!this.endpointConnectionAreaConnectionInfo[longid].hasOwnProperty(res[j].id)) {
                         this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
@@ -137,7 +138,7 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionRouteManager2.prototype._calculateClosestEndpoints = function (connectionId) {
-        var canvas = this.canvas,
+        var canvas = this.diagramDesigner,
             srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
@@ -191,7 +192,7 @@ define(['logManager'], function (logManager) {
 
 
     ConnectionRouteManager2.prototype._updateConnectionCoordinates = function (connectionId) {
-        var canvas = this.canvas,
+        var canvas = this.diagramDesigner,
             srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
@@ -230,7 +231,7 @@ define(['logManager'], function (logManager) {
 
             /***************startpoint's defined connector length*********************/
             if (sourceCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(sourceCoordinates);
+                connectorDelta = this._getConnectorDelta(sourceCoordinates, this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1, sourceConnectionPoint[2]);
                 connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
                     "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)});
             }
@@ -249,7 +250,7 @@ define(['logManager'], function (logManager) {
 
             /***************endpoint's defined connector length*********************/
             if (targetCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(targetCoordinates);
+                connectorDelta = this._getConnectorDelta(targetCoordinates, this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1, targetConnectionPoint[2]);
                 connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
                     "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)});
             }
@@ -275,10 +276,15 @@ define(['logManager'], function (logManager) {
             connectionPathPoints = [];
 
             if (len > 0) {
+                //source point and the rotated connector stays as they are
                 p1 = connectionPathPointsTemp[0];
                 connectionPathPoints.push(p1);
 
-                for (i = 1; i < len; i += 1) {
+                p1 = connectionPathPointsTemp[1];
+                connectionPathPoints.push(p1);
+
+                //but in between them use horizontal and vertical lines only
+                for (i = 2; i < len - 1; i += 1) {
                     p1 = connectionPathPointsTemp[i - 1];
                     p2 = connectionPathPointsTemp[i];
 
@@ -298,34 +304,40 @@ define(['logManager'], function (logManager) {
                     //p2 always goes to the list
                     connectionPathPoints.push(p2);
                 }
+
+                //end point point and the rotated connector stays as they are
+                p1 = connectionPathPointsTemp[len - 2];
+                connectionPathPoints.push(p1);
+
+                p1 = connectionPathPointsTemp[len - 1];
+                connectionPathPoints.push(p1);
             }
         }
 
         canvas.items[connectionId].setConnectionRenderData(connectionPathPoints);
     };
 
-    ConnectionRouteManager2.prototype._getConnectorDelta = function (coordDesc) {
+    ConnectionRouteManager2.prototype._getConnectorDelta = function (coordDesc, slices, connOrderNum) {
         var dx = 0,
-            dy = 0;
+            dy = 0,
+            angle = (coordDesc.angle1 + ((coordDesc.angle2 - coordDesc.angle1) / slices * connOrderNum )) * (Math.PI/180),
+            result = { "dx": dx, "dy": dy };
 
         if (coordDesc.len !== 0) {
-            switch (coordDesc.orientation) {
-                case "N":
-                    dy = -coordDesc.len;
-                    break;
-                case "S":
-                    dy = coordDesc.len;
-                    break;
-                case "E":
-                    dx = coordDesc.len;
-                    break;
-                case "W":
-                    dx = -coordDesc.len;
-                    break;
-            }
+            var s = Math.sin(angle);
+            var c = Math.cos(angle);
+
+            var fx = coordDesc.len;
+            var fy = 0;
+
+            var rx = fx * c - fy * s;
+            var ry = fx * s + fy * c;
+
+            result.dx = rx;
+            result.dy = ry;
         }
 
-        return { "dx": dx, "dy": dy };
+        return result;
     };
 
     //figure out the shortest side to choose between the two

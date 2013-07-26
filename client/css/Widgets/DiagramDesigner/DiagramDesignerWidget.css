@@ -39,6 +39,25 @@
         .diagram-designer .items .selection-outline .s-btn.delete {
           top: -13px;
           right: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.rotate.top {
+          left: 50%;
+          margin-left: -13px;
+          top: -13px; }
+        .diagram-designer .items .selection-outline .s-btn.rotate.right {
+          top: 50%;
+          margin-top: -13px;
+          right: -13px; }
+      .diagram-designer .items .selection-outline .rotation-deg {
+        text-align: center;
+        vertical-align: middle;
+        position: absolute;
+        width: 100%;
+        height: 30px;
+        margin-top: -15px;
+        top: 50%;
+        line-height: 30px;
+        font-size: 30px;
+        color: #666666; }
     .diagram-designer .items .connection-connector.connector {
       background-color: #fefefe;
       height: 10px;

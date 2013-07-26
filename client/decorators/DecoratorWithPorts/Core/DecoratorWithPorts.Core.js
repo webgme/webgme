@@ -49,7 +49,7 @@ define(['js/Constants',
             name;
 
         if (nodeObj) {
-            name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
+            name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "(N/A)";
 
             this.skinParts.$name.text(name);
             this.skinParts.$name.attr("title", name);

@@ -16,7 +16,8 @@ define(['logManager',
         SELECTION_OVERLAP_RATIO = 0.5,
         PATH_SHADOW_ID_PREFIX = "p_",
         SELECTION_OUTLINE_MARGIN = 15,
-        SELECTION_OUTLINE_MIN_WIDTH = 100;
+        SELECTION_OUTLINE_MIN_WIDTH = 100,
+        MOUSE_EVENT_POSTFIX = "SelectionManager";
 
     SelectionManager = function (options) {
         this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "SelectionManager"));
@@ -569,6 +570,7 @@ define(['logManager',
             deleteBtn.html('<i class="icon-remove"></i>');
         }
 
+        //detach mousedown handler on selection outline
         this._diagramDesigner.skinParts.$selectionOutline.off("mousedown").off("click", ".s-btn");
         this._diagramDesigner.skinParts.$selectionOutline.on("mousedown", function (event) {
             event.stopPropagation();
@@ -581,8 +583,131 @@ define(['logManager',
             event.stopPropagation();
             event.preventDefault();
         });
+
+        this._renderRotateHandlers();
     };
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
+
+    SelectionManager.prototype._renderRotateHandlers = function () {
+        var rotateBtnTop,
+            rotateBtnRight,
+            self = this,
+            rotateEnabled = !this._diagramDesigner.getIsReadOnlyMode();
+
+        if (rotateEnabled) {
+            rotateBtnTop = $('<div/>', {
+                "class" : "s-btn rotate top"
+            });
+            rotateBtnTop.html('<i class="icon-repeat"></i>');
+
+            rotateBtnRight = $('<div/>', {
+                "class" : "s-btn rotate right"
+            });
+            rotateBtnRight.html('<i class="icon-repeat"></i>');
+
+            this._rotationDegree = $('<div/>', {
+                "class" : "rotation-deg"
+            });
+
+            this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnTop);
+            this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnRight);
+            this._diagramDesigner.skinParts.$selectionOutline.append(this._rotationDegree);
+
+            this._diagramDesigner.skinParts.$selectionOutline.off("mousedown." + MOUSE_EVENT_POSTFIX, ".rotate");
+            this._diagramDesigner.skinParts.$selectionOutline.on("mousedown." + MOUSE_EVENT_POSTFIX, ".rotate", function (event) {
+                var rotateBtn = $(this);
+                self.logger.debug("selection rotate button mousedown'");
+
+                self._startSelectionRotate(rotateBtn, event);
+
+                event.stopPropagation();
+                event.preventDefault();
+            });
+
+            //TODO: 0, 90, 180, 270 fix _getRotationDegree
+            /*this._diagramDesigner.skinParts.$selectionOutline.off("dblclick." + MOUSE_EVENT_POSTFIX, ".rotate");
+            this._diagramDesigner.skinParts.$selectionOutline.on("dblclick." + MOUSE_EVENT_POSTFIX, ".rotate", function (event) {
+                var rotateBtn = $(this);
+                self.logger.debug("selection rotate button mousedown'");
+
+                self._startSelectionRotate(rotateBtn, event);
+
+                event.stopPropagation();
+                event.preventDefault();
+            });*/
+        }
+    };
+
+    SelectionManager.prototype._startSelectionRotate = function (rotateBtn, event) {
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
+            self = this,
+            leftButton = event.which === 1;
+
+        if (leftButton) {
+            this._rotateDesc = {"startX": mousePos.mX,
+                                "startY": mousePos.mY,
+                                "oX": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("left"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("width"), 10) / 2,
+                                "oY": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("top"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("height"), 10) / 2,
+                                "horizontal": rotateBtn.hasClass('top')};
+
+            $(document).on("mousemove.rotate." + MOUSE_EVENT_POSTFIX, function (event) {
+                self._onSelectionRotate(event);
+            });
+            $(document).on("mouseup.rotate." + MOUSE_EVENT_POSTFIX, function (event) {
+                //unbind mousemove and mouseup handlers
+                $(document).off("mousemove.rotate." + MOUSE_EVENT_POSTFIX);
+                $(document).off("mouseup.rotate." + MOUSE_EVENT_POSTFIX);
+
+                self._endSelectionRotate(event);
+            });
+        }
+    };
+
+    SelectionManager.prototype._onSelectionRotate = function (event) {
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
+            dx = mousePos.mX - this._rotateDesc.startX,
+            dy = mousePos.mY - this._rotateDesc.startY,
+            deg = this._getRotationDegree(this._rotateDesc.horizontal ? dx : dy, event.shiftKey);
+
+        this._rotationDegree.html( (deg >= 0 ? "+" : "") + deg + "°");
+
+        this._diagramDesigner.skinParts.$selectionOutline.css({'transform-origin': '50% 50%',
+            'transform': 'rotate('+ deg + 'deg)'});
+    };
+
+    SelectionManager.prototype._endSelectionRotate = function (event) {
+        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
+            dx = mousePos.mX - this._rotateDesc.startX,
+            dy = mousePos.mY - this._rotateDesc.startY,
+            deg = this._getRotationDegree(this._rotateDesc.horizontal ? dx : dy, event.shiftKey),
+            selectedItems = [],
+            i = this._selectedElements.length;
+
+        this._rotationDegree.html('');
+
+        this._diagramDesigner.skinParts.$selectionOutline.css({'transform-origin': '50% 50%',
+            'transform': 'rotate(0deg)'});
+
+        while (i--) {
+            if (this._diagramDesigner.itemIds.indexOf(this._selectedElements[i]) !== -1) {
+                selectedItems.push(this._selectedElements[i]);
+            }
+        }
+
+        if (selectedItems.length > 0) {
+            this.onSelectionRotated(deg, selectedItems);
+        }
+    };
+
+    SelectionManager.prototype._getRotationDegree = function(value, rounded) {
+        var val = rounded ? Math.round(value / 10) * 10  : value;
+
+        return Math.floor(val % 360);
+    };
+
+    SelectionManager.prototype.onSelectionRotated = function (deg, selectedIds) {
+        this.logger.warning("SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: '" + deg + "'deg, selectedIds: " + selectedIds);
+    };
 
     return SelectionManager;
 });

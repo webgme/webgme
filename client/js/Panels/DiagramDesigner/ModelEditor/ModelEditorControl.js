@@ -241,7 +241,7 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 2 };
 
-            nodeName = desc.name.toUpperCase();
+            nodeName = (desc.name || " ").toUpperCase();
 
             this.designerCanvas.setTitle(nodeName);
             this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
@@ -329,9 +329,9 @@ define(['logManager',
                     pos = nodeObj.getRegistry(nodePropertyNames.Registry.position);
 
                     if (pos) {
-                        objDescriptor.position = { "x": pos.x, "y": pos.y};
+                        objDescriptor.position = { "x": pos.x, "y": pos.y };
                     } else {
-                        objDescriptor.position = { "x": defaultPos, "y": defaultPos};
+                        objDescriptor.position = { "x": defaultPos, "y": defaultPos };
                     }
 
                     if (objDescriptor.position.hasOwnProperty("x")) {
@@ -350,6 +350,8 @@ define(['logManager',
                     if (DECORATORS.indexOf(objDescriptor.decorator) === -1) {
                         objDescriptor.decorator = DEFAULT_DECORATOR;
                     }
+
+                    objDescriptor.rotation = parseInt(nodeObj.getRegistry(nodePropertyNames.Registry.rotation), 10) || 0;
                 }
             }
         }

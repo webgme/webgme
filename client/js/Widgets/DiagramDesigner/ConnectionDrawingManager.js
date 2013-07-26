@@ -351,15 +351,20 @@ define(['logManager',
             connPoints = item.getConnectionAreas(sCompId) || [];
 
             len = connPoints.length;
-            result = { 'x': item.positionX + connPoints[len-1].x + connPoints[len-1].w / 2,
-                       'y': item.positionY + connPoints[len-1].y + connPoints[len-1].h / 2};
+            while (len--) {
+                this.logger.warning(JSON.stringify(connPoints[len]));
+            }
+
+            len = connPoints.length;
+            result = { 'x': connPoints[len-1].x1 + (connPoints[len-1].x2 - connPoints[len-1].x1) / 2,
+                       'y': connPoints[len-1].y1 + (connPoints[len-1].y2 - connPoints[len-1].y1) / 2};
             delta = Math.sqrt((result.x - mX) * (result.x - mX) + (result.y - mY) * (result.y - mY));
 
             len -= 1;
 
             while (len--) {
-                x = item.positionX + connPoints[len].x + connPoints[len].w / 2;
-                y = item.positionY + connPoints[len].y + connPoints[len].h / 2;
+                x = connPoints[len].x1 + (connPoints[len].x2 - connPoints[len].x1) / 2;
+                y = connPoints[len].y1 + (connPoints[len].y2 - connPoints[len].y1) / 2;
                 d1 = Math.sqrt((x - mX) * (x - mX) + (y - mY) * (y - mY));
                 if ( d1 < delta) {
                     delta = d1;

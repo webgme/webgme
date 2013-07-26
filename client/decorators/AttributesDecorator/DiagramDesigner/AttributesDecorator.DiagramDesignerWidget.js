@@ -337,19 +337,21 @@ define(['js/Constants',
         if (id === undefined || id === this.hostDesignerItem.id) {
             //top left
             result.push( {"id": "0",
-                "x": edge,
-                "y": 0,
-                "w": this.hostDesignerItem.width - 2 * edge,
-                "h": 0,
-                "orientation": "N",
+                "x1": edge,
+                "y1": 0,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": 0,
+                "angle1": 270,
+                "angle2": 270,
                 "len": 10} );
 
             result.push( {"id": "1",
-                "x": edge,
-                "y": this.hostDesignerItem.height,
-                "w": this.hostDesignerItem.width - 2 * edge,
-                "h": 0,
-                "orientation": "S",
+                "x1": edge,
+                "y1": this.hostDesignerItem.height,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": this.hostDesignerItem.height,
+                "angle1": 90,
+                "angle2": 90,
                 "len": 10} );
         }
 

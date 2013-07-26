@@ -15,7 +15,8 @@ define(['js/Constants',
 
     var DecoratorWithPorts,
         __parent__ = DiagramDesignerWidgetDecoratorBase,
-        DECORATOR_ID = "DecoratorWithPorts";
+        DECORATOR_ID = "DecoratorWithPorts",
+        PORT_CONTAINER_OFFSET_Y = 21;
 
     DecoratorWithPorts = function (options) {
 
@@ -66,13 +67,9 @@ define(['js/Constants',
         if (this.hostDesignerItem) {
             this.hostDesignerItem.width = this.$el.outerWidth(true);
             this.hostDesignerItem.height = this.$el.outerHeight(true);
-            this.offset = this.hostDesignerItem.canvas.getAdjustedOffset(this.$el.offset());
 
-            var i = this._portIDs.length;
-
-            while (i--) {
-                this._ports[this._portIDs[i]].calculatePortConnectionArea();
-            }
+            this._paddingTop = parseInt(this.$el.css('padding-top'), 10);
+            this._borderTop = parseInt(this.$el.css('border-top-width'), 10);
         }
     };
 
@@ -105,19 +102,21 @@ define(['js/Constants',
         if (id === undefined || id === this.hostDesignerItem.id) {
             //top left
             result.push( {"id": "0",
-                "x": edge,
-                "y": 0,
-                "w": this.hostDesignerItem.width - 2 * edge,
-                "h": 0,
-                "orientation": "N",
+                "x1": edge,
+                "y1": 0,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": 0,
+                "angle1": 270,
+                "angle2": 270,
                 "len": 10} );
 
             result.push( {"id": "1",
-                "x": edge,
-                "y": this.hostDesignerItem.height,
-                "w": this.hostDesignerItem.width - 2 * edge,
-                "h": 0,
-                "orientation": "S",
+                "x1": edge,
+                "y1": this.hostDesignerItem.height,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": this.hostDesignerItem.height,
+                "angle1": 90,
+                "angle2": 90,
                 "len": 10} );
         } else {
             //subcomponent
@@ -125,12 +124,13 @@ define(['js/Constants',
                 idx = this._portIDs.indexOf(id);
 
             result.push( {"id": idx,
-                "x": portConnArea.x - this.offset.left,
-                "y": portConnArea.y - this.offset.top,
-                "w": portConnArea.w,
-                "h": portConnArea.h,
-                "orientation": portConnArea.orientation,
-                "len": portConnArea.len /*+ idx * 5*/} );
+                "x1": portConnArea.x1,
+                "y1": portConnArea.y1 + PORT_CONTAINER_OFFSET_Y + this._paddingTop + this._borderTop,
+                "x2": portConnArea.x2,
+                "y2": portConnArea.y2 + PORT_CONTAINER_OFFSET_Y + this._paddingTop + this._borderTop,
+                "angle1": portConnArea.angle1,
+                "angle2": portConnArea.angle2,
+                "len": portConnArea.len} );
         }
 
 

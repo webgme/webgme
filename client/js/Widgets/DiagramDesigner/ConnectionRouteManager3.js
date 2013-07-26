@@ -2,26 +2,26 @@
 
 define(['logManager'], function (logManager) {
 
-    var ConnectionRouteManagerBasic,
+    var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
 
-    ConnectionRouteManagerBasic = function (options) {
-        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManagerBasic"));
+    ConnectionRouteManager3 = function (options) {
+        this.logger = (options && options.logger) || logManager.create(((options && options.loggerName) || "ConnectionRouteManager3"));
 
         this.diagramDesigner = options ? options.diagramDesigner : null;
 
         if (this.diagramDesigner === undefined || this.diagramDesigner === null) {
-            this.logger.error("Trying to initialize a ConnectionRouteManagerBasic without a canvas...");
-            throw ("ConnectionRouteManagerBasic can not be created");
+            this.logger.error("Trying to initialize a ConnectionRouteManager3 without a canvas...");
+            throw ("ConnectionRouteManager3 can not be created");
         }
 
-        this.logger.debug("ConnectionRouteManagerBasic ctor finished");
+        this.logger.debug("ConnectionRouteManager3 ctor finished");
     };
 
-    ConnectionRouteManagerBasic.prototype.initialize = function () {
+    ConnectionRouteManager3.prototype.initialize = function () {
     };
 
-    ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
+    ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
         var i = idList.length;
 
         this.logger.debug('Redraw connection request: ' + idList.length);
@@ -40,7 +40,7 @@ define(['logManager'], function (logManager) {
         return idList;
     };
 
-    ConnectionRouteManagerBasic.prototype._updateEndpointInfo = function (idList) {
+    ConnectionRouteManager3.prototype._updateEndpointInfo = function (idList) {
         var i = idList.length,
             connId,
             canvas = this.diagramDesigner,
@@ -64,7 +64,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -76,7 +76,7 @@ define(['logManager'], function (logManager) {
             this.endpointConnectionAreaInfo[longid] = [];
 
             if (subCompId === undefined ||
-               (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
+                (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
                 res = designerItem.getConnectionAreas(subCompId) || [];
@@ -91,7 +91,7 @@ define(['logManager'], function (logManager) {
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._updateConnectionCoordinates = function (connectionId) {
+    ConnectionRouteManager3.prototype._updateConnectionCoordinates = function (connectionId) {
         var canvas = this.diagramDesigner,
             srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
@@ -135,7 +135,7 @@ define(['logManager'], function (logManager) {
     };
 
     //figure out the shortest side to choose between the two
-    ConnectionRouteManagerBasic.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
+    ConnectionRouteManager3.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
         var i,
             j,
             dx,
@@ -183,5 +183,5 @@ define(['logManager'], function (logManager) {
         return [srcP, tgtP];
     };
 
-    return ConnectionRouteManagerBasic;
+    return ConnectionRouteManager3;
 });

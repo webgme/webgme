@@ -5,7 +5,8 @@ define(['logManager',
                                                                                  DiagramDesignerWidgetConstants) {
 
     var Port,
-        PORT_CONNECTOR_LEN = 20;
+        PORT_CONNECTOR_LEN = 20,
+        PORT_DOM_HEIGHT = 20;
 
     Port = function (id, options) {
         this.id = id;
@@ -14,11 +15,12 @@ define(['logManager',
         this.orientation = undefined;
         this.position = {};
         this.skinParts = [];
-        this.connectionArea = { "x": 0,
-            "y": 0,
-            "w": 0,
-            "h": 0,
-            "orientation": "E",
+        this.connectionArea = { "x1": 0,
+            "y1": 0,
+            "x2": 0,
+            "y2": 0,
+            "angle1": 0,
+            "angle2": 0,
             "len": PORT_CONNECTOR_LEN};
 
         this.decorator = options.decorator;
@@ -39,8 +41,7 @@ define(['logManager',
     Port.prototype._DOMBaseRightTemplate = Port.prototype._DOMPortBase.clone().append(Port.prototype._DOMTitleWrapper.clone()).append(Port.prototype._DOMDot.clone()).append(Port.prototype._DOMConnector.clone());
 
     Port.prototype._initialize = function () {
-        var self = this,
-            concretePortTemplate = this.orientation === "W" ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
+        var concretePortTemplate = this.orientation === "W" ? this._DOMBaseLeftTemplate : this._DOMBaseRightTemplate;
 
         this.$el = concretePortTemplate.clone();
         this.$el.attr({"id": this.id,
@@ -133,25 +134,25 @@ define(['logManager',
         this.$connectors.hide();
     };
 
-    Port.prototype.calculatePortConnectionArea = function () {
-        var location = this.decorator.hostDesignerItem.canvas.getAdjustedOffset(this.$portDot.offset());
-
-        this.connectionArea.x = location.left;
-        this.connectionArea.y = location.top;
-        this.connectionArea.w = 0;
-        this.connectionArea.h = 7;
-        this.connectionArea.orientation = this.orientation;
-
-        if (this.orientation === "E") {
-            this.connectionArea.x += 2;
-        } else {
-            this.connectionArea.x += 3;
-        }
-
-        this.connectionArea.y += 1;
-    };
 
     Port.prototype.getConnectorArea = function () {
+        var allPorts = this.$el.parent().children(),
+            len = allPorts.length,
+            i;
+
+        for (i = 0; i < len; i += 1) {
+            if (allPorts[i] === this.$el[0]) {
+                break;
+            }
+        }
+
+        this.connectionArea.x1 = this.orientation === "W" ? 0 : this.decorator.hostDesignerItem.width;
+        this.connectionArea.x2 = this.connectionArea.x1;
+        this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 6;
+        this.connectionArea.y2 = this.connectionArea.y1 + 7;
+        this.connectionArea.angle1 = this.orientation === "W" ? 180 : 0;
+        this.connectionArea.angle2 = this.orientation === "W" ? 180 : 0;
+
         return this.connectionArea;
     };
 

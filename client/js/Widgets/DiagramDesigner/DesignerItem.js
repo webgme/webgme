@@ -39,6 +39,7 @@ define(['logManager',
         //location and dimension information
         this.positionX = 0;
         this.positionY = 0;
+        this.rotation = 0;
 
         this.width = 0;
         this.height = 0;
@@ -195,13 +196,35 @@ define(['logManager',
     };
 
     DesignerItem.prototype.getBoundingBox = function () {
-        return {"x": this.positionX,
+        var bBox = {"x": this.positionX,
                 "y": this.positionY,
                 "width": this.width,
                 "height": this.height,
                 "x2": this.positionX + this.width,
                 "y2":  this.positionY + this.height};
+
+        if (this.rotation !== 0) {
+            var topLeft = this._rotatePoint(0, 0);
+            var topRight = this._rotatePoint(this.width, 0);
+            var bottomLeft = this._rotatePoint(0, this.height);
+            var bottomRight = this._rotatePoint(this.width, this.height);
+
+            var x = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+            var x2 = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
+            var y = Math.min(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+            var y2 = Math.max(topLeft.y, topRight.y, bottomLeft.y, bottomRight.y);
+
+            bBox.x = this.positionX + x;
+            bBox.y = this.positionY + y;
+            bBox.x2 = this.positionX + x2;
+            bBox.y2 = this.positionY + y2;
+            bBox.width = bBox.x2 - bBox.x;
+            bBox.height = bBox.y2 - bBox.y;
+        }
+
+        return bBox;
     };
+
 
     DesignerItem.prototype.onMouseEnter = function (/*event*/) {
         var classes = [];
@@ -292,6 +315,11 @@ define(['logManager',
             this.moveTo(objDescriptor.position.x, objDescriptor.position.y);
         }
 
+        //update rotation
+        if (_.isNumber(objDescriptor.rotation)) {
+            this.rotateTo(objDescriptor.rotation);
+        }
+
         //update decorator if needed
         if (objDescriptor.decoratorClass && this._decoratorID !== objDescriptor.decoratorClass.prototype.DECORATORID) {
 
@@ -316,7 +344,34 @@ define(['logManager',
     };
 
     DesignerItem.prototype.getConnectionAreas = function (id) {
-        return this._decoratorInstance.getConnectionAreas(id);
+        var areas = this._decoratorInstance.getConnectionAreas(id),
+            i = areas.length,
+            rotatedXY,
+            cArea;
+
+        while (i--) {
+            cArea = areas[i];
+
+            if (this.rotation === 0) {
+                cArea.x1 += this.positionX;
+                cArea.y1 += this.positionY;
+                cArea.x2 += this.positionX;
+                cArea.y2 += this.positionY;
+            } else {
+                rotatedXY = this._rotatePoint(cArea.x1, cArea.y1);
+                cArea.x1 = rotatedXY.x + this.positionX;
+                cArea.y1 = rotatedXY.y + this.positionY;
+
+                rotatedXY = this._rotatePoint(cArea.x2, cArea.y2);
+                cArea.x2 = rotatedXY.x + this.positionX;
+                cArea.y2 = rotatedXY.y + this.positionY;
+
+                cArea.angle1 = (cArea.angle1 + this.rotation) % 360;
+                cArea.angle2 = (cArea.angle2 + this.rotation) % 360;
+            }
+        }
+
+        return areas;
     };
 
     DesignerItem.prototype.moveTo = function (posX, posY) {
@@ -347,6 +402,7 @@ define(['logManager',
     /*DesignerItem.prototype.moveBy = function (dX, dY) {
         this.moveTo(this.positionX + dX, this.positionY + dY);
     };*/
+
 
     /************ SUBCOMPONENT HANDLING *****************/
     DesignerItem.prototype.registerSubcomponent = function (subComponentId, metaInfo) {
@@ -402,6 +458,37 @@ define(['logManager',
     DesignerItem.prototype.unHighlight = function () {
         this.$el.removeClass(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
     };
+
+    /******************* ROTATION ***********************/
+    DesignerItem.prototype.rotateTo = function (degree) {
+        if (this.rotation !== degree) {
+            this.rotation = degree;
+
+            this.$el.css({'transform-origin': '50% 50%',
+                'transform': 'rotate(' + this.rotation + 'deg)'});
+
+            this.canvas.dispatchEvent(this.canvas.events.ITEM_ROTATION_CHANGED, {"ID": this.id,
+                "deg": this.rotation});
+        }
+    };
+
+    DesignerItem.prototype._rotatePoint = function (x, y) {
+        var fixedRotation = (this.rotation < 0 ? 360 + this.rotation : this.rotation) % 360;
+        var angle = fixedRotation * (Math.PI/180);
+
+        var s = Math.sin(angle);
+        var c = Math.cos(angle);
+
+        var fx = x - this.width / 2;
+        var fy = y - this.height / 2;
+
+        var rx = fx * c - fy * s;
+        var ry = fx * s + fy * c;
+
+        return {"x": rx + this.width / 2,
+            "y": ry + this.height / 2};
+    };
+
 
     return DesignerItem;
 });

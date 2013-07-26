@@ -35,6 +35,8 @@ $connection-end-dst-connector-border-color: #0000FF;
 
 $connection-connector-background-color: #FFFFFF;
 
+$rotation-deg-color: #666666;
+
 .diagram-designer {
   outline: none;
 
@@ -78,6 +80,33 @@ $connection-connector-background-color: #FFFFFF;
           top: -13px;
           right: -13px;
         }
+
+        &.rotate {
+          &.top {
+            left: 50%;
+            margin-left: -13px;
+            top: -13px;
+          }
+
+          &.right {
+            top: 50%;
+            margin-top: -13px;
+            right: -13px;
+          }
+        }
+      }
+
+      .rotation-deg {
+        text-align: center;
+        vertical-align: middle;
+        position: absolute;
+        width: 100%;
+        height: 30px;
+        margin-top: -15px;
+        top: 50%;
+        line-height: 30px;
+        font-size: 30px;
+        color: $rotation-deg-color;
       }
     }
 

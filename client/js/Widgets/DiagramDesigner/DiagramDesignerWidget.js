@@ -19,6 +19,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Subcomponents',
     'js/Widgets/DiagramDesigner/ConnectionRouteManagerBasic',
     'js/Widgets/DiagramDesigner/ConnectionRouteManager2',
+    'js/Widgets/DiagramDesigner/ConnectionRouteManager3',
     'js/Widgets/DiagramDesigner/ConnectionDrawingManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.EventDispatcher',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Zoom',
@@ -37,6 +38,7 @@ define(['logManager',
                                                       DiagramDesignerWidgetSubcomponents,
                                                       ConnectionRouteManagerBasic,
                                                       ConnectionRouteManager2,
+                                                      ConnectionRouteManager3,
                                                       ConnectionDrawingManager,
                                                       DiagramDesignerWidgetEventDispatcher,
                                                       DiagramDesignerWidgetZoom,
@@ -119,6 +121,14 @@ define(['logManager',
             self._onSelectionCommandClicked(command, selectedIds);
         };
 
+        this.selectionManager.onSelectionCommandClicked = function (command, selectedIds) {
+            self._onSelectionCommandClicked(command, selectedIds);
+        };
+
+        this.selectionManager.onSelectionRotated = function (deg, selectedIds) {
+            self.onSelectionRotated(deg, selectedIds);
+        };
+
         this.selectionManager.onSelectionChanged = function (selectedIds) {
             self.onSelectionChanged(selectedIds);
         };
@@ -129,7 +139,7 @@ define(['logManager',
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         //initiate Connection Router (if needed)
-        this.connectionRouteManager = params.connectionRouteManager || new DEFAULT_CONNECTION_ROUTE_MANAGER({"canvas": this});
+        this.connectionRouteManager = params.connectionRouteManager || new DEFAULT_CONNECTION_ROUTE_MANAGER({"diagramDesigner": this});
         this.connectionRouteManager.initialize();
 
         //initiate connection drawing component and hook up event callbacks
@@ -317,6 +327,10 @@ define(['logManager',
                 this.toolBar.addButton({ "title": "Basic+ route manager",
                     "text": "RM #2",
                     "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
+
+                this.toolBar.addButton({ "title": "AutoRouter",
+                    "text": "RM #3",
+                    "data": { "type": "basic3"}}, this.$btnGroupConnectionRouteManager );
             }
             /************** END OF - ROUTING MANAGER SELECTION **************************/
 
@@ -864,13 +878,16 @@ define(['logManager',
     DiagramDesignerWidget.prototype._onConnectionRouteManagerChanged = function (type) {
         switch(type) {
             case "basic":
-                this.connectionRouteManager = new ConnectionRouteManagerBasic({"canvas": this});
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({"diagramDesigner": this});
                 break;
             case "basic2":
-                this.connectionRouteManager = new ConnectionRouteManager2({"canvas": this});
+                this.connectionRouteManager = new ConnectionRouteManager2({"diagramDesigner": this});
+                break;
+            case "basic3":
+                this.connectionRouteManager = new ConnectionRouteManager3({"diagramDesigner": this});
                 break;
             default:
-                this.connectionRouteManager = new ConnectionRouteManagerBasic({"canvas": this});
+                this.connectionRouteManager = new ConnectionRouteManagerBasic({"diagramDesigner": this});
                 break;
         }
 
@@ -1194,6 +1211,11 @@ define(['logManager',
         this.logger.warning("DiagramDesignerWidget.prototype.onUnhighlight not overridden in controller. idList: " + idList);
     };
     /************************* HIGHLIGHTED / UNHIGHLIGHTED EVENT *****************************/
+
+
+    DiagramDesignerWidget.prototype.onSelectionRotated = function (deg, selectedIds) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSelectionRotated IS NOT OVERRIDDEN IN CONTROLLER. deg: '" + deg + "', selectedIds: " + selectedIds);
+    };
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

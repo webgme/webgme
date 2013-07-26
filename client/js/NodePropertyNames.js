@@ -7,6 +7,7 @@ define([], function () {
     var attributeNames = {  "name" : "name",
                             "directed": "directed" },
         registryNames = {   "position" : "position",
+                            "rotation": "rotation",
                             "decorator": "decorator",
                             "isPort": "isPort",
                             "lineStyle": "lineStyle" };
