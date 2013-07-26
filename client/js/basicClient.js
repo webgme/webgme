@@ -1308,8 +1308,8 @@ define([
                         typeof _nodes[parameters.parentId].node === 'object' &&
                         typeof _nodes[parameters.sourceId].node === 'object' &&
                         typeof _nodes[parameters.targetId].node === 'object'){
-                        var sourceName = _core.getAttribute(_nodes[parameters.sourceId].node,"name").toLowerCase();
-                        var targetName = _core.getAttribute(_nodes[parameters.targetId].node,"name").toLowerCase();
+                        var sourceName = (_core.getAttribute(_nodes[parameters.sourceId].node,"name") || "").toLowerCase();
+                        var targetName = (_core.getAttribute(_nodes[parameters.targetId].node,"name") || "").toLowerCase();
 
                         //TODO: basic rule: if all necessary parameters are present they can be connected
                         result = true;
