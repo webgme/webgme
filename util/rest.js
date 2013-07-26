@@ -22,7 +22,6 @@ define([
     Mongo) {
 
     function Rest(_configuration){
-        var _tokens = {};
         var _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null,branch:null};
         var _database = new Commit(
                             new Cache(
@@ -35,15 +34,9 @@ define([
                                 ,{})
                             ,{})
                         ,{});
-        var token = function(){
-
-            return {
-
-            }
-        };
 
         var clearBuffer = function(){
-            delete _buffer;
+            delete(_buffer);
             _buffer = {project:null,core:null,root:null,coreNode:null,formattedNode:null,commit:null,branch:null};
         };
         var specialCharHandling = function(text){
@@ -58,45 +51,45 @@ define([
         };
         var loadingNode = function(core,node,callback){
             //we have to load all pointers, all collections and all the stuff which has connection to the node
-            var outnode = {};
+            var outNode = {};
 
             //attributes
-            outnode.attribute={};
+            outNode.attribute={};
             var names = core.getAttributeNames(node);
             for(var i=0;i<names.length;i++){
-                outnode.attribute[names[i]] = core.getAttribute(node,names[i]);
+                outNode.attribute[names[i]] = core.getAttribute(node,names[i]);
             }
 
             //registry
-            outnode.registry={};
+            outNode.registry={};
             names = core.getRegistryNames(node);
-            for(var i=0;i<names.length;i++){
-                outnode.registry[names[i]] = core.getRegistry(node,names[i]);
+            for(i=0;i<names.length;i++){
+                outNode.registry[names[i]] = core.getRegistry(node,names[i]);
             }
 
             //children
-            outnode.children=core.getChildrenPaths(node);
+            outNode.children=core.getChildrenPaths(node);
 
             //sets
-            outnode.sets = {};
+            outNode.sets = {};
             var setNames = core.getSetNames(node);
-            for(var i=0; i<setNames.length;i++){
-                outnode.sets[setNames[i]] = core.getMemberPaths(node,setNames[i]);
+            for(i=0; i<setNames.length;i++){
+                outNode.sets[setNames[i]] = core.getMemberPaths(node,setNames[i]);
             }
 
             //pointers and collections
-            outnode.pointer = {};
-            outnode.collection = {};
-            outnode.member = {};
+            outNode.pointer = {};
+            outNode.collection = {};
+            outNode.member = {};
             var error = null;
             var needed = 0;
             var allLoaded = function(){
                 if(error){
                     callback(error,null);
                 } else {
-                    outnode.path = core.getPath(node);
-                    _buffer.formattedNode = outnode;
-                    callback(null,outnode);
+                    outNode.path = core.getPath(node);
+                    _buffer.formattedNode = outNode;
+                    callback(null,outNode);
                 }
             };
 
@@ -111,8 +104,7 @@ define([
                     if(err){
                         error = err;
                     } else {
-                        //outnode.pointer[name] = pointer.data._id;
-                        outnode.pointer[name] = core.getPath(pointer);
+                        outNode.pointer[name] = core.getPath(pointer);
                     }
 
                     if(--needed === 0){
@@ -125,22 +117,22 @@ define([
                     if(err){
                         error = err;
                     } else {
-                        outnode.collection[name] = [];
+                        outNode.collection[name] = [];
                         for(var i=0;i<collection.length;i++){
                             var path = core.getPath(collection[i]);
                             if(path.indexOf('/_sets/') === -1){
-                                outnode.collection[name].push(path);
+                                outNode.collection[name].push(path);
                             } else {
                                 //we build, the member part here
                                 path = path.split('/');
-                                var setOwner = "",jmax = path.indexOf('_sets');
-                                for(var j=0;j<jmax;j++){
+                                var setOwner = "",jMax = path.indexOf('_sets');
+                                for(var j=0;j<jMax;j++){
                                     setOwner+="/"+path[j];
                                 }
-                                if(!outnode.member[_buffer.core.getSetName(path[jmax+1])]){
-                                    outnode.member[_buffer.core.getSetName(path[jmax+1])] = [];
+                                if(!outNode.member[_buffer.core.getSetName(path[jMax+1])]){
+                                    outNode.member[_buffer.core.getSetName(path[jMax+1])] = [];
                                 }
-                                outnode.member[_buffer.core.getSetName(path[jmax+1])].push(setOwner);
+                                outNode.member[_buffer.core.getSetName(path[jMax+1])].push(setOwner);
                             }
                         }
                     }
@@ -152,7 +144,7 @@ define([
             };
 
             if(needed >0){
-                for(var i=0;i<names.length;i++){
+                for(i=0;i<names.length;i++){
                     loadPointer(names[i]);
                 }
 
@@ -165,9 +157,9 @@ define([
         };
         var persistProject = function(callback,isdelete){
             //now comes the saving part
-            _buffer.core.persist(_buffer.root,function(err){});
+            _buffer.core.persist(_buffer.root,function(){});
             var newRootHash = _buffer.core.getHash(_buffer.root);
-            var newCommitHash = _buffer.project.makeCommit([_buffer.commit],newRootHash,"REST commit",function(err){});
+            var newCommitHash = _buffer.project.makeCommit([_buffer.commit],newRootHash,"REST commit",function(){});
             if(isdelete){
                 callback(null,addingSpecialChars(newCommitHash));
             } else {
@@ -225,17 +217,17 @@ define([
                 _buffer.core.setAttribute(_buffer.coreNode,i,data.attribute[i]);
             }
             //attribute removals
-            for(var i in _buffer.formattedNode.attribute){
+            for(i in _buffer.formattedNode.attribute){
                 if(!data.attribute[i]){
                     _buffer.core.delAttribute(_buffer.coreNode,i);
                 }
             }
             //registry updates and inserts
-            for(var i in data.registry){
+            for(i in data.registry){
                 _buffer.core.setRegistry(_buffer.coreNode,i,data.registry[i]);
             }
             //registry removals
-            for(var i in _buffer.formattedNode.registry){
+            for(i in _buffer.formattedNode.registry){
                 if(!data.registry[i]){
                     _buffer.core.delRegistry(_buffer.coreNode,i);
                 }
@@ -243,14 +235,14 @@ define([
 
 
             //pointer removals
-            for(var i in _buffer.formattedNode.pointer){
+            for(i in _buffer.formattedNode.pointer){
                 if(!data.pointer[i]){
                     _buffer.core.deletePointer(_buffer.coreNode,i);
                 }
             }
 
             //pointer updates and inserts - this can be done only by callback so it should be done at the end
-            for(var i in data.pointer){
+            for(i in data.pointer){
                 if(_buffer.formattedNode.pointer[i]){
                     if(data.pointer[i] !== _buffer.formattedNode.pointer[i]){
                         pointerToUpdate.push(i);
@@ -261,7 +253,7 @@ define([
             }
 
             //member addition and removal presetting
-            for(var i in _buffer.formattedNode.sets){
+            for(i in _buffer.formattedNode.sets){
                 if(!data.sets[i]){
                     //remove the whole set
                     for(var j=0;j<_buffer.formattedNode.sets[i].length;j++){
@@ -269,21 +261,21 @@ define([
                     }
                 }
             }
-            for(var i in data.sets){
+            for(i in data.sets){
                 if(!_buffer.formattedNode.sets[i]){
                     //a new set
-                    for(var j=0;j<data.sets[i].length;j++){
+                    for(j=0;j<data.sets[i].length;j++){
                         memberToUpdate.push({set:i,path:data.sets[i][j],del:false});
                     }
                 } else {
                     //first the removals
-                    for(var j=0;j<_buffer.formattedNode.sets[i].length;j++){
+                    for(j=0;j<_buffer.formattedNode.sets[i].length;j++){
                         if(data.sets[i].indexOf(_buffer.formattedNode.sets[i][j]) === -1){
                             memberToUpdate.push({set:i,path:_buffer.formattedNode.sets[i][j],del:true});
                         }
                     }
                     //then the inserts
-                    for(var j=0;j<data.sets[i].length;j++){
+                    for(j=0;j<data.sets[i].length;j++){
                         if(_buffer.formattedNode.sets[i].indexOf(data.sets[i][j]) === -1){
                             memberToUpdate.push({set:i,path:data.sets[i][j],del:false});
                         }
@@ -298,7 +290,7 @@ define([
             if(needToGo <1){
                 finished();
             } else {
-                for(var i=0;i<pointerToUpdate.length;i++){
+                for(i=0;i<pointerToUpdate.length;i++){
                     updatePointer(pointerToUpdate[i],function(err){
                         if(err){
                             error = err;
@@ -308,7 +300,7 @@ define([
                         }
                     });
                 }
-                for(var j=0;j<memberToUpdate.length;j++){
+                for(j=0;j<memberToUpdate.length;j++){
                     updateMember(memberToUpdate[j].set,memberToUpdate[j].path,memberToUpdate[j].del,function(err){
                         if(err){
                             error = err;
@@ -324,9 +316,6 @@ define([
         //available commands
         var getProjects = function(callback){
             _database.getProjectNames(callback);
-        };
-        var _getBranches = function(projName,callback){
-            _projects[projName].getBranchNames(callback);
         };
         var getBranches = function(project,callback){
             project.getBranchNames(callback);

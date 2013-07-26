@@ -554,21 +554,13 @@ define([
                 }
 
             }
-            /*function addSetPaths(pathsSoFar){
-                for(var i in pathsSoFar){
-                    var sets = _core.getSetPaths(_nodes[i].node);
-                    for(var j=0;j<sets.length;j++){
-                        pathsSoFar[sets[j]] = true;
-                    }
-                }
-            }*/
+
             function userEvents(userId,modifiedNodes){
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
                     patternToPaths(i,_users[userId].PATTERNS[i],newPaths);
                 }
-                //addSetPaths(newPaths);
 
                 var events = [];
                 //deleted items
@@ -593,39 +585,6 @@ define([
                 }
 
                 _users[userId].PATHS = newPaths;
-
-
-                /*//we should remove set events and add their owner instead
-                var setEvents = {};
-                var eventsToRemove = [];
-                //first we mark the set changes
-                var setPath = null;
-                for(i=0;i<events.length;i++){
-                    setPath =  _core.getSetOwnerPath(events[i].eid);
-                    if(setPath){
-                        eventsToRemove.unshift(i);
-                        setEvents[setPath] = false;
-                    }
-                }
-                //we remove the set events
-                while(eventsToRemove.length>0){
-                    var index = eventsToRemove.shift();
-                    events.splice(index,1);
-                }
-
-                //we check which events should be really added
-                for(i=0;i<events.length;i++){
-                    if(setEvents[events[i].eid] === false){
-                        setEvents[events[i].eid] = true;
-                    }
-                }
-
-                //adding the needed events
-                for(i in setEvents){
-                    if(setEvents[i] === false){
-                        events.push({etype:'update',eid:i});
-                    }
-                }*/
 
 
                 if(events.length>0){
@@ -653,81 +612,7 @@ define([
                 }
                 return path;
             }
-            function completeNode(core,nodesSoFar,node,callback){
-                if(core.getSetsNumber(node)>0){
-                    core.loadSets(node,function(err,sets){
-                        if(!err && sets ){
-                            var missing = sets.length;
-                            var error = null;
-                            var path = null;
-                            for(var i=0;i<sets.length;i++){
-                                path = core.getPath(sets[i]);
-                                if(!nodesSoFar[path]){
-                                    nodesSoFar[path] = {node:sets[i],hash:core.getSingleNodeHash(sets[i]),incomplete:false,basic:false};
-                                }
-                                if(core.getChildrenNumber(sets[i])>0){
-                                    core.loadChildren(sets[i],function(err,children){
-                                        error = error || err;
-                                        if(!err){
-                                            for(var j=0;j<children.length;j++){
-                                                path = core.getPath(children[j]);
-                                                if(!nodesSoFar[path]){
-                                                    nodesSoFar[path] = {node:children[j],hash:core.getSingleNodeHash(children[j]),incomplete:false,basic:false};
-                                                }
-                                            }
-                                        }
 
-                                        if(--missing === 0){
-                                            nodesSoFar[core.getPath(node)].incomplete = false;
-                                            callback(error);
-                                        }
-                                    });
-                                } else {
-                                    if(--missing === 0){
-                                        nodesSoFar[core.getPath(node)].incomplete = false;
-                                        callback(error);
-                                    }
-                                }
-                            }
-                        } else {
-                            callback(err);
-                        }
-                    });
-                } else {
-                    nodesSoFar[core.getPath(node)].incomplete = false;
-                    callback(null);
-                }
-            }
-            function _completeNodes(core,nodes,callback){
-                var incompletes = [];
-                for(var i in nodes){
-                    if(nodes[i].incomplete){
-                        incompletes.push(nodes[i].node);
-                    }
-                }
-                var missing = incompletes.length;
-                if(missing>0){
-                    var error = null;
-                    for(i=0;i<incompletes.length;i++){
-                        completeNode(core,nodes,incompletes[i],function(err){
-                            error = error || err;
-                            if(--missing === 0){
-                                callback(error);
-                            }
-                        });
-                    }
-                } else {
-                    callback(null);
-                }
-            }
-            function completeNodes(core,nodes,callback){
-                for(var i in nodes){
-                    if(nodes[i].incomplete){
-                        nodes[i].incomplete = false;
-                    }
-                }
-                callback(null);
-            }
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
                 if(!nodesSoFar[path]){
@@ -795,14 +680,6 @@ define([
                         var missing = 0,
                             error = null;
                         _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
-                        var allLoaded = function(){
-                            /*if(!error){
-                                completeNodes(_core,_loadNodes,callback);
-                            } else {
-                                callback(error);
-                            }*/
-                            callback(error);
-                        };
 
                         for(var i in _users){
                             for(var j in _users[i].PATTERNS){
@@ -815,13 +692,13 @@ define([
                                     loadPattern(_core,j,_users[i].PATTERNS[j],_loadNodes,function(err){
                                         error = error || err;
                                         if(--missing === 0){
-                                            allLoaded();
+                                            callback(error);
                                         }
                                     });
                                 }
                             }
                         } else {
-                            allLoaded();
+                            callback(error);
                         }
                     } else {
                         callback(err);
@@ -895,7 +772,6 @@ define([
                 }
             }
 
-
             function saveRoot(msg,callback){
                 callback = callback || function(){};
                 if(!_viewer){
@@ -923,7 +799,6 @@ define([
             function getActiveProject() {
                 return _projectName;
             }
-
             function getAvailableProjectsAsync(callback) {
                 if(_database){
                     _database.getProjectNames(callback);
@@ -987,7 +862,6 @@ define([
                     callback(new Error('there is no open database connection!'));
                 }
             }
-
             //branching functionality
             function getBranchesAsync(callback){
                 if(_database){
@@ -1533,72 +1407,8 @@ define([
                     console.log('wrong parameters in intelligent paste operation - denied -');
                 }
             }
+
             //MGAlike - set functions
-            function _addMember(path, memberpath, setid) {
-                if(_nodes[path] &&
-                    _nodes[memberpath] &&
-                    typeof _nodes[path].node === 'object' &&
-                    typeof _nodes[memberpath].node === 'object'){
-                    var setPath = _core.getSetPath(_nodes[path].node,setid);
-                    if(setPath === null){
-                        //we need to create the set first
-                        var id = _core.getSetRelid(setid);
-                        var setNode = _core.createNode(_nodes[path].node,id);
-                        storeNode(setNode);
-                        setPath = _core.getPath(setNode);
-                    }
-
-                    if(_nodes[setPath] && typeof _nodes[setPath].node === 'object'){
-                        //let's check if the path already in the set
-                        var members = _core.getChildrenPaths(_nodes[setPath].node);
-                        var memberPaths =[];
-                        for(var i=0;i<members.length;i++){
-                            if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
-                                memberPaths.push(_core.getPointerPath(_nodes[members[i]].node,'member'));
-                            }
-                        }
-                        if(memberPaths.indexOf(memberpath) === -1){
-                            var newMember = _core.createNode(_nodes[setPath].node);
-                            storeNode(newMember);
-                            _core.setPointer(newMember,'member',_nodes[memberpath].node);
-                            saveRoot('addMember('+path+','+memberpath+','+setid+')');
-                        }
-                    }
-                }
-            }
-            function _removeMember(path, memberpath, setid) {
-                if(_nodes[path] &&
-                    _nodes[memberpath] &&
-                    typeof _nodes[path].node === 'object' &&
-                    typeof _nodes[memberpath].node === 'object'){
-                    var setPath = _core.getSetPath(_nodes[path].node,setid);
-                    if(setPath !== null){
-                        if(_nodes[setPath] && typeof _nodes[setPath].node === 'object'){
-                            //let's check if the path is in the set
-                            var members = _core.getChildrenPaths(_nodes[setPath].node);
-                            var memberPaths =[];
-                            var memberHash = {};
-                            for(var i=0;i<members.length;i++){
-                                if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
-                                    memberPaths.unshift(_core.getPointerPath(_nodes[members[i]].node,'member'));
-                                    memberHash[memberPaths[0]] = members[i];
-                                }
-                            }
-                            if(memberPaths.indexOf(memberpath) !== -1){
-                                _core.deleteNode(_nodes[memberHash[memberpath]].node);
-
-                                if(members.length === 1){
-                                    //this was the only element in the set so we can delete the set itself
-                                    _core.deleteNode(_nodes[setPath].node);
-                                }
-
-                                saveRoot('removeMember('+path+','+memberpath+','+setid+')');
-                            }
-                        }
-                    }
-                }
-            }
-
             function addMember(path,memberpath,setid){
                 if(_nodes[path] &&
                     _nodes[memberpath] &&
@@ -1632,12 +1442,6 @@ define([
                     var missing = 0;
                     var error = null;
                     var allDone = function(){
-                        /*completeNodes(_core,_nodes,function(err){
-                            _users[guid].PATTERNS = patterns;
-                            if(!error && !err){
-                                userEvents(guid,[]);
-                            }
-                        });*/
                         _users[guid].PATTERNS = patterns;
                         if(!error){
                             userEvents(guid,[]);
@@ -1721,26 +1525,6 @@ define([
                 };
 
                 //SET
-                var _getMemberIds = function(setid){
-                    var setPath = _core.getSetPath(_nodes[_id].node,setid);
-                    if(setPath && _nodes[setPath] && typeof _nodes[setPath].node === 'object'){
-                        var members = _core.getChildrenPaths(_nodes[setPath].node);
-                        var memberIds = [];
-                        for(var i=0;i<members.length;i++){
-                            if(_nodes[members[i]] && typeof _nodes[members[i]].node === 'object'){
-                                var path = _core.getPointerPath(_nodes[members[i]].node,'member');
-                                if(path){
-                                    memberIds.push(path);
-                                } else {
-
-                                }
-                            }
-                        }
-                        return memberIds;
-                    } else {
-                        return [];
-                    }
-                };
                 var getMemberIds = function(setid){
                     return _core.getMemberPaths(_nodes[_id].node,setid);
                 };
@@ -1754,9 +1538,6 @@ define([
                     }
                     return names;
                 };
-                /*var getSetIds = function(){
-                    return _core.getSetPaths(_nodes[_id].node);
-                };*/
                 //META
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
@@ -1764,7 +1545,7 @@ define([
 
                 //ASSERT(_nodes[_id]);
 
-                if(_nodes[_id] /*&& _nodes[_id].incomplete === false*/){
+                if(_nodes[_id]){
                     return {
                         getParentId : getParentId,
                         getId       : getId,

@@ -267,6 +267,8 @@ class Node(object):
     REGISTRY_KEY = 'registry'
     COLLECTION_KEY = 'collection'
     CHILDREN_KEY = 'children'
+    SETS_KEY = 'sets'
+    MEMBER_KEY = 'member'
 
     NAME_KEY = 'name'
 
@@ -279,7 +281,9 @@ class Node(object):
         POINTER_KEY: {},
         REGISTRY_KEY: {},
         COLLECTION_KEY: {},
-        CHILDREN_KEY: []
+        CHILDREN_KEY: [],
+        SETS_KEY: {},
+        MEMBER_KEY: {}
     }
 
     def __init__(self, branch, path='', node = None):
@@ -420,6 +424,19 @@ class Node(object):
         # TODO: resolve rel_ids
         return CollectionDict(self, Node.COLLECTION_KEY)
 
+    @property
+    def sets(self):
+        # get update from server
+        self._node_obj = self.GET()
+        # TODO: resolve rel_ids
+        return CollectionDict(self, Node.SETS_KEY)
+
+    @property
+    def member(self):
+        # get update from server
+        self._node_obj = self.GET()
+        # TODO: resolve rel_ids
+        return CollectionDict(self, Node.MEMBER_KEY)
 
     @property
     def __json__(self):
