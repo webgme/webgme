@@ -50,7 +50,8 @@ define(['logManager',
         //handle mouse down in designer-items
         this.$el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id");
-            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
+                self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._diagramDesigner.onElementMouseDown(itemId);
                 self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(event));
                 event.stopPropagation();
@@ -61,7 +62,8 @@ define(['logManager',
         //handle mouse down in designer-connections
         this.$el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
             var connId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
-            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
+            if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
+                self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._diagramDesigner.onElementMouseDown(connId);
                 self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(event));
                 event.stopPropagation();
@@ -560,6 +562,10 @@ define(['logManager',
     SelectionManager.prototype._renderSelectionActions = function () {
         var self = this,
             deleteBtn;
+
+        if (this._diagramDesigner.getIsReadOnlyMode() === true) {
+            return;
+        }
 
         if (this._diagramDesigner.getIsReadOnlyMode() !== true) {
             deleteBtn = $('<div/>', {
