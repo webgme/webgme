@@ -273,11 +273,19 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                     _children:[]
                 });
 
+                var valueString = "";
+                if(!registryObj[i]._value === null && !registryObj[i]._value === undefined){
+                    if(typeof registryObj[i]._value === "string"){
+                        valueString = registryObj[i]._value;
+                    } else {
+                        valueString = JSON.stringify(registryObj[i]._value);
+                    }
+                }
                 regJSON[length-1]._children = registryToChildrenArray(registryObj[i]);
                 regJSON[length-1]._children.unshift({
                     _type:"value",
                     _empty:false,
-                    _string:stringToXMLString( (registryObj[i]._value === null || registryObj[i]._value === undefined) ? "" : registryObj[i]._value )
+                    _string:valueString
                 });
             }
         }
