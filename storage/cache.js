@@ -80,7 +80,7 @@ define([ "util/assert" ], function (ASSERT) {
 
 		function wrapProject (name, project) {
 			var ID_NAME = project.ID_NAME;
-			
+
 			var refcount = 0;
 			var branches = {};
 			var missing = {};
@@ -88,10 +88,25 @@ define([ "util/assert" ], function (ASSERT) {
 			var cache = {};
 			var cacheSize = 0;
 
+			function deepFreeze (obj) {
+				ASSERT(typeof obj === "object");
+
+				Object.freeze(obj);
+
+				var key;
+				for (key in obj) {
+					if (typeof obj[key] === "object") {
+						deepFreeze(obj[key]);
+					}
+				}
+			}
+
 			function cacheInsert (key, obj) {
 				ASSERT(typeof cache[key] === "undefined" && obj[ID_NAME] === key);
 
+				deepFreeze(obj);
 				cache[key] = obj;
+
 				if (++cacheSize >= options.cache) {
 					backup = cache;
 					cache = {};

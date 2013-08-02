@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, SHA1, FUTURE, TASYNC,CANON) {
+define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' ], function (ASSERT, SHA1, FUTURE, TASYNC, CANON) {
 	"use strict";
 
 	var HASH_REGEXP = new RegExp("#[0-9a-f]{40}");
@@ -687,7 +687,7 @@ define([ "util/assert", "util/sha1", "core/future", "core/tasync", 'util/canon' 
 				ASSERT(hash === "" || typeof hash === "undefined");
 
 				if (hash === "") {
-                    hash = "#" + SHA1(CANON.stringify(data));
+					hash = "#" + SHA1(CANON.stringify(data));
 					data[ID_NAME] = hash;
 
 					done = FUTURE.join(done, storage.insertObject(data));
