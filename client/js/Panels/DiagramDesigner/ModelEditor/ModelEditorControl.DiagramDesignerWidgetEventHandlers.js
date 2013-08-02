@@ -411,9 +411,7 @@ define(['logManager',
         if (gmeID) {
             nodeObj = this._client.getNode(gmeID);
             if (nodeObj) {
-                lineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
-                //TODO kecso hack
-                lineStyle = JSON.parse(JSON.stringify(lineStyle));
+                lineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
                 lineStyle[DiagramDesignerWidgetConstants.LINE_POINTS] = points;
 
                 this._client.setRegistry(gmeID, nodePropertyNames.Registry.lineStyle, lineStyle);

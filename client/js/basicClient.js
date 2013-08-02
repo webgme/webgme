@@ -1503,8 +1503,24 @@ define([
                     return _core.getAttribute(_nodes[_id].node,name);
                 };
 
+                var getEditableAttribute = function(name){
+                    var value = _core.getAttribute(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
+                };
+
                 var getRegistry = function(name){
                     return _core.getRegistry(_nodes[_id].node,name);
+                };
+
+                var getEditableRegistry = function(name){
+                    var value = _core.getRegistry(_nodes[_id].node,name);
+                    if(typeof value === 'object'){
+                        return JSON.parse(JSON.stringify(value));
+                    }
+                    return value;
                 };
 
                 var getPointer = function(name){
@@ -1553,7 +1569,9 @@ define([
                         getBaseId : getBaseId,
                         getInheritorIds : getInheritorIds,
                         getAttribute : getAttribute,
+                        getEditableAttribute: getEditableAttribute,
                         getRegistry : getRegistry,
+                        getEditableRegistry : getEditableRegistry,
                         getPointer : getPointer,
                         getPointerNames : getPointerNames,
                         getAttributeNames : getAttributeNames,
