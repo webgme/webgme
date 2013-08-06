@@ -90,6 +90,9 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 			if (name === "project") {
 				ASSERT(stack.length === 0);
 				tag.node = root;
+                var guid = tag.attributes['guid'];
+                guid = guid.replace(/[{,},-]/g,""); //TODO somehow it needs to adapted better to our guid storage needs
+                core.setAttribute(root,"_relguid",guid);
 			} else if (name === "folder" || name === "model" || name === "atom" || name === "connection" || name === "reference" || name === "set") {
 				ASSERT(stack.length >= 1);
                 //**********
@@ -97,7 +100,9 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
                 if(relid === "NaN"){
                     relid = undefined;
                 }
-				tag.node = core.createNode(stack[stack.length - 1].node,relid);
+                var guid = tag.attributes['guid'];
+                guid = guid.replace(/[{,}]/g,"");
+				tag.node = core.createNode(stack[stack.length - 1].node,relid,guid);
                 core.setRegistry(tag.node,'refPortCount',0);
                 //**********
 				objects += 1;
@@ -169,7 +174,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 	}
 
 	var registry = {
-		guid: "guid",
+		//guid: "guid",
 		cdate: "created",
 		mdate: "modified",
 		version: "version",

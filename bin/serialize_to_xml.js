@@ -152,7 +152,7 @@ if (typeof define !== "function") {
     return;
 }
 
-define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 'storage/cache', 'storage/mongo', 'core/core' ], function (ASSERT, TASYNC, COMMON,fs,Commit,Cache,Mongo,Core) {
+define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 'storage/cache', 'storage/mongo' ], function (ASSERT, TASYNC, COMMON,fs,Commit,Cache,Mongo) {
 // attributes reserved for easier JSON to XML conversion
 // _type : show the type of the XML tag
 // _attr : object which contain all the attributes of the XML node
@@ -183,7 +183,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         isinstance: "isinstance",
         isprimary: "isprimary"
     };
-    var webOnly = ['position','isPort','isConnection','metameta','author','comment','refPortCount'];
+    var webOnly = ['position','isPort','isConnection','metameta','author','comment','refPortCount','decorator','lineStyle'];
     function stringToXMLString(text){
         text = text.replace(/\&/g,'&amp;');
         text = text.replace(/\"/g,'&quot;');
@@ -200,6 +200,8 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
         initJ._attr = {};
 
 
+        //TODO properly adding new guid stuff
+        initJ._attr["guid"] = "{"+theCore.getGuid(gmeNode)+"}";
         for(var i in registry){
             var value = theCore.getRegistry(gmeNode,i);
             if(value !== undefined && value !== null){
@@ -399,28 +401,6 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
     }
     function createXMLStart(){
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE project SYSTEM \"mga.dtd\">\n\n"
-    }
-
-    function serialize(corr,rootHash,outPath,projectName,callback){
-        //temporary hack
-        console.log('serialize',(new Date()));
-        var myStorage = new Commit(new Cache(new Mongo({
-            database: 'test',
-            host: 'localhost',
-            port:27017
-        }), {}));
-        myStorage.openDatabase(function(err){
-            if(!err){
-                myStorage.openProject(projectName,function(err,project){
-                    if(!err && project){
-                        var mycore = new Core(project, {
-                            autopersist: true
-                        });
-                        _serialize(mycore,rootHash,outPath,callback);
-                    }
-                });
-            }
-        });
     }
 
     //new TASYNC compatible functions

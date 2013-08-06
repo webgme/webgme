@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "util/sax", "fs", "bin/getconfig", "storage/socketioclient" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, SAX, FS, CONFIG, Client) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "core/guidcore", "util/sax", "fs", "bin/getconfig", "storage/socketioclient" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, GuidCore, SAX, FS, CONFIG, Client) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -112,9 +112,9 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 		project = p;
 
-		core = new Core(project, {
+		core = new GuidCore(new Core(project, {
 			autopersist: true
-		});
+		}));
 
 		core.persist = TASYNC.wrap(core.persist);
 		core.loadByPath = TASYNC.wrap(core.loadByPath);

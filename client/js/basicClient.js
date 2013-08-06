@@ -4,6 +4,7 @@ define([
     'util/guid',
     'core/core',
     'core/setcore',
+    'core/guidcore',
     'storage/cache',
     'storage/failsafe',
     'storage/socketioclient',
@@ -17,6 +18,7 @@ define([
         GUID,
         Core,
         SetCore,
+        GuidCore,
         Cache,
         Failsafe,
         SocketIOClient,
@@ -404,7 +406,7 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
-                        _core = new SetCore(new Core(_project));
+                        _core = new SetCore(new GuidCore(new Core(_project)));
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -513,7 +515,7 @@ define([
                 }
             }
             function createEmptyProject(project,callback){
-                var core = new SetCore(new Core(project,{}));
+                var core = new SetCore(new GuidCore(new Core(project,{})));
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
