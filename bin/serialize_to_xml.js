@@ -276,7 +276,7 @@ define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 's
                 });
 
                 var valueString = "";
-                if(!registryObj[i]._value === null && !registryObj[i]._value === undefined){
+                if(!(registryObj[i]._value === null || registryObj[i]._value === undefined)){
                     if(typeof registryObj[i]._value === "string"){
                         valueString = registryObj[i]._value;
                     } else {
