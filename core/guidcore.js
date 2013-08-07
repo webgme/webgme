@@ -63,6 +63,27 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             }
             return toExternalGuid(outGuid);
         };
+        _core.setGuid = function(node,guid,callback){
+            ASSERT(GUID_REGEXP.test(guid));
+            _core.loadChildren(node,function(err,children){
+                if(err){
+                    callback(err);
+                } else {
+                    var newguid = toInternalGuid(guid);
+                    for(var i=0;i<children.length;i++){
+                        var oldguid = toInternalGuid(_core.getGuid(children[i]));
+                        _core.setAttribute(children[i],"_relguid",xorGuids(newguid,oldguid));
+                    }
+                    var parent = _core.getParent(node);
+                    if(parent){
+                        _core.setAttribute(node,"_relguid",xorGuids(newguid,toInternalGuid(_core.getGuid(parent))));
+                    } else {
+                        _core.setAttribute(node,"_relguid",newguid);
+                    }
+                    callback(null);
+                }
+            });
+        };
         //modified functions
         _core.createNode = function (parent, relid,guid) {
             ASSERT(guid === null || guid === undefined || GUID_REGEXP.test(guid));
@@ -86,15 +107,21 @@ define([ "util/assert","util/guid"], function (ASSERT,GUID) {
             var newnode = _innerCore.moveNode(node,parent);
             var newguid = toInternalGuid(_core.getGuid(_core.getParent(newnode)));
             newguid = xorGuids(toInternalGuid(_core.getGuid(node)),newguid);
-            _innerCore.setAttribute(newnode,"_relguid",newguid);
+            _core.setAttribute(newnode,"_relguid",newguid);
 
             return newnode;
         };
-        /*_core.getAttributeNames = function(node){
+        _core.copyNode = function (node,parent){
+            var newnode = _innerCore.copyNode(node,parent);
+            _core.setAttribute(newnode,"_relguid",toInternalGuid(GUID()));
+
+            return newnode;
+        };
+        _core.getAttributeNames = function(node){
             var names = _innerCore.getAttributeNames(node);
             names.splice(names.indexOf("_relguid"),1);
             return names;
-        };*/
+        };
 
 
 
