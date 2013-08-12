@@ -17,7 +17,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 		options.type = options.type || "browser";
 		options.timeout = options.timeout || 10000;
 
-		if (options.host.substr(0, 7) !== "http://" && options.host.substr(0, 7) !== "https://") {
+		if (options.host.substr(0, 7) !== "http://" && options.host.substr(0, 8) !== "https://") {
 			options.host = "http://" + options.host;
 		}
 
