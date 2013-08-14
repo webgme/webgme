@@ -5,6 +5,7 @@ define([
     'core/core',
     'core/setcore',
     'core/guidcore',
+    'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
     'storage/socketioclient',
@@ -19,6 +20,7 @@ define([
         Core,
         SetCore,
         GuidCore,
+        HashCheck,
         Cache,
         Failsafe,
         SocketIOClient,
@@ -91,6 +93,24 @@ define([
                 'OFFLINE' : 'offline'
             };
 
+            function newDatabase(){
+                return  new Log(
+                            new HashCheck(
+                                new Commit(
+                                    new Cache(
+                                        new Failsafe(
+                                            new SocketIOClient(
+                                                {
+                                                    host:_configuration.host,
+                                                    port:_configuration.port
+                                                }
+                                            ),{}
+                                        ),{}
+                                    ),{}
+                                ),{}
+                            ),{log:LogManager.create('client-storage')}
+                        );
+            }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {
                     _selectedObjectId = objectId;
@@ -1047,20 +1067,7 @@ define([
                     _networkStatus = "";
                     changeBranchState(null);
                 }
-                _database = new Log(
-                    new Commit(
-                        new Cache(
-                            new Failsafe(
-                                new SocketIOClient(
-                                    {
-                                        host:options.host,
-                                        port:options.port
-                                    }
-                                ),{}
-                            ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                );
+                _database = newDatabase();
 
                 _database.openDatabase(function(err){
                     if(!err){
@@ -1611,20 +1618,7 @@ define([
 
             //initialization
             function initialize(){
-                _database = new Log(
-                    new Commit(
-                        new Cache(
-                            new Failsafe(
-                                new SocketIOClient(
-                                    {
-                                        host:_configuration.host,
-                                        port:_configuration.port
-                                    }
-                                ),{}
-                            ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                );
+                _database = newDatabase();
                 _database.openDatabase(function(err){
                     if(!err){
                         _networkWatcher = networkWatcher();
