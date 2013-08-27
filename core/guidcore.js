@@ -110,7 +110,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 		_core.moveNode = function (node, parent) {
 			var newnode = _innerCore.moveNode(node, parent);
 			var newguid = toInternalGuid(_core.getGuid(_core.getParent(newnode)));
-			newguid = xorGuids(toInternalGuid(_core.getGuid(node)), newguid);
+			newguid = xorGuids(toInternalGuid(_core.getGuid(newnode)), newguid);
 			_core.setAttribute(newnode, "_relguid", newguid);
 
 			return newnode;
