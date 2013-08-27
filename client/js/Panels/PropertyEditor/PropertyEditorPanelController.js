@@ -223,10 +223,10 @@ define(['logManager',
             keyArr = args.id.split(".");
             if (keyArr[0] === "Attributes") {
                 setterFn = "setAttributes";
-                getterFn = "getAttribute";
+                getterFn = "getEditableAttribute";
             } else {
                 setterFn = "setRegistry";
-                getterFn = "getRegistry";
+                getterFn = "getEditableRegistry";
             }
 
             keyArr.splice(0, 1);
