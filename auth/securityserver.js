@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSERT,SHA1,CANON,GUID) {
+define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "auth/crypto" ], function (ASSERT,SHA1,CANON,GUID,UDM,CRYPTO) {
     "use strict";
 
     function nullUDM(){
@@ -23,16 +23,6 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
         return {
             getUser : getUser,
             updateUser : updateUser
-        }
-    }
-    function nullCrypto(){
-
-        function encrypt(key,data){
-            return key*data;
-        }
-
-        return {
-            encrypt : encrypt
         }
     }
     function Database (_innerDb, options) {
@@ -99,19 +89,15 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                 callback('not authenticated session');
             }
         };
-        database.fsyncDatabase = function(sid,callback){
+        database.fsyncDatabase = function(callback){
             if(getSessionUser(sid) !== null){
                 _innerDb.fsyncDatabase(callback);
             } else {
                 callback('not authenticated session');
             }
         };
-        database.getDatabaseStatus = function(sid,oldstatus,callback){
-            if(getSessionUser(sid) !== null){
-                _innerDb.getDatabaseStatus(oldstatus,callback);
-            } else {
-                callback('not authenticated session');
-            }
+        database.getDatabaseStatus = function(oldstatus,callback){
+            _innerDb.getDatabaseStatus(oldstatus,callback);
         };
         database.getProjectNames = function(sid,callback){
             var user = getSessionUser(sid);
@@ -133,7 +119,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                 callback('not authenticated session');
             }
         };
-        database.deleteProject = function(sid,name,callback){
+        database.deleteProject = function(name,sid,callback){
             var user = getSessionUser(sid);
             if(user){
                 if(user.projects[name]){
@@ -149,7 +135,10 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                 callback('not authenticated session');
             }
         };
-        database.openProject = function(sid,name,callback){
+        database.openProject = function(name,sid,callback){
+            if(typeof callback !== 'function'){
+                console.log('whaaat??');
+            }
             var goodToOpen = function(){
                 //here we add our security layer
                 _innerDb.openProject(name,function(err,innerProject){
@@ -157,19 +146,11 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                         callback(err);
                     } else {
                         var project = {};
-                        project.fsyncDatabase = function(sid,callback){
-                            if(getSessionUser(sid) !== null){
-                                innerProject.fsyncDatabase(callback);
-                            } else {
-                                callback('not authenticated session');
-                            }
+                        project.fsyncDatabase = function(callback){
+                            innerProject.fsyncDatabase(callback);
                         };
-                        project.getDatabaseStatus = function(sid,callback){
-                            if(getSessionUser(sid) !== null){
-                                innerProject.getDatabaseStatus(callback);
-                            } else {
-                                callback('not authenticated session');
-                            }
+                        project.getDatabaseStatus = function(callback){
+                            innerProject.getDatabaseStatus(callback);
                         };
                         project.closeProject = function(sid,callback){
                             if(getSessionUser(sid) !== null){
@@ -178,7 +159,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.loadObject = function(sid,hash,callback){
+                        project.loadObject = function(hash,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
@@ -194,7 +175,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.insertObject = function(sid,object,callback){
+                        project.insertObject = function(object,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
@@ -211,7 +192,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.findHash = function(sid,beginning,callback){
+                        project.findHash = function(beginning,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
@@ -259,7 +240,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.getBranchHash = function(sid,branch,oldhash,callback){
+                        project.getBranchHash = function(branch,oldhash,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
@@ -275,7 +256,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.setBranchHash = function(sid,branch,oldhash,newhash,callback){
+                        project.setBranchHash = function(branch,oldhash,newhash,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
@@ -291,7 +272,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid" ], function (ASSE
                                 callback('not authenticated session');
                             }
                         };
-                        project.getCommits = function(sid,before,number,callback){
+                        project.getCommits = function(before,number,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
