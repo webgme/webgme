@@ -32,7 +32,8 @@ define(['logManager',
 
     TreeBrowserWidget.prototype._initialize = function () {
         var self = this,  //save this for later use
-            lastSelection = { "nodeId" :  null, "time" : null };
+            lastSelection = { "nodeId" :  null, "time" : null },
+            lastDblClicked;
 
         //clear container content
         this._el.html("");
@@ -98,164 +99,52 @@ define(['logManager',
             },
 
             onClick: function (node, event) {
-                var currentSelectionTime,
-                    delta;
+                //override just to prevent default dynatree behavior
+                //onClick: null, // null: generate focus, expand, activate, select events.
+            },
 
-                //single click on the title means rename if the node is already selected
-                if (node.getEventTargetType(event) === "title") {
+            onFocus: function (node) {
+                //override just to prevent default dynatree behavior
+                //onFocus: null, // null: set focus to node.
+            },
 
-                    //if node was already selected and
-                    // if Ctrl is pressed, alter range selection, toggle this node's selection status
-                    if (event.ctrlKey === true) {
-                        node.toggleSelect();
-                        node.focus();
-                        lastSelection = { "nodeId" :  null, "time" : null };
-                        return false;// Prevent default processing
-                    } else {
-                        //if node is already selected and clicked again, enter edit mode
-                        //if node was not selected, then select it and deselect everyone else
-                        if (node.isSelected() === true) {
-                            currentSelectionTime = new Date();
-                            delta = currentSelectionTime - lastSelection.time;
-                            if (delta <= 500) {
-                                //consider as double click and propagate node selection to upper contorol
-                                if ($.isFunction(self.onNodeDoubleClicked)) {
-                                    self._logger.debug("Node double-click: " + node.data.key);
-                                    self.onNodeDoubleClicked.call(self, node.data.key);
-                                }
-                            } else if ((delta > 500) && (delta <= 1000)) {
-                                editNode(node);
-                                lastSelection = { "nodeId" :  null, "time" : null };
-                            } else {
-                                lastSelection.time = new Date();
-                            }
-                            event.preventDefault();
-                            return false; // Prevent default processing
-                        } else {
-                            self._deselectSelectedNodes();
-                            //finally select this node
-                            node.select(true);
-                            node.focus();
-                            lastSelection = { "nodeId" :  node.data.key, "time" : new Date() };
-                            event.preventDefault();
-                            return false;
-                        }
-                    }
+            onDblClick: function (node, event) {
+                var editNoteTitle = false;
+
+                self._logger.debug("Node double-click: " + node.data.key);
+
+                //if Ctrl or Meta pressed for whatever reason (accidentally dblclick with modifier keys, just ignore)
+                if (event.ctrlKey === true || event.metaKey === true) {
+                    return false;// Prevent default processing
+                }
+
+                //deselect everyone and select the dblclicked one
+                self._deselectSelectedNodes();
+                node.select(true);
+
+                //check if the node is already focused and the title is clicked --> edit title
+                if (node.getEventTargetType(event) === "title" &&
+                    node.isFocused() === true &&
+                    lastDblClicked === node) {
+                    editNoteTitle = true;
+                }
+
+                //check what mode should be activated
+                if (editNoteTitle === true) {
+                    self._nodeEdit(node);
                 } else {
-                    //if the click does not happen on the title or expander, don't handle it
-                    if (node.getEventTargetType(event) !== "expander") {
-                        return false;
+                    lastDblClicked = node;
+                    if ($.isFunction(self.onNodeDoubleClicked)) {
+                        self._logger.debug("default double-click handler: " + node.data.key);
+                        self.onNodeDoubleClicked.call(self, node.data.key);
                     }
                 }
             },
-
-            //onSelect: function (select, node) {
-            // Display list of selected nodes
-            /* var selNodes = node.tree.getSelectedNodes();
-             // convert to title/key array
-             var selKeys = $.map(selNodes, function (node) {
-             return "[" + node.data.key + "]: '" + node.data.title + "'";
-             });
-             this._logger.debug(selKeys.join(", "));*/
-            //},
 
             //we don't need an activation here, it just messes up the UI
             onQueryActivate: function () {
                 return false;
             },
-
-            /*
-            onKeydown: function (node, event) {
-                var sib = null,
-                    parents,
-                    i,
-                    handled = false;
-
-                switch (event.which) {
-                    case 46:    // DEL
-                        self._nodeDelete(node);
-                        handled = true;
-                        break;
-                    // Handle Ctrl-C, -X and -V
-                    case 67:
-                        if (event.ctrlKey) { // Ctrl-C
-                            self._nodeCopy(node);
-                            handled = true;
-                        }
-                        break;
-                    case 86:
-                        if (event.ctrlKey) { // Ctrl-V
-                            self._nodePaste(node);
-                            handled = true;
-                        }
-                        break;
-                    case 113: //F2
-                        self._nodeEdit(node);
-                        handled = true;
-                        break;
-                    case 13: //ENTER
-                        self.onNodeDoubleClicked.call(self, node.data.key);
-                        handled = true;
-                        break;
-                    case 37: // <left>
-                        if (node.bExpanded) {
-                            node.toggleExpand();
-                            node.focus();
-                            node.select(true);
-                        }
-                        handled = true;
-                        nreak;
-                    case 39: // <right>
-                        if (!node.bExpanded && (node.childList || node.data.isLazy)) {
-                            node.toggleExpand();
-                            node.focus();
-                            node.select(true);
-                        }
-                        handled = true;
-                        break;
-                    case 38: // <up>
-                        if (event.shiftKey !== true) {
-                            self._deselectSelectedNodes();
-                        }
-                        sib = node.getPrevSibling();
-                        while (sib && sib.bExpanded && sib.childList) {
-                            sib = sib.childList[sib.childList.length - 1];
-                        }
-                        if (!sib && node.parent && node.parent.parent) {
-                            sib = node.parent;
-                        }
-                        if (sib) {
-                            sib.focus();
-                            sib.select(true);
-                        }
-                        handled = true;
-                        break;
-                    case 40: // <down>
-                        if (event.shiftKey !== true) {
-                            self._deselectSelectedNodes();
-                        }
-                        if (node.bExpanded && node.childList) {
-                            sib = node.childList[0];
-                        } else {
-                            parents = node._parentList(false, true);
-                            for (i = parents.length - 1; i >= 0; i -= 1) {
-                                sib = parents[i].getNextSibling();
-                                if (sib) {
-                                    break;
-                                }
-                            }
-                        }
-                        if (sib) {
-                            sib.focus();
-                            sib.select(true);
-                        }
-                        handled = true;
-                        break;
-                }
-
-                return !handled;
-            },
-            */
 
             onCreate: function (node/*, span*/) {
                 self._makeNodeDraggable(node);
@@ -267,6 +156,10 @@ define(['logManager',
         //register keyboard handling whenever user clicks on widget
         this._el.on('mousedown', function (event) {
            self._registerKeyboardListener(self);
+        });
+
+        this._treeEl.on('mousedown', 'span.dynatree-node', function (event) {
+            self._onNodeMouseDown($.ui.dynatree.getNode(this), event);
         });
     };
 
@@ -476,6 +369,30 @@ define(['logManager',
         }
     };
 
+    TreeBrowserWidget.prototype._onNodeMouseDown = function (node, event) {
+        var self = this,
+            modifierKey = event.ctrlKey === true || event.metaKey === true;
+
+        if (modifierKey) {
+            //modifier key pressed
+            //handle multi selection/deselection
+            this._logger.debug("_onNodeMouseDown: " + node.data.title + " --> toggleSelect");
+            node.toggleSelect();
+        } else {
+            //no modifier key pressed
+            //check if the current node is selected or not
+            //if selected already, don't do anything
+            //if not yet selected, deselect all and select this one only
+            if (!node.isSelected()) {
+                //deselect everyone and select the clicked one
+                this._logger.debug("_onNodeMouseDown: " + node.data.title + " --> select this one only");
+                this._deselectSelectedNodes();
+                node.select(true);
+            } else {
+                this._logger.debug("_onNodeMouseDown: " + node.data.title + " --> already selected, noop");
+            }
+        }
+    };
 
     TreeBrowserWidget.prototype._makeNodeDraggable = function (node) {
         var self = this,
@@ -550,6 +467,8 @@ define(['logManager',
         if (nodeToEdit.data.addClass === NODE_PROGRESS_CLASS) {
             return;
         }
+
+        this._logger.debug("Edit node: " + nodeToEdit.data.key);
 
         $(nodeToEdit.span).find('a').editInPlace({"class": "",
             "onChange": function (oldValue, newValue) {
