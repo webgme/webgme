@@ -125,7 +125,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 
 		_core.getAttributeNames = function (node) {
 			var names = _innerCore.getAttributeNames(node);
-			names.splice(names.indexOf("_relguid"), 1);
+            //TODO: double check (theoretically no need to try to filter out)
+			//names.splice(names.indexOf("_relguid"), 1);
 			return names;
 		};
 

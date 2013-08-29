@@ -39,6 +39,7 @@ $node-progress-font-color: #AAAAAA;
   span.dynatree-icon /* Default icon */
   {
     margin-top: 1px;
+    cursor: pointer;
   }
 
   .dynatree-loading span.dynatree-expander  /* 'Loading' status overrides all others */
@@ -50,7 +51,7 @@ $node-progress-font-color: #AAAAAA;
   ul.dynatree-container a:focus,
   span.dynatree-focused a:link  /* @IE */
   {
-    background-color: $selected-node-background-color;
+    background-color: transparent;
     outline: none;
   }
   /* END OF --- DynaTree Vista-theme overrides */

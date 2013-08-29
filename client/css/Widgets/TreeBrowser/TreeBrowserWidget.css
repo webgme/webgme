@@ -23,13 +23,14 @@
   .tree-browser .dynatree-has-children span.dynatree-icon {
     background-position: 0px -16px; }
   .tree-browser span.dynatree-icon {
-    margin-top: 1px; }
+    margin-top: 1px;
+    cursor: pointer; }
   .tree-browser .dynatree-loading span.dynatree-expander {
     background-position: 0 0;
     background-image: url("./../../../img/progress.gif"); }
   .tree-browser ul.dynatree-container a:focus,
   .tree-browser span.dynatree-focused a:link {
-    background-color: #beebff;
+    background-color: transparent;
     outline: none; }
   .tree-browser ul.dynatree-container li {
     line-height: 16px; }
