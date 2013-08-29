@@ -49,6 +49,11 @@ define([ "util/assert" ], function (ASSERT) {
 			_database.getDatabaseStatus(oldstatus, callback);
 		}
 
+        function authenticate (username,privatekey, callback){
+            logger.debug('authenticate('+username+',***)');
+            _database.authenticate(username,privatekey,callback);
+        }
+
 		function openProject (projectName, callback) {
 			logger.debug('deleteProject(' + projectName + ")");
 			var project = null;
@@ -143,7 +148,8 @@ define([ "util/assert" ], function (ASSERT) {
 			getProjectNames: getProjectNames,
 			getDatabaseStatus: getDatabaseStatus,
 			openProject: openProject,
-			deleteProject: deleteProject
+			deleteProject: deleteProject,
+            authenticate: authenticate
 		};
 	}
 

@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT,SHA1,CANON) {
+define([ "util/assert", "auth/crypto" ], function (ASSERT,CRYPTO) {
     "use strict";
 
     function Database (_innerDb, options) {
@@ -13,37 +13,158 @@ define([ "util/assert", "util/sha1", "util/canon" ], function (ASSERT,SHA1,CANON
         for(var i in _innerDb){
             database[i] = _innerDb[i];
         }
+        var _privateKey = "",
+            _sessionId = null,
+            _username = "",
+            _project = null;
 
 
-        //we have to modify the openProject function
-        database.openProject = function(projectName, callback){
-            _innerDb.openProject(projectName,function(err,innerProject){
-                if(!err && innerProject){
-                    var project = {};
-                    for(var i in innerProject){
-                        project[i] = innerProject[i];
-                    }
+        //new functions
+        database.authenticate = function(username,privateKey,callback){
+            _username = username;
+            _privateKey = privateKey;
+            _innerDb.authenticate(username,function(err,codedSession){
+                if(!err){
+                    _sessionId = CRYPTO.decrypt(_privateKey,codedSession);
+                    callback(null);
+                } else {
+                    return err;
+                }
+            });
+        };
 
-                    //we add the hash check to insertObject
-                    project.insertObject = function(object, cb){
-                        var inHash = object[project.ID_NAME];
-                        object[project.ID_NAME] = "";
-                        var checkHash = "#" + SHA1(CANON.stringify(object));
-                        object[project.ID_NAME] = inHash;
+        //modified functions
+        database.getProjectNames = function(){
+            ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+            var iArgs = [];
+            for(var i=0;i<arguments.length;i++){
+                iArgs.push(arguments[i]);
+            }
+            iArgs.splice(iArgs.length-1,0,_sessionId);
+            _innerDb.getProjectNames.apply(_innerDb,iArgs);
+        };
+        database.openProject = function(projectName,callback){
+            _innerDb.openProject(projectName,_sessionId,function(err,innerProject){
+                if(!err){
+                    _project = {};
 
-                        if(inHash !== checkHash){
-                            cb("wrong hash: expeced - "+checkHash+", received - "+inHash);
-                        } else {
-                            innerProject.insertObject(object,cb);
+                    //we must override all functions with session id
+                    _project.getDatabaseStatus = innerProject.getDatabaseStatus;
+
+                    _project.closeProject = function() {
+                        var haveCallback = false;
+                        if(typeof arguments[arguments.length-1] === 'function'){
+                            haveCallback = true;
                         }
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+
+                        if(haveCallback){
+                            iArgs.splice(iArgs.length-1,0,_sessionId);
+                        } else {
+                            iArgs.push(_sessionId);
+                        }
+
+                        innerProject.closeProject.apply(innerProject,iArgs);
                     };
 
-                    callback(null,project);
+                    _project.loadObject = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.loadObject.apply(innerProject,iArgs);
+                    };
 
+                    _project.insertObject = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.insertObject.apply(innerProject,iArgs);
+                    };
+
+                    _project.findHash = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.findHash.apply(innerProject,iArgs);
+                    };
+
+                    _project.dumpObjects = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.dumpObjects.apply(innerProject,iArgs);
+                    };
+
+                    _project.getBranchNames = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.getBranchNames.apply(innerProject,iArgs);
+                    };
+
+                    _project.getBranchHash = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.getBranchHash.apply(innerProject,iArgs);
+                    };
+
+                    _project.setBranchHash = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.setBranchHash.apply(innerProject,iArgs);
+                    };
+
+                    _project.getCommits = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.getCommits.apply(innerProject,iArgs);
+                    };
+
+                    _project.makeCommit = function() {
+                        ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+                        var iArgs = [];
+                        for(var i=0;i<arguments.length;i++){
+                            iArgs.push(arguments[i]);
+                        }
+                        iArgs.splice(iArgs.length-1,0,_sessionId);
+                        innerProject.makeCommit.apply(innerProject,iArgs);
+                    };
+
+                    callback(null,_project);
                 } else {
                     callback(err);
                 }
-            });
+            })
         };
 
         return database;
