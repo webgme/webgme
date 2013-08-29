@@ -237,7 +237,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                     });
                 });
 
-                socket.on('loadObject', function(projectName,hash,callback){
+                socket.on('loadObject', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
                     var sid = arguments[arguments.length-2];

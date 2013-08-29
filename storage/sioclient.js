@@ -257,19 +257,28 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             }
         }
 
-        function getProjectNames (callback) {
-            ASSERT(typeof callback === 'function');
+        function getProjectNames () {
+            ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
+            var callback = arguments[arguments.length-1];
+            var project = arguments[0];
+            var iArgs = [];
+            for(var i=0;i<arguments.length;i++){
+                iArgs.push(arguments[i]);
+            }
+            iArgs.unshift('getProjectNames');
+            var iCallBack = function (err, names) {
+                clearTimeout(callbacks[guid].to);
+                delete callbacks[guid];
+                callback(err, names);
+            };
+            iArgs.splice(iArgs.length-1,1,iCallBack);
             if (socketConnected) {
                 var guid = GUID();
                 callbacks[guid] = {
                     cb: callback,
                     to: setTimeout(callbackTimeout, options.timeout, guid)
                 };
-                socket.emit('getProjectNames', function (err, names) {
-                    clearTimeout(callbacks[guid].to);
-                    delete callbacks[guid];
-                    callback(err, names);
-                });
+                socket.emit.apply(socket,iArgs);
             } else {
                 callback(new Error(ERROR_DISCONNECTED));
             }
@@ -690,7 +699,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                     iArgs.push(arguments[i]);
                 }
                 iArgs.unshift(project);
-                iArgs.unshift('setBranchHash');
+                iArgs.unshift('getCommits');
                 var iCallBack = function (err, commits) {
                     if (callbacks[guid]) {
                         clearTimeout(callbacks[guid].to);
@@ -749,7 +758,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
             getProjectNames: getProjectNames,
             deleteProject: deleteProject,
             openProject: openProject,
-            authenticate: authenticate
+            authenticate: authenticate,
+            ID_NAME: "_id"
         };
     }
     return Database;

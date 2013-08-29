@@ -49,6 +49,8 @@ define([ "util/assert", "auth/crypto" ], function (ASSERT,CRYPTO) {
                     _project = {};
 
                     //we must override all functions with session id
+                    _project.ID_NAME = innerProject.ID_NAME;
+
                     _project.getDatabaseStatus = innerProject.getDatabaseStatus;
 
                     _project.closeProject = function() {

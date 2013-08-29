@@ -156,14 +156,16 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             if(getSessionUser(sid) !== null){
                                 innerProject.closeProject(callback);
                             } else {
-                                callback('not authenticated session');
+                                if(typeof callback === 'function'){
+                                    callback('not authenticated session');
+                                }
                             }
                         };
                         project.loadObject = function(hash,sid,callback){
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.loadObject(hash,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -196,7 +198,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.findHash(beginning,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -212,7 +214,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.dumpObjects(callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -228,7 +230,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.getBranchNames(callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -244,7 +246,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.getBranchHash(branch,oldhash,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -276,7 +278,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].read == true){
+                                    if(user.projects[name].open == true){
                                         innerProject.getCommits(before,number,callback);
                                     } else {
                                         callback('missing necessary rights');
