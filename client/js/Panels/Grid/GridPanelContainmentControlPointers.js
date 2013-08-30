@@ -11,6 +11,7 @@ define(['logManager',
     var GridPanelContainmentControPointers;
 
     GridPanelContainmentControPointers = function (options) {
+        var self = this;
         this._client = options.client;
         this._panel = options.panel;
         this._dataGridWidget = this._panel.widget;
@@ -18,6 +19,11 @@ define(['logManager',
         this._currentNodeId = null;
 
         this._logger = logManager.create("GridPanelContainmentControPointers");
+
+        this._selectedObjectChanged = function (__project, nodeId) {
+            self.selectedObjectChanged(nodeId);
+        };
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();
@@ -54,6 +60,7 @@ define(['logManager',
     };
 
     GridPanelContainmentControPointers.prototype.destroy = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
         this._client.removeUI(this._territoryId);
     };
 

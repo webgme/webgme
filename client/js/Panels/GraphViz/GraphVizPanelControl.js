@@ -12,6 +12,8 @@ define(['logManager',
         MODEL = 'MODEL';
 
     GraphVizControl = function (options) {
+        var self = this;
+
         this._logger = logManager.create("GraphVizControl");
 
         this._client = options.client;
@@ -26,6 +28,11 @@ define(['logManager',
         this._displayModelsOnly = false;
 
         this._initWidgetEventHandlers();
+
+        this._selectedObjectChanged = function (__project, nodeId) {
+            self.selectedObjectChanged(nodeId);
+        };
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         this._logger.debug("Created");
     };
@@ -233,6 +240,10 @@ define(['logManager',
 
     GraphVizControl.prototype._onUnload = function (gmeID) {
         delete this._nodes[gmeID];
+    };
+
+    GraphVizControl.prototype.destroy = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     return GraphVizControl;

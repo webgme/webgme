@@ -221,10 +221,6 @@ define(['logManager',
 
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
-
-        if (this._activeContoller) {
-            this._activeContoller.selectedObjectChanged(this._currentNodeID);
-        }
     };
 
     return VisualizerPanel;

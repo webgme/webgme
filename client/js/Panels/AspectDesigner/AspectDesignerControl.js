@@ -52,6 +52,11 @@ define(['logManager',
             throw ("ModelEditorControl can not be created");
         }
 
+        this._selectedObjectChanged = function (__project, nodeId) {
+            self.selectedObjectChanged(nodeId);
+        };
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+
         if (this.designerCanvas === undefined) {
             this.logger.error("ModelEditorControl's DesignerCanvas is not specified...");
             throw ("ModelEditorControl can not be created");
@@ -221,6 +226,7 @@ define(['logManager',
     //NOTE: all the UI cleanup will happen from VisualizerPanel
     //might not be the best approach
     AspectDesignerControl.prototype.destroy = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
         this._client.removeUI(this._territoryId);
         this.designerCanvas.clear();
     };

@@ -11,11 +11,17 @@ define(['logManager',
     var GridPanelContainmentControl;
 
     GridPanelContainmentControl = function (options) {
+        var self = this;
         this._client = options.client;
         this._panel = options.panel;
         this._dataGridWidget = this._panel.widget;
 
         this._currentNodeId = null;
+
+        this._selectedObjectChanged = function (__project, nodeId) {
+            self.selectedObjectChanged(nodeId);
+        };
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         this._logger = logManager.create("GridPanelContainmentControl");
 
@@ -54,6 +60,7 @@ define(['logManager',
     };
 
     GridPanelContainmentControl.prototype.destroy = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
         this._client.removeUI(this._territoryId);
     };
 
