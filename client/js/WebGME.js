@@ -6,11 +6,13 @@ var WebGMEGlobal = {};
 define(['logManager',
     'bin/getconfig',
     'js/basicClient',
+    'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager'], function (logManager,
                                             CONFIG,
                                             Client,
+                                            util,
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager) {
@@ -19,15 +21,21 @@ define(['logManager',
         var lm,
             client,
             loadPanels,
-            km;
+            layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
+            commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
+            projectToLoad = util.getURLParameterByName('project').toLowerCase(),
+            logger = logManager.create('WebGME');
 
         //as of now it's a global variable just to make access to it easier
         //TODO: might need to be changed
         WebGMEGlobal.KeyboardManager = new KeyboardManager();
 
         lm = new LayoutManager();
-        lm.loadLayout('DefaultLayout', function () {
-            var panels = [];
+        lm.loadLayout(layoutToLoad, function () {
+            var panels = [],
+                layoutPanels = lm._currentLayout.panels,
+                len = layoutPanels ? layoutPanels.length : 0,
+                i = 0;
 
             client = new Client(CONFIG);
 
@@ -39,46 +47,10 @@ define(['logManager',
 
             client.decoratorManager = new DecoratorManager();
 
-            // HEADER PANEL
-            panels.push({'name': 'ProjectTitle/ProjectTitlePanel',
-                'container': 'header',
-                'params' : {'client': client}});
-
-            // FOOTER PANEL
-            panels.push({'name': 'FooterControls/FooterControlsPanel',
-                'container': 'footer',
-                'params' : {'client': client}});
-
-            // LEFT SIDE PANELS PANELS
-            panels.push({'name': 'Visualizer/VisualizerPanel',
-                'container': 'left',
-                'params' : {'client': client}});
-
-            panels.push({'name': 'Project/ProjectPanel',
-                'container': 'left',
-                'params' : {'client': client}});
-
-            panels.push({'name': 'PartBrowser/PartBrowserPanel',
-                'container': 'left',
-                'params' : {'client': client}});
-
-            panels.push({'name': 'SetEditor/SetEditorPanel',
-                'container': 'left',
-                'params' : {'client': client}});
-
-            // RIGHT SIDE PANELS PANELS
-            panels.push({'name': 'ObjectBrowser/ObjectBrowserPanel',
-                'container': 'right',
-                'params' : {'client': client}});
-
-            panels.push({'name': 'PropertyEditor/PropertyEditorPanel',
-                'container': 'right',
-                'params' : {'client': client}});
-
-            // DEBUG ONLY PANELS
-            if (DEBUG === true) {
-                panels.push({'name': 'DebugTest/DebugTestPanel',
-                    'container': 'left',
+            for (i = 0; i < len; i += 1) {
+                panels.push({'panel': layoutPanels[i].panel,
+                    'container': layoutPanels[i].container,
+                    'control': layoutPanels[i].control,
                     'params' : {'client': client}});
             }
 
@@ -94,7 +66,19 @@ define(['logManager',
                     loadPanels(panels);
                 } else {
                     client.connectToDatabaseAsync({'open': true,
-                                                    'project': CONFIG.project});
+                                                    'project': projectToLoad || CONFIG.project}, function (err) {
+                        if (err) {
+                            logger.error(err);
+                        } else {
+                            if (commitToLoad && commitToLoad !== "") {
+                                client.selectCommitAsync(commitToLoad, function (err) {
+                                    if (err) {
+                                        logger.error(err);
+                                    }
+                                });
+                            }
+                        }
+                    });
                 }
             });
         };

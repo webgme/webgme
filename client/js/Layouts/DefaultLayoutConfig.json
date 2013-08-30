@@ -1,0 +1,42 @@
+{"panels": [
+        {"id": "Header",
+            "panel": "ProjectTitle/ProjectTitlePanel",
+            "container": "header",
+            "DEBUG_ONLY": false},
+
+        {"id": "Footer",
+            "panel": "FooterControls/FooterControlsPanel",
+            "container": "footer",
+            "DEBUG_ONLY": false},
+
+        {"id": "VisualizerPanel",
+            "panel": "Visualizer/VisualizerPanel",
+            "container": "left",
+            "DEBUG_ONLY": false},
+
+        {"id": "ProjectPanel",
+            "panel": "Project/ProjectPanel",
+            "container": "left",
+            "DEBUG_ONLY": false},
+
+        {"id": "PartBrowserPanel",
+            "panel": "PartBrowser/PartBrowserPanel",
+            "container": "left",
+            "DEBUG_ONLY": false},
+
+        {"id": "SetEditorPanel",
+            "panel": "SetEditor/SetEditorPanel",
+            "container": "left",
+            "DEBUG_ONLY": false},
+
+        {"id": "ObjectBrowserPanel",
+            "panel": "ObjectBrowser/ObjectBrowserPanel",
+            "container": "right",
+            "DEBUG_ONLY": false},
+
+        {"id": "PropertyEditorPanel",
+            "panel": "PropertyEditor/PropertyEditorPanel",
+            "container": "right",
+            "DEBUG_ONLY": false}
+    ]
+}

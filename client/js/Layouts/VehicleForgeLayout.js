@@ -1,31 +1,37 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
 "use strict";
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
-    'text!html/Layouts/Default/DefaultLayout.html',
-    'text!./DefaultLayoutConfig.json'], function (_jQueryLayout,
-                             logManager,
-                             defaultLayoutTemplate,
-                             DefaultLayoutConfigJSON) {
+    'text!html/Layouts/VehicleForge/VehicleForgeLayout.html',
+    'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,
+                                                               logManager,
+                                                               vehicleForgeLayoutTemplate,
+                                                               VehicleForgeLayoutConfigJSON) {
 
-    var DefaultLayout,
+    var VehicleForgeLayout,
         SPACING_OPEN_TOUCH = 10,
         SPACING_CLOSED_TOUCH = 10,
         SPACING_OPEN_DESKTOP = 3,
         SPACING_CLOSED_DESKTOP = 6,
         SPACING_OPEN = SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
         SPACING_CLOSED = SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
-        CONFIG = JSON.parse(DefaultLayoutConfigJSON);
+        CONFIG = JSON.parse(VehicleForgeLayoutConfigJSON);
 
-    DefaultLayout = function () {
-        this._logger = logManager.create('DefaultLayout');
+    VehicleForgeLayout = function () {
+        this._logger = logManager.create('VehicleForgeLayout');
     };
 
-    DefaultLayout.prototype.init = function () {
+    VehicleForgeLayout.prototype.init = function () {
         var self = this;
 
         this._body = $('body');
-        this._body.html(defaultLayoutTemplate);
+        this._body.html(vehicleForgeLayoutTemplate);
 
         this._leftPanel = this._body.find('div.ui-layout-west');
         this._mainPanel = this._body.find('div.ui-layout-center');
@@ -69,7 +75,10 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 resizable: false,
                 slidable: false,
                 spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED
+                spacing_closed: SPACING_CLOSED,
+                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                    //self._onWestResize();
+                }
             },
             center : {
                 onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
@@ -81,7 +90,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         this.panels = CONFIG.panels;
     };
 
-    DefaultLayout.prototype.addToContainer = function (panel, container) {
+    VehicleForgeLayout.prototype.addToContainer = function (panel, container) {
         if (container === 'header') {
             this._headerPanel.append(panel.$pEl);
         } else if (container === 'footer') {
@@ -100,8 +109,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         }
     };
 
-    DefaultLayout.prototype.remove = function (panel) {
-          var idx;
+    VehicleForgeLayout.prototype.remove = function (panel) {
+        var idx;
 
         //check it in the right pane
         idx = this._rightPanels.indexOf(panel);
@@ -129,11 +138,11 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         }
     };
 
-    DefaultLayout.prototype.destroy = function () {
+    VehicleForgeLayout.prototype.destroy = function () {
         this._body.empty();
     };
 
-    DefaultLayout.prototype._onCenterResize = function () {
+    VehicleForgeLayout.prototype._onCenterResize = function () {
         var len = this._centerPanels.length,
             w = this._mainPanel.width(),
             h = this._mainPanel.height(),
@@ -145,7 +154,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         }
     };
 
-    DefaultLayout.prototype._onEastResize = function () {
+    VehicleForgeLayout.prototype._onEastResize = function () {
         var len = this._rightPanels.length,
             w = this._rightPanel.width(),
             h = this._rightPanel.height(),
@@ -157,5 +166,17 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         }
     };
 
-    return DefaultLayout;
+    VehicleForgeLayout.prototype._onWestResize = function () {
+        var len = this._leftPanels.length,
+            w = this._leftPanel.width(),
+            h = this._leftPanel.height(),
+            pHeight = Math.floor(h / len),
+            i;
+
+        for (i = 0; i < len; i += 1) {
+            this._leftPanels[i].setSize(w, pHeight);
+        }
+    };
+
+    return VehicleForgeLayout;
 });
