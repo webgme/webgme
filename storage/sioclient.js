@@ -528,7 +528,7 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
                         cb: callback,
                         to: setTimeout(callbackTimeout, options.timeout, guid)
                     };
-                    socket.emit(socket,iArgs);
+                    socket.emit.apply(socket,iArgs);
                 } else {
                     callback(new Error(ERROR_DISCONNECTED));
                 }

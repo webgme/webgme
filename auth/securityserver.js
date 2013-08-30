@@ -90,11 +90,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
             }
         };
         database.fsyncDatabase = function(callback){
-            if(getSessionUser(sid) !== null){
-                _innerDb.fsyncDatabase(callback);
-            } else {
-                callback('not authenticated session');
-            }
+            _innerDb.fsyncDatabase(callback)
         };
         database.getDatabaseStatus = function(oldstatus,callback){
             _innerDb.getDatabaseStatus(oldstatus,callback);
