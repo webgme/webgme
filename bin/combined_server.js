@@ -5,6 +5,7 @@
  */
 
 var requirejs = require("requirejs");
+var urlmodule = require('url');
 
 requirejs.config({
     nodeRequire: require,
@@ -129,8 +130,14 @@ requirejs(['logManager',
                     if(req.url.indexOf('/rest/') >=0){
                         processRest(null);
                     } else {
-                        if(req.url==='/'){
-                            req.url = '/index.html';
+                        var parsedURL = urlmodule.parse(req.url, true);
+                        var href = parsedURL.href;
+                        var search = parsedURL.search;
+                        var query = parsedURL.query;
+                        var pathname = parsedURL.pathname;
+
+                        if(pathname === '/'){
+                            pathname = '/index.html';
                         }
 
                         var dirname = __dirname;
@@ -139,29 +146,29 @@ requirejs(['logManager',
                         }
                         dirname += "./../";
 
-                        if (!(  req.url.indexOf('/common/') === 0 ||
-                            req.url.indexOf('/util/') === 0 ||
-                            req.url.indexOf('/storage/') === 0 ||
-                            req.url.indexOf('/core/') === 0 ||
-                            req.url.indexOf('/user/') === 0 ||
-                            req.url.indexOf('/config/') === 0 ||
-                            req.url.indexOf('/bin/') === 0)){
+                        if (!(  pathname.indexOf('/common/') === 0 ||
+                            pathname.indexOf('/util/') === 0 ||
+                            pathname.indexOf('/storage/') === 0 ||
+                            pathname.indexOf('/core/') === 0 ||
+                            pathname.indexOf('/user/') === 0 ||
+                            pathname.indexOf('/config/') === 0 ||
+                            pathname.indexOf('/bin/') === 0)){
                             dirname += "client";
                         }
 
-                        require('fs').readFile(dirname + req.url, function(err,data){
+                        require('fs').readFile(dirname + pathname, function(err,data){
                             if(err){
-                                logger.error("Error getting the file:" + dirname + req.url);
-                                sendNegativeResponse(404,'Error loading ' + req.url);
+                                logger.error("Error getting the file:" + dirname + pathname);
+                                sendNegativeResponse(404,'Error loading ' + pathname);
                             } else {
-                                if(req.url.indexOf('.js')>0){
-                                    logger.debug("HTTP RESP - "+req.url);
+                                if(pathname.indexOf('.js')>0){
+                                    logger.debug("HTTP RESP - "+pathname);
                                     res.writeHead(200, {
                                         'Content-Length': data.length,
                                         'Content-Type': 'application/x-javascript' });
 
-                                } else if (req.url.indexOf('.css')>0) {
-                                    logger.debug("HTTP RESP - "+req.url);
+                                } else if (pathname.indexOf('.css')>0) {
+                                    logger.debug("HTTP RESP - "+pathname);
                                     res.writeHead(200, {
                                         'Content-Length': data.length,
                                         'Content-Type': 'text/css' });
