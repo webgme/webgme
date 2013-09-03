@@ -378,24 +378,26 @@ define(['logManager',
         var positionChanged = false;
         //check what might have changed
 
-        //location and dimension information
-        if (this.positionX !== posX) {
-            this.positionX = posX;
-            positionChanged = true;
-        }
+        if (_.isNumber(posX) && _.isNumber(posY)) {
+            //location and dimension information
+            if (this.positionX !== posX) {
+                this.positionX = posX;
+                positionChanged = true;
+            }
 
-        if (this.positionY !== posY) {
-            this.positionY = posY;
-            positionChanged = true;
-        }
+            if (this.positionY !== posY) {
+                this.positionY = posY;
+                positionChanged = true;
+            }
 
-        if (positionChanged) {
-            this.$el.css({"left": this.positionX,
-                "top": this.positionY });
+            if (positionChanged) {
+                this.$el.css({"left": this.positionX,
+                    "top": this.positionY });
 
-            this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
-                                                                                 "x": this.positionX,
-                                                                                 "y": this.positionY});
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_POSITION_CHANGED, {"ID": this.id,
+                    "x": this.positionX,
+                    "y": this.positionY});
+            }
         }
     };
 
@@ -461,14 +463,16 @@ define(['logManager',
 
     /******************* ROTATION ***********************/
     DesignerItem.prototype.rotateTo = function (degree) {
-        if (this.rotation !== degree) {
-            this.rotation = degree;
+        if (_.isNumber(degree)) {
+            if (this.rotation !== degree) {
+                this.rotation = degree;
 
-            this.$el.css({'transform-origin': '50% 50%',
-                'transform': 'rotate(' + this.rotation + 'deg)'});
+                this.$el.css({'transform-origin': '50% 50%',
+                    'transform': 'rotate(' + this.rotation + 'deg)'});
 
-            this.canvas.dispatchEvent(this.canvas.events.ITEM_ROTATION_CHANGED, {"ID": this.id,
-                "deg": this.rotation});
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_ROTATION_CHANGED, {"ID": this.id,
+                    "deg": this.rotation});
+            }
         }
     };
 
