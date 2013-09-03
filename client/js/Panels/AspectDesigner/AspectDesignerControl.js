@@ -15,7 +15,6 @@ define(['logManager',
     "use strict";
 
     var AspectDesignerControl,
-        DECORATOR_PATH = "js/Decorators/DiagramDesigner/",
         GME_ID = "GME_ID",
         ASPECT_BUILDER_REGISTRY_KEY = "AspectBuilder",
 
@@ -263,7 +262,7 @@ define(['logManager',
                         itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                         if (itemDecorator && itemDecorator !== "") {
-                            decoratorsToDownload.pushUnique(DEFAULT_DECORATOR);
+                            decoratorsToDownload.pushUnique(itemDecorator);
                         }
                     }
                 }
@@ -355,13 +354,15 @@ define(['logManager',
                 "ParentID": undefined,
                 "Sets": undefined,
                 "Pointers": undefined,
-                "decorator": "DefaultDecorator",
+                "decorator": DEFAULT_DECORATOR,
                 "position": { "x": -1, "y": -1 }};
 
             nodeDescriptor.ID = gmeID;
             nodeDescriptor.ParentID = cNode.getParentId();
 
             nodeDescriptor.name = cNode.getAttribute(nodePropertyNames.Attributes.name) || "";
+
+            nodeDescriptor.decorator = cNode.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
 
             if (gmeID === this.currentNodeInfo.id) {
 
@@ -402,10 +403,6 @@ define(['logManager',
     };
 
     AspectDesignerControl.prototype._onUnload = function (gmeID) {
-        var componentID,
-            len,
-            idx;
-
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been deleted....
             this.logger.debug('The currently opened aspect has been deleted --- GMEID: "' + this.currentNodeInfo.id + '"');
@@ -453,7 +450,7 @@ define(['logManager',
             componentID,
             i,
             gmeID,
-            aspectRegistry = aspectNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
+            aspectRegistry = aspectNode.getEditableRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             territoryChanged = false;
 
         //update selfRegistry (for node positions)
@@ -509,7 +506,7 @@ define(['logManager',
     /**********************************************************/
     AspectDesignerControl.prototype._addItemsToAspect = function (gmeIDList, position) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
+            registry = cNode.getEditableRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             gmeID,
             i;
 
@@ -546,7 +543,7 @@ define(['logManager',
     /**********************************************************/
     AspectDesignerControl.prototype._onDesignerItemsMove = function (repositionDesc) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
+            registry = cNode.getEditableRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             id,
             gmeID;
 
@@ -573,8 +570,7 @@ define(['logManager',
     //TODO: connection deletion not yet handled
     AspectDesignerControl.prototype._onSelectionDelete = function (idList) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
-            registry = cNode.getRegistry(ASPECT_BUILDER_REGISTRY_KEY) || { "Members": [],
-                "MemberCoord": {}},
+            registry = cNode.getEditableRegistry(ASPECT_BUILDER_REGISTRY_KEY) || this._emptyAspectRegistry(),
             len = idList.length,
             gmeID,
             idx,
@@ -664,7 +660,6 @@ define(['logManager',
             connType;
 
         if (this._connectionWaitingListByDstGMEID && this._connectionWaitingListByDstGMEID.hasOwnProperty(gmeDstID)) {
-            //this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].push(connType);
             for (gmeSrcID in this._connectionWaitingListByDstGMEID[gmeDstID]) {
                 if (this._connectionWaitingListByDstGMEID[gmeDstID].hasOwnProperty(gmeSrcID)){
                     len = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID].length;
