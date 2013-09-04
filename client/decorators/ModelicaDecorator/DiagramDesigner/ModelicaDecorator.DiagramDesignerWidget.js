@@ -104,7 +104,8 @@ define(['js/Constants',
 
     ModelicaDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id) {
         var result = [],
-            edge = 10;
+            edge = 10,
+            LEN = 20;
 
         //by default return the bounding box edge's midpoints
 
@@ -117,7 +118,7 @@ define(['js/Constants',
                 "y2": 0,
                 "angle1": 270,
                 "angle2": 270,
-                "len": 10} );
+                "len": LEN} );
 
             result.push( {"id": "1",
                 "x1": edge,
@@ -126,7 +127,7 @@ define(['js/Constants',
                 "y2": this.hostDesignerItem.height,
                 "angle1": 90,
                 "angle2": 90,
-                "len": 10} );
+                "len": LEN} );
 
             result.push( {"id": "2",
                 "x1": 0,
@@ -135,7 +136,7 @@ define(['js/Constants',
                 "y2": this.hostDesignerItem.height - edge,
                 "angle1": 180,
                 "angle2": 180,
-                "len": 10} );
+                "len": LEN} );
 
             result.push( {"id": "3",
                 "x1": this.hostDesignerItem.width,
@@ -144,7 +145,7 @@ define(['js/Constants',
                 "y2": this.hostDesignerItem.height - edge,
                 "angle1": 0,
                 "angle2": 0,
-                "len": 10} );
+                "len": LEN} );
         } else {
             result.push( {"id": id,
                 "x1": this._portCoordinates[id].x + this._portCoordinates[id].w / 2,
@@ -153,7 +154,7 @@ define(['js/Constants',
                 "y2": this._portCoordinates[id].y + this._portCoordinates[id].h / 2,
                 "angle1": 0,
                 "angle2": 360,
-                "len": 10} );
+                "len": LEN} );
         }
 
         return result;
