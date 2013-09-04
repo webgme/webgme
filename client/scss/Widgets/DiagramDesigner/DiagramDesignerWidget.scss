@@ -191,26 +191,36 @@ $rotation-deg-color: #666666;
       }
     }
 
+    div.c-t {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+
+      div.c-text {
+        position: absolute;
+        font-size: 10px;
+
+        .c-name {
+          position: relative;
+          left: -50%;
+        }
+      }
+    }
+
     &.highlight-mode {
       .designer-item,
-      .designer-connection{
+      .designer-connection,
+      .c-t {
         opacity: 0.1;
         cursor: pointer;
       }
 
       .designer-item.highlighted,
-      .designer-connection.highlighted {
+      .designer-connection.highlighted,
+      .c-t.highlighted {
         opacity: 1.0;
-      }
-    }
-
-    div.c-text {
-      position: absolute;
-      font-size: 10px;
-
-      .c-name {
-        position: relative;
-        left: -50%;
       }
     }
   }

@@ -18,6 +18,7 @@ define(['logManager',
 
     var Connection,
         PATH_SHADOW_ID_PREFIX = "p_",
+        TEXT_ID_PREFIX = "t_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DEFAULT_WIDTH = 2,
         CONNECTION_DEFAULT_COLOR = "#000000",
@@ -921,6 +922,9 @@ define(['logManager',
             $(this.skinParts.path.node).attr('class', classes.join(' '));
         }
 
+        if (this.skinParts.textContainer) {
+            this.skinParts.textContainer.addClass(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
+        }
     };
 
     Connection.prototype.unHighlight = function () {
@@ -929,6 +933,10 @@ define(['logManager',
         if (idx !== -1) {
             classes.splice(idx, 1);
             $(this.skinParts.path.node).attr('class', classes.join(' '));
+        }
+
+        if (this.skinParts.textContainer) {
+            this.skinParts.textContainer.removeClass(DiagramDesignerWidgetConstants.ITEM_HIGHLIGHT_CLASS);
         }
     };
 
@@ -1064,6 +1072,7 @@ define(['logManager',
         }
     };
 
+    Connection.prototype._textContainer = $('<div class="c-t"></div>');
     Connection.prototype._textNameBase = $('<div class="c-text"><span class="c-name"></span></div>');
     Connection.prototype._textSrcBase = $('<div class="c-text"><span class="c-src"></span></div>');
     Connection.prototype._textDstBase = $('<div class="c-text"><span class="c-dst"></span></div>');
@@ -1081,16 +1090,21 @@ define(['logManager',
             alphaBegin = this._calculateSteep(path0, path1),
             pathN = this.skinParts.path.getPointAtLength(totalLength),
             pathN1 = this.skinParts.path.getPointAtLength(totalLength - 1),
-            alphaEnd = this._calculateSteep(pathN1, pathN);
+            alphaEnd = this._calculateSteep(pathN1, pathN),
+            hasText = false;
 
         this._hideTexts();
+
+        this.skinParts.textContainer = this._textContainer.clone();
+        this.skinParts.textContainer.attr('id', TEXT_ID_PREFIX + this.id);
 
         if (this.name && this.name !== "") {
             this.skinParts.name = this._textNameBase.clone();
             this.skinParts.name.css({ 'top': pathCenter.y + this.designerAttributes.width / 2,
                 'left': pathCenter.x});
             this.skinParts.name.find('span').text(this.name);
-            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.name);
+            this.skinParts.textContainer.append(this.skinParts.name);
+            hasText = true;
         }
 
         if (this.srcText && this.srcText !== "") {
@@ -1121,7 +1135,8 @@ define(['logManager',
             this.skinParts.srcText.css({ 'top': pathBegin.y + dy,
                 'left': pathBegin.x + dx});
             this.skinParts.srcText.find('span').text(this.srcText);
-            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.srcText);
+            this.skinParts.textContainer.append(this.skinParts.srcText);
+            hasText = true;
         }
 
         if (this.dstText && this.dstText !== "") {
@@ -1154,21 +1169,18 @@ define(['logManager',
             this.skinParts.dstText.css({ 'top': pathEnd.y + dy,
                 'left': pathEnd.x + dx});
             this.skinParts.dstText.find('span').text(this.dstText);
-            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.dstText);
+            this.skinParts.textContainer.append(this.skinParts.dstText);
+            hasText = true;
+        }
+
+        if (hasText) {
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.textContainer);
         }
     };
 
     Connection.prototype._hideTexts = function () {
-        if (this.skinParts.name) {
-            this.skinParts.name.remove();
-        }
-
-        if (this.skinParts.srcText) {
-            this.skinParts.srcText.remove();
-        }
-
-        if (this.skinParts.dstText) {
-            this.skinParts.dstText.remove();
+        if (this.skinParts.textContainer) {
+            this.skinParts.textContainer.remove();
         }
     };
 
