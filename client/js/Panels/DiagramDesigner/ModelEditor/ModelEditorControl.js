@@ -317,6 +317,10 @@ define(['logManager',
                     objDescriptor.kind = "CONNECTION";
                     objDescriptor.source = nodeObj.getPointer("source").to;
                     objDescriptor.target = nodeObj.getPointer("target").to;
+
+                    //clear out name not to display anything
+                    objDescriptor.name = "";
+
                     if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
                         objDescriptor.arrowEnd = "block";
                     }
