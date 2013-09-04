@@ -206,6 +206,11 @@ $rotation-deg-color: #666666;
           position: relative;
           left: -50%;
         }
+
+        input {
+          height: 20px !important;
+          min-width: 50px;
+        }
       }
     }
 

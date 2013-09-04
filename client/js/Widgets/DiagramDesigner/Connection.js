@@ -84,6 +84,9 @@ define(['logManager',
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
         this.name = objDescriptor.name;
+        this.nameEdit = objDescriptor.nameEdit || false;
+        this.srcTextEdit = objDescriptor.srcTextEdit || false;
+        this.dstTextEdit = objDescriptor.dstTextEdit || false;
     };
 
     Connection.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
@@ -1091,7 +1094,8 @@ define(['logManager',
             pathN = this.skinParts.path.getPointAtLength(totalLength),
             pathN1 = this.skinParts.path.getPointAtLength(totalLength - 1),
             alphaEnd = this._calculateSteep(pathN1, pathN),
-            hasText = false;
+            hasText = false,
+            self = this;
 
         this._hideTexts();
 
@@ -1105,6 +1109,18 @@ define(['logManager',
             this.skinParts.name.find('span').text(this.name);
             this.skinParts.textContainer.append(this.skinParts.name);
             hasText = true;
+
+            // set title editable on double-click
+            this.skinParts.name.find('span').on("dblclick.editOnDblClick", null, function (event) {
+                if (self.nameEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
+                    $(this).editInPlace({"class": "",
+                        "onChange": function (oldValue, newValue) {
+                            self._onNameChanged(oldValue, newValue);
+                        }});
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
         }
 
         if (this.srcText && this.srcText !== "") {
@@ -1137,6 +1153,18 @@ define(['logManager',
             this.skinParts.srcText.find('span').text(this.srcText);
             this.skinParts.textContainer.append(this.skinParts.srcText);
             hasText = true;
+
+            // set title editable on double-click
+            this.skinParts.srcText.find('span').on("dblclick.editOnDblClick", null, function (event) {
+                if (self.srcTextEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
+                    $(this).editInPlace({"class": "",
+                        "onChange": function (oldValue, newValue) {
+                            self._onSrcTextChanged(oldValue, newValue);
+                        }});
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
         }
 
         if (this.dstText && this.dstText !== "") {
@@ -1171,6 +1199,18 @@ define(['logManager',
             this.skinParts.dstText.find('span').text(this.dstText);
             this.skinParts.textContainer.append(this.skinParts.dstText);
             hasText = true;
+
+            // set title editable on double-click
+            this.skinParts.dstText.find('span').on("dblclick.editOnDblClick", null, function (event) {
+                if (self.dstTextEdit === true && self.diagramDesigner.getIsReadOnlyMode() !== true) {
+                    $(this).editInPlace({"class": "",
+                        "onChange": function (oldValue, newValue) {
+                            self._onDstTextChanged(oldValue, newValue);
+                        }});
+                }
+                event.stopPropagation();
+                event.preventDefault();
+            });
         }
 
         if (hasText) {
@@ -1205,6 +1245,18 @@ define(['logManager',
         alpha = alpha * (180/Math.PI);
 
         return alpha;
+    };
+
+    Connection.prototype._onNameChanged = function (oldValue, newValue) {
+        this.diagramDesigner.onConnectionNameChanged(this.id, oldValue, newValue);
+    };
+
+    Connection.prototype._onSrcTextChanged = function (oldValue, newValue) {
+        this.diagramDesigner.onConnectionSrcTextChanged(this.id, oldValue, newValue);
+    };
+
+    Connection.prototype._onDstTextChanged = function (oldValue, newValue) {
+        this.diagramDesigner.onConnectionDstTextChanged(this.id, oldValue, newValue);
     };
 
 
