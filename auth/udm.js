@@ -100,7 +100,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
         }*/
         return {
             initialize : function(callback){callback(null);},
-            getUser : function(user,callback){if(user === "kecso"){ callback(null,{create:true,puk:"abcd",projects:{"test":{open: true, delete: false, write: true}}});} else {callback("NIE",null)}}
+            getUser : function(user,callback){if(user === "kecso"){ callback(null,{create:true,puk:"abcd",projects:{"test":{open: true, delete: false, write: true},"users":{open: true, delete: false, write: true}}});} else {callback("NIE",null)}}
         }
     }
 
