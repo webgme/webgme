@@ -72,7 +72,8 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
     };
 
     CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id*/) {
-        var result = [];
+        var result = [],
+            LEN = 20;
 
         //by default return the bounding box edges midpoints
         //NOTE: it returns the connection point regardless of being asked for
@@ -85,7 +86,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
             "y2": 0,
             "angle1": 190,
             "angle2": 350,
-            "len": 30} );
+            "len": LEN} );
 
         result.push( {"id": "1",
             "x1": CANVAS_SIZE / 2,
@@ -94,7 +95,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
             "y2": CANVAS_SIZE,
             "angle1": 10,
             "angle2": 170,
-            "len": 30} );
+            "len": LEN} );
 
         result.push( {"id": "2",
             "x1": 0,
@@ -103,7 +104,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
             "y2": CANVAS_SIZE / 2,
             "angle1": 100,
             "angle2": 260,
-            "len": 30} );
+            "len": LEN} );
 
         result.push( {"id": "3",
             "x1": CANVAS_SIZE,
@@ -112,7 +113,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
             "y2": CANVAS_SIZE / 2,
             "angle1": -80,
             "angle2": 80,
-            "len": 30} );
+            "len": LEN} );
 
         return result;
     };

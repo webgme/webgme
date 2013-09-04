@@ -242,7 +242,8 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.getIsReadOnlyMode = function () {
-        return this.mode === this.OPERATING_MODES.READ_ONLY;
+        //return this.mode === this.OPERATING_MODES.READ_ONLY;
+        return this.mode !== this.OPERATING_MODES.DESIGN;
     };
 
     DiagramDesignerWidget.prototype._setReadOnlyMode = function (readOnly) {
@@ -1216,6 +1217,22 @@ define(['logManager',
     DiagramDesignerWidget.prototype.onSelectionRotated = function (deg, selectedIds) {
         this.logger.warning("DiagramDesignerWidget.prototype.onSelectionRotated IS NOT OVERRIDDEN IN CONTROLLER. deg: '" + deg + "', selectedIds: " + selectedIds);
     };
+
+    /*********************** CONNECTION TEXT CHANGED HANDLERS **************************/
+
+    DiagramDesignerWidget.prototype.onConnectionNameChanged = function (connId, oldValue, newValue) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionNameChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+    };
+
+    DiagramDesignerWidget.prototype.onConnectionSrcTextChanged = function (connId, oldValue, newValue) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionSrcTextChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+    };
+
+    DiagramDesignerWidget.prototype.onConnectionDstTextChanged = function (connId, oldValue, newValue) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionDstTextChanged IS NOT OVERRIDDEN IN CONTROLLER. connId: '" + connId + "', oldValue: " + oldValue + ", newValue:" + newValue);
+    };
+
+    /*********************** END OF CONNECTION TEXT CHANGED HANDLERS **************************/
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

@@ -24,6 +24,7 @@ define(['logManager',
             layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad = util.getURLParameterByName('project').toLowerCase(),
+            objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME');
 
         //as of now it's a global variable just to make access to it easier
@@ -74,6 +75,10 @@ define(['logManager',
                                 client.selectCommitAsync(commitToLoad, function (err) {
                                     if (err) {
                                         logger.error(err);
+                                    } else {
+                                        if (objectToLoad && objectToLoad !== "") {
+                                            client.setSelectedObjectId(objectToLoad);
+                                        }
                                     }
                                 });
                             }

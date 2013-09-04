@@ -330,7 +330,8 @@ define(['js/Constants',
 
     AttributesDecorator.prototype.getConnectionAreas = function (id) {
         var result = [],
-            edge = 10;
+            edge = 10,
+            LEN = 20;
 
         //by default return the bounding box edges midpoints
 
@@ -343,7 +344,7 @@ define(['js/Constants',
                 "y2": 0,
                 "angle1": 270,
                 "angle2": 270,
-                "len": 10} );
+                "len": LEN} );
 
             result.push( {"id": "1",
                 "x1": edge,
@@ -352,7 +353,7 @@ define(['js/Constants',
                 "y2": this.hostDesignerItem.height,
                 "angle1": 90,
                 "angle2": 90,
-                "len": 10} );
+                "len": LEN} );
         }
 
 
