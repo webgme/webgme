@@ -843,10 +843,19 @@ define(['logManager',
                              "srcSubCompId": undefined,
                              "dstObjId": this._GmeID2ComponentID[gmeDstId][0],
                              "dstSubCompId": undefined,
-                             "reconnectable": false
+                             "reconnectable": false,
+                             "name": ""
                 };
 
                 _.extend(connDesc, this._getConnTypeVisualDescriptor(connType));
+
+                //fill out texts
+                if (connType.indexOf(SET_PREFIX) === 0) {
+                    connDesc.name = connType.replace(SET_PREFIX, '');
+                } else if (connType.indexOf(POINTER_PREFIX) === 0) {
+                    connDesc.name = connType.replace(POINTER_PREFIX, '');
+                }
+                
 
                 connComponent = this.designerCanvas.createConnection(connDesc);
 
