@@ -79,6 +79,10 @@ define(['logManager',
 
         this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowWidth, this.designerAttributes.width, false);
         this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowWidth, this.designerAttributes.width, true);
+
+        this.srcText = objDescriptor.srcText;
+        this.dstText = objDescriptor.dstText;
+        this.name = objDescriptor.name;
     };
 
     Connection.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
@@ -289,11 +293,14 @@ define(['logManager',
             }
 
             this._showConnectionAreaMarker();
+
+            this._renderTexts();
         } else {
             this.pathDef = null;
             this._removePath();
             this._removePathShadow();
             this._hideConnectionAreaMarker();
+            this._hideTexts();
         }
     };
 
@@ -519,6 +526,8 @@ define(['logManager',
         this._hideConnectionAreaMarker();
         this.hideSourceConnectors();
         this.hideEndConnectors();
+
+        this._hideTexts();
 
         this.logger.debug("Destroyed");
     };
@@ -1053,6 +1062,137 @@ define(['logManager',
             this._connectionAreaMarker.remove();
             this._connectionAreaMarker = undefined;
         }
+    };
+
+    Connection.prototype._textNameBase = $('<div class="c-text"><span class="c-name"></span></div>');
+    Connection.prototype._textSrcBase = $('<div class="c-text"><span class="c-src"></span></div>');
+    Connection.prototype._textDstBase = $('<div class="c-text"><span class="c-dst"></span></div>');
+
+    Connection.prototype._renderTexts = function () {
+        var totalLength = this.skinParts.path.getTotalLength(),
+            pathCenter = this.skinParts.path.getPointAtLength(totalLength / 2),
+            pathBegin = this.skinParts.path.getPointAtLength(0),
+            pathEnd = this.skinParts.path.getPointAtLength(totalLength),
+            dx,
+            dy,
+            TEXT_OFFSET = 5,
+            path0 = this.skinParts.path.getPointAtLength(0),
+            path1 = this.skinParts.path.getPointAtLength(1),
+            alphaBegin = this._calculateSteep(path0, path1),
+            pathN = this.skinParts.path.getPointAtLength(totalLength),
+            pathN1 = this.skinParts.path.getPointAtLength(totalLength - 1),
+            alphaEnd = this._calculateSteep(pathN1, pathN);
+
+        this._hideTexts();
+
+        if (this.name && this.name !== "") {
+            this.skinParts.name = this._textNameBase.clone();
+            this.skinParts.name.css({ 'top': pathCenter.y + this.designerAttributes.width / 2,
+                'left': pathCenter.x});
+            this.skinParts.name.find('span').text(this.name);
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.name);
+        }
+
+        if (this.srcText && this.srcText !== "") {
+            this.skinParts.srcText = this._textSrcBase.clone();
+            dx = this.designerAttributes.width;
+            dy = this.designerAttributes.width;
+
+            if (alphaBegin > 0 && alphaBegin <= 45) {
+                dx = TEXT_OFFSET;
+                dy *= -1;
+            } else if (alphaBegin > 45 && alphaBegin <= 90) {
+                dy = 0;
+            } else if (alphaBegin > 90 && alphaBegin <= 135) {
+                dy = 0;
+            } else if (alphaBegin > 135 && alphaBegin <= 180) {
+                dx = -5 * this.srcText.length;
+            } else if (alphaBegin > 180 && alphaBegin <= 225) {
+                dx = -5 * this.srcText.length ;
+                dy *= -1;
+            } else if (alphaBegin > 225 && alphaBegin <= 270) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaBegin > 270 && alphaBegin <= 315) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaBegin > 315 && alphaBegin <= 360) {
+                dy = -3 * TEXT_OFFSET;
+            }
+
+            this.skinParts.srcText.css({ 'top': pathBegin.y + dy,
+                'left': pathBegin.x + dx});
+            this.skinParts.srcText.find('span').text(this.srcText);
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.srcText);
+        }
+
+        if (this.dstText && this.dstText !== "") {
+            this.skinParts.dstText = this._textDstBase.clone();
+            dx = this.designerAttributes.width;
+            dy = this.designerAttributes.width;
+
+            if (alphaEnd === 0) {
+                dx = -5 * this.dstText.length ;
+                dy *= -1;
+            } else if (alphaEnd > 0 && alphaEnd <= 45) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaEnd > 45 && alphaEnd <= 90) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaEnd > 90 && alphaEnd <= 135) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaEnd > 135 && alphaEnd <= 180) {
+                dy = -3 * TEXT_OFFSET;
+            } else if (alphaEnd > 180 && alphaEnd <= 225) {
+                dx = TEXT_OFFSET;
+                dy *= -1;
+            } else if (alphaEnd > 225 && alphaEnd <= 270) {
+                dy = 0;
+            } else if (alphaEnd > 270 && alphaEnd <= 315) {
+                dy = 0;
+            } else if (alphaEnd > 315 && alphaEnd <= 360) {
+                dx = -5 * this.srcText.length;
+            }
+
+            this.skinParts.dstText.css({ 'top': pathEnd.y + dy,
+                'left': pathEnd.x + dx});
+            this.skinParts.dstText.find('span').text(this.dstText);
+            $(this.diagramDesigner.skinParts.$itemsContainer.children()[0]).after(this.skinParts.dstText);
+        }
+    };
+
+    Connection.prototype._hideTexts = function () {
+        if (this.skinParts.name) {
+            this.skinParts.name.remove();
+        }
+
+        if (this.skinParts.srcText) {
+            this.skinParts.srcText.remove();
+        }
+
+        if (this.skinParts.dstText) {
+            this.skinParts.dstText.remove();
+        }
+    };
+
+    Connection.prototype._calculateSteep = function (point0, point1) {
+        var alpha = 0,
+            dX = (point1.x - point0.x),
+            dY = (point1.y - point0.y);
+
+        if (dX === 0 && dY !== 0) {
+            alpha = Math.PI / 2 * Math.abs(dY) / dY ;
+        } else {
+            alpha = Math.atan(dY / dX);
+            if (dX < 0) {
+                alpha += Math.PI;
+            }
+        }
+
+        if (alpha < 0) {
+            alpha += Math.PI * 2;
+        }
+
+        alpha = alpha * (180/Math.PI);
+
+        return alpha;
     };
 
 

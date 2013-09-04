@@ -203,6 +203,16 @@ $rotation-deg-color: #666666;
         opacity: 1.0;
       }
     }
+
+    div.c-text {
+      position: absolute;
+      font-size: 10px;
+
+      .c-name {
+        position: relative;
+        left: -50%;
+      }
+    }
   }
 
   .dropRegion {

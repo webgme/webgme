@@ -142,6 +142,12 @@
     .diagram-designer .items.highlight-mode .designer-item.highlighted,
     .diagram-designer .items.highlight-mode .designer-connection.highlighted {
       opacity: 1.0; }
+    .diagram-designer .items div.c-text {
+      position: absolute;
+      font-size: 10px; }
+      .diagram-designer .items div.c-text .c-name {
+        position: relative;
+        left: -50%; }
   .diagram-designer .dropRegion {
     width: 0;
     height: 0;
