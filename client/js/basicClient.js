@@ -1435,6 +1435,32 @@ define([
                 }
             }
 
+            //Meta like descriptor functions
+            function setAttributeDescriptor(path,attributename,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setAttributeDescriptor(_nodes[path].node, attributename, descriptor);
+                    saveRoot('setAttributeDescriptor('+path+','+','+attributename+')');
+                }
+            }
+            function setPointerDescriptor(path,pointername,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setPointerDescriptor(_nodes[path].node, pointername, descriptor);
+                    saveRoot('setPointerDescriptor('+path+','+','+pointername+')');
+                }
+            }
+            function setNodeDescriptor(path,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setNodeDescriptor(_nodes[path].node, descriptor);
+                    saveRoot('setNodeDescriptor('+path+')');
+                }
+            }
+            function setBase(path,basepath){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setRegistry(_nodes[path].node,'base',basepath);
+                    saveRoot('setBase('+path+','+basepath+')');
+                }
+            }
+
             //territory functions
             function addUI(ui, oneevent, guid) {
                 guid = guid || GUID();
@@ -1567,7 +1593,30 @@ define([
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
                 };
-
+                var getAttributeDescriptor = function(attributename){
+                    return _core.getAttributeDescriptor(_nodes[_id].node,attributename);
+                };
+                var getEditableAttributeDescriptor = function(attributename){
+                    var descriptor = _core.getAttributeDescriptor(_nodes[_id].node,attributename);
+                    return JSON.parse(JSON.stringify(descriptor));
+                };
+                var getPointerDescriptor = function(pointername){
+                    return _core.getPointerDescriptor(_nodes[_id].node,pointername);
+                };
+                var getEditablePointerDescriptor = function(pointername){
+                    var descriptor = _core.getPointerDescriptor(_nodes[_id].node,pointername);
+                    return JSON.parse(JSON.stringify(descriptor));
+                };
+                var getNodeDescriptor = function(){
+                    return _core.getNodeDescriptor(_nodes[_id].node);
+                };
+                var getEditableNodeDescriptor = function(){
+                    var descriptor = _core.getNodeDescriptor(_nodes[_id].node);
+                    return JSON.parse(JSON.stringify(descriptor));
+                };
+                var getBase = function(){
+                    return _core.getRegistry(_nodes[_id].node,'base');
+                };
                 //ASSERT(_nodes[_id]);
 
                 if(_nodes[_id]){
@@ -1587,11 +1636,18 @@ define([
                         getRegistryNames : getRegistryNames,
 
                         //META functions
-                        getValidChildrenTypes : getValidChildrenTypes,
-                        getMemberIds          : getMemberIds,
-                        //getSetIds             : getSetIds,
-                        getSetNames           : getSetNames,
-                        getValidSetNames      : getValidSetNames
+                        getValidChildrenTypes          : getValidChildrenTypes,
+                        getMemberIds                   : getMemberIds,
+                        //getSetIds                      : getSetIds,
+                        getSetNames                    : getSetNames,
+                        getValidSetNames               : getValidSetNames,
+                        getAttributeDescriptor         : getAttributeDescriptor,
+                        getEditableAttributeDescriptor : getEditableAttributeDescriptor,
+                        getPointerDescriptor           : getPointerDescriptor,
+                        getEditablePointerDescriptor   : getEditablePointerDescriptor,
+                        getNodeDescriptor              : getNodeDescriptor,
+                        getEditableNodeDescriptor      : getEditableNodeDescriptor,
+                        getBase                        : getBase
                     }
                 }
 
@@ -1707,6 +1763,12 @@ define([
                 intellyPaste: intellyPaste,
                 addMember: addMember,
                 removeMember: removeMember,
+
+                //desc and META
+                setAttributeDescriptor: setAttributeDescriptor,
+                setPointerDescriptor: setPointerDescriptor,
+                setNodeDescriptor: setNodeDescriptor,
+                setBase: setBase,
 
                 //territory functions for the UI
                 addUI: addUI,
