@@ -14,7 +14,8 @@ define([], function () {
         //helper functions
         function updateDescriptorHash(node){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
-            _innerCore.setRegistry(node,'d_hash',_innerCore.getSingleNodeHash(descriptors));
+            var dCount = _innerCore.getRegistry(node,'d_count') || 0;
+            _innerCore.setRegistry(node,'d_count',dCount + 1);
         }
         var _core = {};
         for(var i in _innerCore){
