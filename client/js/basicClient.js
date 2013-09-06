@@ -1450,7 +1450,7 @@ define([
                     saveRoot('setPointerDescriptor('+path+','+','+pointername+')');
                 }
             }
-            function setNodeDescriptor(path,descriptor){
+            function setChildrenMetaDescriptor(path,descriptor){
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setNodeDescriptor(_nodes[path].node, descriptor);
                     saveRoot('setNodeDescriptor('+path+')');
@@ -1600,21 +1600,30 @@ define([
                 };
                 var getEditableAttributeDescriptor = function(attributename){
                     var descriptor = _core.getAttributeDescriptor(_nodes[_id].node,attributename);
-                    return JSON.parse(JSON.stringify(descriptor));
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
                 };
                 var getPointerDescriptor = function(pointername){
                     return _core.getPointerDescriptor(_nodes[_id].node,pointername);
                 };
                 var getEditablePointerDescriptor = function(pointername){
                     var descriptor = _core.getPointerDescriptor(_nodes[_id].node,pointername);
-                    return JSON.parse(JSON.stringify(descriptor));
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
                 };
-                var getNodeDescriptor = function(){
+                var getChildrenMetaDescriptor = function(){
                     return _core.getNodeDescriptor(_nodes[_id].node);
                 };
-                var getEditableNodeDescriptor = function(){
+                var getEditableChildrenMetaDescriptor = function(){
                     var descriptor = _core.getNodeDescriptor(_nodes[_id].node);
-                    return JSON.parse(JSON.stringify(descriptor));
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
                 };
                 var getBase = function(){
                     return _core.getRegistry(_nodes[_id].node,'base');
@@ -1647,8 +1656,8 @@ define([
                         getEditableAttributeDescriptor : getEditableAttributeDescriptor,
                         getPointerDescriptor           : getPointerDescriptor,
                         getEditablePointerDescriptor   : getEditablePointerDescriptor,
-                        getNodeDescriptor              : getNodeDescriptor,
-                        getEditableNodeDescriptor      : getEditableNodeDescriptor,
+                        getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
+                        getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
                         getBase                        : getBase
                     }
                 }
@@ -1769,7 +1778,7 @@ define([
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,
                 setPointerDescriptor: setPointerDescriptor,
-                setNodeDescriptor: setNodeDescriptor,
+                setChildrenMetaDescriptor: setChildrenMetaDescriptor,
                 setBase: setBase,
 
                 //territory functions for the UI
