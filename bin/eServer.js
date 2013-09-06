@@ -168,6 +168,7 @@ requirejs(['logManager',
             }
             req.logIn(user, function(err) {
                 if (err) { return next(err); }
+                res.cookie('username',req.param('username'));
                 return res.redirect('/');
             });
         })(req, res, next);
@@ -199,7 +200,13 @@ requirejs(['logManager',
     });
 
     var httpsServer = https.createServer({key:sitekey,cert:sitecertificate}, app).listen(parameters.port);
-    var udm = new UDM();
+    var udm = new UDM({
+        host: '127.0.0.1',
+        port: 27017,
+        database: 'test',
+        collection: 'users',
+        refresh: 100000
+    });
 
     var storage = new Server(new SServer(new Log(new Cache(new Mongo({
         host: parameters.mongoip,

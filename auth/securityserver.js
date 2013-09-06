@@ -7,29 +7,12 @@
 define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "auth/crypto" ], function (ASSERT,SHA1,CANON,GUID,UDM,CRYPTO) {
     "use strict";
 
-    function nullUDM(){
-        var _user = {
-            pppk : 0,
-            puk : 0,
-            create : true,
-            projects : {}
-        };
-        function getUser(username,callback){
-            callback(null,_user);
-        }
-        function updateUser(username,user,callback){
-            _user = user;
-        }
-        return {
-            getUser : getUser,
-            updateUser : updateUser
-        }
-    }
+
     function Database (_innerDb, options) {
         ASSERT(typeof options === "object" && typeof _innerDb === "object");
         options.sessionperiod = options.sessionperiod || 100000;
         options.expireinterval = options.expireinterval || 10000;
-        var _udm = options.udm || nullUDM();
+        var _udm = options.udm;
         var _crypto = options.crypto || nullCrypto();
         var database = {};
         var _users = {};
@@ -161,7 +144,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.loadObject(hash,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -194,7 +177,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.findHash(beginning,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -210,7 +193,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.dumpObjects(callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -226,7 +209,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.getBranchNames(callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -242,7 +225,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.getBranchHash(branch,oldhash,callback);
                                     } else {
                                         callback('missing necessary rights');
@@ -274,7 +257,7 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                             var user = getSessionUser(sid);
                             if(user){
                                 if(user.projects[name]){
-                                    if(user.projects[name].open == true){
+                                    if(user.projects[name].read == true){
                                         innerProject.getCommits(before,number,callback);
                                     } else {
                                         callback('missing necessary rights');

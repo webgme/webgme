@@ -8,7 +8,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
 
     function userDataManager(_options){
 
-        /*var _storage =  new Cache(
+        var _storage =  new Cache(
                 new Mongo(
                     {
                         host: _options.ip,
@@ -19,7 +19,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
             _project = null,
             _core = null,
             _users = {}; //name:{node,hash,name}
-            */
+
 
 
         function initialize(callback){
@@ -39,19 +39,23 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
                                             if(!err && commit){
                                                 loadUsers(commit.root,callback);
                                             } else {
+                                                setAutoReInit();
                                                 callback(err);
                                             }
                                         });
                                     } else {
+                                        setAutoReInit();
                                         callback(err);
                                     }
                                 });
 
                             } else {
+                                setAutoReInit();
                                 callback(err);
                             }
                         });
                     } else {
+                        setAutoReInit();
                         callback(err);
                     }
                 });
@@ -93,14 +97,15 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
                 callback(null,null);
             }
         }
+        function setAutoReInit(){
+            if(_options.refresh > 0){
+                setInterval(initialize,_options.refresh,function(){});
+            }
+        }
 
-        /*return {
+        return {
             initialize: initialize,
             getUser : getUser
-        }*/
-        return {
-            initialize : function(callback){callback(null);},
-            getUser : function(user,callback){if(user === "kecso"){ callback(null,{create:true,puk:"abcd",projects:{"test":{open: true, delete: false, write: true},"users":{open: true, delete: false, write: true}}});} else {callback("NIE",null)}}
         }
     }
 

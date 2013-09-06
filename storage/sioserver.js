@@ -91,6 +91,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
 
             _socket.on('connection',function(socket){
+                console.log(socket.handshake.headers.cookie);
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
                 });
