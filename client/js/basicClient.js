@@ -5,6 +5,7 @@ define([
     'core/core',
     'core/setcore',
     'core/guidcore',
+    'core/descriptorcore',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
@@ -20,6 +21,7 @@ define([
         Core,
         SetCore,
         GuidCore,
+        DescriptorCore,
         HashCheck,
         Cache,
         Failsafe,
@@ -426,7 +428,7 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
-                        _core = new SetCore(new GuidCore(new Core(_project)));
+                        _core = new DescriptorCore(new SetCore(new GuidCore(new Core(_project))));
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -535,7 +537,7 @@ define([
                 }
             }
             function createEmptyProject(project,callback){
-                var core = new SetCore(new GuidCore(new Core(project,{})));
+                var core = new DescriptorCore(new SetCore(new GuidCore(new Core(project,{}))));
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
