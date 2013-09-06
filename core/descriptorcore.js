@@ -14,7 +14,8 @@ define([], function () {
         //helper functions
         function updateDescriptorHash(node){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
-            _innerCore.setRegistry(node,'d_hash',_innerCore.getSingleNodeHash(descriptors));
+            var dCount = _innerCore.getRegistry(node,'d_count') || 0;
+            _innerCore.setRegistry(node,'d_count',dCount + 1);
         }
         var _core = {};
         for(var i in _innerCore){
@@ -26,7 +27,7 @@ define([], function () {
         _core.getAttributeDescriptor = function(node,attributename){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"a_"+attributename);
-            return _innerCore.getRegistry(descriptor,'descriptor') || {};
+            return _innerCore.getRegistry(descriptor,'descriptor');
         };
         _core.setAttributeDescriptor = function(node,attributename,descobject){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
@@ -38,7 +39,7 @@ define([], function () {
         _core.getPointerDescriptor = function(node,pointername){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"p_"+pointername);
-            return _innerCore.getRegistry(descriptor,'descriptor') || {};
+            return _innerCore.getRegistry(descriptor,'descriptor');
         };
         _core.setPointerDescriptor = function(node,pointername,descobject){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
@@ -51,7 +52,7 @@ define([], function () {
         _core.getNodeDescriptor = function(node){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"n_");
-            return _innerCore.getRegistry(descriptor,'descriptor') || {};
+            return _innerCore.getRegistry(descriptor,'descriptor');
         };
         _core.setNodeDescriptor = function(node,descobject){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
