@@ -11,10 +11,16 @@ define([], function () {
 
     function descriptorCore (_innerCore) {
 
+        //helper functions
+        function updateDescriptorHash(node){
+            var descriptors = _innerCore.getChild(node,DESCR_ID);
+            _innerCore.setRegistry(node,'d_hash',_innerCore.getSingleNodeHash(descriptors));
+        }
         var _core = {};
         for(var i in _innerCore){
             _core[i] = _innerCore[i]
         }
+
 
         //extra functions
         _core.getAttributeDescriptor = function(node,attributename){
@@ -26,6 +32,7 @@ define([], function () {
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"a_"+attributename);
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
+            updateDescriptorHash(node);
         };
 
         _core.getPointerDescriptor = function(node,pointername){
@@ -37,6 +44,7 @@ define([], function () {
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"p_"+pointername);
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
+            updateDescriptorHash(node);
         };
 
 
@@ -49,6 +57,7 @@ define([], function () {
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"n_");
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
+            updateDescriptorHash(node);
         };
 
 
