@@ -143,7 +143,8 @@
       height: 0; }
       .diagram-designer .items div.c-t div.c-text {
         position: absolute;
-        font-size: 10px; }
+        font-size: 10px;
+        white-space: nowrap; }
         .diagram-designer .items div.c-t div.c-text .c-name {
           position: relative;
           left: -50%; }
