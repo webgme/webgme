@@ -352,7 +352,7 @@ define(['logManager',
 
             len = connPoints.length;
             while (len--) {
-                this.logger.warning(JSON.stringify(connPoints[len]));
+                this.logger.debug(JSON.stringify(connPoints[len]));
             }
 
             len = connPoints.length;
@@ -635,7 +635,7 @@ define(['logManager',
      * Called on connection create/reconnect end, should be overridden to handle the event
      */
     ConnectionDrawingManager.prototype.onEndConnectionDraw = function () {
-        this.logger.warning("onEndConnectionDraw");
+        this.logger.warning("onEndConnectionDraw NOT OVERRIDDEN");
     };
 
 
