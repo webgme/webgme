@@ -33,5 +33,11 @@
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
         "control": "js/Panels/GraphViz/GraphVizPanelControl",
+        "DEBUG_ONLY": false},
+
+    {"id": "METAEditor",
+        "title": "METAEditor",
+        "panel": "js/Panels/MetaEditor/MetaEditorPanel",
+        "control": "js/Panels/MetaEditor/MetaEditorControl",
         "DEBUG_ONLY": false}
 ]
