@@ -184,16 +184,8 @@ define(['logManager',
                     this._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
                 } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
                     this._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.name);
-                } else {
-                    /*if (connDesc.type.indexOf(POINTER_PREFIX) === 0) {
-                        //deleted connection is a POINTER
-                        this.logger.debug("Deleting Pointer '" + connDesc.type + "' from GMEObject :'" + connDesc.GMESrcId + "'");
-                        this._client.delPointer(connDesc.GMESrcId, connDesc.type.replace(POINTER_PREFIX, ''));
-                    } else if (connDesc.type.indexOf(SET_PREFIX) === 0) {
-                        //deleted connection is a SET member relationship
-                        this.logger.debug("Deleting SET membership owner:'" + connDesc.GMESrcId + "' member: '" + connDesc.GMEDstID + "', set:'" + connDesc.type + "'");
-                        this._client.removeMember(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.type.replace(SET_PREFIX, ''));
-                    }*/
+                } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
+                    this._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
                 }
             }
         }

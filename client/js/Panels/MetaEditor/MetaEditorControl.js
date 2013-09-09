@@ -137,6 +137,7 @@ define(['logManager',
 
         this._nodeMetaContainment = {};
         this._nodeMetaPointers = {};
+        this._nodeMetaInheritance = {};
 
         this._filteredOutConnectionDescriptors = {};
         len = this._filteredOutConnTypes.length;
@@ -406,6 +407,8 @@ define(['logManager',
                     var pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[i]);
                     this.logger.warning('nodeName (' + nodeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
                 }
+
+                this.logger.warning('nodeName (' + nodeID + ')\'s metaInheritance: ' + node.getBase());
             }
         }
     };
@@ -503,6 +506,7 @@ define(['logManager',
                 //process new node to display containment / pointers / inheritance / pointerlists as connections
                 this._processNodeMetaContainment(gmeID);
                 this._processNodeMetaPointers(gmeID);
+                this._processNodeMetaInheritance(gmeID);
 
                 //check all the waiting pointers (whose SRC is already displayed and waiting for the DST to show up)
                 //it might be this new node
@@ -565,6 +569,7 @@ define(['logManager',
             //keep up accounting
             delete this._nodeMetaContainment[gmeID];
             delete this._nodeMetaPointers[gmeID];
+            delete this._nodeMetaInheritance[gmeID];
         }
     };
 
@@ -806,6 +811,7 @@ define(['logManager',
             //update set relations
             this._processNodeMetaContainment(gmeID);
             this._processNodeMetaPointers(gmeID);
+            this._processNodeMetaInheritance(gmeID);
         }
     };
     /**************************************************************************/
@@ -974,6 +980,33 @@ define(['logManager',
     /******************************************************************************************/
 
 
+
+    /***********************************************************************************/
+    /*  DISPLAY META INHERITANCE RELATIONS AS A CONNECTION FROM PARENT TO OBJECT       */
+    /***********************************************************************************/
+    MetaEditorControl.prototype._processNodeMetaInheritance = function (gmeID) {
+        var node = this._client.getNode(gmeID),
+            oldMetaInheritance,
+            newMetaInheritance = node.getBase();
+
+        //if there was a valid old that's different than the current, delete the connection representing the old
+        oldMetaInheritance = this._nodeMetaInheritance[gmeID];
+        if (oldMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
+            this._removeConnection(oldMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
+
+            delete this._nodeMetaInheritance[gmeID];
+        }
+
+        if (newMetaInheritance) {
+            this._nodeMetaInheritance[gmeID] = newMetaInheritance;
+            this._createConnection(newMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
+        }
+    };
+    /**********************************************************************************************/
+    /*  END OF --- DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM PARENT TO OBJECT       */
+    /**********************************************************************************************/
+
+
     /****************************************************************************/
     /*        CREATE NEW CONNECTION BUTTONS AND THEIR EVENT HANDLERS            */
     /****************************************************************************/
@@ -1004,6 +1037,7 @@ define(['logManager',
                 this._createContainmentRelationship(sourceId, targetId);
                 break;
             case MetaRelations.META_RELATIONS.INHERITANCE:
+                this._createInheritanceRelationship(sourceId, targetId);
                 break;
             case MetaRelations.META_RELATIONS.POINTER:
                 this._createPointerRelationship(sourceId, targetId);
@@ -1134,6 +1168,39 @@ define(['logManager',
             this._client.delPointer(containerID, pointerName);
 
             this._client.completeTransaction();
+        }
+    };
+
+
+    MetaEditorControl.prototype._createInheritanceRelationship = function (parentID, objectID) {
+        var parentNode = this._client.getNode(parentID),
+            objectNode = this._client.getNode(objectID),
+            objectBase;
+
+        if (parentNode && objectNode) {
+            objectBase = objectNode.getBase();
+
+            if (objectBase) {
+                this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
+            }
+
+            this._client.setBase(objectID, parentID);
+        }
+    };
+
+
+    MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
+        var objectNode = this._client.getNode(objectID),
+            objectBase;
+
+        if (objectNode) {
+            objectBase = objectNode.getBase();
+
+            if (objectBase) {
+                this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
+                //TODO: coretree does not allow registry value of 'undefined'
+                this._client.setBase(objectID, undefined);
+            }
         }
     };
     /****************************************************************************/
