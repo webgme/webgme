@@ -4,6 +4,8 @@
  */
 
 define([], function () {
+    var _span = $('<span></span>');
+
     Array.prototype.pushUnique = function (val) {
         if (this.indexOf(val) === -1) {
             this.push(val);
@@ -100,6 +102,10 @@ define([], function () {
             var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
                 results = regex.exec(location.search);
             return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+        },
+
+        toSafeString: function (string) {
+            return _span.text(string).html();
         }
     }
 });
