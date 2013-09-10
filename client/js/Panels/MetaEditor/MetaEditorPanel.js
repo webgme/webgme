@@ -40,12 +40,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.setTitle = function (title) {
             self.setTitle(title);
         };
-
-        //TODO:
-        //remove route manager selection buttons
-        if (this.widget.$btnGroupConnectionRouteManager) {
-            this.widget.$btnGroupConnectionRouteManager.remove();
-        }
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */

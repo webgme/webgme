@@ -30,6 +30,11 @@ define(['logManager',
         __parent_proto__._initializeUI.apply(this, arguments);
         this.logger.debug("MetaEditorWidget._initializeUI");
 
+        //remove route manager selection buttons
+        if (this.$btnGroupConnectionRouteManager) {
+            this.$btnGroupConnectionRouteManager.remove();
+        }
+
         this._initializeFilterPanel();
     };
 
