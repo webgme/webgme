@@ -973,7 +973,7 @@ define(['logManager',
 
                 this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
             } else {
-                this.logger.warning('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') already exists.');
+                this.logger.debug('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') already exists.');
             }
         }
     };
@@ -1003,7 +1003,7 @@ define(['logManager',
 
                 this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
             } else {
-                this.logger.warning('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') does not exist.');
+                this.logger.debug('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') does not exist.');
             }
         }
     };
@@ -1027,7 +1027,7 @@ define(['logManager',
                 pointerMetaDescriptor = containerNode.getEditablePointerDescriptor(userSelectedPointerName);
 
                 if (pointerMetaDescriptor && !_.isEmpty(pointerMetaDescriptor) && pointerNames.indexOf(userSelectedPointerName) !== -1) {
-                    self.logger.warning('PointerRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') with a name "' + userSelectedPointerName + '" already exist, overwriting target to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ')"');
+                    self.logger.debug('PointerRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') with a name "' + userSelectedPointerName + '" already exist, overwriting target to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ')"');
                     pointerMetaDescriptor.target = objectID;
                 } else {
                     pointerMetaDescriptor = {'name': userSelectedPointerName,
@@ -1071,7 +1071,7 @@ define(['logManager',
             objectBase = objectNode.getBase();
 
             if (objectBase && !_.isEmpty(objectBase)) {
-                this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
+                this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
             }
 
             this._client.setBase(objectID, parentID);
@@ -1087,7 +1087,7 @@ define(['logManager',
             objectBase = objectNode.getBase();
 
             if (objectBase && !_.isEmpty(objectBase)) {
-                this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
+                this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
                 //TODO: coretree does not allow registry value of 'undefined', so store {}
                 //TODO: this._client.setBase(objectID, undefined);
                 this._client.setBase(objectID, {});
