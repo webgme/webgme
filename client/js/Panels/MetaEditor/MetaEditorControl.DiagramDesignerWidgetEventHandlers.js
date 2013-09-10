@@ -211,11 +211,11 @@ define(['logManager',
             var connDesc = self._connectionListByID[connectionID];
 
             if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
-                self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
+                self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
-                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.name);
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
-                self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
+                self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             }
             //TODO: PointerList deletion not yet handled
         };
