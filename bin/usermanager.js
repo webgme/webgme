@@ -39,7 +39,7 @@ if (typeof define !== "function") {
                 console.log("  -mongo [database [host [port]]]\topens a mongo database");
                 console.log("  -proj <project>\t\t\tselects the given project");
                 console.log("  -branch <branch>\t\t\tthe branch to work with");
-                console.log("  -adduser <username> <publickey> <write = true/false>\t\t\tthe user to add");
+                console.log("  -adduser <username> <publickey> <write = true/false> [password email]\t\t\tthe user to add");
                 console.log("  -addproject <username> <projectname> <mode = r|rw|rwd>\t\t\t adds a project to the user data");
                 console.log("  -removeproject <username> <projectname>\t\t\t removes a project from the user data");
                 console.log("  -removeuser <username>\t\t\t removes a user data");
@@ -80,7 +80,7 @@ if (typeof define !== "function") {
                 done = TASYNC.call(removeProject,core,_startHash,projpars[0],projpars[1]);
             } else if(COMMON.getParameters("adduser")){
                 var projpars = COMMON.getParameters("adduser")
-                done = TASYNC.call(addUser,core,_startHash,projpars[0],projpars[1],projpars[2]);
+                done = TASYNC.call(addUser,core,_startHash,projpars[0],projpars[1],projpars[2],projpars[3] || null,projpars[4] || null);
             } else if(COMMON.getParameters("removeuser")){
                 var projpars = COMMON.getParameters("removeuser")
                 done = TASYNC.call(removeUser,core,_startHash,projpars[0],projpars[1]);
@@ -267,7 +267,7 @@ if (typeof define !== "function") {
 
             return done;
         }
-        function addUser(core,roothash,username,puk,cancreate){
+        function addUser(core,roothash,username,puk,cancreate,password,email){
             function iterateChildren(parentObject){
                 var children = core.loadChildren(parentObject);
                 return TASYNC.call(function(objectArray){
@@ -286,12 +286,24 @@ if (typeof define !== "function") {
                         core.setRegistry(child,'projects',{});
                         var key = require('fs').readFileSync(puk,'utf8');
                         core.setRegistry(child,'puk',key);
+                        if(password){
+                            core.setRegistry(child,'pass',password);
+                        }
+                        if(email){
+                            core.setRegistry(child,'email',email);
+                        }
                         var newroothash = persist(core,parentObject);
                         return TASYNC.call(saveModifications,newroothash,"a new user"+username+" has been added to the database");
                     } else {
                         core.setRegistry(child,'create',cancreate === true);
                         var key = require('fs').readFileSync(puk,'utf8');
                         core.setRegistry(child,'puk',key);
+                        if(password){
+                            core.setRegistry(child,'pass',password);
+                        }
+                        if(email){
+                            core.setRegistry(child,'email',email);
+                        }
                         var newroothash = persist(core,parentObject);
                         return TASYNC.call(saveModifications,newroothash,"the basic data of user "+username+" has been changed");
                     }

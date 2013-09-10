@@ -22,6 +22,16 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
 
 
 
+        function getUserData(id){
+            var userData = {};
+            userData.puk = _core.getRegistry(_users[id].node,'puk');
+            userData.create = _core.getRegistry(_users[id].node,'create');
+            userData.projects = _core.getRegistry(_users[id].node,'projects');
+            userData.pass = _core.getRegistry(_users[id].node,'pass');
+            userData.email = _core.getRegistry(_users[id].node,'email');
+            return userData;
+        }
+
         function initialize(callback){
             if(_core !== null && _project !== null){
                 callback(null);
@@ -88,14 +98,18 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
         }
         function getUser(username,callback){
             if(_users[username]){
-                var userData = {};
-                userData.puk = _core.getRegistry(_users[username].node,'puk');
-                userData.create = _core.getRegistry(_users[username].node,'create');
-                userData.projects = _core.getRegistry(_users[username].node,'projects');
-                callback(null,userData);
+                callback(null,getUserData(username));
             } else {
-                callback(null,null);
+                callback("no such user",null);
             }
+        }
+        function getUserByEmail(email,callback){
+            for(var i in _users){
+                if(_users[i].email === email){
+                    return callback(null,getUserData(id));
+                }
+            }
+            return callback("no such user",null);
         }
         function setAutoReInit(){
             if(_options.refresh > 0){
@@ -105,7 +119,8 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
 
         return {
             initialize: initialize,
-            getUser : getUser
+            getUser : getUser,
+            getUserByEmail : getUserByEmail
         }
     }
 
