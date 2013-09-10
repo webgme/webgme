@@ -641,7 +641,8 @@ define(['logManager',
         this._connectionListByID[connComponentId] = { "GMESrcId": gmeSrcId,
                                                       "GMEDstID": gmeDstId,
                                                       "type": connType,
-                                                      "name": (connTexts && connTexts.name) ? connTexts.name : undefined};
+                                                      "name": (connTexts && connTexts.name) ? connTexts.name : undefined,
+                                                      "connTexts": connTexts};
     };
     /****************************************************************************/
     /*  END OF --- CREATE A SPECIFIC TYPE OF CONNECTION BETWEEN 2 GME OBJECTS   */
@@ -915,6 +916,7 @@ define(['logManager',
         if (this._connType !== connType) {
             this._connType = connType;
             this.diagramDesigner.connectionDrawingManager.setConnectionInDrawProperties(connProps);
+            this.diagramDesigner.setFilterChecked(this._connType);
         }
     };
 
@@ -1137,7 +1139,8 @@ define(['logManager',
         var len = this._connectionListByType && this._connectionListByType.hasOwnProperty(connType) ? this._connectionListByType[connType].length : 0,
             connComponentId,
             gmeSrcId,
-            gmeDstId;
+            gmeDstId,
+            connTexts;
 
         this._filteredOutConnectionDescriptors[connType] = [];
 
@@ -1148,8 +1151,9 @@ define(['logManager',
 
             gmeSrcId = this._connectionListByID[connComponentId].GMESrcId;
             gmeDstId = this._connectionListByID[connComponentId].GMEDstID;
+            connTexts = this._connectionListByID[connComponentId].connTexts;
 
-            this._filteredOutConnectionDescriptors[connType].push([gmeSrcId,gmeDstId]);
+            this._filteredOutConnectionDescriptors[connType].push([gmeSrcId, gmeDstId, connTexts]);
 
             this._removeConnection(gmeSrcId, gmeDstId, connType);
         }
@@ -1160,15 +1164,17 @@ define(['logManager',
     MetaEditorControl.prototype._unfilterConnType = function (connType) {
         var len = this._filteredOutConnectionDescriptors && this._filteredOutConnectionDescriptors.hasOwnProperty(connType) ? this._filteredOutConnectionDescriptors[connType].length : 0,
             gmeSrcId,
-            gmeDstId;
+            gmeDstId,
+            connTexts;
 
         this.diagramDesigner.beginUpdate();
 
         while (len--) {
             gmeSrcId = this._filteredOutConnectionDescriptors[connType][len][0];
             gmeDstId = this._filteredOutConnectionDescriptors[connType][len][1];
+            connTexts = this._filteredOutConnectionDescriptors[connType][len][2];
 
-            this._createConnection(gmeSrcId, gmeDstId, connType);
+            this._createConnection(gmeSrcId, gmeDstId, connType, connTexts);
         }
 
         delete this._filteredOutConnectionDescriptors[connType];

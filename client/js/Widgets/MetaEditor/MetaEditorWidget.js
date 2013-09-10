@@ -45,6 +45,8 @@ define(['logManager',
         this.$filterUl = this.$filterPanel.find('ul.body');
 
         this.$el.parent().append(this.$filterPanel);
+
+        this._filterCheckboxes = {};
     };
 
     MetaEditorWidget.prototype._checkChanged = function (value, isChecked) {
@@ -77,6 +79,8 @@ define(['logManager',
 
         this._refreshHeaderText();
 
+        this._filterCheckboxes[value] = checkBox;
+
         return item;
     };
 
@@ -89,6 +93,12 @@ define(['logManager',
 
     MetaEditorWidget.prototype.selectNewPointerName = function (pointerNames, callBack) {
        new MetaEditorPointerNamesDialog().show(pointerNames, callBack);
+    };
+
+    MetaEditorWidget.prototype.setFilterChecked = function (value) {
+        if (this._filterCheckboxes[value] && !this._filterCheckboxes[value].isChecked()) {
+            this._filterCheckboxes[value].setChecked(true);
+        }
     };
 
     return MetaEditorWidget;
