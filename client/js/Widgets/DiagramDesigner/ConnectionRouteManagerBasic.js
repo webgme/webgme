@@ -111,9 +111,15 @@ define(['logManager'], function (logManager) {
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
-            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
-            sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
-            targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
+                //connection's source and destination is the same object/port
+                sourceCoordinates = sourceConnectionPoints[0];
+                targetCoordinates = targetConnectionPoints.length > 1 ? targetConnectionPoints[1] : targetConnectionPoints[0];
+            } else {
+                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
+                sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
+                targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+            }
 
             //source point
             connectionPathPoints.push(sourceCoordinates);
@@ -124,6 +130,18 @@ define(['logManager'], function (logManager) {
                 for (i = 0; i < len; i += 1) {
                     connectionPathPoints.push({ "x": segmentPoints[i][0],
                         "y": segmentPoints[i][1]});
+                }
+            } else {
+                if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
+                    //self connection, insert fake points
+                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
+                                               "y": sourceCoordinates.y - 100});
+
+                    connectionPathPoints.push({"x": sourceCoordinates.x + 200,
+                        "y": sourceCoordinates.y});
+
+                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
+                        "y": sourceCoordinates.y + 100});
                 }
             }
 

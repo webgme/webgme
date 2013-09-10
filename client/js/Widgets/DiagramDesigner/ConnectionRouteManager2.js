@@ -178,9 +178,15 @@ define(['logManager'], function (logManager) {
         }
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
-            closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
-            sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
-            targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
+                //connection's source and destination is the same object/port
+                sourceCoordinates = sourceConnectionPoints[0];
+                targetCoordinates = targetConnectionPoints.length > 1 ? targetConnectionPoints[1] : targetConnectionPoints[0];
+            } else {
+                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
+                sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
+                targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+            }
 
             this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] += 1;
             this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] += 1;
@@ -236,10 +242,7 @@ define(['logManager'], function (logManager) {
                     "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)});
             }
 
-            /****************endpoint ***************/
-            slicex = targetCoordinates.w / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
-            slicey = targetCoordinates.h / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
-
+            /*************** segment points *****************************/
             if (segmentPoints && segmentPoints.length > 0) {
                 len = segmentPoints.length;
                 for (i = 0; i < len; i += 1) {
@@ -247,6 +250,10 @@ define(['logManager'], function (logManager) {
                         "y": segmentPoints[i][1]});
                 }
             }
+
+            /****************endpoint ***************/
+            slicex = targetCoordinates.w / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
+            slicey = targetCoordinates.h / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
 
             /***************endpoint's defined connector length*********************/
             if (targetCoordinates.len !== 0) {
@@ -270,47 +277,55 @@ define(['logManager'], function (logManager) {
 
         //when no segment points are defined route with horizontal and vertical lines
         if (segmentPoints.length === 0) {
-            //only vertical or horizontal lines are allowed, so insert extra segment points if needed
-            connectionPathPointsTemp = connectionPathPoints.slice(0);
-            len = connectionPathPointsTemp.length;
-            connectionPathPoints = [];
+            //no segment points
+            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
+                //self connection
+                //insert 2 extra points
+                connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x + 100,
+                    "y": connectionPathPoints[1].y - 100});
+            } else {
+                //only vertical or horizontal lines are allowed, so insert extra segment points if needed
+                connectionPathPointsTemp = connectionPathPoints.slice(0);
+                len = connectionPathPointsTemp.length;
+                connectionPathPoints = [];
 
-            if (len > 0) {
-                //source point and the rotated connector stays as they are
-                p1 = connectionPathPointsTemp[0];
-                connectionPathPoints.push(p1);
+                if (len > 0) {
+                    //source point and the rotated connector stays as they are
+                    p1 = connectionPathPointsTemp[0];
+                    connectionPathPoints.push(p1);
 
-                p1 = connectionPathPointsTemp[1];
-                connectionPathPoints.push(p1);
+                    p1 = connectionPathPointsTemp[1];
+                    connectionPathPoints.push(p1);
 
-                //but in between them use horizontal and vertical lines only
-                for (i = 2; i < len - 1; i += 1) {
-                    p1 = connectionPathPointsTemp[i - 1];
-                    p2 = connectionPathPointsTemp[i];
+                    //but in between them use horizontal and vertical lines only
+                    for (i = 2; i < len - 1; i += 1) {
+                        p1 = connectionPathPointsTemp[i - 1];
+                        p2 = connectionPathPointsTemp[i];
 
-                    //see if there is horizontal and vertical difference between p1 and p2
-                    dx = p2.x - p1.x;
-                    dy = p2.y - p1.y;
+                        //see if there is horizontal and vertical difference between p1 and p2
+                        dx = p2.x - p1.x;
+                        dy = p2.y - p1.y;
 
-                    if (dx !== 0 && dy !== 0) {
-                        //insert 2 extra points in the center to fix the difference
-                        connectionPathPoints.push({ "x": p1.x,
-                            "y": p1.y + dy / 2 });
+                        if (dx !== 0 && dy !== 0) {
+                            //insert 2 extra points in the center to fix the difference
+                            connectionPathPoints.push({ "x": p1.x,
+                                "y": p1.y + dy / 2 });
 
-                        connectionPathPoints.push({ "x": p1.x + dx,
-                            "y": p1.y + dy / 2 });
+                            connectionPathPoints.push({ "x": p1.x + dx,
+                                "y": p1.y + dy / 2 });
+                        }
+
+                        //p2 always goes to the list
+                        connectionPathPoints.push(p2);
                     }
 
-                    //p2 always goes to the list
-                    connectionPathPoints.push(p2);
+                    //end point point and the rotated connector stays as they are
+                    p1 = connectionPathPointsTemp[len - 2];
+                    connectionPathPoints.push(p1);
+
+                    p1 = connectionPathPointsTemp[len - 1];
+                    connectionPathPoints.push(p1);
                 }
-
-                //end point point and the rotated connector stays as they are
-                p1 = connectionPathPointsTemp[len - 2];
-                connectionPathPoints.push(p1);
-
-                p1 = connectionPathPointsTemp[len - 1];
-                connectionPathPoints.push(p1);
             }
         }
 
