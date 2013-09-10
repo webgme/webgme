@@ -129,6 +129,7 @@ define(['logManager',
         this._ComponentID2GMEID = {};
 
         this._connectionWaitingListByDstGMEID = {};
+        this._connectionWaitingListBySrcGMEID = {};
 
         this._connectionListBySrcGMEID = {};
         this._connectionListByDstGMEID = {};
@@ -186,7 +187,6 @@ define(['logManager',
     };
 
     //TODO: check this here...
-    //NOTE: all the UI cleanup will happen from VisualizerPanel
     //might not be the best approach
     MetaEditorControl.prototype.destroy = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
@@ -220,7 +220,7 @@ define(['logManager',
 
             while (len--) {
                 if ( (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_LOAD) || (nextBatchInQueue[len].etype === CONSTANTS.TERRITORY_EVENT_UPDATE)) {
-                    nextBatchInQueue[len].desc = nextBatchInQueue[len].debugEvent ? _.extend({}, this._getObjectDescriptorDEBUG(nextBatchInQueue[len].eid) ) : this._getObjectDescriptor(nextBatchInQueue[len].eid);
+                    nextBatchInQueue[len].desc = this._getObjectDescriptor(nextBatchInQueue[len].eid);
 
                     if (nextBatchInQueue[len].desc) {
                         itemDecorator = nextBatchInQueue[len].desc.decorator;
@@ -281,48 +281,16 @@ define(['logManager',
     /**********************************************************/
     MetaEditorControl.prototype._getObjectDescriptor = function (gmeID) {
         var cNode = this._client.getNode(gmeID),
-            nodeDescriptor,
-            _getSetMembershipInfo,
-            _getPointerInfo;
-
-        _getSetMembershipInfo = function (node) {
-            var result = {},
-                availableSets = node.getValidSetNames(),
-                len = availableSets.length;
-
-            while (len--) {
-                result[availableSets[len]] = node.getMemberIds(availableSets[len]);
-            }
-
-            return result;
-        };
-
-        _getPointerInfo = function (node) {
-            var result = {},
-                availablePointers = node.getPointerNames(),
-                len = availablePointers.length;
-
-            while (len--) {
-                result[availablePointers[len]] = node.getPointer(availablePointers[len]).to;
-            }
-
-            return result;
-        };
+            nodeDescriptor;
 
         if (cNode) {
-            nodeDescriptor = {"ID": undefined,
-                "ParentID": undefined,
-                "Sets": undefined,
-                "Pointers": undefined,
+            nodeDescriptor = {"ID": gmeID,
+                "ParentID": cNode.getParentId(),
                 "decorator": META_DECORATOR,
+                "name": cNode.getAttribute(nodePropertyNames.Attributes.name) || "",
                 "position": { "x": -1, "y": -1 }};
 
-            nodeDescriptor.ID = gmeID;
-            nodeDescriptor.ParentID = cNode.getParentId();
-
-            nodeDescriptor.name = cNode.getAttribute(nodePropertyNames.Attributes.name) || "";
-
-            nodeDescriptor.decorator = cNode.getRegistry(nodePropertyNames.Registry.decorator) || META_DECORATOR;
+            //nodeDescriptor.decorator = cNode.getRegistry(nodePropertyNames.Registry.decorator) || META_DECORATOR;
 
             if (gmeID === this.currentNodeInfo.id) {
 
@@ -331,9 +299,6 @@ define(['logManager',
                     nodeDescriptor.position = this._selfRegistry.MemberCoord[gmeID]; // || { "x": 100, "y": 100  };
                 }
             }
-
-            nodeDescriptor.Sets = _getSetMembershipInfo(cNode);
-            nodeDescriptor.Pointers = _getPointerInfo(cNode);
         }
 
         return nodeDescriptor;
@@ -398,17 +363,17 @@ define(['logManager',
                 nodeName = node.getAttribute(nodePropertyNames.Attributes.name);
 
                 var containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [];
-                this.logger.warning('nodeName (' + nodeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
+                this.logger.warning(nodeName + ' (' + nodeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
 
                 var pointerNames = node.getPointerNames();
                 i = pointerNames.length;
-                this.logger.warning('nodeName (' + nodeID + ')\'s pointerMetaDescriptors num: ' + i);
+                this.logger.warning(nodeName + ' (' + nodeID + ')\'s pointerMetaDescriptors num: ' + i);
                 while (i--) {
                     var pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[i]);
-                    this.logger.warning('nodeName (' + nodeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
+                    this.logger.warning(nodeName + ' (' + nodeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
                 }
 
-                this.logger.warning('nodeName (' + nodeID + ')\'s metaInheritance: ' + node.getBase());
+                this.logger.warning(nodeName + ' (' + nodeID + ')\'s metaInheritance: ' + node.getBase());
             }
         }
     };
@@ -426,7 +391,6 @@ define(['logManager',
             diff,
             objDesc,
             componentID,
-            i,
             gmeID,
             metaEditorRegistry = aspectNode.getEditableRegistry(META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
             territoryChanged = false;
@@ -508,19 +472,22 @@ define(['logManager',
                 this._processNodeMetaPointers(gmeID);
                 this._processNodeMetaInheritance(gmeID);
 
-                //check all the waiting pointers (whose SRC is already displayed and waiting for the DST to show up)
+                //check all the waiting pointers (whose SRC/DST is already displayed and waiting for the DST/SRC to show up)
                 //it might be this new node
                 this._processConnectionWaitingList(gmeID);
             }
         }
     };
 
-    MetaEditorControl.prototype._processConnectionWaitingList = function (gmeDstID) {
+    MetaEditorControl.prototype._processConnectionWaitingList = function (gmeID) {
         var len,
             gmeSrcID,
+            gmeDstID,
             connType,
             connTexts;
 
+        //check for possible endpoint as gmeID
+        gmeDstID = gmeID;
         if (this._connectionWaitingListByDstGMEID && this._connectionWaitingListByDstGMEID.hasOwnProperty(gmeDstID)) {
             for (gmeSrcID in this._connectionWaitingListByDstGMEID[gmeDstID]) {
                 if (this._connectionWaitingListByDstGMEID[gmeDstID].hasOwnProperty(gmeSrcID)){
@@ -535,6 +502,23 @@ define(['logManager',
 
             delete this._connectionWaitingListByDstGMEID[gmeDstID];
         }
+
+        //check for possible source as gmeID
+        gmeSrcID = gmeID;
+        if (this._connectionWaitingListBySrcGMEID && this._connectionWaitingListBySrcGMEID.hasOwnProperty(gmeSrcID)) {
+            for (gmeDstID in this._connectionWaitingListBySrcGMEID[gmeSrcID]) {
+                if (this._connectionWaitingListBySrcGMEID[gmeSrcID].hasOwnProperty(gmeDstID)){
+                    len = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID].length;
+                    while (len--) {
+                        connType = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][0];
+                        connTexts = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][1];
+                        this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                    }
+                }
+            }
+
+            delete this._connectionWaitingListBySrcGMEID[gmeSrcID];
+        }
     };
     /**************************************************************************/
     /*  END OF --- HANDLE OBJECT LOAD DISPLAY IT WITH ALL THE POINTERS / ...  */
@@ -546,16 +530,10 @@ define(['logManager',
     /****************************************************************************/
     MetaEditorControl.prototype._processNodeUnload = function (gmeID) {
         var componentID,
-            len,
             idx;
 
         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
             componentID = this._GMEID2ComponentID[gmeID];
-
-            //remove all the associated connection(s) (both from existing connection list and waiting list)
-            //if gmeID is destinationID, remove connection and store it's data in the waiting list
-            //if gmeID is sourceID, remove connection and end of story
-            this._removeAssociatedConnections(gmeID);
 
             this.diagramDesigner.deleteComponent(componentID);
 
@@ -572,115 +550,6 @@ define(['logManager',
             delete this._nodeMetaInheritance[gmeID];
         }
     };
-
-    //TODO: fix here
-    MetaEditorControl.prototype._removeAssociatedConnections = function (gmeID) {
-        var it,
-            gmeSrcId,
-            gmeDstId,
-            connType,
-            connectionID,
-            idx;
-
-        //remove associated connection info from waiting list
-        //#1
-        //gmeID is in the waiting list as connectionEnd
-        //NOTE: this should never happen, so signal error here
-        if (this._connectionWaitingListByDstGMEID.hasOwnProperty(gmeID)) {
-            throw "Broken connection waiting list...";
-        }
-
-        //#2
-        //gmeID is the source of the connections
-        for (it in this._connectionWaitingListByDstGMEID) {
-            if (this._connectionWaitingListByDstGMEID.hasOwnProperty(it)){
-                if (this._connectionWaitingListByDstGMEID[it].hasOwnProperty(gmeID)){
-                    delete this._connectionWaitingListByDstGMEID[it][gmeID];
-                }
-            }
-        }
-
-        //remove existing connections associated with gmeID
-        //#3
-        //if gmeID is the source of the connection, remove connection and no need to save
-        if (this._connectionListBySrcGMEID.hasOwnProperty(gmeID)) {
-            for (gmeDstId in this._connectionListBySrcGMEID[gmeID]) {
-                if (this._connectionListBySrcGMEID[gmeID].hasOwnProperty(gmeDstId)) {
-                    for (connType in this._connectionListBySrcGMEID[gmeID][gmeDstId]) {
-                        if (this._connectionListBySrcGMEID[gmeID][gmeDstId].hasOwnProperty(connType)) {
-                            connectionID = this._connectionListBySrcGMEID[gmeID][gmeDstId][connType];
-
-                            this.diagramDesigner.deleteComponent(connectionID);
-
-                            //clean up accounting
-                            delete this._connectionListByID[connectionID];
-
-                            idx = this._connectionListByType[connType].indexOf(connectionID);
-                            this._connectionListByType[connType].splice(idx, 1);
-                        }
-                    }
-
-                    //remove all info from _connectionListByDstGMEID
-                    delete this._connectionListByDstGMEID[gmeDstId][gmeID];
-                }
-            }
-
-            //final cleanup in _connectionListBySrcGMEID
-            delete this._connectionListBySrcGMEID[gmeID];
-        }
-
-        //#4
-        //if gmeID is the end of the connection, remove connection and save its data to the waiting list
-        if (this._connectionListByDstGMEID.hasOwnProperty(gmeID)) {
-            for(gmeSrcId in this._connectionListByDstGMEID[gmeID]) {
-                if (this._connectionListByDstGMEID[gmeID].hasOwnProperty(gmeSrcId)) {
-
-                    for (connType in this._connectionListByDstGMEID[gmeID][gmeSrcId]) {
-                        if (this._connectionListByDstGMEID[gmeID][gmeSrcId].hasOwnProperty(connType)) {
-                            connectionID = this._connectionListByDstGMEID[gmeID][gmeSrcId][connType];
-
-                            this.diagramDesigner.deleteComponent(connectionID);
-
-                            //save to waiting list
-                            this._saveConnectionToWaitingList(gmeSrcId, gmeID, connType);
-
-                            //clean up accounting
-                            delete this._connectionListByID[connectionID];
-
-                            idx = this._connectionListByType[connType].indexOf(connectionID);
-                            this._connectionListByType[connType].splice(idx, 1);
-                        }
-                    }
-
-                    //remove all info from _connectionListByDstGMEID
-                    delete this._connectionListBySrcGMEID[gmeSrcId][gmeID];
-                }
-            }
-
-            //final cleanup in _connectionListByDstGMEID
-            delete this._connectionListByDstGMEID[gmeID];
-        }
-
-        //checked filtered out connections
-        //#5 - gmeID is the source of the filtered out connection --- remove info as it is, no need for it
-        //#6 - gmeID is the destination of the connection --- save info to the waiting list
-        for (connType in this._filteredOutConnectionDescriptors) {
-            if (this._filteredOutConnectionDescriptors.hasOwnProperty(connType)) {
-                it = this._filteredOutConnectionDescriptors[connType].length;
-                while (it--) {
-                    gmeSrcId = this._filteredOutConnectionDescriptors[connType][it][0];
-                    gmeDstId = this._filteredOutConnectionDescriptors[connType][it][1];
-
-                    if (gmeID === gmeDstId) {
-                        //save to waiting list
-                        this._saveConnectionToWaitingList(gmeSrcId, gmeID, connType);
-                    }
-
-                    this._filteredOutConnectionDescriptors[connType].splice(it, 1);
-                }
-            }
-        }
-    };
     /****************************************************************************/
     /*                      END OF --- HANDLE OBJECT UNLOAD                     */
     /****************************************************************************/
@@ -695,9 +564,9 @@ define(['logManager',
         //need to check if the src and dst objects are displayed or not
         //if YES, create connection
         //if NO, store information in a waiting queue
-        //fact: gmeSrcId is available, the call is coming from there
-        if (this._GMENodes.indexOf(gmeDstId) !== -1) {
-            //destination is displayed
+
+        if (this._GMENodes.indexOf(gmeSrcId) !== -1 && this._GMENodes.indexOf(gmeDstId) !== -1) {
+            //source and destination is displayed
 
             if (this._filteredOutConnTypes.indexOf(connType) === -1) {
                 //connection type is not filtered out    
@@ -726,18 +595,28 @@ define(['logManager',
                 this._filteredOutConnectionDescriptors[connType].push([gmeSrcId, gmeDstId, connTexts]);
             }
         } else {
-            //destination is not displayed, store it in a queue
+            //source or destination is not displayed, store it in a queue
             this._saveConnectionToWaitingList(gmeSrcId, gmeDstId, connType, connTexts);
         }
     };
 
 
     MetaEditorControl.prototype._saveConnectionToWaitingList =  function (gmeSrcId, gmeDstId, connType, connTexts) {
-        this._connectionWaitingListByDstGMEID[gmeDstId] = this._connectionWaitingListByDstGMEID[gmeDstId] || {};
-
-        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] || [];
-
-        this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].push([connType, connTexts]);
+        if (this._GMENodes.indexOf(gmeSrcId) !== -1 && this._GMENodes.indexOf(gmeDstId) === -1) {
+            //#1 - the destination object is missing from the screen
+            this._connectionWaitingListByDstGMEID[gmeDstId] = this._connectionWaitingListByDstGMEID[gmeDstId] || {};
+            this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId] || [];
+            this._connectionWaitingListByDstGMEID[gmeDstId][gmeSrcId].push([connType, connTexts]);
+        } else if (this._GMENodes.indexOf(gmeSrcId) === -1 && this._GMENodes.indexOf(gmeDstId) !== -1) {
+            //#2 -  the source object is missing from the screen
+            this._connectionWaitingListBySrcGMEID[gmeSrcId] = this._connectionWaitingListBySrcGMEID[gmeSrcId] || {};
+            this._connectionWaitingListBySrcGMEID[gmeSrcId][gmeDstId] = this._connectionWaitingListBySrcGMEID[gmeSrcId][gmeDstId] || [];
+            this._connectionWaitingListBySrcGMEID[gmeSrcId][gmeDstId].push([connType, connTexts]);
+        } else {
+            //#3 - both gmeSrcId and gmeDstId is missing from the screen
+            //NOTE: this should never happen!!!
+            this.logger.error('_saveConnectionToWaitingList both gmeSrcId and gmeDstId is undefined...');
+        }
     };
 
 
@@ -745,12 +624,14 @@ define(['logManager',
         //save by SRC
         this._connectionListBySrcGMEID[gmeSrcId] = this._connectionListBySrcGMEID[gmeSrcId] || {};
         this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] || {};
-        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType] = connComponentId;
+        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType] = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType] || [];
+        this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].push(connComponentId);
         
         //save by DST
         this._connectionListByDstGMEID[gmeDstId] = this._connectionListByDstGMEID[gmeDstId] || {};
         this._connectionListByDstGMEID[gmeDstId][gmeSrcId] = this._connectionListByDstGMEID[gmeDstId][gmeSrcId] || {};
-        this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType] = connComponentId;
+        this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType] = this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType] || [];
+        this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType].push(connComponentId);
 
         //save by type
         this._connectionListByType[connType] = this._connectionListByType[connType] || [];
@@ -770,22 +651,40 @@ define(['logManager',
     /****************************************************************************/
     /*  REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS                */
     /****************************************************************************/
-    MetaEditorControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType) {
+    MetaEditorControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType, pointerName) {
         var connectionID,
-            idx;
+            idx,
+            len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length;
 
-        connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
+        while (len--) {
+            connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType][len];
 
-        this.diagramDesigner.deleteComponent(connectionID);
+            //if a pointer with a specific name should be removed
+            //clear out the connectionID if this connection is not the representation of that pointer
+            if (connType === MetaRelations.META_RELATIONS.POINTER &&
+                pointerName &&
+                pointerName !== "" &&
+                this._connectionListByID[connectionID].name !== pointerName) {
+                connectionID = undefined;
+            }
 
-        //clean up accounting
-        delete this._connectionListByID[connectionID];
+            //if the connectionID is still valid
+            if (connectionID) {
+                this.diagramDesigner.deleteComponent(connectionID);
 
-        idx = this._connectionListByType[connType].indexOf(connectionID);
-        this._connectionListByType[connType].splice(idx, 1);
+                //clean up accounting
+                delete this._connectionListByID[connectionID];
 
-        delete this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType];
-        delete this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType];
+                idx = this._connectionListByType[connType].indexOf(connectionID);
+                this._connectionListByType[connType].splice(idx, 1);
+
+                idx = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].indexOf(connectionID);
+                this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].splice(idx, 1);
+
+                idx = this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType].indexOf(connectionID);
+                this._connectionListByDstGMEID[gmeDstId][gmeSrcId][connType].splice(idx, 1);
+            }
+        }
     };
     /****************************************************************************/
     /*  END OF --- REMOVES A SPECIFIC TYPE OF CONNECTION FROM 2 GME OBJECTS     */
@@ -930,7 +829,6 @@ define(['logManager',
                 //connection endpoint changed, remove old connection, draw new one
                 //draw new one
                 pointerTarget = oldMetaPointers[pointerName].target;
-                //TODO: check parameter incostintence
                 this._removeConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, pointerName);
 
                 oldMetaPointers[pointerName] = {'name': newMetaPointers[pointerName].name,
@@ -991,13 +889,13 @@ define(['logManager',
 
         //if there was a valid old that's different than the current, delete the connection representing the old
         oldMetaInheritance = this._nodeMetaInheritance[gmeID];
-        if (oldMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
+        if (oldMetaInheritance && !_.isEmpty(oldMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
             this._removeConnection(oldMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
 
             delete this._nodeMetaInheritance[gmeID];
         }
 
-        if (newMetaInheritance) {
+        if (newMetaInheritance && !_.isEmpty(newMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
             this._nodeMetaInheritance[gmeID] = newMetaInheritance;
             this._createConnection(newMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
         }
@@ -1116,8 +1014,6 @@ define(['logManager',
             objectNode = this._client.getNode(objectID),
             pointerMetaDescriptor,
             pointerNames,
-            len,
-            alreadyExists,
             self = this;
 
         if (containerNode && objectNode) {
@@ -1140,6 +1036,7 @@ define(['logManager',
 
                     //create pointer on the container node with null value
                     self._client.makePointer(containerID, userSelectedPointerName, containerID);
+                    //TODO: self._client.makePointer cannot accept NULL as end pointer
                     //TODO: self._client.makePointer(containerID, userSelectedPointerName, NULL);
                 }
 
@@ -1153,21 +1050,14 @@ define(['logManager',
 
     MetaEditorControl.prototype._deletePointerRelationship = function (containerID, objectID, pointerName) {
         var containerNode = this._client.getNode(containerID),
-            objectNode = this._client.getNode(objectID),
-            pointerMetaDescriptor,
-            pointerNames,
-            len,
-            alreadyExists;
+            objectNode = this._client.getNode(objectID);
 
         if (containerNode && objectNode) {
-            this._client.startTransaction();
-
             this._client.setPointerDescriptor(containerID, pointerName, {});
-            //TODO: this._client.delPointerDescriptor(containerID, pointerName, undefined);
+            //TODO: client.delPointerDescriptor DOES NOT EXIST YET, workaround is to update to NOTHING
+            //TODO: this._client.delPointerDescriptor(containerID, pointerName);
 
             this._client.delPointer(containerID, pointerName);
-
-            this._client.completeTransaction();
         }
     };
 
@@ -1180,7 +1070,7 @@ define(['logManager',
         if (parentNode && objectNode) {
             objectBase = objectNode.getBase();
 
-            if (objectBase) {
+            if (objectBase && !_.isEmpty(objectBase)) {
                 this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
             }
 
@@ -1196,10 +1086,11 @@ define(['logManager',
         if (objectNode) {
             objectBase = objectNode.getBase();
 
-            if (objectBase) {
+            if (objectBase && !_.isEmpty(objectBase)) {
                 this.logger.warning('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
-                //TODO: coretree does not allow registry value of 'undefined'
-                this._client.setBase(objectID, undefined);
+                //TODO: coretree does not allow registry value of 'undefined', so store {}
+                //TODO: this._client.setBase(objectID, undefined);
+                this._client.setBase(objectID, {});
             }
         }
     };

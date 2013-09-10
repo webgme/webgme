@@ -158,14 +158,67 @@ define(['logManager',
     /*************************************************************/
     /*  HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /*************************************************************/
-        //TODO: connection deletion not yet handled
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var cNode = this._client.getNode(this.currentNodeInfo.id),
             registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
             len = idList.length,
             gmeID,
             idx,
-            connDesc;
+            getAssociatedConnections,
+            connectionListBySrcGMEID = this._connectionListBySrcGMEID,
+            connectionListByDstGMEID = this._connectionListByDstGMEID,
+            aConnections,
+            deleteConnection,
+            i,
+            self = this;
+
+        getAssociatedConnections = function (objectID) {
+            var associatedConnectionIDs = [],
+                otherID,
+                connType,
+                len,
+                cID,
+                checkConnections;
+
+            checkConnections = function (cList) {
+                //check objectID as source
+                if (cList.hasOwnProperty(objectID)) {
+                    for (otherID in cList[objectID]) {
+                        if (cList[objectID].hasOwnProperty(otherID)) {
+                            for (connType in cList[objectID][otherID]) {
+                                if (cList[objectID][otherID].hasOwnProperty(connType)) {
+                                    len = cList[objectID][otherID][connType].length;
+                                    while (len--) {
+                                        cID = cList[objectID][otherID][connType][len];
+                                        if (associatedConnectionIDs.indexOf(cID) === -1) {
+                                            associatedConnectionIDs.push(cID);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+
+            checkConnections(connectionListBySrcGMEID);
+            checkConnections(connectionListByDstGMEID);
+
+            return associatedConnectionIDs;
+        };
+
+        deleteConnection = function (connectionID) {
+            var connDesc = self._connectionListByID[connectionID];
+
+            if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
+                self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.name);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
+                self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
+            }
+            //TODO: PointerList deletion not yet handled
+        };
 
         this._client.startTransaction();
 
@@ -173,20 +226,25 @@ define(['logManager',
             gmeID = this._ComponentID2GMEID[idList[len]];
             idx = registry.Members.indexOf(gmeID);
             if ( idx !== -1) {
-                //connected entity is a box --> GME object
+                //entity is a box --> delete GME object from the sheet member's list and delete relationship definitions as well
+
+                //handle associated connections
+                //if GMEObject is a source of a connection (Containment / Pointer / PointerList relationship)
+                // --> DELETE these relationship definitions from the node
+                //if GMEObject is a destination of a connection (Inheritance)
+                // --> inheritance is stored on the 'other' end, need to delete from the 'other' node
+                aConnections = getAssociatedConnections(gmeID);
+                i = aConnections.length;
+                while (i--) {
+                    deleteConnection(aConnections[i]);
+                }
+
+                //finally remove from members list
                 registry.Members.splice(idx, 1);
                 delete registry.MemberCoord[gmeID];
             } else if (this._connectionListByID.hasOwnProperty(idList[len])) {
-                //TODO: connection delete handler
-                connDesc = this._connectionListByID[idList[len]];
-
-                if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
-                    this._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
-                } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
-                    this._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstID, connDesc.name);
-                } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
-                    this._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstID);
-                }
+                //entity is a connection, just simply delete it
+                deleteConnection(idList[len]);
             }
         }
 
