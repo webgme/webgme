@@ -1191,7 +1191,7 @@ define(['logManager',
             } else if (alphaEnd > 270 && alphaEnd <= 315) {
                 dy = 0;
             } else if (alphaEnd > 315 && alphaEnd <= 360) {
-                dx = -5 * this.srcText.length;
+                dx = -5 * this.dstText.length;
             }
 
             this.skinParts.dstText.css({ 'top': pathEnd.y + dy,
