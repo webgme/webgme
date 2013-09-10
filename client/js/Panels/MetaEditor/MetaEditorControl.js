@@ -639,7 +639,7 @@ define(['logManager',
 
         //save by connectionID
         this._connectionListByID[connComponentId] = { "GMESrcId": gmeSrcId,
-                                                      "GMEDstID": gmeDstId,
+                                                      "GMEDstId": gmeDstId,
                                                       "type": connType,
                                                       "name": (connTexts && connTexts.name) ? connTexts.name : undefined,
                                                       "connTexts": connTexts};
@@ -1150,7 +1150,7 @@ define(['logManager',
             connComponentId = this._connectionListByType[connType][len];
 
             gmeSrcId = this._connectionListByID[connComponentId].GMESrcId;
-            gmeDstId = this._connectionListByID[connComponentId].GMEDstID;
+            gmeDstId = this._connectionListByID[connComponentId].GMEDstId;
             connTexts = this._connectionListByID[connComponentId].connTexts;
 
             this._filteredOutConnectionDescriptors[connType].push([gmeSrcId, gmeDstId, connTexts]);
