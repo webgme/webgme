@@ -30,9 +30,8 @@ define(['js/PanelBase/PanelBase',
     ProjectTitlePanel.prototype._initialize = function () {
         var self = this;
 
-        this.$el.addClass('inline');
-
-        this.$el.html(projectTitleTemplate);
+        //overwrite panel's $pEl and $el
+        this.$pEl = this.$el = $(projectTitleTemplate);
 
         this._projectTitle = this.$el.find(".title");
 

@@ -1,6 +1,6 @@
 .project-title {
   margin-left: 10px;
-  padding-top: 8px; }
+  padding-top: 10px; }
   .project-title .title {
     font-size: 20px;
     font-weight: 200;
@@ -12,8 +12,7 @@
     padding-right: 5px;
     font-size: 12px;
     font-weight: bold; }
-
-.read-only .project-title {
-  color: #777777; }
-  .read-only .project-title .readOnlyInfo {
-    display: inline-block; }
+  .project-title.read-only {
+    color: #777777; }
+    .project-title.read-only .readOnlyInfo {
+      display: inline-block; }

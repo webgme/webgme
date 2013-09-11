@@ -87,6 +87,11 @@ div.spacer {
     white-space: nowrap;
 }
 
+.webgme-version {
+    line-height: 24px;
+    padding-left: 5px;
+}
+
 /********WEBKIT SCROLLBAR **********/
 
 *::-webkit-scrollbar{height:10px;width:10px;overflow:visible;}

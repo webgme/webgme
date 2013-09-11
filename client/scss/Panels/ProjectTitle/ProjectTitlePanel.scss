@@ -2,7 +2,7 @@ $read-only-color : #777777;
 
 .project-title {
   margin-left: 10px;
-  padding-top: 8px;
+  padding-top: 10px;
 
   .title {
     font-size: 20px;
@@ -18,14 +18,13 @@ $read-only-color : #777777;
     font-size: 12px;
     font-weight: bold;
   }
-}
 
-.read-only {
-  .project-title {
-    color: $read-only-color;
+  &.read-only {
+      color: $read-only-color;
 
-    .readOnlyInfo {
-      display: inline-block;
-    }
+      .readOnlyInfo {
+        display: inline-block;
+      }
   }
 }
+
