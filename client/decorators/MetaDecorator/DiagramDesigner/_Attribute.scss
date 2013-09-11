@@ -1,0 +1,26 @@
+$port-height: 20px;
+
+@mixin attribute() {
+  .attr {
+    white-space: nowrap;
+    position: relative;
+    height: $port-height;
+    line-height: $port-height;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    .n {
+      float: left;
+      margin-right: 3px;
+    }
+
+    .t {
+      float: right;
+    }
+  }
+}
+
+
+

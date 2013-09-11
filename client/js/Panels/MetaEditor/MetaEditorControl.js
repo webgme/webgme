@@ -17,7 +17,7 @@ define(['logManager',
     var MetaEditorControl,
         GME_ID = "GME_ID",
         META_EDITOR_REGISTRY_KEY = "MetaEditor",
-        META_DECORATOR = "DefaultDecorator",
+        META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner';
 
     MetaEditorControl = function (options) {
@@ -352,28 +352,39 @@ define(['logManager',
             len = idList.length,
             node,
             nodeID,
+            gmeID,
             nodeName,
             i;
 
         while (len--) {
             nodeID = idList[len];
-            node = this._client.getNode(this._ComponentID2GMEID[nodeID]);
+            gmeID = this._ComponentID2GMEID[nodeID];
+            node = this._client.getNode(gmeID);
 
             if (node) {
                 nodeName = node.getAttribute(nodePropertyNames.Attributes.name);
 
                 var containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [];
-                this.logger.warning(nodeName + ' (' + nodeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
 
                 var pointerNames = node.getPointerNames();
                 i = pointerNames.length;
-                this.logger.warning(nodeName + ' (' + nodeID + ')\'s pointerMetaDescriptors num: ' + i);
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptors num: ' + i);
                 while (i--) {
                     var pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[i]);
-                    this.logger.warning(nodeName + ' (' + nodeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
+                    this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
                 }
 
-                this.logger.warning(nodeName + ' (' + nodeID + ')\'s metaInheritance: ' + node.getBase());
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBase());
+
+                var attributeNames = node.getAttributeNames();
+                i = attributeNames.length;
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s attributeMetaDescriptors num: ' + i);
+
+                while (i--) {
+                    var attrMetaDescriptor = node.getAttributeDescriptor(attributeNames[i]);
+                    this.logger.warning(nodeName + ' (' + gmeID + ')\'s attributeMetaDescriptor "' + attributeNames[i] + '": ' + JSON.stringify(attrMetaDescriptor));
+                }
             }
         }
     };
