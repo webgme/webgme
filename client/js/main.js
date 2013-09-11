@@ -1,7 +1,7 @@
 "use strict";
 
 var DEBUG = true;
-var _webGME_jquery_ver = '2.0.0';
+var _webGME_jquery_ver = '2.0.3';
 var _webGME_jqueryui_ver = '1.10.3';
 
 //touch device detection
