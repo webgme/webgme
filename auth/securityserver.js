@@ -22,6 +22,33 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
         var generateSessionId = function(){
             return GUID();
         };
+        var generateGuest = function(){
+            return {
+                puk:'',
+                create:false,
+                guest:true
+            }
+        };
+        var getUsersProjectRights = function(user,projectname,callback){
+            if(_users[user].projects[projectname]){
+                return callback(null);
+            }
+            if(user.indexOf('@') !== -1){
+                _udm.getUserByEmailProject(user,projectname,function(err,projectData){
+                    if(!err){
+                        _users[user].projects[projectname] = projectData;
+                    }
+                    callback(err);
+                });
+            } else {
+                _udm.getUserProject(user,projectname,function(err,projectData){
+                    if(!err){
+                        _users[user].projects[projectname] = projectData;
+                    }
+                    callback(err);
+                });
+            }
+        };
         var addNewSession = function(user){
             if(user.sessions){
                 //nothing to do
@@ -47,18 +74,35 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
             if(_users[user]){
                 callback(null,_crypto.encrypt(_users[user].puk,addNewSession(_users[user])));
             } else {
-                _udm.getUser(user,function(err,userData){
-                    if(err){
-                        callback(err);
-                    } else {
-                        if(userData){
-                            _users[user] = userData;
-                            callback(null,_crypto.encrypt(_users[user].puk,addNewSession(_users[user])));
+                if(user.indexOf('@') !== -1){
+                    _udm.getUserByEmail(user,function(err,userData){
+                        if(err){
+                            callback(err);
                         } else {
-                            callback('no such user found');
+                            if(userData){
+                                _users[user] = userData;
+                                _users[user].id = user;
+                                callback(null,_crypto.encrypt(_users[user].puk,addNewSession(_users[user])));
+                            } else {
+                                callback('no such user found');
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    _udm.getUser(user,function(err,userData){
+                        if(err){
+                            callback(err);
+                        } else {
+                            if(userData){
+                                _users[user] = userData;
+                                _users[user].id = user;
+                                callback(null,_crypto.encrypt(_users[user].puk,addNewSession(_users[user])));
+                            } else {
+                                callback('no such user found');
+                            }
+                        }
+                    });
+                }
             }
         };
 
@@ -85,13 +129,13 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
                     if(err){
                         callback(err);
                     } else {
-                        var filtered = [];
+                        /*var filtered = [];
                         for(var i=0;i<names.length;i++){
                             if(user.projects[names[i]]){
                                 filtered.push(names[i]);
                             }
-                        }
-                        callback(null,filtered);
+                        }*/
+                        callback(null,names);
                     }
                 });
             } else {
@@ -101,23 +145,22 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
         database.deleteProject = function(name,sid,callback){
             var user = getSessionUser(sid);
             if(user){
-                if(user.projects[name]){
-                    if(user.projects[name].delete === true){
-                        _innerDb.deleteProject(name,callback);
+                getUsersProjectRights(user.id,name,function(err){
+                    if(user.projects[name]){
+                        if(user.projects[name].delete === true){
+                            _innerDb.deleteProject(name,callback);
+                        } else {
+                            callback('missing necessary rights');
+                        }
                     } else {
                         callback('missing necessary rights');
                     }
-                } else {
-                    callback('missing necessary rights');
-                }
+                });
             } else {
                 callback('not authenticated session');
             }
         };
         database.openProject = function(name,sid,callback){
-            if(typeof callback !== 'function'){
-                console.log('whaaat??');
-            }
             var goodToOpen = function(){
                 //here we add our security layer
                 _innerDb.openProject(name,function(err,innerProject){
@@ -278,26 +321,32 @@ define([ "util/assert", "util/sha1", "util/canon", "util/guid", "auth/udm", "aut
 
             var user = getSessionUser(sid);
             if(user){
-                _innerDb.getProjectNames(function(err,names){
-                    if(err){
-                        callback(err);
-                    } else {
-                        if(names.indexOf(name) === -1){
-                            //create
-                            if(user.create === true){
-                                goodToOpen();
-                            } else {
-                                callback('missing necessary rights');
-                            }
+                getUsersProjectRights(user.id,name,function(err){
+                    _innerDb.getProjectNames(function(err,names){
+                        if(err){
+                            callback(err);
                         } else {
-                            //open
-                            if(user.projects[name]){
-                                goodToOpen();
+                            if(names.indexOf(name) === -1){
+                                //create
+                                if(user.create === true){
+                                    goodToOpen();
+                                } else {
+                                    callback('missing necessary rights');
+                                }
                             } else {
-                                callback('missing necessary rights');
+                                //open
+                                if(user.projects[name]){
+                                    if(user.projects[name].read){
+                                        goodToOpen();
+                                    } else {
+                                        callback('missing necessary rights');
+                                    }
+                                } else {
+                                    callback('missing necessary rights');
+                                }
                             }
                         }
-                    }
+                    });
                 });
             } else {
                 callback('not authenticated session');

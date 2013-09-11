@@ -13,7 +13,8 @@ define([
     'storage/commit',
     'logManager',
     'auth/key',
-    'auth/securityclient'
+    'auth/securityclient',
+    'util/url'
 ],
     function (
         ASSERT,
@@ -30,7 +31,8 @@ define([
         Commit,
         LogManager,
         KEY,
-        SClient
+        SClient,
+        URL
         ) {
 
         function COPY(object){
@@ -66,7 +68,7 @@ define([
                 _commitCache = null,
                 _offline = false,
                 _networkWatcher = null,
-                _userName = _configuration.user || "kecso",
+                _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
                 _privateKey = 4;
 
             //default configuration
@@ -99,13 +101,22 @@ define([
                 'OFFLINE' : 'offline'
             };
 
+            function getUserId(){
+                var cookies = URL.parseCookie(document.cookie);
+                if(cookies.webgme){
+                    return cookies.webgme;
+                } else {
+                    return 'n/a';
+                }
+            }
+
             function newDatabase(){
-                return  new Log(
-                    new HashCheck(
-                        new Commit(
-                            new Cache(
-                                new Failsafe(
-                                    new SClient(
+                if(_configuration.authentication === 'none'){
+                    return  new Log(
+                        new HashCheck(
+                            new Commit(
+                                new Cache(
+                                    new Failsafe(
                                         new SocketIOClient(
                                             {
                                                 host:_configuration.host,
@@ -115,9 +126,28 @@ define([
                                     ),{}
                                 ),{}
                             ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                );
+                        ),{log:LogManager.create('client-storage')}
+                    );
+                } else {
+                    return  new Log(
+                        new HashCheck(
+                            new Commit(
+                                new Cache(
+                                    new Failsafe(
+                                        new SClient(
+                                            new SocketIOClient(
+                                                {
+                                                    host:_configuration.host,
+                                                    port:_configuration.port
+                                                }
+                                            ),{}
+                                        ),{}
+                                    ),{}
+                                ),{}
+                            ),{}
+                        ),{log:LogManager.create('client-storage')}
+                    );
+                }
             }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {
@@ -1079,7 +1109,7 @@ define([
 
                 _database.openDatabase(function(err){
                     if(!err){
-                        _database.authenticate(_userName,_privateKey,function(err){
+                        var authenticated = function(err){
                             if(!err){
                                 if(_networkWatcher){
                                     _networkWatcher.stop();
@@ -1107,7 +1137,12 @@ define([
                                 logger.error('authentication failed');
                                 callback(err);
                             }
-                        });
+                        };
+                        if(_configuration.authentication === 'none'){
+                            authenticated(null);
+                        } else {
+                            _database.authenticate(_userName,_privateKey,authenticated);
+                        }
                     } else {
                         logger.error('Cannot open database');
                         callback(err);
@@ -1685,6 +1720,8 @@ define([
                 setPropertyEditorIdList: setPropertyEditorIdList,
                 clearPropertyEditorIdList: clearPropertyEditorIdList,
                 connect: connect,
+
+                getUserId : getUserId,
 
                 //projects, branch, etc.
                 getActiveProject: getActiveProject,

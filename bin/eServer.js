@@ -70,13 +70,17 @@ requirejs(['logManager',
     var sitekey = require('fs').readFileSync("proba-key.pem");
     var sitecertificate = require('fs').readFileSync("proba-cert.pem");
     var app = express();
-    var udm = new UDM({
-        host: '127.0.0.1',
-        port: 27017,
-        database: 'test',
-        collection: 'users',
-        refresh: 100000
-    });
+    var udm = null;
+    if(parameters.authenticate = 'gme'){
+        udm = new UDM({
+            host: parameters.udmip || parameters.mongoip,
+            port: parameters.udmport || parameters.mongoport || 27017,
+            database: parameters.udmdb || parameters.mongodatabase,
+            collection: parameters.udmcollection || 'users',
+            refresh: parameters.udmrefresh || 100000
+        })
+    }
+
     var udmpass = new UDMPASS(udm);
 
     //for session handling we save the user data to the memory and reuse them in case of need
@@ -101,8 +105,8 @@ requirejs(['logManager',
     ));
 
     passport.use(new stratGugli({
-            returnURL: 'https://kecskes.isis.vanderbilt.edu:888/login/google/return',
-            realm: 'https://kecskes.isis.vanderbilt.edu:888'
+            returnURL: parameters.host+(parameters.port === 80 ? '' : ':'+parameters.port)+'/login/google/return',
+            realm: parameters.host+(parameters.port === 80 ? '' : ':'+parameters.port)
         },
         function(identifier, profile, done) {
             return done(null,{id:profile.emails[0].value});
@@ -110,8 +114,12 @@ requirejs(['logManager',
     ));
 
     function ensureAuthenticated(req, res, next) {
-        if (req.isAuthenticated()) { return next(); }
-        res.redirect('/login')
+        if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
+            return next();
+        } else {
+            if (req.isAuthenticated()) { return next(); }
+            res.redirect('/login')
+        }
     }
 
 
@@ -165,8 +173,14 @@ requirejs(['logManager',
             res.send(404);
         });
     });
-    //client contents - js/html/css/scss
-    app.get(/^\/.*\.(js|css|scss|html|gif|png|bmp)/,ensureAuthenticated,function(req,res){
+    //client contents - js/html/css
+    //css classified as not secure content
+    app.get(/^\/.*\.(css)/,function(req,res){
+        res.sendfile(staticclientdirpath+req.path,function(err){
+            res.send(404);
+        });
+    });
+    app.get(/^\/.*\.(js|html|gif|png|bmp)/,ensureAuthenticated,function(req,res){
         res.sendfile(staticclientdirpath+req.path,function(err){
             res.send(404);
         });
@@ -182,11 +196,20 @@ requirejs(['logManager',
 
     var httpsServer = https.createServer({key:sitekey,cert:sitecertificate}, app).listen(parameters.port);
 
-    var storage = new Server(new SServer(new Log(new Cache(new Mongo({
-        host: parameters.mongoip,
-        port: parameters.mongoport,
-        database: parameters.mongodatabase
-    }),{}),{log:logManager.create('combined-server-storage')}),{udm:udm,crypto:CRYPTO}),{combined:httpsServer,logger:iologger});
+    var storage = null;
+    if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
+        storage = new Server(new Log(new Cache(new Mongo({
+            host: parameters.mongoip,
+            port: parameters.mongoport,
+            database: parameters.mongodatabase
+        }),{}),{log:logManager.create('combined-server-storage')}),{combined:httpsServer,logger:iologger,session:false});
+    } else {
+        storage = new Server(new SServer(new Log(new Cache(new Mongo({
+            host: parameters.mongoip,
+            port: parameters.mongoport,
+            database: parameters.mongodatabase
+        }),{}),{log:logManager.create('combined-server-storage')}),{udm:udm,crypto:CRYPTO}),{combined:httpsServer,logger:iologger,session:true});
+    }
 
     storage.open();
 });

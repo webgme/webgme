@@ -55,7 +55,7 @@ define([ "util/assert" ], function (ASSERT) {
         }
 
 		function openProject (projectName, callback) {
-			logger.debug('deleteProject(' + projectName + ")");
+			logger.debug('openProject(' + projectName + ")");
 			var project = null;
 			_database.openProject(projectName, function (err, proj) {
 				if (!err && proj) {

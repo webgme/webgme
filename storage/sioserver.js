@@ -10,6 +10,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         ASSERT(typeof _database === 'object');
         options = options || {};
         options.port = options.port || 888;
+        options.session = (options.session === null || options.session === undefined || options.session === false) ? false : true;
         var _socket = null,
             _objects = {},
             _projects = {},
@@ -41,41 +42,45 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
             }
         }
 
-        /*function checkProject(client,project,callback){
-            if(_projects[project]){
-                addClient(client,project);
-                callback(null);
-            } else {
-                _database.openProject(project,function(err,proj){
-                    if(!err && proj){
-                        _projects[project] = proj;
-                        addClient(client,project);
-                        callback(null);
-                    } else {
-                        callback(err);
-                    }
-                });
+        function decodeUrl(url){
+            var start = url.indexOf('%');
+            while(start>-1){
+                var char = String.fromCharCode(parseInt(url.substr(start+1, 2), 16));
+                url=url.replace(url.substr(start, 3),char);
+                start = url.indexOf('%');
             }
-        }*/
-        function checkProject(){
-            ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
-            var callback = arguments[arguments.length-1];
-            var client = arguments[0];
-            var project = arguments[1];
+            return url;
+        }
+        function getUserId(cookie){
+            var elements = cookie.split(/[;,] */);
+            for(var i=0;i<elements.length;i++){
+                var pair = elements[i].split('=');
+                if(pair[0] === 'webgme'){
+                    return decodeUrl(pair[1]);
+                }
+            }
+            return "";
+        }
+
+        function checkProject(id,projectname,sid,callback){
+            ASSERT(typeof callback === 'function'); //callback check
+            if(_projects[projectname]){
+                callback(null);
+            }
             var iCallBack = function(err,proj){
                 if(!err && proj){
-                    _projects[project] = proj;
-                    addClient(client,project);
+                    _projects[projectname] = proj;
+                    addClient(id,projectname);
                     callback(null);
                 } else {
                     callback(err);
                 }
             };
-            var iArgs = [];
-            for(var i=1;i<arguments.length;i++){
-                iArgs.push(arguments[i]);
+            var iArgs = [projectname];
+            if(options.session){
+                iArgs.push(sid);
             }
-            iArgs.splice(iArgs.length-1,1,iCallBack);
+            iArgs.push(iCallBack);
             _database.openProject.apply(_database,iArgs);
         }
 
@@ -91,7 +96,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
 
             _socket.on('connection',function(socket){
-                console.log(socket.handshake.headers.cookie);
+                socket.webgmeUser = getUserId(socket.handshake.headers.cookie);
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
                 });
@@ -208,12 +213,16 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
                 socket.on('closeProject', function(){
                     var callback = function(){};
-                    var sid = "";
+                    var sid = null;
                     if(typeof arguments[arguments.length-1] === 'function'){
                         callback = arguments[arguments.length-1];
-                        sid = arguments[arguments.length-2];
+                        if(options.session){
+                            sid = arguments[arguments.length-2];
+                        }
                     } else {
-                        sid = arguments[arguments.length-1];
+                        if(options.session){
+                            sid = arguments[arguments.length-1];
+                        }
                     }
                     var projectName = arguments[0];
                     var iArgs = [];
@@ -241,7 +250,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('loadObject', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -259,7 +271,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('insertObject', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -277,7 +292,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('findHash', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -295,7 +313,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('dumpObjects', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -312,7 +333,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('getBranchNames', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -329,7 +353,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('getBranchHash', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -346,7 +373,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('setBranchHash', function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -363,7 +393,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('getCommits',function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){
@@ -380,7 +413,10 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 socket.on('makeCommit',function(){
                     ASSERT(arguments && typeof arguments[arguments.length-1] === 'function'); //callback check
                     var callback = arguments[arguments.length-1];
-                    var sid = arguments[arguments.length-2];
+                    var sid = null;
+                    if(options.session){
+                        sid = arguments[arguments.length-2];
+                    }
                     var projectName = arguments[0];
                     var iArgs = [];
                     for(var i=1;i<arguments.length;i++){

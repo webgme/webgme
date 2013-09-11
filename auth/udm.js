@@ -26,10 +26,14 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
             var userData = {};
             userData.puk = _core.getRegistry(_users[id].node,'puk');
             userData.create = _core.getRegistry(_users[id].node,'create');
-            userData.projects = _core.getRegistry(_users[id].node,'projects');
+            userData.projects = {};
             userData.pass = _core.getRegistry(_users[id].node,'pass');
             userData.email = _core.getRegistry(_users[id].node,'email');
             return userData;
+        }
+        function getUserProjectData(id,projectname){
+            var projects = _core.getRegistry(_users[id].node,'projects');
+            return projects[projectname] || {read:false,write:false,delete:false};
         }
 
         function initialize(callback){
@@ -105,8 +109,23 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
         }
         function getUserByEmail(email,callback){
             for(var i in _users){
-                if(_users[i].email === email){
-                    return callback(null,getUserData(id));
+                if(_core.getRegistry(_users[i].node,'email') === email){
+                    return callback(null,getUserData(i));
+                }
+            }
+            return callback("no such user",null);
+        }
+        function getUserProject(username,projectname,callback){
+            if(_users[username]){
+                callback(null,getUserProjectData(username,projectname));
+            } else {
+                callback("no such user",null);
+            }
+        }
+        function getUserByEmailProject(email,projectname,callback){
+            for(var i in _users){
+                if(_core.getRegistry(_users[i].node,'email') === email){
+                    return callback(null,getUserProjectData(i,projectname));
                 }
             }
             return callback("no such user",null);
@@ -120,7 +139,9 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
         return {
             initialize: initialize,
             getUser : getUser,
-            getUserByEmail : getUserByEmail
+            getUserByEmail : getUserByEmail,
+            getUserProject : getUserProject,
+            getUserByEmailProject : getUserByEmailProject
         }
     }
 
