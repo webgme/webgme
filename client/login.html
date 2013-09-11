@@ -1,22 +1,99 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title></title>
-</head>
-<body>
-<form action="/login" method="post">
-    <div>
-        <label>Username:</label>
-        <input type="text" name="username"/>
-    </div>
-    <div>
-        <label>Password:</label>
-        <input type="password" name="password"/>
-    </div>
-    <div>
-        <input type="submit" value="Log In"/>
-    </div>
-</form>
-<button onclick="window.location.href='/login/google'">LogInWithGoogle</button>
-</body>
+    <head>
+        <title>-= Login =- WebGME</title>
+
+        <!-- CSS libraries -->
+        <link href="css/main.css" type="text/css" rel="stylesheet"/>
+
+        <!-- favicon -->
+        <link rel="shortcut icon" type="image/x-icon" href="img/favicon.ico">
+        <style type="text/css">
+            body {
+                padding-top: 40px;
+                padding-bottom: 40px;
+                background-color: #f5f5f5;
+            }
+
+            .form-signin {
+                max-width: 400px;
+                padding: 19px 29px 29px;
+                margin: 0 auto 20px;
+                background-color: #fff;
+                border: 1px solid #e5e5e5;
+                -webkit-border-radius: 5px;
+                -moz-border-radius: 5px;
+                border-radius: 5px;
+                -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                -moz-box-shadow: 0 1px 2px rgba(0,0,0,.05);
+                box-shadow: 0 1px 2px rgba(0,0,0,.05);
+            }
+            .form-signin .form-signin-heading,
+            .form-signin .checkbox {
+                margin-bottom: 10px;
+            }
+            .form-signin input[type="text"],
+            .form-signin input[type="password"] {
+                font-size: 16px;
+                height: auto;
+                margin-bottom: 15px;
+                padding: 7px 9px;
+            }
+
+            #customBtn {
+                display: inline-block;
+                background: #dd4b39;
+                color: white;
+                width: 115px;
+                border-radius: 5px;
+                white-space: nowrap;
+                padding: 5px 0px 4px 0px;
+            }
+            #customBtn:hover {
+                background: #e74b37;
+                cursor: pointer;
+            }
+            span.label {
+                font-weight: bold;
+            }
+            span.icon {
+                background: url('http://developers.google.com/+/images/branding/btn_red_32.png') transparent 5px 50% no-repeat;
+                display: inline-block;
+                vertical-align: middle;
+                width: 35px;
+                height: 35px;
+                border-right: #bb3f30 1px solid;
+            }
+            span.buttonText {
+                display: inline-block;
+                vertical-align: middle;
+                padding-left: 10px;
+                padding-right: 20px;
+                font-size: 14px;
+                font-weight: bold;
+                /* Use the Roboto font that is loaded in the <head> */
+                font-family: 'Roboto',arial,sans-serif;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <form class="form-signin" action="/login" method="post">
+                <h2 class="form-signin-heading">WebGME - Please sign in</h2>
+                <input name="username" type="text" autocomplete="off" class="input-block-level" placeholder="Username">
+                <input name="password" type="password" autocomplete="off" class="input-block-level" placeholder="Password">
+                <label class="checkbox">
+                    <input type="checkbox" value="remember-me"> Remember me
+                </label>
+                <button class="btn btn-large btn-primary" type="submit">Sign in</button>
+                <a class="pull-right" onclick="window.location.href='/login/google'">
+                    <div id="customBtn" class="customGPlusSignIn">
+                        <span class="icon"></span>
+                        <span class="buttonText">Sign in</span>
+                    </div>
+                </a>
+            </form>
+        </div>
+    </body>
 </html>
