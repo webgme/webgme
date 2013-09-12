@@ -1,5 +1,5 @@
 .meta-decorator {
-  min-width: 100px;
+  min-width: 90px;
   min-height: 40px;
   border: 2px solid black;
   background-color: white;
@@ -23,8 +23,8 @@
     .meta-decorator .attributes .attr {
       white-space: nowrap;
       position: relative;
-      height: 20px;
-      line-height: 20px; }
+      height: 16px;
+      line-height: 16px; }
       .meta-decorator .attributes .attr:hover {
         cursor: pointer; }
       .meta-decorator .attributes .attr .n {
