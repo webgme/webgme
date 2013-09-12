@@ -30,6 +30,7 @@ define(['logManager',
         }
 
         this._selectedElements = [];
+        this._rotationEnabled = true;
 
         this.logger.debug("SelectionManager ctor finished");
     };
@@ -595,28 +596,21 @@ define(['logManager',
     /************* END OF --- RENDER COMMAND BUTTONS ON SELECTION OUTLINE ************************/
 
     SelectionManager.prototype._renderRotateHandlers = function () {
-        var rotateBtnTop,
-            rotateBtnRight,
+        var rotateBtnBottom,
             self = this,
-            rotateEnabled = !this._diagramDesigner.getIsReadOnlyMode();
+            rotateEnabled = !this._diagramDesigner.getIsReadOnlyMode() && this._rotationEnabled;
 
         if (rotateEnabled) {
-            rotateBtnTop = $('<div/>', {
-                "class" : "s-btn rotate top"
+            rotateBtnBottom = $('<div/>', {
+                "class" : "s-btn rotate bottom"
             });
-            rotateBtnTop.html('<i class="icon-repeat"></i>');
-
-            rotateBtnRight = $('<div/>', {
-                "class" : "s-btn rotate right"
-            });
-            rotateBtnRight.html('<i class="icon-repeat"></i>');
+            rotateBtnBottom.html('<i class="icon-repeat"></i>');
 
             this._rotationDegree = $('<div/>', {
                 "class" : "rotation-deg"
             });
 
-            this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnTop);
-            this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnRight);
+            this._diagramDesigner.skinParts.$selectionOutline.append(rotateBtnBottom);
             this._diagramDesigner.skinParts.$selectionOutline.append(this._rotationDegree);
 
             this._diagramDesigner.skinParts.$selectionOutline.off("mousedown." + MOUSE_EVENT_POSTFIX, ".rotate");
@@ -713,6 +707,12 @@ define(['logManager',
 
     SelectionManager.prototype.onSelectionRotated = function (deg, selectedIds) {
         this.logger.warning("SelectionManager.prototype.onSelectionRotated IS NOT OVERRIDDEN IN HOST COMPONENT. deg: '" + deg + "'deg, selectedIds: " + selectedIds);
+    };
+
+    SelectionManager.prototype.enableRotation = function (enabled) {
+        if (this._rotationEnabled !== enabled) {
+            this._rotationEnabled = enabled;
+        }
     };
 
     return SelectionManager;

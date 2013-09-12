@@ -173,10 +173,16 @@ define(['logManager',
             self.onUnhighlight(idList);
         };
 
+        this._afterManagersInitialized();
+
         this.setOperatingMode(DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN);
 
 
         this.logger.debug("DiagramDesignerWidget ctor finished");
+    };
+
+    DiagramDesignerWidget.prototype._afterManagersInitialized = function () {
+        //DEFAULT IMPLEMENTATION - NOOP
     };
 
     DiagramDesignerWidget.prototype._initializeCollections = function () {
@@ -1064,6 +1070,10 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
         this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+    };
+
+    DiagramDesignerWidget.prototype.enableRotate = function (enabled) {
+        this.selectionManager.enableRotation(enabled);
     };
 
     /*************** SELECTION API ******************************************/

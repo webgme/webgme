@@ -38,6 +38,11 @@ define(['logManager',
         this._initializeFilterPanel();
     };
 
+    MetaEditorWidget.prototype._afterManagersInitialized = function () {
+        //turn off item rotation
+        this.enableRotate(false);
+    };
+
     MetaEditorWidget.prototype._initializeFilterPanel = function () {
         /**** create FILTER PANEL ****/
         this.$filterPanel = $('<div/>', {
