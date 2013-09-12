@@ -5,6 +5,8 @@ define([
     'core/core',
     'core/setcore',
     'core/guidcore',
+    'core/descriptorcore',
+    'core/nullpointercore',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
@@ -23,6 +25,8 @@ define([
         Core,
         SetCore,
         GuidCore,
+        DescriptorCore,
+        NullPointerCore,
         HashCheck,
         Cache,
         Failsafe,
@@ -1227,12 +1231,25 @@ define([
                     saveRoot('setAttribute('+path+','+'name'+','+value+')');
                 }
             }
+            function delAttributes(path, name) {
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delAttribute(_nodes[path].node, name);
+                    saveRoot('delAttribute('+path+','+'name'+')');
+                }
+            }
             function setRegistry(path, name, value) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
             }
+            function delRegistry(path, name) {
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delRegistry(_nodes[path].node, name);
+                    saveRoot('delRegistry('+path+','+','+name+')');
+                }
+            }
+
             /************** TEST CAN-SETREGISTRY ******************/
                 //TODO: implement properly
             function canSetRegistry(path, name, value) {
@@ -1322,13 +1339,18 @@ define([
             function canMakePointer(id, name, to) {
                 var result = false;
 
-                if( _core &&
-                    _nodes[id] &&
-                    _nodes[to] &&
+                if( _core && _nodes[id] &&
+
+
                     typeof _nodes[id].node === 'object' &&
-                    typeof _nodes[to].node === 'object' &&
+
                     typeof name === 'string' &&
-                    name !== ""){
+                    name !== "" && (
+                    (_nodes[to] &&
+                        typeof _nodes[to].node === 'object') ||
+                        to === null
+                    )
+                    ){
 
                     //TODO: ENFORCE META AND CONSTRAINS RULES
                     result = true;
@@ -1338,20 +1360,20 @@ define([
             }
             /************** END OF --- TEST CAN_MAKEPOINTER ******************/
             function makePointer(id, name, to) {
-                if(canMakePointer(id, name, to) &&
-                    _core &&
-                    _nodes[id] &&
-                    _nodes[to] &&
-                    typeof _nodes[id].node === 'object' &&
-                    typeof _nodes[to].node === 'object' ){
-                    _core.setPointer(_nodes[id].node,name,_nodes[to].node);
+                if(canMakePointer(id, name, to)){
+                    if(to === null){
+                        _core.setPointer(_nodes[id].node,name,to);
+                    } else {
+
+
+                        _core.setPointer(_nodes[id].node,name,_nodes[to].node);
+                    }
                     saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             }
-
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
-                    _core.setPointer(_nodes[path].node,name);
+                    _core.setPointer(_nodes[path].node,name,undefined);
                     saveRoot('delPointer('+path+','+name+')');
                 }
             }
@@ -1482,6 +1504,32 @@ define([
                     typeof _nodes[path].node === 'object'){
                     _core.delMember(_nodes[path].node,setid,memberpath);
                     saveRoot('removeMember('+path+','+memberpath+','+setid+')');
+                }
+            }
+
+            //Meta like descriptor functions
+            function setAttributeDescriptor(path,attributename,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setAttributeDescriptor(_nodes[path].node, attributename, descriptor);
+                    saveRoot('setAttributeDescriptor('+path+','+','+attributename+')');
+                }
+            }
+            function setPointerDescriptor(path,pointername,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setPointerDescriptor(_nodes[path].node, pointername, descriptor);
+                    saveRoot('setPointerDescriptor('+path+','+','+pointername+')');
+                }
+            }
+            function setChildrenMetaDescriptor(path,descriptor){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setNodeDescriptor(_nodes[path].node, descriptor);
+                    saveRoot('setNodeDescriptor('+path+')');
+                }
+            }
+            function setBase(path,basepath){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setRegistry(_nodes[path].node,'base',basepath);
+                    saveRoot('setBase('+path+','+basepath+')');
                 }
             }
 
@@ -1617,6 +1665,39 @@ define([
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
                 };
+                var getAttributeDescriptor = function(attributename){
+                    return _core.getAttributeDescriptor(_nodes[_id].node,attributename);
+                };
+                var getEditableAttributeDescriptor = function(attributename){
+                    var descriptor = _core.getAttributeDescriptor(_nodes[_id].node,attributename);
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
+                };
+                var getPointerDescriptor = function(pointername){
+                    return _core.getPointerDescriptor(_nodes[_id].node,pointername);
+                };
+                var getEditablePointerDescriptor = function(pointername){
+                    var descriptor = _core.getPointerDescriptor(_nodes[_id].node,pointername);
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
+                };
+                var getChildrenMetaDescriptor = function(){
+                    return _core.getNodeDescriptor(_nodes[_id].node);
+                };
+                var getEditableChildrenMetaDescriptor = function(){
+                    var descriptor = _core.getNodeDescriptor(_nodes[_id].node);
+                    if(typeof descriptor === 'object'){
+                        descriptor = JSON.parse(JSON.stringify(descriptor));
+                    }
+                    return descriptor;
+                };
+                var getBase = function(){
+                    return _core.getRegistry(_nodes[_id].node,'base');
+                };
 
                 //ASSERT(_nodes[_id]);
 
@@ -1641,7 +1722,15 @@ define([
                         getMemberIds          : getMemberIds,
                         //getSetIds             : getSetIds,
                         getSetNames           : getSetNames,
-                        getValidSetNames      : getValidSetNames
+                        getValidSetNames               : getValidSetNames,
+                        getAttributeDescriptor         : getAttributeDescriptor,
+                        getEditableAttributeDescriptor : getEditableAttributeDescriptor,
+                        getPointerDescriptor           : getPointerDescriptor,
+                        getEditablePointerDescriptor   : getEditablePointerDescriptor,
+                        getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
+                        getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
+                        getBase                        : getBase
+
                     }
                 }
 
@@ -1750,7 +1839,9 @@ define([
                 startTransaction: startTransaction,
                 completeTransaction: completeTransaction,
                 setAttributes: setAttributes,
+                delAttributes: delAttributes,
                 setRegistry: setRegistry,
+                delRegistry: delRegistry,
                 canSetRegistry: canSetRegistry,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
@@ -1765,6 +1856,13 @@ define([
                 intellyPaste: intellyPaste,
                 addMember: addMember,
                 removeMember: removeMember,
+
+                //desc and META
+                setAttributeDescriptor: setAttributeDescriptor,
+                setPointerDescriptor: setPointerDescriptor,
+                setChildrenMetaDescriptor: setChildrenMetaDescriptor,
+                setBase: setBase,
+
 
                 //territory functions for the UI
                 addUI: addUI,
