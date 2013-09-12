@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
 $read-only-color : #777777;
 
 .project-title {
@@ -18,13 +24,14 @@ $read-only-color : #777777;
     font-size: 12px;
     font-weight: bold;
   }
-
-  &.read-only {
-      color: $read-only-color;
-
-      .readOnlyInfo {
-        display: inline-block;
-      }
-  }
 }
 
+.read-only {
+  .project-title {
+    color: $read-only-color;
+
+    .readOnlyInfo {
+      display: inline-block;
+    }
+  }
+}
