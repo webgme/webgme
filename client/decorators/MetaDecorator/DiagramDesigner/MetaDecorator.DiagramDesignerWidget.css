@@ -29,9 +29,14 @@
         cursor: pointer; }
       .meta-decorator .attributes .attr .n {
         float: left;
-        margin-right: 3px; }
+        margin-right: 3px;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left; }
       .meta-decorator .attributes .attr .t {
-        float: right; }
+        float: right;
+        text-align: right; }
   .meta-decorator .add-new {
     font-size: 10px;
     cursor: pointer; }

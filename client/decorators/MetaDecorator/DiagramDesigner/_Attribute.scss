@@ -14,10 +14,15 @@ $attribute-height: 16px;
     .n {
       float: left;
       margin-right: 3px;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
     }
 
     .t {
       float: right;
+      text-align: right;
     }
   }
 }
