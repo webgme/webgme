@@ -1181,10 +1181,22 @@ define([
                     saveRoot('setAttribute('+path+','+'name'+','+value+')');
                 }
             }
+            function delAttributes(path, name) {
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delAttribute(_nodes[path].node, name);
+                    saveRoot('delAttribute('+path+','+'name'+')');
+                }
+            }
             function setRegistry(path, name, value) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node, name, value);
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
+                }
+            }
+            function delRegistry(path, name,) {
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delRegistry(_nodes[path].node, name);
+                    saveRoot('delRegistry('+path+','+','+name+')');
                 }
             }
             /************** TEST CAN-SETREGISTRY ******************/
@@ -1762,7 +1774,9 @@ define([
                 startTransaction: startTransaction,
                 completeTransaction: completeTransaction,
                 setAttributes: setAttributes,
+                delAttributes: delAttributes,
                 setRegistry: setRegistry,
+                delRegistry: delRegistry,
                 canSetRegistry: canSetRegistry,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
