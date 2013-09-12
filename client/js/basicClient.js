@@ -6,6 +6,7 @@ define([
     'core/setcore',
     'core/guidcore',
     'core/descriptorcore',
+    'core/nullpointercore',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
@@ -22,6 +23,7 @@ define([
         SetCore,
         GuidCore,
         DescriptorCore,
+        NullPointerCore,
         HashCheck,
         Cache,
         Failsafe,
@@ -428,7 +430,7 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
-                        _core = new DescriptorCore(new SetCore(new GuidCore(new Core(_project))));
+                        _core = new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(_project)))));
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -537,7 +539,7 @@ define([
                 }
             }
             function createEmptyProject(project,callback){
-                var core = new DescriptorCore(new SetCore(new GuidCore(new Core(project,{}))));
+                var core = new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project,{})))));
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
@@ -1274,13 +1276,15 @@ define([
             function canMakePointer(id, name, to) {
                 var result = false;
 
-                if( _core &&
-                    _nodes[id] &&
-                    _nodes[to] &&
+                if( _core && _nodes[id] &&
                     typeof _nodes[id].node === 'object' &&
-                    typeof _nodes[to].node === 'object' &&
                     typeof name === 'string' &&
-                    name !== ""){
+                    name !== "" && (
+                        (_nodes[to] &&
+                        typeof _nodes[to].node === 'object') ||
+                        to === null
+                    )
+                ){
 
                     //TODO: ENFORCE META AND CONSTRAINS RULES
                     result = true;
@@ -1290,20 +1294,19 @@ define([
             }
             /************** END OF --- TEST CAN_MAKEPOINTER ******************/
             function makePointer(id, name, to) {
-                if(canMakePointer(id, name, to) &&
-                    _core &&
-                    _nodes[id] &&
-                    _nodes[to] &&
-                    typeof _nodes[id].node === 'object' &&
-                    typeof _nodes[to].node === 'object' ){
+                if(canMakePointer(id, name, to)){
+                    if(to === null){
+                        _core.setPointer(_nodes[id].node,name,to);
+                    } else {
                         _core.setPointer(_nodes[id].node,name,_nodes[to].node);
-                        saveRoot('makePointer('+id+','+name+','+to+')');
+                    }
+                    saveRoot('makePointer('+id+','+name+','+to+')');
                 }
             }
 
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
-                    _core.setPointer(_nodes[path].node,name);
+                    _core.setPointer(_nodes[path].node,name,undefined);
                     saveRoot('delPointer('+path+','+name+')');
                 }
             }
@@ -1315,7 +1318,7 @@ define([
                     if(_core &&
                         _nodes[parameters.parentId] &&
                         _nodes[parameters.sourceId] &&
-                        _nodes[parameters.parentId] &&
+                        _nodes[parameters.targetId] &&
                         typeof _nodes[parameters.parentId].node === 'object' &&
                         typeof _nodes[parameters.sourceId].node === 'object' &&
                         typeof _nodes[parameters.targetId].node === 'object'){
