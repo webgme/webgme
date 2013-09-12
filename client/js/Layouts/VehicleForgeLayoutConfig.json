@@ -1,6 +1,6 @@
 {"panels": [
         {"id": "Header",
-            "panel": "ProjectTitle/ProjectTitlePanel",
+            "panel": "Header/HeaderPanel",
             "container": "header",
             "DEBUG_ONLY": false},
 
