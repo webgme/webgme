@@ -1193,7 +1193,7 @@ define([
                     saveRoot('setRegistry('+path+','+','+name+','+value+')');
                 }
             }
-            function delRegistry(path, name,) {
+            function delRegistry(path, name) {
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delRegistry(_nodes[path].node, name);
                     saveRoot('delRegistry('+path+','+','+name+')');
