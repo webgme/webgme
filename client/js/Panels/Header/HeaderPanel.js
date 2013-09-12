@@ -35,11 +35,13 @@ define(['js/PanelBase/PanelBase',
     _.extend(HeaderPanel.prototype, __parent__.prototype);
 
     HeaderPanel.prototype._initialize = function () {
-
+        //project title
         var projectTitleEl = $('<div/>', {'class': "inline"});
         new ProjectTitleWidget(projectTitleEl, this._client);
         this.$el.append(projectTitleEl);
 
+        //user info
+        this.$el.append($('<div class="spacer pull-right"></div>'));
         var userProfileEl = $('<div/>', {'class': "inline pull-right"});
         new UserProfileWidget(userProfileEl, this._client);
         this.$el.append(userProfileEl);
