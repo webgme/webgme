@@ -362,7 +362,7 @@ define(['logManager',
 
             this.toolBar.addButton(
                 {"icon": "icon-eye-open",
-                    "title": "Design mode",
+                    "title": "Highlight mode",
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
                 },
                 this.$btnGroupOperatingMode);
