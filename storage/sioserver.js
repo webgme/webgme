@@ -97,7 +97,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
 
 
             _socket.on('connection',function(socket){
-                socket.webgmeUser = getUserId(socket.handshake.headers.cookie);
+                //socket.webgmeUser = getUserId(socket.handshake.headers.cookie);
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
                 });

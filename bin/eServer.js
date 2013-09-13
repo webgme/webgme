@@ -68,8 +68,12 @@ requirejs(['logManager',
         'heartbeats'         : true,
         'log level'          : 1
     };
-    var sitekey = require('fs').readFileSync("proba-key.pem");
-    var sitecertificate = require('fs').readFileSync("proba-cert.pem");
+    var sitekey = null;
+    var sitecertificate = null;
+    if(parameters.httpsecure){
+        sitekey = require('fs').readFileSync("proba-key.pem");
+        sitecertificate = require('fs').readFileSync("proba-cert.pem");
+    }
     var app = express();
     var udm = null;
     var udmpass = null;
