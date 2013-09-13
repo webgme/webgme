@@ -11,7 +11,8 @@ var requirejs = require("requirejs"),
     strategy = require('passport-local').Strategy,
     stratGugli = require('passport-google').Strategy,
     path = require('path'),
-    https = require('https');
+    https = require('https'),
+    http = require('http');
 
 
 requirejs.config({
@@ -71,17 +72,18 @@ requirejs(['logManager',
     var sitecertificate = require('fs').readFileSync("proba-cert.pem");
     var app = express();
     var udm = null;
-    if(parameters.authenticate = 'gme'){
+    var udmpass = null;
+    if(parameters.authentication === 'gme'){
         udm = new UDM({
             host: parameters.udmip || parameters.mongoip,
             port: parameters.udmport || parameters.mongoport || 27017,
             database: parameters.udmdb || parameters.mongodatabase,
             collection: parameters.udmcollection || 'users',
             refresh: parameters.udmrefresh || 100000
-        })
+        });
+        udmpass = new UDMPASS(udm);
     }
 
-    var udmpass = new UDMPASS(udm);
 
     //for session handling we save the user data to the memory and reuse them in case of need
     var _users = {};
@@ -105,8 +107,8 @@ requirejs(['logManager',
     ));
 
     passport.use(new stratGugli({
-            returnURL: parameters.host+(parameters.port === 80 ? '' : ':'+parameters.port)+'/login/google/return',
-            realm: parameters.host+(parameters.port === 80 ? '' : ':'+parameters.port)
+            returnURL: parameters.host+':'+parameters.port+'/login/google/return',
+            realm: parameters.host+':'+parameters.port
         },
         function(identifier, profile, done) {
             return done(null,{id:profile.emails[0].value});
@@ -194,7 +196,14 @@ requirejs(['logManager',
         res.send(500);
     });
 
-    var httpsServer = https.createServer({key:sitekey,cert:sitecertificate}, app).listen(parameters.port);
+    console.log(parameters);
+    var httpServer = null;
+    if(parameters.httpsecure){
+        httpServer = https.createServer({key:sitekey,cert:sitecertificate}, app).listen(parameters.port);
+    } else {
+        httpServer = http.createServer(app).listen(parameters.port);
+    }
+
 
     var storage = null;
     if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
@@ -202,13 +211,13 @@ requirejs(['logManager',
             host: parameters.mongoip,
             port: parameters.mongoport,
             database: parameters.mongodatabase
-        }),{}),{log:logManager.create('combined-server-storage')}),{combined:httpsServer,logger:iologger,session:false});
+        }),{}),{log:logManager.create('combined-server-storage')}),{combined:httpServer,logger:iologger,session:false});
     } else {
         storage = new Server(new SServer(new Log(new Cache(new Mongo({
             host: parameters.mongoip,
             port: parameters.mongoport,
             database: parameters.mongodatabase
-        }),{}),{log:logManager.create('combined-server-storage')}),{udm:udm,crypto:CRYPTO}),{combined:httpsServer,logger:iologger,session:true});
+        }),{}),{log:logManager.create('combined-server-storage')}),{udm:udm,crypto:CRYPTO}),{combined:httpServer,logger:iologger,session:true});
     }
 
     storage.open();

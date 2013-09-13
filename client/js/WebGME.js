@@ -5,7 +5,7 @@ var WebGMEGlobal = {};
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
     'bin/getconfig',
-    'js/basicClient',
+    'js/secureClient',
     'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',

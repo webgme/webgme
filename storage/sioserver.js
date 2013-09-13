@@ -9,7 +9,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
     var server = function(_database,options){
         ASSERT(typeof _database === 'object');
         options = options || {};
-        options.port = options.port || 888;
+        options.port = options.port || 80;
         options.session = (options.session === null || options.session === undefined || options.session === false) ? false : true;
         var _socket = null,
             _objects = {},
@@ -85,6 +85,7 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         }
 
         function open(){
+            console.log(options);
             _socket = IO.listen(options.combined ? options.combined : options.port,{
                 'transports': [
                     'websocket'
