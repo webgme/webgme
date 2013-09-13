@@ -1,5 +1,5 @@
 .meta-decorator {
-  min-width: 100px;
+  min-width: 90px;
   min-height: 40px;
   border: 2px solid black;
   background-color: white;
@@ -23,15 +23,20 @@
     .meta-decorator .attributes .attr {
       white-space: nowrap;
       position: relative;
-      height: 20px;
-      line-height: 20px; }
+      height: 16px;
+      line-height: 16px; }
       .meta-decorator .attributes .attr:hover {
         cursor: pointer; }
       .meta-decorator .attributes .attr .n {
         float: left;
-        margin-right: 3px; }
+        margin-right: 3px;
+        max-width: 90px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left; }
       .meta-decorator .attributes .attr .t {
-        float: right; }
+        float: right;
+        text-align: right; }
   .meta-decorator .add-new {
     font-size: 10px;
     cursor: pointer; }

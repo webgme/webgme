@@ -4,10 +4,10 @@ define(['js/Constants',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
                                                                                  DiagramDesignerWidgetConstants) {
  
-    var CONTAINMENT_TYPE_LINE_END = "diamond-wide-long",
-        POINTER_TYPE_LINE_END = "classic-wide-long",
-        INHERITANCE_TYPE_LINE_END = "block-wide-long",
-        POINTERLIST_TYPE_LINE_END = "classic-wide-long",
+    var CONTAINMENT_TYPE_LINE_END = "diamond-xwide-xlong",
+        POINTER_TYPE_LINE_END = "classic-xwide-xlong",
+        INHERITANCE_TYPE_LINE_END = "blockopen-xwide-xlong",
+        POINTERLIST_TYPE_LINE_END = "classic-xwide-xlong",
         NO_END = "none";
 
     var _meta_relations = {
@@ -55,11 +55,18 @@ define(['js/Constants',
         return params;
     };
 
+    var _convertToButtonLineEndStyle = function (lineEndStyle) {
+        return lineEndStyle.replace("xwide", "wide").replace("xlong", "long");
+    };
+
     var _createButtonIcon = function (btnSize, connType) {
         var el = $('<div/>'),
             path,
             paper = Raphael(el[0], btnSize, btnSize),
             pathParams = _getLineVisualDescriptor(connType);
+
+        pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
+        pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
 
         el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});
 

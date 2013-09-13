@@ -82,16 +82,10 @@ $rotation-deg-color: #666666;
         }
 
         &.rotate {
-          &.top {
+          &.bottom {
             left: 50%;
             margin-left: -13px;
-            top: -13px;
-          }
-
-          &.right {
-            top: 50%;
-            margin-top: -13px;
-            right: -13px;
+            bottom: -13px;
           }
         }
       }

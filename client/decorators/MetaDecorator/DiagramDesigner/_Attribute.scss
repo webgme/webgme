@@ -1,11 +1,11 @@
-$port-height: 20px;
+$attribute-height: 16px;
 
 @mixin attribute() {
   .attr {
     white-space: nowrap;
     position: relative;
-    height: $port-height;
-    line-height: $port-height;
+    height: $attribute-height;
+    line-height: $attribute-height;
 
     &:hover {
       cursor: pointer;
@@ -14,10 +14,15 @@ $port-height: 20px;
     .n {
       float: left;
       margin-right: 3px;
+      max-width: 90px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
     }
 
     .t {
       float: right;
+      text-align: right;
     }
   }
 }

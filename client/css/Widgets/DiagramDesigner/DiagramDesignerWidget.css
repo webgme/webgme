@@ -39,14 +39,10 @@
         .diagram-designer .items .selection-outline .s-btn.delete {
           top: -13px;
           right: -13px; }
-        .diagram-designer .items .selection-outline .s-btn.rotate.top {
+        .diagram-designer .items .selection-outline .s-btn.rotate.bottom {
           left: 50%;
           margin-left: -13px;
-          top: -13px; }
-        .diagram-designer .items .selection-outline .s-btn.rotate.right {
-          top: 50%;
-          margin-top: -13px;
-          right: -13px; }
+          bottom: -13px; }
       .diagram-designer .items .selection-outline .rotation-deg {
         text-align: center;
         vertical-align: middle;
