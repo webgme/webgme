@@ -36,7 +36,7 @@ define(['logManager',
             var panels = [],
                 layoutPanels = lm._currentLayout.panels,
                 len = layoutPanels ? layoutPanels.length : 0,
-                i = 0;
+                i;
 
             client = new Client(CONFIG);
 
