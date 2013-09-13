@@ -150,20 +150,28 @@ requirejs(['logManager',
     });
 
 
-    app.get('/login',function(req,res){
-        res.sendfile(staticclientdirpath+'/login.html',{user:req.user,message:req.flash('error')},function(err){
-            res.send(404);
+    if(parameters.authentication !== 'none'){
+        app.get('/logout', function(req, res){
+            res.clearCookie('webgme');
+            req.logout();
+            res.redirect('/');
         });
-    });
-    app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
-        res.cookie('webgme',req.user.id);
-        res.redirect('/');
-    });
-    app.get('/login/google',passport.authenticate('google'));
-    app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
-        res.cookie('webgme',req.user.id);
-        res.redirect('/');
-    });
+        app.get('/login',function(req,res){
+            res.sendfile(staticclientdirpath+'/login.html',{user:req.user,message:req.flash('error')},function(err){
+                res.send(404);
+            });
+        });
+        app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
+            res.cookie('webgme',req.user.id);
+            res.redirect('/');
+        });
+        app.get('/login/google',passport.authenticate('google'));
+        app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
+            res.cookie('webgme',req.user.id);
+            res.redirect('/');
+        });
+    }
+
 
 
 
