@@ -46,7 +46,9 @@ define([
             return null;
         }
 
-
+        function getNewCore(){
+            return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(_project)))));
+        }
         function Client(_configuration){
             var _self = this,
                 logger = LogManager.create("client"),
@@ -468,7 +470,7 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
-                        _core = new SetCore(new GuidCore(new Core(_project)));
+                        _core = getNewCore();
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -577,7 +579,7 @@ define([
                 }
             }
             function createEmptyProject(project,callback){
-                var core = new SetCore(new GuidCore(new Core(project,{})));
+                var core = getNewCore();
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
