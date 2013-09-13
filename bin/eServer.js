@@ -208,7 +208,6 @@ requirejs(['logManager',
         res.send(500);
     });
 
-    console.log(parameters);
     var httpServer = null;
     if(parameters.httpsecure){
         httpServer = https.createServer({key:sitekey,cert:sitecertificate}, app).listen(parameters.port);

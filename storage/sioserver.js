@@ -85,7 +85,6 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
         }
 
         function open(){
-            console.log(options);
             _socket = IO.listen(options.combined ? options.combined : options.port,{
                 'transports': [
                     'websocket'
