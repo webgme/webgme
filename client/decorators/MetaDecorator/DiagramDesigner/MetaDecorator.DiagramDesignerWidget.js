@@ -5,11 +5,13 @@ define(['js/Constants',
     '../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
     'text!./MetaDecorator.DiagramDesignerWidget.html',
     './Attribute',
+    './AttributeDetailsDialog',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DefaultDecoratorDiagramDesignerWidget,
                                                           MetaDecoratorTemplate,
-                                                          Attribute) {
+                                                          Attribute,
+                                                          AttributeDetailsDialog) {
 
     var MetaDecorator,
         __parent__ = DefaultDecoratorDiagramDesignerWidget,
@@ -68,7 +70,8 @@ define(['js/Constants',
 
     MetaDecorator.prototype._renderContent = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            self = this;
 
         //render GME-ID in the DOM, for debugging
         this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
@@ -90,6 +93,23 @@ define(['js/Constants',
 
             this._updateAttributes();
         }
+
+        this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
+            var attrName = $(this).find('.n').text().replace(":", ""),
+                attrNames = self._attributeNames.slice(0),
+                dialog = new AttributeDetailsDialog(),
+                desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));
+
+            //pass all the other attribute names to the dialog
+            attrNames.splice(self._attributeNames.indexOf(attrName), 1);
+
+            dialog.show(desc, attrNames, function (attrDesc) {
+                self.saveAttributeDescriptor(attrName, attrDesc);
+            });
+
+            e.stopPropagation();
+            e.preventDefault();
+        });
     };
 
     MetaDecorator.prototype.update = function () {
@@ -146,6 +166,8 @@ define(['js/Constants',
         for (i = 0; i < len; i += 1) {
             this._skinParts.$attributesContainer.append(attrLIBase.clone().append(this._attributes[this._attributeNames[i]].$el));
         }
+
+
     };
 
     MetaDecorator.prototype._addAttribute = function (attrName) {
@@ -275,29 +297,23 @@ define(['js/Constants',
 
 
     MetaDecorator.prototype._onNewAttributeCreate = function (attrName) {
-        var client = this._control._client,
-            defaultValue = '',
-            objID = this._metaInfo[CONSTANTS.GME_ID],
-            attrMetaDescriptor;;
+        var desc,
+            self = this,
+            attrNames = this._attributeNames.slice(0),
+            dialog = new AttributeDetailsDialog();
 
         this.logger.debug("_onNewAttributeCreate: " + attrName);
 
-        if (this._isValidName(attrName)) {
-            client.startTransaction();
+        //pass all the other attribute names to the dialog
+        attrNames.splice(this._attributeNames.indexOf(attrName), 1);
 
-            attrMetaDescriptor = {'name': attrName,
-                'type': typeof defaultValue};
+        desc = {'name': attrName,
+            'type': 'string',
+            'isEnum': false };
 
-            client.setAttributeDescriptor(objID, attrName, attrMetaDescriptor);
-            //TODO: as of now we have to create an alibi attribute instance with the same name
-            //TODO: just because of this hack, make sure that the name is not overwritten
-            if (attrName !== nodePropertyNames.Attributes.name)
-            {
-                client.setAttributes(objID, attrName, defaultValue);
-            }
-
-            client.completeTransaction();
-        }
+        dialog.show(desc, attrNames, function (attrDesc) {
+            self.saveAttributeDescriptor(attrName, attrDesc);
+        });
     };
 
     MetaDecorator.prototype._isValidName = function (attrName) {
@@ -329,6 +345,29 @@ define(['js/Constants',
         } else {
             this._skinParts.$addAttributeContainer.insertAfter(this._skinParts.$attributesContainer);
         }
+    };
+
+    MetaDecorator.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
+        var client = this._control._client,
+            objID = this._metaInfo[CONSTANTS.GME_ID];
+
+        client.startTransaction();
+
+        //this.logger.warning('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
+        if (attrName !== attrDesc.name) {
+            //name has changed
+            //TODO: delete old name --> HOW???
+        }
+
+        client.setAttributeDescriptor(objID, attrDesc.name, attrDesc);
+        //TODO: as of now we have to create an alibi attribute instance with the same name
+        //TODO: just because of this hack, make sure that the name is not overwritten
+        if (attrDesc.name !== nodePropertyNames.Attributes.name)
+        {
+            client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
+        }
+
+        client.completeTransaction();
     };
 
     return MetaDecorator;

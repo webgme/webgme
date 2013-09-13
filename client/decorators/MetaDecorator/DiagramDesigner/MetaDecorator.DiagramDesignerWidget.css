@@ -26,7 +26,8 @@
       height: 16px;
       line-height: 16px; }
       .meta-decorator .attributes .attr:hover {
-        cursor: pointer; }
+        cursor: pointer;
+        background-color: #eeeeee; }
       .meta-decorator .attributes .attr .n {
         float: left;
         margin-right: 3px;

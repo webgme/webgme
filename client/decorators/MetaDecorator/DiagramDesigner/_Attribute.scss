@@ -1,4 +1,5 @@
 $attribute-height: 16px;
+$hover-background-color: #eeeeee;
 
 @mixin attribute() {
   .attr {
@@ -9,6 +10,7 @@ $attribute-height: 16px;
 
     &:hover {
       cursor: pointer;
+      background-color: $hover-background-color;
     }
 
     .n {

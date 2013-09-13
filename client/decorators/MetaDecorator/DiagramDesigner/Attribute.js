@@ -1,13 +1,10 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager',
+        './AttributeDetailsDialog'], function (logManager,
+                                               AttributeDetailsDialog) {
 
-    var Attribute,
-        CONNECTOR_CLASS = ".connector",
-        EVENT_POSTFIX = "Attribute",
-        MOUSE_ENTER = "mouseenter",
-        MOUSE_LEAVE = "mouseleave",
-        Attribute_CONNECTOR_LEN = 20;
+    var Attribute;
 
     Attribute = function (attrDesc) {
         this.name = attrDesc.name;
