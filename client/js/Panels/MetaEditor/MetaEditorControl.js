@@ -806,82 +806,75 @@ define(['logManager',
             pointerMetaDescriptor,
             len,
             oldMetaPointers,
-            newMetaPointers = {'names': []},
+            newMetaPointers = {'names': [], 'combinedNames': []},
             diff,
             pointerTarget,
+            pointerTargets,
             pointerName,
-            idx;
+            idx,
+            lenTargets,
+            combinedName;
 
-        this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': []};
+        this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': [], 'combinedNames': []};
         oldMetaPointers = this._nodeMetaPointers[gmeID];
 
         len = pointerNames.length;
         while (len--) {
             pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[len]);
-            
-            newMetaPointers.names.push(pointerNames[len]);
-            newMetaPointers[pointerNames[len]] = {'name': pointerMetaDescriptor.name,
-                                                'target': pointerMetaDescriptor.target,
-                                                'multiplicity': pointerMetaDescriptor.multiplicity};
+
+            lenTargets = pointerMetaDescriptor.targets.length;
+            while (lenTargets--) {
+                combinedName = pointerNames[len] + "_" + pointerMetaDescriptor.targets[lenTargets];
+
+                newMetaPointers.names.push(pointerNames[len]);
+
+                newMetaPointers.combinedNames.push(combinedName);
+
+                newMetaPointers[combinedName] = {'name': pointerMetaDescriptor.name,
+                    'target': pointerMetaDescriptor.targets[lenTargets],
+                    'multiplicity': pointerMetaDescriptor.multiplicity};
+            }
         }
 
         //compute updated connections
-        diff = _.intersection(oldMetaPointers.names, newMetaPointers.names);
+        diff = _.intersection(oldMetaPointers.combinedNames, newMetaPointers.combinedNames);
         len = diff.length;
         while (len--) {
-            pointerName = diff[len];
-            if (oldMetaPointers[pointerName].target === newMetaPointers[pointerName].target &&
-                oldMetaPointers[pointerName].multiplicity !== newMetaPointers[pointerName].multiplicity) {
-                //update connection text
-                //TODO: update connection text
-
-                //update accounting
-                oldMetaPointers[pointerName].multiplicity = newMetaPointers[pointerName].multiplicity;
-            } else if (oldMetaPointers[pointerName].target !== newMetaPointers[pointerName].target) {
-                //connection endpoint changed, remove old connection, draw new one
-                //draw new one
-                pointerTarget = oldMetaPointers[pointerName].target;
-                this._removeConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, pointerName);
-
-                oldMetaPointers[pointerName] = {'name': newMetaPointers[pointerName].name,
-                                                'target': newMetaPointers[pointerName].target,
-                                                'multiplicity': newMetaPointers[pointerName].multiplicity};
-
-                pointerTarget = oldMetaPointers[pointerName].target;
-                this._createConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
-                                                                                                    'dstText': newMetaPointers[pointerName].multiplicity,
-                                                                                                    'dstTextEdit': true});
-            }
-
+            combinedName = diff[len];
+            this.logger.warning('Pointer "' + combinedName +'" update NOT YET HANDLED');
         }
 
         //compute deleted pointers
-        diff = _.difference(oldMetaPointers.names, newMetaPointers.names);
+        diff = _.difference(oldMetaPointers.combinedNames, newMetaPointers.combinedNames);
         len = diff.length;
         while (len--) {
-            pointerName = diff[len];
-            pointerTarget = oldMetaPointers[pointerName].target;
+            combinedName = diff[len];
+            pointerName = oldMetaPointers[combinedName].name;
+            pointerTarget = oldMetaPointers[combinedName].target;
+
             this._removeConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, pointerName);
 
-            idx = oldMetaPointers.names.indexOf(pointerName);
-            oldMetaPointers.names.splice(idx,1);
-            delete oldMetaPointers[pointerName];
+            idx = oldMetaPointers.combinedNames.indexOf(combinedName);
+            oldMetaPointers.combinedNames.splice(idx,1);
+            delete oldMetaPointers[combinedName];
         }
 
         //compute added pointers
-        diff = _.difference(newMetaPointers.names, oldMetaPointers.names);
+        diff = _.difference(newMetaPointers.combinedNames, oldMetaPointers.combinedNames);
         len = diff.length;
         while (len--) {
-            pointerName = diff[len];
-            pointerTarget = newMetaPointers[pointerName].target;
+            combinedName = diff[len];
+            pointerName = newMetaPointers[combinedName].name;
+            pointerTarget = newMetaPointers[combinedName].target;
 
             oldMetaPointers.names.push(pointerName);
-            oldMetaPointers[pointerName] = {'name': newMetaPointers[pointerName].name,
-                                            'target': newMetaPointers[pointerName].target,
-                                            'multiplicity': newMetaPointers[pointerName].multiplicity};
+            oldMetaPointers.combinedNames.push(combinedName);
+            oldMetaPointers[combinedName] = {'name': newMetaPointers[combinedName].name,
+                                            'target': newMetaPointers[combinedName].target,
+                                            'multiplicity': newMetaPointers[combinedName].multiplicity};
 
             this._createConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
-                                                                                                'dstText': newMetaPointers[pointerName].multiplicity,
+                                                                                                'dstText': newMetaPointers[combinedName].multiplicity,
                                                                                                 'dstTextEdit': true});
         }
     };
@@ -1039,18 +1032,17 @@ define(['logManager',
 
                 pointerMetaDescriptor = containerNode.getEditablePointerDescriptor(userSelectedPointerName);
 
-                if (pointerMetaDescriptor && !_.isEmpty(pointerMetaDescriptor) && pointerNames.indexOf(userSelectedPointerName) !== -1) {
-                    self.logger.debug('PointerRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') with a name "' + userSelectedPointerName + '" already exist, overwriting target to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ')"');
-                    pointerMetaDescriptor.target = objectID;
+                if (pointerMetaDescriptor && !_.isEmpty(pointerMetaDescriptor)) {
+                    if (pointerMetaDescriptor.targets.indexOf(objectID) === -1) {
+                        pointerMetaDescriptor.targets.push(objectID);
+                    }
                 } else {
                     pointerMetaDescriptor = {'name': userSelectedPointerName,
-                                                'target': objectID,
-                                                'multiplicity': "0..1"};
+                                            'targets': [objectID],
+                                            'multiplicity': "0..1"};
 
                     //create pointer on the container node with null value
-                    self._client.makePointer(containerID, userSelectedPointerName, containerID);
-                    //TODO: self._client.makePointer cannot accept NULL as end pointer
-                    //TODO: self._client.makePointer(containerID, userSelectedPointerName, NULL);
+                    self._client.makePointer(containerID, userSelectedPointerName, null);
                 }
 
                 self._client.setPointerDescriptor(containerID, userSelectedPointerName, pointerMetaDescriptor);
@@ -1063,14 +1055,30 @@ define(['logManager',
 
     MetaEditorControl.prototype._deletePointerRelationship = function (containerID, objectID, pointerName) {
         var containerNode = this._client.getNode(containerID),
-            objectNode = this._client.getNode(objectID);
+            objectNode = this._client.getNode(objectID),
+            pointerMetaDescriptor,
+            idx;
 
         if (containerNode && objectNode) {
-            this._client.setPointerDescriptor(containerID, pointerName, {});
-            //TODO: client.delPointerDescriptor DOES NOT EXIST YET, workaround is to update to NOTHING
-            //TODO: this._client.delPointerDescriptor(containerID, pointerName);
+            pointerMetaDescriptor = containerNode.getEditablePointerDescriptor(pointerName);
+            idx = pointerMetaDescriptor.targets.indexOf(objectID);
+            if (idx !== -1) {
+                pointerMetaDescriptor.targets.splice(idx, 1);
+                //if no more target for this pointerName, clean up
+                if (pointerMetaDescriptor.targets.length === 0) {
+                    pointerMetaDescriptor = {};
 
-            this._client.delPointer(containerID, pointerName);
+                    this._client.delPointer(containerID, pointerName);
+
+                    //TODO: client.delPointerDescriptor DOES NOT EXIST YET, workaround is to update to NOTHING
+                    //TODO: this._client.delPointerDescriptor(containerID, pointerName);
+                    this._client.setPointerDescriptor(containerID, pointerName, pointerMetaDescriptor);
+                } else {
+                    this._client.setPointerDescriptor(containerID, pointerName, pointerMetaDescriptor);
+                }
+            } else {
+                //this should never happen
+            }
         }
     };
 
