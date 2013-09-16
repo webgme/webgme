@@ -104,8 +104,12 @@ define(['js/Constants',
             attrNames.splice(self._attributeNames.indexOf(attrName), 1);
 
             dialog.show(desc, attrNames, function (attrDesc) {
-                self.saveAttributeDescriptor(attrName, attrDesc);
-            });
+                    self.saveAttributeDescriptor(attrName, attrDesc);
+                },
+                function (attrDesc) {
+                    self.deleteAttributeDescriptor(attrName);
+                }
+            );
 
             e.stopPropagation();
             e.preventDefault();
@@ -365,6 +369,24 @@ define(['js/Constants',
         if (attrDesc.name !== nodePropertyNames.Attributes.name)
         {
             client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
+        }
+
+        client.completeTransaction();
+    };
+
+    MetaDecorator.prototype.deleteAttributeDescriptor = function (attrName) {
+        var client = this._control._client,
+            objID = this._metaInfo[CONSTANTS.GME_ID];
+
+        client.startTransaction();
+
+        client.delAttributeDescriptor(objID, attrName);
+        //TODO: as of now we have to create an alibi attribute instance with the same name
+        //TODO: just because of this hack, make sure that the name is not overwritten
+        //TODO: just because of this hack, delete the alibi attribute as well
+        if (attrName !== nodePropertyNames.Attributes.name)
+        {
+            client.delAttributes(objID, attrName);
         }
 
         client.completeTransaction();
