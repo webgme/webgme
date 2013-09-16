@@ -106,7 +106,7 @@ define(['js/Constants',
             dialog.show(desc, attrNames, function (attrDesc) {
                     self.saveAttributeDescriptor(attrName, attrDesc);
                 },
-                function (attrDesc) {
+                function () {
                     self.deleteAttributeDescriptor(attrName);
                 }
             );
@@ -321,19 +321,15 @@ define(['js/Constants',
     };
 
     MetaDecorator.prototype._isValidName = function (attrName) {
-        if (typeof attrName !== 'string') {
-            return false;
+        var result = true;
+
+        if (attrName === '' ||
+            typeof attrName !== 'string' ||
+            this._attributeNames.indexOf(attrName) !== -1) {
+            result = false;
         }
 
-        if (attrName === '') {
-            return false;
-        }
-
-        if (this._attributeNames.indexOf(attrName) !== -1) {
-            return false;
-        }
-
-        return true;
+        return result;
     };
 
     MetaDecorator.prototype.readOnlyMode = function (readOnlyMode) {
@@ -359,8 +355,15 @@ define(['js/Constants',
 
         //this.logger.warning('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
         if (attrName !== attrDesc.name) {
-            //name has changed
-            //TODO: delete old name --> HOW???
+            //name has changed --> delete the descriptor with the old name
+            client.delAttributeDescriptor(objID, attrName);
+            //TODO: as of now we have to create an alibi attribute instance with the same name
+            //TODO: just because of this hack, make sure that the name is not overwritten
+            //TODO: just because of this hack, delete the alibi attribute as well
+            if (attrName !== nodePropertyNames.Attributes.name)
+            {
+                client.delAttributes(objID, attrName);
+            }
         }
 
         client.setAttributeDescriptor(objID, attrDesc.name, attrDesc);

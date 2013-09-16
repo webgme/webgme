@@ -186,7 +186,6 @@ define(['logManager',
         this.logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
-    //TODO: check this here...
     //might not be the best approach
     MetaEditorControl.prototype.destroy = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
@@ -364,7 +363,7 @@ define(['logManager',
             if (node) {
                 nodeName = node.getAttribute(nodePropertyNames.Attributes.name);
 
-                var containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [];
+                var containmentMetaDescriptor = node.getChildrenMetaDescriptor();
                 this.logger.warning(nodeName + ' (' + gmeID + ')\'s containmentMetaDescriptor: ' + JSON.stringify(containmentMetaDescriptor));
 
                 var pointerNames = node.getPointerNames();
@@ -809,7 +808,6 @@ define(['logManager',
             newMetaPointers = {'names': [], 'combinedNames': []},
             diff,
             pointerTarget,
-            pointerTargets,
             pointerName,
             idx,
             lenTargets,
@@ -1007,9 +1005,15 @@ define(['logManager',
             if (alreadyExists) {
                 containmentMetaDescriptor.splice(len, 1);
 
-                this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
+                if (containmentMetaDescriptor.length > 0) {
+                    this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
+                } else {
+                    //no more containment info, delete meta descriptor
+                    this._client.delChildrenMetaDescriptor(containerID);
+                }
             } else {
-                this.logger.debug('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') does not exist.');
+                //this should never happen
+                this.logger.error('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') does not exist.');
             }
         }
     };
@@ -1066,18 +1070,14 @@ define(['logManager',
                 pointerMetaDescriptor.targets.splice(idx, 1);
                 //if no more target for this pointerName, clean up
                 if (pointerMetaDescriptor.targets.length === 0) {
-                    pointerMetaDescriptor = {};
-
                     this._client.delPointer(containerID, pointerName);
-
-                    //TODO: client.delPointerDescriptor DOES NOT EXIST YET, workaround is to update to NOTHING
-                    //TODO: this._client.delPointerDescriptor(containerID, pointerName);
-                    this._client.setPointerDescriptor(containerID, pointerName, pointerMetaDescriptor);
+                    this._client.delPointerDescriptor(containerID, pointerName);
                 } else {
                     this._client.setPointerDescriptor(containerID, pointerName, pointerMetaDescriptor);
                 }
             } else {
                 //this should never happen
+                this.logger.error('_deletePointerRelationship the pointer to delete was not found... this should never happen');
             }
         }
     };
