@@ -35,6 +35,9 @@ define(['logManager',
             this.$btnGroupConnectionRouteManager.remove();
         }
 
+        //disable connection to a connection
+        this._connectToConnection = false;
+
         this._initializeFilterPanel();
     };
 
