@@ -11,7 +11,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
         var _storage =  new Cache(
                 new Mongo(
                     {
-                        host: _options.ip,
+                        host: _options.host,
                         port: _options.port,
                         database: _options.database
                     }),
@@ -38,7 +38,19 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
 
         function initialize(callback){
             if(_core !== null && _project !== null){
-                callback(null);
+                _project.getBranchHash('master','',function(err,commithash){
+                    if(!err && commithash){
+                        _project.loadObject(commithash,function(err,commit){
+                            if(!err && commit){
+                                loadUsers(commit.root,callback);
+                            } else {
+                                callback(err);
+                            }
+                        });
+                    } else {
+                        callback(err);
+                    }
+                });
             } else {
                 _users = {};
                 _storage.openDatabase(function(err){
@@ -47,7 +59,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
                             if(!err && project){
                                 _project = project;
                                 _core = new GuidCore(new Core(_project));
-                                _project.getBranchHash('master','',function(err,commithash){
+                                _project.getBranchHash('master','#hack',function(err,commithash){
                                     if(!err && commithash){
                                         _project.loadObject(commithash,function(err,commit){
                                             if(!err && commit){
