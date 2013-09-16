@@ -17,10 +17,10 @@ define(['clientUtil',
 
     };
 
-    AttributeDetailsDialog.prototype.show = function (attributeDesc, attributeNames, callBack) {
+    AttributeDetailsDialog.prototype.show = function (attributeDesc, attributeNames, saveCallBack, deleteCallBack) {
         var self = this;
 
-        this._initDialog(attributeDesc, attributeNames, callBack);
+        this._initDialog(attributeDesc, attributeNames, saveCallBack, deleteCallBack);
 
         this._dialog.modal('show');
 
@@ -35,14 +35,15 @@ define(['clientUtil',
         });
     };
 
-    AttributeDetailsDialog.prototype._initDialog = function (attributeDesc, attributeNames, callBack) {
+    AttributeDetailsDialog.prototype._initDialog = function (attributeDesc, attributeNames, saveCallBack, deleteCallBack) {
         var self = this,
-            closeAndCallback,
+            closeSave,
+            closeDelete,
             isValidAttributeName,
             selectedTypeChanged,
             getTypeConvertedValue;
 
-        closeAndCallback = function () {
+        closeSave = function () {
             var i,
                 len,
                 eValues,
@@ -81,8 +82,16 @@ define(['clientUtil',
 
             self._dialog.modal('hide');
 
-            if (callBack) {
-                callBack.call(self, attrDesc);
+            if (saveCallBack) {
+                saveCallBack.call(self, attrDesc);
+            }
+        };
+
+        closeDelete = function () {
+            self._dialog.modal('hide');
+
+            if (deleteCallBack) {
+                deleteCallBack.call(self);
             }
         };
 
@@ -149,6 +158,7 @@ define(['clientUtil',
         this._pName = this._el.find('#pName').first();
 
         this._btnSave = this._dialog.find('.btn-save').first();
+        this._btnDelete = this._dialog.find('.btn-delete').first();
 
         this._inputName = this._el.find('#inputName').first();
         this._inputType = this._el.find('#inputType').first();
@@ -177,7 +187,7 @@ define(['clientUtil',
                 val = self._inputName.val();
 
             if (enterPressed && isValidAttributeName(val)) {
-                closeAndCallback();
+                closeSave();
 
                 event.stopPropagation();
                 event.preventDefault();
@@ -209,9 +219,22 @@ define(['clientUtil',
             event.preventDefault();
 
             if (isValidAttributeName(val)) {
-                closeAndCallback();
+                closeSave();
             }
         });
+
+        //click on DELETE button
+        if (deleteCallBack) {
+            this._btnDelete.on('click', function (event) {
+                event.stopPropagation();
+                event.preventDefault();
+
+                closeDelete();
+            });
+        } else {
+            this._btnDelete.remove();
+        }
+
 
         //fill controls based on the currently edited attribute
         this._inputName.val(attributeDesc.name);
