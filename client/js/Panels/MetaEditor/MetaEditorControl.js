@@ -839,6 +839,7 @@ define(['logManager',
         len = diff.length;
         while (len--) {
             combinedName = diff[len];
+            //TODO: NOT YET HANDLED
             this.logger.warning('Pointer "' + combinedName +'" update NOT YET HANDLED');
         }
 
