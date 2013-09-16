@@ -1552,6 +1552,12 @@ define([
                     saveRoot('setBase('+path+','+basepath+')');
                 }
             }
+            function delBase(path){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delRegistry(_nodes[path].node,'base');
+                    saveRoot('delBase('+path+')');
+                }
+            }
 
             //territory functions
             function addUI(ui, oneevent, guid) {
@@ -1885,6 +1891,7 @@ define([
                 setChildrenMetaDescriptor: setChildrenMetaDescriptor,
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
+                delBase: delBase,
 
 
                 //territory functions for the UI
