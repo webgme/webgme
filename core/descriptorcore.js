@@ -35,6 +35,12 @@ define([], function () {
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
             updateDescriptorHash(node);
         };
+        _core.delAttributeDescriptor = function(node,attributename){
+            var descriptors = _innerCore.getChild(node,DESCR_ID);
+            var descriptor = _innerCore.getChild(descriptors,"a_"+attributename);
+            _innerCore.deleteNode(descriptor);
+            updateDescriptorHash(node);
+        };
 
         _core.getPointerDescriptor = function(node,pointername){
             var descriptors = _innerCore.getChild(node,DESCR_ID);
@@ -45,6 +51,12 @@ define([], function () {
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"p_"+pointername);
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
+            updateDescriptorHash(node);
+        };
+        _core.delPointerDescriptor = function(node,pointername){
+            var descriptors = _innerCore.getChild(node,DESCR_ID);
+            var descriptor = _innerCore.getChild(descriptors,"p_"+pointername);
+            _innerCore.deleteNode(descriptor);
             updateDescriptorHash(node);
         };
 
@@ -58,6 +70,12 @@ define([], function () {
             var descriptors = _innerCore.getChild(node,DESCR_ID);
             var descriptor = _innerCore.getChild(descriptors,"n_");
             _innerCore.setRegistry(descriptor,'descriptor',descobject);
+            updateDescriptorHash(node);
+        };
+        _core.delNodeDescriptor = function(node,descobject){
+            var descriptors = _innerCore.getChild(node,DESCR_ID);
+            var descriptor = _innerCore.getChild(descriptors,"n_");
+            _innerCore.deleteNode(descriptor);
             updateDescriptorHash(node);
         };
 

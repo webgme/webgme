@@ -1516,16 +1516,34 @@ define([
                     saveRoot('setAttributeDescriptor('+path+','+','+attributename+')');
                 }
             }
+            function delAttributeDescriptor(path,attributename){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delAttributeDescriptor(_nodes[path].node, attributename);
+                    saveRoot('delAttributeDescriptor('+path+','+','+attributename+')');
+                }
+            }
             function setPointerDescriptor(path,pointername,descriptor){
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setPointerDescriptor(_nodes[path].node, pointername, descriptor);
                     saveRoot('setPointerDescriptor('+path+','+','+pointername+')');
                 }
             }
+            function delPointerDescriptor(path,pointername){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delPointerDescriptor(_nodes[path].node, pointername);
+                    saveRoot('delPointerDescriptor('+path+','+','+pointername+')');
+                }
+            }
             function setChildrenMetaDescriptor(path,descriptor){
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setNodeDescriptor(_nodes[path].node, descriptor);
                     saveRoot('setNodeDescriptor('+path+')');
+                }
+            }
+            function delChildrenMetaDescriptor(path){
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.delNodeDescriptor(_nodes[path].node);
+                    saveRoot('delNodeDescriptor('+path+')');
                 }
             }
             function setBase(path,basepath){
@@ -1861,8 +1879,11 @@ define([
 
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,
+                delAttributeDescriptor: delAttributeDescriptor,
                 setPointerDescriptor: setPointerDescriptor,
+                delPointerDescriptor: delPointerDescriptor,
                 setChildrenMetaDescriptor: setChildrenMetaDescriptor,
+                delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
 
 
