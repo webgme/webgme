@@ -1,0 +1,347 @@
+/*
+ * Copyright (C) 2012-2013 Vanderbilt University, All rights reserved.
+ *
+ * Author: Tamas Kecskes
+ */
+
+define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID,URL,IO){
+
+    var server = function(_database,options){
+        ASSERT(typeof _database === 'object');
+        options = options || {};
+        options.port = options.port || 80;
+        options.secret = options.secret || 'this is WEBGME!!!';
+        options.cookieID = options.cookieID || 'webgme';
+        options.authorization = options.authorization || function(sessionID,projectName,type,callback){callback(null,true);};
+        options.sessioncheck = options.sessioncheck || function(sessionID,callback){callback(null,true)};
+        var _socket = null,
+            _objects = {},
+            _projects = {},
+            _references = {},
+            _databaseOpened = false,
+            ERROR_DEAD_GUID = 'the given object does not exists';
+
+        function addClient(id,project){
+            if(!_references[project]){
+                _references[project] = [];
+            }
+            if(_references[project].indexOf(id) === -1){
+                _references[project].push(id);
+            }
+        }
+
+        function getSessionID(socket){
+            return socket.handshake.webGMESession;
+        }
+
+        function checkDatabase(callback){
+            if(_databaseOpened){
+                callback();
+            } else {
+                _database.openDatabase(function(err){
+                    if(err){
+                        callback(err);
+                    } else {
+                        _databaseOpened = true;
+                        callback(null);
+                    }
+                });
+            }
+        }
+
+        function checkProject(client,project,callback){
+            options.authorization(client,project,'read',function(err,cando){
+                if(!err && cando === true){
+                    if(_projects[project]){
+                        addClient(client,project);
+                        callback(null,_projects[project]);
+                    } else {
+                        _database.openProject(project,function(err,proj){
+                            if(!err && proj){
+                                _projects[project] = proj;
+                                addClient(client,project);
+                                callback(null,_projects[project]);
+                            } else {
+                                callback(err,null);
+                            }
+                        });
+                    }
+                } else {
+                    callback(err);
+                }
+            });
+        }
+
+        function open(){
+            _socket = IO.listen(options.combined ? options.combined : options.port,{
+                'transports': [
+                    'websocket'
+                ]
+            });
+            if(options.logger){
+                _socket.set('logger',options.logger);
+            }
+
+            _socket.set('authorization',function(data,accept){
+                //either the html header contains some webgme signed cookie with the sessionID
+                // or the data has a webgme member which should also contain the sessionID - currently the same as the cookie
+                var sessionID = data.webgme;
+                if(sessionID === null || sessionID === undefined){
+                    var cookie = URL.parseCookie(data.headers.cookie);
+                    sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                }
+                options.sessioncheck(sessionID,function(err,isOk){
+                    if(!err && isOk === true){
+                        data.webGMESession = sessionID;
+                        return accept(null,true);
+                    } else {
+                        return accept(err,false);
+                    }
+                });
+            });
+
+
+            _socket.on('connection',function(socket){
+                //first we connect our socket id to the session
+                socket.webgme = getSessionID(socket);
+
+                socket.on('openDatabase', function(callback){
+                    checkDatabase(callback);
+                });
+
+                socket.on('closeDatabase', function(callback){
+                    _databaseOpened = false;
+                    _database.closeDatabase(callback);
+                });
+
+                socket.on('fsyncDatabase', function(callback){
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.fsyncDatabase(callback);
+                        }
+                    });
+                });
+
+                socket.on('getDatabaseStatus', function(oldstatus,callback){
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.getDatabaseStatus(oldstatus,callback);
+                        }
+                    });
+                });
+
+                socket.on('getProjectNames', function(callback){
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.getProjectNames(callback);
+                        }
+                    });
+                });
+
+                socket.on('deleteProject', function(projectName,callback){
+                    options.authorization(socket.webgme,projectName,'delete',function(err,cando){
+                        if(err || !cando){
+                            callback(err);
+                        } else {
+                            _database.deleteProject(projectName,function(err){
+                                if(err){
+                                    callback(err);
+                                } else {
+                                    //TODO what to do with the object itself???
+                                    callback(null);
+                                }
+                            });
+                        }
+                    });
+                });
+
+                socket.on('openProject', function(projectName,callback){
+                    checkProject(socket.webgme,projectName,callback);
+                });
+
+                socket.on('closeProject', function(projectName,callback){
+                    callback = callback || function() {};
+                    checkProject(socket.webgme,projectName,function(err,project){
+                        if(err) {
+                            callback(err);
+                        } else {
+                            var index = _references[projectName].indexOf(socket.webgme);
+                            _references[projectName].splice(index,1);
+                            if(_references[projectName].length === 0){
+                                delete _references[projectName];
+                                delete _projects[projectName];
+                                project.closeProject(callback);
+                            } else {
+                                callback(null);
+                            }
+                        }
+                    });
+                });
+
+                socket.on('loadObject', function(projectName,hash,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.loadObject(hash,callback);
+                        }
+                    });
+                });
+
+                socket.on('insertObject', function(projectName,object,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            options.authorization(socket.webgme,projectName,'write',function(err,cando){
+                               if(!err && cando === true){
+                                   project.insertObject(object,callback);
+                               } else {
+                                   callback(err);
+                               }
+                            });
+                        }
+                    });
+                });
+
+                socket.on('findHash', function(projectName,beginning,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.findHash(beginning,callback);
+                        }
+                    });
+                });
+
+                socket.on('dumpObjects', function(projectName,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.dumpObjects(callback);
+                        }
+                    });
+                });
+                socket.on('getBranchNames', function(projectName,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.getBranchNames(callback);
+                        }
+                    });
+                });
+                socket.on('getBranchHash', function(projectName,branch,oldhash,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.getBranchHash(branch,oldhash,callback);
+                        }
+                    });
+                });
+                socket.on('setBranchHash', function(projectName,branch,oldhash,newhash,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            options.authorization(socket.webgme,projectName,'write',function(err,cando){
+                                if(!err && cando === true){
+                                    project.setBranchHash(branch,oldhash,newhash,callback);
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        }
+                    });
+                });
+                socket.on('getCommits',function(projectName,before,number,callback){
+                    checkProject(socket.id,projectName,function(err,project){
+                        if(err){
+                            callback(err);
+                        } else {
+                            project.getCommits(before,number,callback);
+                        }
+                    });
+                });
+                /* TODO check if we really need this
+                socket.on('makeCommit',function(projectName,parents,roothash,msg,callback){
+                    checkProject(socket.id,projectName,function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _projects[projectName].makeCommit(parents,roothash,msg,callback);
+                        }
+                    });
+                });*/
+
+                socket.on('disconnect',function(){
+                    var todelete = [];
+                    for(var i in _references){
+                        if(_projects[i]){
+                            var index = _references[i].indexOf(socket.id);
+                            if(index>-1){
+                                _references[i].splice(index,1);
+                                if(_references[i].length === 0){
+                                    todelete.push(i);
+                                    var proj = _projects[i];
+                                    delete _projects[i];
+                                    proj.closeProject(null);
+                                }
+                            }
+                        } else {
+                            todelete.push(i);
+                        }
+                    }
+
+                    for(i=0;i<todelete.length;i++){
+                        delete _references[todelete[i]];
+                    }
+                });
+            });
+        }
+
+        function close(){
+
+            //disconnect clients
+            if(_socket){
+                //_socket.sockets.emit('disconnect');
+                _socket.sockets.clients().forEach(function (socket){
+                    socket.disconnect();
+                });
+                _socket.server.close();
+                _socket = null;
+            }
+
+            if(_databaseOpened){
+                //close projects
+                for(var i in _projects){
+                    _projects[i].closeProject(null);
+                }
+
+                //close database
+                _database.closeDatabase(null);
+            }
+
+            _objects = {};
+            _projects = {};
+            _references = {};
+            _databaseOpened = false;
+        }
+
+        return {
+            open: open,
+            close: close
+        };
+    };
+
+    return server;
+});
+
