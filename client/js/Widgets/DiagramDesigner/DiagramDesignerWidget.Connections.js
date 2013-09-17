@@ -86,6 +86,12 @@ define(['js/Widgets/DiagramDesigner/Connection',
         this.items[id].update(objDescriptor);
     };
 
+    DiagramDesignerWidget.prototype.updateConnectionTexts = function (id, texts) {
+        this.logger.debug("Updating connection texts with ID: '" + id + "'");
+
+        this.items[id].updateTexts(texts);
+    };
+
     DiagramDesignerWidget.prototype.deleteConnection = function (id) {
         var idx;
 
