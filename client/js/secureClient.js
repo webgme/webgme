@@ -1309,6 +1309,20 @@ define([
                     saveRoot('delMoreNodes('+paths+')');
                 }
             }
+            /******************* TEST CAN-CREATECHILD **********************/
+            function canCreateChild(parameters) {
+                var result = false;
+                if(_core){
+                    if(parameters.parentId &&
+                        parameters.objectId) {
+                        //TODO: implement real logic based on META and CONSTRAINTS...
+                        result = true;
+                    }
+                }
+
+                return result;
+            }
+            /******************* END OF --- TEST CAN-CREATECHILD **********************/
             function createChild(parameters) {
                 if(_core){
                     if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
@@ -1874,6 +1888,7 @@ define([
                 deleteNode: deleteNode,
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
+                canCreateChild: canCreateChild,
                 makePointer: makePointer,
                 canMakePointer: canMakePointer,
                 delPointer: delPointer,
