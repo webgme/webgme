@@ -28,6 +28,8 @@ define(['logManager',
 
         this._parts = {};
 
+        this._partDraggableEl = {};
+
         this._el.append(this._list);
     };
 
@@ -57,6 +59,8 @@ define(['logManager',
             decoratorInstance.beforeAppend();
             partContainerDiv.append(decoratorInstance.$el);
 
+            //store draggable DIV in list
+            this._partDraggableEl[partId] = partContainerDiv;
 
             //add part's GUI
             this._list.append(partContainerLi.append(partContainerDiv));
@@ -130,6 +134,7 @@ define(['logManager',
             partContainer.empty();
 
             delete this._parts[partId];
+            delete this._partDraggableEl[partId];
         }
     };
 
@@ -197,6 +202,18 @@ define(['logManager',
             partDecoratorInstance.notifyComponentEvent(componentList);
         }
     };
+
+
+    PartBrowserWidget.prototype.setEnabled = function (partId, enabled) {
+        var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined,
+            enabledStr = enabled ? 'enable' : 'disable';
+
+        if (partContainerDiv) {
+            partContainerDiv.draggable(enabledStr);
+        }
+    };
+
+
 
     return PartBrowserWidget;
 });

@@ -43,6 +43,11 @@ define(['logManager',
             self._onConnectionTypeFilterCheckChanged(value, isChecked);
         };
 
+        this.diagramDesigner.onConnectionDstTextChanged = function (connId, oldValue, newValue) {
+            self._onConnectionDstTextChanged(connId, oldValue, newValue);
+        };
+
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 

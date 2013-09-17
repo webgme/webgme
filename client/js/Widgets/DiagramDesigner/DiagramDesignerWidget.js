@@ -108,6 +108,9 @@ define(['logManager',
         //zoom ratio variable
         this._zoomRatio = 1.0;
 
+        //by default connection item to connections are enabled
+        this._connectToConnection = true;
+
         //initialize UI
         this._initializeUI();
 
@@ -1243,6 +1246,14 @@ define(['logManager',
     };
 
     /*********************** END OF CONNECTION TEXT CHANGED HANDLERS **************************/
+
+    /*********************** CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
+    DiagramDesignerWidget.prototype.connectToConnectionEnabled = function (enabled) {
+        this._connectToConnection = enabled;
+    };
+
+
+    /*********************** END OF --- CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/

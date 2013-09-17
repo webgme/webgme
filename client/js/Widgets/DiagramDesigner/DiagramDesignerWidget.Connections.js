@@ -86,6 +86,12 @@ define(['js/Widgets/DiagramDesigner/Connection',
         this.items[id].update(objDescriptor);
     };
 
+    DiagramDesignerWidget.prototype.updateConnectionTexts = function (id, texts) {
+        this.logger.debug("Updating connection texts with ID: '" + id + "'");
+
+        this.items[id].updateTexts(texts);
+    };
+
     DiagramDesignerWidget.prototype.deleteConnection = function (id) {
         var idx;
 
@@ -217,11 +223,14 @@ define(['js/Widgets/DiagramDesigner/Connection',
             }
         }
 
-        //iterate through all the known connections to build the available connection end list
-        i = this.connectionIds.length;
-        while (i--) {
-            availableEndPoints.push({'dstItemID': this.connectionIds[i],
-                'dstSubCompID': undefined});
+        //if connecting to connections are enabled
+        if (this._connectToConnection === true) {
+            //iterate through all the known connections to build the available connection end list
+            i = this.connectionIds.length;
+            while (i--) {
+                availableEndPoints.push({'dstItemID': this.connectionIds[i],
+                    'dstSubCompID': undefined});
+            }
         }
 
         //all available items and their subcomponent is a valid connection-destination by default

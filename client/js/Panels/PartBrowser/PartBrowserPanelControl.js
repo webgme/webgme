@@ -36,6 +36,7 @@ define(['logManager',
         this._currentNodeId = nodeId;
         this._currentNodeParts = [];
         this._componentIDPartIDMap = {};
+        this._currentNodePartsCanCreateChild = {};
 
         if (this._currentNodeId) {
             //put new node's info into territory rules
@@ -113,6 +114,8 @@ define(['logManager',
         }
 
         this._buildNotifyPackageByID(gmeID);
+
+        this._updatePartDraggability();
     };
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
@@ -131,6 +134,8 @@ define(['logManager',
         }
 
         this._buildNotifyPackageByID(gmeID);
+
+        this._updatePartDraggability();
     };
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
@@ -143,8 +148,9 @@ define(['logManager',
 
     PartBrowserControl.prototype._processPartsOwnerNode = function (gmeID) {
         var node = this._client.getNode(gmeID),
-            currentMembers = node ? node.getValidChildrenTypes() : [],
+            currentMembers = [],
             oldMembers = this._currentNodeParts.slice(0),
+            containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [],
             len,
             diff,
             idx,
@@ -154,6 +160,11 @@ define(['logManager',
             territoryChanged = false;
 
         if (node) {
+            //get possible targets from MetaDescriptor
+            len = containmentMetaDescriptor.length;
+            while(len--) {
+                currentMembers.push(containmentMetaDescriptor[len].target);
+            }
 
             //check the deleted ones
             diff = _.difference(oldMembers, currentMembers);
@@ -164,6 +175,8 @@ define(['logManager',
 
                 idx = this._currentNodeParts.indexOf(id);
                 this._currentNodeParts.splice(idx, 1);
+
+                delete this._currentNodePartsCanCreateChild[id];
 
                 //remove it from the territory
                 delete this._selfPatterns[id];
@@ -185,6 +198,13 @@ define(['logManager',
                 //add to the territory
                 this._selfPatterns[id] = { "children": 0 };
                 territoryChanged = true;
+            }
+
+            //update create child capability info
+            len = this._currentNodeParts.length;
+            while (len--) {
+                this._currentNodePartsCanCreateChild[this._currentNodeParts[len]] = this._client.canCreateChild({'parentId': gmeID,
+                                                                                                                 'objectId': this._currentNodeParts[len]});
             }
 
             //update the territory
@@ -278,6 +298,8 @@ define(['logManager',
             }
         }
 
+        this._updatePartDraggability();
+
         //update the territory
         if (territoryChanged) {
             //TODO: review this async here
@@ -335,6 +357,13 @@ define(['logManager',
                     this._partBrowserView.notifyPart(partId, notifyPackage[partId]);
                 }
             }
+        }
+    };
+
+    PartBrowserControl.prototype._updatePartDraggability = function () {
+        var len = this._currentNodeParts.length;
+        while (len--) {
+            this._partBrowserView.setEnabled(this._currentNodeParts[len], this._currentNodePartsCanCreateChild[this._currentNodeParts[len]]);
         }
     };
 

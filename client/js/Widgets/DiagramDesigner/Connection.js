@@ -1260,5 +1260,17 @@ define(['logManager',
     };
 
 
+    Connection.prototype.updateTexts = function (newTexts) {
+        this.srcText = newTexts.srcText || this.srcText;
+        this.dstText = newTexts.dstText || this.dstText;
+        this.name = newTexts.name || this.name;
+        this.nameEdit = newTexts.nameEdit || this.nameEdit;
+        this.srcTextEdit = newTexts.srcTextEdit || this.srcTextEdit;
+        this.dstTextEdit = newTexts.dstTextEdit || this.dstTextEdit;
+
+        this._renderTexts();
+    };
+
+
     return Connection;
 });
