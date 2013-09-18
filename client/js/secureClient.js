@@ -10,7 +10,7 @@ define([
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
-    'storage/sioclient',
+    'storage/client',
     'storage/log',
     'storage/commit',
     'logManager',
@@ -117,7 +117,23 @@ define([
             }
 
             function newDatabase(){
-                if(_configuration.authentication === 'none'){
+                return  new Log(
+                    new HashCheck(
+                        new Commit(
+                            new Cache(
+                                new Failsafe(
+                                    new SocketIOClient(
+                                        {
+                                            host:_configuration.host,
+                                            port:_configuration.port
+                                        }
+                                    ),{}
+                                ),{}
+                            ),{}
+                        ),{}
+                    ),{log:LogManager.create('client-storage')}
+                );
+                /*if(_configuration.authentication === 'none'){
                     return  new Log(
                         new HashCheck(
                             new Commit(
@@ -153,7 +169,7 @@ define([
                             ),{}
                         ),{log:LogManager.create('client-storage')}
                     );
-                }
+                }*/
             }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {
@@ -1144,11 +1160,12 @@ define([
                                 callback(err);
                             }
                         };
-                        if(_configuration.authentication === 'none'){
+                        /*if(_configuration.authentication === 'none'){
                             authenticated(null);
                         } else {
                             _database.authenticate(_userName,_privateKey,authenticated);
-                        }
+                        }*/
+                        authenticated(null);
                     } else {
                         logger.error('Cannot open database');
                         callback(err);

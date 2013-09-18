@@ -34,26 +34,24 @@ requirejs.config({
 
 requirejs(['logManager',
     'bin/getconfig',
-    'storage/sioserver',
+    'storage/server',
     'storage/cache',
     'storage/mongo',
     'storage/log',
-    'auth/securityserver',
+    'auth/gmeauth',
     'auth/udm',
     'auth/udmpass',
-    'auth/crypto',
-    'util/common'],function(
+    'auth/sessionstore'],function(
     logManager,
     CONFIG,
     Server,
     Cache,
     Mongo,
     Log,
-    SServer,
+    gAuthorization,
     UDM,
     UDMPASS,
-    CRYPTO,
-    COMMON){
+    SStore){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -66,7 +64,7 @@ requirejs(['logManager',
         'heartbeat timeout'  : 240,
         'heartbeat interval' : 60,
         'heartbeats'         : true,
-        'log level'          : 1
+        'log level'          : 5
     };
     var sitekey = null;
     var sitecertificate = null;
@@ -127,10 +125,19 @@ requirejs(['logManager',
             res.redirect('/login')
         }
     }
+    function checkVF(req,res,next){
+        console.log('check Vehicle Forge framework');
+        return next();
+    }
 
 
     var staticclientdirpath = path.resolve(__dirname+'./../client');
     var staticdirpath = path.resolve(__dirname+'./..');
+
+    var __sessionStore = new SStore();
+    var __cookiekey = 'webgmeSid';
+    var __cookiesecret = 'meWebGMEez';
+    var __authorization = new gAuthorization(udm,__sessionStore);
 
     app.configure(function(){
         app.use(flash());
@@ -138,7 +145,7 @@ requirejs(['logManager',
         app.use(express.cookieParser());
         app.use(express.bodyParser());
         app.use(express.methodOverride());
-        app.use(express.session({ secret: 'keyboard cat' }));
+        app.use(express.session({store: __sessionStore, secret: __cookiesecret, key: __cookiekey }));
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(app.router);
@@ -147,7 +154,7 @@ requirejs(['logManager',
 
 
     //starting point
-    app.get('/',ensureAuthenticated,function(req,res){
+    app.get('/',checkVF,ensureAuthenticated,function(req,res){
         res.sendfile(staticclientdirpath+'/index.html',{user:req.user},function(err){
             res.send(404);
         });
@@ -166,13 +173,35 @@ requirejs(['logManager',
             });
         });
         app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
-            res.cookie('webgme',req.user.id);
+            req.session.authenticated = true;
+            req.session.udmId = req.user.id;
+            res.cookie('webgme',req.session.udmId);
             res.redirect('/');
         });
         app.get('/login/google',passport.authenticate('google'));
         app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
-            res.cookie('webgme',req.user.id);
-            res.redirect('/');
+            udm.getUserByEmail(req.user.id,function(err,data){
+                if(!err && data){
+                    req.session.udmId = data.id;
+                    req.session.authenticated = true;
+                    res.cookie('webgme',req.session.udmId);
+                    res.redirect('/');
+                } else {
+                    if(parameters.guest === true){
+                        udm.getUser('guest',function(err,data){
+                            if(!err && data){
+                                req.session.udmId = data.id;
+                                req.session.authenticated = true;
+                                res.cookie('webgme',req.session.udmId);
+                                res.redirect('/');
+                            }
+                        });
+                    } else {
+                        req.session.authenticated = false;
+                        res.redirect('/login');
+                    }
+                }
+            });
         });
     }
 
@@ -217,19 +246,18 @@ requirejs(['logManager',
 
 
     var storage = null;
+    var __storageOptions = {combined:httpServer,logger:iologger,session:false};
     if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
-        storage = new Server(new Log(new Cache(new Mongo({
-            host: parameters.mongoip,
-            port: parameters.mongoport,
-            database: parameters.mongodatabase
-        }),{}),{log:logManager.create('combined-server-storage')}),{combined:httpServer,logger:iologger,session:false});
+        //nothing we go with the default options
     } else {
-        storage = new Server(new SServer(new Log(new Cache(new Mongo({
-            host: parameters.mongoip,
-            port: parameters.mongoport,
-            database: parameters.mongodatabase
-        }),{}),{log:logManager.create('combined-server-storage')}),{udm:udm,crypto:CRYPTO}),{combined:httpServer,logger:iologger,session:true});
+        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:__authorization.authorization};
     }
+    storage = new Server(new Log(new Cache(new Mongo({
+        host: parameters.mongoip,
+        port: parameters.mongoport,
+        database: parameters.mongodatabase
+    }),{}),{log:logManager.create('combined-server-storage')}),__storageOptions);
+
 
     storage.open();
 });

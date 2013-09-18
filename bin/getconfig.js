@@ -53,6 +53,7 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 			autostart: false,
             authentication: 'none', //available: gme, ...
             httpsecure: false,
+            guest: false,
 
 			//used by the server
 			loglevel: 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF

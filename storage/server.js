@@ -67,6 +67,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         });
                     }
                 } else {
+                    err = err || 'missing necessary user rights';
                     callback(err);
                 }
             });
@@ -85,6 +86,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
             _socket.set('authorization',function(data,accept){
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webgme member which should also contain the sessionID - currently the same as the cookie
+
                 var sessionID = data.webgme;
                 if(sessionID === null || sessionID === undefined){
                     var cookie = URL.parseCookie(data.headers.cookie);
@@ -103,7 +105,6 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
             _socket.on('connection',function(socket){
                 //first we connect our socket id to the session
-                socket.webgme = getSessionID(socket);
 
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
@@ -145,7 +146,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('deleteProject', function(projectName,callback){
-                    options.authorization(socket.webgme,projectName,'delete',function(err,cando){
+                    options.authorization(getSessionID(socket),projectName,'delete',function(err,cando){
                         if(err || !cando){
                             callback(err);
                         } else {
@@ -162,16 +163,16 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('openProject', function(projectName,callback){
-                    checkProject(socket.webgme,projectName,callback);
+                    checkProject(getSessionID(socket),projectName,callback);
                 });
 
                 socket.on('closeProject', function(projectName,callback){
                     callback = callback || function() {};
-                    checkProject(socket.webgme,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err) {
                             callback(err);
                         } else {
-                            var index = _references[projectName].indexOf(socket.webgme);
+                            var index = _references[projectName].indexOf(getSessionID(socket));
                             _references[projectName].splice(index,1);
                             if(_references[projectName].length === 0){
                                 delete _references[projectName];
@@ -185,7 +186,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('loadObject', function(projectName,hash,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -195,11 +196,11 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('insertObject', function(projectName,object,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            options.authorization(socket.webgme,projectName,'write',function(err,cando){
+                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
                                if(!err && cando === true){
                                    project.insertObject(object,callback);
                                } else {
@@ -211,7 +212,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('findHash', function(projectName,beginning,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -221,7 +222,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('dumpObjects', function(projectName,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -230,7 +231,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     });
                 });
                 socket.on('getBranchNames', function(projectName,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -239,7 +240,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     });
                 });
                 socket.on('getBranchHash', function(projectName,branch,oldhash,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -248,11 +249,11 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     });
                 });
                 socket.on('setBranchHash', function(projectName,branch,oldhash,newhash,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            options.authorization(socket.webgme,projectName,'write',function(err,cando){
+                            options.authorization(getSessionID(socket),projectName,'write',function(err,cando){
                                 if(!err && cando === true){
                                     project.setBranchHash(branch,oldhash,newhash,callback);
                                 } else {
@@ -263,7 +264,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     });
                 });
                 socket.on('getCommits',function(projectName,before,number,callback){
-                    checkProject(socket.id,projectName,function(err,project){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
@@ -273,11 +274,11 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
                 /* TODO check if we really need this
                 socket.on('makeCommit',function(projectName,parents,roothash,msg,callback){
-                    checkProject(socket.id,projectName,function(err){
+                    checkProject(getSessionID(socket),projectName,function(err,project){
                         if(err){
                             callback(err);
                         } else {
-                            _projects[projectName].makeCommit(parents,roothash,msg,callback);
+                            project.makeCommit(parents,roothash,msg,callback);
                         }
                     });
                 });*/

@@ -24,6 +24,7 @@ define([ "util/assert", "storage/cache", "storage/mongo", "core/core", "core/gui
 
         function getUserData(id){
             var userData = {};
+            userData.id = id;
             userData.puk = _core.getRegistry(_users[id].node,'puk');
             userData.create = _core.getRegistry(_users[id].node,'create');
             userData.projects = {};
