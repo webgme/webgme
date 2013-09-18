@@ -109,6 +109,10 @@ define(['logManager',
                     //now it has WEST orientation
                     this.$el.prepend(this.$connectors).prepend(this.$portDot);
                 }
+
+                if (this.decorator._displayConnectors !== true) {
+                    this.$connectors.remove();
+                }
             }
         }
 
