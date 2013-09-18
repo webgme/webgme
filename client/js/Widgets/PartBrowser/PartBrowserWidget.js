@@ -208,7 +208,8 @@ define(['logManager',
         var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined,
             enabledStr = enabled ? 'enable' : 'disable';
 
-        if (partContainerDiv) {
+        if (partContainerDiv &&
+            partContainerDiv.hasClass('ui-draggable')) {
             partContainerDiv.draggable(enabledStr);
         }
     };
