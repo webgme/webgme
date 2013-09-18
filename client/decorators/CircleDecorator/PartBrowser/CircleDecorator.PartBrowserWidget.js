@@ -62,7 +62,7 @@ define(['js/Constants',
         this.skinParts.$circleCanvas = this.$el.find('[id="circleCanvas"]');
         this.skinParts.$circleCanvas.height(CANVAS_SIZE);
         this.skinParts.$circleCanvas.width(CANVAS_SIZE);
-        this.skinParts.svgPaper = Raphael(this.skinParts.$circleCanvas[0]);
+        this.skinParts.svgPaper = Raphael(this.skinParts.$circleCanvas[0], CANVAS_SIZE, CANVAS_SIZE);
         this.skinParts.svgPaper.circle(CANVAS_SIZE / 2, CANVAS_SIZE / 2, CANVAS_SIZE / 2 - 1).attr('fill',FILL_COLOR);
     };
 
