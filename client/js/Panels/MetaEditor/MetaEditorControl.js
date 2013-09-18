@@ -1002,6 +1002,15 @@ define(['logManager',
 
         if (this._connType !== connType) {
             this._connType = connType;
+
+            if (connType === MetaRelations.META_RELATIONS.CONTAINMENT ||
+                connType === MetaRelations.META_RELATIONS.INHERITANCE) {
+                //for METACONTAINMENT AND INHERITANCE flip the visual end arrow style for drawing only
+                var temp = connProps[DiagramDesignerWidgetConstants.LINE_START_ARROW];
+                connProps[DiagramDesignerWidgetConstants.LINE_START_ARROW] = connProps[DiagramDesignerWidgetConstants.LINE_END_ARROW];
+                connProps[DiagramDesignerWidgetConstants.LINE_END_ARROW] = temp;
+            }
+
             this.diagramDesigner.connectionDrawingManager.setConnectionInDrawProperties(connProps);
             this.diagramDesigner.setFilterChecked(this._connType);
         }
@@ -1021,10 +1030,10 @@ define(['logManager',
 
         switch(this._connType) {
             case MetaRelations.META_RELATIONS.CONTAINMENT:
-                this._createContainmentRelationship(sourceId, targetId);
+                this._createContainmentRelationship(targetId, sourceId);
                 break;
             case MetaRelations.META_RELATIONS.INHERITANCE:
-                this._createInheritanceRelationship(sourceId, targetId);
+                this._createInheritanceRelationship(targetId, sourceId);
                 break;
             case MetaRelations.META_RELATIONS.POINTER:
                 this._createPointerRelationship(sourceId, targetId);

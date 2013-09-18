@@ -65,8 +65,16 @@ define(['js/Constants',
             paper = Raphael(el[0], btnSize, btnSize),
             pathParams = _getLineVisualDescriptor(connType);
 
-        pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
-        pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+        if (connType === _meta_relations.CONTAINMENT ||
+            connType === _meta_relations.INHERITANCE) {
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+        } else {
+            //for pointer and pointer list we have to flip the line end visual styles
+            var temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(temp);
+        }
 
         el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});
 
