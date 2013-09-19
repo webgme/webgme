@@ -6,7 +6,7 @@ define(['js/Constants',
  
     var CONTAINMENT_TYPE_LINE_END = "diamond2-xwide-xlong",
         POINTER_TYPE_LINE_END = "classic-wide-long",
-        INHERITANCE_TYPE_LINE_END = "block-wide-long",
+        INHERITANCE_TYPE_LINE_END = "block-xwide-xlong",
         POINTERLIST_TYPE_LINE_END = "classic-wide-long",
         NO_END = "none";
 
@@ -55,6 +55,14 @@ define(['js/Constants',
         return params;
     };
 
+    var _convertToButtonLineEndStyle = function (lineEndStyle) {
+        if (lineEndStyle === INHERITANCE_TYPE_LINE_END) {
+            return lineEndStyle.replace("xwide", "wide").replace("xlong", "long");
+        }
+
+        return lineEndStyle;
+    };
+
     var _createButtonIcon = function (btnSize, connType) {
         var el = $('<div/>'),
             path,
@@ -63,8 +71,8 @@ define(['js/Constants',
 
         if (connType === _meta_relations.CONTAINMENT ||
             connType === _meta_relations.INHERITANCE) {
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
-            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
         } else {
             //for pointer and pointer list we have to flip the line end visual styles
             var temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
