@@ -246,7 +246,7 @@ requirejs(['logManager',
 
 
     var storage = null;
-    var __storageOptions = {combined:httpServer,logger:iologger,session:false};
+    var __storageOptions = {combined:httpServer,logger:iologger,session:false,cookieID:__cookiekey};
     if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
         //nothing we go with the default options
     } else {

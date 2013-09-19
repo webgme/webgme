@@ -87,19 +87,23 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 //either the html header contains some webgme signed cookie with the sessionID
                 // or the data has a webgme member which should also contain the sessionID - currently the same as the cookie
 
-                var sessionID = data.webgme;
-                if(sessionID === null || sessionID === undefined){
-                    var cookie = URL.parseCookie(data.headers.cookie);
-                    sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
-                }
-                options.sessioncheck(sessionID,function(err,isOk){
-                    if(!err && isOk === true){
-                        data.webGMESession = sessionID;
-                        return accept(null,true);
-                    } else {
-                        return accept(err,false);
+                if (options.session === true){
+                    var sessionID = data.webgme;
+                    if(sessionID === null || sessionID === undefined){
+                        var cookie = URL.parseCookie(data.headers.cookie);
+                        sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
                     }
-                });
+                    options.sessioncheck(sessionID,function(err,isOk){
+                        if(!err && isOk === true){
+                            data.webGMESession = sessionID;
+                            return accept(null,true);
+                        } else {
+                            return accept(err,false);
+                        }
+                    });
+                } else {
+                    return accept(null,true);
+                }
             });
 
 
