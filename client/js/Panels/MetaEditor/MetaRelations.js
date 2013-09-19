@@ -4,10 +4,10 @@ define(['js/Constants',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
                                                                                  DiagramDesignerWidgetConstants) {
  
-    var CONTAINMENT_TYPE_LINE_END = "diamond-xwide-xlong",
-        POINTER_TYPE_LINE_END = "classic-xwide-xlong",
-        INHERITANCE_TYPE_LINE_END = "blockopen-xwide-xlong",
-        POINTERLIST_TYPE_LINE_END = "classic-xwide-xlong",
+    var CONTAINMENT_TYPE_LINE_END = "diamond2-xwide-xlong",
+        POINTER_TYPE_LINE_END = "classic-wide-long",
+        INHERITANCE_TYPE_LINE_END = "block-wide-long",
+        POINTERLIST_TYPE_LINE_END = "classic-wide-long",
         NO_END = "none";
 
     var _meta_relations = {
@@ -55,10 +55,6 @@ define(['js/Constants',
         return params;
     };
 
-    var _convertToButtonLineEndStyle = function (lineEndStyle) {
-        return lineEndStyle.replace("xwide", "wide").replace("xlong", "long");
-    };
-
     var _createButtonIcon = function (btnSize, connType) {
         var el = $('<div/>'),
             path,
@@ -67,13 +63,13 @@ define(['js/Constants',
 
         if (connType === _meta_relations.CONTAINMENT ||
             connType === _meta_relations.INHERITANCE) {
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW]);
-            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
         } else {
             //for pointer and pointer list we have to flip the line end visual styles
             var temp = pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW];
-            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = _convertToButtonLineEndStyle(pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW]);
-            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = _convertToButtonLineEndStyle(temp);
+            pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW] = pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW];
+            pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW] = temp;
         }
 
         el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});

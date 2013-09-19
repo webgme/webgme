@@ -33,7 +33,7 @@ define(['./raphael.core'], function (R) {
             diamond: "M2.5,0 5,2.5 2.5,5 0,2.5z",
             open: "M6,1 1,3.5 6,6",
             oval: "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z",
-            blockopen: "M5,0 0,2.5 5,5 5,0"
+            diamond2: "M2.5,1 5,2.5 2.5,4 0,2.5z"
         },
         markerCounter = {};
     R.toString = function () {
@@ -172,15 +172,15 @@ define(['./raphael.core'], function (R) {
                     case "diamond":
                     case "open":
                     case "none":
-                    case "blockopen":
+                    case "diamond2":
                         type = values[i];
                         break;
                     case "wide": h = 5; break;
                     case "narrow": h = 2; break;
                     case "long": w = 5; break;
                     case "short": w = 2; break;
-                    case "xwide": h = 8; break;
-                    case "xlong": w = 8; break;
+                    case "xwide": h = 7; break;
+                    case "xlong": w = 7; break;
                 }
             }
             if (type == "open") {
@@ -195,17 +195,10 @@ define(['./raphael.core'], function (R) {
                 };
             } else {
                 refX = dx = w / 2;
-                if (type === "blockopen") {
-                    attr = {
-                        fill: "#FFFFFF",
-                        stroke: attrs.stroke
-                    };
-                } else {
-                    attr = {
-                        fill: attrs.stroke,
-                        stroke: "none"
-                    };
-                }
+                attr = {
+                    fill: attrs.stroke,
+                    stroke: "none"
+                };
             }
             if (o._.arrows) {
                 if (isEnd) {
