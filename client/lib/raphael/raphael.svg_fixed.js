@@ -179,8 +179,10 @@ define(['./raphael.core'], function (R) {
                     case "narrow": h = 2; break;
                     case "long": w = 5; break;
                     case "short": w = 2; break;
-                    case "xwide": h = 7; break;
-                    case "xlong": w = 7; break;
+                    case "xwide": h = 9; break;
+                    case "xlong": w = 9; break;
+                    case "xxwide": h = 12; break;
+                    case "xxlong": w = 12; break;
                 }
             }
             if (type == "open") {
