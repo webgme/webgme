@@ -4,10 +4,10 @@ define(['js/Constants',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (CONSTANTS,
                                                                                  DiagramDesignerWidgetConstants) {
  
-    var CONTAINMENT_TYPE_LINE_END = "diamond2-xwide-xlong",
-        POINTER_TYPE_LINE_END = "classic-wide-long",
-        INHERITANCE_TYPE_LINE_END = "block-xwide-xlong",
-        POINTERLIST_TYPE_LINE_END = "classic-wide-long",
+    var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
+        POINTER_TYPE_LINE_END = "classic-xwide-xlong",
+        INHERITANCE_TYPE_LINE_END = "block-xxwide-xxlong",
+        POINTERLIST_TYPE_LINE_END = "classic-xwide-xlong",
         NO_END = "none";
 
     var _meta_relations = {
@@ -20,7 +20,7 @@ define(['js/Constants',
     var _getLineVisualDescriptor = function (sName) {
         var params = {};
 
-        params[DiagramDesignerWidgetConstants.LINE_WIDTH] = 2;
+        params[DiagramDesignerWidgetConstants.LINE_WIDTH] = 1;
         params[DiagramDesignerWidgetConstants.LINE_START_ARROW] = NO_END;
         params[DiagramDesignerWidgetConstants.LINE_END_ARROW] = NO_END;
         params[DiagramDesignerWidgetConstants.LINE_COLOR] = "#AAAAAA";
