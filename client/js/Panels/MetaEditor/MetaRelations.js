@@ -5,9 +5,9 @@ define(['js/Constants',
                                                                                  DiagramDesignerWidgetConstants) {
  
     var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
-        POINTER_TYPE_LINE_END = "classic-xwide-xlong",
-        INHERITANCE_TYPE_LINE_END = "block-xxwide-xxlong",
-        POINTERLIST_TYPE_LINE_END = "classic-xwide-xlong",
+        POINTER_TYPE_LINE_END = "open-xwide-long",
+        INHERITANCE_TYPE_LINE_END = "inheritance-xxwide-xxlong",
+        POINTERLIST_TYPE_LINE_END = "open-xwide-long",
         NO_END = "none";
 
     var _meta_relations = {
@@ -82,7 +82,7 @@ define(['js/Constants',
 
         el.attr({"style": "height: " + btnSize + "px; margin-top: 2px; margin-bottom: 2px;"});
 
-        path = paper.path("M" + btnSize / 2 + ",0, L" + btnSize / 2 + "," + btnSize);
+        path = paper.path("M" + (Math.round(btnSize / 2) + 0.5) + ",0, L" + (Math.round(btnSize / 2) + 0.5) + "," + btnSize);
 
         path.attr({ "arrow-start": pathParams[DiagramDesignerWidgetConstants.LINE_START_ARROW],
             "arrow-end": pathParams[DiagramDesignerWidgetConstants.LINE_END_ARROW],
