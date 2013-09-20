@@ -20,7 +20,7 @@ define(['logManager',
         PATH_SHADOW_ID_PREFIX = "p_",
         TEXT_ID_PREFIX = "t_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
-        CONNECTION_DEFAULT_WIDTH = 2,
+        CONNECTION_DEFAULT_WIDTH = 1,
         CONNECTION_DEFAULT_COLOR = "#000000",
         CONNECTION_NO_END = "none",
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
@@ -203,7 +203,14 @@ define(['logManager',
             p,
             points = [],
             validPath = segPoints && segPoints.length > 1,
-            self = this;
+            self = this,
+            fixXY;
+
+
+        fixXY = function (point) {
+            return {'x': Math.round(point.x) + 0.5,
+                    'y': Math.round(point.y) + 0.5};
+        };
 
         //remove edit features
         this._removeEditModePath();
@@ -235,7 +242,7 @@ define(['logManager',
             this._pathPoints = points;
 
             //non-edit mode, one path builds the connection
-            p = points[0];
+            p = fixXY(points[0]);
             pathDef.push("M" + p.x + "," + p.y);
 
             //store source coordinate
@@ -246,7 +253,7 @@ define(['logManager',
             len--;
             i--;
             while (i--) {
-                p = points[len - i];
+                p = fixXY(points[len - i]);
                 pathDef.push("L" + p.x + "," + p.y);
             }
 
