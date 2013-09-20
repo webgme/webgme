@@ -28,12 +28,15 @@ define(['./raphael.core'], function (R) {
         svgCounter = 0;
     var xlink = "http://www.w3.org/1999/xlink",
         markers = {
-            block: "M5,0 0,2.5 5,5z",
-            classic: "M5,0 0,2.5 5,5 3.5,3 3.5,2z",
-            diamond: "M2.5,0 5,2.5 2.5,5 0,2.5z",
-            open: "M6,1 1,3.5 6,6",
-            oval: "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z",
-            diamond2: "M2.5,1 5,2.5 2.5,4 0,2.5z"
+            block: [{'path': "M5,0 0,2.5 5,5z" }],
+            classic: [{'path': "M5,0 0,2.5 5,5 3.5,3 3.5,2z" }],
+            diamond: [{'path': "M2.5,0 5,2.5 2.5,5 0,2.5z" }],
+            open: [{'path': "M6,1 1,3.5 6,6" }],
+            oval: [{'path': "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z" }],
+            diamond2: [{'path': "M2.5,1 5,2.5 2.5,4 0,2.5z" }],
+            inheritance:[{'path': "M5,0 0,2.5 5,5z"  },
+                         {'path': "M4.7,0.4 0.5,2.5 4.7,4.6 z",
+                          'attr': {'fill':"#FFFFFF"}}]
         },
         markerCounter = {};
     R.toString = function () {
@@ -173,6 +176,7 @@ define(['./raphael.core'], function (R) {
                     case "open":
                     case "none":
                     case "diamond2":
+                    case "inheritance":
                         type = values[i];
                         break;
                     case "wide": h = 5; break;
@@ -223,20 +227,28 @@ define(['./raphael.core'], function (R) {
                     pDefsTags = p.defs.getElementsByTagName('path'),
                     pDefsTagsLen = pDefsTags.length,
                     found;
+
+                var marker_type_parts_i,
+                    marker_type_parts_len;
+
                 found = false;
                 while (pDefsTagsLen--) {
-                    if (pDefsTags[pDefsTagsLen].getAttribute('id') === pathId) {
+                    if (pDefsTags[pDefsTagsLen].getAttribute('id') === pathId + "_0") {
                         found = true;
                         break;
                     }
                 }
                 if (found === false) {
-                    p.defs.appendChild($($("path"), {
-                        "stroke-linecap": "round",
-                        d: markers[type],
-                        id: pathId
-                    }));
-                    markerCounter[pathId] = 1;
+                    //create a each path in defs
+                    marker_type_parts_len = markers[type].length;
+                    for (marker_type_parts_i = 0; marker_type_parts_i < marker_type_parts_len; marker_type_parts_i += 1) {
+                        p.defs.appendChild($($("path"), {
+                            "stroke-linecap": "round",
+                            d: markers[type][marker_type_parts_i].path,
+                            id: pathId + '_' + marker_type_parts_i
+                        }));
+                        markerCounter[pathId + '_' + marker_type_parts_i] = 1;
+                    }
                 } else {
                     markerCounter[pathId]++;
                 }
@@ -260,19 +272,44 @@ define(['./raphael.core'], function (R) {
                         refX: refX,
                         refY: h / 2
                     });
-                    use = $($("use"), {
-                        "xlink:href": "#" + pathId,
-                        transform: (isEnd ? "rotate(180 " + w / 2 + " " + h / 2 + ") " : E) + "scale(" + w / t + "," + h / t + ")",
-                        "stroke-width": (1 / ((w / t + h / t) / 2)).toFixed(4)
-                    });
-                    marker.appendChild(use);
+
+                    //create a 'use' tag for each path
+                    marker_type_parts_len = markers[type].length;
+                    for (marker_type_parts_i = 0; marker_type_parts_i < marker_type_parts_len; marker_type_parts_i += 1) {
+                        use = $($("use"), {
+                            "xlink:href": "#" + pathId + '_' + marker_type_parts_i,
+                            transform: (isEnd ? "rotate(180 " + w / 2 + " " + h / 2 + ") " : E) + "scale(" + w / t + "," + h / t + ")",
+                            "stroke-width": (1 / ((w / t + h / t) / 2)).toFixed(4)
+                        });
+                        marker.appendChild(use);
+                    }
+
                     p.defs.appendChild(marker);
                     markerCounter[markerId] = 1;
                 } else {
                     markerCounter[markerId]++;
-                    use = marker.getElementsByTagName("use")[0];
                 }
-                $(use, attr);
+
+                var extendObj = function (tObj, sObj) {
+                    var _a;
+                    for (_a in sObj) {
+                        if (sObj.hasOwnProperty(_a)) {
+                            tObj[_a] = sObj[_a];
+                        }
+                    }
+
+                    return tObj;
+                };
+
+                marker_type_parts_len = markers[type].length;
+                for (marker_type_parts_i = 0; marker_type_parts_i < marker_type_parts_len; marker_type_parts_i += 1) {
+                    use = marker.getElementsByTagName("use")[marker_type_parts_i];
+                    if (markers[type][marker_type_parts_i].attr) {
+                        $(use, extendObj(extendObj({}, attr), markers[type][marker_type_parts_i].attr));
+                    } else {
+                        $(use, attr);
+                    }
+                }
                 //var delta = dx * (type != "diamond" && type != "oval");   //ORIGINAL RaphaleJS version --> change so that it automatically fits the edge of the arrow-end to the real end of line
                 var delta = dx ; //adjust line from and to so that the ending arrow will 'end' at the original coordinate
                 if (isEnd) {
