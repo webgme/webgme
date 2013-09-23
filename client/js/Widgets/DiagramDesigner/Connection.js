@@ -25,7 +25,7 @@ define(['logManager',
         CONNECTION_NO_END = "none",
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
-        CONNECTION_SHADOW_DEFAULT_WIDTH = 3,
+        CONNECTION_SHADOW_DEFAULT_WIDTH = 5,
         CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
         CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
@@ -72,7 +72,7 @@ define(['logManager',
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
         this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
         this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
-        this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH;
+        this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH - CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
         this.designerAttributes.shadowColor = CONNECTION_SHADOW_DEFAULT_COLOR;
@@ -206,10 +206,18 @@ define(['logManager',
             self = this,
             fixXY;
 
-
+        //for EVEN width of the path, get the lower integer of the coordinate
+        //for ODD width of the path, get the lower integer + 0.5
         fixXY = function (point) {
-            return {'x': Math.round(point.x) + 0.5,
-                    'y': Math.round(point.y) + 0.5};
+            var p = {'x': Math.floor(point.x),
+                'y': Math.floor(point.y)};
+
+            if (self.designerAttributes.width % 2 === 1) {
+                p.x += 0.5;
+                p.y += 0.5;
+            }
+
+            return p;
         };
 
         //remove edit features
@@ -222,7 +230,7 @@ define(['logManager',
             len--;
             while (i--) {
                 if (segPoints[len - i]) {
-                    points.push(segPoints[len - i]);
+                    points.push(fixXY(segPoints[len - i]));
                 }
             }
         }
@@ -242,7 +250,7 @@ define(['logManager',
             this._pathPoints = points;
 
             //non-edit mode, one path builds the connection
-            p = fixXY(points[0]);
+            p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
 
             //store source coordinate
@@ -253,7 +261,7 @@ define(['logManager',
             len--;
             i--;
             while (i--) {
-                p = fixXY(points[len - i]);
+                p = points[len - i];
                 pathDef.push("L" + p.x + "," + p.y);
             }
 
@@ -634,10 +642,9 @@ define(['logManager',
 
             this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
                 "stroke-width": this.designerAttributes.shadowWidth,
-                "opacity": this.designerAttributes.shadowOpacity,
+                "opacity": this.designerAttributes.shadowOpacity/*,
                 "arrow-start": this.designerAttributes.arrowStart,
-                "arrow-end": this.designerAttributes.arrowEnd,
-                "arrow-dx-stroke-width-fix": this.designerAttributes.width });
+                "arrow-end": this.designerAttributes.arrowEnd */});
         }
     };
 
