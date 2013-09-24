@@ -5,9 +5,9 @@ define(['js/Constants',
                                                                                  DiagramDesignerWidgetConstants) {
  
     var CONTAINMENT_TYPE_LINE_END = "diamond2-xxwide-xxlong",
-        POINTER_TYPE_LINE_END = "open-xwide-long",
+        POINTER_TYPE_LINE_END = "open-xwide-xlong",
         INHERITANCE_TYPE_LINE_END = "inheritance-xxwide-xxlong",
-        POINTERLIST_TYPE_LINE_END = "open-xwide-long",
+        POINTERLIST_TYPE_LINE_END = "open-xwide-xlong",
         NO_END = "none";
 
     var _meta_relations = {
