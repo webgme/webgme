@@ -48,6 +48,12 @@ define([], function () {
                       BEZIER: 'bezier'},
         LINE_START_ARROW: 'start-arrow',
         LINE_END_ARROW: 'end-arrow',
-        LINE_POINTS: 'points'
+        LINE_POINTS: 'points',
+
+        /*
+         * CONNECTION CONSTANTS
+         */
+        PATH_SHADOW_ID_PREFIX: "p_",
+        PATH_SHADOW_ARROW_END_ID_PREFIX: "p_e_"
     };
 });
