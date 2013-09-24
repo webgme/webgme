@@ -2,7 +2,8 @@
 
 define([], function () {
 
-    var DiagramDesignerWidgetZoom;
+    var DiagramDesignerWidgetZoom,
+        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10];
 
     DiagramDesignerWidgetZoom = function () {
     };
@@ -12,7 +13,7 @@ define([], function () {
         if (this._zoomValues.indexOf(1) === -1) {
             this._zoomValues.push(1);
         }
-        this._zoomValues.sort();
+        this._zoomValues.sort(function(a,b){return a-b});
         this._zoomLevelMin = 0;
         this._zoomLevelMax = this._zoomValues.length - 1;
         this._zoomLevel = this._zoomValues.indexOf(1);
