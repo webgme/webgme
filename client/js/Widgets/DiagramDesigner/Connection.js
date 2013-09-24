@@ -665,6 +665,11 @@ define(['logManager',
                 this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
                 this.skinParts.pathShadowEndings = this.skinParts.pathShadowEndings || this.paper.path("M0,0 L1,1");
                 this.skinParts.pathShadowEndings.insertBefore(this.skinParts.path);
+            } else {
+                if (this.skinParts.pathShadowEndings) {
+                    this.skinParts.pathShadowEndings.remove();
+                    this.skinParts.pathShadowEndings = undefined;
+                }
             }
 
             this._updatePathShadow(segPoints);
