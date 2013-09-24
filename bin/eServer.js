@@ -41,7 +41,9 @@ requirejs(['logManager',
     'auth/gmeauth',
     'auth/udm',
     'auth/udmpass',
-    'auth/sessionstore'],function(
+    'auth/sessionstore',
+    'auth/vehicleforgeauth',
+    'auth/ownauth'],function(
     logManager,
     CONFIG,
     Server,
@@ -51,7 +53,9 @@ requirejs(['logManager',
     gAuthorization,
     UDM,
     UDMPASS,
-    SStore){
+    SStore,
+    VFAUTH,
+    OWNAUTH){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -75,6 +79,14 @@ requirejs(['logManager',
     var app = express();
     var udm = null;
     var udmpass = null;
+
+    var __sessionStore = new SStore();
+    var __cookiekey = 'webgmeSid';
+    var __cookiesecret = 'meWebGMEez';
+    var __authorization = new gAuthorization(udm,__sessionStore);
+
+    var forge = new VFAUTH({});
+    var own = new OWNAUTH({session:__sessionStore});
     if(parameters.authentication === 'gme'){
         udm = new UDM({
             host: parameters.udmip || parameters.mongoip,
@@ -121,23 +133,24 @@ requirejs(['logManager',
         if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
             return next();
         } else {
-            if (req.isAuthenticated()) { return next(); }
+            if (req.isAuthenticated() || req.session.authenticated === true) { return next(); }
             res.redirect('/login')
         }
     }
     function checkVF(req,res,next){
         console.log('check Vehicle Forge framework');
-        return next();
+        if(req.cookies['isisforge']){
+            res.redirect('/login/forge');
+        } else {
+            return next();
+        }
     }
 
 
     var staticclientdirpath = path.resolve(__dirname+'./../client');
     var staticdirpath = path.resolve(__dirname+'./..');
 
-    var __sessionStore = new SStore();
-    var __cookiekey = 'webgmeSid';
-    var __cookiesecret = 'meWebGMEez';
-    var __authorization = new gAuthorization(udm,__sessionStore);
+
 
     app.configure(function(){
         app.use(flash());
@@ -172,12 +185,15 @@ requirejs(['logManager',
                 res.send(404);
             });
         });
-        app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
+        app.post('/login',own.authenticate,function(req,res){
+            res.redirect('/');
+        });
+        /*app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
             req.session.authenticated = true;
             req.session.udmId = req.user.id;
             res.cookie('webgme',req.session.udmId);
             res.redirect('/');
-        });
+        });*/
         app.get('/login/google',passport.authenticate('google'));
         app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
             udm.getUserByEmail(req.user.id,function(err,data){
@@ -202,6 +218,9 @@ requirejs(['logManager',
                     }
                 }
             });
+        });
+        app.get('/login/forge',forge.authenticate,function(req,res){
+            res.redirect('/');
         });
     }
 
@@ -250,7 +269,7 @@ requirejs(['logManager',
     if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
         //nothing we go with the default options
     } else {
-        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:__authorization.authorization};
+        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:/*__authorization.authorization*/own.authorize};
     }
     storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,

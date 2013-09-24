@@ -94,9 +94,27 @@ define([ "util/assert","util/guid","socket.io" ],function(ASSERT,GUID,IO){
                 _socket.set('logger',options.logger);
             }
 
+            _socket.set('authorization',function(data,accept){
+                if(data.headers.cookie){
+                    var cookie = require('cookie').parse(data.headers.cookie);
+                    //console.log(cookie);
+                    var sessionid = options.pcookie(cookie['express.sid'],'a');
+                    if(options.sstore.sessions[sessionid]){
+                        console.log('sid-sio',sessionid);
+                        return accept(null,true);
+                    } else {
+                        return accept('invalid session',false);
+                    }
+                } else {
+                    return accept('No cookie transmitted.', false);
+                }
+            });
+
 
             _socket.on('connection',function(socket){
                 //socket.webgmeUser = getUserId(socket.handshake.headers.cookie);
+                //console.log(socket.handshake.session);
+                console.log('kecso',socket.id);
                 socket.on('openDatabase', function(callback){
                     checkDatabase(callback);
                 });
