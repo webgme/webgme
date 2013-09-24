@@ -31,7 +31,7 @@ define(['./raphael.core'], function (R) {
             block: [{'path': "M5,0 0,2.5 5,5z" }],
             classic: [{'path': "M5,0 0,2.5 5,5 3.5,3 3.5,2z" }],
             diamond: [{'path': "M2.5,0 5,2.5 2.5,5 0,2.5z" }],
-            open: [{'path': "M6,1 1,3.5 6,6" }],
+            open: [{'path': "M4.5,0.5 0.5,2.5 3.5,2.5 0.5,2.5 4.5,4.5" }],
             oval: [{'path': "M2.5,0A2.5,2.5,0,0,1,2.5,5 2.5,2.5,0,0,1,2.5,0z" }],
             diamond2: [{'path': "M2.5,1 5,2.5 2.5,4 0,2.5z" }],
             inheritance:[{'path': "M5,0 0,2.5 5,5z"  },
@@ -190,11 +190,12 @@ define(['./raphael.core'], function (R) {
                 }
             }
             if (type == "open") {
-                w += 2;
+                /*w += 2;
                 h += 2;
                 t += 2;
                 dx = 1;
-                refX = isEnd ? 4 : 1;
+                refX = isEnd ? 4 : 1;*/
+                refX = dx = w / 2;
                 attr = {
                     fill: "none",
                     stroke: attrs.stroke

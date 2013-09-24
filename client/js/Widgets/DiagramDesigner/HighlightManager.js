@@ -10,8 +10,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
                                                                              DiagramDesignerWidgetConstants) {
 
-    var HighlightManager,
-        PATH_SHADOW_ID_PREFIX = "p_";
+    var HighlightManager;
 
     HighlightManager = function (options) {
         this.logger = logManager.create(((options && options.loggerName) || "HighlightManager"));
@@ -65,7 +64,7 @@ define(['logManager',
 
         //handle click on designer-connections
         this.$el.on('mousedown.HighlightManagerConnection', 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var connId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, ""),
+            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, ""),
                 rightClick = event.which === 3;
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
                 self._highLight(connId, rightClick);

@@ -55,7 +55,7 @@ define(['logManager',
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
                          'gridSize': 10,
                          'droppable': true,
-                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5],
+                         'zoomValues': [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10],
                          'zoomUIControls': true
     };
 

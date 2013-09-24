@@ -17,7 +17,6 @@ define(['logManager',
                             ConnectionSegmentPoint) {
 
     var Connection,
-        PATH_SHADOW_ID_PREFIX = "p_",
         TEXT_ID_PREFIX = "t_",
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DEFAULT_WIDTH = 1,
@@ -26,9 +25,12 @@ define(['logManager',
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
         CONNECTION_SHADOW_DEFAULT_WIDTH = 5,
-        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 0.4,
-        CONNECTION_SHADOW_DEFAULT_COLOR = "#52A8EC",
-        CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
+        CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED = 1,
+        CONNECTION_SHADOW_DEFAULT_COLOR = "#B9DCF7",
+        CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
+        SHADOW_MARKER_SIZE_INCREMENT = 3,
+        SHADOW_MARKER_SIZE_INCREMENT_X = 1,
+        SHADOW_MARKER_BLOCK_FIX_OFFSET = 2;
 
     Connection = function (objId) {
         this.id = objId;
@@ -78,8 +80,16 @@ define(['logManager',
         this.designerAttributes.shadowColor = CONNECTION_SHADOW_DEFAULT_COLOR;
         this.designerAttributes.lineType = objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] || CONNECTION_DEFAULT_LINE_TYPE;
 
-        this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowWidth, this.designerAttributes.width, false);
-        this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowWidth, this.designerAttributes.width, true);
+        this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width + SHADOW_MARKER_SIZE_INCREMENT;
+        if (this.designerAttributes.arrowStart.indexOf('-xx') !== -1 ||
+            this.designerAttributes.arrowEnd.indexOf('-xx') !== -1 ||
+            this.designerAttributes.arrowStart.indexOf('-x') !== -1 ||
+            this.designerAttributes.arrowEnd.indexOf('-x') !== -1) {
+            this.designerAttributes.shadowEndArrowWidth = this.designerAttributes.width + SHADOW_MARKER_SIZE_INCREMENT_X;
+        }
+
+        this.designerAttributes.shadowArrowStartAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowStart, this.designerAttributes.shadowEndArrowWidth, this.designerAttributes.width, false);
+        this.designerAttributes.shadowArrowEndAdjust = this._raphaelArrowAdjustForSizeToRefSize(this.designerAttributes.arrowEnd, this.designerAttributes.shadowEndArrowWidth, this.designerAttributes.width, true);
 
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
@@ -105,12 +115,18 @@ define(['logManager',
                 case "diamond":
                 case "open":
                 case "none":
+                case "diamond2":
+                case "inheritance":
                     type = values[i];
                     break;
                 case "wide": raphaelMarkerH = 5; break;
                 case "narrow": raphaelMarkerH = 2; break;
                 case "long": raphaelMarkerW = 5; break;
                 case "short": raphaelMarkerW = 2; break;
+                case "xwide": raphaelMarkerH = 9; break;
+                case "xlong": raphaelMarkerW = 9; break;
+                case "xxwide": raphaelMarkerH = 12; break;
+                case "xxlong": raphaelMarkerW = 12; break;
             }
         }
 
@@ -123,10 +139,12 @@ define(['logManager',
          return 0;
          }*/
 
+        //open type is no different than other since it's fixed in RaphaelJS lib
         if (type == "open") {
-            raphaelMarkerW += 2;
+            /*raphaelMarkerW += 2;
             raphaelMarkerH += 2;
-            refX = isEnd ? 4 : 1;
+            refX = isEnd ? 4 : 1;*/
+            refX = raphaelMarkerW / 2;
         } else {
             refX = raphaelMarkerW / 2;
         }
@@ -584,11 +602,17 @@ define(['logManager',
         this._createPathShadow(this._pathPoints);
 
         this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+        if (this.skinParts.pathShadowEndings) {
+            this.skinParts.pathShadowEndings.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+        }
     };
 
     Connection.prototype._unHighlightPath = function () {
         if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
             this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacity});
+            if (this.skinParts.pathShadowEndings) {
+                this.skinParts.pathShadowEndings.attr({"opacity": this.designerAttributes.shadowOpacity});
+            }
         } else {
             this._removePathShadow();
         }
@@ -629,54 +653,119 @@ define(['logManager',
     };
 
     Connection.prototype._createPathShadow = function (segPoints) {
-        var self = this;
+        var shadowArrowStart,
+            shadowArrowEnd;
 
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
             this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path("M0,0 L1,1");
+            this.skinParts.pathShadow.insertBefore(this.skinParts.path);
+
+            if (this.designerAttributes.arrowStart !== CONNECTION_NO_END ||
+                this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
+                this.skinParts.pathShadowEndings = this.skinParts.pathShadowEndings || this.paper.path("M0,0 L1,1");
+                this.skinParts.pathShadowEndings.insertBefore(this.skinParts.path);
+            } else {
+                if (this.skinParts.pathShadowEndings) {
+                    this.skinParts.pathShadowEndings.remove();
+                    this.skinParts.pathShadowEndings = undefined;
+                }
+            }
 
             this._updatePathShadow(segPoints);
 
-            $(this.skinParts.pathShadow.node).attr({"id": PATH_SHADOW_ID_PREFIX + this.id,
+            $(this.skinParts.pathShadow.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX + this.id,
                 "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
             this.skinParts.pathShadow.attr({    "stroke": this.designerAttributes.shadowColor,
                 "stroke-width": this.designerAttributes.shadowWidth,
-                "opacity": this.designerAttributes.shadowOpacity/*,
-                "arrow-start": this.designerAttributes.arrowStart,
-                "arrow-end": this.designerAttributes.arrowEnd */});
+                "opacity": this.designerAttributes.shadowOpacity});
+
+            if (this.skinParts.pathShadowEndings) {
+                $(this.skinParts.pathShadowEndings.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+
+                shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+                shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+
+                this.skinParts.pathShadowEndings.attr({"stroke": this.designerAttributes.shadowColor,
+                    "stroke-width": this.designerAttributes.shadowEndArrowWidth,
+                    "opacity": this.designerAttributes.shadowOpacity,
+                    "arrow-start": shadowArrowStart,
+                    "arrow-end": shadowArrowEnd});
+            }
         }
     };
 
     Connection.prototype._updatePathShadow = function (segPoints) {
         var points = [],
+            pointsEndArrow = [],
             i,
             len,
             p,
             pathDef = [],
+            pathDefArrow = [],
             dx,
-            dy;
+            dy,
+            eFix,
+
+        eFix = function (e) {
+            return Math.abs(e) < 0.001 ? 0 : e;
+        };
 
         //copy over coordinates to prevent them from overwriting
         len = segPoints.length;
         for (i = 0; i < len; i += 1) {
             points.push({"x": segPoints[i].x, "y": segPoints[i].y});
+            pointsEndArrow.push({"x": segPoints[i].x, "y": segPoints[i].y});
         }
 
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
             dx = this.designerAttributes.shadowArrowStartAdjust * Math.cos(this._pathStartAngle);
-            dy = this.designerAttributes.shadowArrowStartAdjust * Math.sin(this._pathStartAngle) ;
+            dy = this.designerAttributes.shadowArrowStartAdjust * Math.sin(this._pathStartAngle);
 
-            points[0].x -= dx;
-            points[0].y -= dy;
+            dx = eFix(dx);
+            dy = eFix(dy);
+
+            points[0].x += dx;
+            points[0].y += dy;
+
+            pointsEndArrow[0].x -= dx;
+            pointsEndArrow[0].y -= dy;
+
+            if (this.designerAttributes.arrowStart.indexOf("block") !== -1 ||
+                this.designerAttributes.arrowStart.indexOf("inheritance") !== -1) {
+                if (dx !== 0) {
+                    pointsEndArrow[0].x -= SHADOW_MARKER_BLOCK_FIX_OFFSET * (dx / Math.abs(dx));
+                }
+                if (dy !== 0) {
+                    pointsEndArrow[0].y -= SHADOW_MARKER_BLOCK_FIX_OFFSET * (dy / Math.abs(dy));
+                }
+            }
         }
 
         if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
             dx = this.designerAttributes.shadowArrowEndAdjust * Math.cos(this._pathEndAngle) ;
             dy = this.designerAttributes.shadowArrowEndAdjust * Math.sin(this._pathEndAngle) ;
 
-            points[len - 1].x += dx;
-            points[len - 1].y += dy;
+            dx = eFix(dx);
+            dy = eFix(dy);
+
+            points[len - 1].x -= dx;
+            points[len - 1].y -= dy;
+
+            pointsEndArrow[len - 1].x += dx;
+            pointsEndArrow[len - 1].y += dy;
+
+            if (this.designerAttributes.arrowEnd.indexOf("block") !== -1 ||
+                this.designerAttributes.arrowEnd.indexOf("inheritance") !== -1) {
+                if (dx !== 0) {
+                    pointsEndArrow[len - 1].x += SHADOW_MARKER_BLOCK_FIX_OFFSET * (dx / Math.abs(dx));
+                }
+                if (dy !== 0) {
+                    pointsEndArrow[len - 1].y += SHADOW_MARKER_BLOCK_FIX_OFFSET * (dy / Math.abs(dy));
+                }
+            }
         }
 
         i = len = points.length;
@@ -684,17 +773,27 @@ define(['logManager',
         p = points[0];
         pathDef.push("M" + p.x + "," + p.y);
 
+        p = pointsEndArrow[0];
+        pathDefArrow.push("M" + p.x + "," + p.y);
+
         //fix the counter to start from the second point in the list
         len--;
         i--;
         while (i--) {
             p = points[len - i];
             pathDef.push("L" + p.x + "," + p.y);
+
+            p = pointsEndArrow[len - i];
+            pathDefArrow.push("L" + p.x + "," + p.y);
         }
 
         pathDef = pathDef.join(" ");
+        pathDefArrow = pathDefArrow.join(" ");
 
         this.skinParts.pathShadow.attr({ "path": pathDef});
+        if (this.skinParts.pathShadowEndings) {
+            this.skinParts.pathShadowEndings.attr({ "path": pathDefArrow});
+        }
     };
 
     Connection.prototype._removePath = function () {
@@ -707,7 +806,12 @@ define(['logManager',
     Connection.prototype._removePathShadow = function () {
         if (this.skinParts.pathShadow) {
             this.skinParts.pathShadow.remove();
-            this.skinParts.pathShadow = null;
+            this.skinParts.pathShadow = undefined;
+        }
+
+        if (this.skinParts.pathShadowEndings) {
+            this.skinParts.pathShadowEndings.remove();
+            this.skinParts.pathShadowEndings = undefined;
         }
     };
 
@@ -958,6 +1062,9 @@ define(['logManager',
     };
 
     Connection.prototype.update = function (objDescriptor) {
+        var shadowArrowStart,
+            shadowArrowEnd;
+
         //read props coming from the DataBase or DiagramDesigner
         this._initializeConnectionProps(objDescriptor);
 
@@ -971,10 +1078,16 @@ define(['logManager',
 
 
         if (this.skinParts.pathShadow) {
-            this.skinParts.pathShadow.attr({    "stroke-width": this.designerAttributes.shadowWidth,
-                "arrow-start": this.designerAttributes.arrowStart,
-                "arrow-end": this.designerAttributes.arrowEnd,
-                "arrow-dx-stroke-width-fix": this.designerAttributes.width });
+            this.skinParts.pathShadow.attr({ "stroke-width": this.designerAttributes.shadowWidth });
+        }
+
+        if (this.skinParts.pathShadowEndings) {
+            shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+            shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+
+            this.skinParts.pathShadowEndings.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
+                "arrow-start": shadowArrowStart,
+                "arrow-end": shadowArrowEnd});
         }
     };
 

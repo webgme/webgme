@@ -14,7 +14,6 @@ define(['logManager',
 
     var SelectionManager,
         SELECTION_OVERLAP_RATIO = 0.5,
-        PATH_SHADOW_ID_PREFIX = "p_",
         SELECTION_OUTLINE_MARGIN = 15,
         SELECTION_OUTLINE_MIN_WIDTH = 100,
         MOUSE_EVENT_POSTFIX = "SelectionManager";
@@ -62,7 +61,7 @@ define(['logManager',
 
         //handle mouse down in designer-connections
         this.$el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var connId = $(this).attr("id").replace(PATH_SHADOW_ID_PREFIX, "");
+            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, "");
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
                 self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._diagramDesigner.onElementMouseDown(connId);
