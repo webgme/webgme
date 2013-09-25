@@ -244,7 +244,7 @@ requirejs(['logManager',
     });
     //client contents - js/html/css
     //css classified as not secure content
-    app.get(/^\/.*\.(css)/,function(req,res){
+    app.get(/^\/.*\.(css|ico)/,function(req,res){
         res.sendfile(staticclientdirpath+req.path,function(err){
             res.send(404);
         });
