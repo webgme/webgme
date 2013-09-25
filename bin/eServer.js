@@ -38,7 +38,7 @@ requirejs(['logManager',
     'storage/log',
     'auth/sessionstore',
     'auth/vehicleforgeauth',
-    'auth/ownauth'],function(
+    'auth/gmeauth'],function(
     logManager,
     CONFIG,
     Server,
@@ -47,7 +47,7 @@ requirejs(['logManager',
     Log,
     SStore,
     VFAUTH,
-    OWNAUTH){
+    GMEAUTH){
     var parameters = CONFIG;
     var logLevel = parameters.loglevel || logManager.logLevels.WARNING;
     var logFile = parameters.logfile || 'server.log';
@@ -67,7 +67,7 @@ requirejs(['logManager',
     var __sessionStore = new SStore();
 
     var forge = new VFAUTH({});
-    var own = new OWNAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,guest:parameters.guest});
+    var gme = new GMEAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,guest:parameters.guest});
 
 
 
@@ -148,12 +148,12 @@ requirejs(['logManager',
             res.send(404);
         });
     });
-    app.post('/login',own.authenticate,function(req,res){
+    app.post('/login',gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
     app.get('/login/google',passport.authenticate('google'));
-    app.get('/login/google/return',own.authenticate,function(req,res){
+    app.get('/login/google/return',gme.authenticate,function(req,res){
         res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
@@ -208,7 +208,7 @@ requirejs(['logManager',
         __storageOptions.session = true;
         __storageOptions.sessioncheck = __sessionStore.check;
         __storageOptions.secret = parameters.sessioncookiesecret;
-        __storageOptions.authorization = own.authorize;
+        __storageOptions.authorization = gme.authorize;
     }
     storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,

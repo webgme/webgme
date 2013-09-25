@@ -14,8 +14,6 @@ define([
     'storage/log',
     'storage/commit',
     'logManager',
-    'auth/key',
-    'auth/securityclient',
     'util/url'
 ],
     function (
@@ -34,8 +32,6 @@ define([
         Log,
         Commit,
         LogManager,
-        KEY,
-        SClient,
         URL
         ) {
 
