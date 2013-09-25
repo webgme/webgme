@@ -86,7 +86,7 @@ requirejs(['logManager',
     var __authorization = new gAuthorization(udm,__sessionStore);
 
     var forge = new VFAUTH({});
-    var own = new OWNAUTH({session:__sessionStore});
+    var own = new OWNAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase});
     if(parameters.authentication === 'gme'){
         udm = new UDM({
             host: parameters.udmip || parameters.mongoip,
@@ -133,7 +133,13 @@ requirejs(['logManager',
         if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
             return next();
         } else {
-            if (req.isAuthenticated() || req.session.authenticated === true) { return next(); }
+            if(req.isAuthenticated()){
+                return next();
+            } else {
+                if(req.session && req.session.authenticated === true){
+                    return next();
+                }
+            }
             res.redirect('/login')
         }
     }
@@ -178,6 +184,7 @@ requirejs(['logManager',
         app.get('/logout', function(req, res){
             res.clearCookie('webgme');
             req.logout();
+            req.session.authenticated = false;
             res.redirect('/');
         });
         app.get('/login',function(req,res){
