@@ -11,6 +11,7 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
             _validity = _options.validity,
             _userField = _options.user || 'username',
             _passwordField = _options.password || 'password',
+            _guest = _options.guest === true ? true : false,
             _storage = new Mongo(
                 {
                     host: _options.host || '127.0.0.1',
@@ -104,26 +105,35 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                     _core.loadRoot(rootHash,function(err,root){
                         if(!err && root){
                             _core.loadChildren(root,function(err,children){
+                                var guest = null;
                                 if(!err && children && children.length>0){
                                     for(var i=0;i<children.length;i++){
                                         var name = _core.getRegistry(children[i],'email');
                                         if(email === name){
                                             return callback(null,children[i]);
                                         }
+                                        if('guest' === _core.getAttribute(children[i],'name')){
+                                            guest = children[i];
+                                        }
+                                    }
+                                    if(_guest){
+                                        return callback(null,guest);
+                                    } else {
+                                        return callback('no such user found');
                                     }
                                 } else {
-                                    err = err || 'no such user found';
-                                    callback(err);
+                                    err = err || 'no user found';
+                                    return callback(err);
                                 }
                             })
                         } else {
                             err = err || 'cannot find user manager\'s root';
-                            callback(err);
+                            return callback(err);
                         }
                     });
                 } else {
                     err = err || 'cannot open user data';
-                    callback(err);
+                    return callback(err);
                 }
             });
         }
@@ -159,16 +169,29 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
         }
 
         function authenticate(req,res,next){
-            var userId = req.body[_userField];
-            var password = req.body[_passwordField];
+            var userId = req.body[_userField],
+                password = req.body[_passwordField],
+                gmail = false;
+            //gmail based authentication - no authentication just user search
+            if(userId === null || userId === undefined){
+                userId = req.query['openid.ext1.value.email'];
+                password = null;
+                gmail = true;
+            }
             var haveUser = function(err,node){
                 if(!err){
-                    if(password = _core.getRegistry(node,'pass')){
+                    if(gmail){
                         req.session.udmId = _core.getAttribute(node,'name');
                         req.session.authenticated = true;
                         next(null);
                     } else {
-                        res.redirect('/');
+                        if(password = _core.getRegistry(node,'pass')){
+                            req.session.udmId = _core.getAttribute(node,'name');
+                            req.session.authenticated = true;
+                            next(null);
+                        } else {
+                            res.redirect('/');
+                        }
                     }
                 } else {
                     res.redirect('/');

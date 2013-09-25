@@ -133,43 +133,6 @@ define([
                         ),{}
                     ),{log:LogManager.create('client-storage')}
                 );
-                /*if(_configuration.authentication === 'none'){
-                    return  new Log(
-                        new HashCheck(
-                            new Commit(
-                                new Cache(
-                                    new Failsafe(
-                                        new SocketIOClient(
-                                            {
-                                                host:_configuration.host,
-                                                port:_configuration.port
-                                            }
-                                        ),{}
-                                    ),{}
-                                ),{}
-                            ),{}
-                        ),{log:LogManager.create('client-storage')}
-                    );
-                } else {
-                    return  new Log(
-                        new HashCheck(
-                            new Commit(
-                                new Cache(
-                                    new Failsafe(
-                                        new SClient(
-                                            new SocketIOClient(
-                                                {
-                                                    host:_configuration.host,
-                                                    port:_configuration.port
-                                                }
-                                            ),{}
-                                        ),{}
-                                    ),{}
-                                ),{}
-                            ),{}
-                        ),{log:LogManager.create('client-storage')}
-                    );
-                }*/
             }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {
@@ -1131,41 +1094,33 @@ define([
 
                 _database.openDatabase(function(err){
                     if(!err){
-                        var authenticated = function(err){
-                            if(!err){
-                                if(_networkWatcher){
-                                    _networkWatcher.stop();
-                                }
-                                _networkWatcher = networkWatcher();
+                        if(!err){
+                            if(_networkWatcher){
+                                _networkWatcher.stop();
+                            }
+                            _networkWatcher = networkWatcher();
 
-                                if(options.open){
-                                    if(options.project){
-                                        openProject(options.project,callback);
-                                    } else {
-                                        //default opening routine
-                                        _database.getProjectNames(function(err,names){
-                                            if(!err && names && names.length>0){
-                                                openProject(names[0],callback);
-                                            } else {
-                                                logger.error('Cannot get project names / There is no project on the server');
-                                                callback(err);
-                                            }
-                                        });
-                                    }
+                            if(options.open){
+                                if(options.project){
+                                    openProject(options.project,callback);
                                 } else {
-                                    callback(null);
+                                    //default opening routine
+                                    _database.getProjectNames(function(err,names){
+                                        if(!err && names && names.length>0){
+                                            openProject(names[0],callback);
+                                        } else {
+                                            logger.error('Cannot get project names / There is no project on the server');
+                                            callback(err);
+                                        }
+                                    });
                                 }
                             } else {
-                                logger.error('authentication failed');
-                                callback(err);
+                                callback(null);
                             }
-                        };
-                        /*if(_configuration.authentication === 'none'){
-                            authenticated(null);
                         } else {
-                            _database.authenticate(_userName,_privateKey,authenticated);
-                        }*/
-                        authenticated(null);
+                            logger.error('authentication failed');
+                            callback(err);
+                        }
                     } else {
                         logger.error('Cannot open database');
                         callback(err);

@@ -51,16 +51,18 @@ if (typeof define !== "function" && typeof require === "function" && typeof proc
 			reconndelay: 1000,
 			reconnamount: 1000,
 			autostart: false,
-            authentication: 'none', //available: gme, ...
-            httpsecure: false,
-            guest: false,
 
 			//used by the server
 			loglevel: 2, // 5 = ALL, 4 = DEBUG, 3 = INFO, 2 = WARNING, 1 = ERROR, 0 = OFF
 			logfile: 'server.log',
 			mongoip: "129.59.105.239",
 			mongoport: 27017,
-			mongodatabase: "multi"
+			mongodatabase: "multi",
+            authentication: false,
+            httpsecure: false,
+            guest: false,
+            sessioncookieid : 'webgmeSid',
+            sessioncookiesecret : 'meWebGMEez'
 		};
 
 		if (LOCAL) {

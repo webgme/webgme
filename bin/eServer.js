@@ -65,11 +65,9 @@ requirejs(['logManager',
     var app = express();
 
     var __sessionStore = new SStore();
-    var __cookiekey = 'webgmeSid';
-    var __cookiesecret = 'meWebGMEez';
 
     var forge = new VFAUTH({});
-    var own = new OWNAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase});
+    var own = new OWNAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,guest:parameters.guest});
 
 
 
@@ -93,17 +91,13 @@ requirejs(['logManager',
     ));
 
     function ensureAuthenticated(req, res, next) {
-        if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
-            return next();
-        } else {
-            if(req.isAuthenticated()){
+        if(true === parameters.authentication){
+            if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
                 return next();
-            } else {
-                if(req.session && req.session.authenticated === true){
-                    return next();
-                }
             }
-            res.redirect('/login')
+            res.redirect('/login');
+        } else {
+            return next();
         }
     }
     function checkVF(req,res,next){
@@ -126,7 +120,7 @@ requirejs(['logManager',
         app.use(express.cookieParser());
         app.use(express.bodyParser());
         app.use(express.methodOverride());
-        app.use(express.session({store: __sessionStore, secret: __cookiesecret, key: __cookiekey }));
+        app.use(express.session({store: __sessionStore, secret: parameters.sessioncookiesecret, key: parameters.sessioncookieid }));
         app.use(passport.initialize());
         app.use(passport.session());
         app.use(app.router);
@@ -142,50 +136,31 @@ requirejs(['logManager',
     });
 
 
-    if(parameters.authentication !== 'none'){
-        app.get('/logout', function(req, res){
-            res.clearCookie('webgme');
-            req.logout();
-            req.session.authenticated = false;
-            res.redirect('/');
+    //authentication related routing
+    app.get('/logout', function(req, res){
+        res.clearCookie('webgme');
+        req.logout();
+        req.session.authenticated = false;
+        res.redirect('/');
+    });
+    app.get('/login',function(req,res){
+        res.sendfile(staticclientdirpath+'/login.html',{},function(err){
+            res.send(404);
         });
-        app.get('/login',function(req,res){
-            res.sendfile(staticclientdirpath+'/login.html',{user:req.user,message:req.flash('error')},function(err){
-                res.send(404);
-            });
-        });
-        app.post('/login',own.authenticate,function(req,res){
-            res.redirect('/');
-        });
-        app.get('/login/google',passport.authenticate('google'));
-        app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
-            udm.getUserByEmail(req.user.id,function(err,data){
-                if(!err && data){
-                    req.session.udmId = data.id;
-                    req.session.authenticated = true;
-                    res.cookie('webgme',req.session.udmId);
-                    res.redirect('/');
-                } else {
-                    if(parameters.guest === true){
-                        udm.getUser('guest',function(err,data){
-                            if(!err && data){
-                                req.session.udmId = data.id;
-                                req.session.authenticated = true;
-                                res.cookie('webgme',req.session.udmId);
-                                res.redirect('/');
-                            }
-                        });
-                    } else {
-                        req.session.authenticated = false;
-                        res.redirect('/login');
-                    }
-                }
-            });
-        });
-        app.get('/login/forge',forge.authenticate,function(req,res){
-            res.redirect('/');
-        });
-    }
+    });
+    app.post('/login',own.authenticate,function(req,res){
+        res.cookie('webgme',req.session.udmId);
+        res.redirect('/');
+    });
+    app.get('/login/google',passport.authenticate('google'));
+    app.get('/login/google/return',own.authenticate,function(req,res){
+        res.cookie('webgme',req.session.udmId);
+        res.redirect('/');
+    });
+    app.get('/login/forge',forge.authenticate,function(req,res){
+        //res.cookie('webgme',req.session.udmId);
+        res.redirect('/');
+    });
 
 
 
@@ -228,11 +203,12 @@ requirejs(['logManager',
 
 
     var storage = null;
-    var __storageOptions = {combined:httpServer,logger:iologger,session:false,cookieID:__cookiekey};
-    if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
-        //nothing we go with the default options
-    } else {
-        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:own.authorize};
+    var __storageOptions = {combined:httpServer,logger:iologger,session:false,cookieID:parameters.sessioncookieid};
+    if(true === parameters.authentication){
+        __storageOptions.session = true;
+        __storageOptions.sessioncheck = __sessionStore.check;
+        __storageOptions.secret = parameters.sessioncookiesecret;
+        __storageOptions.authorization = own.authorize;
     }
     storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,
