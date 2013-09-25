@@ -133,7 +133,13 @@ requirejs(['logManager',
         if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
             return next();
         } else {
-            if (req.isAuthenticated() || req.session.authenticated === true) { return next(); }
+            if(req.isAuthenticated()){
+                return next();
+            } else {
+                if(req.session && req.session.authenticated === true){
+                    return next();
+                }
+            }
             res.redirect('/login')
         }
     }
