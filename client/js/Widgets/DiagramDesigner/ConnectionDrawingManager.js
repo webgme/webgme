@@ -25,6 +25,7 @@ define(['logManager',
         CONNECTION_END_REJECT_CLASS = 'connection-end-reject',
         IN_DRAW_COLOR = "#FF7800",
         IN_DRAW_LINETYPE = "-",
+        IN_DRAW_WIDTH = 2,
         DRAW_TYPE_CREATE = "create",
         DRAW_TYPE_RECONNECT = "reconnect";
 
@@ -62,7 +63,7 @@ define(['logManager',
         this._connectionInDraw = false;
 
         //visual properties of the drawn connection
-        this._connectionPathProps = { "strokeWidth" : 2,
+        this._connectionPathProps = { "strokeWidth" : IN_DRAW_WIDTH,
             "strokeColor" : IN_DRAW_COLOR,
             "lineType": IN_DRAW_LINETYPE,
             "arrowStart": "none",

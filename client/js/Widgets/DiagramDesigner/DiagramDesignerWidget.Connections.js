@@ -56,7 +56,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
 
         /* check if any endpoint of the connection has been changed */
         //check SOURCE
-        if (srcObjId !== this.connectionEndIDs[id].srcObjId &&
+        if (srcObjId !== this.connectionEndIDs[id].srcObjId ||
             srcSubCompId !== this.connectionEndIDs[id].srcSubCompId) {
 
             //remove connection from source list
@@ -67,7 +67,7 @@ define(['js/Widgets/DiagramDesigner/Connection',
         }
 
         //check TARGET
-        if (dstObjId !== this.connectionEndIDs[id].dstObjId &&
+        if (dstObjId !== this.connectionEndIDs[id].dstObjId ||
             dstSubCompId !== this.connectionEndIDs[id].dstSubCompId) {
 
             //remove connection from target list
