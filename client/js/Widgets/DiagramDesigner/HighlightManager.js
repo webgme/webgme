@@ -64,10 +64,9 @@ define(['logManager',
 
         //handle click on designer-connections
         this.$el.on('mousedown.HighlightManagerConnection', 'path[class~="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
-            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, ""),
-                rightClick = event.which === 3;
+            var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, "");
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
-                self._highLight(connId, rightClick);
+                self._highLight(connId, true);
                 event.preventDefault();
                 event.stopImmediatePropagation();
             }
@@ -81,7 +80,7 @@ define(['logManager',
             }
         });
 
-        //handle click on designer-items
+        //handle click on background --> clear highlight selection
         this.$el.on('dblclick.HighlightManagerItem', function (event) {
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.HIGHLIGHT) {
                 self._clear();
@@ -106,7 +105,7 @@ define(['logManager',
             associatedIDs,
             i;
 
-        this.logger.debug('highlightAssociated, ID: "' + id + '", highlightAssociated: ' + highlightAssociated);
+        this.logger.debug('_highLight, ID: "' + id + '", highlightAssociated: ' + highlightAssociated);
 
         if (idx === -1) {
             //highlight clicked and all associated
@@ -115,20 +114,14 @@ define(['logManager',
                 //get all the connection that go in/out from this element and highlight them too
                 if (this._diagramDesigner.itemIds.indexOf(id) !== -1) {
                     associatedIDs = this._diagramDesigner._getConnectionsForItem(id);
+                    elementsToHighlight = _.union(elementsToHighlight, associatedIDs);
                     i = associatedIDs.length;
                     while (i--) {
-                        if (this._highlightedElements.indexOf(associatedIDs[i]) === -1) {
-                            elementsToHighlight.push(associatedIDs[i]);
-                        }
+                        elementsToHighlight = _.union(elementsToHighlight, this._diagramDesigner._getItemsForConnection(associatedIDs[i]));
                     }
                 } else if (this._diagramDesigner.connectionIds.indexOf(id) !== -1) {
                     associatedIDs = this._diagramDesigner._getItemsForConnection(id);
-                    i = associatedIDs.length;
-                    while (i--) {
-                        if (this._highlightedElements.indexOf(associatedIDs[i]) === -1) {
-                            elementsToHighlight.push(associatedIDs[i]);
-                        }
-                    }
+                    elementsToHighlight = _.union(elementsToHighlight, associatedIDs);
                 }
             }
 
@@ -145,20 +138,14 @@ define(['logManager',
                 //get all the connection that go in/out from this element and highlight them too
                 if (this._diagramDesigner.itemIds.indexOf(id) !== -1) {
                     associatedIDs = this._diagramDesigner._getConnectionsForItem(id);
+                    elementsToHighlight = _.union(elementsToHighlight, associatedIDs);
                     i = associatedIDs.length;
                     while (i--) {
-                        if (this._highlightedElements.indexOf(associatedIDs[i]) !== -1) {
-                            elementsToHighlight.push(associatedIDs[i]);
-                        }
+                        elementsToHighlight = _.union(elementsToHighlight, this._diagramDesigner._getItemsForConnection(associatedIDs[i]));
                     }
                 } else if (this._diagramDesigner.connectionIds.indexOf(id) !== -1) {
                     associatedIDs = this._diagramDesigner._getItemsForConnection(id);
-                    i = associatedIDs.length;
-                    while (i--) {
-                        if (this._highlightedElements.indexOf(associatedIDs[i]) !== -1) {
-                            elementsToHighlight.push(associatedIDs[i]);
-                        }
-                    }
+                    elementsToHighlight = _.union(elementsToHighlight, associatedIDs);
                 }
             }
 
