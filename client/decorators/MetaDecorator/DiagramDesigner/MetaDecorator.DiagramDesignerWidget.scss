@@ -91,3 +91,18 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
     }
   }
 }
+
+.items {
+  &.highlight-mode {
+    .meta-decorator {
+      .attributes {
+        .attr {
+          &:hover {
+            cursor: default;
+            background-color: $background-color;
+          }
+        }
+      }
+    }
+  }
+}

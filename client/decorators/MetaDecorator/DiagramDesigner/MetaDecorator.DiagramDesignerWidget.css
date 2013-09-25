@@ -78,3 +78,7 @@
   background-color: white; }
   .selected .meta-decorator .add-new:hover {
     background-color: #ffffc0; }
+
+.items.highlight-mode .meta-decorator .attributes .attr:hover {
+  cursor: default;
+  background-color: white; }

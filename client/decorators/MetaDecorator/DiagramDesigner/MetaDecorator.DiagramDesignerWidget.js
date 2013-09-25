@@ -95,21 +95,23 @@ define(['js/Constants',
         }
 
         this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
-            var attrName = $(this).find('.n').text().replace(":", ""),
-                attrNames = self._attributeNames.slice(0),
-                dialog = new AttributeDetailsDialog(),
-                desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));
+            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                var attrName = $(this).find('.n').text().replace(":", ""),
+                    attrNames = self._attributeNames.slice(0),
+                    dialog = new AttributeDetailsDialog(),
+                    desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));
 
-            //pass all the other attribute names to the dialog
-            attrNames.splice(self._attributeNames.indexOf(attrName), 1);
+                //pass all the other attribute names to the dialog
+                attrNames.splice(self._attributeNames.indexOf(attrName), 1);
 
-            dialog.show(desc, attrNames, function (attrDesc) {
-                    self.saveAttributeDescriptor(attrName, attrDesc);
-                },
-                function () {
-                    self.deleteAttributeDescriptor(attrName);
-                }
-            );
+                dialog.show(desc, attrNames, function (attrDesc) {
+                        self.saveAttributeDescriptor(attrName, attrDesc);
+                    },
+                    function () {
+                        self.deleteAttributeDescriptor(attrName);
+                    }
+                );
+            }
 
             e.stopPropagation();
             e.preventDefault();
