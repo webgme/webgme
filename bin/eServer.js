@@ -7,8 +7,6 @@
 var requirejs = require("requirejs"),
     express = require('express'),
     passport = require('passport'),
-    flash = require('connect-flash'),
-    strategy = require('passport-local').Strategy,
     stratGugli = require('passport-google').Strategy,
     path = require('path'),
     https = require('https'),
@@ -38,9 +36,6 @@ requirejs(['logManager',
     'storage/cache',
     'storage/mongo',
     'storage/log',
-    'auth/gmeauth',
-    'auth/udm',
-    'auth/udmpass',
     'auth/sessionstore',
     'auth/vehicleforgeauth',
     'auth/ownauth'],function(
@@ -50,9 +45,6 @@ requirejs(['logManager',
     Cache,
     Mongo,
     Log,
-    gAuthorization,
-    UDM,
-    UDMPASS,
     SStore,
     VFAUTH,
     OWNAUTH){
@@ -64,12 +56,6 @@ requirejs(['logManager',
     logManager.setFileLogPath(logFile);
     var logger = logManager.create("combined-server");
     var iologger = logManager.create("socket.io");
-    var iopar =  {
-        'heartbeat timeout'  : 240,
-        'heartbeat interval' : 60,
-        'heartbeats'         : true,
-        'log level'          : 5
-    };
     var sitekey = null;
     var sitecertificate = null;
     if(parameters.httpsecure){
@@ -77,26 +63,14 @@ requirejs(['logManager',
         sitecertificate = require('fs').readFileSync("proba-cert.pem");
     }
     var app = express();
-    var udm = null;
-    var udmpass = null;
 
     var __sessionStore = new SStore();
     var __cookiekey = 'webgmeSid';
     var __cookiesecret = 'meWebGMEez';
-    var __authorization = new gAuthorization(udm,__sessionStore);
 
     var forge = new VFAUTH({});
     var own = new OWNAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase});
-    if(parameters.authentication === 'gme'){
-        udm = new UDM({
-            host: parameters.udmip || parameters.mongoip,
-            port: parameters.udmport || parameters.mongoport || 27017,
-            database: parameters.udmdb || parameters.mongodatabase,
-            collection: parameters.udmcollection || 'users',
-            refresh: parameters.udmrefresh || 100000
-        });
-        udmpass = new UDMPASS(udm);
-    }
+
 
 
     //for session handling we save the user data to the memory and reuse them in case of need
@@ -108,17 +82,6 @@ requirejs(['logManager',
     passport.deserializeUser(function(id, done) {
         done(null,_users[id]);
     });
-
-    passport.use(new strategy(
-        function(username, password, done) {
-            udmpass.findUser(username,function(err,authData){
-                if(err) { return done(err);}
-                if(!authData) { return done(null,false, { message: 'Unknown user ' + username }); }
-                if(authData.pass !== password) { return done(null, false, { message: 'Invalid password' }); }
-                return done(null,authData);
-            });
-        }
-    ));
 
     passport.use(new stratGugli({
             returnURL: parameters.host+':'+parameters.port+'/login/google/return',
@@ -159,7 +122,6 @@ requirejs(['logManager',
 
 
     app.configure(function(){
-        app.use(flash());
         app.use(express.logger());
         app.use(express.cookieParser());
         app.use(express.bodyParser());
@@ -195,12 +157,6 @@ requirejs(['logManager',
         app.post('/login',own.authenticate,function(req,res){
             res.redirect('/');
         });
-        /*app.post('/login',passport.authenticate('local',{failureRedirect: '/login'}), function(req,res){
-            req.session.authenticated = true;
-            req.session.udmId = req.user.id;
-            res.cookie('webgme',req.session.udmId);
-            res.redirect('/');
-        });*/
         app.get('/login/google',passport.authenticate('google'));
         app.get('/login/google/return',passport.authenticate('google',{failureRedirect: '/login'}),function(req,res){
             udm.getUserByEmail(req.user.id,function(err,data){
@@ -276,7 +232,7 @@ requirejs(['logManager',
     if(parameters.authentication === null || parameters.authentication === undefined || parameters.authentication === 'none'){
         //nothing we go with the default options
     } else {
-        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:/*__authorization.authorization*/own.authorize};
+        __storageOptions = {combined:httpServer,logger:iologger,session:true,sessioncheck:__sessionStore.check,secret:__cookiesecret,cookieID:__cookiekey,authorization:own.authorize};
     }
     storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,
