@@ -896,17 +896,19 @@ define(['logManager',
         while (len--) {
             pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[len]);
 
-            lenTargets = pointerMetaDescriptor.targets.length;
-            while (lenTargets--) {
-                combinedName = pointerNames[len] + "_" + pointerMetaDescriptor.targets[lenTargets];
+            if (pointerMetaDescriptor) {
+                lenTargets = pointerMetaDescriptor.targets.length;
+                while (lenTargets--) {
+                    combinedName = pointerNames[len] + "_" + pointerMetaDescriptor.targets[lenTargets];
 
-                newMetaPointers.names.push(pointerNames[len]);
+                    newMetaPointers.names.push(pointerNames[len]);
 
-                newMetaPointers.combinedNames.push(combinedName);
+                    newMetaPointers.combinedNames.push(combinedName);
 
-                newMetaPointers[combinedName] = {'name': pointerMetaDescriptor.name,
-                    'target': pointerMetaDescriptor.targets[lenTargets],
-                    'multiplicity': pointerMetaDescriptor.multiplicity};
+                    newMetaPointers[combinedName] = {'name': pointerMetaDescriptor.name,
+                        'target': pointerMetaDescriptor.targets[lenTargets],
+                        'multiplicity': pointerMetaDescriptor.multiplicity};
+                }
             }
         }
 
