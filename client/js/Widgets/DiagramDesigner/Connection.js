@@ -140,19 +140,26 @@ define(['logManager',
          }*/
 
         //open type is no different than other since it's fixed in RaphaelJS lib
-        if (type == "open") {
-            /*raphaelMarkerW += 2;
+        /*if (type == "open") {
+            raphaelMarkerW += 2;
             raphaelMarkerH += 2;
-            refX = isEnd ? 4 : 1;*/
-            refX = raphaelMarkerW / 2;
+            refX = isEnd ? 4 : 1;
         } else {
             refX = raphaelMarkerW / 2;
+        }*/
+
+        refX = raphaelMarkerW / 2;
+
+        if (isEnd) {
+            this.designerAttributes.endArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
+        } else {
+            this.designerAttributes.startArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
         }
 
         return refX * (size - refSize);
     };
 
-    Connection.prototype._raphaelArrowSizeToRefSize = function (arrowType, refSize, isEnd) {
+    Connection.prototype._raphaelArrowSizeToRefSize = function (arrowType, refSize) {
         var raphaelMarkerW = 3, //original RaphaelJS source settings
             raphaelMarkerH = 3,
             values = arrowType.toLowerCase().split("-"),
@@ -169,12 +176,18 @@ define(['logManager',
                 case "diamond":
                 case "open":
                 case "none":
+                case "diamond2":
+                case "inheritance":
                     type = values[i];
                     break;
                 case "wide": raphaelMarkerH = 5; break;
                 case "narrow": raphaelMarkerH = 2; break;
                 case "long": raphaelMarkerW = 5; break;
                 case "short": raphaelMarkerW = 2; break;
+                case "xwide": raphaelMarkerH = 9; break;
+                case "xlong": raphaelMarkerW = 9; break;
+                case "xxwide": raphaelMarkerH = 12; break;
+                case "xxlong": raphaelMarkerW = 12; break;
             }
         }
 
@@ -182,14 +195,15 @@ define(['logManager',
             return 0;
         }
 
-        if (type == "open") {
+        /*if (type == "open") {
             raphaelMarkerW += 2;
             raphaelMarkerH += 2;
             refX = raphaelMarkerW / 2;
         } else {
             refX = raphaelMarkerW / 2;
-        }
+        }*/
 
+        refX = raphaelMarkerW / 2;
         refY = raphaelMarkerH / 2;
 
         return { "w": refSize * raphaelMarkerW,
@@ -504,6 +518,8 @@ define(['logManager',
                 case "diamond":
                 case "open":
                 case "none":
+                case "diamond2":
+                case "inheritance":
                     type = values[i];
                     break;
             }
@@ -527,11 +543,13 @@ define(['logManager',
         switch (type) {
             case "classic":
             case "block":
+            case "inheritance":
                 bPoints.push( {"x": - ref.x + topLeft.x, "y": - ref.y + topLeft.y});
                 bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x)) / 2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y)) /2 });
                 bPoints.push( {"x": - ref.x + bottomLeft.x, "y": - ref.y + bottomLeft.y});
                 break;
             case "diamond":
+            case "diamond2":
                 bPoints.push( {"x": ((- ref.x + topLeft.x) + (- ref.x + topRight.x))/2, "y": ((- ref.y + topLeft.y) + (- ref.y + topRight.y))/2});
                 bPoints.push( {"x": ((- ref.x + topRight.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + topRight.y) + (- ref.y + bottomRight.y))/2});
                 bPoints.push( {"x": ((- ref.x + bottomLeft.x) + (- ref.x + bottomRight.x))/2, "y": ((- ref.y + bottomLeft.y) + (- ref.y + bottomRight.y))/2});
@@ -682,11 +700,11 @@ define(['logManager',
                 "opacity": this.designerAttributes.shadowOpacity});
 
             if (this.skinParts.pathShadowEndings) {
-                $(this.skinParts.pathShadowEndings.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
-                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
-
                 shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
                 shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+
+                $(this.skinParts.pathShadowEndings.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
                 this.skinParts.pathShadowEndings.attr({"stroke": this.designerAttributes.shadowColor,
                     "stroke-width": this.designerAttributes.shadowEndArrowWidth,
@@ -708,9 +726,53 @@ define(['logManager',
             dx,
             dy,
             eFix,
+            eliminatePoints,
+            osX,
+            osY,
+            oeX,
+            oeY;
 
         eFix = function (e) {
             return Math.abs(e) < 0.001 ? 0 : e;
+        };
+
+        eliminatePoints = function (points, pointA, pointB, isEnd) {
+            var x1 = pointA.x < pointB.x ? pointA.x : pointB.x,
+                y1 = pointA.y < pointB.y ? pointA.y : pointB.y,
+                x2 = pointA.x > pointB.x ? pointA.x : pointB.x,
+                y2 = pointA.y > pointB.y ? pointA.y : pointB.y,
+                i,
+                j,
+                newPoints = [];
+
+            if (isEnd) {
+                i = 0;
+                j = points.length - 1;
+            } else {
+                i = 1;
+                j = points.length;
+                newPoints.push({'x': points[0].x,
+                                'y': points[0].y});
+            }
+
+            for (; i < j; i += 1) {
+                if (points[i].x >= x1 && points[i].x <= x2 &&
+                    points[i].y >= y1 && points[i].y <= y2) {
+                    //inside the area to eliminate
+                    //do not add to result list
+                } else {
+                    //outside the elimination are, add to list
+                    newPoints.push({'x': points[i].x,
+                        'y': points[i].y});
+                }
+            }
+
+            if (isEnd) {
+                newPoints.push({'x': points[points.length - 1].x,
+                    'y': points[points.length - 1].y});
+            }
+
+            return newPoints;
         };
 
         //copy over coordinates to prevent them from overwriting
@@ -727,8 +789,16 @@ define(['logManager',
             dx = eFix(dx);
             dy = eFix(dy);
 
-            points[0].x += dx;
-            points[0].y += dy;
+            //fix the pathShadow (the one that does not have the end-marker
+            if (dx !== 0) {
+                osX = points[0].x;
+                points[0].x += this.designerAttributes.startArrowMarkerSize / 2 * Math.cos(this._pathStartAngle);
+            }
+
+            if (dy !== 0) {
+                osY = points[0].y;
+                points[0].y += this.designerAttributes.startArrowMarkerSize / 2 * Math.sin(this._pathStartAngle);
+            }
 
             pointsEndArrow[0].x -= dx;
             pointsEndArrow[0].y -= dy;
@@ -745,14 +815,22 @@ define(['logManager',
         }
 
         if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
-            dx = this.designerAttributes.shadowArrowEndAdjust * Math.cos(this._pathEndAngle) ;
-            dy = this.designerAttributes.shadowArrowEndAdjust * Math.sin(this._pathEndAngle) ;
+            dx = this.designerAttributes.shadowArrowEndAdjust * Math.cos(this._pathEndAngle);
+            dy = this.designerAttributes.shadowArrowEndAdjust * Math.sin(this._pathEndAngle);
 
             dx = eFix(dx);
             dy = eFix(dy);
 
-            points[len - 1].x -= dx;
-            points[len - 1].y -= dy;
+            //fix the pathShadow (the one that does not have the end-marker
+            if (dx !== 0) {
+                oeX = points[len - 1].x;
+                points[len - 1].x -= this.designerAttributes.endArrowMarkerSize / 2 * Math.cos(this._pathEndAngle);
+            }
+
+            if (dy !== 0) {
+                oeY = points[len - 1].y;
+                points[len - 1].y -= this.designerAttributes.endArrowMarkerSize / 2 * Math.sin(this._pathEndAngle);
+            }
 
             pointsEndArrow[len - 1].x += dx;
             pointsEndArrow[len - 1].y += dy;
@@ -768,13 +846,19 @@ define(['logManager',
             }
         }
 
-        i = len = points.length;
+        //PATHSHADOW
+        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+            points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
+        }
 
+        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+            len = points.length;
+            points = eliminatePoints(points, {"x": oeX, "y": oeY}, {"x": points[len - 1].x, "y": points[len - 1].y}, true);
+        }
+
+        i = len = points.length;
         p = points[0];
         pathDef.push("M" + p.x + "," + p.y);
-
-        p = pointsEndArrow[0];
-        pathDefArrow.push("M" + p.x + "," + p.y);
 
         //fix the counter to start from the second point in the list
         len--;
@@ -782,7 +866,17 @@ define(['logManager',
         while (i--) {
             p = points[len - i];
             pathDef.push("L" + p.x + "," + p.y);
+        }
 
+        // PATHSHADOW with END-MARKER
+        i = len = pointsEndArrow.length;
+        p = pointsEndArrow[0];
+        pathDefArrow.push("M" + p.x + "," + p.y);
+
+        //fix the counter to start from the second point in the list
+        len--;
+        i--;
+        while (i--) {
             p = pointsEndArrow[len - i];
             pathDefArrow.push("L" + p.x + "," + p.y);
         }
@@ -1092,7 +1186,7 @@ define(['logManager',
     };
 
 
-    Connection.prototype.getConnectionAreas = function (id) {
+    Connection.prototype.getConnectionAreas = function () {
         var result = [],
             AREA_SIZE = 0,
             w = 0,
@@ -1139,7 +1233,7 @@ define(['logManager',
     Connection.prototype.hideSourceConnectors = function () {
     };
 
-    Connection.prototype.showEndConnectors = function (params) {
+    Connection.prototype.showEndConnectors = function () {
         this._connectionConnector = this._connectionConnector || $('<div/>', {'class': 'connector connection-connector'});
 
         this._connectionConnector.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID, this.id);
