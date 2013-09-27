@@ -261,5 +261,12 @@ define(['logManager',
         return undefined;
     };
 
+    //Search support for DiagramDesignerWidget
+    //return true if this item matches the search criteria described in searchDesc
+    //otherwise return false
+    DiagramDesignerWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
+        return false;
+    };
+
     return DiagramDesignerWidgetDecoratorBase;
 });

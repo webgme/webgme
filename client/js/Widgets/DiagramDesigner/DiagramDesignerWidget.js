@@ -25,6 +25,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Zoom',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
     'js/Widgets/DiagramDesigner/HighlightManager',
+    'js/Widgets/DiagramDesigner/SearchManager',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -43,7 +44,8 @@ define(['logManager',
                                                       DiagramDesignerWidgetEventDispatcher,
                                                       DiagramDesignerWidgetZoom,
                                                       DiagramDesignerWidgetKeyboard,
-                                                      HighlightManager) {
+                                                      HighlightManager,
+                                                      SearchManager) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -81,6 +83,12 @@ define(['logManager',
 
         //if the widget has to support drop feature at all
         this._droppable = params.droppable;
+
+        //if the widget supports search functionality
+        this._defaultSearchUI = true;
+        if (params.hasOwnProperty('defaultSearchUI')) {
+            this._defaultSearchUI = params.defaultSearchUI;
+        }
 
         //toolbar instance
         this.toolBar = params.toolBar;
@@ -165,7 +173,7 @@ define(['logManager',
         };
         /*********** END OF --- CONNECTION DRAWING COMPONENT *************/
 
-            //initiate Connection Router (if needed)
+        //initiate Highlight Manager
         this.highlightManager = new HighlightManager({"diagramDesigner": this});
         this.highlightManager.initialize(this.skinParts.$itemsContainer);
         this.highlightManager.onHighlight = function (idList) {
@@ -175,6 +183,10 @@ define(['logManager',
         this.highlightManager.onUnhighlight = function (idList) {
             self.onUnhighlight(idList);
         };
+
+        //initiate Search Manager
+        this.searchManager = new SearchManager({"diagramDesigner": this});
+        this.searchManager.initialize(this.skinParts.$itemsContainer);
 
         this._afterManagersInitialized();
 
@@ -1146,17 +1158,20 @@ define(['logManager',
             this.selectionManager.deactivate();
             this.dragManager.deactivate();
             this.connectionDrawingManager.deactivate();
+            this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
             switch (mode) {
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
                     this.selectionManager.activate();
+                    this.searchManager.activate();
                     break;
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
                     this.dragManager.activate();
                     this.connectionDrawingManager.activate();
+                    this.searchManager.activate();
                     this._setComponentsReadOnly(false);
                     break;
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT:
@@ -1166,6 +1181,7 @@ define(['logManager',
                 default:
                     this.mode = this.OPERATING_MODES.READ_ONLY;
                     this.selectionManager.activate();
+                    this.searchManager.activate();
                     break;
             }
         }
