@@ -35,7 +35,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("AspectDesigner");
 
-        this.widget = new AspectDesignerWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new AspectDesignerWidget(this.$el, {'toolBar': this.toolBar,
+                                                          'defaultSearchUI': false});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
