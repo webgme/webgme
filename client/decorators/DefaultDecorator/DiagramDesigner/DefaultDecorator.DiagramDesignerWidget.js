@@ -145,5 +145,14 @@ define(['js/Constants',
 
     /**************** END OF - EDIT NODE TITLE ************************/
 
+    DefaultDecorator.prototype.doSearch = function (searchDesc) {
+        var searchText = searchDesc.toString();
+        if (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+            return true;
+        }
+
+        return false;
+    };
+
     return DefaultDecorator;
 });

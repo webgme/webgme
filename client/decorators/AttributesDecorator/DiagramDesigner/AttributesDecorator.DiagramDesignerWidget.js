@@ -360,5 +360,14 @@ define(['js/Constants',
         return result;
     };
 
+    AttributesDecorator.prototype.doSearch = function (searchDesc) {
+        var searchText = searchDesc.toString();
+        if (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+            return true;
+        }
+
+        return false;
+    };
+
     return AttributesDecorator;
 });

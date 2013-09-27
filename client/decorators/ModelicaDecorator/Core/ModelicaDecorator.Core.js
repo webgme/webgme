@@ -284,5 +284,10 @@ define(['js/Constants',
         });
     };
 
+    ModelicaDecoratorCore.prototype.doSearch = function (searchDesc) {
+        //TODO: correct implementation needed
+        return false;
+    };
+
     return ModelicaDecoratorCore;
 });
