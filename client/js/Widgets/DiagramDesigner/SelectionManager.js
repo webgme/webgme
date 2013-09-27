@@ -603,7 +603,7 @@ define(['logManager',
             rotateBtnBottom = $('<div/>', {
                 "class" : "s-btn rotate bottom"
             });
-            rotateBtnBottom.html('<i class="icon-repeat"></i>');
+            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover fade right in nowrap" style="top: -10px; left: 22px; display: block;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group inline toolbar-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-share-alt flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-share-alt"></i></a></div></div></div></i>');
 
             this._rotationDegree = $('<div/>', {
                 "class" : "rotation-deg"
@@ -623,17 +623,33 @@ define(['logManager',
                 event.preventDefault();
             });
 
-            //TODO: 0, 90, 180, 270 fix _getRotationDegree
-            /*this._diagramDesigner.skinParts.$selectionOutline.off("dblclick." + MOUSE_EVENT_POSTFIX, ".rotate");
-            this._diagramDesigner.skinParts.$selectionOutline.on("dblclick." + MOUSE_EVENT_POSTFIX, ".rotate", function (event) {
-                var rotateBtn = $(this);
-                self.logger.debug("selection rotate button mousedown'");
+            rotateBtnBottom.hover(
+                function () {
+                    rotateBtnBottom.find('.popover').show();
+                },
+                function () {
+                    rotateBtnBottom.find('.popover').hide();
+                }
+            );
 
-                self._startSelectionRotate(rotateBtn, event);
+            rotateBtnBottom.on('click', '.btn', function (event) {
+                var btnId = $(this).attr('id'),
+                    deg = 0;
+
+                switch(btnId.replace('rotate-', '')) {
+                    case 'left':
+                        deg = -90;
+                        break;
+                    case 'right':
+                        deg = 90;
+                        break;
+                }
+
+                self._rotateSelectionBy(deg);
 
                 event.stopPropagation();
                 event.preventDefault();
-            });*/
+            });
         }
     };
 
@@ -648,6 +664,8 @@ define(['logManager',
                                 "oX": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("left"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("width"), 10) / 2,
                                 "oY": parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("top"), 10) + parseInt(this._diagramDesigner.skinParts.$selectionOutline.css("height"), 10) / 2,
                                 "horizontal": rotateBtn.hasClass('top')};
+
+            this._rotateAngle = 0;
 
             $(document).on("mousemove.rotate." + MOUSE_EVENT_POSTFIX, function (event) {
                 self._onSelectionRotate(event);
@@ -666,7 +684,10 @@ define(['logManager',
         var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
             dx = mousePos.mX - this._rotateDesc.startX,
             dy = mousePos.mY - this._rotateDesc.startY,
-            deg = this._getRotationDegree(this._rotateDesc.horizontal ? dx : dy, event.shiftKey);
+            roundTo = event.shiftKey ? 10 : (event.ctrlKey || event.metaKey ? 45 : 0),
+            deg = this._getRotationDegree(this._rotateDesc.horizontal ? dx : dy, roundTo);
+
+        this._rotateAngle = deg;
 
         this._rotationDegree.html( (deg >= 0 ? "+" : "") + deg + "°");
 
@@ -674,18 +695,18 @@ define(['logManager',
             'transform': 'rotate('+ deg + 'deg)'});
     };
 
-    SelectionManager.prototype._endSelectionRotate = function (event) {
-        var mousePos = this._diagramDesigner.getAdjustedMousePos(event),
-            dx = mousePos.mX - this._rotateDesc.startX,
-            dy = mousePos.mY - this._rotateDesc.startY,
-            deg = this._getRotationDegree(this._rotateDesc.horizontal ? dx : dy, event.shiftKey),
-            selectedItems = [],
-            i = this._selectedElements.length;
-
+    SelectionManager.prototype._endSelectionRotate = function (/*event*/) {
         this._rotationDegree.html('');
 
         this._diagramDesigner.skinParts.$selectionOutline.css({'transform-origin': '50% 50%',
             'transform': 'rotate(0deg)'});
+
+        this._rotateSelectionBy(this._rotateAngle);
+    };
+
+    SelectionManager.prototype._rotateSelectionBy = function (deg) {
+        var selectedItems = [],
+            i = this._selectedElements.length;
 
         while (i--) {
             if (this._diagramDesigner.itemIds.indexOf(this._selectedElements[i]) !== -1) {
@@ -698,8 +719,8 @@ define(['logManager',
         }
     };
 
-    SelectionManager.prototype._getRotationDegree = function(value, rounded) {
-        var val = rounded ? Math.round(value / 10) * 10  : value;
+    SelectionManager.prototype._getRotationDegree = function(value, roundTo) {
+        var val = roundTo ? Math.round(value / roundTo) * roundTo  : value;
 
         return Math.floor(val % 360);
     };
