@@ -37,7 +37,7 @@ define([], function () {
         };
         _core.getPointerPath = function(node,name){
             var path = _innerCore.getPointerPath(node,name);
-            if(path.indexOf(NULLPTR_RELID) !== -1){
+            if(path && path.indexOf(NULLPTR_RELID) !== -1){
                 return null;
             } else {
                 return path;

@@ -102,10 +102,14 @@ requirejs(['logManager',
     }
     function checkVF(req,res,next){
         console.log('check Vehicle Forge framework');
-        if(req.cookies['isisforge']){
-            res.redirect('/login/forge');
-        } else {
+        if(req.isAuthenticated() || (req.session && true === req.session.authenticated)){
             return next();
+        } else {
+            if(req.cookies['isisforge']){
+                res.redirect('/login/forge');
+            } else {
+                return next();
+            }
         }
     }
 
