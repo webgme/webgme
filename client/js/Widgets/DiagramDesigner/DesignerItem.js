@@ -493,6 +493,9 @@ define(['logManager',
             "y": ry + this.height / 2};
     };
 
+    DesignerItem.prototype.doSearch = function (searchDesc) {
+        return this._decoratorInstance.doSearch(searchDesc);
+    };
 
     return DesignerItem;
 });

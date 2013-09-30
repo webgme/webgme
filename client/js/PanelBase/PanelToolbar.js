@@ -190,12 +190,21 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             $label.text(params.label + ": ");
         }
 
+        if (params && params.prependContent) {
+            $label = $('<span/>', {"class":"add-on"});
+            $label.html(params.prependContent);
+        }
+
         if (params && params.collapse) {
             $textBox.addClass('no-focus-collapse');
         }
 
         if ($label) {
             $txtGroup.append($label);
+        }
+
+        if (params && params.placeholder) {
+            $textBox.attr('placeholder', params.placeholder);
         }
 
         $txtGroup.append($textBox);

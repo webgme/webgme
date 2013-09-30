@@ -18,6 +18,7 @@ define(['js/Constants',
     };
 
     DecoratorWidthPortsCore.prototype._initializeVariables = function () {
+        this.name = "";
         this._portIDs = [];
         this._ports = {};
         this.skinParts = { "$name": undefined,
@@ -51,6 +52,7 @@ define(['js/Constants',
         if (nodeObj) {
             name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "(N/A)";
 
+            this.name = name;
             this.skinParts.$name.text(name);
             this.skinParts.$name.attr("title", name);
         }
@@ -213,6 +215,15 @@ define(['js/Constants',
             //reattach
             this._addPortToContainer(portNode);
         }
+    };
+
+    DecoratorWidthPortsCore.prototype.doSearch = function (searchDesc) {
+        var searchText = searchDesc.toString();
+        if (this.name && this.name.toLowerCase().indexOf(searchText.toLowerCase()) !== -1) {
+            return true;
+        }
+
+        return false;
     };
 
     return DecoratorWidthPortsCore;

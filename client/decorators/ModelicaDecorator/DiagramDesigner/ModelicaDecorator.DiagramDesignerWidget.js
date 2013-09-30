@@ -436,5 +436,9 @@ define(['js/Constants',
         return metaInfo;
     };
 
+    ModelicaDecoratorDiagramDesignerWidget.prototype.doSearch = function (searchDesc) {
+        return this._modelicaDecoratorCore.doSearch(searchDesc);
+    };
+
     return ModelicaDecoratorDiagramDesignerWidget;
 });
