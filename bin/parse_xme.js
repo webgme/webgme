@@ -70,8 +70,6 @@ if (typeof define !== "function") {
 			}
 		}
 	});
-
-	return;
 }
 
 define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC, COMMON) {
@@ -91,7 +89,8 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 				ASSERT(stack.length === 0);
 				tag.node = root;
                 var guid = tag.attributes['guid'];
-                guid = guid.replace(/[{,},-]/g,""); //TODO somehow it needs to adapted better to our guid storage needs
+                // TODO: somehow it needs to adapted better to our guid storage needs
+                guid = guid.replace(/[{,},-]/g,"");
                 core.setAttribute(root,"_relguid",guid);
 			} else if (name === "folder" || name === "model" || name === "atom" || name === "connection" || name === "reference" || name === "set") {
 				ASSERT(stack.length >= 1);
@@ -152,7 +151,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 			getstat: getstat
 		});
 
-		var done = TASYNC.call(resolveAll, core, root, global, done);
+		done = TASYNC.call(resolveAll, core, root, global, done);
 		var hash = TASYNC.call(persist, core, root, done);
 		hash = TASYNC.call(makeCommit, xmlfile, hash);
 
@@ -193,7 +192,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 	var POSITION_VAL_REGEXP = new RegExp("^([0-9]*),([0-9]*)$");
 
 	function parseObject (core, tag, global) {
-		var key;
+		var key = null;
 		for (key in registry) {
 			if (typeof tag.attributes[key] !== "undefined") {
 				core.setRegistry(tag.node, registry[key], tag.attributes[key]);
@@ -247,7 +246,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 		}
 
 		if (pos) {
-			var pos = POSITION_VAL_REGEXP.exec(pos);
+			pos = POSITION_VAL_REGEXP.exec(pos);
 			if (pos) {
 				pos = {
 					x: parseInt(pos[1], 10),
@@ -321,7 +320,7 @@ define([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TASYNC
 	function resolveAll (core, root, global) {
 		console.log("Resolving references ...");
 
-		var done, i;
+		var done = true, i;
 		for (i = 0; i < global.refs.length; ++i) {
 			resolveReference(core, global.ids, global.refs[i]);
 		}
