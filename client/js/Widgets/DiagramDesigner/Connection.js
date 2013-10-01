@@ -1170,8 +1170,8 @@ define(['logManager',
                 "stroke-width": this.designerAttributes.width});
         }
 
-
         if (this.skinParts.pathShadow) {
+            this._updatePathShadow(this._pathPoints);
             this.skinParts.pathShadow.attr({ "stroke-width": this.designerAttributes.shadowWidth });
         }
 
