@@ -1662,13 +1662,7 @@ define([
                 var getSetNames = function(){
                     return _core.getSetNames(_nodes[_id].node);
                 };
-                var getValidSetNames = function(){
-                    var names = [];
-                    for(var i in setNames){
-                        names.push(setNames[i]);
-                    }
-                    return names;
-                };
+
                 //META
                 var getValidChildrenTypes = function(){
                     return getMemberIds('ValidChildren');
@@ -1728,9 +1722,7 @@ define([
                         //META functions
                         getValidChildrenTypes : getValidChildrenTypes,
                         getMemberIds          : getMemberIds,
-                        //getSetIds             : getSetIds,
                         getSetNames           : getSetNames,
-                        getValidSetNames               : getValidSetNames,
                         getAttributeDescriptor         : getAttributeDescriptor,
                         getEditableAttributeDescriptor : getEditableAttributeDescriptor,
                         getPointerDescriptor           : getPointerDescriptor,
