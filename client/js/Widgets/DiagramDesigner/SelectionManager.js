@@ -603,7 +603,7 @@ define(['logManager',
             rotateBtnBottom = $('<div/>', {
                 "class" : "s-btn rotate bottom"
             });
-            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group inline toolbar-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-share-alt flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-share-alt"></i></a></div></div></div></i>');
+            rotateBtnBottom.html('<i class="icon-repeat"><div class="popover right nowrap" style="top: -10px; left: 22px; display: none;"><div class="arrow"></div><div class="popover-content narrow"><div class="btn-group inline toolbar-group"><a class="btn btn-small" id="rotate-left" title="Rotate left"><i class="icon-repeat flip-vertical"></i></a><a class="btn  btn-small" id="rotate-right" title="Rotate right"><i class="icon-repeat"></i></a></div></div></div></i>');
 
             this._rotationDegree = $('<div/>', {
                 "class" : "rotation-deg"
