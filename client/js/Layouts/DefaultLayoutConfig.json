@@ -24,11 +24,6 @@
             "container": "left",
             "DEBUG_ONLY": false},
 
-        {"id": "SetEditorPanel",
-            "panel": "SetEditor/SetEditorPanel",
-            "container": "left",
-            "DEBUG_ONLY": false},
-
         {"id": "ObjectBrowserPanel",
             "panel": "ObjectBrowser/ObjectBrowserPanel",
             "container": "right",

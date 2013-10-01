@@ -17,18 +17,6 @@
         "control": "js/Panels/Grid/GridPanelContainmentControlPointers",
         "DEBUG_ONLY": true},
 
-    {"id": "SetEditor",
-        "title": "SetEditor",
-        "panel": "js/Panels/DiagramDesigner/DiagramDesignerPanel",
-        "control": "js/Panels/DiagramDesigner/SetEditor/SetEditorControl",
-        "DEBUG_ONLY": true},
-
-    {"id": "AspectEditor",
-        "title": "AspectEditor",
-        "panel": "js/Panels/AspectDesigner/AspectDesignerPanel",
-        "control": "js/Panels/AspectDesigner/AspectDesignerControl",
-        "DEBUG_ONLY": false},
-
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
