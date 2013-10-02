@@ -548,7 +548,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 			ASSERT(isValidNode(node) && typeof name === "string");
 
 			var source = "";
-			var target = undefined;
+			var target;
 
 			do {
 				var child = coretree.getChild(node, OVERLAYS);
@@ -599,7 +599,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 			ASSERT(isValidNode(node) && typeof name === "string");
 			ASSERT(typeof source === "string");
 
-			var target = undefined;
+			var target;
 
 			do {
 				var child = coretree.getChild(node, OVERLAYS);
@@ -629,7 +629,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 			ASSERT(isValidNode(node) && name);
 
 			var source = "";
-			var target = undefined;
+			var target;
 
 			do {
 				var child = coretree.getChild(node, OVERLAYS);

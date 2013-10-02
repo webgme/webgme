@@ -7,8 +7,6 @@
 define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
     "use strict";
 
-    var HASH_REGEXP = new RegExp("^#[0-9a-zA-Z_]*$");
-
     function Database (options) {
         ASSERT(typeof options === "object");
 
