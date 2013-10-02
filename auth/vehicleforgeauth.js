@@ -11,8 +11,8 @@ define(['https','http' ],function(HTTPS,HTTP){
             _web = _options.https === true ? HTTPS : HTTP,
             _session = _options.session,
             _validity = _options.validity || 100000,
-            _host = _options.host || 'https://dev.vf.isis.vanderbilt.edu',
-            _port = _options.port || _options.https === true ? 443 : 80,
+            _host = _options.host || /*'https://dev.vf.isis.vanderbilt.edu'*/'kecskes.isis.vanderbilt.edu',
+            _port = _options.port || /*_options.https === true ? 443 : 80*/888,
             _path = _options.path || '/auth/webgme/get_user_info',
             _projectPath = _options.projectpath || '/auth/webgme/get_project_info',
             _idCookie = _options.cookie || 'isisforge';
@@ -31,6 +31,7 @@ define(['https','http' ],function(HTTPS,HTTP){
                 if(!err && data){
                     req.session.udmId = VFID;
                     req.session.authenticated = true;
+                    req.session.userType = 'vehicleForge';
                     next(null);
                 } else {
                     res.redirect('/');
@@ -56,7 +57,7 @@ define(['https','http' ],function(HTTPS,HTTP){
                         }
                     } else {
                         if(_cachedUserData[projId]){
-                            userDataArrived(null,_cachedUserData[projId].permissions[type] === true);
+                            callback(null,_cachedUserData[projId].permissions[type] === true);
                         } else {
                             getUserProject(VFID,projectName,function(err,userData){
                                 if(!err && userData){
@@ -78,15 +79,25 @@ define(['https','http' ],function(HTTPS,HTTP){
             _web.get({
                 hostname: _host,
                 port: _port,
-                path: _path
+                path: _path,
+                headers: {
+                    Cookie: "isisforge="+VFID
+                }
             },function(res){
-                res.on('data',function(data){
-                    _cachedUserData[VFID] = data;
-                    setTimeout(clearData,_validity,VFID);
-                    callback(null,_cachedUserData[VFID]);
+                var data = "";
+                res.on('data',function(chunk){
+                    console.log('more data');
+                    data+=chunk;
                 });
-            }).on('error',function(error){
-                    callback(error);
+                res.on('end',function(){
+                    console.log('finally',data);
+                    data = JSON.parse(data);
+                    _cachedUserData[VFID] = data;
+                    callback(null,data);
+                });
+            }).on('error',function(err){
+                    console.log('kecso',err);
+                    callback(err);
                 });
         }
         function getUserProject(VFID,projectName,callback){
@@ -94,13 +105,21 @@ define(['https','http' ],function(HTTPS,HTTP){
                 hostname: _host,
                 port: _port,
                 path: _projectPath,
+                headers: {
+                    Cookie: "isisforge="+VFID
+                },
                 project_name: projectName
             },function(res){
-                res.on('data',function(data){
+                var data = "";
+                res.on('data',function(chunk){
+                    data+=chunk
+                });
+                res.on('end',function(){
+                    data = JSON.parse(data);
                     _cachedUserData[VFID+'/'+projectName] = data;
                     setTimeout(clearData,_validity,VFID+'/'+projectName);
                     callback(null,_cachedUserData[VFID+'/'+projectName]);
-                });
+                })
             }).on('error',function(error){
                     callback(error);
                 });

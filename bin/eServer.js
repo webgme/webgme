@@ -66,8 +66,28 @@ requirejs(['logManager',
 
     var __sessionStore = new SStore();
 
-    var forge = new VFAUTH({});
+    var forge = new VFAUTH({session:__sessionStore});
     var gme = new GMEAUTH({session:__sessionStore,host:parameters.mongoip,port:parameters.mongoport,database:parameters.mongodatabase,guest:parameters.guest});
+
+    var globalAuthorization = function(sessionId,projectName,type,callback){
+        __sessionStore.get(sessionId,function(err,data){
+            if(!err && data){
+                switch (data.userType){
+                    case 'GME':
+                        gme.authorize(sessionId,projectName,type,callback);
+                        break;
+                    case 'vehicleForge':
+                        forge.authorize(sessionId,projectName,type,callback);
+                        break;
+                    default:
+                        callback('unknown user type',false);
+                }
+            } else {
+                err = err || 'session not found';
+                callback(err,false);
+            }
+        });
+    };
 
 
 
@@ -143,8 +163,10 @@ requirejs(['logManager',
     //authentication related routing
     app.get('/logout', function(req, res){
         res.clearCookie('webgme');
+        res.clearCookie('isisforge'); //todo is this really needed
         req.logout();
         req.session.authenticated = false;
+        req.session.userType = 'unknown';
         res.redirect('/');
     });
     app.get('/login',function(req,res){
@@ -162,7 +184,7 @@ requirejs(['logManager',
         res.redirect('/');
     });
     app.get('/login/forge',forge.authenticate,function(req,res){
-        //res.cookie('webgme',req.session.udmId);
+        res.cookie('webgme',req.session.udmId);
         res.redirect('/');
     });
 
@@ -212,7 +234,7 @@ requirejs(['logManager',
         __storageOptions.session = true;
         __storageOptions.sessioncheck = __sessionStore.check;
         __storageOptions.secret = parameters.sessioncookiesecret;
-        __storageOptions.authorization = gme.authorize;
+        __storageOptions.authorization = globalAuthorization;
     }
     storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,
