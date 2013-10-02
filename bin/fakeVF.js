@@ -14,7 +14,7 @@ app.get('/auth/webgme/get_user_info',function(req,res){
     res.send();
 });
 app.get('/auth/webgme/get_project_info',function(req,res){
-    console.log(req.params);
+    console.log('kecso',req.url,req.query['project_name']);
     res.write(JSON.stringify({
         permissions:{
             read : true,

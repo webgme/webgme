@@ -104,11 +104,10 @@ define(['https','http' ],function(HTTPS,HTTP){
             _web.get({
                 hostname: _host,
                 port: _port,
-                path: _projectPath,
+                path: _projectPath+"?project_name="+projectName, //todo is this really have to be this way???
                 headers: {
                     Cookie: "isisforge="+VFID
-                },
-                project_name: projectName
+                }
             },function(res){
                 var data = "";
                 res.on('data',function(chunk){
