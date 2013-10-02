@@ -148,8 +148,6 @@ if (typeof define !== "function") {
         }
 
     });
-
-    return;
 }
 
 define([ "util/assert", "core/tasync", "util/common", 'fs', 'storage/commit', 'storage/cache', 'storage/mongo' ], function (ASSERT, TASYNC, COMMON,fs,Commit,Cache,Mongo) {

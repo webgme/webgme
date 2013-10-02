@@ -113,8 +113,6 @@ if (typeof define !== "function") {
         }
 
     });
-
-    return;
 }
 
 define([ "util/assert", "core/tasync", "util/common", "util/canon", "util/sha1" ], function (ASSERT, TASYNC, COMMON,CANON,SHA1) {

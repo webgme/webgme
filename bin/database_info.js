@@ -62,8 +62,8 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 		if (names.length === 0) {
 			console.log("No project found");
 		} else {
-			var done, i;
-			for (i = 0; i < names.length; ++i) {
+			var done = true;
+			for (var i = 0; i < names.length; ++i) {
 				var name = names[i], project = database.openProject(name);
 				done = TASYNC.call(printProjectInfo, project, name, done);
 			}
@@ -85,8 +85,7 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 	function printProjectInfo2 (project, name, branches) {
 		var done = print("project " + name);
 
-		var branch;
-		for (branch in branches) {
+		for (var branch in branches) {
 			done = TASYNC.call(printCommitInfo, project, branch, branches[branch], done);
 		}
 
@@ -107,7 +106,7 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 	function printCommitInfo2 (branch, hash, object) {
 		ASSERT(typeof object === "object");
 
-		var done;
+		var done = true;
 		if (object === null) {
 			console.log("  " + branch + ":\t" + hash + " (not found)");
 		} else {

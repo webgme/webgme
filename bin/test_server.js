@@ -102,9 +102,7 @@ requirejs(['logManager',
         _databaseOpened = false,
         _projects = {},
         _references  = {},
-        _clientData = {},
-        _intest = false;
-
+        _clientData = {};
 
     var testPageHandler = function(req,res){
         if(req.url === '/test.html'){

@@ -22,8 +22,7 @@ if (typeof define !== "function") {
             COMMON.closeProject();
             COMMON.closeDatabase();
         });
-        var _commit = null,
-            _startHash = null,
+        var _startHash = null,
             _branch = null,
             _projectName = null;
 
@@ -73,16 +72,16 @@ if (typeof define !== "function") {
                 //info command
                 done = TASYNC.call(infoPrint,core,_startHash);
             } else if(COMMON.getParameters("addproject")){
-                var projpars = COMMON.getParameters("addproject")
+                var projpars = COMMON.getParameters("addproject");
                 done = TASYNC.call(addProject,core,_startHash,projpars[0],projpars[1],projpars[2]);
             } else if(COMMON.getParameters("removeproject")){
-                var projpars = COMMON.getParameters("removeproject")
+                var projpars = COMMON.getParameters("removeproject");
                 done = TASYNC.call(removeProject,core,_startHash,projpars[0],projpars[1]);
             } else if(COMMON.getParameters("adduser")){
-                var projpars = COMMON.getParameters("adduser")
+                var projpars = COMMON.getParameters("adduser");
                 done = TASYNC.call(addUser,core,_startHash,projpars[0],projpars[1],projpars[2],projpars[3] || null,projpars[4] || null);
             } else if(COMMON.getParameters("removeuser")){
-                var projpars = COMMON.getParameters("removeuser")
+                var projpars = COMMON.getParameters("removeuser");
                 done = TASYNC.call(removeUser,core,_startHash,projpars[0],projpars[1]);
             }
 
@@ -213,14 +212,11 @@ if (typeof define !== "function") {
                         core.setRegistry(child,'projects',projects);
                         var newroothash = persist(core,parentObject);
                         return TASYNC.call(saveModifications,newroothash,"project "+projectname+" has been added to user "+username);
-
                     } else {
                         return null;
                     }
                 },children);
             }
-
-
 
             var root = core.loadRoot(roothash);
             var done = TASYNC.call(iterateChildren,root);
@@ -259,8 +255,6 @@ if (typeof define !== "function") {
                     }
                 },children);
             }
-
-
 
             var root = core.loadRoot(roothash);
             var done = TASYNC.call(iterateChildren,root);
@@ -311,8 +305,6 @@ if (typeof define !== "function") {
                 },children);
             }
 
-
-
             var root = core.loadRoot(roothash);
             var done = TASYNC.call(iterateChildren,root);
 
@@ -345,10 +337,6 @@ if (typeof define !== "function") {
             var done = TASYNC.call(iterateChildren,root);
 
             return done;
-        }
-
+        };
     });
-    return;
-}
-
-
+};

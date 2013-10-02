@@ -54,7 +54,7 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 		return done;
 	}
 
-	var project;
+	var project = null;
 
 	function dump (selector, depth) {
 		ASSERT(typeof selector === "string");
@@ -106,8 +106,8 @@ requirejs([ "util/assert", "core/tasync", "util/common" ], function (ASSERT, TAS
 		console.log(object);
 
 		if (depth > 0) {
-			var done, relid;
-			for (relid in object) {
+			var done = true;
+			for (var relid in object) {
 				var hash = object[relid];
 				if (typeof hash === "string" && hash.charAt(0) === "#") {
 					done = TASYNC.join(done, dumpObject(hash, depth - 1));
