@@ -88,11 +88,14 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 	var project, core;
 
-	function openProject () {
+	function openProject (overRideName) {
 		ASSERT(database);
 
 		var params = getParameters("proj") || [];
 		var name = params[0] || "test";
+        if(typeof overRideName === 'string'){
+            name = overRideName;
+        }
 
 		console.log("Opening project " + name);
 
