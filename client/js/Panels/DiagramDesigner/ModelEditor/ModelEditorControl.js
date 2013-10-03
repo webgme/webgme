@@ -23,7 +23,7 @@ define(['logManager',
         WIDGET_NAME = 'DiagramDesigner',
         DEFAULT_LINE_STYLE = {};
 
-    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 2;
+    DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
@@ -837,14 +837,16 @@ define(['logManager',
                 targetId = Math.floor((Math.random()*(i / 2 ) + (i / 2)));
             }
 
+            var registry = {};
+            registry[nodePropertyNames.Registry.lineStyle] = {};
+            _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
+
             connDesc = {   "parentId": this.currentNodeInfo.id,
                 "sourceId": allGMEID[sourceId],
                 "targetId": allGMEID[targetId],
-                "directed": true };
+                "registry": registry };
 
             this._client.makeConnection(connDesc);
-
-            this.logger.warning(JSON.stringify(connDesc));
 
             counter += 1;
         }
