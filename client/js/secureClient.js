@@ -2,6 +2,7 @@ define([
     'util/assert',
     'eventDispatcher',
     'util/guid',
+    'core/newcore',
     'core/core',
     'core/setcore',
     'core/guidcore',
@@ -20,6 +21,7 @@ define([
         ASSERT,
         EventDispatcher,
         GUID,
+        NewCore,
         Core,
         SetCore,
         GuidCore,
@@ -43,7 +45,8 @@ define([
         }
 
         function getNewCore(project){
-            return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
+            //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
+            return NewCore.asyncCore(project,{autopersist: true});
         }
         function Client(_configuration){
             var _self = this,
@@ -660,7 +663,7 @@ define([
                     nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                 }
                 if(level>0){
-                    if(core.getChildrenNumber(nodesSoFar[path].node)>0){
+                    if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
                         core.loadChildren(nodesSoFar[path].node,function(err,children){
                             if(!err && children){
                                 var missing = children.length;
@@ -699,7 +702,7 @@ define([
                     base = nodesSoFar[id].node;
                     baseLoaded();
                 } else {
-                    core.loadByPath(id,function(err,node){
+                    core.loadByPath(_nodes['root'],id,function(err,node){
                         if(!err && node){
                             var path = core.getPath(node);
                             if(!nodesSoFar[path]){
@@ -819,7 +822,7 @@ define([
                     _msg +="\n"+msg;
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
-                        _core.persist(function(err){});
+                        _core.persist(_nodes['root'].node,function(err){});
                         var newRootHash = _core.getHash(_core.getRoot());
                         var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
                             //TODO now what??? - could we end up here?
@@ -1552,7 +1555,6 @@ define([
             }
             function updateTerritory(guid, patterns) {
                 if(_project){
-
                     //this has to be optimized
                     var missing = 0;
                     var error = null;
