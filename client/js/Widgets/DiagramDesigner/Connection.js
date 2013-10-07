@@ -57,6 +57,8 @@ define(['logManager',
         this._editMode = false;
         this._readOnly = false;
         this._connectionEditSegments = [];
+
+        this.jumpOnCrossingsEnabled = false;
         
         /*MODELEDITORCONNECTION CONSTANTS*/
 
@@ -93,7 +95,7 @@ define(['logManager',
 
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
-        this.name = objDescriptor.name;
+        this.name = objDescriptor.name || this.id;
         this.nameEdit = objDescriptor.nameEdit || false;
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
@@ -238,6 +240,8 @@ define(['logManager',
             self = this,
             fixXY;
 
+        this._startProfile('setConnectionRenderData');
+
         //for EVEN width of the path, get the lower integer of the coordinate
         //for ODD width of the path, get the lower integer + 0.5
         fixXY = function (point) {
@@ -355,6 +359,8 @@ define(['logManager',
             this._hideConnectionAreaMarker();
             this._hideTexts();
         }
+
+        this._endProfile('setConnectionRenderData');
     };
 
     Connection.prototype.getBoundingBox = function () {
@@ -734,6 +740,8 @@ define(['logManager',
             oeX,
             oeY;
 
+        this._startProfile('_updatePathShadow');
+
         eFix = function (e) {
             return Math.abs(e) < 0.001 ? 0 : e;
         };
@@ -853,7 +861,7 @@ define(['logManager',
             points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
         }
 
-        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+        if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
             len = points.length;
             points = eliminatePoints(points, {"x": oeX, "y": oeY}, {"x": points[len - 1].x, "y": points[len - 1].y}, true);
         }
@@ -883,16 +891,18 @@ define(['logManager',
             pathDefArrow.push("L" + p.x + "," + p.y);
         }
 
-        pathDef = this._jumpOnCrossings(pathDef);
+        //pathDef = this._jumpOnCrossings(pathDef);
         pathDef = pathDef.join(" ");
 
-        pathDefArrow = this._jumpOnCrossings(pathDefArrow);
+        //pathDefArrow = this._jumpOnCrossings(pathDefArrow);
         pathDefArrow = pathDefArrow.join(" ");
 
         this.skinParts.pathShadow.attr({ "path": pathDef});
         if (this.skinParts.pathShadowEndings) {
             this.skinParts.pathShadowEndings.attr({ "path": pathDefArrow});
         }
+
+        this._endProfile('_updatePathShadow');
     };
 
     Connection.prototype._removePath = function () {
@@ -1526,11 +1536,16 @@ define(['logManager',
             j,
             xRadius;
 
-        /*return pathDefArray;*/
+        if (this.jumpOnCrossingsEnabled !== true) {
+            return pathDefArray;
+        }
+
+        this._startProfile('_jumpOnCrossings');
 
         connectionIDs.splice(selfIdx);
         len = connectionIDs.length;
 
+        this._startProfile('_jumpOnCrossings_#1');
         while(len--) {
             otherConn = items[connectionIDs[len]];
             xingWithOther = Raphael.pathIntersection(pathDef, otherConn.pathDef);
@@ -1551,7 +1566,9 @@ define(['logManager',
                 }
             }
         }
+        this._endProfile('_jumpOnCrossings_#1');
 
+        this._startProfile('_jumpOnCrossings_#2');
         //we got all the intersections of this path with everybody else
         intersectionSegments.sort(function(a,b){return a-b});
         for (len = 0; len < intersectionSegments.length; len += 1) {
@@ -1601,12 +1618,14 @@ define(['logManager',
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
             }
         }
+        this._endProfile('_jumpOnCrossings_#2');
 
         //the first etry is the M x,y, it goes unchanged
         resultPathDefArray.push(pathDefArray[0]);
 
         len = pathDefArray.length;
 
+        this._startProfile('_jumpOnCrossings_#3');
         for (i = 1; i < len; i += 1) {
             //i is the segment number
             segNum = i.toString();
@@ -1622,8 +1641,19 @@ define(['logManager',
 
             resultPathDefArray.push(pathDefArray[i]);
         }
+        this._endProfile('_jumpOnCrossings_#3');
+
+        this._endProfile('_jumpOnCrossings');
 
         return resultPathDefArray;
+    };
+
+    Connection.prototype._startProfile = function (profID) {
+        this.diagramDesigner.profiler.startProfile( this.id + "_" + profID);
+    };
+
+    Connection.prototype._endProfile = function (profID) {
+        this.diagramDesigner.profiler.endProfile( this.id + "_" + profID);
     };
 
 
