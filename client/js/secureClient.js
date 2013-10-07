@@ -823,7 +823,7 @@ define([
                     if(!_inTransaction){
                         ASSERT(_project && _core && _branch);
                         _core.persist(_nodes['root'].node,function(err){});
-                        var newRootHash = _core.getHash(_core.getRoot());
+                        var newRootHash = _core.getHash(_nodes['root'].node);
                         var newCommitHash = _project.makeCommit([_recentCommits[0]],newRootHash,_msg,function(err){
                             //TODO now what??? - could we end up here?
                         });
