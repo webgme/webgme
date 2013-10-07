@@ -851,7 +851,7 @@ define(['logManager',
             points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
         }
 
-        if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+        if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
             len = points.length;
             points = eliminatePoints(points, {"x": oeX, "y": oeY}, {"x": points[len - 1].x, "y": points[len - 1].y}, true);
         }
