@@ -433,7 +433,7 @@ define([
             function viewLatestCommit(callback){
                 _commitCache.getNCommitsFrom(null,1,function(err,commits){
                     if(!err && commits && commits.length>0){
-                        viewerCommit(commits[0][_database.ID_NAME],callback)
+                        viewerCommit(commits[0][_project.ID_NAME],callback)
                     } else {
                         logger.error('Cannot get latest commit! ['+JSON.stringify(err)+']');
                         callback(err);
