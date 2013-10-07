@@ -50,8 +50,9 @@ define(['logManager'], function (logManager) {
             }
 
             //3 - calculate the connection path informations
-            i = idList.length;
-            while (i--) {
+            /*i = idList.length;
+            while (i--) {*/
+            for (i = 0; i < idList.length; i += 1) {
                 this._updateConnectionCoordinates(idList[i]);
             }
 

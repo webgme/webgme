@@ -301,6 +301,8 @@ define(['logManager',
             this.endCoordinates.x = p.x;
             this.endCoordinates.y = p.y;
 
+
+            pathDef = this._jumpOnCrossings(pathDef);
             pathDef = pathDef.join(" ");
 
             //check if the prev pathDef is the same as the new
@@ -881,7 +883,10 @@ define(['logManager',
             pathDefArrow.push("L" + p.x + "," + p.y);
         }
 
+        pathDef = this._jumpOnCrossings(pathDef);
         pathDef = pathDef.join(" ");
+
+        pathDefArrow = this._jumpOnCrossings(pathDefArrow);
         pathDefArrow = pathDefArrow.join(" ");
 
         this.skinParts.pathShadow.attr({ "path": pathDef});
@@ -1490,6 +1495,135 @@ define(['logManager',
         this.dstTextEdit = newTexts.dstTextEdit || this.dstTextEdit;
 
         this._renderTexts();
+    };
+
+
+    Connection.prototype._jumpOnCrossings = function (pathDefArray) {
+        var connectionIDs = this.diagramDesigner.connectionIds.slice(0).sort(),
+            selfIdx = connectionIDs.indexOf(this.id),
+            len,
+            PIX_DIFF = 3,
+            otherConn,
+            items = this.diagramDesigner.items,
+            intersections = {},
+            intersectionSegments = [],
+            xingWithOther,
+            resultPathDefArray = [],
+            pathDef = pathDefArray.join(" "),
+            i,
+            segment,
+            xingDesc,
+            segmentXings,
+            segmentLength,
+            segmentPath,
+            pixDiffPercentage,
+            pointBefore,
+            pointAfter,
+            atLength,
+            xingCurve,
+            resultIntersectionPathDefs = {},
+            segNum,
+            j,
+            xRadius;
+
+        /*return pathDefArray;*/
+
+        connectionIDs.splice(selfIdx);
+        len = connectionIDs.length;
+
+        while(len--) {
+            otherConn = items[connectionIDs[len]];
+            xingWithOther = Raphael.pathIntersection(pathDef, otherConn.pathDef);
+            if (xingWithOther && xingWithOther.length > 0) {
+
+                //this.logger.warning('cross: ' + this.id + ' --> ' + otherConn.id);
+
+                for (i = 0; i < xingWithOther.length; i += 1) {
+                    xingDesc = xingWithOther[i];
+                    intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
+                    intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
+                                                    't': xingDesc.t1,
+                                                  'bez': xingDesc.bez1,
+                                                  'otherWidth': otherConn.designerAttributes.width });
+                    if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
+                        intersectionSegments.push(xingDesc.segment1);
+                    }
+                }
+            }
+        }
+
+        //we got all the intersections of this path with everybody else
+        intersectionSegments.sort(function(a,b){return a-b});
+        for (len = 0; len < intersectionSegments.length; len += 1) {
+            segNum = intersectionSegments[len];
+            segmentXings = intersections[segNum];
+            //this.logger.warning('Segment ' + segNum + '\'s crossings: ');
+            for (i = 0; i < segmentXings.length; i += 1) {
+                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}};
+
+                xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + PIX_DIFF;
+                //this.logger.warning('xRadius: ' + xRadius);
+
+                //this.logger.warning(JSON.stringify(segmentXings[i]));
+                segmentPath = "M" + segmentXings[i].bez[0] + "," + segmentXings[i].bez[1] + " C" + segmentXings[i].bez[2] + "," + segmentXings[i].bez[3] + " " + segmentXings[i].bez[4] + "," + segmentXings[i].bez[5] + " " + segmentXings[i].bez[6] + "," + segmentXings[i].bez[7];
+                segmentLength = Raphael.getTotalLength(segmentPath);
+                //this.logger.warning('segmentLength: ' + segmentLength);
+                pixDiffPercentage = xRadius / segmentLength;
+                //this.logger.warning('pixDiffPercentage: ' + pixDiffPercentage);
+
+                //fix T value because it seems to be incorrect
+                var xLength = Math.sqrt((segmentXings[i].xy[0] - segmentXings[i].bez[0]) * (segmentXings[i].xy[0] - segmentXings[i].bez[0]) + (segmentXings[i].xy[1] - segmentXings[i].bez[1]) * (segmentXings[i].xy[1] - segmentXings[i].bez[1]));
+                segmentXings[i].t =  xLength / segmentLength;
+                //this.logger.warning('my T: ' + segmentXings[i].t );
+
+                atLength = segmentXings[i].t - pixDiffPercentage;
+                if (atLength < 0) {
+                    atLength = 0;
+                }
+                //this.logger.warning('atLength before: ' + atLength);
+                pointBefore = Raphael.getPointAtLength(segmentPath, atLength * segmentLength);
+                //this.logger.warning('pointBefore: ' + JSON.stringify(pointBefore));
+
+                /*var dx = (segmentXings[i].bez[6] - segmentXings[i].bez[0]) / segmentLength;
+                var dy = (segmentXings[i].bez[7] - segmentXings[i].bez[1]) / segmentLength;*/
+
+                atLength = segmentXings[i].t + pixDiffPercentage;
+                if (atLength > 1) {
+                    atLength = 1;
+                }
+                //this.logger.warning('atLength after: ' + atLength);
+                pointAfter = Raphael.getPointAtLength(segmentPath, atLength * segmentLength);
+                //this.logger.warning('pointAfter: ' + JSON.stringify(pointAfter));
+
+                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0,1 " + pointAfter.x + "," + pointAfter.y;
+
+                resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
+                resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
+            }
+        }
+
+        //the first etry is the M x,y, it goes unchanged
+        resultPathDefArray.push(pathDefArray[0]);
+
+        len = pathDefArray.length;
+
+        for (i = 1; i < len; i += 1) {
+            //i is the segment number
+            segNum = i.toString();
+            //if resultIntersectionPathDefs[i] exist, use those
+            //otherwise pick the corresponding value from the original array
+            if (resultIntersectionPathDefs.hasOwnProperty(segNum)) {
+                resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+
+                for (j = 0; j < resultIntersectionPathDefs[segNum].t.length; j += 1) {
+                    resultPathDefArray.push(resultIntersectionPathDefs[segNum].paths[resultIntersectionPathDefs[segNum].t[j]]);
+                }
+            }
+
+            resultPathDefArray.push(pathDefArray[i]);
+        }
+
+        return resultPathDefArray;
     };
 
 
