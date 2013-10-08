@@ -59,10 +59,6 @@ define(['logManager',
         this._readOnly = false;
         this._connectionEditSegments = [];
 
-        this.jumpOnCrossingsEnabled = true;
-        
-        /*MODELEDITORCONNECTION CONSTANTS*/
-
         //read props coming from the DataBase or DiagramDesigner
         this._initializeConnectionProps(objDescriptor);
     };
@@ -1587,7 +1583,7 @@ define(['logManager',
             j,
             xRadius;
 
-        if (this.jumpOnCrossingsEnabled !== true) {
+        if (this.diagramDesigner._connectionJumpXing !== true) {
             return pathDefArray;
         }
 
