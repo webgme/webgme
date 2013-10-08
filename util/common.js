@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "core/guidcore", "util/sax", "fs", "bin/getconfig", "storage/socketioclient" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, GuidCore, SAX, FS, CONFIG, Client) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "core/guidcore", "util/sax", "fs", "bin/getconfig", "storage/socketioclient", "core/newcore" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, GuidCore, SAX, FS, CONFIG, Client, NewCore) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -88,11 +88,14 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 	var project, core;
 
-	function openProject () {
+	function openProject (overRideName) {
 		ASSERT(database);
 
 		var params = getParameters("proj") || [];
 		var name = params[0] || "test";
+        if(typeof overRideName === 'string'){
+            name = overRideName;
+        }
 
 		console.log("Opening project " + name);
 
@@ -112,7 +115,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 		project = p;
 
-		core = new GuidCore(new Core(project, {
+		/*core = new GuidCore(new Core(project, {
 			autopersist: true
 		}));
 
@@ -120,7 +123,8 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 		core.loadByPath = TASYNC.wrap(core.loadByPath);
 		core.loadRoot = TASYNC.wrap(core.loadRoot);
 		core.loadChildren = TASYNC.wrap(core.loadChildren);
-		core.loadPointer = TASYNC.wrap(core.loadPointer);
+		core.loadPointer = TASYNC.wrap(core.loadPointer);*/
+        core = NewCore.syncCore(project,{autopersist:true});
 	}
 
 	function closeProject () {

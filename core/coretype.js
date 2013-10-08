@@ -109,6 +109,21 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return TASYNC.lift(nodes);
 		}
 
+		// ----- creation
+
+		core.createNode = function(parent, base, relid) {
+			ASSERT(isValidNode(parent));
+			ASSERT(!base || isValidNode(base));
+			ASSERT(typeof relid === "undefined" || typeof relid === "string");
+
+			node = oldcore.createNode(parent, relid);
+			if (!!base) {
+				oldcore.setPointer(node, "base", base);
+			}
+
+			return node;
+		};
+
 		// ----- properties
 
 		core.getAttributeNames = function(node) {
@@ -127,6 +142,77 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			} while (node);
 
 			return Object.keys(merged);
+		};
+
+		core.getRegistryNames = function(node) {
+			ASSERT(isValidNode(node));
+
+			var merged = {};
+			do {
+				var names = oldcore.getRegistryNames(node);
+				for ( var i = 0; i < names.length; ++i) {
+					if (!(names[i] in merged)) {
+						merged[names[i]] = true;
+					}
+				}
+
+				node = node.base;
+			} while (node);
+
+			return Object.keys(merged);
+		};
+
+		core.getAttribute = function(node, name) {
+			ASSERT(isValidNode(node));
+
+			do {
+				value = oldcore.getAttribute(node, name);
+				node = node.base;
+			} while (typeof value === "undefined" && node !== null);
+
+			return value;
+		};
+
+		core.getRegistry = function(node, name) {
+			ASSERT(isValidNode(node));
+
+			do {
+				value = oldcore.getRegistry(node, name);
+				node = node.base;
+			} while (typeof value === "undefined" && node !== null);
+
+			return value;
+		};
+
+		// ----- pointers
+
+		core.getPointerNames = function(node) {
+			ASSERT(isValidNode(node));
+
+			var merged = {};
+			do {
+				var names = oldcore.getPointerNames(node);
+				for ( var i = 0; i < names.length; ++i) {
+					if (!(names[i] in merged)) {
+						merged[names[i]] = true;
+					}
+				}
+
+				node = node.base;
+			} while (node);
+
+			return Object.keys(merged);
+		};
+
+		core.getPointer = function(node, name) {
+			ASSERT(isValidNode(node));
+
+			do {
+				value = oldcore.getPointer(node, name);
+				node = node.base;
+			} while (typeof value === "undefined" && node !== null);
+
+			return value;
 		};
 
 		return core;

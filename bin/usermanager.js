@@ -24,7 +24,8 @@ if (typeof define !== "function") {
         });
         var _startHash = null,
             _branch = null,
-            _projectName = null;
+            _projectName = null,
+            _user = null;
 
         function main () {
             //var args = COMMON.getParameters(null);
@@ -38,51 +39,48 @@ if (typeof define !== "function") {
                 console.log("  -mongo [database [host [port]]]\topens a mongo database");
                 console.log("  -proj <project>\t\t\tselects the given project");
                 console.log("  -branch <branch>\t\t\tthe branch to work with");
-                console.log("  -adduser <username> <publickey> <write = true/false> [password email]\t\t\tthe user to add");
-                console.log("  -addproject <username> <projectname> <mode = r|rw|rwd>\t\t\t adds a project to the user data");
-                console.log("  -removeproject <username> <projectname>\t\t\t removes a project from the user data");
-                console.log("  -removeuser <username>\t\t\t removes a user data");
-                console.log("  -info\t\t\t prints out the users and their data from the project");
+                console.log("  -user <username>\t\t\tthe user which we would like to manage");
+                console.log("  -adduser <write = true/false> [password email]\t\t\tthe user to add");
+                console.log("  -addproject <projectname> <mode = r|rw|rwd>\t\t\t adds a project to the user data");
+                console.log("  -removeproject <projectname>\t\t\t removes a project from the user data");
+                console.log("  -removeuser \t\t\t removes a user data");
+                console.log("  -info\t\t\t prints out the data of the user, or if no user is given then the data of all users");
                 console.log("  -help\t\t\t\t\tprints out this help message");
                 console.log("");
                 return;
             }
 
 
-            _branch = COMMON.getParameters("branch");
-            if (_branch) {
-                _branch = _branch[0] || "master";
-            } else {
-                _branch = "master";
-            }
-            _projectName = COMMON.getParameters("proj");
-            if(_projectName){
-                _projectName = _projectName[0];
-            } else {
-                _projectName = "users";
-            }
+            _branch = COMMON.getParameters("branch") || [];
+            _branch = _branch[0] || "master";
+
+            _projectName = COMMON.getParameters("proj") || [];
+            _projectName = _projectName[0] || "users";
+
+            _user = COMMON.getParameters("user") || [];
+            _user = _user[0];
 
             var done = TASYNC.call(COMMON.openDatabase);
-            done = TASYNC.call(COMMON.openProject, done);
+            done = TASYNC.call(COMMON.openProject,_projectName,done);
             var core = TASYNC.call(COMMON.getCore, done);
             _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
 
 
             if(COMMON.getParameters("info")){
                 //info command
-                done = TASYNC.call(infoPrint,core,_startHash);
+                done = TASYNC.call(infoPrint,core,_startHash,_user);
             } else if(COMMON.getParameters("addproject")){
                 var projpars = COMMON.getParameters("addproject");
-                done = TASYNC.call(addProject,core,_startHash,projpars[0],projpars[1],projpars[2]);
+                done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1]);
             } else if(COMMON.getParameters("removeproject")){
                 var projpars = COMMON.getParameters("removeproject");
-                done = TASYNC.call(removeProject,core,_startHash,projpars[0],projpars[1]);
+                done = TASYNC.call(removeProject,core,_startHash,_user,projpars[0]);
             } else if(COMMON.getParameters("adduser")){
                 var projpars = COMMON.getParameters("adduser");
-                done = TASYNC.call(addUser,core,_startHash,projpars[0],projpars[1],projpars[2],projpars[3] || null,projpars[4] || null);
+                done = TASYNC.call(addUser,core,_startHash,_user,projpars[0] || "false",projpars[1] || null,projpars[2] || null);
             } else if(COMMON.getParameters("removeuser")){
                 var projpars = COMMON.getParameters("removeuser");
-                done = TASYNC.call(removeUser,core,_startHash,projpars[0],projpars[1]);
+                done = TASYNC.call(removeUser,core,_startHash,_user);
             }
 
             done = TASYNC.call(COMMON.closeProject, done);
@@ -100,17 +98,14 @@ if (typeof define !== "function") {
             },done);
             return done;
         }
-
         function getCommitHashOfBranch (branch){
             var project = COMMON.getProject();
             return project.getBranchHash(branch,null);
         }
-
         function makeCommit (newroothash, parentcommithash, msg) {
             var project = COMMON.getProject();
             return project.makeCommit([parentcommithash], newroothash, msg);
         }
-
         function writeBranch (oldhash,newhash) {
             var project = COMMON.getProject();
             var done = project.setBranchHash(_branch, oldhash, newhash);
@@ -118,38 +113,56 @@ if (typeof define !== "function") {
                 console.log("Commit " + newhash + " written to branch " + _branch);
             }, done);
         }
-
         function persist (core,root) {
             console.log("Waiting for objects to be saved ...");
             var done = core.persist(root);
             var hash = core.getHash(root);
             return TASYNC.join(hash, done);
         }
-
         function saveModifications(newroothash,msg){
             var oldcommithash = getCommitHashOfBranch(_branch);
             var newcommit = TASYNC.call(makeCommit,newroothash,oldcommithash,msg);
             return TASYNC.call(writeBranch,oldcommithash,newcommit);
 
         }
+        function padString(str,length){
+            while(str.length<length){
+                str = " "+str;
+            }
+            return str;
+        }
 
         //commands
-        function infoPrint(core,roothash){
+        function infoPrint(core,roothash,userName){
             function printUser(userObject){
                 var outstring = "";
-                outstring+="username: "+core.getAttribute(userObject,'name')+"  \t| ";
+                outstring+="userName: " + padString(core.getAttribute(userObject,'name'),20) + " | ";
+                outstring+="canCreate: " + (core.getRegistry(userObject,'create') === true ? " true" : "false") + " | ";
+                outstring+="projects: ";
                 var userProjects = core.getRegistry(userObject,'projects');
-                var hasproject=false;
                 for(var i in userProjects){
-                    if(hasproject === false){
-                        hasproject = true;
-                        outstring+= "projects:";
+                    var mode = "";
+                    if(userProjects[i].read){
+                        mode+="r";
+                    } else {
+                        mode+="_";
                     }
-                    outstring+= " "+i;
+                    if(userProjects[i].write){
+                        mode+="w";
+                    } else {
+                        mode+="_";
+                    }
+                    if(userProjects[i].delete){
+                        mode+="d";
+                    } else {
+                        mode+="_";
+                    }
+                    outstring+= padString(i+"("+mode+")",20) + " ; ";
                 }
-
-                outstring += " \t| can create: "+ (core.getRegistry(userObject,'create') === true ? "true" : "false");
-
+                var end = outstring.lastIndexOf(';');
+                if(end !== -1){
+                    outstring = outstring.substring(0,end-1);
+                }
                 return outstring;
             }
 
@@ -157,7 +170,13 @@ if (typeof define !== "function") {
                 var children = core.loadChildren(parentObject);
                 return TASYNC.call(function(objectArray){
                     for(var i=0;i<objectArray.length;i++){
-                        console.log(printUser(objectArray[i]));
+                        if(userName){
+                            if(core.getAttribute(objectArray[i],'name') === userName){
+                                console.log(printUser(objectArray[i]));
+                            }
+                        } else {
+                            console.log(printUser(objectArray[i]));
+                        }
                     }
                     return;
                 },children);
@@ -261,7 +280,7 @@ if (typeof define !== "function") {
 
             return done;
         }
-        function addUser(core,roothash,username,puk,cancreate,password,email){
+        function addUser(core,roothash,username,cancreate,password,email){
             function iterateChildren(parentObject){
                 var children = core.loadChildren(parentObject);
                 return TASYNC.call(function(objectArray){
@@ -278,8 +297,6 @@ if (typeof define !== "function") {
                         core.setAttribute(child,'name',username);
                         core.setRegistry(child,'create',cancreate === 'true');
                         core.setRegistry(child,'projects',{});
-                        var key = require('fs').readFileSync(puk,'utf8');
-                        core.setRegistry(child,'puk',key);
                         if(password){
                             core.setRegistry(child,'pass',password);
                         }
@@ -290,8 +307,6 @@ if (typeof define !== "function") {
                         return TASYNC.call(saveModifications,newroothash,"a new user"+username+" has been added to the database");
                     } else {
                         core.setRegistry(child,'create',cancreate === true);
-                        var key = require('fs').readFileSync(puk,'utf8');
-                        core.setRegistry(child,'puk',key);
                         if(password){
                             core.setRegistry(child,'pass',password);
                         }

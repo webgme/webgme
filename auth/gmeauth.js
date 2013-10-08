@@ -183,11 +183,13 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                     if(gmail){
                         req.session.udmId = _core.getAttribute(node,'name');
                         req.session.authenticated = true;
+                        req.session.userType = 'GME';
                         next(null);
                     } else {
                         if(password = _core.getRegistry(node,'pass')){
                             req.session.udmId = _core.getAttribute(node,'name');
                             req.session.authenticated = true;
+                            req.session.userType = 'GME';
                             next(null);
                         } else {
                             res.redirect('/');
