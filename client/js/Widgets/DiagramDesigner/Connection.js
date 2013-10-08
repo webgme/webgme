@@ -909,6 +909,7 @@ define(['logManager',
         this.skinParts.pathShadow.attr({ "path": pathDef});
 
         //MARKER ENDING SHADOWS if needed
+        //MARKER ENDING SHADOWS if needed
         if (this.skinParts.pathShadowArrowStart) {
             // PATHSHADOW with END-MARKER
             //1st segment
@@ -924,7 +925,12 @@ define(['logManager',
             this.skinParts.pathShadowArrowStart.attr({ "path": pathDefArrow});
         }
 
-  
+        if (this.skinParts.pathShadowArrowEnd) {
+            // PATHSHADOW with END-MARKER
+            //last segment
+            len = pointsEndArrow.length;
+            pathDefArrow = [];
+
             dx = this.designerAttributes.shadowEndArrowMarkerSize * Math.cos(this._pathEndAngle);
             dy = this.designerAttributes.shadowEndArrowMarkerSize * Math.sin(this._pathEndAngle);
 
