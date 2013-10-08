@@ -1,6 +1,6 @@
 "use strict";
 
-define(['logManager'], function (logManager) {
+define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
 
     var ConnectionRouteManager3,
         DESIGNERITEM_SUBCOMPONENT_SEPARATOR = "_x_";
@@ -15,6 +15,8 @@ define(['logManager'], function (logManager) {
             throw ("ConnectionRouteManager3 can not be created");
         }
 
+        this.autorouter = new AutoRouter();
+
         this.logger.debug("ConnectionRouteManager3 ctor finished");
     };
 
@@ -22,9 +24,22 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
+        var i;
 
         this.logger.debug('Redraw connection request: ' + idList.length);
+
+        //no matter what, we want to reroute all the connections
+        //not just the ones that explicitly needs rerouting
+        idList = this.diagramDesigner.connectionIds.slice(0);
+
+        //Define container that will map obj+subID -> box
+        this._autorouterBoxes = {};
+        this._autorouterPath = {};
+
+        i = idList.length;
+
+        //0 - clear out autorouter
+        this.autorouter.clear();
 
         //1 - update all the connection endpoint connectable area information
         this._updateEndpointInfo(idList);
@@ -33,6 +48,24 @@ define(['logManager'], function (logManager) {
         //find the closest areas for each connection
         while (i--) {
             this._updateConnectionCoordinates(idList[i]);
+        }
+
+
+        //3 autoroute
+        this.autorouter.autoroute();
+
+        //4 - Get the path points and redraw
+        i = idList.length;
+        var pathPoints,
+            realPathPoints;
+        while(i--){
+            pathPoints = this.autorouter.getPathPoints(this._autorouterPath[idList[i]]);
+            realPathPoints = [];
+            for(var j = 0; j < pathPoints.length; j++){
+                realPathPoints.push({'x': pathPoints[j][0], 'y': pathPoints[j][1] });
+            }
+
+            this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
         }
 
         //need to return the IDs of the connections that was really
@@ -64,12 +97,14 @@ define(['logManager'], function (logManager) {
         }
     };
 
+                                                                               //BOX   PORT
     ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
             j,
-            designerItem;
+            designerItem,
+            boxdefinition = {};
 
         if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
 
@@ -80,12 +115,27 @@ define(['logManager'], function (logManager) {
 
                 designerItem = canvas.items[objId];
                 res = designerItem.getConnectionAreas(subCompId) || [];
+//Autorouter here
+                var bBox = canvas.items[objId].getBoundingBox();
+                boxdefinition = {
+                                //BOX
+                                    "x1": bBox.x,
+                                    "y1": bBox.y,
+                                    "x2": bBox.x2,
+                                    "y2": bBox.y2,
+
+                                //PORTS
+                                    "ConnectionAreas": []
+                                        };
 
                 j = res.length;
                 while (j--) {
-                    this.endpointConnectionAreaInfo[longid].push({"x": res[j].x1 + (res[j].x2 - res[j].x1) / 2,
-                        "y": res[j].y1 + (res[j].y2 - res[j].y1) / 2});
+                    //Building up the ConnectionAreas object
+                    boxdefinition.ConnectionAreas.push([ [ res[j].x1, res[j].y1 ], [ res[j].x2, res[j].y2 ] ]);
                 }
+
+                //Box def built
+                this._autorouterBoxes[longid] = this.autorouter.addBox(boxdefinition);
 
             }
         }
@@ -100,56 +150,47 @@ define(['logManager'], function (logManager) {
             sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
             tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
             segmentPoints = canvas.items[connectionId].segmentPoints,
-            sourceConnectionPoints = this.endpointConnectionAreaInfo[sId] || [],
-            targetConnectionPoints = this.endpointConnectionAreaInfo[tId] || [],
+            sourceConnectionPoints = [], //this._autorouterBoxes[sId].ports, //this.endpointConnectionAreaInfo[sId] || [],
+            targetConnectionPoints = [], //this._autorouterBoxes[tId].ports, //this.endpointConnectionAreaInfo[tId] || [],
             sourceCoordinates = null,
             targetCoordinates = null,
             closestConnPoints,
             connectionPathPoints = [],
             len,
-            i;
+            i,
+            sIndex,
+            tIndex;
+
+            for(i = 0; i < this._autorouterBoxes[sId].ports.length; i++){
+                sourceConnectionPoints.push(this._autorouterBoxes[sId].ports[i].getRect().getCenter());
+            }
+            for(i = 0; i < this._autorouterBoxes[tId].ports.length; i++){
+                targetConnectionPoints.push(this._autorouterBoxes[tId].ports[i].getRect().getCenter());
+            }
+
+
+
 
         if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
 
             if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                 //connection's source and destination is the same object/port
-                sourceCoordinates = sourceConnectionPoints[0];
-                targetCoordinates = targetConnectionPoints.length > 1 ? targetConnectionPoints[1] : targetConnectionPoints[0];
+                sIndex = 0;
+                tIndex = targetConnectionPoints.length > 1 ? 1 : 0;
+
             } else {
                 closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
-                sourceCoordinates = sourceConnectionPoints[closestConnPoints[0]];
-                targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
+                sIndex = closestConnPoints[0];
+                tIndex = closestConnPoints[1];
             }
 
-            //source point
-            connectionPathPoints.push(sourceCoordinates);
-
-            //segment points
-            if (segmentPoints && segmentPoints.length > 0) {
-                len = segmentPoints.length;
-                for (i = 0; i < len; i += 1) {
-                    connectionPathPoints.push({ "x": segmentPoints[i][0],
-                        "y": segmentPoints[i][1]});
-                }
-            } else {
-                if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
-                    //self connection, insert fake points
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
-                        "y": sourceCoordinates.y - 100});
-
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 200,
-                        "y": sourceCoordinates.y});
-
-                    connectionPathPoints.push({"x": sourceCoordinates.x + 100,
-                        "y": sourceCoordinates.y + 100});
-                }
-            }
-
-            //end point
-            connectionPathPoints.push(targetCoordinates);
         }
 
-        canvas.items[connectionId].setConnectionRenderData(connectionPathPoints);
+
+        //Create the path
+        this._autorouterPath[connectionId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId].ports[sIndex],
+                                                                       "dst": this._autorouterBoxes[tId].ports[tIndex] });
+
     };
 
     //figure out the shortest side to choose between the two
