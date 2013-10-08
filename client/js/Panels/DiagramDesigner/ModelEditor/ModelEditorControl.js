@@ -67,6 +67,8 @@ define(['logManager',
         this._ComponentID2GmeID = {};
         this.eventQueue = [];
 
+        this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
+
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
