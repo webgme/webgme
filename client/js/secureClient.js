@@ -702,7 +702,7 @@ define([
                     base = nodesSoFar[id].node;
                     baseLoaded();
                 } else {
-                    core.loadByPath(_nodes['root'],id,function(err,node){
+                    core.loadByPath(_nodes['root'].node,id,function(err,node){
                         if(!err && node){
                             var path = core.getPath(node);
                             if(!nodesSoFar[path]){
@@ -765,6 +765,11 @@ define([
                             userEvents(i,modifiedPaths);
                         }
                         _loadError = 0;
+                    }
+                    if(_loadNodes['root']){
+                        //we left the stuff in the loading rack, probably because there were no _nodes beforehand
+                        _nodes = _loadNodes;
+                        _loadNodes = {};
                     }
                     callback(null);
                 };
@@ -1555,29 +1560,37 @@ define([
             }
             function updateTerritory(guid, patterns) {
                 if(_project){
-                    //this has to be optimized
-                    var missing = 0;
-                    var error = null;
-                    var allDone = function(){
-                        _users[guid].PATTERNS = patterns;
-                        if(!error){
-                            userEvents(guid,[]);
+                    if(_nodes['root']){
+                        //this has to be optimized
+                        var missing = 0;
+                        var error = null;
+                        var allDone = function(){
+                            _users[guid].PATTERNS = patterns;
+                            if(!error){
+                                userEvents(guid,[]);
+                            }
+                        };
+                        for(var i in patterns){
+                            missing++;
                         }
-                    };
-                    for(var i in patterns){
-                        missing++;
-                    }
-                    if(missing>0){
-                        for(i in patterns){
-                            loadPattern(_core,i,patterns[i],_nodes,function(err){
-                                error = error || err;
-                                if(--missing === 0){
-                                    allDone();
-                                }
-                            });
+                        if(missing>0){
+                            for(i in patterns){
+                                loadPattern(_core,i,patterns[i],_nodes,function(err){
+                                    error = error || err;
+                                    if(--missing === 0){
+                                        allDone();
+                                    }
+                                });
+                            }
+                        } else {
+                            allDone();
                         }
                     } else {
-                        allDone();
+                        //something funny is going on
+                        if(_loadNodes['root']){
+                            //probably we are in the loading process, so we should redo this update when the loading finishes
+                            setTimeout(updateTerritory,100,guid,patterns);
+                        }
                     }
                 } else {
                     //we should update the patterns, but that is all
