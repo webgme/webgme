@@ -14,8 +14,7 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target",
-        DEFAULT_LINE_STYLE = {};
+        CONNECTION_TARGET_NAME = "target";
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -180,7 +179,7 @@ define(['logManager',
 
         var registry = {};
         registry[nodePropertyNames.Registry.lineStyle] = {};
-        _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
+        _.extend(registry[nodePropertyNames.Registry.lineStyle], this._DEFAULT_LINE_STYLE);
 
         var p = {   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,
