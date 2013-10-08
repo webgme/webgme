@@ -30,7 +30,8 @@ define(['logManager',
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
         SHADOW_MARKER_SIZE_INCREMENT = 3,
         SHADOW_MARKER_SIZE_INCREMENT_X = 1,
-        SHADOW_MARKER_BLOCK_FIX_OFFSET = 2;
+        SHADOW_MARKER_BLOCK_FIX_OFFSET = 2,
+        JUMP_XING_RADIUS = 3;
 
     Connection = function (objId) {
         this.id = objId;
@@ -58,7 +59,7 @@ define(['logManager',
         this._readOnly = false;
         this._connectionEditSegments = [];
 
-        this.jumpOnCrossingsEnabled = false;
+        this.jumpOnCrossingsEnabled = true;
         
         /*MODELEDITORCONNECTION CONSTANTS*/
 
@@ -95,7 +96,7 @@ define(['logManager',
 
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
-        this.name = objDescriptor.name || this.id;
+        this.name = objDescriptor.name;/* || this.id;*/
         this.nameEdit = objDescriptor.nameEdit || false;
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
@@ -905,6 +906,7 @@ define(['logManager',
             pathDef.push("L" + p.x + "," + p.y);
         }
 
+        pathDef = this._jumpOnCrossings(pathDef);
         pathDef = pathDef.join(" ");
         this.skinParts.pathShadow.attr({ "path": pathDef});
 
@@ -1562,7 +1564,6 @@ define(['logManager',
         var connectionIDs = this.diagramDesigner.connectionIds.slice(0).sort(),
             selfIdx = connectionIDs.indexOf(this.id),
             len,
-            PIX_DIFF = 3,
             otherConn,
             items = this.diagramDesigner.items,
             intersections = {},
@@ -1628,7 +1629,7 @@ define(['logManager',
             for (i = 0; i < segmentXings.length; i += 1) {
                 resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}};
 
-                xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + PIX_DIFF;
+                xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
                 //this.logger.warning('xRadius: ' + xRadius);
 
                 //this.logger.warning(JSON.stringify(segmentXings[i]));
