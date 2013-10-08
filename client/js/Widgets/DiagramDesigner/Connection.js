@@ -154,8 +154,10 @@ define(['logManager',
 
         if (isEnd) {
             this.designerAttributes.endArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
+            this.designerAttributes.shadowEndArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth * raphaelMarkerW;
         } else {
             this.designerAttributes.startArrowMarkerSize = this.designerAttributes.width * raphaelMarkerW;
+            this.designerAttributes.shadowStartArrowMarkerSize = this.designerAttributes.shadowEndArrowWidth * raphaelMarkerW;
         }
 
         return refX * (size - refSize);
@@ -628,16 +630,22 @@ define(['logManager',
         this._createPathShadow(this._pathPoints);
 
         this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
-        if (this.skinParts.pathShadowEndings) {
-            this.skinParts.pathShadowEndings.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+        if (this.skinParts.pathShadowArrowStart) {
+            this.skinParts.pathShadowArrowStart.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
+        }
+        if (this.skinParts.pathShadowArrowEnd) {
+            this.skinParts.pathShadowArrowEnd.attr({"opacity": this.designerAttributes.shadowOpacityWhenSelected});
         }
     };
 
     Connection.prototype._unHighlightPath = function () {
         if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
             this.skinParts.pathShadow.attr({"opacity": this.designerAttributes.shadowOpacity});
-            if (this.skinParts.pathShadowEndings) {
-                this.skinParts.pathShadowEndings.attr({"opacity": this.designerAttributes.shadowOpacity});
+            if (this.skinParts.pathShadowArrowStart) {
+                this.skinParts.pathShadowArrowStart.attr({"opacity": this.designerAttributes.shadowOpacity});
+            }
+            if (this.skinParts.pathShadowArrowEnd) {
+                this.skinParts.pathShadowArrowEnd.attr({"opacity": this.designerAttributes.shadowOpacity});
             }
         } else {
             this._removePathShadow();
@@ -684,21 +692,8 @@ define(['logManager',
 
         /*CREATE SHADOW IF NEEDED*/
         if (this.skinParts.pathShadow === undefined || this.skinParts.pathShadow === null) {
-            this.skinParts.pathShadow = this.skinParts.pathShadow || this.paper.path("M0,0 L1,1");
+            this.skinParts.pathShadow = this.paper.path("M0,0 L1,1");
             this.skinParts.pathShadow.insertBefore(this.skinParts.path);
-
-            if (this.designerAttributes.arrowStart !== CONNECTION_NO_END ||
-                this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
-                this.skinParts.pathShadowEndings = this.skinParts.pathShadowEndings || this.paper.path("M0,0 L1,1");
-                this.skinParts.pathShadowEndings.insertBefore(this.skinParts.path);
-            } else {
-                if (this.skinParts.pathShadowEndings) {
-                    this.skinParts.pathShadowEndings.remove();
-                    this.skinParts.pathShadowEndings = undefined;
-                }
-            }
-
-            this._updatePathShadow(segPoints);
 
             $(this.skinParts.pathShadow.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX + this.id,
                 "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
@@ -707,17 +702,49 @@ define(['logManager',
                 "stroke-width": this.designerAttributes.shadowWidth,
                 "opacity": this.designerAttributes.shadowOpacity});
 
-            if (this.skinParts.pathShadowEndings) {
-                shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
-                shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+            if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
+                this.skinParts.pathShadowArrowStart = this.paper.path("M0,0 L1,1");
+                this.skinParts.pathShadowArrowStart.insertBefore(this.skinParts.path);
 
-                $(this.skinParts.pathShadowEndings.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                $(this.skinParts.pathShadowArrowStart.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
+                    "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
+            } else {
+                if (this.skinParts.pathShadowArrowStart) {
+                    this.skinParts.pathShadowArrowStart.remove();
+                    this.skinParts.pathShadowArrowStart = undefined;
+                }
+            }
+
+            if (this.designerAttributes.arrowEnd !== CONNECTION_NO_END) {
+                this.skinParts.pathShadowArrowEnd = this.paper.path("M0,0 L1,1");
+                this.skinParts.pathShadowArrowEnd.insertBefore(this.skinParts.path);
+
+                $(this.skinParts.pathShadowArrowEnd.node).attr({"id": DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX + this.id,
                     "class": DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS});
 
-                this.skinParts.pathShadowEndings.attr({"stroke": this.designerAttributes.shadowColor,
+            } else {
+                if (this.skinParts.pathShadowArrowEnd) {
+                    this.skinParts.pathShadowArrowEnd.remove();
+                    this.skinParts.pathShadowArrowEnd = undefined;
+                }
+            }
+
+            this._updatePathShadow(segPoints);
+
+            if (this.skinParts.pathShadowArrowStart) {
+                shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+
+                this.skinParts.pathShadowArrowStart.attr({"stroke": this.designerAttributes.shadowColor,
                     "stroke-width": this.designerAttributes.shadowEndArrowWidth,
                     "opacity": this.designerAttributes.shadowOpacity,
-                    "arrow-start": shadowArrowStart,
+                    "arrow-start": shadowArrowStart});
+            }
+
+            if (this.skinParts.pathShadowArrowEnd) {
+                shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
+                this.skinParts.pathShadowArrowEnd.attr({"stroke": this.designerAttributes.shadowColor,
+                    "stroke-width": this.designerAttributes.shadowEndArrowWidth,
+                    "opacity": this.designerAttributes.shadowOpacity,
                     "arrow-end": shadowArrowEnd});
             }
         }
@@ -856,7 +883,7 @@ define(['logManager',
             }
         }
 
-        //PATHSHADOW
+        //PATHSHADOW without marker endgins
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
             points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
         }
@@ -878,28 +905,35 @@ define(['logManager',
             pathDef.push("L" + p.x + "," + p.y);
         }
 
-        // PATHSHADOW with END-MARKER
-        i = len = pointsEndArrow.length;
-        p = pointsEndArrow[0];
-        pathDefArrow.push("M" + p.x + "," + p.y);
+        pathDef = pathDef.join(" ");
+        this.skinParts.pathShadow.attr({ "path": pathDef});
 
-        //fix the counter to start from the second point in the list
-        len--;
-        i--;
-        while (i--) {
-            p = pointsEndArrow[len - i];
-            pathDefArrow.push("L" + p.x + "," + p.y);
+        //MARKER ENDING SHADOWS if needed
+        if (this.skinParts.pathShadowArrowStart) {
+            // PATHSHADOW with END-MARKER
+            //1st segment
+            pathDefArrow = [];
+
+            dx = this.designerAttributes.shadowStartArrowMarkerSize * Math.cos(this._pathStartAngle);
+            dy = this.designerAttributes.shadowStartArrowMarkerSize * Math.sin(this._pathStartAngle);
+
+            p = pointsEndArrow[0];
+            pathDefArrow.push("M" + p.x + "," + p.y);
+            pathDefArrow.push("L" + (p.x + dx) + "," + (p.y + dy));
+            pathDefArrow = pathDefArrow.join(" ");
+            this.skinParts.pathShadowArrowStart.attr({ "path": pathDefArrow});
         }
 
-        //pathDef = this._jumpOnCrossings(pathDef);
-        pathDef = pathDef.join(" ");
+  
+            dx = this.designerAttributes.shadowEndArrowMarkerSize * Math.cos(this._pathEndAngle);
+            dy = this.designerAttributes.shadowEndArrowMarkerSize * Math.sin(this._pathEndAngle);
 
-        //pathDefArrow = this._jumpOnCrossings(pathDefArrow);
-        pathDefArrow = pathDefArrow.join(" ");
+            p = pointsEndArrow[len - 1];
 
-        this.skinParts.pathShadow.attr({ "path": pathDef});
-        if (this.skinParts.pathShadowEndings) {
-            this.skinParts.pathShadowEndings.attr({ "path": pathDefArrow});
+            pathDefArrow.push("M" + (p.x - dx) + "," + (p.y - dy));
+            pathDefArrow.push("L" + p.x + "," + p.y);
+            pathDefArrow = pathDefArrow.join(" ");
+            this.skinParts.pathShadowArrowEnd.attr({ "path": pathDefArrow});
         }
 
         this._endProfile('_updatePathShadow');
@@ -918,9 +952,14 @@ define(['logManager',
             this.skinParts.pathShadow = undefined;
         }
 
-        if (this.skinParts.pathShadowEndings) {
-            this.skinParts.pathShadowEndings.remove();
-            this.skinParts.pathShadowEndings = undefined;
+        if (this.skinParts.pathShadowArrowStart) {
+            this.skinParts.pathShadowArrowStart.remove();
+            this.skinParts.pathShadowArrowStart = undefined;
+        }
+
+        if (this.skinParts.pathShadowArrowEnd) {
+            this.skinParts.pathShadowArrowEnd.remove();
+            this.skinParts.pathShadowArrowEnd = undefined;
         }
     };
 
@@ -1190,12 +1229,17 @@ define(['logManager',
             this.skinParts.pathShadow.attr({ "stroke-width": this.designerAttributes.shadowWidth });
         }
 
-        if (this.skinParts.pathShadowEndings) {
+        if (this.skinParts.pathShadowArrowStart) {
             shadowArrowStart = this.designerAttributes.arrowStart.replace("inheritance", "block");
+
+            this.skinParts.pathShadowArrowStart.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
+                "arrow-start": shadowArrowStart});
+        }
+
+        if (this.skinParts.pathShadowArrowEnd) {
             shadowArrowEnd = this.designerAttributes.arrowEnd.replace("inheritance", "block");
 
-            this.skinParts.pathShadowEndings.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
-                "arrow-start": shadowArrowStart,
+            this.skinParts.pathShadowArrowEnd.attr({ "stroke-width": this.designerAttributes.shadowEndArrowWidth,
                 "arrow-end": shadowArrowEnd});
         }
     };

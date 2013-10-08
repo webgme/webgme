@@ -67,6 +67,8 @@ define(['logManager',
         this._ComponentID2GmeID = {};
         this.eventQueue = [];
 
+        this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
+
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
@@ -888,7 +890,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
 
                     _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
 
@@ -914,7 +916,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
 
                     existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
 
