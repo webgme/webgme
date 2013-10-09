@@ -890,7 +890,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
 
                     _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
 
@@ -916,7 +916,7 @@ define(['logManager',
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
-                    existingLineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle) || {};
+                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
 
                     existingLineStyle[CONSTANTS.LINE_STYLE.POINTS] = [];
 

@@ -24,24 +24,13 @@ define([ "util/assert", 'core/tasync'], function (ASSERT,TASYNC) {
 
     function RootCore(innerCore){
         var rootcore = {};
-        var roothash = null;
         for(var i in innerCore){
             rootcore[i] = innerCore[i];
         }
 
         //overloading functions so that they can be called without passing the root node and converting between the visible and valid root pathes
         // check
-        rootcore.loadRoot = function(hash){
-            roothash = hash;
-            return innerCore.loadRoot(hash);
-        };
         rootcore.loadByPath = function(node, path){
-            //TODO this is a partial hack, which is not really good :(
-            if(node === null || node === undefined){
-                //TODO we propose it is the root, but it is only valid in our case :(
-                node = innerCore.loadRoot(roothash);
-                return TASYNC.call(innerCore.loadByPath,node,toActualPath(path));
-            }
             return innerCore.loadByPath(node,toActualPath(path));
         };
         rootcore.getPath = function(node,base){

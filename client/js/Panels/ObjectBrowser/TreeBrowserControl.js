@@ -27,25 +27,31 @@ define(['logManager',
         logger = logManager.create("TreeBrowserControl");
 
         initialize = function () {
-            var loadingRootTreeNode;
+            var rootNode = client.getNode('root');
 
-            selfId = client.addUI(self);
+            if (rootNode) {
+                var loadingRootTreeNode;
 
-            //add "root" with its children to territory
-            //create a new loading node for it in the tree
-            loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
-                "name": "Initializing tree...",
-                "hasChildren" : false,
-                "class" :  NODE_PROGRESS_CLASS });
+                selfId = client.addUI(self);
 
-            //store the node's info in the local hashmap
-            nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
-                "children" : [],
-                "state" : stateLoading };
+                //add "root" with its children to territory
+                //create a new loading node for it in the tree
+                loadingRootTreeNode = treeBrowser.createNode(null, {   "id": rootNodeId,
+                    "name": "Initializing tree...",
+                    "hasChildren" : false,
+                    "class" :  NODE_PROGRESS_CLASS });
 
-            //add the root to the query
-            selfPatterns = { "root": { "children": 2} };
-            client.updateTerritory(selfId, selfPatterns);
+                //store the node's info in the local hashmap
+                nodes[rootNodeId] = {   "treeNode": loadingRootTreeNode,
+                    "children" : [],
+                    "state" : stateLoading };
+
+                //add the root to the query
+                selfPatterns = { "root": { "children": 2} };
+                client.updateTerritory(selfId, selfPatterns);
+            } else {
+                setTimeout(initialize, 500);
+            }
         };
 
         //called from the TreeBrowserWidget when a node is expanded by its expand icon
