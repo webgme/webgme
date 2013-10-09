@@ -1566,9 +1566,7 @@ define(['logManager',
             intersectionSegments = [],
             xingWithOther,
             resultPathDefArray = [],
-            pathDef = pathDefArray.join(" "),
             i,
-            segment,
             xingDesc,
             segmentXings,
             segmentLength,
@@ -1587,7 +1585,7 @@ define(['logManager',
             return pathDefArray;
         }
 
-        this._startProfile('_jumpOnCrossings');
+        //this._startProfile('_jumpOnCrossings');
 
         connectionIDs.splice(selfIdx);
         len = connectionIDs.length;
@@ -1595,7 +1593,7 @@ define(['logManager',
         this._startProfile('_jumpOnCrossings_#1');
         while(len--) {
             otherConn = items[connectionIDs[len]];
-            xingWithOther = Raphael.pathIntersection(pathDef, otherConn.pathDef);
+            xingWithOther = this._pathIntersect(otherConn._pathPoints);
             if (xingWithOther && xingWithOther.length > 0) {
 
                 //this.logger.warning('cross: ' + this.id + ' --> ' + otherConn.id);
@@ -1615,7 +1613,7 @@ define(['logManager',
         }
         this._endProfile('_jumpOnCrossings_#1');
 
-        this._startProfile('_jumpOnCrossings_#2');
+        //this._startProfile('_jumpOnCrossings_#2');
         //we got all the intersections of this path with everybody else
         intersectionSegments.sort(function(a,b){return a-b});
         for (len = 0; len < intersectionSegments.length; len += 1) {
@@ -1665,14 +1663,14 @@ define(['logManager',
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
             }
         }
-        this._endProfile('_jumpOnCrossings_#2');
+        //this._endProfile('_jumpOnCrossings_#2');
 
         //the first etry is the M x,y, it goes unchanged
         resultPathDefArray.push(pathDefArray[0]);
 
         len = pathDefArray.length;
 
-        this._startProfile('_jumpOnCrossings_#3');
+        //this._startProfile('_jumpOnCrossings_#3');
         for (i = 1; i < len; i += 1) {
             //i is the segment number
             segNum = i.toString();
@@ -1688,11 +1686,101 @@ define(['logManager',
 
             resultPathDefArray.push(pathDefArray[i]);
         }
-        this._endProfile('_jumpOnCrossings_#3');
+        //this._endProfile('_jumpOnCrossings_#3');
 
-        this._endProfile('_jumpOnCrossings');
+        //this._endProfile('_jumpOnCrossings');
 
         return resultPathDefArray;
+    };
+
+    //finds all intersection points of this connection with other connection's pathpoints
+    Connection.prototype._pathIntersect = function (oPathPoints) {
+        var myPathPoints = this._pathPoints,
+            p1len = myPathPoints.length,
+            p2len = oPathPoints.length,
+            s1,s2,
+            i,
+            j,
+            res = [],
+            intr,
+            s1Length,
+            s2Length,
+            tLength;
+
+        for (i = 0; i < p1len - 1; i += 1) {
+            s1 = {'x1': myPathPoints[i].x,
+                  'y1': myPathPoints[i].y,
+                  'x2': myPathPoints[i + 1].x,
+                  'y2': myPathPoints[i + 1].y};
+
+            s1Length = Math.sqrt((s1.x2 - s1.x1) * (s1.x2 - s1.x1) + (s1.y2 - s1.y1) * (s1.y2 - s1.y1));
+
+            for (j = 0; j < p2len - 1; j += 1) {
+                s2 = {'x1': oPathPoints[j].x,
+                    'y1': oPathPoints[j].y,
+                    'x2': oPathPoints[j + 1].x,
+                    'y2': oPathPoints[j + 1].y};
+
+                s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
+
+                intr = this._intersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
+                if (intr) {
+                    intr.segment1 = i + 1;
+                    intr.segment2 = j + 1;
+                    intr.bez1 = [s1.x1, s1.y1, s1.x1, s1.y1, s1.x2, s1.y2, s1.x2, s1.y2];
+                    intr.bez2 = [s2.x1, s2.y1, s2.x1, s2.y1, s2.x2, s2.y2, s2.x2, s2.y2];
+
+                    tLength = Math.sqrt((intr.x - s1.x1) * (intr.x - s1.x1) + (intr.y - s1.y1) * (intr.y - s1.y1));
+                    intr.t1 = tLength / s1Length;
+
+                    tLength = Math.sqrt((intr.x - s2.x1) * (intr.x - s2.x1) + (intr.y - s2.y1) * (intr.y - s2.y1));
+                    intr.t2 = tLength / s2Length;
+
+                    res.push(intr);
+                }
+            }
+        }
+
+        return res;
+    };
+
+    //finds an intersection point of two segments A:(x1,y1 - x2,y2) and B:(x3,y3 - x4,y4)
+    Connection.prototype._intersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        var mmax = Math.max,
+            mmin = Math.min;
+
+        if (
+            mmax(x1, x2) < mmin(x3, x4) ||
+                mmin(x1, x2) > mmax(x3, x4) ||
+                mmax(y1, y2) < mmin(y3, y4) ||
+                mmin(y1, y2) > mmax(y3, y4)
+            ) {
+            return;
+        }
+        var nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4),
+            ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4),
+            denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+        if (!denominator) {
+            return;
+        }
+        var px = nx / denominator,
+            py = ny / denominator,
+            px2 = +px.toFixed(2),
+            py2 = +py.toFixed(2);
+        if (
+            px2 < +mmin(x1, x2).toFixed(2) ||
+                px2 > +mmax(x1, x2).toFixed(2) ||
+                px2 < +mmin(x3, x4).toFixed(2) ||
+                px2 > +mmax(x3, x4).toFixed(2) ||
+                py2 < +mmin(y1, y2).toFixed(2) ||
+                py2 > +mmax(y1, y2).toFixed(2) ||
+                py2 < +mmin(y3, y4).toFixed(2) ||
+                py2 > +mmax(y3, y4).toFixed(2)
+            ) {
+            return;
+        }
+        return {x: px, y: py};
     };
 
     Connection.prototype._startProfile = function (profID) {
