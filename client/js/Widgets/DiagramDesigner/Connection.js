@@ -239,8 +239,6 @@ define(['logManager',
             self = this,
             fixXY;
 
-        this._startProfile('setConnectionRenderData');
-
         //for EVEN width of the path, get the lower integer of the coordinate
         //for ODD width of the path, get the lower integer + 0.5
         fixXY = function (point) {
@@ -358,8 +356,6 @@ define(['logManager',
             this._hideConnectionAreaMarker();
             this._hideTexts();
         }
-
-        this._endProfile('setConnectionRenderData');
     };
 
     Connection.prototype.getBoundingBox = function () {
@@ -764,8 +760,6 @@ define(['logManager',
             oeX,
             oeY;
 
-        this._startProfile('_updatePathShadow');
-
         eFix = function (e) {
             return Math.abs(e) < 0.001 ? 0 : e;
         };
@@ -939,8 +933,6 @@ define(['logManager',
             pathDefArrow = pathDefArrow.join(" ");
             this.skinParts.pathShadowArrowEnd.attr({ "path": pathDefArrow});
         }
-
-        this._endProfile('_updatePathShadow');
     };
 
     Connection.prototype._removePath = function () {
@@ -1570,7 +1562,6 @@ define(['logManager',
             xingDesc,
             segmentXings,
             segmentLength,
-            segmentPath,
             pixDiffPercentage,
             pointBefore,
             pointAfter,
@@ -1585,25 +1576,20 @@ define(['logManager',
             return pathDefArray;
         }
 
-        //this._startProfile('_jumpOnCrossings');
-
         connectionIDs.splice(selfIdx);
         len = connectionIDs.length;
 
-        this._startProfile('_jumpOnCrossings_#1');
         while(len--) {
             otherConn = items[connectionIDs[len]];
             xingWithOther = this._pathIntersect(otherConn._pathPoints);
             if (xingWithOther && xingWithOther.length > 0) {
-
-                //this.logger.warning('cross: ' + this.id + ' --> ' + otherConn.id);
-
                 for (i = 0; i < xingWithOther.length; i += 1) {
                     xingDesc = xingWithOther[i];
                     intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
                     intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
                                                     't': xingDesc.t1,
-                                                  'bez': xingDesc.bez1,
+                                                  'path': xingDesc.path1,
+                                                  'length': xingDesc.segment1Length,
                                                   'otherWidth': otherConn.designerAttributes.width });
                     if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
                         intersectionSegments.push(xingDesc.segment1);
@@ -1611,51 +1597,32 @@ define(['logManager',
                 }
             }
         }
-        this._endProfile('_jumpOnCrossings_#1');
 
-        //this._startProfile('_jumpOnCrossings_#2');
         //we got all the intersections of this path with everybody else
         intersectionSegments.sort(function(a,b){return a-b});
         for (len = 0; len < intersectionSegments.length; len += 1) {
             segNum = intersectionSegments[len];
             segmentXings = intersections[segNum];
-            //this.logger.warning('Segment ' + segNum + '\'s crossings: ');
+
             for (i = 0; i < segmentXings.length; i += 1) {
                 resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}};
 
                 xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
-                //this.logger.warning('xRadius: ' + xRadius);
 
-                //this.logger.warning(JSON.stringify(segmentXings[i]));
-                segmentPath = "M" + segmentXings[i].bez[0] + "," + segmentXings[i].bez[1] + " C" + segmentXings[i].bez[2] + "," + segmentXings[i].bez[3] + " " + segmentXings[i].bez[4] + "," + segmentXings[i].bez[5] + " " + segmentXings[i].bez[6] + "," + segmentXings[i].bez[7];
-                segmentLength = Raphael.getTotalLength(segmentPath);
-                //this.logger.warning('segmentLength: ' + segmentLength);
+                segmentLength =  segmentXings[i].length;
                 pixDiffPercentage = xRadius / segmentLength;
-                //this.logger.warning('pixDiffPercentage: ' + pixDiffPercentage);
-
-                //fix T value because it seems to be incorrect
-                var xLength = Math.sqrt((segmentXings[i].xy[0] - segmentXings[i].bez[0]) * (segmentXings[i].xy[0] - segmentXings[i].bez[0]) + (segmentXings[i].xy[1] - segmentXings[i].bez[1]) * (segmentXings[i].xy[1] - segmentXings[i].bez[1]));
-                segmentXings[i].t =  xLength / segmentLength;
-                //this.logger.warning('my T: ' + segmentXings[i].t );
 
                 atLength = segmentXings[i].t - pixDiffPercentage;
                 if (atLength < 0) {
                     atLength = 0;
                 }
-                //this.logger.warning('atLength before: ' + atLength);
-                pointBefore = Raphael.getPointAtLength(segmentPath, atLength * segmentLength);
-                //this.logger.warning('pointBefore: ' + JSON.stringify(pointBefore));
-
-                /*var dx = (segmentXings[i].bez[6] - segmentXings[i].bez[0]) / segmentLength;
-                var dy = (segmentXings[i].bez[7] - segmentXings[i].bez[1]) / segmentLength;*/
+                pointBefore = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
                 atLength = segmentXings[i].t + pixDiffPercentage;
                 if (atLength > 1) {
                     atLength = 1;
                 }
-                //this.logger.warning('atLength after: ' + atLength);
-                pointAfter = Raphael.getPointAtLength(segmentPath, atLength * segmentLength);
-                //this.logger.warning('pointAfter: ' + JSON.stringify(pointAfter));
+                pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
                 xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0,1 " + pointAfter.x + "," + pointAfter.y;
 
@@ -1663,14 +1630,12 @@ define(['logManager',
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
             }
         }
-        //this._endProfile('_jumpOnCrossings_#2');
 
-        //the first etry is the M x,y, it goes unchanged
+        //the first entry is the M x,y, it goes unchanged
         resultPathDefArray.push(pathDefArray[0]);
 
         len = pathDefArray.length;
 
-        //this._startProfile('_jumpOnCrossings_#3');
         for (i = 1; i < len; i += 1) {
             //i is the segment number
             segNum = i.toString();
@@ -1686,9 +1651,6 @@ define(['logManager',
 
             resultPathDefArray.push(pathDefArray[i]);
         }
-        //this._endProfile('_jumpOnCrossings_#3');
-
-        //this._endProfile('_jumpOnCrossings');
 
         return resultPathDefArray;
     };
@@ -1727,8 +1689,10 @@ define(['logManager',
                 if (intr) {
                     intr.segment1 = i + 1;
                     intr.segment2 = j + 1;
-                    intr.bez1 = [s1.x1, s1.y1, s1.x1, s1.y1, s1.x2, s1.y2, s1.x2, s1.y2];
-                    intr.bez2 = [s2.x1, s2.y1, s2.x1, s2.y1, s2.x2, s2.y2, s2.x2, s2.y2];
+                    intr.segment1Length = s1Length;
+                    intr.segment2Length = s2Length;
+                    intr.path1 = [s1.x1, s1.y1, s1.x2, s1.y2];
+                    intr.path2 = [s2.x1, s2.y1, s2.x2, s2.y2];
 
                     tLength = Math.sqrt((intr.x - s1.x1) * (intr.x - s1.x1) + (intr.y - s1.y1) * (intr.y - s1.y1));
                     intr.t1 = tLength / s1Length;
@@ -1783,14 +1747,14 @@ define(['logManager',
         return {x: px, y: py};
     };
 
-    Connection.prototype._startProfile = function (profID) {
-        this.diagramDesigner.profiler.startProfile( this.id + "_" + profID);
-    };
+    Connection.prototype._getPointAtLength = function(x1, y1, x2, y2, length) {
+        var totalLength = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)),
+            dx = (x2 - x1) / totalLength,
+            dy = (y2 - y1) / totalLength;
 
-    Connection.prototype._endProfile = function (profID) {
-        this.diagramDesigner.profiler.endProfile( this.id + "_" + profID);
+        return {'x': x1 + dx * length,
+                'y': y1 + dy * length};
     };
-
 
     return Connection;
 });
