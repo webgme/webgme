@@ -32,6 +32,7 @@ requirejs.config({
 
 requirejs(['logManager',
     'bin/getconfig',
+    'storage/serverstorage',
     'storage/server',
     'storage/cache',
     'storage/mongo',
@@ -41,6 +42,7 @@ requirejs(['logManager',
     'auth/gmeauth'],function(
     logManager,
     CONFIG,
+    Storage,
     Server,
     Cache,
     Mongo,
@@ -236,12 +238,18 @@ requirejs(['logManager',
         __storageOptions.secret = parameters.sessioncookiesecret;
         __storageOptions.authorization = globalAuthorization;
     }
-    storage = new Server(new Log(new Cache(new Mongo({
+    /*storage = new Server(new Log(new Cache(new Mongo({
         host: parameters.mongoip,
         port: parameters.mongoport,
         database: parameters.mongodatabase
-    }),{}),{log:logManager.create('combined-server-storage')}),__storageOptions);
+    }),{}),{log:logManager.create('combined-server-storage')}),__storageOptions);*/
 
+    __storageOptions.host = parameters.mongoip;
+    __storageOptions.port = parameters.mongoport;
+    __storageOptions.database = parameters.mongodatabase;
+    __storageOptions.log = logManager.create('combined-server-storage');
+
+    storage = Storage(__storageOptions);
 
     storage.open();
 });

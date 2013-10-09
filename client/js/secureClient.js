@@ -3,6 +3,7 @@ define([
     'eventDispatcher',
     'util/guid',
     'core/core',
+    'storage/clientstorage',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
@@ -16,7 +17,8 @@ define([
         ASSERT,
         EventDispatcher,
         GUID,
-        NewCore,
+        Core,
+        Storage,
         HashCheck,
         Cache,
         Failsafe,
@@ -36,7 +38,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return NewCore.asyncCore(project,{autopersist: true});
+            return Core.asyncCore(project,{autopersist: true});
         }
         function Client(_configuration){
             var _self = this,
@@ -106,7 +108,8 @@ define([
             }
 
             function newDatabase(){
-                return  new Log(
+                return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
+                /*return  new Log(
                     new HashCheck(
                         new Commit(
                             new Cache(
@@ -121,7 +124,7 @@ define([
                             ),{}
                         ),{}
                     ),{log:LogManager.create('client-storage')}
-                );
+                );*/
             }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {
