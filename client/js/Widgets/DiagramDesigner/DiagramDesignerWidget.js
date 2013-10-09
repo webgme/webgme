@@ -26,7 +26,6 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
     'js/Widgets/DiagramDesigner/HighlightManager',
     'js/Widgets/DiagramDesigner/SearchManager',
-    './Profiler',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -46,8 +45,7 @@ define(['logManager',
                                                       DiagramDesignerWidgetZoom,
                                                       DiagramDesignerWidgetKeyboard,
                                                       HighlightManager,
-                                                      SearchManager,
-                                                      Profiler) {
+                                                      SearchManager) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -192,8 +190,6 @@ define(['logManager',
         //initiate Search Manager
         this.searchManager = new SearchManager({"diagramDesigner": this});
         this.searchManager.initialize(this.skinParts.$itemsContainer);
-
-        this.profiler = new Profiler();
 
         this._afterManagersInitialized();
 
@@ -615,9 +611,6 @@ define(['logManager',
 
         this.logger.debug("_refreshScreen START");
 
-        this.profiler.clear();
-        this.profiler.startProfile('_refreshScreen');
-
         //TODO: updated items probably touched the DOM for modification
         //hopefully none of them forced a reflow by reading values, only setting values
         //browsers will optimize this
@@ -721,9 +714,6 @@ define(['logManager',
             this.selectionManager.showSelectionOutline();    
         }
 
-        this.profiler.endProfile('_refreshScreen');
-        this.profiler.dump();
-
         this.logger.debug("_refreshScreen END");
     };
 
@@ -811,9 +801,6 @@ define(['logManager',
             itemBBox,
             items = this.items;
 
-        this.profiler.clear();
-        this.profiler.startProfile('onDesignerItemDrag');
-
         //get the position and size of all dragged guy and temporarily resize canvas to fit them
         while (i--) {
             itemBBox =  items[allDraggedItemIDs[i]].getBoundingBox();
@@ -836,9 +823,6 @@ define(['logManager',
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
         i = redrawnConnectionIDs.len;
-
-        this.profiler.endProfile('onDesignerItemDrag');
-        this.profiler.dump();
     };
 
     DiagramDesignerWidget.prototype.onDesignerItemDragStop = function (draggedItemId, allDraggedItemIDs) {
