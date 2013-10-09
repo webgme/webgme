@@ -2,7 +2,7 @@ define([
     'util/assert',
     'eventDispatcher',
     'util/guid',
-    'core/newcore',
+    'core/core',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
