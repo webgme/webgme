@@ -338,7 +338,7 @@ define(['logManager',
                 this.skinParts.$progressText = this.toolBar.addLabel();
 
                 //route manager selection
-                this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
+                this.$btnGroupConnectionRouteManager = this.toolBar.addRadioButtonGroup(function (event, data) {
                     self._onConnectionRouteManagerChanged(data.type);
                 });
 
@@ -348,6 +348,7 @@ define(['logManager',
 
                 this.toolBar.addButton({ "title": "Basic+ route manager",
                     "text": "RM #2",
+                    "selected": true,
                     "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
 
                 this.toolBar.addButton({ "title": "AutoRouter",
