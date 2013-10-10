@@ -355,7 +355,8 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     PanelToolbar.prototype.addCheckBox = function (params) {
         var onCheckChanged,
-            chkFieldEpx;
+            chkFieldEpx,
+            p = {};
 
         onCheckChanged = function (checked) {
             var data = chkFieldEpx.el.data();
@@ -365,9 +366,14 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             }
         };
 
-        chkFieldEpx = new iCheckBox({"checkChangedFn": onCheckChanged});
+        p = {"checkChangedFn": onCheckChanged,
+                  "checked": true};
 
-        chkFieldEpx.el.addClass('pull-right');
+        if (params.hasOwnProperty("checked")) {
+            p.checked = params.checked;
+        }
+
+        chkFieldEpx = new iCheckBox(p);
 
         if (params.data) {
             chkFieldEpx.el.data(params.data);

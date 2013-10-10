@@ -119,6 +119,9 @@ define(['logManager',
         //by default connection item to connections are enabled
         this._connectToConnection = true;
 
+        //by default connections do not jump on crossings
+        this._connectionJumpXing = false;
+
         //initialize UI
         this._initializeUI();
 
@@ -382,6 +385,15 @@ define(['logManager',
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
                 },
                 this.$btnGroupOperatingMode);
+
+
+            this.toolBar.addLabel().text('XING:');
+            this.toolBar.addCheckBox({ "checked": false,
+                                        "checkChangedFn": function(data, checked){
+                    self._setConnectionXingJumpMode(checked);
+                }
+            });
+
         }
 
         //CHILDREN container
@@ -1267,6 +1279,17 @@ define(['logManager',
     /*********************** CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
     DiagramDesignerWidget.prototype.connectToConnectionEnabled = function (enabled) {
         this._connectToConnection = enabled;
+    };
+
+
+    DiagramDesignerWidget.prototype._setConnectionXingJumpMode = function (enabled) {
+        var i = this.connectionIds.length;
+
+        if (this._connectionJumpXing !== enabled) {
+            this._connectionJumpXing = enabled;
+
+            this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        }
     };
 
 
