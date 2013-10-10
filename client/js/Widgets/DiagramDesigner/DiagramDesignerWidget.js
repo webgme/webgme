@@ -331,12 +331,12 @@ define(['logManager',
                 "icon": "icon-th",
                 "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
-            /*this.toolBar.addButton({ "title": "Diagonal",
-                "icon": "icon-signal",
-                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );*/
-
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {
+                this.toolBar.addButton({ "title": "Cozy Grid layout",
+                    "icon": "icon-th-large",
+                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
                 //progress text in toolbar for debug only
                 this.skinParts.$progressText = this.toolBar.addLabel();
 
@@ -883,8 +883,15 @@ define(['logManager',
                     y += h + dy;
                 }
                 break;
+            case "cozygrid":
             case "grid":
             default:
+                dx = 20;
+                dy = 20;
+                if (mode === "cozygrid") {
+                    dx = 100;
+                    dy = 100;
+                }
                 while (i--) {
                     w = this.items[this.itemIds[i]].width;
                     h = Math.max(h, this.items[this.itemIds[i]].height);
