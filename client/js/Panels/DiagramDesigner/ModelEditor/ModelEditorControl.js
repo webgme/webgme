@@ -34,9 +34,8 @@ define(['logManager',
     ModelEditorControl = function (options) {
         var self = this,
             $btnGroupAutoRename,
-            $btnGroupAutoCreateModel,
             $btnGroupPrintNodeData,
-            $btnGroupAutoCreateConnection;
+            $ddlCreate;
 
         this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
 
@@ -62,7 +61,6 @@ define(['logManager',
         }
 
         this._selfPatterns = {};
-        this._components = {};
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
         this.eventQueue = [];
@@ -127,61 +125,74 @@ define(['logManager',
             /************** END OF - AUTO RENAME GME NODES *****************/
 
             /************** AUTO CREATE NEW NODES *****************/
-            $btnGroupAutoCreateModel = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
-                self._createGMEModels(data.num);
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 1",
+            $ddlCreate = this.designerCanvas.toolBar.addDropDownMenu({ "text": "Create..." });
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 item",
                 "icon": "icon-plus-sign",
-                "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateModel);
+                "text": "1 item",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEModels(1);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 5",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 items",
                 "icon": "icon-plus-sign",
-                "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateModel);
+                "text": "5 items",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEModels(5);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 10",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 items",
                 "icon": "icon-plus-sign",
-                "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateModel);
+                "text": "10 items",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEModels(10);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 50",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 items",
                 "icon": "icon-plus-sign",
-                "text": "50",
-                "data": { "num": 50 }}, $btnGroupAutoCreateModel);
+                "text": "50 items",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEModels(50);
+                }}, $ddlCreate);
 
             /************** END OF - AUTO CREATE NEW NODES *****************/
 
+            this.designerCanvas.toolBar.addMenuItemDivider($ddlCreate);
+
             /************** AUTO CREATE NEW CONNECTIONS *****************/
-            $btnGroupAutoCreateConnection = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
-                self._createGMEConnections(data.num);
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 1 connection",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 connection",
                 "icon": "icon-resize-horizontal",
-                "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateConnection);
+                "text": "1 connection",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEConnections(1);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 5 connections",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 connections",
                 "icon": "icon-resize-horizontal",
-                "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateConnection);
+                "text": "5 connections",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEConnections(5);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 10 connections",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 connections",
                 "icon": "icon-resize-horizontal",
-                "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateConnection);
+                "text": "10 connections",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEConnections(10);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 50 connections",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 connections",
                 "icon": "icon-resize-horizontal",
-                "text": "50",
-                "data": { "num": 50 }}, $btnGroupAutoCreateConnection);
+                "text": "50 connections",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEConnections(50);
+                }}, $ddlCreate);
 
-            this.designerCanvas.toolBar.addButton({ "title": "Create 100 connections",
+            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 100 connections",
                 "icon": "icon-resize-horizontal",
-                "text": "100",
-                "data": { "num": 100 }}, $btnGroupAutoCreateConnection);
+                "text": "100 connections",
+                "clickFn": function (/*event, data*/) {
+                    self._createGMEConnections(100);
+                }}, $ddlCreate);
 
             /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
@@ -216,8 +227,6 @@ define(['logManager',
         this.designerCanvas.clear();
 
         //clean up local hash map
-        this._components = {};
-
         this._GMEModels = [];
         this._GMEConnections = [];
 
