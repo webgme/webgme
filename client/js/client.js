@@ -38,7 +38,7 @@ define([
 
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return Core.asyncCore(project,{autopersist: true});
+            return Core(project,{autopersist: true,usertype:'nodejs'});
         }
         function Client(_configuration){
             var _self = this,
@@ -109,22 +109,6 @@ define([
 
             function newDatabase(){
                 return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
-                /*return  new Log(
-                    new HashCheck(
-                        new Commit(
-                            new Cache(
-                                new Failsafe(
-                                    new SocketIOClient(
-                                        {
-                                            host:_configuration.host,
-                                            port:_configuration.port
-                                        }
-                                    ),{}
-                                ),{}
-                            ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                );*/
             }
             function setSelectedObjectId(objectId) {
                 if (objectId !== _selectedObjectId) {

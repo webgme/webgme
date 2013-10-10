@@ -4,20 +4,19 @@
  * Author: Tamas Kecskes
  */
 
-define([ "core/corerel",'core/corewrap','core/setcore','core/rootcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore'], function (Rel,Wrap,Set,Root,Guid,NullPtr,UnWrap,Descriptor) {
+define([ "core/corerel",'core/setcore','core/rootcore','core/guidcore','core/nullpointercore','core/coreunwrap', 'core/descriptorcore'], function (Rel,Set,Root,Guid,NullPtr,UnWrap,Descriptor) {
     "use strict";
-    function syncCore(storage,options){
-        var core = new Root(new Guid(new Descriptor(new NullPtr(new Set( new Wrap(new Rel(storage,options)))))));
-        return core;
+
+    function core(storage,options){
+        options = options || {};
+        options.usetype = options.usertype || 'nodejs';
+        var core = new Root(new Guid(new Descriptor(new NullPtr(new Set(new Rel(storage,options))))));
+        if(options.usertype === 'tasync'){
+            return core;
+        } else {
+            return new UnWrap(core);
+        }
     }
 
-    function asyncCore(storage,options){
-        var core = new UnWrap(new Root(new Guid(new Descriptor(new NullPtr(new Set( new Wrap(new Rel(storage,options))))))));
-        return core;
-    }
-
-    return {
-        syncCore : syncCore,
-        asyncCore : asyncCore
-    }
+    return core;
 });

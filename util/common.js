@@ -115,7 +115,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 		project = p;
 
-        core = Core.syncCore(project,{autopersist:true});
+        core = Core(project,{autopersist:true,usertype:'tasync'});
 	}
 
 	function closeProject () {

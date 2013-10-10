@@ -238,11 +238,6 @@ requirejs(['logManager',
         __storageOptions.secret = parameters.sessioncookiesecret;
         __storageOptions.authorization = globalAuthorization;
     }
-    /*storage = new Server(new Log(new Cache(new Mongo({
-        host: parameters.mongoip,
-        port: parameters.mongoport,
-        database: parameters.mongodatabase
-    }),{}),{log:logManager.create('combined-server-storage')}),__storageOptions);*/
 
     __storageOptions.host = parameters.mongoip;
     __storageOptions.port = parameters.mongoport;
