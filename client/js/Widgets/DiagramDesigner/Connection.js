@@ -7,10 +7,12 @@
 "use strict";
 
 define(['logManager',
+    'clientUtil',
     './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
     './Connection.SegmentPoint'], function (logManager,
+                                            clientUtil,
                             DiagramDesignerWidgetConstants,
                             DiagramDesignerWidgetOperatingModes,
                             ConnectionEditSegment,
@@ -58,6 +60,13 @@ define(['logManager',
         this._editMode = false;
         this._readOnly = false;
         this._connectionEditSegments = [];
+
+        this._pathPointsBBox = {'x': 0,
+                          'y': 0,
+                          'x2': 0,
+                          'y2': 0,
+                          'w': 0,
+                          'h': 0};
 
         //read props coming from the DataBase or DiagramDesigner
         this._initializeConnectionProps(objDescriptor);
@@ -239,7 +248,11 @@ define(['logManager',
             points = [],
             validPath = segPoints && segPoints.length > 1,
             self = this,
-            fixXY;
+            fixXY,
+            minX,
+            minY,
+            maxX,
+            maxY;
 
         //for EVEN width of the path, get the lower integer of the coordinate
         //for ODD width of the path, get the lower integer + 0.5
@@ -294,6 +307,9 @@ define(['logManager',
             p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
 
+            minX = maxX = p.x;
+            minY = maxY = p.y;
+
             //store source coordinate
             this.sourceCoordinates.x = p.x;
             this.sourceCoordinates.y = p.y;
@@ -303,8 +319,18 @@ define(['logManager',
             i--;
             while (i--) {
                 p = points[len - i];
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
                 pathDef.push("L" + p.x + "," + p.y);
             }
+
+            //save calculated bounding box
+            this._pathPointsBBox.x = minX;
+            this._pathPointsBBox.y = minY;
+            this._pathPointsBBox.x2 = maxX;
+            this._pathPointsBBox.y2 = maxY;
 
             //save endpoint coordinates
             this.endCoordinates.x = p.x;
@@ -1578,7 +1604,10 @@ define(['logManager',
             resultIntersectionPathDefs = {},
             segNum,
             j,
-            xRadius;
+            xRadius,
+            sweepFlag,
+            hDir,
+            vDir;
 
         if (this.diagramDesigner._connectionJumpXing !== true) {
             return pathDefArray;
@@ -1589,7 +1618,7 @@ define(['logManager',
 
         while(len--) {
             otherConn = items[connectionIDs[len]];
-            xingWithOther = this._pathIntersect(otherConn._pathPoints);
+            xingWithOther = this._pathIntersect(otherConn);
             if (xingWithOther && xingWithOther.length > 0) {
                 for (i = 0; i < xingWithOther.length; i += 1) {
                     xingDesc = xingWithOther[i];
@@ -1632,7 +1661,33 @@ define(['logManager',
                 }
                 pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
-                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0,1 " + pointAfter.x + "," + pointAfter.y;
+                vDir = segmentXings[i].path[3] - segmentXings[i].path[1];
+                if (vDir !== 0) {
+                    vDir = vDir / Math.abs(vDir);
+                }
+
+                hDir = segmentXings[i].path[2] - segmentXings[i].path[0];
+                if (hDir !== 0) {
+                    hDir = hDir / Math.abs(hDir);
+                }
+
+                if (hDir > 0) {
+                    //going from left to right
+                    sweepFlag = 1;
+                } else if (hDir === 0) {
+                    //vertical line
+                    if (vDir > 0) {
+                        //going from top to bottom
+                        sweepFlag = 1
+                    } else {
+                        sweepFlag = 0;
+                    }
+                } else {
+                    //going from right to left
+                    sweepFlag = 0;
+                }
+
+                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + pointAfter.x + "," + pointAfter.y;
 
                 resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
@@ -1664,8 +1719,9 @@ define(['logManager',
     };
 
     //finds all intersection points of this connection with other connection's pathpoints
-    Connection.prototype._pathIntersect = function (oPathPoints) {
+    Connection.prototype._pathIntersect = function (otherConn) {
         var myPathPoints = this._pathPoints,
+            oPathPoints = otherConn._pathPoints,
             p1len = myPathPoints.length,
             p2len = oPathPoints.length,
             s1,s2,
@@ -1677,38 +1733,40 @@ define(['logManager',
             s2Length,
             tLength;
 
-        for (i = 0; i < p1len - 1; i += 1) {
-            s1 = {'x1': myPathPoints[i].x,
-                  'y1': myPathPoints[i].y,
-                  'x2': myPathPoints[i + 1].x,
-                  'y2': myPathPoints[i + 1].y};
+        if (clientUtil.overlap(this._pathPointsBBox, otherConn._pathPointsBBox)) {
+            for (i = 0; i < p1len - 1; i += 1) {
+                s1 = {'x1': myPathPoints[i].x,
+                      'y1': myPathPoints[i].y,
+                      'x2': myPathPoints[i + 1].x,
+                      'y2': myPathPoints[i + 1].y};
 
-            s1Length = Math.sqrt((s1.x2 - s1.x1) * (s1.x2 - s1.x1) + (s1.y2 - s1.y1) * (s1.y2 - s1.y1));
+                s1Length = Math.sqrt((s1.x2 - s1.x1) * (s1.x2 - s1.x1) + (s1.y2 - s1.y1) * (s1.y2 - s1.y1));
 
-            for (j = 0; j < p2len - 1; j += 1) {
-                s2 = {'x1': oPathPoints[j].x,
-                    'y1': oPathPoints[j].y,
-                    'x2': oPathPoints[j + 1].x,
-                    'y2': oPathPoints[j + 1].y};
+                for (j = 0; j < p2len - 1; j += 1) {
+                    s2 = {'x1': oPathPoints[j].x,
+                        'y1': oPathPoints[j].y,
+                        'x2': oPathPoints[j + 1].x,
+                        'y2': oPathPoints[j + 1].y};
 
-                s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
+                    s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
 
-                intr = this._intersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
-                if (intr) {
-                    intr.segment1 = i + 1;
-                    intr.segment2 = j + 1;
-                    intr.segment1Length = s1Length;
-                    intr.segment2Length = s2Length;
-                    intr.path1 = [s1.x1, s1.y1, s1.x2, s1.y2];
-                    intr.path2 = [s2.x1, s2.y1, s2.x2, s2.y2];
+                    intr = this._intersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
+                    if (intr) {
+                        intr.segment1 = i + 1;
+                        intr.segment2 = j + 1;
+                        intr.segment1Length = s1Length;
+                        intr.segment2Length = s2Length;
+                        intr.path1 = [s1.x1, s1.y1, s1.x2, s1.y2];
+                        intr.path2 = [s2.x1, s2.y1, s2.x2, s2.y2];
 
-                    tLength = Math.sqrt((intr.x - s1.x1) * (intr.x - s1.x1) + (intr.y - s1.y1) * (intr.y - s1.y1));
-                    intr.t1 = tLength / s1Length;
+                        tLength = Math.sqrt((intr.x - s1.x1) * (intr.x - s1.x1) + (intr.y - s1.y1) * (intr.y - s1.y1));
+                        intr.t1 = tLength / s1Length;
 
-                    tLength = Math.sqrt((intr.x - s2.x1) * (intr.x - s2.x1) + (intr.y - s2.y1) * (intr.y - s2.y1));
-                    intr.t2 = tLength / s2Length;
+                        tLength = Math.sqrt((intr.x - s2.x1) * (intr.x - s2.x1) + (intr.y - s2.y1) * (intr.y - s2.y1));
+                        intr.t2 = tLength / s2Length;
 
-                    res.push(intr);
+                        res.push(intr);
+                    }
                 }
             }
         }
