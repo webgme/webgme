@@ -1604,7 +1604,10 @@ define(['logManager',
             resultIntersectionPathDefs = {},
             segNum,
             j,
-            xRadius;
+            xRadius,
+            sweepFlag,
+            hDir,
+            vDir;
 
         if (this.diagramDesigner._connectionJumpXing !== true) {
             return pathDefArray;
@@ -1658,7 +1661,33 @@ define(['logManager',
                 }
                 pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
 
-                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0,1 " + pointAfter.x + "," + pointAfter.y;
+                vDir = segmentXings[i].path[3] - segmentXings[i].path[1];
+                if (vDir !== 0) {
+                    vDir = vDir / Math.abs(vDir);
+                }
+
+                hDir = segmentXings[i].path[2] - segmentXings[i].path[0];
+                if (hDir !== 0) {
+                    hDir = hDir / Math.abs(hDir);
+                }
+
+                if (hDir > 0) {
+                    //going from left to right
+                    sweepFlag = 1;
+                } else if (hDir === 0) {
+                    //vertical line
+                    if (vDir > 0) {
+                        //going from top to bottom
+                        sweepFlag = 1
+                    } else {
+                        sweepFlag = 0;
+                    }
+                } else {
+                    //going from right to left
+                    sweepFlag = 0;
+                }
+
+                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + pointAfter.x + "," + pointAfter.y;
 
                 resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
