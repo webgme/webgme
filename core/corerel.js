@@ -828,7 +828,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
             getChild: coretree.getChild,
 
-            loadChildx: loadChild,
+            loadChildx: coretree.loadChild,
             loadchild: function(node,relid){return TASYNC.call(checkNode,coretree.loadChild(node,relid));},
 
             loadByPathx: loadByPath,
