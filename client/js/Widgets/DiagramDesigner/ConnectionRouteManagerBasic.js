@@ -22,16 +22,21 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
+        var i;
 
         this.logger.debug('Redraw connection request: ' + idList.length);
+
+        //NOTE: here it is not enough to update the connections the canvas asked for
+        //because updating one connections' endpoint (connection area switch) can cause
+        //other connections to be redrawn that was originally not requested to do so
+        idList = this.diagramDesigner.connectionIds.slice(0);
 
         //1 - update all the connection endpoint connectable area information
         this._updateEndpointInfo(idList);
 
         //2 - we have each connection end connectability info
         //find the closest areas for each connection
-        while (i--) {
+        for (i = 0; i < idList.length; i += 1) {
             this._updateConnectionCoordinates(idList[i]);
         }
 
