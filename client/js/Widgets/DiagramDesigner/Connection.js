@@ -234,6 +234,8 @@ define(['logManager',
             len,
             pathDef = [],
             p,
+            lastP = { 'x': NaN,
+                      'y': NaN},
             points = [],
             validPath = segPoints && segPoints.length > 1,
             self = this,
@@ -263,10 +265,16 @@ define(['logManager',
             len--;
             while (i--) {
                 if (segPoints[len - i]) {
-                    points.push(fixXY(segPoints[len - i]));
+                    p = fixXY(segPoints[len - i]);
+                    if (lastP && (lastP.x !== p.x || lastP.y !== p.y)) {
+                        points.push(p);
+                        lastP = p;
+                    }
                 }
             }
         }
+
+        this._simplifyTrivially(points);
 
         this.sourceCoordinates = { "x": -1,
                                   "y": -1};
@@ -1754,6 +1762,44 @@ define(['logManager',
 
         return {'x': x1 + dx * length,
                 'y': y1 + dy * length};
+    };
+
+    Connection.prototype._simplifyTrivially = function(pathPoints) {
+        //eliminate the middle point if 3 consecutive point are on the same line
+        var pos = 1,
+            p1,
+            p2,
+            p3,
+            dx1,
+            dx2,
+            dy1,
+            dy2,
+            a12,
+            a23;
+
+        while (pos < pathPoints.length - 1) {
+            p1 = pathPoints[pos - 1];
+            p2 = pathPoints[pos];
+            p3 = pathPoints[pos + 1];
+
+            //calculate p1 - p2 alpha
+            dx1 = p2.x - p1.x;
+            dy1 = p2.y - p1.y;
+            a12 = dx1 === 0 ? (dy1 > 0 ? Math.PI / 2 : Math.PI / 2 * 3) : Math.atan(dy1 / dx1);
+
+            //calculate p2 - p3 alpha
+            dx2 = p3.x - p2.x;
+            dy2 = p3.y - p2.y;
+            a23 = dx2 === 0 ? (dy2 > 0 ? Math.PI / 2 : Math.PI / 2 * 3) : Math.atan(dy2 / dx2);
+
+            if (a12 === a23) {
+                //the two segments have the same steep
+                //p2 can be omitted
+                pathPoints.splice(pos, 1);
+            } else {
+                pos += 1;
+            }
+        }
     };
 
     return Connection;
