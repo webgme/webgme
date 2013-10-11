@@ -387,13 +387,15 @@ define(['logManager',
                 this.$btnGroupOperatingMode);
 
 
-            this.toolBar.addLabel().text('XING:');
-            this.toolBar.addCheckBox({ "checked": false,
-                                        "checkChangedFn": function(data, checked){
-                    self._setConnectionXingJumpMode(checked);
-                }
-            });
+            //toggle button for show common/all fields
+            this.$btnGroupXING = this.toolBar.addButtonGroup();
 
+            this.toolBar.addToggleButton(
+                {"text": "XING",
+                 "title": "Turn connection crossing jumps on/off",
+                    "clickFn": function (event, data, isPressed) {
+                        self._setConnectionXingJumpMode(isPressed);
+                    }}, this.$btnGroupXING);
         }
 
         //CHILDREN container
