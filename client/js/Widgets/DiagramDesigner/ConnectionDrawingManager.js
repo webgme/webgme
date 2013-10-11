@@ -401,11 +401,25 @@ define(['logManager',
                 "visualStyle": {}};
             desc[CONSTANTS.META_INFO] = this._metaInfo;
 
-            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_WIDTH] = this._connectionPathProps.strokeWidth;
-            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_COLOR] = this._connectionPathProps.strokeColor;
-            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_START_ARROW] = this._connectionPathProps.arrowStart;
-            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_END_ARROW] = this._connectionPathProps.arrowEnd;
-            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_PATTERN] = this._connectionPathProps.lineType;
+            if (this._connectionPathProps.strokeWidth !== DEFAULT_WIDTH) {
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_WIDTH] = this._connectionPathProps.strokeWidth;
+            }
+
+            if (this._connectionPathProps.strokeColor !== DEFAULT_COLOR) {
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_COLOR] = this._connectionPathProps.strokeColor;
+            }
+
+            if (this._connectionPathProps.arrowStart !== DEFAULT_START_ARROW) {
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_START_ARROW] = this._connectionPathProps.arrowStart;
+            }
+
+            if (this._connectionPathProps.arrowEnd !== DEFAULT_END_ARROW) {
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_END_ARROW] = this._connectionPathProps.arrowEnd;
+            }
+
+            if (this._connectionPathProps.lineType !== DEFAULT_PATTERN) {
+                desc.visualStyle[DiagramDesignerWidgetConstants.LINE_PATTERN] = this._connectionPathProps.lineType;
+            }
 
             this.onCreateNewConnection(desc);
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
