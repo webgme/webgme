@@ -181,6 +181,10 @@ define(['logManager',
         registry[nodePropertyNames.Registry.lineStyle] = {};
         _.extend(registry[nodePropertyNames.Registry.lineStyle], this._DEFAULT_LINE_STYLE);
 
+        if (params.visualStyle) {
+            _.extend(registry[nodePropertyNames.Registry.lineStyle], params.visualStyle);
+        }
+
         var p = {   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,
             "targetId": targetId,
