@@ -35,6 +35,11 @@ define(['logManager',
             this.$btnGroupConnectionRouteManager.remove();
         }
 
+        //remove connection start/end arrow and line pattern selector
+        this.$ddlConnectionArrowStart.remove();
+        this.$ddlConnectionPattern.remove();
+        this.$ddlConnectionArrowEnd.remove();
+
         //disable connection to a connection
         this._connectToConnection = false;
 

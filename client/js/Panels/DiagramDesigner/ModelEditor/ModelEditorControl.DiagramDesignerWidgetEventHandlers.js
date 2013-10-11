@@ -103,6 +103,10 @@ define(['logManager',
             return self._onSelectionRotated(deg, selectedIds);
         };
 
+        this.designerCanvas.onSetConnectionProperty = function (params) {
+            self._onSetConnectionProperty(params);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -540,6 +544,36 @@ define(['logManager',
             this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, ((regDegree || 0) + degree) % 360 );
         }
         this._client.completeTransaction();
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
+        var connectionIDs = params.connections,
+            visualParams = params.params,
+            gmeIDs = [],
+            len = connectionIDs.length,
+            id,
+            connRegLineStyle;
+
+        while (len--) {
+            id = this._ComponentID2GmeID[connectionIDs[len]];
+            if (id) {
+                gmeIDs.push(id);
+            }
+        }
+
+        len = gmeIDs.length;
+        if (len > 0) {
+            this._client.startTransaction();
+
+            while(len--) {
+                id = gmeIDs[len];
+                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
+                _.extend(connRegLineStyle, visualParams);
+                this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+            }
+
+            this._client.completeTransaction();
+        }
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

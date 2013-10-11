@@ -144,7 +144,7 @@ define(['logManager',
         };
 
         this.selectionManager.onSelectionChanged = function (selectedIds) {
-            self.onSelectionChanged(selectedIds);
+            self._onSelectionChanged(selectedIds);
         };
 
         //initiate Drag Manager (if needed)
@@ -396,6 +396,61 @@ define(['logManager',
                     "clickFn": function (event, data, isPressed) {
                         self._setConnectionXingJumpMode(isPressed);
                     }}, this.$btnGroupXING);
+
+            //connection visual style setting buttons
+            /************** AUTO CREATE NEW NODES *****************/
+            this.$ddlConnectionArrowStart = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-left" });
+            this.$ddlConnectionPattern = this.toolBar.addDropDownMenu({ "icon": "icon-minus", "class": 'toolbar-group-small-margin' });
+            this.$ddlConnectionArrowEnd = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-right", "class": 'toolbar-group-small-margin' });
+
+            var createArrowMenuItem = function (arrowType, isEnd) {
+                var size = arrowType === DiagramDesignerWidgetConstants.LINE_ARROWS.NONE ? "" : "-xwide-xlong",
+                    startArrow = isEnd ? null : arrowType + size,
+                    endArrow = isEnd ? arrowType + size : null;
+
+                return { "title": arrowType,
+                        "icon": self._createLineStyleMenuItem(null, null, null, startArrow, endArrow),
+                        "clickFn": function (/*event, data*/) {
+                            var p = {};
+                            if (isEnd) {
+                                p[DiagramDesignerWidgetConstants.LINE_END_ARROW] = endArrow;
+                            } else {
+                                p[DiagramDesignerWidgetConstants.LINE_START_ARROW] = startArrow;
+                            }
+                            self._setConnectionProperty(p);
+                        }
+                };
+            };
+
+            var createPatternMenuItem = function (pattern) {
+                return { "title": pattern,
+                    "icon": self._createLineStyleMenuItem(null, null, DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern], null, null),
+                    "clickFn": function (/*event, data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern];
+                        self._setConnectionProperty(p);
+                    }
+                };
+            };
+
+            for (var a in DiagramDesignerWidgetConstants.LINE_ARROWS) {
+                if (DiagramDesignerWidgetConstants.LINE_ARROWS.hasOwnProperty([a])) {
+                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], false), this.$ddlConnectionArrowStart);
+                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], true), this.$ddlConnectionArrowEnd);
+                }
+            }
+
+            for (var a in DiagramDesignerWidgetConstants.LINE_PATTERNS) {
+                if (DiagramDesignerWidgetConstants.LINE_PATTERNS.hasOwnProperty([a])) {
+                    this.toolBar.addButtonMenuItem(createPatternMenuItem(a), this.$ddlConnectionPattern);
+                }
+            }
+
+            this.$ddlConnectionArrowStart.enabled(false);
+            this.$ddlConnectionPattern.enabled(false);
+            this.$ddlConnectionArrowEnd.enabled(false);
+
+            /************** END OF - AUTO CREATE NEW NODES *****************/
         }
 
         //CHILDREN container
@@ -455,6 +510,33 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+    };
+
+    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow) {
+        var el = $('<div/>'),
+            path,
+            hSize = 50,
+            vSize = 20,
+            paper = Raphael(el[0], hSize, vSize),
+            pathParams = {};
+
+        width = width || 1;
+        color = color || "#000000";
+        pattern = pattern || DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID;
+        startArrow = startArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
+        endArrow = endArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
+
+        el.attr({"style": "height: " + vSize + "px; width: " + hSize + "px;"});
+
+        path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + ", L" + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+
+        path.attr({ "arrow-start": startArrow,
+            "arrow-end": endArrow,
+            "stroke":  color,
+            "stroke-width": width,
+            "stroke-dasharray": pattern});
+
+        return el;
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
@@ -853,6 +935,27 @@ define(['logManager',
     /************************** SELECTION DELETE CLICK HANDLER ****************************/
 
     /************************** SELECTION CHANGED HANDLER ****************************/
+
+    DiagramDesignerWidget.prototype._onSelectionChanged = function (selectedIds) {
+        //check if there is at least any connection selected
+        //if so enable the connection visual style buttons, otherwise
+        //disable it
+        var len = selectedIds.length,
+            connectionSelected = false;
+
+        while (len--) {
+            if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
+                connectionSelected = true;
+                break;
+            };
+        }
+
+        this.$ddlConnectionArrowEnd.enabled(connectionSelected);
+        this.$ddlConnectionArrowStart.enabled(connectionSelected);
+        this.$ddlConnectionPattern.enabled(connectionSelected);
+
+        this.onSelectionChanged(selectedIds);
+    };
 
     DiagramDesignerWidget.prototype.onSelectionChanged = function (selectedIds) {
         this.logger.debug("DiagramDesignerWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
@@ -1289,8 +1392,10 @@ define(['logManager',
     DiagramDesignerWidget.prototype.connectToConnectionEnabled = function (enabled) {
         this._connectToConnection = enabled;
     };
+    /*********************** END OF --- CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
 
 
+    /*********************** CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
     DiagramDesignerWidget.prototype._setConnectionXingJumpMode = function (enabled) {
         var i = this.connectionIds.length;
 
@@ -1300,9 +1405,34 @@ define(['logManager',
             this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
         }
     };
+    /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
 
 
-    /*********************** END OF --- CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
+    /*********************** SET CONNECTION VISUAL PROPERTIES *****************************/
+    DiagramDesignerWidget.prototype._setConnectionProperty = function (params) {
+        var selectedIds = this.selectionManager.getSelectedElements(),
+            len = selectedIds.length,
+            selectedConnections = [],
+            p;
+
+        while (len--) {
+            if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
+                selectedConnections.push(selectedIds[len]);
+            };
+        }
+
+        if (selectedConnections.length > 0) {
+            p = {'connections': selectedConnections,
+                 'params': params};
+
+            this.onSetConnectionProperty(p);
+        }
+    };
+
+    DiagramDesignerWidget.prototype.onSetConnectionProperty = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSetConnectionProperty IS NOT OVERRIDDEN IN CONTROLLER. params: '" + JSON.stringify(params));
+    };
+    /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
