@@ -49,6 +49,14 @@ define([], function () {
         LINE_START_ARROW: 'start-arrow',
         LINE_END_ARROW: 'end-arrow',
         LINE_POINTS: 'points',
+        LINE_ARROWS: { NONE: 'none',
+                       DIAMOND: 'diamond',
+                       BLOCK: 'block',
+                       CLASSIC: 'classic',
+                       OPEN: 'open',
+                       OVAL: 'oval',
+                       DIAMOND2: 'diamond2',
+                       INHERITANCE: 'inheritance'},
 
         /*
          * CONNECTION CONSTANTS
