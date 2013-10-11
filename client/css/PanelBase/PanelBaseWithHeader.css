@@ -18,6 +18,8 @@
       margin-left: 10px; }
     .panel-base-wh .panel-header .panel-header-toolbar .toolbar-group {
       margin-left: 10px; }
+      .panel-base-wh .panel-header .panel-header-toolbar .toolbar-group.toolbar-group-small-margin {
+        margin-left: 2px; }
     .panel-base-wh .panel-header .panel-header-toolbar select,
     .panel-base-wh .panel-header .panel-header-toolbar textarea,
     .panel-base-wh .panel-header .panel-header-toolbar input,

@@ -37,6 +37,10 @@ $sidepane-panel-border-radius: 4px;
     .panel-header-toolbar {
       .toolbar-group {
         margin-left: 10px;
+
+        &.toolbar-group-small-margin {
+          margin-left: 2px;
+        }
       }
 
       select,
