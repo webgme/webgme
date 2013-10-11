@@ -23,9 +23,11 @@ define(['logManager',
         MOUSELEAVE = 'mouseleave.' + EVENTPOSTFIX,
         CONNECTION_END_ACCEPT_CLASS = 'connection-end-accept',
         CONNECTION_END_REJECT_CLASS = 'connection-end-reject',
-        IN_DRAW_COLOR = "#FF7800",
-        IN_DRAW_LINETYPE = "-",
-        IN_DRAW_WIDTH = 2,
+        DEFAULT_COLOR = "#FF7800",
+        DEFAULT_PATTERN = "-",
+        DEFAULT_WIDTH = 2,
+        DEFAULT_END_ARROW = "none",
+        DEFAULT_START_ARROW = "none",
         DRAW_TYPE_CREATE = "create",
         DRAW_TYPE_RECONNECT = "reconnect";
 
@@ -63,11 +65,11 @@ define(['logManager',
         this._connectionInDraw = false;
 
         //visual properties of the drawn connection
-        this._connectionPathProps = { "strokeWidth" : IN_DRAW_WIDTH,
-            "strokeColor" : IN_DRAW_COLOR,
-            "lineType": IN_DRAW_LINETYPE,
-            "arrowStart": "none",
-            "arrowEnd": "none" };
+        this._connectionPathProps = { "strokeWidth" : DEFAULT_WIDTH,
+            "strokeColor" : DEFAULT_COLOR,
+            "lineType": DEFAULT_PATTERN,
+            "arrowStart": DEFAULT_START_ARROW,
+            "arrowEnd": DEFAULT_END_ARROW };
 
         //listen to events of the host DiagramDesigner for item/sub-component relocation/deletion
         this._diagramDesigner.addEventListener(this._diagramDesigner.events.ITEM_POSITION_CHANGED, function (_canvas, event) {
@@ -202,6 +204,8 @@ define(['logManager',
         this._connectionPathProps.strokeColor = params[DiagramDesignerWidgetConstants.LINE_COLOR] || this._connectionPathProps.strokeColor;
         this._connectionPathProps.arrowStart = params[DiagramDesignerWidgetConstants.LINE_START_ARROW] || this._connectionPathProps.arrowStart;
         this._connectionPathProps.arrowEnd = params[DiagramDesignerWidgetConstants.LINE_END_ARROW] || this._connectionPathProps.arrowEnd;
+
+        this._connectionPathProps.lineType = params[DiagramDesignerWidgetConstants.LINE_PATTERN] || this._connectionPathProps.lineType;
     };
 
 
@@ -393,8 +397,16 @@ define(['logManager',
             desc = { "src": this._connectionInDrawProps.src,
                 "srcSubCompId": this._connectionInDrawProps.sCompId,
                 "dst": endPointId,
-                "dstSubCompId": sCompId};
+                "dstSubCompId": sCompId,
+                "visualStyle": {}};
             desc[CONSTANTS.META_INFO] = this._metaInfo;
+
+            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_WIDTH] = this._connectionPathProps.strokeWidth;
+            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_COLOR] = this._connectionPathProps.strokeColor;
+            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_START_ARROW] = this._connectionPathProps.arrowStart;
+            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_END_ARROW] = this._connectionPathProps.arrowEnd;
+            desc.visualStyle[DiagramDesignerWidgetConstants.LINE_PATTERN] = this._connectionPathProps.lineType;
+
             this.onCreateNewConnection(desc);
         } else if (this._connectionInDrawProps.type === DRAW_TYPE_RECONNECT) {
             this.onModifyConnectionEnd({ "id": this._connectionInDrawProps.connId,
@@ -433,6 +445,9 @@ define(['logManager',
         this.logger.debug("Start connection drawing from DesignerItem: '" + objId + "', subcomponent: '" + sCompId + "'");
 
         this._connectionInDraw = true;
+
+        //ask the decorator if it wants to specify custom line-in-draw-visual-properties for the connection being drawn
+        this._setTempConnectionInDrawProperties(this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
 
         this._connectionInDrawProps = {"src": objId,
             "sCompId": sCompId,
@@ -626,6 +641,8 @@ define(['logManager',
         this._el.find('.' + CONNECTION_END_ACCEPT_CLASS).removeClass(CONNECTION_END_ACCEPT_CLASS);
         this._el.find('.' + CONNECTION_END_REJECT_CLASS).removeClass(CONNECTION_END_REJECT_CLASS);
 
+        this._resetTempConnectionInDrawProperties();
+
         //fire event
         this.onEndConnectionDraw();
 
@@ -743,6 +760,40 @@ define(['logManager',
         }
     };
 
+    ConnectionDrawingManager.prototype._setTempConnectionInDrawProperties = function (params) {
+        if (params) {
+            //first save current config
+            this._saveTempConnectionInDrawProperties();
+            //apply new settings
+            this.setConnectionInDrawProperties(params);
+        }
+    };
+
+    ConnectionDrawingManager.prototype._resetTempConnectionInDrawProperties = function () {
+        if (this._savedConnectionProps) {
+            this._revertSavedConnectionInDrawProperties();
+        }
+    };
+
+    ConnectionDrawingManager.prototype._saveTempConnectionInDrawProperties = function () {
+        this._savedConnectionProps = {};
+
+        for (var i in this._connectionPathProps) {
+            if (this._connectionPathProps.hasOwnProperty(i)) {
+                this._savedConnectionProps[i] = this._connectionPathProps[i];
+            }
+        }
+    };
+
+    ConnectionDrawingManager.prototype._revertSavedConnectionInDrawProperties = function () {
+        for (var i in this._savedConnectionProps) {
+            if (this._savedConnectionProps.hasOwnProperty(i)) {
+                this._connectionPathProps[i] = this._savedConnectionProps[i];
+            }
+        }
+
+        this._savedConnectionProps = undefined;
+    };
 
     return ConnectionDrawingManager;
 });

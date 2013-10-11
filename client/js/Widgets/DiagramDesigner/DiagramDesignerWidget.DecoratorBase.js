@@ -268,5 +268,17 @@ define(['logManager',
         return false;
     };
 
+    //Called when a connection drawing starts from this item (or one of it's subcomponent)
+    //can return visual properties for the connection being drawn
+    //{'width': 2,
+    // 'color': "#FF0000",
+    // 'start-arrow': "diamond",
+    // 'end-arrow': "block",
+    // 'pattern': '.'}
+    // for more information see DiagramDesignerWidget.Constants.js
+    DiagramDesignerWidgetDecoratorBase.prototype.getDrawnConnectionVisualStyle = function (subComponentId) {
+        return null;
+    };
+
     return DiagramDesignerWidgetDecoratorBase;
 });

@@ -497,5 +497,9 @@ define(['logManager',
         return this._decoratorInstance.doSearch(searchDesc);
     };
 
+    DesignerItem.prototype.getDrawnConnectionVisualStyle = function (sCompId) {
+        return this._decoratorInstance.getDrawnConnectionVisualStyle(sCompId);
+    };
+
     return DesignerItem;
 });

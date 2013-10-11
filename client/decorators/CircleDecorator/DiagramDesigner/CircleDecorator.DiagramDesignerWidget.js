@@ -1,9 +1,11 @@
 "use strict";
 
 define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./CircleDecorator.DiagramDesignerWidget.html',
     'css!./CircleDecorator.DiagramDesignerWidget'], function (
                                                           DefaultDecoratorDiagramDesignerWidget,
+                                                          DiagramDesignerWidgetConstants,
                                                         circleDecoratorDiagramDesignerWidgetTemplate) {
 
     var CircleDecoratorDiagramDesignerWidget,
@@ -125,6 +127,17 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
         }
 
         return false;
+    };
+
+    CircleDecoratorDiagramDesignerWidget.prototype.getDrawnConnectionVisualStyle = function (subComponentId) {
+        var v = {};
+
+        v[DiagramDesignerWidgetConstants.LINE_WIDTH] = 3;
+        v[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF0000';
+        v[DiagramDesignerWidgetConstants.LINE_PATTERN] = '.';
+        v[DiagramDesignerWidgetConstants.LINE_END_ARROW] = 'classic';
+
+        return v;
     };
 
     return CircleDecoratorDiagramDesignerWidget;
