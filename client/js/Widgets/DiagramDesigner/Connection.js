@@ -23,6 +23,7 @@ define(['logManager',
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DEFAULT_WIDTH = 1,
         CONNECTION_DEFAULT_COLOR = "#000000",
+        CONNECTION_DEFAULT_PATTERN = DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID,
         CONNECTION_NO_END = "none",
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
@@ -81,6 +82,7 @@ define(['logManager',
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
         this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
         this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] || CONNECTION_DEFAULT_PATTERN
         this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH - CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
@@ -245,6 +247,7 @@ define(['logManager',
         objDescriptor.width = this.designerAttributes.width;
         objDescriptor.shadowColor = this.designerAttributes.shadowColor;
         objDescriptor.lineType = this.designerAttributes.lineType;
+        objDescriptor.pattern = this.designerAttributes.pattern;
 
         return objDescriptor;
     };
@@ -376,7 +379,8 @@ define(['logManager',
                     this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                         "arrow-end": this.designerAttributes.arrowEnd,
                         "stroke": this.designerAttributes.color,
-                        "stroke-width": this.designerAttributes.width});
+                        "stroke-width": this.designerAttributes.width,
+                        "stroke-dasharray": this.designerAttributes.pattern});
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
