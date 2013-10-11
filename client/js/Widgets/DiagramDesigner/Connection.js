@@ -1261,7 +1261,8 @@ define(['logManager',
             this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                 "arrow-end": this.designerAttributes.arrowEnd,
                 "stroke": this.designerAttributes.color,
-                "stroke-width": this.designerAttributes.width});
+                "stroke-width": this.designerAttributes.width,
+                "stroke-dasharray": this.designerAttributes.pattern});
         }
 
         if (this.skinParts.pathShadow) {
