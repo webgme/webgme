@@ -73,7 +73,6 @@ define(['logManager',
     };
 
     Connection.prototype._initializeConnectionProps = function (objDescriptor) {
-        this.segmentPoints = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS] ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].slice(0) : [];
         this.reconnectable = objDescriptor.reconnectable === true;
         this.editable = !!objDescriptor.editable;
 
@@ -105,6 +104,18 @@ define(['logManager',
         this.nameEdit = objDescriptor.nameEdit || false;
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
+
+        //get segnment points
+        this.segmentPoints = [];
+        if (objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS]) {
+            var fixedP;
+            var len =  objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].length;
+            for (var i = 0; i < len; i += 1) {
+                fixedP = this._fixXY({'x': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][0],
+                                      'y': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][1]});
+                this.segmentPoints.push([fixedP.x, fixedP.y]);
+            }
+        }
     };
 
     Connection.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
@@ -238,6 +249,20 @@ define(['logManager',
         return objDescriptor;
     };
 
+    //for EVEN width of the path, get the lower integer of the coordinate
+    //for ODD width of the path, get the lower integer + 0.5
+    Connection.prototype._fixXY = function (point) {
+        var p = {'x': Math.floor(point.x),
+            'y': Math.floor(point.y)};
+
+        if (this.designerAttributes.width % 2 === 1) {
+            p.x += 0.5;
+            p.y += 0.5;
+        }
+
+        return p;
+    };
+
     Connection.prototype.setConnectionRenderData = function (segPoints) {
         var i = 0,
             len,
@@ -247,26 +272,12 @@ define(['logManager',
                       'y': NaN},
             points = [],
             validPath = segPoints && segPoints.length > 1,
-            self = this,
-            fixXY,
             minX,
             minY,
             maxX,
             maxY;
 
-        //for EVEN width of the path, get the lower integer of the coordinate
-        //for ODD width of the path, get the lower integer + 0.5
-        fixXY = function (point) {
-            var p = {'x': Math.floor(point.x),
-                'y': Math.floor(point.y)};
 
-            if (self.designerAttributes.width % 2 === 1) {
-                p.x += 0.5;
-                p.y += 0.5;
-            }
-
-            return p;
-        };
 
         //remove edit features
         this._removeEditModePath();
@@ -278,7 +289,7 @@ define(['logManager',
             len--;
             while (i--) {
                 if (segPoints[len - i]) {
-                    p = fixXY(segPoints[len - i]);
+                    p = this._fixXY(segPoints[len - i]);
                     if (lastP && (lastP.x !== p.x || lastP.y !== p.y)) {
                         points.push(p);
                         lastP = p;
