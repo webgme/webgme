@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "util/sax", "fs", "bin/getconfig", "storage/socketioclient", "core/newcore" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, SAX, FS, CONFIG, Client, Core) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "util/sax", "fs", "bin/getconfig", "storage/client", "core/core" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, SAX, FS, CONFIG, Client, Core) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
