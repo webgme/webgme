@@ -21,8 +21,6 @@ define(['logManager',
         MOUSEUP = 'mouseup.' + EVENTPOSTFIX,
         MOUSEENTER = 'mouseenter.' + EVENTPOSTFIX,
         MOUSELEAVE = 'mouseleave.' + EVENTPOSTFIX,
-        CONNECTION_END_ACCEPT_CLASS = 'connection-end-accept',
-        CONNECTION_END_REJECT_CLASS = 'connection-end-reject',
         DEFAULT_COLOR = "#FF7800",
         DEFAULT_PATTERN = "-",
         DEFAULT_WIDTH = 2,
@@ -147,23 +145,13 @@ define(['logManager',
         });
 
         //MOUSE LISTENER FOR CONNECTION MOUSEENTER / MOSELEAVE / MOUSEUP MOUSEDOWN --> POTENTIAL CONNECTION END
-        this._el.on(MOUSEENTER, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
-            var el = $(this);
-            if (self._connectionInDraw === true) {
-                $(this).addClass(CONNECTION_END_ACCEPT_CLASS);
-            }
-        }).on(MOUSELEAVE, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
-                if (self._connectionInDraw === true) {
-                    $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
-                }
-        }).on(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
+
+        this._el.on(MOUSEUP, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
             var el = $(this),
                 objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
                 sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID);
 
             if (self._connectionInDraw === true) {
-                $(this).removeClass([CONNECTION_END_ACCEPT_CLASS, CONNECTION_END_REJECT_CLASS].join(' '));
-
                 if (objId === undefined || objId === null) {
                     self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
@@ -611,9 +599,6 @@ define(['logManager',
         }
 
         this._connectionInDrawProps = undefined;
-
-        this._el.find('.' + CONNECTION_END_ACCEPT_CLASS).removeClass(CONNECTION_END_ACCEPT_CLASS);
-        this._el.find('.' + CONNECTION_END_REJECT_CLASS).removeClass(CONNECTION_END_REJECT_CLASS);
 
         this._resetTempConnectionInDrawProperties();
 
