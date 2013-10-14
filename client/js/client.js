@@ -36,6 +36,7 @@ define([
             return null;
         }
 
+
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
             return Core(project,{autopersist: true,usertype:'nodejs'});
@@ -68,6 +69,22 @@ define([
                 _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
                 _privateKey = 4;
 
+            function print_nodes(pretext){
+                if(pretext){
+                    console.log(pretext);
+                }
+                var nodes = "loaded: ";
+                for(var k in _loadNodes){
+                    nodes+="("+k+","+_loadNodes[k].hash+")";
+                }
+                console.log(nodes);
+                nodes = "stored: ";
+                for(var k in _nodes){
+                    nodes+="("+k+","+_nodes[k].hash+")";
+                }
+                console.log(nodes);
+                return;
+            }
             //default configuration
             _configuration = _configuration || {};
             _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
@@ -679,7 +696,13 @@ define([
                     base = nodesSoFar[id].node;
                     baseLoaded();
                 } else {
-                    core.loadByPath(_nodes['root'].node,id,function(err,node){
+                    var base = null;
+                    if(_loadNodes['root']){
+                        base = _loadNodes['root'].node;
+                    } else if(_nodes['root']){
+                        base = _nodes['root'].node;
+                    }
+                    core.loadByPath(base,id,function(err,node){
                         if(!err && node){
                             var path = core.getPath(node);
                             if(!nodesSoFar[path]){
@@ -742,8 +765,7 @@ define([
                             userEvents(i,modifiedPaths);
                         }
                         _loadError = 0;
-                    }
-                    if(_loadNodes['root']){
+                    } else if(_loadNodes['root']){
                         //we left the stuff in the loading rack, probably because there were no _nodes beforehand
                         _nodes = _loadNodes;
                         _loadNodes = {};
