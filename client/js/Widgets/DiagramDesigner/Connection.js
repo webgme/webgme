@@ -1871,5 +1871,15 @@ define(['logManager',
         }
     };
 
+    /***************************** CONNECTION'S META INFO **************************/
+    Connection.prototype.setMetaInfo = function (params) {
+        this._metaInfo = params;
+    };
+
+    Connection.prototype.getMetaInfo = function () {
+        return this._metaInfo;
+    };
+    /***************************** END OF --- CONNECTION'S META INFO **************************/
+
     return Connection;
 });

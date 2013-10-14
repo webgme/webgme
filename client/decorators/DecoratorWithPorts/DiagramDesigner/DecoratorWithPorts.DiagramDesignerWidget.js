@@ -93,7 +93,7 @@ define(['js/Constants',
     };
 
 
-    DecoratorWithPorts.prototype.getConnectionAreas = function (id, isEnd) {
+    DecoratorWithPorts.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
             edge = 10,
             LEN = 20;

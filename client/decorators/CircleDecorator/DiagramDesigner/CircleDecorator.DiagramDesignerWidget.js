@@ -73,7 +73,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
         }
     };
 
-    CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id, isEnd*/) {
+    CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id, isEnd, connectionMetaInfo*/) {
         var result = [],
             LEN = 20;
 

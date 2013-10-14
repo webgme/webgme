@@ -102,7 +102,7 @@ define(['js/Constants',
         this._renderContent();
     };
 
-    ModelicaDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id, isEnd) {
+    ModelicaDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
             edge = 10,
             LEN = 20;

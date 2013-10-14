@@ -6,12 +6,14 @@ define(['js/Constants',
     'text!./MetaDecorator.DiagramDesignerWidget.html',
     './Attribute',
     './AttributeDetailsDialog',
+    'js/Panels/MetaEditor/MetaRelations',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DefaultDecoratorDiagramDesignerWidget,
                                                           MetaDecoratorTemplate,
                                                           Attribute,
-                                                          AttributeDetailsDialog) {
+                                                          AttributeDetailsDialog,
+                                                          MetaRelations) {
 
     var MetaDecorator,
         __parent__ = DefaultDecoratorDiagramDesignerWidget,
@@ -395,6 +397,80 @@ define(['js/Constants',
         }
 
         client.completeTransaction();
+    };
+
+
+    MetaDecorator.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
+        var result = [],
+            edge = 10,
+            LEN = 20,
+            connType = connectionMetaInfo && connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] ? connectionMetaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] : null,
+            cN,
+            cE,
+            cW,
+            cS;
+
+        //by default return the bounding box edge's midpoints
+
+        if (id === undefined) {
+            //NORTH
+            cN = {"id": "0",
+                "x1": edge,
+                "y1": 0,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": 0,
+                "angle1": 270,
+                "angle2": 270,
+                "len": LEN};
+
+            //EAST
+            cE = {"id": "1",
+                "x1": this.hostDesignerItem.width,
+                "y1": edge,
+                "x2": this.hostDesignerItem.width,
+                "y2": this.hostDesignerItem.height - edge,
+                "angle1": 0,
+                "angle2": 0,
+                "len": LEN};
+
+            //SOUTH
+            cS = {"id": "2",
+                "x1": edge,
+                "y1": this.hostDesignerItem.height,
+                "x2": this.hostDesignerItem.width - edge,
+                "y2": this.hostDesignerItem.height,
+                "angle1": 90,
+                "angle2": 90,
+                "len": LEN};
+
+            //WEST
+            cW = {"id": "3",
+                "x1": 0,
+                "y1": edge,
+                "x2": 0,
+                "y2": this.hostDesignerItem.height - edge,
+                "angle1": 180,
+                "angle2": 180,
+                "len": LEN};
+
+            if (connType && connType === MetaRelations.META_RELATIONS.INHERITANCE) {
+                //if the connection is inheritance
+                //it can be NORTH only if destination
+                //it can be SOUTH only if source
+                if (isEnd) {
+                    result.push(cN);
+                } else {
+                    result.push(cS);
+                }
+            } else {
+                result.push(cN);
+                result.push(cE);
+                result.push(cS);
+                result.push(cW);
+            }
+        }
+
+        return result;
     };
 
     return MetaDecorator;

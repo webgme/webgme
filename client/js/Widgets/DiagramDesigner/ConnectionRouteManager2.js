@@ -74,7 +74,8 @@ define(['logManager'], function (logManager) {
             srcSubCompId,
             dstObjId,
             dstSubCompId,
-            dependantNotReadyYet = [];
+            dependantNotReadyYet = [],
+            connectionMetaInfo;
 
         //first update the available connection endpoint coordinates
         while(i--) {
@@ -84,13 +85,15 @@ define(['logManager'], function (logManager) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            if (!this._getEndpointConnectionAreas(srcObjId, srcSubCompId, false)) {
+            connectionMetaInfo = canvas.items[connId].getMetaInfo();
+
+            if (!this._getEndpointConnectionAreas(connId, srcObjId, srcSubCompId, false, connectionMetaInfo)) {
                 if (canvas.connectionIds.indexOf(srcObjId) !== -1) {
                     dependantNotReadyYet.push(connId);
                 }
 
             }
-            if (!this._getEndpointConnectionAreas(dstObjId, dstSubCompId, true)) {
+            if (!this._getEndpointConnectionAreas(connId, dstObjId, dstSubCompId, true, connectionMetaInfo)) {
                 if (canvas.connectionIds.indexOf(dstObjId) !== -1) {
                     dependantNotReadyYet.push(connId);
                 }
@@ -100,8 +103,25 @@ define(['logManager'], function (logManager) {
         return dependantNotReadyYet;
     };
 
-    ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd) {
-        var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
+    ConnectionRouteManager2.prototype._getEndPointID = function (connId, objId, subCompId) {
+        var res = "";
+
+        if (connId) {
+            res += connId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR;
+        }
+
+        res += objId;
+
+        if (subCompId) {
+            res += DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId;
+        }
+
+        return res;
+    };
+
+    ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (connId, objId, subCompId, isEnd, connectionMetaInfo) {
+        var longid = this._getEndPointID(connId, objId, subCompId),
+            eID = this._getEndPointID(undefined, objId, subCompId),
             res,
             canvas = this.diagramDesigner,
             j,
@@ -109,13 +129,13 @@ define(['logManager'], function (logManager) {
 
         //if (this.endpointConnectionAreaInfo.hasOwnProperty(longid) === false) {
             this.endpointConnectionAreaInfo[longid] = this.endpointConnectionAreaInfo[longid] || [];
-            this.endpointConnectionAreaConnectionInfo[longid] = this.endpointConnectionAreaConnectionInfo[longid] || {};
+            this.endpointConnectionAreaConnectionInfo[eID] = this.endpointConnectionAreaConnectionInfo[eID] || {};
 
             if (subCompId === undefined ||
                 (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId, isEnd) || [];
+                res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
 
                 j = res.length;
                 while (j--) {
@@ -128,8 +148,8 @@ define(['logManager'], function (logManager) {
                         "w": res[j].x2 - res[j].x1,
                         "h": res[j].y2 - res[j].y1};
 
-                    if (!this.endpointConnectionAreaConnectionInfo[longid].hasOwnProperty(res[j].id)) {
-                        this.endpointConnectionAreaConnectionInfo[longid][res[j].id] = 0;
+                    if (!this.endpointConnectionAreaConnectionInfo[eID].hasOwnProperty(res[j].id)) {
+                        this.endpointConnectionAreaConnectionInfo[eID][res[j].id] = 0;
                     }
                 }
             }
@@ -144,8 +164,10 @@ define(['logManager'], function (logManager) {
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connectionId].dstSubCompId,
-            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
+            sId = this._getEndPointID(connectionId, srcObjId, srcSubCompId),
+            tId = this._getEndPointID(connectionId, dstObjId, dstSubCompId),
+            sEId = this._getEndPointID(undefined, srcObjId, srcSubCompId),
+            tEId = this._getEndPointID(undefined, dstObjId, dstSubCompId),
             segmentPoints = canvas.items[connectionId].segmentPoints,
             sourceConnectionPoints = [],
             targetConnectionPoints = [],
@@ -189,10 +211,10 @@ define(['logManager'], function (logManager) {
                 targetCoordinates = targetConnectionPoints[closestConnPoints[1]];
             }
 
-            this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] += 1;
-            this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] += 1;
-            this.connectionEndPoints[connectionId] = { "source": [sId, sourceCoordinates.id, this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id]],
-                                                       "target": [tId, targetCoordinates.id, this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id]]};
+            this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] += 1;
+            this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] += 1;
+            this.connectionEndPoints[connectionId] = { "source": [sId, sourceCoordinates.id, this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id]],
+                                                       "target": [tId, targetCoordinates.id, this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id]]};
         }
     };
 
@@ -204,8 +226,10 @@ define(['logManager'], function (logManager) {
             srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connectionId].dstSubCompId,
-            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
+            sId = this._getEndPointID(connectionId, srcObjId, srcSubCompId),
+            tId = this._getEndPointID(connectionId, dstObjId, dstSubCompId),
+            sEId = this._getEndPointID(undefined, srcObjId, srcSubCompId),
+            tEId = this._getEndPointID(undefined, dstObjId, dstSubCompId),
             segmentPoints = canvas.items[connectionId].segmentPoints,
             sourceConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].source : undefined,
             targetConnectionPoint = this.connectionEndPoints[connectionId] ? this.connectionEndPoints[connectionId].target : undefined,
@@ -229,8 +253,8 @@ define(['logManager'], function (logManager) {
             targetCoordinates = this.endpointConnectionAreaInfo[targetConnectionPoint[0]][targetConnectionPoint[1]];
 
             /****************startpoint ***************/
-            slicex = sourceCoordinates.w / (this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1);
-            slicey = sourceCoordinates.h / (this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1);
+            slicex = sourceCoordinates.w / (this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1);
+            slicey = sourceCoordinates.h / (this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1);
 
             /***************startpoint's coordinates*********************/
             connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2],
@@ -238,7 +262,7 @@ define(['logManager'], function (logManager) {
 
             /***************startpoint's defined connector length*********************/
             if (sourceCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(sourceCoordinates, this.endpointConnectionAreaConnectionInfo[sId][sourceCoordinates.id] + 1, sourceConnectionPoint[2]);
+                connectorDelta = this._getConnectorDelta(sourceCoordinates, this.endpointConnectionAreaConnectionInfo[sEId][sourceCoordinates.id] + 1, sourceConnectionPoint[2]);
                 connectionPathPoints.push({ "x": sourceCoordinates.x + slicex * sourceConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (sourceConnectionPoint[2] - 1),
                     "y": sourceCoordinates.y + slicey * sourceConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (sourceConnectionPoint[2] - 1)});
             }
@@ -253,12 +277,12 @@ define(['logManager'], function (logManager) {
             }
 
             /****************endpoint ***************/
-            slicex = targetCoordinates.w / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
-            slicey = targetCoordinates.h / (this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1);
+            slicex = targetCoordinates.w / (this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] + 1);
+            slicey = targetCoordinates.h / (this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] + 1);
 
             /***************endpoint's defined connector length*********************/
             if (targetCoordinates.len !== 0) {
-                connectorDelta = this._getConnectorDelta(targetCoordinates, this.endpointConnectionAreaConnectionInfo[tId][targetCoordinates.id] + 1, targetConnectionPoint[2]);
+                connectorDelta = this._getConnectorDelta(targetCoordinates, this.endpointConnectionAreaConnectionInfo[tEId][targetCoordinates.id] + 1, targetConnectionPoint[2]);
                 connectionPathPoints.push({ "x": targetCoordinates.x + slicex * targetConnectionPoint[2] + connectorDelta.dx + connectorDelta.dx * connExtender * (targetConnectionPoint[2] - 1),
                     "y": targetCoordinates.y + slicey * targetConnectionPoint[2] + connectorDelta.dy + connectorDelta.dy * connExtender * (targetConnectionPoint[2] - 1)});
             }
