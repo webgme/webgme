@@ -59,12 +59,12 @@ define(['logManager'], function (logManager) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
-            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
+            this._getEndpointConnectionAreas(srcObjId, srcSubCompId, false);
+            this._getEndpointConnectionAreas(dstObjId, dstSubCompId, false);
         }
     };
 
-    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -79,7 +79,7 @@ define(['logManager'], function (logManager) {
                 (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId) || [];
+                res = designerItem.getConnectionAreas(subCompId, isEnd) || [];
 
                 j = res.length;
                 while (j--) {

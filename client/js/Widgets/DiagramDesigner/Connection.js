@@ -1286,7 +1286,7 @@ define(['logManager',
     };
 
 
-    Connection.prototype.getConnectionAreas = function () {
+    Connection.prototype.getConnectionAreas = function (id, isEnd) {
         var result = [],
             AREA_SIZE = 0,
             w = 0,

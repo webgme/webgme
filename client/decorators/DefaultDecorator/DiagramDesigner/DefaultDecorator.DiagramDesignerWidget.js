@@ -83,7 +83,7 @@ define(['js/Constants',
         }
     };
 
-    DefaultDecorator.prototype.getConnectionAreas = function (id) {
+    DefaultDecorator.prototype.getConnectionAreas = function (id, isEnd) {
         var result = [],
             edge = 10,
             LEN = 20;

@@ -353,7 +353,7 @@ define(['logManager',
             y;
 
         if (item) {
-            connPoints = item.getConnectionAreas(sCompId) || [];
+            connPoints = item.getConnectionAreas(sCompId, false) || [];
 
             len = connPoints.length;
             while (len--) {

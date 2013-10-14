@@ -156,9 +156,11 @@ define(['logManager',
     //Canvas will draw the connection to / from this coordinate
     //'id' might be the id of this DesignerItem itself, or the
     //'id' can be the ID of one of the SubComponents contained in this component
+    //isEnd if true, this is the destination end of the connection
+    //isEnd if false, this is the source end of the connection
     //result should be an array of the area descriptors
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (id) {
+    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (id, isEnd) {
         var result = [];
 
         //by default return the center point of the item

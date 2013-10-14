@@ -343,8 +343,8 @@ define(['logManager',
         }
     };
 
-    DesignerItem.prototype.getConnectionAreas = function (id) {
-        var areas = this._decoratorInstance.getConnectionAreas(id),
+    DesignerItem.prototype.getConnectionAreas = function (id, isEnd) {
+        var areas = this._decoratorInstance.getConnectionAreas(id, isEnd),
             i = areas.length,
             rotatedXY,
             cArea;
