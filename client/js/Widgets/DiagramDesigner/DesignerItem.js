@@ -340,11 +340,14 @@ define(['logManager',
             //if decorator instance not changed
             //let the decorator instance know about the update
             this._decoratorInstance.update();
+            if (objDescriptor.metaInfo) {
+                this._decoratorInstance.setMetaInfo(objDescriptor.metaInfo);
+            }
         }
     };
 
-    DesignerItem.prototype.getConnectionAreas = function (id) {
-        var areas = this._decoratorInstance.getConnectionAreas(id),
+    DesignerItem.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
+        var areas = this._decoratorInstance.getConnectionAreas(id, isEnd, connectionMetaInfo),
             i = areas.length,
             rotatedXY,
             cArea;

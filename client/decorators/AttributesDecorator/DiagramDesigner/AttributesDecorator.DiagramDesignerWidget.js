@@ -328,7 +328,7 @@ define(['js/Constants',
         }
     };
 
-    AttributesDecorator.prototype.getConnectionAreas = function (id) {
+    AttributesDecorator.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
             edge = 10,
             LEN = 20;

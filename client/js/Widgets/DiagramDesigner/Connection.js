@@ -1286,7 +1286,7 @@ define(['logManager',
     };
 
 
-    Connection.prototype.getConnectionAreas = function () {
+    Connection.prototype.getConnectionAreas = function (id, isEnd) {
         var result = [],
             AREA_SIZE = 0,
             w = 0,
@@ -1870,6 +1870,16 @@ define(['logManager',
             }
         }
     };
+
+    /***************************** CONNECTION'S META INFO **************************/
+    Connection.prototype.setMetaInfo = function (params) {
+        this._metaInfo = params;
+    };
+
+    Connection.prototype.getMetaInfo = function () {
+        return this._metaInfo;
+    };
+    /***************************** END OF --- CONNECTION'S META INFO **************************/
 
     return Connection;
 });

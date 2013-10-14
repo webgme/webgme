@@ -47,7 +47,8 @@ define(['logManager'], function (logManager) {
             srcObjId,
             srcSubCompId,
             dstObjId,
-            dstSubCompId;
+            dstSubCompId,
+            connectionMetaInfo;
 
         this.endpointConnectionAreaInfo = {};
 
@@ -59,12 +60,14 @@ define(['logManager'], function (logManager) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
-            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
+            connectionMetaInfo = canvas.items[connId].getMetaInfo();
+
+            this._getEndpointConnectionAreas(srcObjId, srcSubCompId, false, connectionMetaInfo);
+            this._getEndpointConnectionAreas(dstObjId, dstSubCompId, true, connectionMetaInfo);
         }
     };
 
-    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd, connectionMetaInfo) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -79,7 +82,7 @@ define(['logManager'], function (logManager) {
                 (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId) || [];
+                res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
 
                 j = res.length;
                 while (j--) {

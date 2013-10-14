@@ -570,7 +570,8 @@ define(['logManager',
     /****************************************************************************/
     MetaEditorControl.prototype._createConnection = function (gmeSrcId, gmeDstId, connType, connTexts) {
         var connDesc,
-            connComponent;
+            connComponent,
+            metaInfo;
         //need to check if the src and dst objects are displayed or not
         //if YES, create connection
         //if NO, store information in a waiting queue
@@ -598,6 +599,12 @@ define(['logManager',
                 }
 
                 connComponent = this.diagramDesigner.createConnection(connDesc);
+
+                //set connection metaInfo and store connection type
+                //the MetaDecorator uses this information when queried for connectionArea
+                metaInfo = {};
+                metaInfo[MetaRelations.CONNECTION_META_INFO.TYPE] = connType;
+                connComponent.setMetaInfo(metaInfo);
 
                 this._saveConnection(gmeSrcId, gmeDstId, connType, connComponent.id, connTexts);
             } else {
@@ -1000,7 +1007,8 @@ define(['logManager',
     /****************************************************************************/
 
     MetaEditorControl.prototype._setNewConnectionType = function (connType) {
-        var connProps = MetaRelations.getLineVisualDescriptor(connType);
+        var connProps = MetaRelations.getLineVisualDescriptor(connType),
+            metaInfo;
 
         if (this._connType !== connType) {
             this._connType = connType;
