@@ -340,6 +340,9 @@ define(['logManager',
             //if decorator instance not changed
             //let the decorator instance know about the update
             this._decoratorInstance.update();
+            if (objDescriptor.metaInfo) {
+                this._decoratorInstance.setMetaInfo(objDescriptor.metaInfo);
+            }
         }
     };
 
