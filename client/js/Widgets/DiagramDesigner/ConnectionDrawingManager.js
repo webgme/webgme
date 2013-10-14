@@ -150,11 +150,7 @@ define(['logManager',
         this._el.on(MOUSEENTER, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
             var el = $(this);
             if (self._connectionInDraw === true) {
-                if (self._acceptConnectionEndDrop(el) == true) {
-                    $(this).addClass(CONNECTION_END_ACCEPT_CLASS);
-                } else {
-                    $(this).addClass(CONNECTION_END_REJECT_CLASS);
-                }
+                $(this).addClass(CONNECTION_END_ACCEPT_CLASS);
             }
         }).on(MOUSELEAVE, '.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS, function (/*event*/) {
                 if (self._connectionInDraw === true) {
@@ -172,9 +168,7 @@ define(['logManager',
                     self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
                     if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
-                        if (self._acceptConnectionEndDrop(el) == true) {
-                            self._connectionEndDrop(objId, sCompId);
-                        }
+                        self._connectionEndDrop(objId, sCompId);
                     }
                 }
             }
@@ -257,40 +251,6 @@ define(['logManager',
         //unbind mousemove and mouseup handlers
         $(document).off(MOUSEMOVE);
         $(document).off(MOUSEUP);
-    };
-
-
-    /*
-     * Determines if a specific connector can be a valid endpoint for a connection being drawn
-     * Returns true if the connection end can be dropped on the specific connector
-     * Returns false if not
-     *
-     * Note: connection end cannot be dropped on the same connector it is drawn from
-     */
-    //TODO: since acceptable endpoint are pre-checked, this might not be needed anymore
-    ConnectionDrawingManager.prototype._acceptConnectionEndDrop = function (el) {
-        var accept = false,
-            objId = el.attr(DiagramDesignerWidgetConstants.DATA_ITEM_ID),
-            sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID),
-            desc;
-
-        if (this._connectionInDrawProps.type === DRAW_TYPE_CREATE) {
-            if (this._connectionInDrawProps.srcEl[0] !== el[0]) {
-                desc = {"srcObjId": this._connectionInDrawProps.src,
-                    "srcSubCompId": this._connectionInDrawProps.sCompId,
-                    "connEndId": objId,
-                    "connEndSubCompId": sCompId};
-                desc[CONSTANTS.META_INFO] = this._metaInfo;
-                accept = this._diagramDesigner.onConnectionCreateConnectableAccept(desc);
-            }
-        } else {
-            accept = this._diagramDesigner.onConnectionReconnectConnectableAccept({"connId": this._connectionInDrawProps.connId,
-                "draggedEnd": this._connectionInDrawProps.draggedEnd,
-                "connEndId": objId,
-                "connEndSubCompId": sCompId});
-        }
-
-        return accept;
     };
 
 
