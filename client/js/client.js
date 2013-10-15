@@ -557,7 +557,7 @@ define([
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
-                core.persist(function(err){});
+                core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
                 project.setBranchHash('master',"",commitHash,callback);
