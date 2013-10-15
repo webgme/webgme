@@ -32,10 +32,7 @@ define(['logManager',
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
 
     ModelEditorControl = function (options) {
-        var self = this,
-            $btnGroupAutoRename,
-            $btnGroupPrintNodeData,
-            $ddlCreate;
+        var self = this;
 
         this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
 
@@ -111,105 +108,11 @@ define(['logManager',
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
-
-
-
         if (DEBUG === true) {
-            /************** AUTO RENAME GME NODES *****************/
-            $btnGroupAutoRename = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-                self._autoRenameGMEObjects();
-            });
-            this.designerCanvas.toolBar.addButton({ "title": "Auto rename",
-                "icon": "icon-th-list"}, $btnGroupAutoRename);
-
-            /************** END OF - AUTO RENAME GME NODES *****************/
-
-            /************** AUTO CREATE NEW NODES *****************/
-            $ddlCreate = this.designerCanvas.toolBar.addDropDownMenu({ "text": "Create..." });
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 item",
-                "icon": "icon-plus-sign",
-                "text": "1 item",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEModels(1);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 items",
-                "icon": "icon-plus-sign",
-                "text": "5 items",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEModels(5);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 items",
-                "icon": "icon-plus-sign",
-                "text": "10 items",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEModels(10);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 items",
-                "icon": "icon-plus-sign",
-                "text": "50 items",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEModels(50);
-                }}, $ddlCreate);
-
-            /************** END OF - AUTO CREATE NEW NODES *****************/
-
-            this.designerCanvas.toolBar.addMenuItemDivider($ddlCreate);
-
-            /************** AUTO CREATE NEW CONNECTIONS *****************/
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 connection",
-                "icon": "icon-resize-horizontal",
-                "text": "1 connection",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEConnections(1);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "5 connections",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEConnections(5);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "10 connections",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEConnections(10);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "50 connections",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEConnections(50);
-                }}, $ddlCreate);
-
-            this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 100 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "100 connections",
-                "clickFn": function (/*event, data*/) {
-                    self._createGMEConnections(100);
-                }}, $ddlCreate);
-
-            /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
-
-            /************** PRINT NODE DATA *****************/
-            $btnGroupPrintNodeData = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-                self._printNodeData();
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Print node data",
-                "icon": "icon-share"}, $btnGroupPrintNodeData);
-
-            /************** END OF - PRINT NODE DATA *****************/
+            this._addDebugModeExtensions();
         }
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
-
-
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
@@ -437,7 +340,7 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
-        var i,
+        var i = events.length,
             e;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
@@ -787,102 +690,12 @@ define(['logManager',
         this._client.removeUI(this._territoryId);
     };
 
-
-
-    ModelEditorControl.prototype._autoRenameGMEObjects = function () {
-        var i = this._GMEModels.length,
-            counter = i,
-            prefix = "MODEL_";
-
-        this._client.startTransaction();
-        while (i--) {
-            this._client.setAttributes(this._GMEModels[i], nodePropertyNames.Attributes.name, prefix + (counter - i));
-        }
-        this._client.completeTransaction();
-    };
-
-    ModelEditorControl.prototype._createGMEModels = function (num) {
-        var counter = this._GMEModels.length,
-            prefix = "MODEL_";
-
-        this._client.startTransaction();
-
-        while (num--) {
-            this._client.createChild({ "parentId": this.currentNodeInfo.id,
-                "name": prefix + counter });
-
-            counter += 1;
-        }
-        this._client.completeTransaction();
-    };
-
-    ModelEditorControl.prototype._createGMEConnections = function (num) {
-        var counter = this._GMEConnections.length,
-            allGMEID = [],
-            i,
-            sourceId,
-            targetId,
-            connDesc;
-
-        for (i in this._GmeID2ComponentID) {
-            if (this._GmeID2ComponentID.hasOwnProperty(i)) {
-                if (this._GMEModels.indexOf(i) !== -1) {
-                    allGMEID.pushUnique(i);
-                }
-            }
-        }
-
-        for (i in this._GMEID2Subcomponent) {
-            if (this._GMEID2Subcomponent.hasOwnProperty(i)) {
-                allGMEID.pushUnique(i);
-            }
-        }
-
-        i = allGMEID.length;
-
-        this._client.startTransaction();
-
-        while (num--) {
-            targetId = sourceId = Math.floor((Math.random()*( i / 2 )));
-            while (targetId === sourceId) {
-                targetId = Math.floor((Math.random()*(i / 2 ) + (i / 2)));
-            }
-
-            var registry = {};
-            registry[nodePropertyNames.Registry.lineStyle] = {};
-            _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
-
-            connDesc = {   "parentId": this.currentNodeInfo.id,
-                "sourceId": allGMEID[sourceId],
-                "targetId": allGMEID[targetId],
-                "registry": registry };
-
-            this._client.makeConnection(connDesc);
-
-            counter += 1;
-        }
-        this._client.completeTransaction();
-    };
-
     ModelEditorControl.prototype._onModelHierarchyUp = function () {
         if (this.currentNodeInfo.parentId) {
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
         }
     };
 
-    ModelEditorControl.prototype._printNodeData = function () {
-        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
-            len = idList.length,
-            node;
-
-        while (len--) {
-            node = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
-
-            if (node) {
-                node.printData();
-            }
-        }
-    };
 
     ModelEditorControl.prototype._createConnectionVisualStyleRegistryFields = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
