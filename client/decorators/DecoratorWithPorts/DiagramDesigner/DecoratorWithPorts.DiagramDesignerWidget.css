@@ -95,6 +95,10 @@
       top: -6px; }
     .decorator-with-ports .connector.bottom {
       bottom: -6px; }
+  .decorator-with-ports .progress-bar .loader-progressbar {
+    position: relative;
+    left: 50%;
+    margin-left: -8px; }
 
 .selected .decorator-with-ports {
   border: 1px solid #52a8ec;

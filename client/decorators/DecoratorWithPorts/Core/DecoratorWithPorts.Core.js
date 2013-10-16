@@ -8,11 +8,14 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'loaderProgressBar',
     './Port'], function (CONSTANTS,
                          nodePropertyNames,
+                         LoaderProgressBar,
                          Port) {
 
-    var DecoratorWidthPortsCore;
+    var DecoratorWidthPortsCore,
+        PROGRESS_BAR_CLASS = 'progress-bar';
 
     DecoratorWidthPortsCore = function () {
     };
@@ -58,6 +61,18 @@ define(['js/Constants',
         }
     };
 
+    DecoratorWidthPortsCore.prototype._registerAsSubcomponent = function(portId) {
+    };
+
+    DecoratorWidthPortsCore.prototype._unregisterAsSubcomponent = function(portId) {
+    };
+
+    DecoratorWidthPortsCore.prototype._registerForNotification = function(portId) {
+    };
+
+    DecoratorWidthPortsCore.prototype._unregisterForNotification = function(portId) {
+    };
+
     /***************  CUSTOM DECORATOR PART ****************************/
     DecoratorWidthPortsCore.prototype._updatePorts = function () {
         var client = this._control._client,
@@ -71,14 +86,29 @@ define(['js/Constants',
         removedChildren = _.difference(currentChildrenIDs, newChildrenIDs);
         len = removedChildren.length;
         while (len--) {
+            this._unregisterForNotification(removedChildren[len]);
             this._removePort(removedChildren[len]);
         }
 
         addedChildren = _.difference(newChildrenIDs, currentChildrenIDs);
         len = addedChildren.length;
         while (len--) {
+            this._registerForNotification(addedChildren[len]);
             this._renderPort(addedChildren[len]);
         }
+
+        this._checkTerritoryReady();
+    };
+
+    DecoratorWidthPortsCore.prototype._isPort = function (portNode) {
+        var isPort = false;
+
+        if (portNode) {
+            isPort = portNode.getRegistry(nodePropertyNames.Registry.isPort);
+            isPort = (isPort === true || isPort === false) ? isPort : false;
+        }
+
+        return isPort;
     };
 
     DecoratorWidthPortsCore.prototype._renderPort = function (portId) {
@@ -94,23 +124,6 @@ define(['js/Constants',
             this._addPortToContainer(portNode);
             this._registerAsSubcomponent(portId);
         }
-    };
-
-    DecoratorWidthPortsCore.prototype._registerAsSubcomponent = function(portId) {
-    };
-
-    DecoratorWidthPortsCore.prototype._unregisterAsSubcomponent = function(portId) {
-    };
-
-    DecoratorWidthPortsCore.prototype._isPort = function (portNode) {
-        var isPort = false;
-
-        if (portNode) {
-            isPort = portNode.getRegistry(nodePropertyNames.Registry.isPort);
-            isPort = (isPort === true || isPort === false) ? isPort : false;
-        }
-
-        return isPort;
     };
 
     DecoratorWidthPortsCore.prototype._removePort = function (portId) {
@@ -198,6 +211,8 @@ define(['js/Constants',
             } else {
                 this._removePort(portId);
             }
+        } else {
+            this._renderPort(portId);
         }
     };
 
@@ -224,6 +239,57 @@ define(['js/Constants',
         }
 
         return false;
+    };
+
+
+    DecoratorWidthPortsCore.prototype._checkTerritoryReady = function () {
+        //the territory rule here is all children
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            tReady = true,
+            childrenIDs,
+            len;
+
+        if (nodeObj) {
+            childrenIDs = nodeObj.getChildrenIds();
+            len = childrenIDs.length;
+            while (len--) {
+                nodeObj = client.getNode(childrenIDs[len]);
+                if (!nodeObj) {
+                    tReady = false;
+                    break;
+                }
+            }
+        } else {
+            tReady = false;
+        }
+
+        if (tReady === true) {
+            this._hidePortProgressBar();
+        } else {
+            this._showPortProgressBar();
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._showPortProgressBar = function () {
+        var pgBar = this.$el.find('.' + PROGRESS_BAR_CLASS);
+        if (pgBar.length === 0) {
+            pgBar = $('<div/>', {'class': PROGRESS_BAR_CLASS});
+            this.$el.append(pgBar);
+
+            this._loader = new LoaderProgressBar({"containerElement": pgBar});
+            this._loader.start();
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._hidePortProgressBar = function () {
+        if (this._loader) {
+            this._loader.stop();
+            this._loader.destroy();
+            delete this._loader;
+        }
+
+        this.$el.find('.' + PROGRESS_BAR_CLASS).remove();
     };
 
     return DecoratorWidthPortsCore;

@@ -323,7 +323,9 @@ define(['logManager',
 
     PartBrowserControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
         this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
-        this._componentIDPartIDMap[componentID].push(partId);
+        if (this._componentIDPartIDMap[componentID].indexOf(partId) === -1) {
+            this._componentIDPartIDMap[componentID].push(partId);
+        }
     };
 
     PartBrowserControl.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {

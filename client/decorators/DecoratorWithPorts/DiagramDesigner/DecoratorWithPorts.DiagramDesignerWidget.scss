@@ -86,6 +86,14 @@ $ports-separator-width: 15px;
       bottom: $connector-size / -2;
     }
   }
+
+  .progress-bar {
+    .loader-progressbar {
+      position: relative;
+      left: 50%;
+      margin-left: -8px;
+    }
+  }
 }
 
 
