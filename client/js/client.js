@@ -550,13 +550,33 @@ define([
                     returning(null);
                 }
             }
-            function createEmptyProject(project,callback){
+            /*function createEmptyProject(project,callback){
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
+                core.persist(root,function(err){});
+                var rootHash = core.getHash(root);
+                var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
+                project.setBranchHash('master',"",commitHash,callback);
+            }*/
+            function createEmptyProject(project,callback){
+                var core = getNewCore(project);
+                var root = core.createNode();
+                core.setAttribute(root,"name","ROOT");
+                var metameta = core.createNode(root);
+                core.setAttribute(metameta,"name","METAMETA");
+                var meta = core.createNode(root);
+                core.setAttribute(meta,"name","META");
+                var proj = core.createNode(root);
+                core.setAttribute(proj,"name","PROJECT");
+                var fco = core.createNode(metameta);
+                core.setAttribute(fco,"name","FCO");
+                core.setRegistry(fco,"isConnection",false);
+                core.setRegistry(fco,"position",{ "x": 100, "y": 100});
+                core.setRegistry(fco,"isMeta",true);
                 core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
@@ -1298,7 +1318,7 @@ define([
                 return result;
             }
             /******************* END OF --- TEST CAN-CREATECHILD **********************/
-            function createChild(parameters) {
+            /*function createChild(parameters) {
                 if(_core){
                     if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                         var baseId = parameters.baseId || "object";
@@ -1320,6 +1340,20 @@ define([
                         }
 
                         _core.setRegistry(child,"decorator","");
+
+                        storeNode(child);
+                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
+                    }
+                }
+            }*/
+            function createChild(parameters){
+                if(_core){
+                    if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                        var baseNode = null;
+                        if(_nodes[parameters.baseId]){
+                            baseNode = _nodes[parameters.baseId].node || baseNode;
+                        }
+                        var child = _core.createNode(_nodes[parameters.parentId].node, _nodes[parameters.baseId].node);
 
                         storeNode(child);
                         saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
@@ -1536,14 +1570,22 @@ define([
                 }
             }
             function setBase(path,basepath){
-                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                /*if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node,'base',basepath);
+                    saveRoot('setBase('+path+','+basepath+')');
+                }*/
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object' && _nodes[basepath] && typeof _nodes[basepath].node === 'object') {
+                    _core.setBase(_nodes[path].node,_nodes[basepath].node);
                     saveRoot('setBase('+path+','+basepath+')');
                 }
             }
             function delBase(path){
-                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                /*if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delRegistry(_nodes[path].node,'base');
+                    saveRoot('delBase('+path+')');
+                }*/
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setBase(_nodes[node].node,null);
                     saveRoot('delBase('+path+')');
                 }
             }

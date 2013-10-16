@@ -47,7 +47,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		};
 
 		core.loadRoot = function(hash) {
-			TASYNC.call(__loadRoot2, oldcore.loadRoot(hash));
+			return TASYNC.call(__loadRoot2, oldcore.loadRoot(hash));
 		};
 
 		function __loadRoot2(node) {
@@ -112,14 +112,18 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		// ----- creation
 
 		core.createNode = function(parent, base, relid) {
-			ASSERT(isValidNode(parent));
+			ASSERT(!parent || isValidNode(parent));
 			ASSERT(!base || isValidNode(base));
 			ASSERT(typeof relid === "undefined" || typeof relid === "string");
 
-			node = oldcore.createNode(parent, relid);
+			var node = oldcore.createNode(parent, relid);
 			if (!!base) {
 				oldcore.setPointer(node, "base", base);
-			}
+                //TODO maybe this is not the best way, needs to be double checked
+                node.base = base;
+			} else {
+                node.base = null;
+            }
 
 			return node;
 		};
@@ -164,7 +168,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 		core.getAttribute = function(node, name) {
 			ASSERT(isValidNode(node));
-
+            var value;
 			do {
 				value = oldcore.getAttribute(node, name);
 				node = node.base;
@@ -175,7 +179,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 		core.getRegistry = function(node, name) {
 			ASSERT(isValidNode(node));
-
+            var value;
 			do {
 				value = oldcore.getRegistry(node, name);
 				node = node.base;
@@ -206,7 +210,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 		core.getPointer = function(node, name) {
 			ASSERT(isValidNode(node));
-
+            var value;
 			do {
 				value = oldcore.getPointer(node, name);
 				node = node.base;
@@ -214,6 +218,20 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			return value;
 		};
+
+        // -------- kecso
+        core.setBase = function(node,base){
+            ASSERT(isValidNode(node) && (isValidNode(base) || base === undefined || base === null));
+            if(!!base){
+                oldcore.setPointer(node, "base", base);
+                //TODO maybe this is not the best way, needs to be double checked
+                node.base = base;
+            } else {
+                oldcore.delPointer(node,'base');
+                delete node.base;
+            }
+        };
+        // -------- kecso
 
 		return core;
 	};

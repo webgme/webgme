@@ -22,6 +22,9 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 		}
 
 		function guidToArray (guid) {
+            if(guid === null || guid === undefined){
+                return [0,0,0,0,0,0,0,0];
+            }
 			var array = [];
 			for ( var i = 0; i < guid.length / 4; i++) {
 				array.push(parseInt(guid.substr(4 * i, 4), 16));
