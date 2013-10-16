@@ -70,15 +70,16 @@ define(['js/Constants',
         while (len--) {
             this.updatePort(componentList[len]);
         }
+        this._checkTerritoryReady();
     };
 
-    DecoratorWidthPortsPartBrowserWidget.prototype._registerAsSubcomponent = function(portId) {
+    DecoratorWidthPortsPartBrowserWidget.prototype._registerForNotification = function(portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.registerComponentIDForPartID(portId, partId);
     };
 
-    DecoratorWidthPortsPartBrowserWidget.prototype._unregisterAsSubcomponent = function(portId) {
+    DecoratorWidthPortsPartBrowserWidget.prototype._unregisterForNotification = function(portId) {
         var partId = this._metaInfo[CONSTANTS.GME_ID];
 
         this._control.unregisterComponentIDFromPartID(portId, partId);
