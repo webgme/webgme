@@ -61,12 +61,6 @@ define(['js/Constants',
         }
     };
 
-    DecoratorWidthPortsCore.prototype._registerAsSubcomponent = function(portId) {
-    };
-
-    DecoratorWidthPortsCore.prototype._unregisterAsSubcomponent = function(portId) {
-    };
-
     DecoratorWidthPortsCore.prototype._registerForNotification = function(portId) {
     };
 
@@ -122,7 +116,6 @@ define(['js/Constants',
 
             this._portIDs.push(portId);
             this._addPortToContainer(portNode);
-            this._registerAsSubcomponent(portId);
         }
     };
 
@@ -130,7 +123,6 @@ define(['js/Constants',
         var idx = this._portIDs.indexOf(portId);
 
         if (idx !== -1) {
-            this._unregisterAsSubcomponent(portId);
             this._ports[portId].destroy();
             delete this._ports[portId];
             this._portIDs.splice(idx,1);

@@ -104,6 +104,16 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
         this.designerCanvas.toolBar.addButton({ "title": "Print node data",
             "icon": "icon-share"}, $btnGroupPrintNodeData);
 
+
+        this.designerCanvas.toolBar.addLabel().text('SLOW:');
+
+        this.designerCanvas.toolBar.addCheckBox({ "title": "SLOW CONNECTION",
+                                                  "checked": false,
+            "checkChangedFn": function(data, checked){
+                self.___SLOW_CONN = checked;
+            }
+        });
+
         /************** END OF - PRINT NODE DATA *****************/
 
     };

@@ -14,7 +14,6 @@ define(['js/Constants',
                                                           DecoratorWithPortsCore) {
 
     var DecoratorWithPorts,
-        __parent__ = DiagramDesignerWidgetDecoratorBase,
         DECORATOR_ID = "DecoratorWithPorts",
         PORT_CONTAINER_OFFSET_Y = 21;
 
@@ -22,7 +21,7 @@ define(['js/Constants',
 
         var opts = _.extend( {}, options);
 
-        __parent__.apply(this, [opts]);
+        DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
 
         this._initializeVariables();
         this._displayConnectors = true;
@@ -30,7 +29,7 @@ define(['js/Constants',
         this.logger.debug("DecoratorWithPorts ctor");
     };
 
-    _.extend(DecoratorWithPorts.prototype, __parent__.prototype);
+    _.extend(DecoratorWithPorts.prototype, DiagramDesignerWidgetDecoratorBase.prototype);
     _.extend(DecoratorWithPorts.prototype, DecoratorWithPortsCore.prototype);
     DecoratorWithPorts.prototype.DECORATORID = DECORATOR_ID;
 
@@ -75,15 +74,23 @@ define(['js/Constants',
 
 
     DecoratorWithPorts.prototype._registerAsSubcomponent = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
         if (this.hostDesignerItem) {
             this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
         }
+
+        //this._control.registerComponentIDForPartID(portId, partId);
     };
 
     DecoratorWithPorts.prototype._unregisterAsSubcomponent = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
         if (this.hostDesignerItem) {
             this.hostDesignerItem.unregisterSubcomponent(portId);
         }
+
+        //this._control.unregisterComponentIDFromPartID(portId, partId);
     };
 
     DecoratorWithPorts.prototype._portPositionChanged = function (portId) {
@@ -209,6 +216,59 @@ define(['js/Constants',
     DecoratorWithPorts.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
+
+    /********* TODO: possibly can go to CORE *************/
+    DecoratorWithPorts.prototype.getTerritoryQuery = function () {
+        var territoryRule = {};
+
+        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { "children": 1 };
+
+        return territoryRule;
+    };
+
+    DecoratorWithPorts.prototype.notifyComponentEvent = function (componentList) {
+        var len = componentList.length;
+        while (len--) {
+            this.updatePort(componentList[len].id);
+        }
+        this._checkTerritoryReady();
+    };
+
+    DecoratorWithPorts.prototype._registerForNotification = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
+        this._control.registerComponentIDForPartID(portId, partId);
+    };
+
+    DecoratorWithPorts.prototype._unregisterForNotification = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
+        this._control.unregisterComponentIDFromPartID(portId, partId);
+    };
+
+
+    DecoratorWithPorts.prototype._renderPort = function (portId) {
+        var client = this._control._client,
+            portNode = client.getNode(portId),
+            isPort = this._isPort(portNode);
+
+        DecoratorWithPortsCore.prototype._renderPort.call(this, portId);
+
+        if (portNode && isPort) {
+            this._registerAsSubcomponent(portId);
+        }
+    };
+
+    DecoratorWithPorts.prototype._removePort = function (portId) {
+        var idx = this._portIDs.indexOf(portId);
+
+        if (idx !== -1) {
+            this._unregisterAsSubcomponent(portId);
+        }
+
+        DecoratorWithPortsCore.prototype._removePort.call(this, portId);
+    };
+
 
     return DecoratorWithPorts;
 });

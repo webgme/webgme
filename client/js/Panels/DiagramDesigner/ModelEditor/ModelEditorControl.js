@@ -61,6 +61,9 @@ define(['logManager',
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
         this.eventQueue = [];
+        this._componentIDPartIDMap = {};
+
+        this.___SLOW_CONN = false;
 
         this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
 
@@ -158,7 +161,7 @@ define(['logManager',
 
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 2 };
+            this._selfPatterns[nodeId] = { "children": 1 };
 
             nodeName = (desc.name || " ").toUpperCase();
 
@@ -341,7 +344,9 @@ define(['logManager',
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
         var i = events.length,
-            e;
+            e,
+            territoryChanged = false,
+            self = this;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
@@ -350,72 +355,91 @@ define(['logManager',
         /** 2: connections second, dependency if a connection is connected to an other connection **/
         var orderedItemEvents = [];
         var orderedConnectionEvents = [];
+
+        if (this._delayedConnections && this._delayedConnections.length > 0) {
+            this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );
+            for (i = 0; i < this._delayedConnections.length; i += 1) {
+                orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
+                                              'eid': this._delayedConnections[i],
+                                              'desc': this._getObjectDescriptor(this._delayedConnections[i]) });
+            }
+        }
+
+        this._delayedConnections = [];
+
         var unloadEvents = [];
         i = events.length;
         while (i--) {
             e = events[i];
+
             if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                 unloadEvents.push(e);
             } else if (e.desc.kind === "MODEL") {
                 orderedItemEvents.push(e);
             } else if (e.desc.kind === "CONNECTION") {
-                //check to see if SRC and DST is another connection
-                //if so, put this guy AFTER them
-                var srcGMEID = e.desc.source;
-                var dstGMEID = e.desc.target;
-                var srcConnIdx = -1;
-                var dstConnIdx = -1;
-                var j = orderedConnectionEvents.length;
-                while (j--) {
-                    var ce = orderedConnectionEvents[j];
-                    if (ce.id === srcGMEID) {
-                        srcConnIdx = j;
-                    } else if (ce.id === dstGMEID) {
-                        dstConnIdx = j;
+                if (e.desc.parentId == this.currentNodeInfo.id) {
+                    //check to see if SRC and DST is another connection
+                    //if so, put this guy AFTER them
+                    var srcGMEID = e.desc.source;
+                    var dstGMEID = e.desc.target;
+                    var srcConnIdx = -1;
+                    var dstConnIdx = -1;
+                    var j = orderedConnectionEvents.length;
+                    while (j--) {
+                        var ce = orderedConnectionEvents[j];
+                        if (ce.id === srcGMEID) {
+                            srcConnIdx = j;
+                        } else if (ce.id === dstGMEID) {
+                            dstConnIdx = j;
+                        }
+
+                        if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                            break;
+                        }
                     }
 
-                    if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                        break;
+                    var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
+
+                    //check to see if this guy is a DEPENDENT of any already processed CONNECTION
+                    //insert BEFORE THEM
+                    var MAX_VAL = 999999999;
+                    var depSrcConnIdx = MAX_VAL;
+                    var depDstConnIdx = MAX_VAL;
+                    var j = orderedConnectionEvents.length;
+                    while (j--) {
+                        var ce = orderedConnectionEvents[j];
+                        if (e.desc.id === ce.desc.source) {
+                            depSrcConnIdx = j;
+                        } else if (e.desc.id === ce.desc.target) {
+                            depDstConnIdx = j;
+                        }
+
+                        if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                            break;
+                        }
                     }
-                }
 
-                var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
-
-                //check to see if this guy is a DEPENDENT of any already processed CONNECTION
-                //insert BEFORE THEM
-                var MAX_VAL = 999999999;
-                var depSrcConnIdx = MAX_VAL;
-                var depDstConnIdx = MAX_VAL;
-                var j = orderedConnectionEvents.length;
-                while (j--) {
-                    var ce = orderedConnectionEvents[j];
-                    if (e.desc.id === ce.desc.source) {
-                        depSrcConnIdx = j;
-                    } else if (e.desc.id === ce.desc.target) {
-                        depDstConnIdx = j;
+                    var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
+                    if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
+                        orderedConnectionEvents.push(e);
+                    } else {
+                        if (insertIdxAfter !== -1 &&
+                            insertIdxBefore === MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                        } else if (insertIdxAfter === -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                        } else if (insertIdxAfter !== -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                        }
                     }
-
-                    if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                        break;
-                    }
-                }
-
-                var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
-                if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.push(e);
                 } else {
-                    if (insertIdxAfter !== -1 &&
-                        insertIdxBefore === MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
-                    } else if (insertIdxAfter === -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    } else if (insertIdxAfter !== -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    }
+                    orderedItemEvents.push(e);
                 }
+
             }
+
         }
 
         /** LOG ORDERED CONNECTION LIST ********************/
@@ -435,11 +459,37 @@ define(['logManager',
         }
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
-        events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
+        //events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
+        events = unloadEvents.concat(orderedItemEvents);
         i = events.length;
+
+        this._notifyPackage = {};
 
         this.designerCanvas.beginUpdate();
 
+        //items
+        for (i = 0; i < events.length; i += 1) {
+            e = events[i];
+            switch (e.etype) {
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    territoryChanged = this._onLoad(e.eid, e.desc) || territoryChanged;
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    this._onUpdate(e.eid, e.desc);
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
+                    territoryChanged = this._onUnload(e.eid) || territoryChanged;
+                    break;
+            }
+        }
+
+        this._handleDecoratorNotification();
+
+        //connections
+        events = orderedConnectionEvents;
+        i = events.length;
+
+        //items
         for (i = 0; i < events.length; i += 1) {
             e = events[i];
             switch (e.etype) {
@@ -458,6 +508,20 @@ define(['logManager',
         this.designerCanvas.endUpdate();
 
         this.designerCanvas.hideProgressbar();
+
+        //update the territory
+        if (territoryChanged) {
+            //TODO: review this async here
+            if (this.___SLOW_CONN === true) {
+                setTimeout(function () {
+                 self.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
+                 self._client.updateTerritory(self._territoryId, self._selfPatterns);
+                 }, 2000);
+            } else {
+                this.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
+                this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            }
+        }
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 
@@ -483,7 +547,29 @@ define(['logManager',
             decClass,
             objDesc,
             sources = [],
-            destinations = [];
+            destinations = [],
+            getDecoratorTerritoryQueries,
+            territoryChanged = false,
+            self = this;
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            self._selfPatterns[entry] = query[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
+
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -508,6 +594,9 @@ define(['logManager',
 
                         this._GmeID2ComponentID[gmeID].push(uiComponent.id);
                         this._ComponentID2GmeID[uiComponent.id] = gmeID;
+
+                        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
+
                     }
 
                     if (objDesc.kind === "CONNECTION") {
@@ -521,36 +610,46 @@ define(['logManager',
                         var k = sources.length;
                         var l = destinations.length;
 
-                        while (k--) {
-                            while (l--) {
-                                objDesc.srcObjId = sources[k].objId;
-                                objDesc.srcSubCompId = sources[k].subCompId;
-                                objDesc.dstObjId = destinations[l].objId;
-                                objDesc.dstSubCompId = destinations[l].subCompId;
-                                objDesc.reconnectable = true;
-                                objDesc.editable = true;
+                        if (k > 0 && l > 0) {
+                            while (k--) {
+                                while (l--) {
+                                    objDesc.srcObjId = sources[k].objId;
+                                    objDesc.srcSubCompId = sources[k].subCompId;
+                                    objDesc.dstObjId = destinations[l].objId;
+                                    objDesc.dstSubCompId = destinations[l].subCompId;
+                                    objDesc.reconnectable = true;
+                                    objDesc.editable = true;
 
-                                delete objDesc.source;
-                                delete objDesc.target;
+                                    delete objDesc.source;
+                                    delete objDesc.target;
 
-                                uiComponent = this.designerCanvas.createConnection(objDesc);
+                                    uiComponent = this.designerCanvas.createConnection(objDesc);
 
-                                this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
 
-                                this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                                this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                }
                             }
+                        } else {
+                            //the connection is here, but no valid endpoint on canvas
+                            //save the connection
+                            this._delayedConnections.push(gmeID);
                         }
                     }
                 } else {
                     //supposed to be the grandchild of the currently open node
                     //--> load of port
-                    if(this._GMEModels.indexOf(objD.parentId) !== -1){
+                    /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
                         this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
-                    }
+                    }*/
+                    this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
                 }
             }
         }
+
+        return territoryChanged;
+
     };
 
     ModelEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
@@ -618,6 +717,11 @@ define(['logManager',
                                     len -= 1;
                                 } else {
                                     this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                    //let's create a connection
+                                    var uiComponent = this.designerCanvas.createConnection(objDesc);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
                                 }
                             }
                         }
@@ -635,23 +739,7 @@ define(['logManager',
                     }
                 } else {
                     //update about a subcomponent - will be handled in the decorator
-                    //find the host and send update to it
-                    var sCompExist = false;
-                    for (objId in this._GMEID2Subcomponent[gmeID]) {
-                        if (this._GMEID2Subcomponent[gmeID].hasOwnProperty(objId)) {
-                            sCompId = this._GMEID2Subcomponent[gmeID][objId];
-                            sCompExist = true;
-                            this.designerCanvas.updateDesignerItemSubComponent(objId, sCompId);
-                        }
-                    }
-
-                    //the guy was not registered for being subcomponent
-                    //try to locate it's parent
-                    if (sCompExist === false) {
-                        if(this._GMEModels.indexOf(objDesc.parentId) !== -1){
-                            this._onUpdate(objDesc.parentId,this._getObjectDescriptor(objDesc.parentId));
-                        }
-                    }
+                    this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UPDATE);
                 }
             }
         }
@@ -659,7 +747,28 @@ define(['logManager',
 
     ModelEditorControl.prototype._onUnload = function (gmeID) {
         var componentID,
-            len;
+            len,
+            getDecoratorTerritoryQueries,
+            self = this,
+            territoryChanged = false;
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            delete self._selfPatterns[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
@@ -672,6 +781,10 @@ define(['logManager',
                 while (len--) {
                     componentID = this._GmeID2ComponentID[gmeID][len];
 
+                    if (this.designerCanvas.itemIds.indexOf(componentID) !== -1) {
+                        getDecoratorTerritoryQueries(this.designerCanvas.items[componentID]._decoratorInstance);
+                    }
+
                     this.designerCanvas.deleteComponent(componentID);
 
                     delete this._ComponentID2GmeID[componentID];
@@ -680,8 +793,11 @@ define(['logManager',
                 delete this._GmeID2ComponentID[gmeID];
             } else {
                 //probably a subcomponent has been deleted - will be handled in the decorator
+                this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
             }
         }
+
+        return territoryChanged;
     };
 
     //TODO: check this here...
@@ -797,6 +913,56 @@ define(['logManager',
 
         return {'sources': sources,
                 'destinations': destinations};
+    };
+
+    ModelEditorControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
+        this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
+        if (this._componentIDPartIDMap[componentID].indexOf(partId) === -1) {
+            this._componentIDPartIDMap[componentID].push(partId);
+        }
+    };
+
+    ModelEditorControl.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {
+        var idx;
+
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[componentID]) {
+            idx = this._componentIDPartIDMap[componentID].indexOf(partId);
+            if (idx !== -1) {
+                this._componentIDPartIDMap[componentID].splice(idx, 1);
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._checkComponentDependency = function (gmeID, eventType) {
+        var len;
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
+            len = this._componentIDPartIDMap[gmeID].length;
+            while (len--) {
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({'id': gmeID, 'event': eventType});
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._handleDecoratorNotification = function () {
+        var gmeID,
+            i,
+            itemID;
+
+        for (gmeID in this._notifyPackage) {
+            if (this._notifyPackage.hasOwnProperty(gmeID)) {
+                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' + JSON.stringify(this._notifyPackage[gmeID]));
+
+                if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+                    //src is a DesignerItem
+                    i = this._GmeID2ComponentID[gmeID].length;
+                    while (i--) {
+                        itemID = this._GmeID2ComponentID[gmeID][i];
+                        this.designerCanvas.notifyItemComponentEvents(itemID, this._notifyPackage[gmeID]);
+                    }
+                }
+            }
+        }
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
