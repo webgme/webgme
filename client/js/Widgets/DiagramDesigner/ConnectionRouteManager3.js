@@ -55,10 +55,9 @@ define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
         this.autorouter.autoroute();
 
         //4 - Get the path points and redraw
-        i = idList.length;
         var pathPoints,
             realPathPoints;
-        while(i--){
+        for (i = 0; i < idList.length; i += 1) {
             pathPoints = this.autorouter.getPathPoints(this._autorouterPath[idList[i]]);
             realPathPoints = [];
             for(var j = 0; j < pathPoints.length; j++){
@@ -68,8 +67,11 @@ define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
             this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
         }
 
+        //console.log("Time between redrawing connections: " + ((new Date()).getTime() - this._lastRedraw)/1000);
+
         //need to return the IDs of the connections that was really
         //redrawn or any other visual property chenged (width, etc)
+        this._lastRedraw = (new Date()).getTime();
         return idList;
     };
 
@@ -92,13 +94,13 @@ define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
-            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
+            this._getEndpointConnectionAreas(srcObjId, srcSubCompId, false);
+            this._getEndpointConnectionAreas(dstObjId, dstSubCompId, true);
         }
     };
 
                                                                                //BOX   PORT
-    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManager3.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -114,7 +116,7 @@ define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
                 (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId) || [];
+                res = designerItem.getConnectionAreas(subCompId, isEnd) || [];
 //Autorouter here
                 var bBox = canvas.items[objId].getBoundingBox();
                 boxdefinition = {
@@ -136,6 +138,7 @@ define(['logManager', './AutoRouter'], function (logManager, AutoRouter) {
 
                 //Box def built
                 this._autorouterBoxes[longid] = this.autorouter.addBox(boxdefinition);
+
 
             }
         }

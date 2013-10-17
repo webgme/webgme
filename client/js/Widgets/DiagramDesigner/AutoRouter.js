@@ -933,7 +933,7 @@ define(['logManager'], function (logManager) {
         };
 
         var onWhichEdge = function (rect, point){
-            if( point.y == rect.ceil && rect.left < point.x && point.x < rect.right - 1 )
+            if( point.y == rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) //The last value's -1 may be causing bugs... TODO I was unable to successfully replicate the bug
                 return Dir_Top;
 
             if( point.y == rect.floor - 1 && rect.left < point.x && point.x < rect.right - 1 )
@@ -1314,6 +1314,9 @@ define(['logManager'], function (logManager) {
 
             this.x = x;
             this.y = y;
+
+            this.x = Math.round(x);
+            this.y = Math.round(y);
 
             //functions
             this.equals = equals;
@@ -1992,6 +1995,70 @@ define(['logManager'], function (logManager) {
         };
 
         var AutoRouterEdge = function (){
+            /*
+               In this section every comment refer to the horizontal case, that is, each	edge is
+               horizontal.
+             */
+
+            /*
+               Every CAutoRouterEdge belongs to an edge of a CAutoRouterPath, CAutoRouterBox or CAutoRouterPort. This edge is
+               Represented by a CAutoRouterPoint with its next point. The variable 'point' will refer
+               to this CAutoRouterPoint.
+
+               The coordinates of an edge are 'x1', 'x2' and 'y' where x1/x2 is the x-coordinate
+               of the left/right point, and y is the common y-coordinate of the points.
+
+               The edges are ordered according to their y-coordinates. The first edge has
+               the least y-coordinate (topmost), and its pointer is in 'order_first'.
+               We use the 'order' prefix in the variable names to refer to this order.
+
+               We will walk from top to bottom (from the 'order_first' along the 'order_next').
+               We keep track a "section" of some edges. If we have an infinite horizontal line,
+               then the section consists of those edges that are above the line and not blocked
+               by another edge which is closer to the line. Each edge in the section has
+               a viewable portion from the line (the not blocked portion). The coordinates
+               of this portion are 'section_x1' and 'section_x2'. We have an order of the edges
+               belonging to the current section. The 'section_first' refers to the leftmost
+               edge in the section, while the 'section_next' to the next from left to right.
+
+               We say that the CAutoRouterEdge E1 "precede" the CAutoRouterEdge E2 if there is no other CAutoRouterEdge which
+               totally	blocks S1 from S2. So a section consists of the preceding edges of an 
+               infinite edge. We say that E1 is "adjacent" to E2, if E1 is the nearest edge
+               to E2 which precede it. Clearly, every edge has at most one adjacent precedence.
+
+               The edges of any CAutoRouterBox or CAutoRouterPort are fixed. We will continually fix the edges
+               of the CAutoRouterPaths. But first we need some definition.
+
+               We call a set of edges as a "block" if the topmost (first) and bottommost (last)
+               edges of it are fixed while the edges between them are not. Furthermore, every
+               edge is adjacent to	the next one in the order. Every edge in the block has an
+               "index". The index of the first one (topmost) is 0, of the second is 1, and so on.
+               We call the index of the last edge (# of edges - 1) as the index of the entire box.
+               The "depth" of a block is the difference of the y-coordinates of the first and last
+               edges of it. The "goal gap" of the block is the quotient of the depth and index
+               of the block. If the difference of the y-coordinates of the adjacent edges in
+               the block are all equal to the goal gap, then we say that the block is evenly
+               distributed.
+
+               So we search the block which has minimal goal gap. Then if it is not evenly
+               distributed, then we shift the not fixed edges to the desired position. It is
+               not hard to see	that if the block has minimal goal gap (among the all
+               possibilities of blocks), then in this way we do not move any edges into boxes.
+               Finally, we set the (inner) edges of the block to be fixed (except the topmost and 
+               bottommost edges, since they are already fixed). And we again begin the search.
+               If every edge is fixed, then we have finished. This is the basic idea. We will
+               refine this algorithm.
+
+               The variables related to the blocks are prefixed by 'block'. Note that the 
+               variables of an edge are refer to that block in which this edge is inner! The
+               'block_oldgap' is the goal gap of the block when it was last evenly distributed.
+
+               The variables 'canstart' and 'canend' means that this egde can start and/or end
+               a block. The top edge of a box only canend, while a fixed edge of a path can both
+               start and end of a block.
+
+             */
+
             var owner = null,
                 startpoint_prev = null,
                 startpoint = null,
@@ -2028,40 +2095,53 @@ define(['logManager'], function (logManager) {
 
             this.assign = function(otherEdge){
 
-                this.setOwner(otherEdge.getOwner());
-                this.setStartPoint(otherEdge.getStartPointPtr(), false );
-                this.setEndPoint(otherEdge.getEndPointPtr(), otherEdge.getEndPointPtr() !== null); //Only calculateDirection if endpoint is not null
+                if(otherEdge !== null){
+                    this.setOwner(otherEdge.getOwner());
+                    this.setStartPoint(otherEdge.getStartPointPtr(), false );
+                    this.setEndPoint(otherEdge.getEndPointPtr(), otherEdge.getEndPointPtr() !== null); //Only calculateDirection if endpoint is not null
 
-                this.setStartPointPrev(otherEdge.getStartPointPrev() );
-                this.setEndPointNext(otherEdge.getEndPointNext() );
+                    this.setStartPointPrev(otherEdge.getStartPointPrev() );
+                    this.setEndPointNext(otherEdge.getEndPointNext() );
 
-                this.setPositionY(otherEdge.getPositionY());
-                this.setPositionX1(otherEdge.getPositionX1() );
-                this.setPositionX2(otherEdge.getPositionX2() );
-                this.setBracketClosing(otherEdge.getBracketClosing(), false );
-                this.setBracketOpening(otherEdge.getBracketOpening() );
+                    this.setPositionY(otherEdge.getPositionY());
+                    this.setPositionX1(otherEdge.getPositionX1() );
+                    this.setPositionX2(otherEdge.getPositionX2() );
+                    this.setBracketClosing(otherEdge.getBracketClosing(), false );
+                    this.setBracketOpening(otherEdge.getBracketOpening() );
 
-                this.setOrderNext(otherEdge.getOrderNext() );
-                this.setOrderPrev(otherEdge.getOrderPrev() );
+                    this.setOrderNext(otherEdge.getOrderNext() );
+                    this.setOrderPrev(otherEdge.getOrderPrev() );
 
-                this.setSectionX1(otherEdge.getSectionX1() );
-                this.setSectionX2(otherEdge.getSectionX2() );
-                this.setSectionNext(otherEdge.getSectionNext(true) );
-                this.setSectionDown(otherEdge.getSectionDown(true) );
+                    this.setSectionX1(otherEdge.getSectionX1() );
+                    this.setSectionX2(otherEdge.getSectionX2() );
+                    this.setSectionNext(otherEdge.getSectionNext(true) );
+                    this.setSectionDown(otherEdge.getSectionDown(true) );
 
-                this.setEdgeFixed(otherEdge.getEdgeFixed() );
-                this.setEdgeCustomFixed(otherEdge.getEdgeCustomFixed() );
-                this.setEdgeCanpassed(otherEdge.getEdgeCanpassed() );
-                this.setDirection(otherEdge.getDirection() );
+                    this.setEdgeFixed(otherEdge.getEdgeFixed() );
+                    this.setEdgeCustomFixed(otherEdge.getEdgeCustomFixed() );
+                    this.setEdgeCanpassed(otherEdge.getEdgeCanpassed() );
+                    this.setDirection(otherEdge.getDirection() );
 
-                this.setBlockPrev(otherEdge.getBlockPrev() );
-                this.setBlockNext(otherEdge.getBlockNext() );
-                this.setBlockTrace(otherEdge.getBlockTrace() );
+                    this.setBlockPrev(otherEdge.getBlockPrev() );
+                    this.setBlockNext(otherEdge.getBlockNext() );
+                    this.setBlockTrace(otherEdge.getBlockTrace() );
 
-                this.setClosestPrev(otherEdge.getClosestPrev() );
-                this.setClosestNext(otherEdge.getClosestNext() );
-                
-                return this;
+                    this.setClosestPrev(otherEdge.getClosestPrev() );
+                    this.setClosestNext(otherEdge.getClosestNext() );
+
+                    //Adjusting edges linked to the edge
+                    /*
+                    if(this.getOrderNext())
+                        this.getOrderNext().setOrderPrev(this);
+
+                    if(this.getOrderPrev())
+                        this.getOrderPrev().setOrderNext(this);
+                    */
+
+                    return this;
+                }
+
+                return null;
             }
 
             this.equals = function(otherEdge){
@@ -2247,6 +2327,43 @@ define(['logManager'], function (logManager) {
                 return order_prev;
             }
 
+            /*
+             * This is a temporary method. Remove when bugs are all gone. It tests the linked list for problems.
+             */
+            function testList(edge, insert){
+                var loneRanger,
+                    tonto = edge;
+
+                loneRanger = tonto;
+                while(loneRanger){
+                    tonto = loneRanger.getOrderPrev();
+                    while(tonto){
+                        if(loneRanger === tonto)
+                            return;
+                        //assert(loneRanger !== tonto, "Duplicates have been put into the list!\n" + tonto.getStartPoint().x + "," + tonto.getStartPoint().y + 
+                         //   "\nWhen inserting " + (insert ? insert.getStartPoint().x + "," + insert.getStartPoint().y : "null") );
+                        tonto = tonto.getOrderPrev();
+                    }
+                    if(!loneRanger.getOrderPrev())
+                        break;
+                    else
+                        loneRanger = loneRanger.getOrderPrev();
+                }
+
+                while(loneRanger){
+                    tonto = loneRanger.getOrderNext();
+                    while(tonto){
+                        if(loneRanger === tonto)
+                            return;
+                        //assert(loneRanger !== tonto, "Duplicates have been put into the list!\n" + tonto.getStartPoint().x + "," + tonto.getStartPoint().y + 
+                         //   "\nWhen inserting " + (insert ? insert.getStartPoint().x + "," + insert.getStartPoint().y : "null") );
+                        tonto = tonto.getOrderNext();
+                    }
+                    loneRanger = loneRanger.getOrderNext();
+                }
+                
+            }
+
             this.setOrderPrev = function(orderPrev){
                 order_prev = orderPrev;
             }
@@ -2277,7 +2394,7 @@ if(x2 < section_x1){
 var q = undefined;
 section_x2 = section_x1;
 section_x1 = x2;
-_logger.warning("Setting section_x2 to value less than section_x1. Swapping section_x2 and section_x1.");
+//_logger.warning("Setting section_x2 to value less than section_x1. Swapping section_x2 and section_x1.");
 }
 //REMOVE_END
             }
@@ -2418,8 +2535,8 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
             //--Section
                 section_first,
                 section_blocker,
-                section_ptr2blocked = [],
-
+                section_ptr2blocked = [], //This is an array to emulate the pointer to a pointer functionality in CPP. 
+                                          // section_ptr2blocked[0] = section_ptr2blocked*
                 self = this;
 
             initOrder();
@@ -2855,6 +2972,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 while( edge )
                 {
                     position_SetRealY(edge, edge.getPositionY());
+//REMOVE
+//_logger.info("Storing " + edge.getStartPoint().x + "," + edge.getStartPoint().y + " " + edge.getEndPoint().x + "," + edge.getEndPoint().y);
+//REMOVE_END
 
                     edge = edge.getOrderNext();
                 }
@@ -2892,7 +3012,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 edge.setOrderNext(before);
 
                 if( before.getOrderPrev() ){
-                    assert( before.getOrderPrev().getOrderNext() === before, "AREdgeList.insertBefore: before.getOrderPrev().getOrderNext() === before FAILED");
+                    assert( before.getOrderPrev().getOrderNext() === before, "AREdgeList.insertBefore: before.getOrderPrev().getOrderNext() === before FAILED\nbefore.getOrderPrev().getOrderNext() is " + before.getOrderPrev().getOrderNext() + " and before is " + before );
                     before.getOrderPrev().setOrderNext(edge);
 
                     assert( order_first !== before, "AREdgeList.insertBefore: order_first !== before FAILED");
@@ -2903,6 +3023,15 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 }
 
                 before.setOrderPrev(edge);
+//REMOVE
+/*
+_logger.warning("Adding " 
++ edge.getStartPoint().x + "," + edge.getStartPoint().y + " " 
++ edge.getEndPoint().x + "," + edge.getEndPoint().y + " before " 
++ before.getStartPoint().x + "," + before.getStartPoint().y + " " 
++ before.getEndPoint().x + "," + before.getEndPoint().y + " in the EdgeList" );
+*/
+//REMOVE_END
             }
 
             this.insertAfter = function(edge, after){
@@ -2926,6 +3055,15 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 }
 
                 after.setOrderNext(edge);
+//REMOVE
+/*
+_logger.warning("Adding " 
++ edge.getStartPoint().x + "," + edge.getStartPoint().y + " " 
++ edge.getEndPoint().x + "," + edge.getEndPoint().y + " after " 
++ after.getStartPoint().x + "," + after.getStartPoint().y + " " 
++ after.getEndPoint().x + "," + after.getEndPoint().y + " in the EdgeList" );
+*/
+//REMOVE_END
             }
 
             this.insertLast = function(edge){
@@ -2963,6 +3101,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
 
                 while( insert && insert.getPositionY() < y )
                     insert = insert.getOrderNext();
+//FIXME There is a bug with how order_next/prev is set. Order_next is set in one of the following methods:
 
                 if( insert )
                     this.insertBefore(edge, insert);
@@ -2972,14 +3111,20 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
 
             this.remove = function(edge){
                 assert( edge !== null, "AREdgeList.remove:  edge !== null FAILED");
+/*
+                if(edge.getOrderNext())
+                    assert( edge.getOrderNext().getOrderPrev() === edge, "AREdgeList.remove: edge is " + edge.getStartPoint().y + " FAILED");
+                if(edge.getOrderPrev())
+                    assert( edge.getOrderPrev().getOrderNext() === edge, "AREdgeList.remove: edge is " + edge.getStartPoint().y + " FAILED");
+*/
 
-                if( order_first.equals(edge) )
+                if( order_first === edge )
                     order_first = edge.getOrderNext();
 
                 if( edge.getOrderNext() )
                     edge.getOrderNext().setOrderPrev(edge.getOrderPrev());
 
-                if( order_last.equals(edge) )
+                if( order_last === edge )
                     order_last = edge.getOrderPrev();
 
                 if( edge.getOrderPrev() )
@@ -3037,9 +3182,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
                     }
 
-                    if( !edge.equals(insert) && !insert.getOrderPrev().equals(edge) )
+                    if( edge !== insert && insert.getOrderPrev() !== edge )
                     {
-                        self.remove(edge);
+                        self.remove(edge); //This is where I believe the error could lie!
                         self.insertBefore(edge, insert);
                     }
                 }
@@ -3054,6 +3199,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                             break;
                         }
 
+                        //If insert cannot be passed and it is in the way of the edge (if the edge were to slide up).
                         if( !insert.getEdgeCanpassed() && intersect(x1, x2, insert.getPositionX1(), insert.getPositionX2() ) )
                         {
                             ret = insert;
@@ -3062,9 +3208,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
                     }
 
-                    if( !edge.equals(insert) && !insert.getOrderNext().equals(edge) )
+                    if( edge !== insert && insert.getOrderNext() !== edge )//!edge.equals(insert) && !insert.getOrderNext().equals(edge) )
                     {
-                        self.remove(edge);
+                        self.remove(edge);//This is where I believe the error could lie!
                         self.insertAfter(edge, insert);
                     }
 
@@ -3151,11 +3297,11 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 assert( section_blocker != null, "AREdgeList.section_HasBlockedEdge: section_blocker != null FAILED");
 
                 var b1 = section_blocker.getSectionX1(),
-                    b2 = section_blocker.getSectionX2(),
-                    temp = new AutoRouterEdge();
+                    b2 = section_blocker.getSectionX2();
 
                 assert( b1 <= b2, "AREdgeList.section_HasBlockedEdge: b1 <= b2 FAILED");
 
+                //Setting section_ptr2blocked
                 if( section_ptr2blocked === null ){
 
                     section_first = section_first === null ? [new AutoRouterEdge()] : section_first;
@@ -3188,7 +3334,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                             while( e.getSectionNext() )
                                 e = e.getSectionNext();
 
-                            e.setSectionNext(current_edge.getSectionNext());//(new AutoRouterEdge()).assign(current_edge.getSectionNext()));//
+                            e.setSectionNext(current_edge.getSectionNext());
                             section_ptr2blocked[0] = current_edge.getSectionDown();
                         }
                         else{
@@ -3250,7 +3396,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                                 (section_ptr2blocked[0].getSectionX1() < b1 ? section_ptr2blocked[0].getSectionX1() : b1) - 1);
 
                             current_edge.setSectionNext(section_ptr2blocked[0]);
-                            section_ptr2blocked[0] = new AutoRouterEdge();
+                            section_ptr2blocked[0] = new AutoRouterEdge(); //This seems odd
                             section_ptr2blocked = null;
 
                         }
@@ -3262,11 +3408,12 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 }
 
                 assert( section_ptr2blocked !== null, "AREdgeList.section_HasBlockedEdge: section_ptr2blocked != null FAILED");
-                while( !section_ptr2blocked[0].getStartPoint().equals(emptyPoint))
+                while( section_ptr2blocked[0] != null && !section_ptr2blocked[0].getStartPoint().equals(emptyPoint))
                 {
                     var a1 = section_ptr2blocked[0].getSectionX1(),
                         a2 = section_ptr2blocked[0].getSectionX2();
 
+                    //If section_ptr2blocked is completely to the right (or above) section_blocker
                     if( a2 < b1 )												// case 1
                     {
                         section_ptr2blocked = section_ptr2blocked[0].getSectionNextPtr();
@@ -3274,10 +3421,12 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         assert( section_ptr2blocked != null, "AREdgeList.section_HasBlockedEdge: section_ptr2blocked != null FAILED");
                         continue;
                     }
+                    //If section_blocker is completely to the right (or above) section_ptr2blocked 
                     else if( b2 < a1 )											// case 6
                         break;
                     
                     if( a1 < b1 && b2 < a2 )									// case 3
+                    //If section_ptr2blocked starts before and ends after section_blocker
                     {
                         var x = b1,
                             e = section_ptr2blocked[0].getSectionDown();
@@ -3301,16 +3450,15 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         section_ptr2blocked = section_ptr2blocked[0].getSectionDownPtr(); 
                         continue;
                     }
+                    //This leaves the regular partial overlap possibility. They also include section_blocker starting before and ending after section_ptr2blocked.
 
                     return true;
                 }
 
                 assert( section_blocker.getSectionNext() == null && (section_blocker.getSectionDown() == null || section_blocker.getSectionDown().getStartPoint().equals(emptyPoint)) , "AREdgeList.section_HasBlockedEdge: section_blocker.getSectionNext() == null && section_blocker.getSectionDown() == null FAILED");
 
-
-
-                section_blocker.setSectionNext((new AutoRouterEdge()).assign(section_ptr2blocked[0]));//This will break if not new AutoRouterEdge (Need to pass by value)
-                section_ptr2blocked[0] = section_blocker;
+                section_blocker.setSectionNext((section_ptr2blocked[0]));
+                section_ptr2blocked[0] = section_blocker; //This is odd
 
                 section_blocker = null;
                 section_ptr2blocked = null;
@@ -3510,7 +3658,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
 
                         edge = trace;
-                    } while( !edge.equals(blocked) );
+                    } while( edge !== blocked );
 
                     if (DEBUG){
                             y += (edge.getBracketOpening() || blocker.getBracketClosing()) ? g : f;
@@ -3737,8 +3885,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                                         if( bmin_f > blocked.getPositionY() )
                                         {
                                             bmin_f = blocked.getPositionY();
-                                            //bmin = blocked;
-                                            bmin = (new AutoRouterEdge()).assign(blocked);
+                                            bmin = blocked;
                                         }
                                     }
                                 }
@@ -4139,6 +4286,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 var boxby = null,
                     iter = 0;
 
+                //Add a new collection that handles overlapping boxes (creates a larger encompassing box) TODO
                 while (iter < boxes.length)
                 {
                     var boxRect = ((boxes[iter]).getRect());
@@ -4348,6 +4496,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                 var thestart = start,
                     retend = ret.getLength(); //I am not sure if this should be adjusted from =null to this...
 
+                //This is where we create the original path that we will later adjust
                 while( !start.equals(end) )
                 {
                     var dir1 = exGetMajorDir(end.minus(start)),
@@ -5166,15 +5315,36 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
 
             this.autoRoute = function(){
                 connectAllDisconnectedPaths();
+//REMOVE
+var diagonalCheck = false;
+if(diagonalCheck){
+    var i = 0;
+    while(i < paths.length){
+        var path = paths[i],
+            j = 0;
+        while(j < path.getPointList().getLength() - 1){
+            if(getDir(path.getPointList().get(j)[0].minus(path.getPointList().get(j + 1)[0])) == 4)
+                _logger.info("Diagonal in path #" + i + " (" + path.getPointList().get(j)[0].x + "," + path.getPointList().get(j)[0].y + " to " + path.getPointList().get(j + 1)[0].x + "," + path.getPointList().get(j+1)[0].y + ")");
+
+            j++;
+        }
+
+        i++;
+    }
+}
+//REMOVE_END
 
                 var updated = 0,
-                    last = 0,
-                    c = 100,		// max # of total op
+                    last = 0,       // identifies the last change to the path
+                    c = 100,//20,		// max # of total op
                     dm = 10,		// max # of distribution op
                     d = 0;
 
                 while( c > 0 )
                 {
+//REMOVE
+//_logger.info("About to simplifyPaths()");
+//REMOVE_END
                     if( c > 0 )
                     {
                         if( last === 1 )
@@ -5194,6 +5364,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                             break;
 
                         c--;
+//REMOVE
+//_logger.info("About to horizontal.block_ScanBackward() ");
+//REMOVE_END
                         if( horizontal.block_ScanBackward() )
                         {
                             updated = 1;
@@ -5202,6 +5375,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                                 c--;
                             } while( c > 0 && horizontal.block_ScanBackward() );
 
+//c = 20;
                             if( last < 2 || last > 5 )
                                 d = 0;
                             else if( ++d >= dm )
@@ -5210,6 +5384,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                             last = 2;
                         }
                     }
+//REMOVE
+//_logger.info("About to horizontal.block_ScanForward()");
+//REMOVE_END
 
                     if( c > 0 )
                     {
@@ -5234,6 +5411,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
                     }
 
+//REMOVE
+//_logger.info("About to vertical.block_ScanBackward()");
+//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 4 )
@@ -5257,6 +5437,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
                     }
 
+//REMOVE
+//_logger.info("About to vertical.block_ScanForward()");
+//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 5 )
@@ -5279,6 +5462,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                             last = 5;
                         }
                     }
+//REMOVE
+//_logger.info("About to horizontal.block_SwitchWrongs()");
+//REMOVE_END
 
                     if( c > 0 )
                     {
@@ -5293,6 +5479,9 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                         }
                     }
 
+//REMOVE
+//_logger.info("About to vertical.block_SwitchWrongs()");
+//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 7 )
@@ -5355,6 +5544,7 @@ _logger.warning("Setting section_x2 to value less than section_x1. Swapping sect
                     }
                 }
 
+                _logger.info("c has been decremented " + (100 - c) + " times");
                 return updated;
             }
 
