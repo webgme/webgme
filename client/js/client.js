@@ -1353,10 +1353,14 @@ define([
                         if(_nodes[parameters.baseId]){
                             baseNode = _nodes[parameters.baseId].node || baseNode;
                         }
-                        var child = _core.createNode(_nodes[parameters.parentId].node, _nodes[parameters.baseId].node);
-
+                        var child = _core.createNode(_nodes[parameters.parentId].node, baseNode);
+                        if (parameters.position) {
+                            _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
+                        } else {
+                            _core.setRegistry(child,"position", { "x": 100, "y": 100});
+                        }
                         storeNode(child);
-                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
+                        saveRoot('createChild('+parameters.parentId+','+parameters.baseId+','+_core.getPath(child)+')');
                     }
                 }
             }
