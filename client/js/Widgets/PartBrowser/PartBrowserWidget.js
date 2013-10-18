@@ -179,6 +179,11 @@ define(['logManager',
 
                 return undefined;
             }
+        } else {
+            //not present in the list yet
+            if (partContainerDiv.length === 0) {
+                this.addPart(partId, partDesc);
+            }
         }
 
         return undefined;

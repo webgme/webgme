@@ -1653,7 +1653,7 @@ define(['logManager',
             segmentXings = intersections[segNum];
 
             for (i = 0; i < segmentXings.length; i += 1) {
-                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}};
+                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}, 'segmentLength': segmentXings[i].length, 'xings': {}, 'sweepFlag': 0};
 
                 xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
 
@@ -1702,7 +1702,59 @@ define(['logManager',
 
                 resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
                 resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
+                resultIntersectionPathDefs[segNum].xings[segmentXings[i].t] = {'pointBefore': pointBefore,
+                                                                               'pointAfter': pointAfter,
+                                                                               'xRadius': xRadius};
+                resultIntersectionPathDefs[segNum].sweepFlag = sweepFlag;
             }
+
+            //simplify bumps if they overlap
+            //order based on t
+            resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+
+            segmentLength = resultIntersectionPathDefs[segNum].segmentLength;
+            sweepFlag = resultIntersectionPathDefs[segNum].sweepFlag;
+
+            for (j = 0; j < resultIntersectionPathDefs[segNum].t.length - 1; j += 1) {
+                var t = resultIntersectionPathDefs[segNum].t[j];
+                var t1 = resultIntersectionPathDefs[segNum].t[j + 1];
+                var xing = resultIntersectionPathDefs[segNum].xings[t];
+                var xing1 = resultIntersectionPathDefs[segNum].xings[t1];
+
+                if (this._checkIntersect(xing.pointBefore.x, xing.pointBefore.y,
+                    xing.pointAfter.x, xing.pointAfter.y,
+                    xing1.pointBefore.x, xing1.pointBefore.y,
+                    xing1.pointAfter.x, xing1.pointAfter.y)) {
+                    xRadius = Math.max(xing.xRadius, xing1.xRadius);
+
+                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;
+
+                    //try to not draw a huge arc, more like a small arc and a path inbetween - doesn't look that good
+                    /*var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) * (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) * (xing1.pointAfter.y - xing.pointBefore.y));
+                    var c1 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, xRadius);
+                    var c2 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, totalLength - xRadius);
+
+                    var ddx = c1.x - xing.pointBefore.x;
+                    var ddy = c1.y - xing.pointBefore.y;
+                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + (c1.x + ddy) + "," + (c1.y + ddx);
+
+                    ddx = xing1.pointAfter.x - c2.x;
+                    ddy = xing1.pointAfter.y - c2.y;
+                    xingCurve += " L" + (c2.x + ddy) + "," + (c2.y + ddx) + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;*/
+
+                    resultIntersectionPathDefs[segNum].paths[t] = xingCurve;
+
+                    resultIntersectionPathDefs[segNum].xings[t] = {'pointBefore': xing.pointBefore,
+                        'pointAfter': xing1.pointAfter,
+                        'xRadius': xRadius};
+
+                    resultIntersectionPathDefs[segNum].t.splice(j + 1, 1);
+
+                    j -= 1;
+                }
+            }
+
+            //END OF --- simplify bumps if they overlap
         }
 
         //the first entry is the M x,y, it goes unchanged
@@ -1761,7 +1813,7 @@ define(['logManager',
 
                     s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
 
-                    intr = this._intersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
+                    intr = this._getIntersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
                     if (intr) {
                         intr.segment1 = i + 1;
                         intr.segment2 = j + 1;
@@ -1786,7 +1838,7 @@ define(['logManager',
     };
 
     //finds an intersection point of two segments A:(x1,y1 - x2,y2) and B:(x3,y3 - x4,y4)
-    Connection.prototype._intersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+    Connection.prototype._getIntersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
         var mmax = Math.max,
             mmin = Math.min;
 
@@ -1822,6 +1874,22 @@ define(['logManager',
             return;
         }
         return {x: px, y: py};
+    };
+
+    Connection.prototype._checkIntersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        var mmax = Math.max,
+            mmin = Math.min;
+
+        if (
+            mmax(x1, x2) < mmin(x3, x4) ||
+                mmin(x1, x2) > mmax(x3, x4) ||
+                mmax(y1, y2) < mmin(y3, y4) ||
+                mmin(y1, y2) > mmax(y3, y4)
+            ) {
+            return;
+        }
+
+        return true;
     };
 
     Connection.prototype._getPointAtLength = function(x1, y1, x2, y2, length) {
