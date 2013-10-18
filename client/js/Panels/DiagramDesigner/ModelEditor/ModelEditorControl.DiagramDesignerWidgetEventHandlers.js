@@ -14,7 +14,8 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
+        CONNECTION_TARGET_NAME = "target",
+        PARTBROWSERWIDGET = 'PartBrowserWidget';
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -314,33 +315,70 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
         var metaInfo = helper.data(CONSTANTS.META_INFO),
-            intellyPasteOpts,
+            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
+            createChildParams,
             gmeID,
-            i;
+            i,
+            POS_INC = 20,
+            newID,
+            newNode,
+            reg,
+            newName,
+            refObj;
 
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
 
-                intellyPasteOpts = { "parentId": this.currentNodeInfo.id };
-
                 gmeID = metaInfo[CONSTANTS.GME_ID];
 
-                if (_.isArray(gmeID)) {
-                    for (i = 0; i < gmeID.length; i+= 1) {
-                        intellyPasteOpts[gmeID[i]] = { "attributes": {}, registry: {} };
-                        intellyPasteOpts[gmeID[i]].registry[nodePropertyNames.Registry.position] = { "x": position.x,
-                            "y": position.y };
-
-                        position.x += 20;
-                        position.y += 20;
-                    }
-                } else {
-                    intellyPasteOpts[gmeID] = { "attributes": {}, registry: {} };
-                    intellyPasteOpts[gmeID].registry[nodePropertyNames.Registry.position] = { "x": position.x,
-                        "y": position.y };
+                if (!_.isArray(gmeID)) {
+                    gmeID = [gmeID];
                 }
 
-                this._client.intellyPaste(intellyPasteOpts);
+                this._client.startTransaction();
+
+                for (i = 0; i < gmeID.length; i+= 1) {
+                    //if dragsource is PartBrowserWidget --> instantiate
+                    // otherwise create reference
+                    if (dragSource === PARTBROWSERWIDGET) {
+                        createChildParams = { "parentId": this.currentNodeInfo.id,
+                            "baseId": gmeID[i]};
+                    } else {
+                        createChildParams = { "parentId": this.currentNodeInfo.id};
+                    }
+
+                    //create child
+                    newID = this._client.createChild(createChildParams);
+
+                    if (newID) {
+                        newNode = this._client.getNode(newID);
+
+                        if (newNode) {
+                            //store new position
+                            this._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': position.x,
+                                                                                                  'y': position.y});
+
+                            if (dragSource !== PARTBROWSERWIDGET) {
+                                this._client.setAttributes(newID, 'ref', gmeID[i]);
+
+                                //figure out name
+                                refObj = this._client.getNode(gmeID[i]);
+                                if (refObj) {
+                                    newName = "REF - " + (refObj.getAttribute(nodePropertyNames.Attributes.name) || gmeID[i]);
+                                } else {
+                                    newName = "REF - " + gmeID[i];
+                                }
+
+                                this._client.setAttributes(newID, nodePropertyNames.Attributes.name, newName);
+                            }
+                        }
+                    }
+
+                    position.x += POS_INC;
+                    position.y += POS_INC;
+                }
+
+                this._client.completeTransaction();
             }
         }
     };

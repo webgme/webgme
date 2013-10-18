@@ -39,6 +39,8 @@ define(['logManager',
         this._client = options.client;
         this._panel = options.panel;
 
+        this._firstLoad = false;
+
         //initialize core collections and variables
         this.designerCanvas = this._panel.widget;
 
@@ -162,6 +164,8 @@ define(['logManager',
             //put new node's info into territory rules
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
+
+            this._firstLoad = true;
 
             nodeName = (desc.name || " ").toUpperCase();
 
@@ -357,7 +361,7 @@ define(['logManager',
         var orderedConnectionEvents = [];
 
         if (this._delayedConnections && this._delayedConnections.length > 0) {
-            this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );
+            /*this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );*/
             for (i = 0; i < this._delayedConnections.length; i += 1) {
                 orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
                                               'eid': this._delayedConnections[i],
@@ -520,6 +524,30 @@ define(['logManager',
             } else {
                 this.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
                 this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            }
+        }
+
+        //check if firstload
+        if (this._firstLoad === true) {
+            this._firstLoad = false;
+
+            //check if there is active selection set in client
+            var activeSelection = this._client.getActiveSelection();
+
+            if (activeSelection && activeSelection.length > 0) {
+                i = activeSelection.length;
+                var gmeID;
+                var ddSelection = [];
+                while (i--) {
+                    //try to find each object present in the active selection mapped to DiagramDesigner element
+                    gmeID = activeSelection[i];
+
+                    if (this._GmeID2ComponentID[gmeID]) {
+                        ddSelection = ddSelection.concat(this._GmeID2ComponentID[gmeID]);
+                    }
+                }
+
+                this.designerCanvas.select(ddSelection);
             }
         }
 

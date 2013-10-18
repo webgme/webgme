@@ -9,10 +9,12 @@
 define(['js/Constants',
     'js/NodePropertyNames',
     'loaderProgressBar',
-    './Port'], function (CONSTANTS,
+    './Port',
+    './DecoratorWithPorts.Constants'], function (CONSTANTS,
                          nodePropertyNames,
                          LoaderProgressBar,
-                         Port) {
+                         Port,
+                         DecoratorWithPortsConstants) {
 
     var DecoratorWidthPortsCore,
         PROGRESS_BAR_CLASS = 'progress-bar';
@@ -22,13 +24,15 @@ define(['js/Constants',
 
     DecoratorWidthPortsCore.prototype._initializeVariables = function () {
         this.name = "";
+        this._refTo = undefined;
         this._portIDs = [];
         this._ports = {};
         this.skinParts = { "$name": undefined,
             "$portsContainer": undefined,
             "$portsContainerLeft": undefined,
             "$portsContainerRight": undefined,
-            "$portsContainerCenter": undefined };
+            "$portsContainerCenter": undefined,
+            "$ref": undefined};
     };
 
     DecoratorWidthPortsCore.prototype._renderContent = function () {
@@ -45,6 +49,7 @@ define(['js/Constants',
 
         this._updateName();
         this._updatePorts();
+        this._updateReference();
     };
 
     DecoratorWidthPortsCore.prototype._updateName = function () {
@@ -282,6 +287,83 @@ define(['js/Constants',
         }
 
         this.$el.find('.' + PROGRESS_BAR_CLASS).remove();
+    };
+
+    DecoratorWidthPortsCore.prototype._refUIDOMBase = $('<div class="' + DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS + '"><i class="icon-share"></i></div>');
+    DecoratorWidthPortsCore.prototype._updateReference = function () {
+        var refTo;
+
+        if (this._hasReference()) {
+            this.skinParts.$ref = this.$el.find('.' + DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS);
+            if (this.skinParts.$ref.length === 0) {
+                this.skinParts.$ref = this._refUIDOMBase.clone();
+                this.$el.append(this.skinParts.$ref);
+            }
+
+            refTo = this._getReferenceValue();
+
+            if (refTo !== undefined) {
+                this.skinParts.$ref.removeClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET);
+            } else {
+                this.skinParts.$ref.addClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET);
+            }
+
+            //if the old value is different than the new
+            if (this._refTo !== refTo) {
+                var oldRefTo = this._refTo;
+                this._refTo = refTo;
+
+                this._refToChanged(oldRefTo, this._refTo);
+            }
+        } else {
+            if (this.skinParts.$ref) {
+                this.skinParts.$ref.remove();
+                this.skinParts.$ref = undefined;
+            }
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._refToChanged = function (oldValue, newValue) {
+
+    };
+
+    DecoratorWidthPortsCore.prototype._hasReference = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            hasRefPointer = false;
+
+        if (nodeObj) {
+            //TODO: FIXME getPointerNames
+            hasRefPointer = nodeObj.getAttributeNames().indexOf(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME) !== -1;
+        }
+
+        return hasRefPointer;
+    };
+
+    DecoratorWidthPortsCore.prototype._getReferenceValue = function () {
+        var res,
+            client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
+
+        if (nodeObj) {
+            //TODO: FIXME getPointer
+            res = nodeObj.getAttribute(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME);
+            if (res === '' || res === null) {
+                res = undefined;
+            }
+        }
+
+        return res;
+    };
+
+    DecoratorWidthPortsCore.prototype._setReferenceValue = function (val) {
+        var client = this._control._client,
+            nodeID = this._metaInfo[CONSTANTS.GME_ID];
+
+        if (this._refTo !== val) {
+            //TODO: FIXME getPointer
+            client = client.setAttributes(nodeID, DecoratorWithPortsConstants.REFERENCE_POINTER_NAME, val);
+        }
     };
 
     return DecoratorWidthPortsCore;
