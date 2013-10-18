@@ -481,6 +481,7 @@ define(['logManager',
             /* SET UP DROPPABLE DROP REGION */
             this.skinParts.$dropRegion.droppable({
                 over: function( event, ui ) {
+                    self.selectionManager.clear();
                     self._onBackgroundDroppableOver(ui);
                 },
                 out: function( event, ui ) {
@@ -1242,6 +1243,11 @@ define(['logManager',
     DiagramDesignerWidget.prototype.selectConnections = function () {
         this.selectionManager.clear();
         this.selectionManager.setSelection(this.connectionIds, false);
+    };
+
+    DiagramDesignerWidget.prototype.select = function (selectionList) {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(selectionList, false);
     };
 
     /*************** END OF --- SELECTION API ******************************************/
