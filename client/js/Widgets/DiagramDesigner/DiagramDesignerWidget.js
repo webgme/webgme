@@ -476,7 +476,7 @@ define(['logManager',
 
             this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
 
-            this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$dropRegion);
+            this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
             /* SET UP DROPPABLE DROP REGION */
             this.skinParts.$dropRegion.droppable({
