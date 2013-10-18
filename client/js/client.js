@@ -49,6 +49,7 @@ define([
                 _project = null,
                 _core = null,
                 _selectedObjectId = null,
+                _activeSelection = [],
                 _propertyEditorSelection = null,
                 _branch = null,
                 _branchState = null,
@@ -127,8 +128,13 @@ define([
             function newDatabase(){
                 return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
             }
-            function setSelectedObjectId(objectId) {
+            function setSelectedObjectId(objectId, activeSelection) {
                 if (objectId !== _selectedObjectId) {
+                    if (activeSelection) {
+                        _activeSelection = [].concat(activeSelection);
+                    } else {
+                        _activeSelection = [];
+                    }
                     _selectedObjectId = objectId;
                     _self.dispatchEvent(_self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
                     setPropertyEditorIdList([objectId]);
@@ -145,6 +151,9 @@ define([
             }
             function clearPropertyEditorIdList() {
                 setPropertyEditorIdList([]);
+            }
+            function getActiveSelection() {
+                return _activeSelection;
             }
             function changeBranchState(newstate){
                 if(_branchState !== newstate){
@@ -1847,6 +1856,7 @@ define([
                 goOffline: goOffline,
                 goOnline: goOnline,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
+                getActiveSelection: getActiveSelection,
 
 
                 //MGA
