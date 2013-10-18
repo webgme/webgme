@@ -38,37 +38,37 @@ define(['logManager'], function (logManager) {
         ARPATH_Default = 0x0000,
 
         ARPATHST_Connected = 0x0001,		// states,
-        ARPATHST_Default = 0x0000;
+        ARPATHST_Default = 0x0000,
 
         // Port Connection Variables
-        var ARPORT_EndOnTop = 0x0001,
-            ARPORT_EndOnRight = 0x0002,
-            ARPORT_EndOnBottom = 0x0004,
-            ARPORT_EndOnLeft = 0x0008,
-            ARPORT_EndOnAll = 0x000F,
+        ARPORT_EndOnTop = 0x0001,
+        ARPORT_EndOnRight = 0x0002,
+        ARPORT_EndOnBottom = 0x0004,
+        ARPORT_EndOnLeft = 0x0008,
+        ARPORT_EndOnAll = 0x000F,
 
-            ARPORT_StartOnTop = 0x0010,
-            ARPORT_StartOnRight = 0x0020,
-            ARPORT_StartOnBottom = 0x0040,
-            ARPORT_StartOnLeft = 0x0080,
-            ARPORT_StartOnAll = 0x00F0,
+        ARPORT_StartOnTop = 0x0010,
+        ARPORT_StartOnRight = 0x0020,
+        ARPORT_StartOnBottom = 0x0040,
+        ARPORT_StartOnLeft = 0x0080,
+        ARPORT_StartOnAll = 0x00F0,
 
-            ARPORT_ConnectOnAll = 0x00FF,
-            ARPORT_ConnectToCenter = 0x0100,
+        ARPORT_ConnectOnAll = 0x00FF,
+        ARPORT_ConnectToCenter = 0x0100,
 
-            ARPORT_StartEndHorizontal = 0x00AA,
-            ARPORT_StartEndVertical = 0x0055,
+        ARPORT_StartEndHorizontal = 0x00AA,
+        ARPORT_StartEndVertical = 0x0055,
 
-            ARPORT_Default = 0x00FF;
+        ARPORT_Default = 0x00FF,
 
 
         //RoutingDirection vars 
-        var Dir_None	= -1,
-            Dir_Top		= 0,
-            Dir_Right	= 1,
-            Dir_Bottom	= 2,
-            Dir_Left	= 3,
-            Dir_Skew	= 4;
+        Dir_None	= -1,
+        Dir_Top		= 0,
+        Dir_Right	= 1,
+        Dir_Bottom	= 2,
+        Dir_Left	= 3,
+        Dir_Skew	= 4;
 
 
 
@@ -932,8 +932,11 @@ define(['logManager'], function (logManager) {
             return coord >= from;
         };
 
+        // This next method only supports deterministic (unambiguous) orientations. That is, the point
+        // cannot be in a corner of the rectangle.
+        // NOTE: the right and floor used to be - 1. 
         var onWhichEdge = function (rect, point){
-            if( point.y == rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) //The last value's -1 may be causing bugs... TODO I was unable to successfully replicate the bug
+            if( point.y == rect.ceil && rect.left < point.x && point.x < rect.right - 1 ) 
                 return Dir_Top;
 
             if( point.y == rect.floor - 1 && rect.left < point.x && point.x < rect.right - 1 )
@@ -1722,6 +1725,8 @@ define(['logManager'], function (logManager) {
                 return resRect;
             }
 
+            //Methods for detecting overlap and creating a 'union rectangle'
+
         };
 
         var ArSize = function (x, y){
@@ -2389,13 +2394,14 @@ define(['logManager'], function (logManager) {
  * the open space is restricted and forces multiple paths to overlap. 
  * 
  * Unfortunately, this patch allows them to overlap (in exchange for a non-crashing autorouter).
- */
+
 if(x2 < section_x1){
 var q = undefined;
 section_x2 = section_x1;
 section_x1 = x2;
 //_logger.warning("Setting section_x2 to value less than section_x1. Swapping section_x2 and section_x1.");
 }
+ */
 //REMOVE_END
             }
 
@@ -3055,15 +3061,6 @@ _logger.warning("Adding "
                 }
 
                 after.setOrderNext(edge);
-//REMOVE
-/*
-_logger.warning("Adding " 
-+ edge.getStartPoint().x + "," + edge.getStartPoint().y + " " 
-+ edge.getEndPoint().x + "," + edge.getEndPoint().y + " after " 
-+ after.getStartPoint().x + "," + after.getStartPoint().y + " " 
-+ after.getEndPoint().x + "," + after.getEndPoint().y + " in the EdgeList" );
-*/
-//REMOVE_END
             }
 
             this.insertLast = function(edge){
@@ -3101,7 +3098,6 @@ _logger.warning("Adding "
 
                 while( insert && insert.getPositionY() < y )
                     insert = insert.getOrderNext();
-//FIXME There is a bug with how order_next/prev is set. Order_next is set in one of the following methods:
 
                 if( insert )
                     this.insertBefore(edge, insert);
@@ -3111,12 +3107,6 @@ _logger.warning("Adding "
 
             this.remove = function(edge){
                 assert( edge !== null, "AREdgeList.remove:  edge !== null FAILED");
-/*
-                if(edge.getOrderNext())
-                    assert( edge.getOrderNext().getOrderPrev() === edge, "AREdgeList.remove: edge is " + edge.getStartPoint().y + " FAILED");
-                if(edge.getOrderPrev())
-                    assert( edge.getOrderPrev().getOrderNext() === edge, "AREdgeList.remove: edge is " + edge.getStartPoint().y + " FAILED");
-*/
 
                 if( order_first === edge )
                     order_first = edge.getOrderNext();
@@ -4529,6 +4519,7 @@ _logger.warning("Adding "
                     var old = new ArPoint(start),
                         box = goToNextBox(start, dir1, end);
 
+                    //If goToNextBox does not modify start
                     if( start.equals(old) )
                     {
                         assert( box != null, "ARGraph.connectPoints: box != null FAILED");
@@ -5039,7 +5030,7 @@ _logger.warning("Adding "
                 assert( pos < pointList.getLength(), "ARGraph.centerStairsInPathPoints pos < pointList.getLength() FAILED");
 
                 p1p = pos;
-                p1 = (new ArPoint()).assign(pointList.get(pos++)[0]);
+                p1 = (pointList.get(pos++)[0]);
 
                 while( pos < pointList.getLength())
                 {
@@ -5051,7 +5042,7 @@ _logger.warning("Adding "
                     p4 = p3;
                     p3 = p2;
                     p2 = p1;
-                    p1 = (new ArPoint()).assign(pointList.get(pos++)[0]);
+                    p1 = (pointList.get(pos++)[0]);
 
                     d34 = d23;
                     d23 = d12;
@@ -5070,14 +5061,15 @@ _logger.warning("Adding "
                     {
                         assert( p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength(), "ARGraph.centerStairsInPathPoints: p1p < pointList.getLength() && p2p < pointList.getLength() && p3p < pointList.getLength() && p4p < pointList.getLength() FAILED");
 
-                        var np2 = p2,
-                            np3 = p3,
+                        var np2 = new ArPoint(p2),
+                            np3 = new ArPoint(p3),
                             h = isHorizontal(d12),
 
                             p4x = getPointCoord(p4, h),
                             p3x = getPointCoord(p3, h),
                             p1x = getPointCoord(p1, h);
 
+                        //p1x will represent the larger x value in this 'step' situation
                         if( p1x < p4x )
                         {
                             var t = p1x;
@@ -5111,17 +5103,13 @@ _logger.warning("Adding "
                             }
 
                             if( !isLineClipBoxes(np2, np3) &&
-                                !isLineClipBoxes(p1p == pointList.getLength() ? outOfBoxEndPoint : p1, np2) && //Replaced GetTailPosition with end()
+                                !isLineClipBoxes(p1p == pointList.getLength() ? outOfBoxEndPoint : p1, np2) &&
                                 !isLineClipBoxes(p4p == 0 ? outOfBoxStartPoint : p4, np3) )
                             {
                                 p2 = np2;
                                 p3 = np3;
-                                /*pointList.splice(p2p++, 0, new ArPoint(p2)); //Copied p2
-                                pointList.splice(p2p--, 1);
-                                pointList.splice(p3p++, 0, new ArPoint(p3)); //Copied p3
-                                pointList.splice(p3p--, 1);*/
-                                pointList.splice(p2p, 1, [new ArPoint(p2)]); //Copied p2
-                                pointList.splice(p3p, 1, [new ArPoint(p3)]); //Copied p3
+                                pointList.splice(p2p, 1, [p2]);
+                                pointList.splice(p3p, 1, [p3]);
                             }
                         }
                     }
@@ -5324,7 +5312,7 @@ if(diagonalCheck){
             j = 0;
         while(j < path.getPointList().getLength() - 1){
             if(getDir(path.getPointList().get(j)[0].minus(path.getPointList().get(j + 1)[0])) == 4)
-                _logger.info("Diagonal in path #" + i + " (" + path.getPointList().get(j)[0].x + "," + path.getPointList().get(j)[0].y + " to " + path.getPointList().get(j + 1)[0].x + "," + path.getPointList().get(j+1)[0].y + ")");
+                _logger.warning("Diagonal in path #" + i + " (" + path.getPointList().get(j)[0].x + "," + path.getPointList().get(j)[0].y + " to " + path.getPointList().get(j + 1)[0].x + "," + path.getPointList().get(j+1)[0].y + ")");
 
             j++;
         }
@@ -6576,7 +6564,11 @@ pt = [pt];
             }
 
             function roundToHalfGrid(left, right){
-                return Math.floor(Math.floor((right + left) / 2) / AR_GRID_SIZE) * AR_GRID_SIZE + Math.floor(AR_GRID_SIZE/2);//((Math.floor(((right + left) / 2) / AR_GRID_SIZE) * AR_GRID_SIZE + (AR_GRID_SIZE / 2));
+                // This method finds the nearest 'gridline' to the left (or above) the center then adds half a gridlength to it.
+                // I added a checking condition to make sure that the rounding will not yield a value outside of the left, right values
+                var btwn = (left + right - 1)/2;//btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1) ? btwn : (left + right - 1)/2;
+                assert(btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1), "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?"); 
+                return btwn;
             }
 
             function createStartEndPointOn(dir){
@@ -6691,7 +6683,11 @@ pt = [pt];
                                     horizontal = (_y1 == _y2 ? true : false); 
 
                                 //If it is a single point of connection, we will expand it to a rect
+                                // We will determine that it is horizontal by if it is closer to a horizontal edges
+                                // or the vertical edges
                                 if(_y1 == _y2 && _x1 == _x2){ 
+                                    horizontal =  Math.min(Math.abs(y1 - _y1), Math.abs(y2 - _y2)) <
+                                        Math.min(Math.abs(x1 - _x1), Math.abs(x2 - _x2)) ;
                                     if(horizontal)
                                     {
                                         _x1 -= 1;
@@ -6749,6 +6745,7 @@ pt = [pt];
 
 
 
+                                assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
 
 /*
