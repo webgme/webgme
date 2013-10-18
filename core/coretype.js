@@ -51,7 +51,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		};
 
 		function __loadRoot2(node) {
-			ASSERT(typeof node.base === "undefined");
+            ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
 			node.base = null;
 			return node;
@@ -84,7 +84,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		}
 
 		function __loadBase2(node, target) {
-			ASSERT(typeof node.base === "undefined");
+			ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
 			node.base = target || null;
 			return node;
@@ -230,6 +230,31 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 oldcore.delPointer(node,'base');
                 delete node.base;
             }
+        };
+
+        core.getChild = function(node,relid){
+            ASSERT(isValidNode(node) && (typeof node.base === 'undefined' || typeof node.base === 'object'));
+            var child = oldcore.getChild(node,relid);
+            if(node.base !== null && node.base !== undefined){
+                if(child.base === null || child.base === undefined){
+                    child.base = core.getChild(node.base,relid);
+                }
+            } else {
+                child.base = null;
+            }
+            return child;
+        };
+        core.moveNode = function(node,parent){
+            var base = node.base;
+            var moved = oldcore.moveNode(node,parent);
+            moved.base = base;
+            return moved;
+        };
+        core.copyNode = function(node,parent){
+            var base = node.base;
+            var newnode = oldcore.copyNode(node,parent);
+            newnode.base = base;
+            return newnode;
         };
         // -------- kecso
 
