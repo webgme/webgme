@@ -1356,6 +1356,8 @@ define([
                 }
             }*/
             function createChild(parameters){
+                var newID;
+
                 if(_core){
                     if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                         var baseNode = null;
@@ -1369,9 +1371,12 @@ define([
                             _core.setRegistry(child,"position", { "x": 100, "y": 100});
                         }
                         storeNode(child);
+                        newID = _core.getPath(child);
                         saveRoot('createChild('+parameters.parentId+','+parameters.baseId+','+_core.getPath(child)+')');
                     }
                 }
+
+                return newID;
             }
             /************** TEST CAN-MAKEPOINTER ******************/
             function canMakePointer(id, name, to) {
