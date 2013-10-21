@@ -1669,7 +1669,8 @@ define([
                 };
 
                 var getBaseId = function(){
-                    return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
+                    //return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
+                    return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
                 var getInheritorIds = function(){
@@ -1760,7 +1761,8 @@ define([
                     return descriptor;
                 };
                 var getBase = function(){
-                    return _core.getRegistry(_nodes[_id].node,'base');
+                    //return _core.getRegistry(_nodes[_id].node,'base');
+                    return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
                 //ASSERT(_nodes[_id]);
