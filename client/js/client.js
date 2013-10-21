@@ -1291,6 +1291,7 @@ define([
             function deleteNode(path) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
+                    delete _nodes[path];
                     saveRoot('deleteNode('+path+')');
                 }
             }
@@ -1299,6 +1300,7 @@ define([
                     for(var i=0;i<paths.length;i++){
                         if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
                             _core.deleteNode(_nodes[paths[i]].node);
+                            delete _nodes[paths[i]];
                         }
                     }
                     saveRoot('delMoreNodes('+paths+')');
