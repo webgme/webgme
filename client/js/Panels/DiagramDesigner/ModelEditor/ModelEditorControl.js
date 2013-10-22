@@ -21,7 +21,9 @@ define(['logManager',
         DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
         DEFAULT_DECORATOR = "DecoratorWithPorts", /*'DefaultDecorator'*/
         WIDGET_NAME = 'DiagramDesigner',
-        DEFAULT_LINE_STYLE = {};
+        DEFAULT_LINE_STYLE = {},
+        SRC_POINTER_NAME = "source",
+        DST_POINTER_NAME = "target";
 
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
@@ -234,10 +236,10 @@ define(['logManager',
 
             if (nodeId !== this.currentNodeInfo.id) {
                 //fill the descriptor based on its type
-                if (nodeObj.getBaseId() === "connection") {
+                if (this._isConnection(nodeObj)) {
                     objDescriptor.kind = "CONNECTION";
-                    objDescriptor.source = nodeObj.getPointer("source").to;
-                    objDescriptor.target = nodeObj.getPointer("target").to;
+                    objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
+                    objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
                     //clear out name not to display anything
                     objDescriptor.name = "";
@@ -287,6 +289,22 @@ define(['logManager',
         }
 
         return objDescriptor;
+    };
+
+    ModelEditorControl.prototype._isConnection = function (obj) {
+        var res = false;
+
+        if (obj) {
+
+            var ptrNames = obj.getPointerNames();
+            if (ptrNames.indexOf(SRC_POINTER_NAME) !== -1 && ptrNames.indexOf(DST_POINTER_NAME) !== -1) {
+                if (obj.getPointer(SRC_POINTER_NAME).to && obj.getPointer(DST_POINTER_NAME).to) {
+                    res = true;
+                }
+            }
+        }
+
+        return res;
     };
 
     ModelEditorControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {
