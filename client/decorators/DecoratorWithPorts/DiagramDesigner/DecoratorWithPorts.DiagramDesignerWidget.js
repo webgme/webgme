@@ -19,7 +19,8 @@ define(['js/Constants',
         DECORATOR_ID = "DecoratorWithPorts",
         PORT_CONTAINER_OFFSET_Y = 21,
         TREEBROWSERWIDGET = 'TreeBrowserWidget',
-        ACCEPT_DROPPABLE_CLASS = 'accept-droppable';
+        ACCEPT_DROPPABLE_CLASS = 'accept-droppable',
+        DRAGGABLE_MOUSE = 'DRAGGABLE';
 
     DecoratorWithPorts = function (options) {
 
@@ -89,16 +90,12 @@ define(['js/Constants',
 
 
     DecoratorWithPorts.prototype._registerAsSubcomponent = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
-
         if (this.hostDesignerItem) {
             this.hostDesignerItem.registerSubcomponent(portId, {"GME_ID": portId});
         }
     };
 
     DecoratorWithPorts.prototype._unregisterAsSubcomponent = function(portId) {
-        var partId = this._metaInfo[CONSTANTS.GME_ID];
-
         if (this.hostDesignerItem) {
             this.hostDesignerItem.unregisterSubcomponent(portId);
         }
@@ -295,22 +292,20 @@ define(['js/Constants',
                 icon.addClass(inverseClass);
             }
 
-            this.$el.droppable({
-                greedy: true,
-                over: function( event, ui ) {
-                    self._onBackgroundDroppableOver(ui);
-                },
-                out: function( event, ui ) {
-                    self._onBackgroundDroppableOut(ui);
-                },
-                drop: function (event, ui) {
-                    self._onBackgroundDrop(event, ui);
-                }
+            //edit droppable mode
+            this.$el.on('mouseenter.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseEnter(event);
+            })
+            .on('mouseleave.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseLeave(event);
+            })
+            .on('mouseup.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseUp(event);
             });
         } else {
-            if (this.$el.hasClass('ui-droppable')) {
-                this.$el.droppable("destroy");
-            }
+            this.$el.off('mouseenter.' + DRAGGABLE_MOUSE)
+                .off('mouseleave.' + DRAGGABLE_MOUSE)
+                .off('mouseup.' + DRAGGABLE_MOUSE);
         }
     };
 
@@ -370,21 +365,18 @@ define(['js/Constants',
     };
 
 
-    DecoratorWithPorts.prototype._onBackgroundDroppableOver = function (ui) {
-        var helper = ui.helper;
-
+    DecoratorWithPorts.prototype._onBackgroundDroppableOver = function (helper) {
         if (this.onBackgroundDroppableAccept(helper) === true) {
             this._doAcceptDroppable(true);
         }
     };
 
-    DecoratorWithPorts.prototype._onBackgroundDroppableOut = function (/*ui*/) {
+    DecoratorWithPorts.prototype._onBackgroundDroppableOut = function (/*helper*/) {
         this._doAcceptDroppable(false);
     };
 
-    DecoratorWithPorts.prototype._onBackgroundDrop = function (event, ui) {
-        var helper = ui.helper,
-            metaInfo = helper.data(CONSTANTS.META_INFO),
+    DecoratorWithPorts.prototype._onBackgroundDrop = function (helper) {
+        var metaInfo = helper.data(CONSTANTS.META_INFO),
             dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
             gmeID;
 
@@ -406,10 +398,6 @@ define(['js/Constants',
         }
 
         this._doAcceptDroppable(false);
-
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
     };
 
     DecoratorWithPorts.prototype.onBackgroundDroppableAccept = function (helper) {
@@ -440,8 +428,38 @@ define(['js/Constants',
             this._acceptDroppable = false;
             this.$el.removeClass(ACCEPT_DROPPABLE_CLASS);
         }
+
+        this.hostDesignerItem.canvas._enableDroppable(!accept);
     };
 
+
+    DecoratorWithPorts.prototype._onMouseEnter = function (event) {
+        //check if it's dragging anything with jQueryUI
+        if ($.ui.ddmanager.current && $.ui.ddmanager.current.helper) {
+            this._onDragOver = true;
+            this._onBackgroundDroppableOver($.ui.ddmanager.current.helper);
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    };
+
+    DecoratorWithPorts.prototype._onMouseLeave = function (event) {
+        if (this._onDragOver) {
+            this._onBackgroundDroppableOut($.ui.ddmanager.current.helper);
+            this._onDragOver = false;
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    };
+
+    DecoratorWithPorts.prototype._onMouseUp = function (event) {
+        if (this._onDragOver) {
+            //TODO: this is still questionable if we should hack the jQeuryUI 's draggable&droppable and use half of it only
+            this._onBackgroundDrop($.ui.ddmanager.current.helper);
+            this._onDragOver = false;
+            this.hostDesignerItem.canvas._enableDroppable(false);
+        }
+    };
 
 
     return DecoratorWithPorts;

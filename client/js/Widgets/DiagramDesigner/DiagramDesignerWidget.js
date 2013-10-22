@@ -1428,6 +1428,21 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
+    DiagramDesignerWidget.prototype._enableDroppable = function (enabled) {
+        if (this.skinParts.$dropRegion && this.skinParts.$dropRegion.hasClass('ui-droppable')) {
+            if (enabled === true) {
+                this.skinParts.$dropRegion.droppable("enable");
+                if (this._savedAcceptDroppable !== undefined) {
+                    this._doAcceptDroppable(this._savedAcceptDroppable);
+                    this._savedAcceptDroppable = undefined;
+                }
+            } else {
+                this.skinParts.$dropRegion.droppable("disable");
+                this._savedAcceptDroppable = this._acceptDroppable;
+                this._doAcceptDroppable(false);
+            }
+        }
+    };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
