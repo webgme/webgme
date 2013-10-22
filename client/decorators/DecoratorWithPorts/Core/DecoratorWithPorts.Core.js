@@ -333,8 +333,7 @@ define(['js/Constants',
             hasRefPointer = false;
 
         if (nodeObj) {
-            //TODO: FIXME getPointerNames
-            hasRefPointer = nodeObj.getAttributeNames().indexOf(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME) !== -1;
+            hasRefPointer = nodeObj.getPointerNames().indexOf(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME) !== -1;
         }
 
         return hasRefPointer;
@@ -346,9 +345,10 @@ define(['js/Constants',
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
 
         if (nodeObj) {
-            //TODO: FIXME getPointer
-            res = nodeObj.getAttribute(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME);
-            if (res === '' || res === null) {
+            res = nodeObj.getPointer(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME);
+            if (res && res.to !== undefined && res.to !== null) {
+                res = res.to;
+            } else {
                 res = undefined;
             }
         }
@@ -361,8 +361,7 @@ define(['js/Constants',
             nodeID = this._metaInfo[CONSTANTS.GME_ID];
 
         if (this._refTo !== val) {
-            //TODO: FIXME getPointer
-            client = client.setAttributes(nodeID, DecoratorWithPortsConstants.REFERENCE_POINTER_NAME, val);
+            client.makePointer(nodeID, DecoratorWithPortsConstants.REFERENCE_POINTER_NAME, val);
         }
     };
 

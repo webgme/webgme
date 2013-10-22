@@ -359,7 +359,8 @@ define(['logManager',
                                                                                                   'y': position.y});
 
                             if (dragSource !== PARTBROWSERWIDGET) {
-                                this._client.setAttributes(newID, 'ref', gmeID[i]);
+                                //TODO: fixme 'ref' should come from some constants list
+                                this._client.makePointer(newID, 'ref', gmeID[i]);
 
                                 //figure out name
                                 refObj = this._client.getNode(gmeID[i]);
