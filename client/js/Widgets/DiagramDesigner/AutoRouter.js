@@ -4,12 +4,11 @@ define(['logManager'], function (logManager) {
 
     var AutoRouter;
     //Static Variables
-    //Next, there are a bunch of methods that may be used throughout the other objects
+    //Consider adding a stem length setting
 
      var ED_MAXCOORD = 100000,
         ED_MINCOORD = 0,
         ED_SMALLGAP = 15,
-        AR_GRID_SIZE = 7,
         CONNECTIONCUSTOMIZATIONDATAVERSION = 0,
         EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1,
         DEBUG =  false,
@@ -76,6 +75,7 @@ define(['logManager'], function (logManager) {
 
     AutoRouter = function(graphDetails){
        this.boxes = [];
+       this.generalBoxes = []; //Used for covering general off-limits areas in original path finding
        this.ports = [];
        this.paths = [];
 
@@ -86,7 +86,6 @@ define(['logManager'], function (logManager) {
        ED_MAXCOORD = (graphDetails ? graphDetails.coordMax : false) || 100000;
        ED_MINCOORD = (graphDetails ? graphDetails.coordMin : false) || 0;
      ED_SMALLGAP = 15;
-     AR_GRID_SIZE = (graphDetails ? graphDetails.increment || graphDetails.step : false) || 7;
         CONNECTIONCUSTOMIZATIONDATAVERSION = 0;
         EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1;
         DEBUG =  DEBUG || false;
@@ -3161,19 +3160,31 @@ _logger.warning("Adding "
 
                         if( y < insert.getPositionY() )
                         {
+                            //Then we won't be shifting past the new edge (insert)
                             break;
                         }
 
+                        //If you can't pass the edge (but want to) and the lines will overlap x values...
                         if( !insert.getEdgeCanpassed() && intersect(x1, x2, insert.getPositionX1(), insert.getPositionX2() ) )
                         {
+//REMOVE
+_logger.info("trying to slide down");
+//REMOVE_END
                             ret = insert;
                             y = insert.getPositionY();
                             break;
                         }
                     }
+//REMOVE
+_logger.info(edge !== insert );
+_logger.info(insert.getOrderPrev() !== edge);
+//REMOVE_END
 
                     if( edge !== insert && insert.getOrderPrev() !== edge )
                     {
+//REMOVE
+_logger.info("removing edge");
+//REMOVE_END
                         self.remove(edge); //This is where I believe the error could lie!
                         self.insertBefore(edge, insert);
                     }
@@ -3192,6 +3203,9 @@ _logger.warning("Adding "
                         //If insert cannot be passed and it is in the way of the edge (if the edge were to slide up).
                         if( !insert.getEdgeCanpassed() && intersect(x1, x2, insert.getPositionX1(), insert.getPositionX2() ) )
                         {
+//REMOVE
+_logger.info("trying to slide up");
+//REMOVE_END
                             ret = insert;
                             y = insert.getPositionY();
                             break;
@@ -3200,6 +3214,9 @@ _logger.warning("Adding "
 
                     if( edge !== insert && insert.getOrderNext() !== edge )//!edge.equals(insert) && !insert.getOrderNext().equals(edge) )
                     {
+//REMOVE
+_logger.info("removing edge");
+//REMOVE_END
                         self.remove(edge);//This is where I believe the error could lie!
                         self.insertAfter(edge, insert);
                     }
@@ -3222,17 +3239,22 @@ _logger.warning("Adding "
             }
 
             function checkSection(){
-                assert( section_blocker === null && section_ptr2blocked == null, "AREdgeList.checkSection: section_blocker === null && section_ptr2blocked == null FAILED");
+                if( !(section_blocker == null && section_ptr2blocked == null)){
+                    //This used to be contained in an assert. Generally this fails when the router does not have a clean exit then is asked to reroute.
+                    _logger.warning("section_blocker and section_ptr2blocked are not null. Assuming last run did not exit cleanly. Fixing...");
+                    section_blocker == null;
+                    section_ptr2blocked == null;
+                }
             }
             
             function sectionReset(){
-                assert( section_blocker == null && section_ptr2blocked == null, "AREdgeList.sectionReset: section_blocker == null && section_ptr2blocked == null FAILED" );
+                checkSection();
 
                 section_first = null;
             }
             
             function section_BeginScan(blocker){
-                assert( section_blocker == null && section_ptr2blocked == null, "AREdgeList.section_BeginScan: section_blocker == null && section_ptr2blocked == null FAILED" );
+                checkSection();
 
                 section_blocker = blocker;
 
@@ -3258,7 +3280,7 @@ _logger.warning("Adding "
                     b2 = section_blocker.getSectionX2();
 
                     if(e != null)
-                        e = (e.getStartPoint().equals(emptyPoint) || e.getSectionX1() === undefined ? null : e);//TEST
+                        e = (e.getStartPoint().equals(emptyPoint) || e.getSectionX1() === undefined ? null : e);
                     
                 assert( b1 <= a2 && a1 <= b2, "AREdgeList.section_IsImmediate: b1 <= a2 && a1 <= b2 FAILED");// not case 1 or 6
 
@@ -3279,7 +3301,7 @@ _logger.warning("Adding "
                 if( b2 <= a2 )
                     return a1 == p1 && ((e == null || e.getStartPoint().equals(emptyPoint)) || b2 < e.getSectionX1());	// case 5
 
-                return e == null && a1 == p1 && a2 == p2;						// case 4
+                return (e == null || e.getStartPoint().equals(emptyPoint)) && a1 == p1 && a2 == p2;						// case 4
             }
             
             
@@ -3359,6 +3381,7 @@ _logger.warning("Adding "
                         }
 
                         assert( b2 < a1, "AREdgeList.section_HasBlockedEdge: b2 < a1 FAILED");
+                        //Shifting the front of the p2b so it no longer overlaps section_blocker
                         current_edge.setSectionX1(a1);
                     }
                     else														// case 2
@@ -3372,7 +3395,7 @@ _logger.warning("Adding "
                             o = e;
                             e = e.getSectionNext();
 
-                            if( o.getSectionX2() + 1 < b1 && ( e == null || o.getSectionX2() + 1 < e.getSectionX1() ) ){
+                            if( o.getSectionX2() + 1 < b1 && ( e == null || e.getStartPoint().equals(emptyPoint) || o.getSectionX2() + 1 < e.getSectionX1() ) ){
                                 section_ptr2blocked = o.getSectionNextPtr();
                             }
                         }
@@ -3403,7 +3426,7 @@ _logger.warning("Adding "
                     var a1 = section_ptr2blocked[0].getSectionX1(),
                         a2 = section_ptr2blocked[0].getSectionX2();
 
-                    //If section_ptr2blocked is completely to the right (or above) section_blocker
+                    //If section_ptr2blocked is completely to the left (or above) section_blocker
                     if( a2 < b1 )												// case 1
                     {
                         section_ptr2blocked = section_ptr2blocked[0].getSectionNextPtr();
@@ -3411,7 +3434,7 @@ _logger.warning("Adding "
                         assert( section_ptr2blocked != null, "AREdgeList.section_HasBlockedEdge: section_ptr2blocked != null FAILED");
                         continue;
                     }
-                    //If section_blocker is completely to the right (or above) section_ptr2blocked 
+                    //If section_blocker is completely to the right (or below) section_ptr2blocked 
                     else if( b2 < a1 )											// case 6
                         break;
                     
@@ -3424,7 +3447,7 @@ _logger.warning("Adding "
                         for(;;)
                         {
 
-                            if( e == null || x < e.getSectionX1() ){ 
+                            if( e == null || e.getStartPoint().equals(emptyPoint) || x < e.getSectionX1() ){ 
                                 return true;
                             }
                             else if( x <= e.getSectionX2() )
@@ -3642,6 +3665,9 @@ _logger.warning("Adding "
 
                         if( y + 0.001 < trace.getPositionY() )
                         {
+//REMOVE
+_logger.info("modified is true because " + (y + .001) + " < " + trace.getPositionY());
+//REMOVE_END
                             modified = true;
                             if( slideButNotPassEdges(trace, y) )
                                 trace.setBlockPrev(null);
@@ -3738,8 +3764,15 @@ _logger.warning("Adding "
 
                         if( trace.getPositionY() < y - 0.001 )
                         {
+//REMOVE
+_logger.info("modified is true because " + trace.getPositionY()  + " < " + (y - .001));
+//REMOVE_END
                             modified = true;
-                            if( slideButNotPassEdges(trace, y) ) 
+                            var ed = slideButNotPassEdges(trace, y)
+//REMOVE
+_logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoint().y) : "yes") );
+//REMOVE_END
+                            if( ed ) 
                                 trace.setBlockNext(null);
                         }
 
@@ -3760,8 +3793,8 @@ _logger.warning("Adding "
                 var blocker = order_first;
                 while( blocker )
                 {
-                    var bmin = null,
-                        smin = null,
+                    var bmin = null, //block min?
+                        smin = null, //section min?
                         bmin_f = ED_MINCOORD - 1,
                         smin_f = ED_MINCOORD - 1;
 
@@ -6564,7 +6597,6 @@ pt = [pt];
             }
 
             function roundToHalfGrid(left, right){
-                // This method finds the nearest 'gridline' to the left (or above) the center then adds half a gridlength to it.
                 // I added a checking condition to make sure that the rounding will not yield a value outside of the left, right values
                 var btwn = (left + right - 1)/2;//btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1) ? btwn : (left + right - 1)/2;
                 assert(btwn < Math.max(left, right - 1) && btwn > Math.min(left, right - 1), "roundToHalfGrid: btwn variable not between left, right values. Perhaps box/connectionArea is too small?"); 
