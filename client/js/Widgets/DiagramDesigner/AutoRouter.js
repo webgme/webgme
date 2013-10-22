@@ -3343,7 +3343,7 @@ _logger.info("removing edge");
                     {
                         if( e && !e.getStartPoint().equals(emptyPoint))
                         {
-                            while( e.getSectionNext() )
+                            while( e.getSectionNext() && !e.getSectionNext().getStartPoint().equals(emptyPoint))
                                 e = e.getSectionNext();
 
                             e.setSectionNext(current_edge.getSectionNext());
