@@ -283,5 +283,18 @@ define(['logManager',
         return null;
     };
 
+
+    //called by the controller and the decorator can specify the territory rule for itself
+    //must return an object of id - rule pairs, like
+    //{'id': {'children': 0, ...}}
+    DiagramDesignerWidgetDecoratorBase.prototype.getTerritoryQuery = function () {
+        return undefined;
+    };
+
+    //called by the controller when an event arrives about registered component ID
+    DiagramDesignerWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
+        this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
+    };
+
     return DiagramDesignerWidgetDecoratorBase;
 });

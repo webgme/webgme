@@ -504,5 +504,9 @@ define(['logManager',
         return this._decoratorInstance.getDrawnConnectionVisualStyle(sCompId);
     };
 
+    DesignerItem.prototype.onItemComponentEvents = function (eventList) {
+        this._decoratorInstance.notifyComponentEvent(eventList);
+    };
+
     return DesignerItem;
 });

@@ -104,6 +104,16 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
         this.designerCanvas.toolBar.addButton({ "title": "Print node data",
             "icon": "icon-share"}, $btnGroupPrintNodeData);
 
+
+        this.designerCanvas.toolBar.addLabel().text('SLOW:');
+
+        this.designerCanvas.toolBar.addCheckBox({ "title": "SLOW CONNECTION",
+                                                  "checked": false,
+            "checkChangedFn": function(data, checked){
+                self.___SLOW_CONN = checked;
+            }
+        });
+
         /************** END OF - PRINT NODE DATA *****************/
 
     };
@@ -122,13 +132,23 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
 
     ModelEditorControlDEBUG.prototype._createGMEModels = function (num) {
         var counter = this._GMEModels.length,
-            prefix = "MODEL_";
+            prefix = "MODEL_",
+            newID,
+            newNode;
 
         this._client.startTransaction();
 
         while (num--) {
-            this._client.createChild({ "parentId": this.currentNodeInfo.id,
-                "name": prefix + counter });
+            newID = this._client.createChild({ "parentId": this.currentNodeInfo.id});
+
+            if (newID) {
+                newNode = this._client.getNode(newID);
+
+                if (newNode) {
+                    this._client.setAttributes(newID, nodePropertyNames.Attributes.name, prefix + counter);
+                    this._client.setRegistry(newID, nodePropertyNames.Registry.decorator, "");
+                }
+            }
 
             counter += 1;
         }

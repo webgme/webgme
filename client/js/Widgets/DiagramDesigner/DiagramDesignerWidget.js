@@ -476,11 +476,12 @@ define(['logManager',
 
             this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
 
-            this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$dropRegion);
+            this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
             /* SET UP DROPPABLE DROP REGION */
             this.skinParts.$dropRegion.droppable({
                 over: function( event, ui ) {
+                    self.selectionManager.clear();
                     self._onBackgroundDroppableOver(ui);
                 },
                 out: function( event, ui ) {
@@ -1244,6 +1245,11 @@ define(['logManager',
         this.selectionManager.setSelection(this.connectionIds, false);
     };
 
+    DiagramDesignerWidget.prototype.select = function (selectionList) {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(selectionList, false);
+    };
+
     /*************** END OF --- SELECTION API ******************************************/
 
 
@@ -1422,6 +1428,21 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
+    DiagramDesignerWidget.prototype._enableDroppable = function (enabled) {
+        if (this.skinParts.$dropRegion && this.skinParts.$dropRegion.hasClass('ui-droppable')) {
+            if (enabled === true) {
+                this.skinParts.$dropRegion.droppable("enable");
+                if (this._savedAcceptDroppable !== undefined) {
+                    this._doAcceptDroppable(this._savedAcceptDroppable);
+                    this._savedAcceptDroppable = undefined;
+                }
+            } else {
+                this.skinParts.$dropRegion.droppable("disable");
+                this._savedAcceptDroppable = this._acceptDroppable;
+                this._doAcceptDroppable(false);
+            }
+        }
+    };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 

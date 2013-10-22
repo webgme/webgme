@@ -63,6 +63,7 @@ define(['js/Constants',
     DecoratorWidthPortsPartBrowserWidget.prototype.update = function () {
          this._updateName();
          this._updatePorts();
+         this._updateReference();
     };
 
     DecoratorWidthPortsPartBrowserWidget.prototype.notifyComponentEvent = function (componentList) {

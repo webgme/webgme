@@ -6,31 +6,36 @@ define(['js/Constants',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./DecoratorWithPorts.DiagramDesignerWidget.html',
     '../Core/DecoratorWithPorts.Core',
+    '../Core/DecoratorWithPorts.Constants',
     'css!./DecoratorWithPorts.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DiagramDesignerWidgetDecoratorBase,
                                                           DiagramDesignerWidgetConstants,
                                                           decoratorWithPortsTemplate,
-                                                          DecoratorWithPortsCore) {
+                                                          DecoratorWithPortsCore,
+                                                          DecoratorWithPortsConstants) {
 
     var DecoratorWithPorts,
-        __parent__ = DiagramDesignerWidgetDecoratorBase,
         DECORATOR_ID = "DecoratorWithPorts",
-        PORT_CONTAINER_OFFSET_Y = 21;
+        PORT_CONTAINER_OFFSET_Y = 21,
+        TREEBROWSERWIDGET = 'TreeBrowserWidget',
+        ACCEPT_DROPPABLE_CLASS = 'accept-droppable',
+        DRAGGABLE_MOUSE = 'DRAGGABLE';
 
     DecoratorWithPorts = function (options) {
 
         var opts = _.extend( {}, options);
 
-        __parent__.apply(this, [opts]);
+        DiagramDesignerWidgetDecoratorBase.apply(this, [opts]);
 
         this._initializeVariables();
         this._displayConnectors = true;
+        this._selfPatterns = {};
 
         this.logger.debug("DecoratorWithPorts ctor");
     };
 
-    _.extend(DecoratorWithPorts.prototype, __parent__.prototype);
+    _.extend(DecoratorWithPorts.prototype, DiagramDesignerWidgetDecoratorBase.prototype);
     _.extend(DecoratorWithPorts.prototype, DecoratorWithPortsCore.prototype);
     DecoratorWithPorts.prototype.DECORATORID = DECORATOR_ID;
 
@@ -54,12 +59,22 @@ define(['js/Constants',
             event.stopPropagation();
             event.preventDefault();
         });
+
+        // set title editable on double-click
+        this.$el.on("dblclick.refDblClick", '.' + DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS, function (event) {
+            if (!($(this).hasClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET))) {
+                self._navigateToReference();
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
     };
 
 
     DecoratorWithPorts.prototype.update = function () {
         this._updateName();
         this._updatePorts();
+        this._updateReference();
     };
 
 
@@ -209,6 +224,245 @@ define(['js/Constants',
     DecoratorWithPorts.prototype.hideEndConnectors = function () {
         this.hideSourceConnectors();
     };
+
+    /********* TODO: possibly can go to CORE *************/
+    DecoratorWithPorts.prototype.getTerritoryQuery = function () {
+        var territoryRule = {};
+
+        territoryRule[this._metaInfo[CONSTANTS.GME_ID]] = { "children": 1 };
+
+        return territoryRule;
+    };
+
+    DecoratorWithPorts.prototype.notifyComponentEvent = function (componentList) {
+        var len = componentList.length;
+        while (len--) {
+            this.updatePort(componentList[len].id);
+        }
+        this._checkTerritoryReady();
+    };
+
+    DecoratorWithPorts.prototype._registerForNotification = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
+        this._control.registerComponentIDForPartID(portId, partId);
+    };
+
+    DecoratorWithPorts.prototype._unregisterForNotification = function(portId) {
+        var partId = this._metaInfo[CONSTANTS.GME_ID];
+
+        this._control.unregisterComponentIDFromPartID(portId, partId);
+    };
+
+
+    DecoratorWithPorts.prototype._renderPort = function (portId) {
+        var client = this._control._client,
+            portNode = client.getNode(portId),
+            isPort = this._isPort(portNode);
+
+        DecoratorWithPortsCore.prototype._renderPort.call(this, portId);
+
+        if (portNode && isPort) {
+            this._registerAsSubcomponent(portId);
+        }
+    };
+
+    DecoratorWithPorts.prototype._removePort = function (portId) {
+        var idx = this._portIDs.indexOf(portId);
+
+        if (idx !== -1) {
+            this._unregisterAsSubcomponent(portId);
+        }
+
+        DecoratorWithPortsCore.prototype._removePort.call(this, portId);
+    };
+
+    DecoratorWithPorts.prototype._updateReference = function () {
+        var inverseClass = 'inverse-on-hover',
+            icon,
+            self = this;
+
+        DecoratorWithPortsCore.prototype._updateReference.call(this);
+
+        if (this.skinParts.$ref) {
+            icon = this.skinParts.$ref.find('i').first();
+            if (this.skinParts.$ref.hasClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET)) {
+                icon.removeClass(inverseClass);
+            } else {
+                icon.addClass(inverseClass);
+            }
+
+            //edit droppable mode
+            this.$el.on('mouseenter.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseEnter(event);
+            })
+            .on('mouseleave.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseLeave(event);
+            })
+            .on('mouseup.' + DRAGGABLE_MOUSE, null, function (event) {
+                self._onMouseUp(event);
+            });
+        } else {
+            this.$el.off('mouseenter.' + DRAGGABLE_MOUSE)
+                .off('mouseleave.' + DRAGGABLE_MOUSE)
+                .off('mouseup.' + DRAGGABLE_MOUSE);
+        }
+    };
+
+    DecoratorWithPorts.prototype._navigateToReference = function () {
+        var client = this._control._client,
+            nodeObj;
+
+        if (this._refTo) {
+            nodeObj = client.getNode(this._refTo);
+            if (nodeObj) {
+                if (nodeObj.getParentId()) {
+                    this._control._client.setSelectedObjectId(nodeObj.getParentId(), this._refTo);
+                } else {
+                    this._control._client.setSelectedObjectId('root', this._refTo);
+                }
+            } else {
+                this.logger.warning('_navigateToReference client.getNode(' + this._refTo + ') returned null... :(');
+            }
+        }
+    };
+
+    DecoratorWithPorts.prototype._refToChanged = function (oldValue, newValue) {
+        this.logger.debug('refToChanged from ' + oldValue + ' to ' + newValue);
+
+        if (oldValue) {
+            delete this._selfPatterns[oldValue];
+        }
+
+        if (newValue) {
+            this._territoryId = this._territoryId || this._control._client.addUI(this, true);
+            this._selfPatterns[newValue] = { "children": 0 };
+        }
+
+        if (this._selfPatterns && !_.isEmpty(this._selfPatterns)) {
+            this._control._client.updateTerritory(this._territoryId, this._selfPatterns);
+        } else {
+            if (this._territoryId) {
+                this._control._client.removeUI(this._territoryId);
+            }
+        }
+    };
+
+    // PUBLIC METHODS
+    DecoratorWithPorts.prototype.onOneEvent = function (events) {
+        //don't really care here, just want to make sure that the reference object is loaded in the client
+        this.logger.debug('onOneEvent: ' + JSON.stringify(events));
+    };
+
+    DecoratorWithPorts.prototype.destroy = function () {
+        //drop territory
+        if (this._territoryId) {
+            this._control._client.removeUI(this._territoryId);
+        }
+
+        //call base destroy
+        DecoratorWithPortsCore.prototype.destroy.call(this);
+    };
+
+
+    DecoratorWithPorts.prototype._onBackgroundDroppableOver = function (helper) {
+        if (this.onBackgroundDroppableAccept(helper) === true) {
+            this._doAcceptDroppable(true);
+        }
+    };
+
+    DecoratorWithPorts.prototype._onBackgroundDroppableOut = function (/*helper*/) {
+        this._doAcceptDroppable(false);
+    };
+
+    DecoratorWithPorts.prototype._onBackgroundDrop = function (helper) {
+        var metaInfo = helper.data(CONSTANTS.META_INFO),
+            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
+            gmeID;
+
+        if (this._acceptDroppable === true) {
+
+            if (dragSource === TREEBROWSERWIDGET) {
+                if (metaInfo) {
+                    if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+                        gmeID = metaInfo[CONSTANTS.GME_ID];
+
+                        if (gmeID && (!_.isArray(gmeID) || (gmeID.length === 1))) {
+
+                            this._setReferenceValue(gmeID);
+
+                        }
+                    }
+                }
+            }
+        }
+
+        this._doAcceptDroppable(false);
+    };
+
+    DecoratorWithPorts.prototype.onBackgroundDroppableAccept = function (helper) {
+        var metaInfo = helper.data(CONSTANTS.META_INFO),
+            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
+            gmeID;
+
+        if (dragSource === TREEBROWSERWIDGET) {
+            if (metaInfo) {
+                if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+                    gmeID = metaInfo[CONSTANTS.GME_ID];
+
+                    if (gmeID && (!_.isArray(gmeID) || (gmeID.length === 1))) {
+                        return true;
+                    }
+                }
+            }
+        }
+
+        return false;
+    };
+
+    DecoratorWithPorts.prototype._doAcceptDroppable = function (accept) {
+        if (accept === true) {
+            this._acceptDroppable = true;
+            this.$el.addClass(ACCEPT_DROPPABLE_CLASS);
+        } else {
+            this._acceptDroppable = false;
+            this.$el.removeClass(ACCEPT_DROPPABLE_CLASS);
+        }
+
+        this.hostDesignerItem.canvas._enableDroppable(!accept);
+    };
+
+
+    DecoratorWithPorts.prototype._onMouseEnter = function (event) {
+        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+            //check if it's dragging anything with jQueryUI
+            if ($.ui.ddmanager.current && $.ui.ddmanager.current.helper) {
+                this._onDragOver = true;
+                this._onBackgroundDroppableOver($.ui.ddmanager.current.helper);
+                event.stopPropagation();
+                event.preventDefault();
+            }
+        }
+    };
+
+    DecoratorWithPorts.prototype._onMouseLeave = function (event) {
+        if (this._onDragOver) {
+            this._onBackgroundDroppableOut($.ui.ddmanager.current.helper);
+            this._onDragOver = false;
+            event.stopPropagation();
+            event.preventDefault();
+        }
+    };
+
+    DecoratorWithPorts.prototype._onMouseUp = function (event) {
+        if (this._onDragOver) {
+            //TODO: this is still questionable if we should hack the jQeuryUI 's draggable&droppable and use half of it only
+            this._onBackgroundDrop($.ui.ddmanager.current.helper);
+            this._onDragOver = false;
+            this.hostDesignerItem.canvas._enableDroppable(false);
+        }
+    };
+
 
     return DecoratorWithPorts;
 });
