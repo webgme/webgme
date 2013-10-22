@@ -322,13 +322,13 @@ define(['js/Constants',
                     this._control._client.setSelectedObjectId('root', this._refTo);
                 }
             } else {
-                this.logger.warning('client.getNode(' + this._refTo + ') returned null... :(');
+                this.logger.warning('_navigateToReference client.getNode(' + this._refTo + ') returned null... :(');
             }
         }
     };
 
     DecoratorWithPorts.prototype._refToChanged = function (oldValue, newValue) {
-        this.logger.warning('refToChanged from ' + oldValue + ' to ' + newValue);
+        this.logger.debug('refToChanged from ' + oldValue + ' to ' + newValue);
 
         if (oldValue) {
             delete this._selfPatterns[oldValue];
@@ -351,7 +351,7 @@ define(['js/Constants',
     // PUBLIC METHODS
     DecoratorWithPorts.prototype.onOneEvent = function (events) {
         //don't really care here, just want to make sure that the reference object is loaded in the client
-        this.logger.warning('onOneEvent: ' + JSON.stringify(events));
+        this.logger.debug('onOneEvent: ' + JSON.stringify(events));
     };
 
     DecoratorWithPorts.prototype.destroy = function () {
@@ -434,12 +434,14 @@ define(['js/Constants',
 
 
     DecoratorWithPorts.prototype._onMouseEnter = function (event) {
-        //check if it's dragging anything with jQueryUI
-        if ($.ui.ddmanager.current && $.ui.ddmanager.current.helper) {
-            this._onDragOver = true;
-            this._onBackgroundDroppableOver($.ui.ddmanager.current.helper);
-            event.stopPropagation();
-            event.preventDefault();
+        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+            //check if it's dragging anything with jQueryUI
+            if ($.ui.ddmanager.current && $.ui.ddmanager.current.helper) {
+                this._onDragOver = true;
+                this._onBackgroundDroppableOver($.ui.ddmanager.current.helper);
+                event.stopPropagation();
+                event.preventDefault();
+            }
         }
     };
 
