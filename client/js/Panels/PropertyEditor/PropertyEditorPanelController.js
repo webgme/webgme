@@ -71,8 +71,10 @@ define(['logManager',
             i,
             flattenedAttrs,
             flattenedRegs,
+            flattenedPointers,
             commonAttrs = {},
             commonRegs = {},
+            commonPointers = {},
             noCommonValueColor = "#f89406",
             _getNodePropertyValues, //fn
             _filterCommon, //fn
@@ -131,6 +133,10 @@ define(['logManager',
                     flattenedRegs = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
 
                     _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
+
+                    flattenedPointers = _getNodePropertyValues(cNode, "getPointerNames", "getPointer");
+
+                    _filterCommon(commonPointers, flattenedPointers, i === selectionLength - 1);
                 }
             }
 
@@ -198,8 +204,39 @@ define(['logManager',
                 "text": "Registry",
                 "value": undefined};
 
+            propList["Pointers"] = { "name": 'Pointers',
+                "text": "Pointers",
+                "value": undefined};
+
             _addItemsToResultList(commonAttrs, "Attributes", propList);
+
+            //filter out rows from Registry
+            //MetaEditor.MemberCoord
+            for (var it in commonRegs) {
+                if (commonRegs.hasOwnProperty(it)) {
+                    if (commonRegs.hasOwnProperty(it)) {
+                        if (it.indexOf('MetaEditor.MemberCoord.') !== -1) {
+                            delete commonRegs[it];
+                        }
+                    }
+                }
+            }
+
             _addItemsToResultList(commonRegs, "Registry", propList);
+
+            //filter out ros from Pointers
+            for (var it in commonPointers) {
+                if (commonPointers.hasOwnProperty(it)) {
+                    if (commonPointers.hasOwnProperty(it)) {
+                        if (it.indexOf('.from') === it.length - 5) {
+                            delete commonPointers[it];
+                        } else {
+                            commonPointers[it].readOnly = true;
+                        }
+                    }
+                }
+            }
+            _addItemsToResultList(commonPointers, "Pointers", propList);
         }
 
         return propList;
