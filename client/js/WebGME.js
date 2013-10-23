@@ -91,7 +91,9 @@ define(['logManager',
 
         selectObject = function () {
             if (objectToLoad && objectToLoad !== "") {
-                client.setSelectedObjectId(objectToLoad);
+                setTimeout(function () {
+                    client.setSelectedObjectId(objectToLoad);
+                }, 1000);
             }
         };
     };

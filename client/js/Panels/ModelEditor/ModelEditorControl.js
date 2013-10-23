@@ -155,7 +155,9 @@ define(['logManager',
         this.currentNodeInfo.parentId = undefined;
 
         if (nodeId) {
-            this.currentNodeInfo.parentId = desc.parentId;
+            if (desc) {
+                this.currentNodeInfo.parentId = desc.parentId;
+            }
 
             if (this.currentNodeInfo.parentId) {
                 this.$btnGroupModelHierarchyUp.show();
@@ -169,7 +171,7 @@ define(['logManager',
 
             this._firstLoad = true;
 
-            nodeName = (desc.name || " ").toUpperCase();
+            nodeName = (desc && desc.name || " ").toUpperCase();
 
             this.designerCanvas.setTitle(nodeName);
             this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
