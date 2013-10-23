@@ -64,10 +64,19 @@ require(
         'jquery-dataTables-bootstrapped',
         'bootstrap',
         'underscore',
-        'js/WebGME'
+        'js/WebGME',
+        'clientUtil'
     ],
-    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME) {
+    function (domReady, jQuery, jQueryUi, jQueryUiiPad, jqueryWebGME, jqueryDataTables, bootstrap, underscore, webGME, util) {
         domReady(function () {
+            var rel = util.getURLParameterByName('d').toLowerCase() === "rel";
+
+            //check if release mode requested from URL
+            //TODO: might need to be changed in long term
+            if (rel === true) {
+                DEBUG = false;
+            }
+
             webGME.start();
         });
     }
