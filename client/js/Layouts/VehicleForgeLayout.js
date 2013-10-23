@@ -37,7 +37,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         this._mainPanel = this._body.find('div.ui-layout-center');
         this._rightPanel = this._body.find('div.ui-layout-east');
 
-        this._headerPanel = this._body.find('div.ui-layout-north div.project-info');
+        this._headerPanel = this._body.find('div.ui-layout-north > div.navbar-inner');
         this._footerPanel = this._body.find('div.ui-layout-south > div.navbar-inner');
 
         this._rightPanels = [];

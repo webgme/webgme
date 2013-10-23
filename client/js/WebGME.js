@@ -1,6 +1,6 @@
 "use strict";
 
-var WebGMEGlobal = {};
+var WebGMEGlobal = { 'version': 'pre-alpha' };
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -25,7 +25,8 @@ define(['logManager',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
             projectToLoad = util.getURLParameterByName('project').toLowerCase(),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
-            logger = logManager.create('WebGME');
+            logger = logManager.create('WebGME'),
+            selectObject;
 
         //as of now it's a global variable just to make access to it easier
         //TODO: might need to be changed
@@ -76,16 +77,22 @@ define(['logManager',
                                     if (err) {
                                         logger.error(err);
                                     } else {
-                                        if (objectToLoad && objectToLoad !== "") {
-                                            client.setSelectedObjectId(objectToLoad);
-                                        }
+                                        selectObject();
                                     }
                                 });
+                            } else {
+                                selectObject();
                             }
                         }
                     });
                 }
             });
+        };
+
+        selectObject = function () {
+            if (objectToLoad && objectToLoad !== "") {
+                client.setSelectedObjectId(objectToLoad);
+            }
         };
     };
 
