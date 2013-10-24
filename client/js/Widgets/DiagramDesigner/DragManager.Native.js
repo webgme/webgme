@@ -451,6 +451,8 @@ define(['logManager',
 
 
     DragManager.prototype._updateDraggedItemPositions = function (dX, dY) {
+        var gridSize = this._diagramDesigner.gridSize;
+
         if (dX !== this._dragDesc.dX ||
             dY !== this._dragDesc.dY) {
 
@@ -459,14 +461,14 @@ define(['logManager',
 
             this.logger.debug("DragManager._updateDraggedItemPositions [dx,dy]: " + dX + "," + dY );
 
-            if (this._dragDesc.params.minStartCoordinates.x + dX < 0) {
+            if (this._dragDesc.params.minStartCoordinates.x + dX < gridSize) {
                 this.logger.debug("dX cleared out otherwise item's position would be negative");
-                dX = -this._dragDesc.params.minStartCoordinates.x;
+                dX = gridSize - this._dragDesc.params.minStartCoordinates.x;
             }
 
-            if (this._dragDesc.params.minStartCoordinates.y + dY < 0) {
+            if (this._dragDesc.params.minStartCoordinates.y + dY < gridSize) {
                 this.logger.debug("dY cleared out otherwise item's position would be negative");
-                dY = -this._dragDesc.params.minStartCoordinates.y;
+                dY = gridSize - this._dragDesc.params.minStartCoordinates.y;
             }
 
             this._moveDraggedComponentsBy(dX, dY);

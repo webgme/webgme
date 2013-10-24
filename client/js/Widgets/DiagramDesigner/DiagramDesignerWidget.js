@@ -824,11 +824,11 @@ define(['logManager',
         var posXDelta,
             posYDelta;
 
-        if (pX < 0) {
+        if (pX < this.gridSize) {
             pX = this.gridSize;
         }
 
-        if (pY < 0) {
+        if (pY < this.gridSize) {
             pY = this.gridSize;
         }
 
