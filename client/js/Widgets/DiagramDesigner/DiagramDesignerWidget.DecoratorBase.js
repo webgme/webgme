@@ -154,7 +154,7 @@ define(['logManager',
 
     //Should return the connection areas for the component with the given 'id'
     //Canvas will draw the connection to / from this coordinate
-    //'id' might be the id of this DesignerItem itself, or the
+    //'id' might be the id of this DesignerItem itself (or undefined), or the
     //'id' can be the ID of one of the SubComponents contained in this component
     //isEnd if true, this is the destination end of the connection
     //isEnd if false, this is the source end of the connection

@@ -412,7 +412,7 @@ define(['js/Constants',
 
         //by default return the bounding box edge's midpoints
 
-        if (id === undefined) {
+        if (id === undefined || id == this.hostDesignerItem.id) {
             //NORTH
             cN = {"id": "0",
                 "x1": edge,
