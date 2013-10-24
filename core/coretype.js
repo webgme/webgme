@@ -86,16 +86,69 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		function __loadBase2(node, target) {
 			ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
 
-			node.base = target || null;
-			return node;
+            if(target === null){
+                node.base = null;
+                return node;
+            } else {
+                return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
+            }
 		}
 
+        core.getChildrenRelids = function(node){
+            var inheritRelIds = node.base === null ? [] : oldcore.getChildrenRelids(core.getBase(node));
+            var ownRelIds = oldcore.getChildrenRelids(node);
+            for(var i=0;i<inheritRelIds.length;i++){
+                if(ownRelIds.indexOf(inheritRelIds[i]) === -1){
+                    ownRelIds.push(inheritRelIds[i]);
+                }
+            }
+            return ownRelIds;
+        };
+        /*
 		core.loadChildren = function(node) {
 			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
-		};
 
-		core.loadCollection = function(node, name) {
+            //now we made it not recursive so we only check the children of the base
+            if(node.base !== null){
+                console.log(kecso);
+            }
+            var inhertChildren = node.base === null ? [] : TASYNC.call(__loadBaseArray, oldcore.loadChildren(core.getBase(node)));
+            var ownChildren = TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
+            var findChild = function(children,relid){
+                for(var i=0;i<children.length;i++){
+                    if(core.getRelid(children[i]) === relid){
+                        return children[i];
+                    }
+                }
+                return null;
+            };
+            var createMissingChildren = function(own,inherited){
+                //we should create inherited children which missing
+                var inheritRelIds = node.base === null ? [] : oldcore.getChildrenRelids(core.getBase(node));
+                var ownRelIds = oldcore.getChildrenRelids(node);
+                var missingChildren = [];
+                for(var i=0;i<inheritRelIds.length;i++){
+                    if(ownRelIds.indexOf(inheritRelIds[i]) === -1){
+                        missingChildren.push(inheritRelIds[i]);
+                    }
+                }
+
+                for(var i=0;i<missingChildren.length;i++){
+                    var newChild = core.createNode(node,findChild(inherited,missingChildren[i]),missingChildren[i]);
+                    own.push(newChild);
+                }
+
+                return own;
+            };
+            return TASYNC.call(createMissingChildren,ownChildren,inhertChildren);
+		};*/
+        core.loadChildren = function(node) {
+            ASSERT(isValidNode(node));
+            return TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
+        };
+
+
+        core.loadCollection = function(node, name) {
 			ASSERT(isValidNode(node));
 			return TASYNC.call(__loadBaseArray, oldcore.loadCollection(node, name));
 		};
