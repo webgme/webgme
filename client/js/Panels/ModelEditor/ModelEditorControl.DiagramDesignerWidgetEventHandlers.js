@@ -60,8 +60,8 @@ define(['logManager',
             return self._onBackgroundDroppableAccept(helper);
         };
 
-        this.designerCanvas.onBackgroundDrop = function (helper, position) {
-            self._onBackgroundDrop(helper, position);
+        this.designerCanvas.onBackgroundDrop = function (helper, position, event) {
+            self._onBackgroundDrop(helper, position, event);
         };
 
         this.designerCanvas.onSelectionChanged = function (selectedIds) {
@@ -313,18 +313,90 @@ define(['logManager',
         return false;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position, event) {
         var metaInfo = helper.data(CONSTANTS.META_INFO),
             dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
-            createChildParams,
             gmeID,
-            i,
-            POS_INC = 20,
-            newID,
-            newNode,
-            reg,
-            newName,
-            refObj;
+            self = this,
+            handleDrop;
+
+        handleDrop = function (key, idList, pos) {
+            var createChildParams,
+                i,
+                POS_INC = 20,
+                newID,
+                newNode,
+                newName,
+                refObj;
+
+            self._client.startTransaction();
+
+            self.logger.warning('handleDrop idList: ' + idList);
+
+            for (i = 0; i < idList.length; i+= 1) {
+                //if dragsource is PartBrowserWidget --> instantiate
+                // otherwise create reference
+                createChildParams = undefined;
+                switch (key) {
+                    case "inherit":
+                        createChildParams = { "parentId": self.currentNodeInfo.id,
+                            "baseId": idList[i]};
+
+                        newID = self._client.createChild(createChildParams);
+
+                        if (newID) {
+                            newNode = self._client.getNode(newID);
+
+                            if (newNode) {
+                                //store new position
+                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
+                                    'y': pos.y});
+                            }
+                        }
+                        break;
+                    case "reference":
+                        createChildParams = { "parentId": self.currentNodeInfo.id};
+
+                        newID = self._client.createChild(createChildParams);
+
+                        if (newID) {
+                            newNode = self._client.getNode(newID);
+
+                            if (newNode) {
+                                //store new position
+                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
+                                    'y': pos.y});
+
+                                //TODO: fixme 'ref' should come from some constants list
+                                self._client.makePointer(newID, 'ref', idList[i]);
+
+                                //figure out name
+                                refObj = self._client.getNode(idList[i]);
+                                if (refObj) {
+                                    newName = "REF - " + (refObj.getAttribute(nodePropertyNames.Attributes.name) || idList[i]);
+                                } else {
+                                    newName = "REF - " + idList[i];
+                                }
+
+                                self._client.setAttributes(newID, nodePropertyNames.Attributes.name, newName);
+                            }
+                        }
+                        break;
+                    case "move":
+                        self._client.moveMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                        break;
+                    case "copy":
+                        self._client.copyMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                        break;
+                    default:
+                }
+
+                pos.x += POS_INC;
+                pos.y += POS_INC;
+            }
+
+            self._client.completeTransaction();
+        };
 
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
@@ -335,55 +407,44 @@ define(['logManager',
                     gmeID = [gmeID];
                 }
 
-                this._client.startTransaction();
+                this.logger.warning('_onBackgroundDrop gmeID: ' + gmeID);
 
-                for (i = 0; i < gmeID.length; i+= 1) {
-                    //if dragsource is PartBrowserWidget --> instantiate
-                    // otherwise create reference
-                    if (dragSource === PARTBROWSERWIDGET) {
-                        createChildParams = { "parentId": this.currentNodeInfo.id,
-                            "baseId": gmeID[i]};
-                    } else {
-                        createChildParams = { "parentId": this.currentNodeInfo.id};
-                    }
+                if (dragSource !== PARTBROWSERWIDGET) {
+                    this.designerCanvas.createMenu(function (trigger, e) {
+                        var menuItems = {};
 
-                    //create child
-                    newID = this._client.createChild(createChildParams);
-
-                    if (newID) {
-                        newNode = this._client.getNode(newID);
-
-                        if (newNode) {
-                            //store new position
-                            this._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': position.x,
-                                                                                                  'y': position.y});
-
-                            if (dragSource !== PARTBROWSERWIDGET) {
-                                //TODO: fixme 'ref' should come from some constants list
-                                this._client.makePointer(newID, 'ref', gmeID[i]);
-
-                                //figure out name
-                                refObj = this._client.getNode(gmeID[i]);
-                                if (refObj) {
-                                    newName = "REF - " + (refObj.getAttribute(nodePropertyNames.Attributes.name) || gmeID[i]);
-                                } else {
-                                    newName = "REF - " + gmeID[i];
-                                }
-
-                                this._client.setAttributes(newID, nodePropertyNames.Attributes.name, newName);
+                        menuItems = {
+                            "move":  {
+                                "name": "Move here",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
+                            },
+                            "copy":  {
+                                "name": "Copy here",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
+                            },
+                            "reference":  {
+                                "name": "Create reference",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
                             }
-                        }
-                    }
+                        };
 
-                    position.x += POS_INC;
-                    position.y += POS_INC;
+                        return menuItems;
+                    }, this.designerCanvas.posToPageXY(position.x, position.y));
+                } else {
+                    handleDrop("inherit", gmeID, position);
                 }
-
-                this._client.completeTransaction();
             }
         }
     };
-
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
