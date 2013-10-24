@@ -623,6 +623,7 @@ define([
             }
 
             function userEvents(userId,modifiedNodes){
+                console.log('kecso','1',modifiedNodes);
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
@@ -630,6 +631,9 @@ define([
                 }
 
                 var events = [];
+
+                console.log('kecso','1.5',_users[userId].PATTERNS,_users[userId].PATHS,newPaths);
+
                 //deleted items
                 for(i in _users[userId].PATHS){
                     if(!newPaths[i]){
@@ -660,6 +664,7 @@ define([
                     } else {
                         // TODO events.push({etype:'complete',eid:null});
                     }
+                    console.log('kecso','2',events);
                     if(_users[userId].ONEEVENT){
                         _users[userId].UI.onOneEvent(events);
                     } else {
@@ -1160,7 +1165,7 @@ define([
                 });
             }
             //MGA
-            function copyMoreNodes(nodePaths,parentPath,callback){
+            function copyMoreNodesAsync(nodePaths,parentPath,callback){
                 var checkPaths = function(){
                     var result = true;
                     for(var i=0;i<nodePaths.length;i++){
@@ -1217,6 +1222,40 @@ define([
                             callback(err,{});
                         }
                     });
+                }
+            }
+            function copyMoreNodes(parentPath,nodesPath){
+                var isMissing = false;
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
+                    for(var i=0;i<nodesPath.length;i++){
+                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
+                            isMissing = true;
+                            break;
+                        }
+                    }
+                    if(!isMissing){
+                        for(var i=0;i<nodesPath.length;i++){
+                            _core.copyNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
+                        }
+                        saveRoot('copyMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+                    }
+                }
+            }
+            function moveMoreNodes(parentPath,nodesPath){
+                var isMissing = false;
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
+                    for(var i=0;i<nodesPath.length;i++){
+                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
+                            isMissing = true;
+                            break;
+                        }
+                    }
+                    if(!isMissing){
+                        for(var i=0;i<nodesPath.length;i++){
+                            _core.moveNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
+                        }
+                        saveRoot('moveMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+                    }
                 }
             }
             function startTransaction() {
@@ -1290,7 +1329,7 @@ define([
 
                 if(_core && checkClipboard()){
                     var paths = COPY(_clipboard);
-                    copyMoreNodes(paths,parentpath,function(err,copyarray){
+                    copyMoreNodesAsync(paths,parentpath,function(err,copyarray){
                         if(!err){
                             saveRoot('pasteNodes('+parentpath+','+paths+')');
                         }
@@ -1510,7 +1549,7 @@ define([
                         }
                         saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
                     } else {
-                        copyMoreNodes(pathestocopy,parameters.parentId,function(err,copyarr){
+                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
                             if(err){
                                 //rollBackModification();
                             }
@@ -1922,6 +1961,8 @@ define([
                 setRegistry: setRegistry,
                 delRegistry: delRegistry,
                 canSetRegistry: canSetRegistry,
+                copyMoreNodes: copyMoreNodes,
+                moveMoreNodes: moveMoreNodes,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
                 deleteNode: deleteNode,
