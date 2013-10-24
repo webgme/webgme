@@ -26,6 +26,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
     'js/Widgets/DiagramDesigner/HighlightManager',
     'js/Widgets/DiagramDesigner/SearchManager',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -45,7 +46,8 @@ define(['logManager',
                                                       DiagramDesignerWidgetZoom,
                                                       DiagramDesignerWidgetKeyboard,
                                                       HighlightManager,
-                                                      SearchManager) {
+                                                      SearchManager,
+                                                      DiagramDesignerWidgetContextMenu) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -596,6 +598,19 @@ define(['logManager',
             "top": top };
     };
 
+    DiagramDesignerWidget.prototype.posToPageXY = function (x, y) {
+        var childrenContainerOffset = this._offset,
+            childrenContainerScroll = this._scrollPos,
+            pX = x * this._zoomRatio,
+            pY = y * this._zoomRatio;
+
+        pX += childrenContainerOffset.left - childrenContainerScroll.left;
+        pY += childrenContainerOffset.top - childrenContainerScroll.top;
+
+        return { "x": pX > 0 ? pX : 0,
+            "y": pY > 0 ? pY : 0 };
+    };
+
     DiagramDesignerWidget.prototype.clear = function () {
         var i;
 
@@ -1069,7 +1084,7 @@ define(['logManager',
             posY = mPos.mY;
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(helper, { "x": posX, "y": posY });
+            this.onBackgroundDrop(helper, { "x": posX, "y": posY }, event);
         }
 
         this._doAcceptDroppable(false);
@@ -1090,7 +1105,7 @@ define(['logManager',
         return false;
     };
 
-    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position) {
+    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position, event) {
         this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDrop not overridden in controller!!! position: '" + JSON.stringify(position) + "'");
     };
 
@@ -1454,6 +1469,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetEventDispatcher.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
+
 
     return DiagramDesignerWidget;
 });
