@@ -623,7 +623,6 @@ define([
             }
 
             function userEvents(userId,modifiedNodes){
-                console.log('kecso','1',modifiedNodes);
                 var newPaths = {};
                 var startErrorLevel = _loadError;
                 for(var i in _users[userId].PATTERNS){
@@ -631,8 +630,6 @@ define([
                 }
 
                 var events = [];
-
-                console.log('kecso','1.5',_users[userId].PATTERNS,_users[userId].PATHS,newPaths);
 
                 //deleted items
                 for(i in _users[userId].PATHS){
@@ -664,7 +661,6 @@ define([
                     } else {
                         // TODO events.push({etype:'complete',eid:null});
                     }
-                    console.log('kecso','2',events);
                     if(_users[userId].ONEEVENT){
                         _users[userId].UI.onOneEvent(events);
                     } else {
@@ -737,7 +733,7 @@ define([
                         base = _nodes['root'].node;
                     }
                     core.loadByPath(base,id,function(err,node){
-                        if(!err && node){
+                        if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
                             if(!nodesSoFar[path]){
                                 nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
