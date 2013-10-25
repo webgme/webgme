@@ -6,69 +6,67 @@ define(['logManager'], function (logManager) {
     //Static Variables
 
      var ED_MAXCOORD = 100000,
-        ED_MINCOORD = 0,
-        ED_SMALLGAP = 15,
-        CONNECTIONCUSTOMIZATIONDATAVERSION = 0,
-        EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1,
-        DEBUG =  false,
+         ED_MINCOORD = -2,//This allows connections to be still be draw when box is pressed against the edge
+         ED_SMALLGAP = 15,
+         CONNECTIONCUSTOMIZATIONDATAVERSION = 0,
+         EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1,
+         DEBUG =  false,
+         BUFFER = 1,
 
-        EDLS_S = ED_SMALLGAP,
-        EDLS_R = ED_SMALLGAP + 1, 
-        EDLS_D = ED_MAXCOORD - ED_MINCOORD,
+         EDLS_S = ED_SMALLGAP,
+         EDLS_R = ED_SMALLGAP + 1, 
+         EDLS_D = ED_MAXCOORD - ED_MINCOORD,
 
-        ARPATH_EndOnDefault = 0x0000,
-        ARPATH_EndOnTop = 0x0010,
-        ARPATH_EndOnRight = 0x0020,
-        ARPATH_EndOnBottom = 0x0040,
-        ARPATH_EndOnLeft = 0x0080,
-        ARPATH_EndMask = (ARPATH_EndOnTop | ARPATH_EndOnRight | ARPATH_EndOnBottom | ARPATH_EndOnLeft),
-
-
-        ARPATH_StartOnDefault = 0x0000,
-        ARPATH_StartOnTop = 0x0100,
-        ARPATH_StartOnRight = 0x0200,
-        ARPATH_StartOnBottom = 0x0400,
-        ARPATH_StartOnLeft = 0x0800,
-        ARPATH_StartMask = (ARPATH_StartOnTop | ARPATH_StartOnRight | ARPATH_StartOnBottom | ARPATH_StartOnLeft),
-
-        ARPATH_HighLighted = 0x0002,		// attributes,
-        ARPATH_Fixed = 0x0001,
-        ARPATH_Default = 0x0000,
-
-        ARPATHST_Connected = 0x0001,		// states,
-        ARPATHST_Default = 0x0000,
-
-        // Port Connection Variables
-        ARPORT_EndOnTop = 0x0001,
-        ARPORT_EndOnRight = 0x0002,
-        ARPORT_EndOnBottom = 0x0004,
-        ARPORT_EndOnLeft = 0x0008,
-        ARPORT_EndOnAll = 0x000F,
-
-        ARPORT_StartOnTop = 0x0010,
-        ARPORT_StartOnRight = 0x0020,
-        ARPORT_StartOnBottom = 0x0040,
-        ARPORT_StartOnLeft = 0x0080,
-        ARPORT_StartOnAll = 0x00F0,
-
-        ARPORT_ConnectOnAll = 0x00FF,
-        ARPORT_ConnectToCenter = 0x0100,
-
-        ARPORT_StartEndHorizontal = 0x00AA,
-        ARPORT_StartEndVertical = 0x0055,
-
-        ARPORT_Default = 0x00FF,
+         ARPATH_EndOnDefault = 0x0000,
+         ARPATH_EndOnTop = 0x0010,
+         ARPATH_EndOnRight = 0x0020,
+         ARPATH_EndOnBottom = 0x0040,
+         ARPATH_EndOnLeft = 0x0080,
+         ARPATH_EndMask = (ARPATH_EndOnTop | ARPATH_EndOnRight | ARPATH_EndOnBottom | ARPATH_EndOnLeft),
 
 
-        //RoutingDirection vars 
-        Dir_None	= -1,
-        Dir_Top		= 0,
-        Dir_Right	= 1,
-        Dir_Bottom	= 2,
-        Dir_Left	= 3,
-        Dir_Skew	= 4;
+         ARPATH_StartOnDefault = 0x0000,
+         ARPATH_StartOnTop = 0x0100,
+         ARPATH_StartOnRight = 0x0200,
+         ARPATH_StartOnBottom = 0x0400,
+         ARPATH_StartOnLeft = 0x0800,
+         ARPATH_StartMask = (ARPATH_StartOnTop | ARPATH_StartOnRight | ARPATH_StartOnBottom | ARPATH_StartOnLeft),
 
+         ARPATH_HighLighted = 0x0002,		// attributes,
+         ARPATH_Fixed = 0x0001,
+         ARPATH_Default = 0x0000,
 
+         ARPATHST_Connected = 0x0001,		// states,
+         ARPATHST_Default = 0x0000,
+
+         // Port Connection Variables
+         ARPORT_EndOnTop = 0x0001,
+         ARPORT_EndOnRight = 0x0002,
+         ARPORT_EndOnBottom = 0x0004,
+         ARPORT_EndOnLeft = 0x0008,
+         ARPORT_EndOnAll = 0x000F,
+
+         ARPORT_StartOnTop = 0x0010,
+         ARPORT_StartOnRight = 0x0020,
+         ARPORT_StartOnBottom = 0x0040,
+         ARPORT_StartOnLeft = 0x0080,
+         ARPORT_StartOnAll = 0x00F0,
+
+         ARPORT_ConnectOnAll = 0x00FF,
+         ARPORT_ConnectToCenter = 0x0100,
+
+         ARPORT_StartEndHorizontal = 0x00AA,
+         ARPORT_StartEndVertical = 0x0055,
+
+         ARPORT_Default = 0x00FF,
+
+         //RoutingDirection vars 
+         Dir_None	= -1,
+         Dir_Top    = 0,
+         Dir_Right	= 1,
+         Dir_Bottom	= 2,
+         Dir_Left	= 3,
+         Dir_Skew	= 4;
 
     var _logger = logManager.create("AutoRouter");
 
@@ -78,17 +76,9 @@ define(['logManager'], function (logManager) {
        this.ports = [];
        this.paths = [];
 
-
-
-        //TODO: fixme
-/*
-       ED_MAXCOORD = (graphDetails ? graphDetails.coordMax : false) || 100000;
-       ED_MINCOORD = (graphDetails ? graphDetails.coordMin : false) || 0;
-     ED_SMALLGAP = 15;
-        CONNECTIONCUSTOMIZATIONDATAVERSION = 0;
-        EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1;
-        DEBUG =  DEBUG || false;
-*/
+       ED_MAXCOORD = (graphDetails && graphDetails.coordMax !== undefined ? graphDetails.coordMax : false) || ED_MAXCOORD;
+       ED_MINCOORD = (graphDetails && graphDetails.coordMin !== undefined ? graphDetails.coordMin : false) || ED_MINCOORD;
+       EDLS_D = ED_MAXCOORD - ED_MINCOORD,
  
        this.router = new AutoRouterGraph();
     };
@@ -610,20 +600,25 @@ define(['logManager'], function (logManager) {
         var getRectOuterCoord = function (rect, dir){
             assert( isRightAngle(dir), "ArHelper.getRectOuterCoord: isRightAngle(dir) FAILED" );
             assert( rect instanceof ArRect, "ArHelper.getRectOuterCoord: rect instanceof ArRect FAILED. 'rect' is " + rect);
+            var d = 1,//BUFFER + 1, //How far to exit the box
+                t = rect.ceil - d,
+                r = rect.right + 1 - d,
+                b = rect.floor + 1 - d,
+                l = rect.left - d;
 
             switch( dir )
             {
             case Dir_Top: 
-                return rect.ceil-1;
+                return t;
 
             case Dir_Right:
-                return rect.right;
+                return r;
 
             case Dir_Bottom:
-                return rect.floor;
+                return b;
             }
 
-            return rect.left-1;
+            return l;
         };
 
         //	Indexes:
@@ -1475,15 +1470,15 @@ define(['logManager'], function (logManager) {
             this.inflateRect = inflateRect;
             this.deflateRect = deflateRect;
             this.normalizeRect = normalizeRect;
-            this.intersectAssign = intersectAssign;
             this.assign = assign;
             this.equals = equals;
             this.add = add;
             this.subtract = subtract;
             this.plus = plus;
             this.minus = minus;
-            this.btOrAssign = btOrAssign;
-            this.btOr = btOr;
+            this.unionAssign = unionAssign;
+            this.union = union;
+            this.intersectAssign = intersectAssign;
             this.intersect = intersect;
 
             this.getCenter = function(){
@@ -1515,7 +1510,7 @@ define(['logManager'], function (logManager) {
             }
 
             function isRectEmpty(){
-                if((this.left >= this.right) && (this.ceil >= bottom))
+                if((this.left >= this.right) && (this.ceil >= this.floor))
                     return true;
 
                 return false;
@@ -1580,6 +1575,8 @@ define(['logManager'], function (logManager) {
                 if( x !== undefined && x.cx !== undefined && x.cy !== undefined){
                     y = x.cy;
                     x = x.cx;
+                }else if( y === undefined ){
+                    y = x;
                 }
 
                 this.left -= x;
@@ -1614,21 +1611,6 @@ define(['logManager'], function (logManager) {
                     this.ceil = this.floor;
                     this.floor = temp;
                 }
-            }
-
-            function intersectAssign(rect1, rect2){
-                //Sets this rect to the intersection rect
-                this.left = Math.max(rect1.left, rect2.left);
-                this.right = Math.min(rect1.right, rect2.right);
-                this.ceil = Math.max(rect1.ceil, rect2.ceil);
-                this.floor = Math.min(rect1.floor, rect2.floor);
-
-                if(this.left >= this.right || this.ceil >= this.floor){
-                    this.setRectEmpty();
-                    return false;
-                }
-
-                return true;
             }
 
             function assign(rect){
@@ -1701,10 +1683,8 @@ define(['logManager'], function (logManager) {
                 return resObject;
             }
 
-            function btOrAssign(rect){
-                var rectCopy = new ArRect(rect);
-
-                if( rectCopy.isRectEmpty())
+            function unionAssign(rect){
+                if( rect.isRectEmpty())
                     return;
                 if( this.isRectEmpty()){
                     this.assign(rect);
@@ -1712,19 +1692,34 @@ define(['logManager'], function (logManager) {
                 }
 
                 //Take the outermost dimension
-                this.left = Math.min(rect1.left, rect2.left);
-                this.right = Math.max(rect1.right, rect2.right);
-                this.ceil = Math.min(rect1.ceil, rect2.ceil);
-                this.floor = Math.max(rect1.floor, rect2.floor);
+                this.left = Math.min(this.left, rect.left);
+                this.right = Math.max(this.right, rect.right);
+                this.ceil = Math.min(this.ceil, rect.ceil);
+                this.floor = Math.max(this.floor, rect.floor);
 
             }
 
-            function btOr(rect){
+            function union(rect){
                 var resRect = new ArRect(this);
-
-                resRect.btOrAssign(rect);
+                resRect.unionAssign(rect);
 
                 return resRect;
+            }
+
+            function intersectAssign(rect1, rect2){
+                rect2 = rect2 ? rect2 : this;
+                //Sets this rect to the intersection rect
+                this.left = Math.max(rect1.left, rect2.left);
+                this.right = Math.min(rect1.right, rect2.right);
+                this.ceil = Math.max(rect1.ceil, rect2.ceil);
+                this.floor = Math.min(rect1.floor, rect2.floor);
+
+                if(this.left >= this.right || this.ceil >= this.floor){
+                    this.setRectEmpty();
+                    return false;
+                }
+
+                return true;
             }
 
             function intersect(rect){
@@ -4025,8 +4020,7 @@ _logger.warning("Adding "
                 bufferBoxes = [],
                 paths = [], //new AutoRouterPathList(),
                 selfPoints = [],
-                self = this,
-                buffer = 1;
+                self = this;
                 
             horizontal.setOwner(this);
             vertical.setOwner(this);
@@ -4240,12 +4234,12 @@ _logger.warning("Adding "
 
                 for (var i = 0; i < boxes.length; i++)
                 {
-                    rect.btOrAssign(boxes[i].getRect());
+                    rect.unionAssign(boxes[i].getRect());
                 }
 
                 for (var i = 0; i < paths.length; i++)
                 {
-                    rect.btOrAssign(paths[i].getSurroundRect());
+                    rect.unionAssign(paths[i].getSurroundRect());
                 }
 
                 return rect;
@@ -5252,14 +5246,52 @@ _logger.warning("Adding "
                 }
             }
 
+            function createBufferBoxes(){
+                //First I will create the atomic buffer boxes and store them in order of x
+                var i = boxes.length,
+                    k = -1,
+                    j = 0,
+                    bufferBox,
+                    rect;
+
+                bufferBoxes = [];
+
+                while( i-- ){
+                    rect = boxes[i].getRect();
+                    rect.inflateRect(BUFFER);
+                    bufferBox = new AutoRouterBox();
+                    bufferBox.setRect(rect);
+
+                    while( bufferBoxes[++k] && bufferBoxes[k].getRect().right < rect.left); //Get first possibility of overlap 
+                    while( bufferBoxes[k] && bufferBoxes[k].getRect().left < rect.right){ //Until there cannot be an overlap
+                        if( j == -1 && rect.left < bufferBoxes[k].getRect().left )
+                            j = k; //insertion point
+                        
+                        if( bufferBoxes[k] && !bufferBoxes[k].getRect().intersect(rect).isRectEmpty() ){
+                            bufferBoxes[k].getRect().unionAssign(rect);
+                            j = -1;
+                        }
+                        k++;
+                    };
+
+                    if(j !== -1){
+                        bufferBoxes.splice(k, 0, bufferBox);
+                    }
+
+                    j = -1;
+                    k = -1;
+                }
+
+            }
+
             //Public Functions
             this.setBuffer = function(newBuffer){
-                buffer = newBuffer;
+                BUFFER = newBuffer;
             };
 
             this.getPathList = function(){
                 return paths;
-            }
+            };
 
             this.calculateSelfPoints = function(){
                 selfPoints = [];
@@ -5267,7 +5299,7 @@ _logger.warning("Adding "
                 selfPoints.push(new ArPoint(ED_MAXCOORD, ED_MINCOORD));
                 selfPoints.push(new ArPoint(ED_MAXCOORD, ED_MAXCOORD));
                 selfPoints.push(new ArPoint(ED_MINCOORD, ED_MAXCOORD));
-            }
+            };
 
             this.createBox = function(){
                 var box = new AutoRouterBox();
@@ -5346,6 +5378,7 @@ _logger.warning("Adding "
             }
 
             this.autoRoute = function(){
+                //createBufferBoxes(); //TODO Finish this!
                 connectAllDisconnectedPaths();
 
                 var updated = 0,
@@ -5882,7 +5915,7 @@ pt = [pt];
                 return endbox.getRect();
             }
 
-            this.getOutOfBoxStartPoint = function(hintDir){
+            this.getOutOfBoxStartPoint = function(hintDir){//TODO consider adding a len
                 var startBoxRect = this.getStartBox();
 
                 assert( hintDir != Dir_Skew, "ARPath.getOutOfBoxStartPoint: hintDir != Dir_Skew FAILED"  );
@@ -6926,7 +6959,7 @@ pt = [pt];
                 var currRect = this.bufferBoxes[i].getRect()
                 if( !currRect.intersect(bufferRect).isRectEmpty() ){ 
                     //set the bufferBox to the union of the boxes
-                    currRect.btOrAssign(bufferRect);
+                    currRect.unionAssign(bufferRect);
                     assert(!currRect.isRectEmpty(), "AutoRouter:addBufferBox Union of boxes yields an empty rectangle");
                     break; 
                 }
@@ -7020,6 +7053,14 @@ pt = [pt];
 
         AutoRouter.prototype.remove = function(item){
             router.remove(item);
+        };
+
+        AutoRouter.prototype.move = function( box, details ){
+            //Make sure details is in dx, dy
+            dx = details.dx !== undefined ? details.dx : details.x - box.getRect().left;
+            dy = details.dy !== undefined ? details.dy : details.y - box.getRect().ceil;
+
+            this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
         };
 
 

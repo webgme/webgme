@@ -27,8 +27,31 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterBoxes = {};
         this._autorouterPorts = {}; //Maps boxIds to an array of port ids that have been mapped
         this._autorouterPath = {};
-
         this.autorouter.clear();
+
+        //Adding event listeners
+        var self = this;
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, function(_canvas, ID) {
+            self.logger.warning("ON_COMPONENT_UPDATE: " + ID);
+            //self.autorouter.setBox();
+        });
+
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, function(_canvas, ID) {
+            self.logger.warning("Added Component: " + ID);
+            self.insertItem( ID );
+        });
+
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, function(_canvas, eventArgs) {
+            if( !self._autorouterBoxes[eventArgs.ID] )
+                self.insertItem( eventArgs.ID );
+            self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "dx": eventArgs.x, "dy": eventArgs.y });
+        });
+
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, function(_canvas) {
+            self.logger.warning("Clearing...");
+            self._initializeGraph();
+        });
+
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
@@ -159,10 +182,11 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                         dw = (currBox.width) - (oldBox.getWidth()),
                         dh = (currBox.height) - (oldBox.getHeight());
                 
-                    if(dw !== 0 || dh !== 0){
-                        this.autorouter.setBox(this._autorouterBoxes[itemIdList[i]].box, currBox);
+                    //if(dw !== 0 || dh !== 0){
+                        //this.autorouter.setBox(this._autorouterBoxes[itemIdList[i]].box, currBox);
 
-                    }else if(dx !== 0 || dy !== 0){
+//                    }else 
+                    if(dx !== 0 || dy !== 0){
                         this.autorouter.router.shiftBoxBy(this._autorouterBoxes[itemIdList[i]].box, { "cx": dx, "cy": dy });
                     }
                 }
@@ -189,7 +213,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var canvas = this.diagramDesigner,
             designerItem,
             areas, //TODO change to create incoming and outgoing ports
-            bBox,
+            bBox,//TODO incorporate angle1, angle2
             boxdefinition,
             connectionMetaInfo,
             isEnd,
