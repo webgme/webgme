@@ -167,7 +167,7 @@ define(['logManager',
 
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 1 };
+            this._selfPatterns[nodeId] = { "children": 2 };
 
             this._firstLoad = true;
 
