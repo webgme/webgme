@@ -5,7 +5,7 @@ $dot-width: 3px;
 $dot-height: 8px;
 $dot-border-width: 1px;
 
-@mixin port($ports-width, $padding, $connector-size) {
+@mixin port($ports-width, $padding) {
   .port {
     white-space: nowrap;
     position: relative;
@@ -32,10 +32,6 @@ $dot-border-width: 1px;
       height: $dot-height;
       top: ($port-height - $dot-height - 2 * $dot-border-width)/2;
     }
-
-    div.connector {
-      top: ($port-height - $connector-size)/2;
-    }
   }
 
   .left {
@@ -45,13 +41,9 @@ $dot-border-width: 1px;
       }
 
       span.dot {
-        left: - $padding - $dot-width - 2; /* -2 because of the 2px border-width of the decorator)*/
+        left: - $padding - $dot-width - 2; // -2 because of the 2px border-width of the decorator)
         border-top-left-radius: $dot-radius;
         border-bottom-left-radius: $dot-radius;
-      }
-
-      .connector {
-        left: -($connector-size/2) - ($padding - 2);
       }
     }
   }
@@ -66,10 +58,6 @@ $dot-border-width: 1px;
         left: $ports-width + $padding;
         border-top-right-radius: $dot-radius;
         border-bottom-right-radius: $dot-radius;
-      }
-
-      .connector {
-        left: $ports-width + ($connector-size/2) + ($padding - 2);
       }
     }
   }

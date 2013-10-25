@@ -18,8 +18,7 @@ define(['logManager',
         GME_ID = "GME_ID",
         BACKGROUND_TEXT_COLOR = '#DEDEDE',
         BACKGROUND_TEXT_SIZE = 30,
-        DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
-        DEFAULT_DECORATOR = "DecoratorWithPorts", /*'DefaultDecorator'*/
+        DEFAULT_DECORATOR = "ModelDecorator",
         WIDGET_NAME = 'DiagramDesigner',
         DEFAULT_LINE_STYLE = {},
         SRC_POINTER_NAME = "source",
@@ -281,10 +280,6 @@ define(['logManager',
                     }
 
                     objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || "";
-                    if (DECORATORS.indexOf(objDescriptor.decorator) === -1) {
-                        objDescriptor.decorator = DEFAULT_DECORATOR;
-                    }
-
                     objDescriptor.rotation = parseInt(nodeObj.getRegistry(nodePropertyNames.Registry.rotation), 10) || 0;
                 }
             }

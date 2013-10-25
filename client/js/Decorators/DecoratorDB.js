@@ -18,8 +18,8 @@ define(["ifexists!bin/decorators"], function (LOCAL_DECORATORS) {
     var DECORATORS = {
         'DiagramDesigner': ['AttributesDecorator',
             'CircleDecorator',
-            'DecoratorWithPorts',
-            'DefaultDecorator']
+            'DefaultDecorator',
+            'ModelDecorator']
     };
 
     if (LOCAL_DECORATORS) {
