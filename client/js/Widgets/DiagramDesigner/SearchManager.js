@@ -37,7 +37,7 @@ define(['logManager',
         });
 
         if (this._diagramDesigner._defaultSearchUI === true) {
-            this._filterBox = this._diagramDesigner.toolBar.addTextBox({"prependContent": '<i class="icon-search"></i>', "placeholder": "Search..."}, function (oldVal, newVal) {
+            this._filterBox = this._diagramDesigner.toolBar.addTextBox({"prependContent": '<i class="icon-search"></i>', "placeholder": "Find..."}, function (oldVal, newVal) {
                 self.filterItems(newVal);
             });
         }

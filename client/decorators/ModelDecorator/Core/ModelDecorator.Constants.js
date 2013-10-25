@@ -13,6 +13,7 @@ define([], function () {
          */
         REFERENCE_POINTER_CLASS : 'ref',
         REFERENCE_POINTER_CLASS_NONSET : 'nonset',
+        PROGRESS_BAR_CLASS : 'progress-bar',
 
         /*
         * REFERENCE POINTER NAME

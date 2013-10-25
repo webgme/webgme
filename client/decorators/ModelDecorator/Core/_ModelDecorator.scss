@@ -1,0 +1,87 @@
+@import "Port";
+
+$min-width: 65px;
+$height: 40px;
+$border: 1px solid #000000;
+$padding: 3px;
+$background-color: #FBFBFB;
+$selected-background-color: #DBEAFC;
+$selected-border: 1px solid #52A8EC;
+$ports-background-color: #000000;
+$left-ports-background-color: rgba(255, 255, 0, 0.5);
+$right-ports-background-color: rgba(0, 0, 255, 0.5);
+$center-ports-background-color: rgba(0, 255, 0, 0.5);
+$ports-width : 50px;
+$ports-separator-width: 15px;
+$accept-droppable-background-color: #00FF00;
+
+@mixin model_decorator_core {
+  .model-decorator {
+    min-width: $min-width;
+    min-height: $height;
+    border: $border;
+    background-color: $background-color;
+    padding: $padding;
+    text-align: center;
+    position: relative;
+
+    .name {
+      white-space: nowrap;
+      font-size: 9px;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: $ports-width * 2 + $ports-separator-width + $padding * 2;
+      border-bottom: 1px solid #000000;
+    }
+
+    .ports {
+      font-size: 10px;
+      min-height: 1px;
+      width: $ports-width * 2 + $ports-separator-width + $padding * 2;
+
+      .left {
+        display: inline-block;
+        vertical-align: top;
+        width: $ports-width;
+        min-height: 1px;
+      }
+
+      .center {
+        display: inline-block;
+        vertical-align: top;
+        width: $ports-separator-width;
+        height: 1px;
+      }
+
+      .right {
+        display: inline-block;
+        vertical-align: top;
+        width: $ports-width;
+        min-height: 1px;
+      }
+
+      @include port($ports-width, $padding);
+    }
+
+    .progress-bar {
+      .loader-progressbar {
+        position: relative;
+        left: 50%;
+        margin-left: -8px;
+      }
+    }
+
+    .ref {
+      position: absolute;
+      top: 0;
+      right: 2px;
+
+      &.nonset {
+        opacity: 0.4;
+      }
+    }
+  }
+}
