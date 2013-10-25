@@ -4,7 +4,6 @@ define(['logManager'], function (logManager) {
 
     var AutoRouter;
     //Static Variables
-    //Consider adding a stem length setting
 
      var ED_MAXCOORD = 100000,
         ED_MINCOORD = 0,
@@ -75,7 +74,7 @@ define(['logManager'], function (logManager) {
 
     AutoRouter = function(graphDetails){
        this.boxes = [];
-       this.generalBoxes = []; //Used for covering general off-limits areas in original path finding
+       this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
        this.ports = [];
        this.paths = [];
 
@@ -456,12 +455,17 @@ define(['logManager'], function (logManager) {
 
         var isLineMeetHLine = function (start, end, x1, x2, y){
             assert( x1 <= x2, "ArHelper.isLineMeetHLine: x1 <= x2 FAILED");
+            if(start instanceof Array) //Converting from 'pointer'
+                start = start[0];
+            if(end instanceof Array)
+                end = end[0];
 
             if( !((start.y <= y && y <= end.y) || (end.y <= y && y <= start.y )) )
                 return false;
 
-            var end2 = end;
-            end2 -= start;
+            var end2 = new ArPoint(end);
+            //end2 -= start;
+            end2.subtract(start);
             x1 -= start.x;
             x2 -= start.x;
             y -= start.y;
@@ -475,12 +479,17 @@ define(['logManager'], function (logManager) {
 
         var isLineMeetVLine = function (start, end, y1, y2, x){
             assert( y1 <= y2, "ArHelper.isLineMeetVLine: y1 <= y2  FAILED");
+            if(start instanceof Array) //Converting from 'pointer'
+                start = start[0];
+            if(end instanceof Array)
+                end = end[0];
 
             if( !((start.x <= x && x <= end.x) || (end.x <= x && x <= start.x )) )
                 return false;
 
-            var end2 = end;
-            end2 -= start;
+            var end2 = new ArPoint(end);
+            //end2 -= start;
+            end2.subtract(start);
             y1 -= start.y;
             y2 -= start.y;
             x -= start.x;
@@ -1070,7 +1079,7 @@ define(['logManager'], function (logManager) {
 
                 start = ArPointList[pos];
 
-                return pos;
+                return { "pos": pos, "start": start, "end": end };
             }
 
            this.getNextEdge = function(pos, start, end){
@@ -1095,6 +1104,8 @@ define(['logManager'], function (logManager) {
                 end = ArPointList[pos--];
                 if( pos != ArPointList.length)
                     start = ArPointList[pos];
+        
+                return { "pos": pos, "start": start, "end": end };
             }
 
            this.getEdge = function(pos, start, end){
@@ -1114,11 +1125,9 @@ define(['logManager'], function (logManager) {
                 var pos = 0;
                 assert( pos < ArPointList.length, "ArPointListPath.getHeadEdgePtrs: pos < ArPointList.length FAILED");
 
-                //start = ArPointList[pos++]; //& These technically are not ptrs
                 start.assign(ArPointList[pos++]); //&
                 assert( pos < ArPointList.length, "ArPointListPath.getHeadEdgePtrs: pos < ArPointList.length FAILED");
 
-                //end = ArPointList[pos];//&
                 end.assign(ArPointList[pos]); //&
 
                 return pos;
@@ -1138,14 +1147,9 @@ define(['logManager'], function (logManager) {
                 assert( --pos < ArPointList.length, "ArPointListPath.getTailEdgePtrs: --pos < ArPointList.length FAILED"); 
 
                 end = ArPointList[pos--];//&
-                //end = new ArPoint(ArPointList[pos--]);
-                //end.assign(ArPointList[pos--]);
                 assert( pos < ArPointList.length, "ArPointListPath.getTailEdgePtrs: pos < ArPointList.length FAILED"); 
 
                 start = ArPointList[pos];//&
-                //start.assign(ArPointList[pos]);
-                //start = new ArPoint(ArPointList[pos]);
-
 
                 result.pos = pos;
                 result.start = start;
@@ -1157,10 +1161,8 @@ define(['logManager'], function (logManager) {
                 if(DEBUG)
                     AssertValidPos(pos);
 
-                //start = ArPointList[pos++];//&
                 start.assign(ArPointList[pos++]);
                 if (pos < ArPointList.length)
-                    //end = ArPointList[pos];//&
                     end.assign(ArPointList[pos]);
             }
 
@@ -1185,11 +1187,9 @@ define(['logManager'], function (logManager) {
                 if(DEBUG)
                     AssertValidPos(pos);
 
-                //start = ArPointList[pos++];//&
                 start.assign(ArPointList[pos++]);
                 assert( pos < ArPointList.length, "ArPointListPath.getEdgePtrs: pos < ArPointList.length FAILED");
 
-                //end = ArPointList[pos]; //&
                 end.assign(ArPointList[pos]);
             }
 
@@ -1314,9 +1314,6 @@ define(['logManager'], function (logManager) {
                 x = x.x;
             }
 
-            this.x = x;
-            this.y = y;
-
             this.x = Math.round(x);
             this.y = Math.round(y);
 
@@ -1352,6 +1349,9 @@ define(['logManager'], function (logManager) {
                     this.x += otherObject.x;
                     this.y += otherObject.y;
                 }
+
+                this.x = Math.round(x);
+                this.y = Math.round(y);
             }
 
             function subtract(otherObject){ //equivalent to += 
@@ -1362,6 +1362,7 @@ define(['logManager'], function (logManager) {
                     this.x -= otherObject.x;
                     this.y -= otherObject.y;
                 }
+
             }
 
             function plus(otherObject){ //equivalent to +
@@ -1409,6 +1410,9 @@ define(['logManager'], function (logManager) {
             function assign(otherPoint){
                 this.x = otherPoint.x;
                 this.y = otherPoint.y;
+
+                this.x = Math.round(x);
+                this.y = Math.round(y);
         
                 return this;
             }
@@ -1439,10 +1443,10 @@ define(['logManager'], function (logManager) {
                     Left = Left.x;
 
                 }else if(Left instanceof ArPoint && Ceil instanceof ArPoint){
-                    Right = Ceil.x;
-                    Floor = Ceil.y;
-                    Ceil = Left.y;
-                    Left = Left.x;
+                    Right = Math.round(Ceil.x);
+                    Floor = Math.round(Ceil.y);
+                    Ceil = Math.round(Left.y);
+                    Left = Math.round(Left.x);
                 }else
                     console.log("Invalid ArRect Constructor");
 
@@ -1528,6 +1532,9 @@ define(['logManager'], function (logManager) {
             }
 
             function ptInRect(pt){
+                if(pt instanceof Array)
+                    pt = pt[0];
+
                 if( pt.x >= this.left &&
                     pt.x < this.right &&
                     pt.y >= this.ceil &&
@@ -1570,7 +1577,7 @@ define(['logManager'], function (logManager) {
             }
 
             function inflateRect(x, y){
-                if(x instanceof ArSize){
+                if( x !== undefined && x.cx !== undefined && x.cy !== undefined){
                     y = x.cy;
                     x = x.cx;
                 }
@@ -1582,7 +1589,7 @@ define(['logManager'], function (logManager) {
             }
 
             function deflateRect(x, y){
-                if(x instanceof ArSize){
+                if( x !== undefined && x.cx !== undefined && x.cy !== undefined){
                     y = x.cy;
                     x = x.cx;
                 }
@@ -1644,20 +1651,23 @@ define(['logManager'], function (logManager) {
             }
 
             function add(ArObject){
+                var dx,
+                    dy;
                 if(ArObject instanceof ArPoint){
-                    this.inflateRect(ArObject.x, ArObject.y);
+                    dx = ArObject.x;
+                    dy = ArObject.y;
 
-                }else if (ArObject instanceof ArSize){
-                    this.inflateRect(ArObject);
-
-                }else if (ArObject instanceof ArRect){
-                    this.left -= ArObject.left;
-                    this.right += ArObject.right;
-                    this.ceil -= ArObject.ceil;
-                    this.floor += ArObject.floor;
+                }else if (ArObject.cx !== undefined && ArObject.cy !== undefined){
+                    dx = ArObject.cx;
+                    dy = ArObject.cy;
 
                 }else
                     console.log("Invalid arg for [ArRect].add method");
+
+                this.left += dx;
+                this.right += dx;
+                this.ceil += dy;
+                this.floor += dy;
             }
 
             function subtract(ArObject){
@@ -1723,8 +1733,6 @@ define(['logManager'], function (logManager) {
                 resRect.intersectAssign(rect);
                 return resRect;
             }
-
-            //Methods for detecting overlap and creating a 'union rectangle'
 
         };
 
@@ -2779,7 +2787,7 @@ section_x1 = x2;
                 var edge = order_first;
                 while( edge !== null){
 
-                    if(edge.getOwner().equals(object)){
+                    if(edge.getOwner() === object){
                         var next = edge.getOrderNext();
                         this.Delete(edge);
                         edge = next;
@@ -3167,24 +3175,14 @@ _logger.warning("Adding "
                         //If you can't pass the edge (but want to) and the lines will overlap x values...
                         if( !insert.getEdgeCanpassed() && intersect(x1, x2, insert.getPositionX1(), insert.getPositionX2() ) )
                         {
-//REMOVE
-_logger.info("trying to slide down");
-//REMOVE_END
                             ret = insert;
                             y = insert.getPositionY();
                             break;
                         }
                     }
-//REMOVE
-_logger.info(edge !== insert );
-_logger.info(insert.getOrderPrev() !== edge);
-//REMOVE_END
 
                     if( edge !== insert && insert.getOrderPrev() !== edge )
                     {
-//REMOVE
-_logger.info("removing edge");
-//REMOVE_END
                         self.remove(edge); //This is where I believe the error could lie!
                         self.insertBefore(edge, insert);
                     }
@@ -3203,9 +3201,6 @@ _logger.info("removing edge");
                         //If insert cannot be passed and it is in the way of the edge (if the edge were to slide up).
                         if( !insert.getEdgeCanpassed() && intersect(x1, x2, insert.getPositionX1(), insert.getPositionX2() ) )
                         {
-//REMOVE
-_logger.info("trying to slide up");
-//REMOVE_END
                             ret = insert;
                             y = insert.getPositionY();
                             break;
@@ -3214,9 +3209,6 @@ _logger.info("trying to slide up");
 
                     if( edge !== insert && insert.getOrderNext() !== edge )//!edge.equals(insert) && !insert.getOrderNext().equals(edge) )
                     {
-//REMOVE
-_logger.info("removing edge");
-//REMOVE_END
                         self.remove(edge);//This is where I believe the error could lie!
                         self.insertAfter(edge, insert);
                     }
@@ -3665,9 +3657,6 @@ _logger.info("removing edge");
 
                         if( y + 0.001 < trace.getPositionY() )
                         {
-//REMOVE
-_logger.info("modified is true because " + (y + .001) + " < " + trace.getPositionY());
-//REMOVE_END
                             modified = true;
                             if( slideButNotPassEdges(trace, y) )
                                 trace.setBlockPrev(null);
@@ -3764,14 +3753,8 @@ _logger.info("modified is true because " + (y + .001) + " < " + trace.getPositio
 
                         if( trace.getPositionY() < y - 0.001 )
                         {
-//REMOVE
-_logger.info("modified is true because " + trace.getPositionY()  + " < " + (y - .001));
-//REMOVE_END
                             modified = true;
                             var ed = slideButNotPassEdges(trace, y)
-//REMOVE
-_logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoint().y) : "yes") );
-//REMOVE_END
                             if( ed ) 
                                 trace.setBlockNext(null);
                         }
@@ -4039,9 +4022,11 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
             var horizontal = new AutoRouterEdgeList(true),
                 vertical = new AutoRouterEdgeList(false),
                 boxes = [], //new AutoRouterBoxList(),
+                bufferBoxes = [],
                 paths = [], //new AutoRouterPathList(),
                 selfPoints = [],
-                self = this;
+                self = this,
+                buffer = 1;
                 
             horizontal.setOwner(this);
             vertical.setOwner(this);
@@ -4307,19 +4292,20 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                 assert( getPointCoord(point, dir) != stophere, "ArGraph.goToNextBox: getPointCoord(point, dir) != stophere FAILED" );
 
                 var boxby = null,
-                    iter = 0;
+                    iter = 0,
+                    boxList = bufferBoxes.length > 0 ? bufferBoxes : boxes;
 
-                //Add a new collection that handles overlapping boxes (creates a larger encompassing box) TODO
-                while (iter < boxes.length)
+                //Add a new collection that handles overlapping boxes (creates a larger encompassing box)
+                while (iter < boxList.length)
                 {
-                    var boxRect = ((boxes[iter]).getRect());
+                    var boxRect = ((boxList[iter]).getRect());
 
                     if( isPointInDirFrom(point, boxRect, reverseDir(dir)) &&
                         isPointBetweenSides(point, boxRect, dir) &&
                         isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) )
                     {
                         stophere = getRectOuterCoord(boxRect, reverseDir(dir));
-                        boxby = boxes[iter];
+                        boxby = boxList[iter];
                     }
                     ++iter;
                 }
@@ -4667,7 +4653,6 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                 {
                     if( (paths[iter]).isPathClip(rect) )
                         disconnect(paths[iter]);
-                    ++iter;
                 }
             }
 
@@ -4689,10 +4674,9 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                         var endbox = endPort.getOwner();
                         assert(endbox != null, "ARGraph.disconnectPathsFrom: endbox != null FAILED");
 
-                        if( (startbox.equals(box) || endbox.equals(box)) )
+                        if( (startbox === box || endbox === box) )
                             disconnect(path);
 
-                        ++iter;
                     }
                 }else{
                     var iter = paths.length;
@@ -4703,10 +4687,9 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                             startport = path.getStartPort(),
                             endport = path.getEndPort();
 
-                        if( (startport.equals(port) || endport.equals(port)) )
+                        if( (startport === port || endport === port) )
                             disconnect(path);
 
-                        ++iter;
                     }
                 }
             }
@@ -5270,6 +5253,10 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
             }
 
             //Public Functions
+            this.setBuffer = function(newBuffer){
+                buffer = newBuffer;
+            };
+
             this.getPathList = function(){
                 return paths;
             }
@@ -5296,6 +5283,14 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                     return;
 
                 var rect = box.getRect();
+/*
+                var buffRect = new ArRect(rect),//Create buffered rectangle
+                    bufferBox = new AutoRouterBox();
+
+                buffRect.inflateRect(buffer);
+                bufferBox.setRect(buffRect);
+                bufferBoxes.push(bufferBox);
+*/
 
                 disconnectPathsClipping(rect);
 
@@ -5304,6 +5299,10 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                 boxes.push(box);
 
                 addBoxAndPortEdges(box);
+            }
+
+            this.setBufferBoxes = function(boxes){
+                bufferBoxes = boxes;
             }
 
             this.deleteBox = function(box){
@@ -5334,30 +5333,24 @@ _logger.info("ed is null?" + (ed ? (ed.getStartPoint().x + "," + ed.getStartPoin
                 disconnectPathsFrom(box);
             }
 
+            this.setBoxRect = function(box, rect){
+                if (box === null)
+                    return;
+
+                deleteBoxAndPortEdges(box);
+                box.setRect(rect);
+                addBoxAndPortEdges(box);
+
+                disconnectPathsClipping(rect);
+                disconnectPathsFrom(box);
+            }
+
             this.autoRoute = function(){
                 connectAllDisconnectedPaths();
-//REMOVE
-var diagonalCheck = false;
-if(diagonalCheck){
-    var i = 0;
-    while(i < paths.length){
-        var path = paths[i],
-            j = 0;
-        while(j < path.getPointList().getLength() - 1){
-            if(getDir(path.getPointList().get(j)[0].minus(path.getPointList().get(j + 1)[0])) == 4)
-                _logger.warning("Diagonal in path #" + i + " (" + path.getPointList().get(j)[0].x + "," + path.getPointList().get(j)[0].y + " to " + path.getPointList().get(j + 1)[0].x + "," + path.getPointList().get(j+1)[0].y + ")");
-
-            j++;
-        }
-
-        i++;
-    }
-}
-//REMOVE_END
 
                 var updated = 0,
                     last = 0,       // identifies the last change to the path
-                    c = 100,//20,		// max # of total op
+                    c = 100,		// max # of total op
                     dm = 10,		// max # of distribution op
                     d = 0;
 
@@ -5791,16 +5784,21 @@ if(diagonalCheck){
             }
 
             function getEdgePosAt(point, nearness){
-                var a,
-                    b,
-                    pos = points.getTailEdge(a, b);
+                var tmp = points.getTailEdge(a, b),
+                    a = tmp.start,
+                    b = tmp.end,
+                    pos = tmp.pos;
 
                 while( pos < points.getLength())
                 {
                     if( isPointNearLine(point, a, b, nearness) )
                         return pos;
 
-                    points.getPrevEdge(pos, a, b);
+                    tmp = points.getPrevEdge(pos, a, b);
+                    a = tmp.start;
+                    b = tmp.end;
+                    pos = tmp.pos;
+                    
                 }
 
                 return points.getLength();
@@ -6034,13 +6032,14 @@ pt = [pt];
             }
 
             this.isPathClip = function(r, isStartOrEndRect){
-                var a,
-                    b,
-                    pos = points.getTailEdge(a, b),
+                var tmp = points.getTailEdge(a, b),
+                    a = tmp.start,
+                    b = tmp.end,
+                    pos = tmp.pos,
                     i = 0,
                     numEdges = points.getLength() - 1;
 
-                while( pos < points.getLength())
+                while( pos >= 0)
                 {
                     if( isStartOrEndRect && ( i == 0 || i == numEdges - 1 ) )
                     {
@@ -6055,7 +6054,10 @@ pt = [pt];
                         return true;
                     }
 
-                    points.getPrevEdge(pos, a, b);
+                    tmp = points.getPrevEdge(pos, a, b);
+                    a = tmp.start;
+                    b = tmp.end;
+                    pos = tmp.pos;
                     i++;
                 }
 
@@ -6658,10 +6660,29 @@ pt = [pt];
             box.setRect(rect);
 
             //Adding connection port
-            //If none designated, I will add a 'virtual' port that allows connections on 
-            // all sides
+            p = this.addPort(box, connAreas);
+
+            this.router.addBox(box);
+            this.boxes.push(box);
+
+            return { "box": box, "ports": p }; 
+        };
+
+        AutoRouter.prototype.addPort = function(box, connAreas){
+            //Adding a port to an already existing box (also called in addBox method)
+            //Default is no connection ports (more relevant when creating a box)
+            var port,
+                r,
+                p = [],
+                x1 = box.getRect().left,
+                y1 = box.getRect().ceil,
+                x2 = box.getRect().right,
+                y2 = box.getRect().floor;
+
             if(connAreas == undefined){
-                port = box.createPort();
+                return p;
+            }else if(connAreas == "all"){//If "all" designated, I will add a 'virtual' port that allows connections on 
+                port = box.createPort(); // all sides
                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
                 port.setLimitedDirs(false);
                 port.setRect(r);
@@ -6670,7 +6691,7 @@ pt = [pt];
                 port.setAttributes(ARPORT_ConnectOnAll);
 
                 p.push(port);
-            }else{
+            }else{ 
             //A connection area is specified
             /* There are a couple possibilities here:
              *  1) Single connection specified
@@ -6687,6 +6708,12 @@ pt = [pt];
              * I will make them all 'multiple' connections 
              *  then handle them the same
              *
+             * This will need some revisions. TODO specifying 
+             * multiple connection areas with a variety of in/out specs
+             * is clumsy. It isn't too bad unless you try to 
+             * set specific attributes.
+             *
+             *
              */
 
                 if(!(connAreas instanceof Array))
@@ -6694,7 +6721,7 @@ pt = [pt];
 
                 connAreas.forEach(function (connData, i, list){
                         var attr = 0,
-                            type = "any",
+                            type = "any", //Specify start, end, or any
                             j = 0,
                             port = box.createPort(),
                             connArea = connData instanceof Array ? 
@@ -6707,75 +6734,111 @@ pt = [pt];
                         {
                             
                                 
-                            if(connArea[j] instanceof Array){ //using points to designate it: [ [x1, y1], [x2, y2] ]
-                                var _x1 = connArea[j][0][0],
-                                    _x2 = connArea[j][1][0],
-                                    _y1 = connArea[j][0][1],
-                                    _y2 = connArea[j][1][1],
-                                    horizontal = (_y1 == _y2 ? true : false); 
+                            if(connArea[j] instanceof Array){ 
+                                var isStart = 17,
+                                    arx1,
+                                    arx2,
+                                    ary1,
+                                    ary2;
 
-                                //If it is a single point of connection, we will expand it to a rect
-                                // We will determine that it is horizontal by if it is closer to a horizontal edges
-                                // or the vertical edges
-                                if(_y1 == _y2 && _x1 == _x2){ 
-                                    horizontal =  Math.min(Math.abs(y1 - _y1), Math.abs(y2 - _y2)) <
-                                        Math.min(Math.abs(x1 - _x1), Math.abs(x2 - _x2)) ;
-                                    if(horizontal)
-                                    {
-                                        _x1 -= 1;
-                                        _x2 += 1;
-                                    }
-                                    else
-                                    {
-                                        _y1 -= 1;
-                                        _y2 += 1;
-                                    }
+                                //This gives us a coefficient to multiply our attributes by to govern incoming
+                                //or outgoing connection. Now, the port needs only to determine the direction 
+                                if(type !== "any"){
+                                   isStart -= (type === "start" ? 1 : 16); 
                                 }
 
-                                assert(horizontal || _x1 == _x2, "AutoRouter:addBox Connection Area for box must be either horizontal or vertical");
+                                if(connArea[j].length == 1 ){//using points to designate the connection RECTANGLE [ [x1, y1, x2, y2] ]
+                                    arx1 = connArea[j][0][0] + 1;
+                                    arx2 = connArea[j][0][1] - 1;
+                                    ary1 = connArea[j][0][2] + 1;
+                                    ary2 = connArea[j][0][3] - 1;
 
-                                var arx1 = _x1,
-                                    arx2 = _x2,
-                                    ary1 = _y1,
+                                    attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                        (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                        (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                        (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+
+                                }else if(connArea[j].length == 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
+                                         && connArea[j][0][1] != connArea[j][1][1]) {//[ [x1, y1], [x2, y2] ]
+                                    arx1 = connArea[j][0][0] + 1;
+                                    arx2 = connArea[j][1][0] - 1;
+                                    ary1 = connArea[j][0][1] + 1;
+                                    ary2 = connArea[j][1][1] - 1;
+
+                                    attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                        (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                        (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                        (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+
+                                }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
+                                    var _x1 = connArea[j][0][0],
+                                        _x2 = connArea[j][1][0],
+                                        _y1 = connArea[j][0][1],
+                                        _y2 = connArea[j][1][1],
+                                        horizontal = (_y1 == _y2 ? true : false); 
+
+                                    //If it is a single point of connection, we will expand it to a rect
+                                    // We will determine that it is horizontal by if it is closer to a horizontal edges
+                                    // or the vertical edges
+                                    if(_y1 == _y2 && _x1 == _x2){ 
+                                        horizontal =  Math.min(Math.abs(y1 - _y1), Math.abs(y2 - _y2)) <
+                                            Math.min(Math.abs(x1 - _x1), Math.abs(x2 - _x2)) ;
+                                        if(horizontal)
+                                        {
+                                            _x1 -= 1;
+                                            _x2 += 1;
+                                        }
+                                        else
+                                        {
+                                            _y1 -= 1;
+                                            _y2 += 1;
+                                        }
+                                    }
+
+                                    assert(horizontal || _x1 == _x2, "AutoRouter:addBox Connection Area for box must be either horizontal or vertical");
+
+                                    arx1 = _x1;
+                                    arx2 = _x2;
+                                    ary1 = _y1;
                                     ary2 = _y2;
 
-                                if(horizontal){
-                                    if(Math.abs(_y1 - y1) < Math.abs(_y1 - y2)){ //Closer to the top (horizontal)
-                                        ary1 = _y1 + 1;
-                                        ary2 = _y1 + 5;
-                                        attr = ARPORT_StartOnTop + ARPORT_EndOnTop;
-                                    }else{ //Closer to the top (horizontal)
-                                        ary1 = _y1 - 5;
-                                        ary2 = _y1 - 1;
-                                        attr = ARPORT_StartOnBottom + ARPORT_EndOnBottom;
-                                    }
+                                    if(horizontal){
+                                        if(Math.abs(_y1 - y1) < Math.abs(_y1 - y2)){ //Closer to the top (horizontal)
+                                            ary1 = _y1 + 1;
+                                            ary2 = _y1 + 5;
+                                            attr = ARPORT_StartOnTop + ARPORT_EndOnTop;
+                                        }else{ //Closer to the top (horizontal)
+                                            ary1 = _y1 - 5;
+                                            ary2 = _y1 - 1;
+                                            attr = ARPORT_StartOnBottom + ARPORT_EndOnBottom;
+                                        }
 
-                                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-                                    if(arx2 - arx1 < 3){
-                                        arx1 -= 2;
-                                        arx2 += 2;
-                                    }
-    
-                                }else{
-                                    if(Math.abs(_x1 - x1) < Math.abs(_x1 - x2)){//Closer to the left (vertical)
-                                        arx1 += 1;
-                                        arx2 += 5;
-                                        attr = ARPORT_StartOnLeft + ARPORT_EndOnLeft;
-                                    }else {//Closer to the right (vertical)
-                                        arx1 -= 5;
-                                        arx2 -= 1;
-                                        attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
-                                    }
+                                        
+                                    }else{
+                                        if(Math.abs(_x1 - x1) < Math.abs(_x1 - x2)){//Closer to the left (vertical)
+                                            arx1 += 1;
+                                            arx2 += 5;
+                                            attr = ARPORT_StartOnLeft + ARPORT_EndOnLeft;
+                                        }else {//Closer to the right (vertical)
+                                            arx1 -= 5;
+                                            arx2 -= 1;
+                                            attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
+                                        }
 
-                                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
-                                    if(ary2 - ary1 < 3){
-                                        ary1 -= 2;
-                                        ary2 += 2;
+
                                     }
 
                                 }
-
-
+                                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+                                if(arx2 - arx1 < 3){
+                                    arx1 -= 2;
+                                    arx2 += 2;
+                                }
+                                //Check to make sure the width/height is at least 3 -> otherwise assert will fail in ARPort.setRect
+                                if(ary2 - ary1 < 3){
+                                    ary1 -= 2;
+                                    ary2 += 2;
+                                }
 
                                 assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
@@ -6803,9 +6866,7 @@ pt = [pt];
 */
                 
                                 //attr = ARPORT_ConnectOnAll; 
-
-                            }
-                            else if(typeof connArea[j] == "string") //Using words to designate connection area
+                            }else if(typeof connArea[j] == "string") //Using words to designate connection area
                             {
                                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
                                 //connArea[j] = connArea[j].toLowerCase();
@@ -6842,10 +6903,41 @@ pt = [pt];
 
             }
 
-            this.router.addBox(box);
-            this.boxes.push(box);
+            //Returning the list of ports added to the box
+            return p;
+        };
 
-            return { "box": box, "ports": p }; 
+        AutoRouter.prototype.addBufferBox = function(box, buffer){
+            //Add a box that prevents lines from trying to pass through gaps of less than twice the buffer
+            //First, create the box,rect
+            var bufferBox = new AutoRouterBox(),//this.router.createBox(),
+                rect = new ArRect(box.getRect().inflateRect(buffer, buffer));
+
+            bufferBox.setRect(rect);
+
+            //Next, I will add the bufferBox in our ordered list of bufferboxes. The list is organized
+            //by the x values in . If it is intersecting another bufferBox, the other
+            //bufferBox will envelope this box and become a larger box.
+            var bufferRect = bufferBox.getRect(),
+                i = this.bufferBoxes.length;
+
+            while( i-- ){
+                //If the new bufferRect intersects another box
+                var currRect = this.bufferBoxes[i].getRect()
+                if( !currRect.intersect(bufferRect).isRectEmpty() ){ 
+                    //set the bufferBox to the union of the boxes
+                    currRect.btOrAssign(bufferRect);
+                    assert(!currRect.isRectEmpty(), "AutoRouter:addBufferBox Union of boxes yields an empty rectangle");
+                    break; 
+                }
+                //If the new rect is smaller than the comparing rectangle OR
+                //the we are on the last rectangle of the array
+                if(bufferRect.right < this.bufferBoxes[i].getRect().left || i == 0){
+                    this.bufferBoxes.splice(i, 0, bufferBox);
+                    break;//These breaks are pretty hacky...
+                }
+
+            }
         };
 
         AutoRouter.prototype.addPath = function(a){
@@ -6890,6 +6982,7 @@ pt = [pt];
         };
 
         AutoRouter.prototype.autoroute = function(){
+            this.router.setBufferBoxes(this.bufferBoxes);
             this.router.autoRoute();
         };
 
@@ -6907,14 +7000,26 @@ pt = [pt];
             return res;
         };
 
-        AutoRouter.prototype.setLocation = function(box, a){
-            var x = a.x,
-                y = a.y,
-                x2 = a.x2 || a.x + a.w,
-                y2 = a.y2 || a.y + a.h,
-                r = new ArRect(x, y, x2, y2);
+        AutoRouter.prototype.setBox = function(boxObject, size){
+            var box = boxObject.box,
+                ports = boxObject.ports,
+                x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
+                x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
+                y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
+                y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
+                rect = new ArRect(x1, y1, x2, y2);
 
-            box.setRect(r);
+            //TODO Remove the ports belonging to the box. Additional ports will cause breakage
+            //Perform the same horizontal/vertical stretches/translations on the ports. Then add them back.
+
+            //First, I will need to handle the ports. I will need to decide if the ports should be resized or 
+            //simply throw an error if the box resize messes up the ports...
+            assert( box.getPortCount() == 0 , "AutoRouter:setBox Cannot setBox of a box that still has ports. Remove ports before setting box.");
+            this.router.setBoxRect(box, rect);
+        };
+
+        AutoRouter.prototype.remove = function(item){
+            router.remove(item);
         };
 
 
