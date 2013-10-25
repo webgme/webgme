@@ -150,7 +150,7 @@ define(['logManager',
             }
         }
 
-        this.connectionArea.x1 = this.orientation === "W" ? 0 : this.decorator.hostDesignerItem.width;
+        this.connectionArea.x1 = this.orientation === "W" ? 0 : this.decorator.hostDesignerItem.getWidth();
         this.connectionArea.x2 = this.connectionArea.x1;
         this.connectionArea.y1 = i * PORT_DOM_HEIGHT + 6;
         this.connectionArea.y2 = this.connectionArea.y1 + 7;

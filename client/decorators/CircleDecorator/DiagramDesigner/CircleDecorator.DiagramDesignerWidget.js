@@ -68,8 +68,7 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
 
     CircleDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = CANVAS_SIZE;
-            this.hostDesignerItem.height = CANVAS_SIZE + this.skinParts.$name.outerHeight(true);
+            this.hostDesignerItem.setSize(CANVAS_SIZE, CANVAS_SIZE + this.skinParts.$name.outerHeight(true));
         }
     };
 

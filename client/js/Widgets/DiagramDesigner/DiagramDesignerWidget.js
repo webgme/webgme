@@ -1012,8 +1012,8 @@ define(['logManager',
         switch (mode) {
             case "diagonal":
                 while (i--) {
-                    w = this.items[this.itemIds[i]].width;
-                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    w = this.items[this.itemIds[i]].getWidth();
+                    h = Math.max(h, this.items[this.itemIds[i]].getHeight());
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
                     newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;
@@ -1030,8 +1030,8 @@ define(['logManager',
                     dy = 100;
                 }
                 while (i--) {
-                    w = this.items[this.itemIds[i]].width;
-                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    w = this.items[this.itemIds[i]].getWidth();
+                    h = Math.max(h, this.items[this.itemIds[i]].getHeight());
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
                     newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;

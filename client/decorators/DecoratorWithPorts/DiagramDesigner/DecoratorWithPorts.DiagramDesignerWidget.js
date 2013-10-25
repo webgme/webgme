@@ -80,8 +80,7 @@ define(['js/Constants',
 
     DecoratorWithPorts.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = this.$el.outerWidth(true);
-            this.hostDesignerItem.height = this.$el.outerHeight(true);
+            this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
 
             this._paddingTop = parseInt(this.$el.css('padding-top'), 10);
             this._borderTop = parseInt(this.$el.css('border-top-width'), 10);
@@ -120,7 +119,7 @@ define(['js/Constants',
             result.push( {"id": "0",
                 "x1": edge,
                 "y1": 0,
-                "x2": this.hostDesignerItem.width - edge,
+                "x2": this.hostDesignerItem.getWidth() - edge,
                 "y2": 0,
                 "angle1": 270,
                 "angle2": 270,
@@ -128,9 +127,9 @@ define(['js/Constants',
 
             result.push( {"id": "1",
                 "x1": edge,
-                "y1": this.hostDesignerItem.height,
-                "x2": this.hostDesignerItem.width - edge,
-                "y2": this.hostDesignerItem.height,
+                "y1": this.hostDesignerItem.getHeight(),
+                "x2": this.hostDesignerItem.getWidth() - edge,
+                "y2": this.hostDesignerItem.getHeight(),
                 "angle1": 90,
                 "angle2": 90,
                 "len": LEN} );

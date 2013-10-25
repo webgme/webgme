@@ -140,15 +140,14 @@ define(['logManager',
     };
 
     //Override to set the
-    // - 'this.hostDesignerItem.width' and
-    // - 'this.hostDesignerItem.height' attributes with the correct dimensions of this decorator
+    // - 'this.hostDesignerItem._width' and
+    // - 'this.hostDesignerItem._height' attributes with the correct dimensions of this decorator
     //The dimension information is used for many different reasons in the canvas (line routing, etc...),
     //Please set it correctly
     //NOTE - SHALL BE OVERRIDDEN
     DiagramDesignerWidgetDecoratorBase.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = this.$el.outerWidth(true);
-            this.hostDesignerItem.height = this.$el.outerHeight(true);
+            this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
         }
     };
 
@@ -167,10 +166,10 @@ define(['logManager',
         //by default return the center point of the item
         //canvas will draw the connection to / from this coordinate
         result.push( {"id": "0",
-            "x1": this.hostDesignerItem.width / 2,
-            "y1": this.hostDesignerItem.height / 2,
-            "x2": this.hostDesignerItem.width / 2,
-            "y2": this.hostDesignerItem.height / 2,
+            "x1": this.hostDesignerItem.getWidth() / 2,
+            "y1": this.hostDesignerItem.getHeight() / 2,
+            "x2": this.hostDesignerItem.getWidth() / 2,
+            "y2": this.hostDesignerItem.getHeight() / 2,
             "angle1": 270,
             "angle2": 270,
             "len": 10} );

@@ -41,8 +41,8 @@ define(['logManager',
         this.positionY = 0;
         this.rotation = 0;
 
-        this.width = 0;
-        this.height = 0;
+        this._width = 0;
+        this._height = 0;
 
         this._initializeUI();
     };
@@ -198,16 +198,16 @@ define(['logManager',
     DesignerItem.prototype.getBoundingBox = function () {
         var bBox = {"x": this.positionX,
                 "y": this.positionY,
-                "width": this.width,
-                "height": this.height,
-                "x2": this.positionX + this.width,
-                "y2":  this.positionY + this.height};
+                "width": this._width,
+                "height": this._height,
+                "x2": this.positionX + this._width,
+                "y2":  this.positionY + this._height};
 
         if (this.rotation !== 0) {
             var topLeft = this._rotatePoint(0, 0);
-            var topRight = this._rotatePoint(this.width, 0);
-            var bottomLeft = this._rotatePoint(0, this.height);
-            var bottomRight = this._rotatePoint(this.width, this.height);
+            var topRight = this._rotatePoint(this._width, 0);
+            var bottomLeft = this._rotatePoint(0, this._height);
+            var bottomRight = this._rotatePoint(this._width, this._height);
 
             var x = Math.min(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
             var x2 = Math.max(topLeft.x, topRight.x, bottomLeft.x, bottomRight.x);
@@ -486,14 +486,14 @@ define(['logManager',
         var s = Math.sin(angle);
         var c = Math.cos(angle);
 
-        var fx = x - this.width / 2;
-        var fy = y - this.height / 2;
+        var fx = x - this._width / 2;
+        var fy = y - this._height / 2;
 
         var rx = fx * c - fy * s;
         var ry = fx * s + fy * c;
 
-        return {"x": rx + this.width / 2,
-            "y": ry + this.height / 2};
+        return {"x": rx + this._width / 2,
+            "y": ry + this._height / 2};
     };
 
     DesignerItem.prototype.doSearch = function (searchDesc) {
@@ -506,6 +506,36 @@ define(['logManager',
 
     DesignerItem.prototype.onItemComponentEvents = function (eventList) {
         this._decoratorInstance.notifyComponentEvent(eventList);
+    };
+
+    DesignerItem.prototype.getWidth = function () {
+        return  this._width;
+    };
+
+    DesignerItem.prototype.getHeight = function () {
+        return this._height;
+    };
+
+    DesignerItem.prototype.setSize = function (w, h) {
+        var changed = false;
+
+        if (_.isNumber(w) && _.isNumber(h)) {
+            if (this._width !== w) {
+                this._width = w;
+                changed = true;
+            }
+
+            if (this._height !== h) {
+                this._height = h;
+                changed = true;
+            }
+
+            if (changed === true) {
+                this.canvas.dispatchEvent(this.canvas.events.ITEM_SIZE_CHANGED, {"ID": this.id,
+                    "w": this._width,
+                    "h": this._height});
+            }
+        };
     };
 
     return DesignerItem;
