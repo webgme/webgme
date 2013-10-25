@@ -628,6 +628,8 @@ define(['logManager',
         this._actualSize = { "w": 0, "h": 0 };
 
         this._resizeItemContainer();
+
+        this.dispatchEvent(this.events.ON_CLEAR);
     };
 
     DiagramDesignerWidget.prototype.deleteComponent = function (componentId) {
@@ -708,7 +710,9 @@ define(['logManager',
             doRenderGetLayout,
             doRenderSetLayout,
             items = this.items,
-            affectedItems = [];
+            affectedItems = [],
+            dispatchEvents,
+            self = this;
 
         this.logger.debug("_refreshScreen START");
 
@@ -753,6 +757,18 @@ define(['logManager',
         
         doRenderSetLayout(this._insertedDesignerItemIDs);
         doRenderSetLayout(this._updatedDesignerItemIDs);
+
+        /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
+        dispatchEvents = function (itemIDList, eventType) {
+            var i = itemIDList.length;
+
+            while (i--) {
+                self.dispatchEvent(eventType, itemIDList[i]);
+            }
+        };
+        dispatchEvents(this._insertedDesignerItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._updatedDesignerItemIDs, this.events.ON_COMPONENT_UPDATE);
+        /*********************/
 
 
         /***************** THEN HANDLE THE CONNECTIONS *****************/
