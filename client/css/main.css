@@ -92,6 +92,11 @@ div.spacer {
     padding-left: 5px;
 }
 
+/*FIX jQueryUI layout's z-index issue that the resizer has higher z-index than the panels*/
+.ui-layout-south {
+    z-index: 10 !important;
+}
+
 /********WEBKIT SCROLLBAR **********/
 
 *::-webkit-scrollbar{height:10px;width:10px;overflow:visible;}

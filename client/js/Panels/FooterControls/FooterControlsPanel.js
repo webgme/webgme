@@ -35,7 +35,11 @@ define(['js/PanelBase/PanelBase',
     _.extend(FooterControlsPanel.prototype, __parent__.prototype);
 
     FooterControlsPanel.prototype._initialize = function () {
-        this.$el.html('<div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+        this.$el.html('<div class="pull-left inline"></div><div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+
+        var pullLeft = this.$el.find('.pull-left').first();
+        //add version UI piece
+        pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
 
         var keyBoardManagerEl = this.$el.find('.keyBoardManager').first();
         new KeyboardManagerWidget(keyBoardManagerEl);

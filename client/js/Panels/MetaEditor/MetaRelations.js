@@ -17,6 +17,10 @@ define(['js/Constants',
             POINTERLIST : "pointerlist"
     };
 
+    var _connection_meta_info = {
+        TYPE: "type"
+    };
+
     var _getLineVisualDescriptor = function (sName) {
         var params = {};
 
@@ -98,6 +102,8 @@ define(['js/Constants',
 
         getLineVisualDescriptor : _getLineVisualDescriptor,
 
-        createButtonIcon : _createButtonIcon
+        createButtonIcon : _createButtonIcon,
+
+        CONNECTION_META_INFO: _connection_meta_info
     }
 });

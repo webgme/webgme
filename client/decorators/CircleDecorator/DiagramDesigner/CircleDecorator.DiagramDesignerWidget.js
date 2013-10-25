@@ -1,9 +1,11 @@
 "use strict";
 
 define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesignerWidget',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./CircleDecorator.DiagramDesignerWidget.html',
     'css!./CircleDecorator.DiagramDesignerWidget'], function (
                                                           DefaultDecoratorDiagramDesignerWidget,
+                                                          DiagramDesignerWidgetConstants,
                                                         circleDecoratorDiagramDesignerWidgetTemplate) {
 
     var CircleDecoratorDiagramDesignerWidget,
@@ -66,12 +68,11 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
 
     CircleDecoratorDiagramDesignerWidget.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = CANVAS_SIZE;
-            this.hostDesignerItem.height = CANVAS_SIZE + this.skinParts.$name.outerHeight(true);
+            this.hostDesignerItem.setSize(CANVAS_SIZE, CANVAS_SIZE + this.skinParts.$name.outerHeight(true));
         }
     };
 
-    CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id*/) {
+    CircleDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (/*id, isEnd, connectionMetaInfo*/) {
         var result = [],
             LEN = 20;
 
@@ -125,6 +126,17 @@ define(['../../DefaultDecorator/DiagramDesigner/DefaultDecorator.DiagramDesigner
         }
 
         return false;
+    };
+
+    CircleDecoratorDiagramDesignerWidget.prototype.getDrawnConnectionVisualStyle = function (subComponentId) {
+        var v = {};
+
+        v[DiagramDesignerWidgetConstants.LINE_WIDTH] = 3;
+        v[DiagramDesignerWidgetConstants.LINE_COLOR] = '#FF0000';
+        v[DiagramDesignerWidgetConstants.LINE_PATTERN] = '.';
+        v[DiagramDesignerWidgetConstants.LINE_END_ARROW] = 'classic';
+
+        return v;
     };
 
     return CircleDecoratorDiagramDesignerWidget;

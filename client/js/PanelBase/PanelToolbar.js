@@ -11,9 +11,9 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     /***************** BUTTON GROUP ****************************/
 
-    PanelToolbar.prototype.addButtonGroup = function (clickFn) {
+    PanelToolbar.prototype.addButtonGroup = function (clickFn, gclass) {
         var $btnGroup = $('<div/>', {
-            "class": "btn-group inline toolbar-group"
+            "class": "btn-group inline toolbar-group" + (gclass? " " + gclass : "")
         });
 
         this.$el.append($btnGroup);
@@ -241,7 +241,7 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
     /***************** DROPDOWN MENU ****************************/
 
     PanelToolbar.prototype.addDropDownMenu = function (params) {
-        var $ddMenu = this.addButtonGroup(),
+        var $ddMenu = this.addButtonGroup(null, params.class),
             $btn = this.addButton(params, $ddMenu),
             $caret = $('<span class="caret"></span>');/*,
             $menuUl = $('<ul class="dropdown-menu"></ul>');*/
@@ -355,7 +355,8 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
 
     PanelToolbar.prototype.addCheckBox = function (params) {
         var onCheckChanged,
-            chkFieldEpx;
+            chkFieldEpx,
+            p = {};
 
         onCheckChanged = function (checked) {
             var data = chkFieldEpx.el.data();
@@ -365,9 +366,14 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             }
         };
 
-        chkFieldEpx = new iCheckBox({"checkChangedFn": onCheckChanged});
+        p = {"checkChangedFn": onCheckChanged,
+                  "checked": true};
 
-        chkFieldEpx.el.addClass('pull-right');
+        if (params.hasOwnProperty("checked")) {
+            p.checked = params.checked;
+        }
+
+        chkFieldEpx = new iCheckBox(p);
 
         if (params.data) {
             chkFieldEpx.el.data(params.data);

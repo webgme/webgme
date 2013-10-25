@@ -19,9 +19,9 @@
             "container": "right",
             "DEBUG_ONLY": false},
 
-        {"id": "DiagramDesigner",
-            "panel": "DiagramDesigner/DiagramDesignerPanel",
-            "control": "DiagramDesigner/ModelEditor/ModelEditorControl",
+        {"id": "ModelEditor",
+            "panel": "ModelEditor/ModelEditorPanel",
+            "control": "ModelEditor/ModelEditorControl",
             "container": "main",
             "DEBUG_ONLY": false}
     ]

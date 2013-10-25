@@ -102,25 +102,10 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
 
         this.path.dblclick(function (event) {
             var mousePos = self._getMousePos(event),
-                pos = self._getSelectedPathPoint(mousePos.mX, mousePos.mY),
-                dots,
-                cx,
-                cy;
+                pos = self._getSelectedPathPoint(mousePos.mX, mousePos.mY);
 
             if (pos) {
-                dots = Raphael.findDotsAtSegment(pos.bez[0],
-                    pos.bez[1],
-                    pos.bez[2],
-                    pos.bez[3],
-                    pos.bez[4],
-                    pos.bez[5],
-                    pos.bez[6],
-                    pos.bez[7],
-                    pos.t);
-                cx = dots.n.x - pos.x;
-                cy = dots.n.y - pos.y;
-
-                self.connection.addSegmentPoint(self.id, pos.x, pos.y, cx, cy);
+                self.connection.addSegmentPoint(self.id, pos.x, pos.y);
             }
 
             event.stopPropagation();

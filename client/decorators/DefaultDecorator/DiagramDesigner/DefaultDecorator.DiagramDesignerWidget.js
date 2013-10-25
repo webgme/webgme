@@ -83,19 +83,19 @@ define(['js/Constants',
         }
     };
 
-    DefaultDecorator.prototype.getConnectionAreas = function (id) {
+    DefaultDecorator.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
             edge = 10,
             LEN = 20;
 
         //by default return the bounding box edge's midpoints
 
-        if (id === undefined) {
+        if (id === undefined || id == this.hostDesignerItem.id) {
             //NORTH
             result.push( {"id": "0",
                 "x1": edge,
                 "y1": 0,
-                "x2": this.hostDesignerItem.width - edge,
+                "x2": this.hostDesignerItem.getWidth() - edge,
                 "y2": 0,
                 "angle1": 270,
                 "angle2": 270,
@@ -103,10 +103,10 @@ define(['js/Constants',
 
             //EAST
             result.push( {"id": "1",
-                "x1": this.hostDesignerItem.width,
+                "x1": this.hostDesignerItem.getWidth(),
                 "y1": edge,
-                "x2": this.hostDesignerItem.width,
-                "y2": this.hostDesignerItem.height - edge,
+                "x2": this.hostDesignerItem.getWidth(),
+                "y2": this.hostDesignerItem.getHeight() - edge,
                 "angle1": 0,
                 "angle2": 0,
                 "len": LEN} );
@@ -114,9 +114,9 @@ define(['js/Constants',
             //SOUTH
             result.push( {"id": "2",
                 "x1": edge,
-                "y1": this.hostDesignerItem.height,
-                "x2": this.hostDesignerItem.width - edge,
-                "y2": this.hostDesignerItem.height,
+                "y1": this.hostDesignerItem.getHeight(),
+                "x2": this.hostDesignerItem.getWidth() - edge,
+                "y2": this.hostDesignerItem.getHeight(),
                 "angle1": 90,
                 "angle2": 90,
                 "len": LEN} );
@@ -126,7 +126,7 @@ define(['js/Constants',
                 "x1": 0,
                 "y1": edge,
                 "x2": 0,
-                "y2": this.hostDesignerItem.height - edge,
+                "y2": this.hostDesignerItem.getHeight() - edge,
                 "angle1": 180,
                 "angle2": 180,
                 "len": LEN} );

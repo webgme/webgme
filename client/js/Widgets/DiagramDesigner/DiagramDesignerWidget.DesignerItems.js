@@ -92,5 +92,12 @@ define(['js/Widgets/DiagramDesigner/DesignerItem'], function (DesignerItem) {
         this.logger.debug("DesignerItem '" + id + "' received double click at pos: [" + event.offsetX + ", " + event.offsetY + "]");
     };
 
+    DiagramDesignerWidgetDesignerItems.prototype.notifyItemComponentEvents = function (itemId, eventList) {
+        if (this.itemIds.indexOf(itemId) !== -1) {
+            this._updatedDesignerItemIDs.push(itemId);
+            this.items[itemId].onItemComponentEvents(eventList);
+        }
+    };
+
     return DiagramDesignerWidgetDesignerItems;
 });

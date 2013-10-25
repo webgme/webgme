@@ -2,12 +2,8 @@ define([
     'util/assert',
     'eventDispatcher',
     'util/guid',
-    'core/newcore',
     'core/core',
-    'core/setcore',
-    'core/guidcore',
-    'core/descriptorcore',
-    'core/nullpointercore',
+    'storage/clientstorage',
     'storage/hashcheck',
     'storage/cache',
     'storage/failsafe',
@@ -21,12 +17,8 @@ define([
         ASSERT,
         EventDispatcher,
         GUID,
-        NewCore,
         Core,
-        SetCore,
-        GuidCore,
-        DescriptorCore,
-        NullPointerCore,
+        Storage,
         HashCheck,
         Cache,
         Failsafe,
@@ -44,9 +36,10 @@ define([
             return null;
         }
 
+
         function getNewCore(project){
             //return new NullPointerCore(new DescriptorCore(new SetCore(new GuidCore(new Core(project)))));
-            return NewCore.asyncCore(project,{autopersist: true});
+            return Core(project,{autopersist: true,usertype:'nodejs'});
         }
         function Client(_configuration){
             var _self = this,
@@ -56,6 +49,7 @@ define([
                 _project = null,
                 _core = null,
                 _selectedObjectId = null,
+                _activeSelection = [],
                 _propertyEditorSelection = null,
                 _branch = null,
                 _branchState = null,
@@ -76,6 +70,22 @@ define([
                 _userName = URL.parseCookie(document.cookie).webgme || _configuration.user,
                 _privateKey = 4;
 
+            function print_nodes(pretext){
+                if(pretext){
+                    console.log(pretext);
+                }
+                var nodes = "loaded: ";
+                for(var k in _loadNodes){
+                    nodes+="("+k+","+_loadNodes[k].hash+")";
+                }
+                console.log(nodes);
+                nodes = "stored: ";
+                for(var k in _nodes){
+                    nodes+="("+k+","+_nodes[k].hash+")";
+                }
+                console.log(nodes);
+                return;
+            }
             //default configuration
             _configuration = _configuration || {};
             _configuration.autoreconnect = _configuration.autoreconnect === null || _configuration.autoreconnect === undefined ? true : _configuration.autoreconnect;
@@ -116,25 +126,15 @@ define([
             }
 
             function newDatabase(){
-                return  new Log(
-                    new HashCheck(
-                        new Commit(
-                            new Cache(
-                                new Failsafe(
-                                    new SocketIOClient(
-                                        {
-                                            host:_configuration.host,
-                                            port:_configuration.port
-                                        }
-                                    ),{}
-                                ),{}
-                            ),{}
-                        ),{}
-                    ),{log:LogManager.create('client-storage')}
-                );
+                return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
             }
-            function setSelectedObjectId(objectId) {
+            function setSelectedObjectId(objectId, activeSelection) {
                 if (objectId !== _selectedObjectId) {
+                    if (activeSelection) {
+                        _activeSelection = [].concat(activeSelection);
+                    } else {
+                        _activeSelection = [];
+                    }
                     _selectedObjectId = objectId;
                     _self.dispatchEvent(_self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
                     setPropertyEditorIdList([objectId]);
@@ -151,6 +151,9 @@ define([
             }
             function clearPropertyEditorIdList() {
                 setPropertyEditorIdList([]);
+            }
+            function getActiveSelection() {
+                return _activeSelection;
             }
             function changeBranchState(newstate){
                 if(_branchState !== newstate){
@@ -556,14 +559,34 @@ define([
                     returning(null);
                 }
             }
-            function createEmptyProject(project,callback){
+            /*function createEmptyProject(project,callback){
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setRegistry(root,"isConnection",false);
                 core.setRegistry(root,"position",{ "x": 0, "y": 0});
                 core.setAttribute(root,"name","ROOT");
                 core.setRegistry(root,"isMeta",false);
-                core.persist(function(err){});
+                core.persist(root,function(err){});
+                var rootHash = core.getHash(root);
+                var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
+                project.setBranchHash('master',"",commitHash,callback);
+            }*/
+            function createEmptyProject(project,callback){
+                var core = getNewCore(project);
+                var root = core.createNode();
+                core.setAttribute(root,"name","ROOT");
+                var metameta = core.createNode(root);
+                core.setAttribute(metameta,"name","METAMETA");
+                var meta = core.createNode(root);
+                core.setAttribute(meta,"name","META");
+                var proj = core.createNode(root);
+                core.setAttribute(proj,"name","PROJECT");
+                var fco = core.createNode(metameta);
+                core.setAttribute(fco,"name","FCO");
+                core.setRegistry(fco,"isConnection",false);
+                core.setRegistry(fco,"position",{ "x": 100, "y": 100});
+                core.setRegistry(fco,"isMeta",true);
+                core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
                 project.setBranchHash('master',"",commitHash,callback);
@@ -607,6 +630,7 @@ define([
                 }
 
                 var events = [];
+
                 //deleted items
                 for(i in _users[userId].PATHS){
                     if(!newPaths[i]){
@@ -702,8 +726,14 @@ define([
                     base = nodesSoFar[id].node;
                     baseLoaded();
                 } else {
-                    core.loadByPath(_nodes['root'].node,id,function(err,node){
-                        if(!err && node){
+                    var base = null;
+                    if(_loadNodes['root']){
+                        base = _loadNodes['root'].node;
+                    } else if(_nodes['root']){
+                        base = _nodes['root'].node;
+                    }
+                    core.loadByPath(base,id,function(err,node){
+                        if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
                             if(!nodesSoFar[path]){
                                 nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
@@ -765,8 +795,7 @@ define([
                             userEvents(i,modifiedPaths);
                         }
                         _loadError = 0;
-                    }
-                    if(_loadNodes['root']){
+                    } else if(_loadNodes['root']){
                         //we left the stuff in the loading rack, probably because there were no _nodes beforehand
                         _nodes = _loadNodes;
                         _loadNodes = {};
@@ -1132,7 +1161,7 @@ define([
                 });
             }
             //MGA
-            function copyMoreNodes(nodePaths,parentPath,callback){
+            function copyMoreNodesAsync(nodePaths,parentPath,callback){
                 var checkPaths = function(){
                     var result = true;
                     for(var i=0;i<nodePaths.length;i++){
@@ -1189,6 +1218,40 @@ define([
                             callback(err,{});
                         }
                     });
+                }
+            }
+            function copyMoreNodes(parentPath,nodesPath){
+                var isMissing = false;
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
+                    for(var i=0;i<nodesPath.length;i++){
+                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
+                            isMissing = true;
+                            break;
+                        }
+                    }
+                    if(!isMissing){
+                        for(var i=0;i<nodesPath.length;i++){
+                            _core.copyNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
+                        }
+                        saveRoot('copyMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+                    }
+                }
+            }
+            function moveMoreNodes(parentPath,nodesPath){
+                var isMissing = false;
+                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
+                    for(var i=0;i<nodesPath.length;i++){
+                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
+                            isMissing = true;
+                            break;
+                        }
+                    }
+                    if(!isMissing){
+                        for(var i=0;i<nodesPath.length;i++){
+                            _core.moveNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
+                        }
+                        saveRoot('moveMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+                    }
                 }
             }
             function startTransaction() {
@@ -1262,7 +1325,7 @@ define([
 
                 if(_core && checkClipboard()){
                     var paths = COPY(_clipboard);
-                    copyMoreNodes(paths,parentpath,function(err,copyarray){
+                    copyMoreNodesAsync(paths,parentpath,function(err,copyarray){
                         if(!err){
                             saveRoot('pasteNodes('+parentpath+','+paths+')');
                         }
@@ -1272,6 +1335,7 @@ define([
             function deleteNode(path) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
+                    delete _nodes[path];
                     saveRoot('deleteNode('+path+')');
                 }
             }
@@ -1280,6 +1344,7 @@ define([
                     for(var i=0;i<paths.length;i++){
                         if(_nodes[paths[i]] && typeof _nodes[paths[i]].node === 'object'){
                             _core.deleteNode(_nodes[paths[i]].node);
+                            delete _nodes[paths[i]];
                         }
                     }
                     saveRoot('delMoreNodes('+paths+')');
@@ -1299,7 +1364,7 @@ define([
                 return result;
             }
             /******************* END OF --- TEST CAN-CREATECHILD **********************/
-            function createChild(parameters) {
+            /*function createChild(parameters) {
                 if(_core){
                     if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                         var baseId = parameters.baseId || "object";
@@ -1326,6 +1391,29 @@ define([
                         saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
                     }
                 }
+            }*/
+            function createChild(parameters){
+                var newID;
+
+                if(_core){
+                    if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                        var baseNode = null;
+                        if(_nodes[parameters.baseId]){
+                            baseNode = _nodes[parameters.baseId].node || baseNode;
+                        }
+                        var child = _core.createNode(_nodes[parameters.parentId].node, baseNode);
+                        if (parameters.position) {
+                            _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
+                        } else {
+                            _core.setRegistry(child,"position", { "x": 100, "y": 100});
+                        }
+                        storeNode(child);
+                        newID = _core.getPath(child);
+                        saveRoot('createChild('+parameters.parentId+','+parameters.baseId+','+_core.getPath(child)+')');
+                    }
+                }
+
+                return newID;
             }
             /************** TEST CAN-MAKEPOINTER ******************/
             function canMakePointer(id, name, to) {
@@ -1457,7 +1545,7 @@ define([
                         }
                         saveRoot('intellyPaste('+pathestocopy+','+parameters.parentId+')');
                     } else {
-                        copyMoreNodes(pathestocopy,parameters.parentId,function(err,copyarr){
+                        copyMoreNodesAsync(pathestocopy,parameters.parentId,function(err,copyarr){
                             if(err){
                                 //rollBackModification();
                             }
@@ -1537,14 +1625,22 @@ define([
                 }
             }
             function setBase(path,basepath){
-                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                /*if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.setRegistry(_nodes[path].node,'base',basepath);
+                    saveRoot('setBase('+path+','+basepath+')');
+                }*/
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object' && _nodes[basepath] && typeof _nodes[basepath].node === 'object') {
+                    _core.setBase(_nodes[path].node,_nodes[basepath].node);
                     saveRoot('setBase('+path+','+basepath+')');
                 }
             }
             function delBase(path){
-                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                /*if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
                     _core.delRegistry(_nodes[path].node,'base');
+                    saveRoot('delBase('+path+')');
+                }*/
+                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
+                    _core.setBase(_nodes[node].node,null);
                     saveRoot('delBase('+path+')');
                 }
             }
@@ -1622,7 +1718,8 @@ define([
                 };
 
                 var getBaseId = function(){
-                    return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
+                    //return _core.getRegistry(_nodes[_id].node,"isConnection") === true ? 'connection' : 'object';
+                    return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
                 var getInheritorIds = function(){
@@ -1713,7 +1810,8 @@ define([
                     return descriptor;
                 };
                 var getBase = function(){
-                    return _core.getRegistry(_nodes[_id].node,'base');
+                    //return _core.getRegistry(_nodes[_id].node,'base');
+                    return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
                 //ASSERT(_nodes[_id]);
@@ -1848,6 +1946,7 @@ define([
                 goOffline: goOffline,
                 goOnline: goOnline,
                 isReadOnly: function(){ return _viewer;},//TODO should be removed
+                getActiveSelection: getActiveSelection,
 
 
                 //MGA
@@ -1858,6 +1957,8 @@ define([
                 setRegistry: setRegistry,
                 delRegistry: delRegistry,
                 canSetRegistry: canSetRegistry,
+                copyMoreNodes: copyMoreNodes,
+                moveMoreNodes: moveMoreNodes,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
                 deleteNode: deleteNode,

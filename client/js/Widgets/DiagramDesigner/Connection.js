@@ -7,10 +7,12 @@
 "use strict";
 
 define(['logManager',
+    'clientUtil',
     './DiagramDesignerWidget.Constants',
     './DiagramDesignerWidget.OperatingModes',
     './Connection.EditSegment',
     './Connection.SegmentPoint'], function (logManager,
+                                            clientUtil,
                             DiagramDesignerWidgetConstants,
                             DiagramDesignerWidgetOperatingModes,
                             ConnectionEditSegment,
@@ -21,6 +23,7 @@ define(['logManager',
         MIN_WIDTH_NOT_TO_NEED_SHADOW = 5,
         CONNECTION_DEFAULT_WIDTH = 1,
         CONNECTION_DEFAULT_COLOR = "#000000",
+        CONNECTION_DEFAULT_PATTERN = DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID,
         CONNECTION_NO_END = "none",
         CONNECTION_DEFAULT_END = CONNECTION_NO_END,
         CONNECTION_SHADOW_DEFAULT_OPACITY = 0,
@@ -30,7 +33,8 @@ define(['logManager',
         CONNECTION_DEFAULT_LINE_TYPE = DiagramDesignerWidgetConstants.LINE_TYPES.NONE,
         SHADOW_MARKER_SIZE_INCREMENT = 3,
         SHADOW_MARKER_SIZE_INCREMENT_X = 1,
-        SHADOW_MARKER_BLOCK_FIX_OFFSET = 2;
+        SHADOW_MARKER_BLOCK_FIX_OFFSET = 2,
+        JUMP_XING_RADIUS = 3;
 
     Connection = function (objId) {
         this.id = objId;
@@ -57,15 +61,19 @@ define(['logManager',
         this._editMode = false;
         this._readOnly = false;
         this._connectionEditSegments = [];
-        
-        /*MODELEDITORCONNECTION CONSTANTS*/
+
+        this._pathPointsBBox = {'x': 0,
+                          'y': 0,
+                          'x2': 0,
+                          'y2': 0,
+                          'w': 0,
+                          'h': 0};
 
         //read props coming from the DataBase or DiagramDesigner
         this._initializeConnectionProps(objDescriptor);
     };
 
     Connection.prototype._initializeConnectionProps = function (objDescriptor) {
-        this.segmentPoints = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS] ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].slice(0) : [];
         this.reconnectable = objDescriptor.reconnectable === true;
         this.editable = !!objDescriptor.editable;
 
@@ -74,6 +82,7 @@ define(['logManager',
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
         this.designerAttributes.color = objDescriptor[DiagramDesignerWidgetConstants.LINE_COLOR] || CONNECTION_DEFAULT_COLOR;
         this.designerAttributes.width = parseInt(objDescriptor[DiagramDesignerWidgetConstants.LINE_WIDTH], 10) || CONNECTION_DEFAULT_WIDTH;
+        this.designerAttributes.pattern = objDescriptor[DiagramDesignerWidgetConstants.LINE_PATTERN] || CONNECTION_DEFAULT_PATTERN
         this.designerAttributes.shadowWidth = this.designerAttributes.width + CONNECTION_SHADOW_DEFAULT_WIDTH - CONNECTION_DEFAULT_WIDTH;
         this.designerAttributes.shadowOpacity = CONNECTION_SHADOW_DEFAULT_OPACITY;
         this.designerAttributes.shadowOpacityWhenSelected = CONNECTION_SHADOW_DEFAULT_OPACITY_WHEN_SELECTED;
@@ -93,10 +102,22 @@ define(['logManager',
 
         this.srcText = objDescriptor.srcText;
         this.dstText = objDescriptor.dstText;
-        this.name = objDescriptor.name;
+        this.name = objDescriptor.name;/* || this.id;*/
         this.nameEdit = objDescriptor.nameEdit || false;
         this.srcTextEdit = objDescriptor.srcTextEdit || false;
         this.dstTextEdit = objDescriptor.dstTextEdit || false;
+
+        //get segnment points
+        this.segmentPoints = [];
+        if (objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS]) {
+            var fixedP;
+            var len =  objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].length;
+            for (var i = 0; i < len; i += 1) {
+                fixedP = this._fixXY({'x': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][0],
+                                      'y': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][1]});
+                this.segmentPoints.push([fixedP.x, fixedP.y]);
+            }
+        }
     };
 
     Connection.prototype._raphaelArrowAdjustForSizeToRefSize = function (arrowType, size, refSize, isEnd) {
@@ -226,8 +247,23 @@ define(['logManager',
         objDescriptor.width = this.designerAttributes.width;
         objDescriptor.shadowColor = this.designerAttributes.shadowColor;
         objDescriptor.lineType = this.designerAttributes.lineType;
+        objDescriptor.pattern = this.designerAttributes.pattern;
 
         return objDescriptor;
+    };
+
+    //for EVEN width of the path, get the lower integer of the coordinate
+    //for ODD width of the path, get the lower integer + 0.5
+    Connection.prototype._fixXY = function (point) {
+        var p = {'x': Math.floor(point.x),
+            'y': Math.floor(point.y)};
+
+        if (this.designerAttributes.width % 2 === 1) {
+            p.x += 0.5;
+            p.y += 0.5;
+        }
+
+        return p;
     };
 
     Connection.prototype.setConnectionRenderData = function (segPoints) {
@@ -235,24 +271,16 @@ define(['logManager',
             len,
             pathDef = [],
             p,
+            lastP = { 'x': NaN,
+                      'y': NaN},
             points = [],
             validPath = segPoints && segPoints.length > 1,
-            self = this,
-            fixXY;
+            minX,
+            minY,
+            maxX,
+            maxY;
 
-        //for EVEN width of the path, get the lower integer of the coordinate
-        //for ODD width of the path, get the lower integer + 0.5
-        fixXY = function (point) {
-            var p = {'x': Math.floor(point.x),
-                'y': Math.floor(point.y)};
 
-            if (self.designerAttributes.width % 2 === 1) {
-                p.x += 0.5;
-                p.y += 0.5;
-            }
-
-            return p;
-        };
 
         //remove edit features
         this._removeEditModePath();
@@ -264,10 +292,16 @@ define(['logManager',
             len--;
             while (i--) {
                 if (segPoints[len - i]) {
-                    points.push(fixXY(segPoints[len - i]));
+                    p = this._fixXY(segPoints[len - i]);
+                    if (lastP && (lastP.x !== p.x || lastP.y !== p.y)) {
+                        points.push(p);
+                        lastP = p;
+                    }
                 }
             }
         }
+
+        this._simplifyTrivially(points);
 
         this.sourceCoordinates = { "x": -1,
                                   "y": -1};
@@ -287,6 +321,9 @@ define(['logManager',
             p = points[0];
             pathDef.push("M" + p.x + "," + p.y);
 
+            minX = maxX = p.x;
+            minY = maxY = p.y;
+
             //store source coordinate
             this.sourceCoordinates.x = p.x;
             this.sourceCoordinates.y = p.y;
@@ -296,13 +333,25 @@ define(['logManager',
             i--;
             while (i--) {
                 p = points[len - i];
+                minX = Math.min(minX, p.x);
+                minY = Math.min(minY, p.y);
+                maxX = Math.max(maxX, p.x);
+                maxY = Math.max(maxY, p.y);
                 pathDef.push("L" + p.x + "," + p.y);
             }
+
+            //save calculated bounding box
+            this._pathPointsBBox.x = minX;
+            this._pathPointsBBox.y = minY;
+            this._pathPointsBBox.x2 = maxX;
+            this._pathPointsBBox.y2 = maxY;
 
             //save endpoint coordinates
             this.endCoordinates.x = p.x;
             this.endCoordinates.y = p.y;
 
+
+            pathDef = this._jumpOnCrossings(pathDef);
             pathDef = pathDef.join(" ");
 
             //check if the prev pathDef is the same as the new
@@ -330,7 +379,8 @@ define(['logManager',
                     this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                         "arrow-end": this.designerAttributes.arrowEnd,
                         "stroke": this.designerAttributes.color,
-                        "stroke-width": this.designerAttributes.width});
+                        "stroke-width": this.designerAttributes.width,
+                        "stroke-dasharray": this.designerAttributes.pattern});
 
                     if (this.designerAttributes.width < MIN_WIDTH_NOT_TO_NEED_SHADOW) {
                         this._createPathShadow(this._pathPoints);
@@ -895,9 +945,11 @@ define(['logManager',
             pathDef.push("L" + p.x + "," + p.y);
         }
 
+        pathDef = this._jumpOnCrossings(pathDef);
         pathDef = pathDef.join(" ");
         this.skinParts.pathShadow.attr({ "path": pathDef});
 
+        //MARKER ENDING SHADOWS if needed
         //MARKER ENDING SHADOWS if needed
         if (this.skinParts.pathShadowArrowStart) {
             // PATHSHADOW with END-MARKER
@@ -1105,14 +1157,9 @@ define(['logManager',
         this._connectionEditSegments.push(segment);
     };
 
-    Connection.prototype.addSegmentPoint = function (idx, x, y, cx, cy) {
+    Connection.prototype.addSegmentPoint = function (idx, x, y) {
         var d = [x, y],
             newSegmentPoints = this.segmentPoints.slice(0);
-
-        if (cx && cy) {
-            d.push(cx);
-            d.push(cy);
-        }
 
         newSegmentPoints.splice(idx,0,d);
 
@@ -1214,7 +1261,8 @@ define(['logManager',
             this.skinParts.path.attr({ "arrow-start": this.designerAttributes.arrowStart,
                 "arrow-end": this.designerAttributes.arrowEnd,
                 "stroke": this.designerAttributes.color,
-                "stroke-width": this.designerAttributes.width});
+                "stroke-width": this.designerAttributes.width,
+                "stroke-dasharray": this.designerAttributes.pattern});
         }
 
         if (this.skinParts.pathShadow) {
@@ -1238,7 +1286,7 @@ define(['logManager',
     };
 
 
-    Connection.prototype.getConnectionAreas = function () {
+    Connection.prototype.getConnectionAreas = function (id, isEnd) {
         var result = [],
             AREA_SIZE = 0,
             w = 0,
@@ -1544,6 +1592,362 @@ define(['logManager',
         this._renderTexts();
     };
 
+
+    Connection.prototype._jumpOnCrossings = function (pathDefArray) {
+        var connectionIDs = this.diagramDesigner.connectionIds.slice(0).sort(),
+            selfIdx = connectionIDs.indexOf(this.id),
+            len,
+            otherConn,
+            items = this.diagramDesigner.items,
+            intersections = {},
+            intersectionSegments = [],
+            xingWithOther,
+            resultPathDefArray = [],
+            i,
+            xingDesc,
+            segmentXings,
+            segmentLength,
+            pixDiffPercentage,
+            pointBefore,
+            pointAfter,
+            atLength,
+            xingCurve,
+            resultIntersectionPathDefs = {},
+            segNum,
+            j,
+            xRadius,
+            sweepFlag,
+            hDir,
+            vDir;
+
+        if (this.diagramDesigner._connectionJumpXing !== true) {
+            return pathDefArray;
+        }
+
+        connectionIDs.splice(selfIdx);
+        len = connectionIDs.length;
+
+        while(len--) {
+            otherConn = items[connectionIDs[len]];
+            xingWithOther = this._pathIntersect(otherConn);
+            if (xingWithOther && xingWithOther.length > 0) {
+                for (i = 0; i < xingWithOther.length; i += 1) {
+                    xingDesc = xingWithOther[i];
+                    intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
+                    intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
+                                                    't': xingDesc.t1,
+                                                  'path': xingDesc.path1,
+                                                  'length': xingDesc.segment1Length,
+                                                  'otherWidth': otherConn.designerAttributes.width });
+                    if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
+                        intersectionSegments.push(xingDesc.segment1);
+                    }
+                }
+            }
+        }
+
+        //we got all the intersections of this path with everybody else
+        intersectionSegments.sort(function(a,b){return a-b});
+        for (len = 0; len < intersectionSegments.length; len += 1) {
+            segNum = intersectionSegments[len];
+            segmentXings = intersections[segNum];
+
+            for (i = 0; i < segmentXings.length; i += 1) {
+                resultIntersectionPathDefs[segNum] = resultIntersectionPathDefs[segNum] || { 't': [], 'paths': {}, 'segmentLength': segmentXings[i].length, 'xings': {}, 'sweepFlag': 0};
+
+                xRadius = Math.max(this.designerAttributes.width, segmentXings[i].otherWidth) + JUMP_XING_RADIUS;
+
+                segmentLength =  segmentXings[i].length;
+                pixDiffPercentage = xRadius / segmentLength;
+
+                atLength = segmentXings[i].t - pixDiffPercentage;
+                if (atLength < 0) {
+                    atLength = 0;
+                }
+                pointBefore = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
+
+                atLength = segmentXings[i].t + pixDiffPercentage;
+                if (atLength > 1) {
+                    atLength = 1;
+                }
+                pointAfter = this._getPointAtLength(segmentXings[i].path[0], segmentXings[i].path[1], segmentXings[i].path[2], segmentXings[i].path[3], atLength * segmentLength);
+
+                vDir = segmentXings[i].path[3] - segmentXings[i].path[1];
+                if (vDir !== 0) {
+                    vDir = vDir / Math.abs(vDir);
+                }
+
+                hDir = segmentXings[i].path[2] - segmentXings[i].path[0];
+                if (hDir !== 0) {
+                    hDir = hDir / Math.abs(hDir);
+                }
+
+                if (hDir > 0) {
+                    //going from left to right
+                    sweepFlag = 1;
+                } else if (hDir === 0) {
+                    //vertical line
+                    if (vDir > 0) {
+                        //going from top to bottom
+                        sweepFlag = 1
+                    } else {
+                        sweepFlag = 0;
+                    }
+                } else {
+                    //going from right to left
+                    sweepFlag = 0;
+                }
+
+                xingCurve = "L" + pointBefore.x + "," + pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + pointAfter.x + "," + pointAfter.y;
+
+                resultIntersectionPathDefs[segNum].t.push(segmentXings[i].t);
+                resultIntersectionPathDefs[segNum].paths[segmentXings[i].t] = xingCurve;
+                resultIntersectionPathDefs[segNum].xings[segmentXings[i].t] = {'pointBefore': pointBefore,
+                                                                               'pointAfter': pointAfter,
+                                                                               'xRadius': xRadius};
+                resultIntersectionPathDefs[segNum].sweepFlag = sweepFlag;
+            }
+
+            //simplify bumps if they overlap
+            //order based on t
+            resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+
+            segmentLength = resultIntersectionPathDefs[segNum].segmentLength;
+            sweepFlag = resultIntersectionPathDefs[segNum].sweepFlag;
+
+            for (j = 0; j < resultIntersectionPathDefs[segNum].t.length - 1; j += 1) {
+                var t = resultIntersectionPathDefs[segNum].t[j];
+                var t1 = resultIntersectionPathDefs[segNum].t[j + 1];
+                var xing = resultIntersectionPathDefs[segNum].xings[t];
+                var xing1 = resultIntersectionPathDefs[segNum].xings[t1];
+
+                if (this._checkIntersect(xing.pointBefore.x, xing.pointBefore.y,
+                    xing.pointAfter.x, xing.pointAfter.y,
+                    xing1.pointBefore.x, xing1.pointBefore.y,
+                    xing1.pointAfter.x, xing1.pointAfter.y)) {
+                    xRadius = Math.max(xing.xRadius, xing1.xRadius);
+
+                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;
+
+                    //try to not draw a huge arc, more like a small arc and a path inbetween - doesn't look that good
+                    /*var totalLength = Math.sqrt((xing1.pointAfter.x - xing.pointBefore.x) * (xing1.pointAfter.x - xing.pointBefore.x) + (xing1.pointAfter.y - xing.pointBefore.y) * (xing1.pointAfter.y - xing.pointBefore.y));
+                    var c1 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, xRadius);
+                    var c2 = this._getPointAtLength(xing.pointBefore.x, xing.pointBefore.y, xing1.pointAfter.x, xing1.pointAfter.y, totalLength - xRadius);
+
+                    var ddx = c1.x - xing.pointBefore.x;
+                    var ddy = c1.y - xing.pointBefore.y;
+                    xingCurve = "L" + xing.pointBefore.x + "," + xing.pointBefore.y + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + (c1.x + ddy) + "," + (c1.y + ddx);
+
+                    ddx = xing1.pointAfter.x - c2.x;
+                    ddy = xing1.pointAfter.y - c2.y;
+                    xingCurve += " L" + (c2.x + ddy) + "," + (c2.y + ddx) + "A" + xRadius + "," + xRadius + " 0 0," + sweepFlag + " " + xing1.pointAfter.x + "," + xing1.pointAfter.y;*/
+
+                    resultIntersectionPathDefs[segNum].paths[t] = xingCurve;
+
+                    resultIntersectionPathDefs[segNum].xings[t] = {'pointBefore': xing.pointBefore,
+                        'pointAfter': xing1.pointAfter,
+                        'xRadius': xRadius};
+
+                    resultIntersectionPathDefs[segNum].t.splice(j + 1, 1);
+
+                    j -= 1;
+                }
+            }
+
+            //END OF --- simplify bumps if they overlap
+        }
+
+        //the first entry is the M x,y, it goes unchanged
+        resultPathDefArray.push(pathDefArray[0]);
+
+        len = pathDefArray.length;
+
+        for (i = 1; i < len; i += 1) {
+            //i is the segment number
+            segNum = i.toString();
+            //if resultIntersectionPathDefs[i] exist, use those
+            //otherwise pick the corresponding value from the original array
+            if (resultIntersectionPathDefs.hasOwnProperty(segNum)) {
+                resultIntersectionPathDefs[segNum].t.sort(function(a,b){return a-b});
+
+                for (j = 0; j < resultIntersectionPathDefs[segNum].t.length; j += 1) {
+                    resultPathDefArray.push(resultIntersectionPathDefs[segNum].paths[resultIntersectionPathDefs[segNum].t[j]]);
+                }
+            }
+
+            resultPathDefArray.push(pathDefArray[i]);
+        }
+
+        return resultPathDefArray;
+    };
+
+    //finds all intersection points of this connection with other connection's pathpoints
+    Connection.prototype._pathIntersect = function (otherConn) {
+        var myPathPoints = this._pathPoints,
+            oPathPoints = otherConn._pathPoints,
+            p1len = myPathPoints.length,
+            p2len = oPathPoints.length,
+            s1,s2,
+            i,
+            j,
+            res = [],
+            intr,
+            s1Length,
+            s2Length,
+            tLength;
+
+        if (clientUtil.overlap(this._pathPointsBBox, otherConn._pathPointsBBox)) {
+            for (i = 0; i < p1len - 1; i += 1) {
+                s1 = {'x1': myPathPoints[i].x,
+                      'y1': myPathPoints[i].y,
+                      'x2': myPathPoints[i + 1].x,
+                      'y2': myPathPoints[i + 1].y};
+
+                s1Length = Math.sqrt((s1.x2 - s1.x1) * (s1.x2 - s1.x1) + (s1.y2 - s1.y1) * (s1.y2 - s1.y1));
+
+                for (j = 0; j < p2len - 1; j += 1) {
+                    s2 = {'x1': oPathPoints[j].x,
+                        'y1': oPathPoints[j].y,
+                        'x2': oPathPoints[j + 1].x,
+                        'y2': oPathPoints[j + 1].y};
+
+                    s2Length = Math.sqrt((s2.x2 - s2.x1) * (s2.x2 - s2.x1) + (s2.y2 - s2.y1) * (s2.y2 - s2.y1));
+
+                    intr = this._getIntersect(s1.x1, s1.y1, s1.x2, s1.y2, s2.x1, s2.y1, s2.x2, s2.y2);
+                    if (intr) {
+                        intr.segment1 = i + 1;
+                        intr.segment2 = j + 1;
+                        intr.segment1Length = s1Length;
+                        intr.segment2Length = s2Length;
+                        intr.path1 = [s1.x1, s1.y1, s1.x2, s1.y2];
+                        intr.path2 = [s2.x1, s2.y1, s2.x2, s2.y2];
+
+                        tLength = Math.sqrt((intr.x - s1.x1) * (intr.x - s1.x1) + (intr.y - s1.y1) * (intr.y - s1.y1));
+                        intr.t1 = tLength / s1Length;
+
+                        tLength = Math.sqrt((intr.x - s2.x1) * (intr.x - s2.x1) + (intr.y - s2.y1) * (intr.y - s2.y1));
+                        intr.t2 = tLength / s2Length;
+
+                        res.push(intr);
+                    }
+                }
+            }
+        }
+
+        return res;
+    };
+
+    //finds an intersection point of two segments A:(x1,y1 - x2,y2) and B:(x3,y3 - x4,y4)
+    Connection.prototype._getIntersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        var mmax = Math.max,
+            mmin = Math.min;
+
+        if (
+            mmax(x1, x2) < mmin(x3, x4) ||
+                mmin(x1, x2) > mmax(x3, x4) ||
+                mmax(y1, y2) < mmin(y3, y4) ||
+                mmin(y1, y2) > mmax(y3, y4)
+            ) {
+            return;
+        }
+        var nx = (x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4),
+            ny = (x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4),
+            denominator = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+        if (!denominator) {
+            return;
+        }
+        var px = nx / denominator,
+            py = ny / denominator,
+            px2 = +px.toFixed(2),
+            py2 = +py.toFixed(2);
+        if (
+            px2 < +mmin(x1, x2).toFixed(2) ||
+                px2 > +mmax(x1, x2).toFixed(2) ||
+                px2 < +mmin(x3, x4).toFixed(2) ||
+                px2 > +mmax(x3, x4).toFixed(2) ||
+                py2 < +mmin(y1, y2).toFixed(2) ||
+                py2 > +mmax(y1, y2).toFixed(2) ||
+                py2 < +mmin(y3, y4).toFixed(2) ||
+                py2 > +mmax(y3, y4).toFixed(2)
+            ) {
+            return;
+        }
+        return {x: px, y: py};
+    };
+
+    Connection.prototype._checkIntersect = function (x1, y1, x2, y2, x3, y3, x4, y4) {
+        var mmax = Math.max,
+            mmin = Math.min;
+
+        if (
+            mmax(x1, x2) < mmin(x3, x4) ||
+                mmin(x1, x2) > mmax(x3, x4) ||
+                mmax(y1, y2) < mmin(y3, y4) ||
+                mmin(y1, y2) > mmax(y3, y4)
+            ) {
+            return;
+        }
+
+        return true;
+    };
+
+    Connection.prototype._getPointAtLength = function(x1, y1, x2, y2, length) {
+        var totalLength = Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)),
+            dx = (x2 - x1) / totalLength,
+            dy = (y2 - y1) / totalLength;
+
+        return {'x': x1 + dx * length,
+                'y': y1 + dy * length};
+    };
+
+    Connection.prototype._simplifyTrivially = function(pathPoints) {
+        //eliminate the middle point if 3 consecutive point are on the same line
+        var pos = 1,
+            p1,
+            p2,
+            p3,
+            dx1,
+            dx2,
+            dy1,
+            dy2,
+            a12,
+            a23;
+
+        while (pos < pathPoints.length - 1) {
+            p1 = pathPoints[pos - 1];
+            p2 = pathPoints[pos];
+            p3 = pathPoints[pos + 1];
+
+            //calculate p1 - p2 alpha
+            dx1 = p2.x - p1.x;
+            dy1 = p2.y - p1.y;
+            a12 = dx1 === 0 ? (dy1 > 0 ? Math.PI / 2 : Math.PI / 2 * 3) : Math.atan(dy1 / dx1);
+
+            //calculate p2 - p3 alpha
+            dx2 = p3.x - p2.x;
+            dy2 = p3.y - p2.y;
+            a23 = dx2 === 0 ? (dy2 > 0 ? Math.PI / 2 : Math.PI / 2 * 3) : Math.atan(dy2 / dx2);
+
+            if (a12 === a23) {
+                //the two segments have the same steep
+                //p2 can be omitted
+                pathPoints.splice(pos, 1);
+            } else {
+                pos += 1;
+            }
+        }
+    };
+
+    /***************************** CONNECTION'S META INFO **************************/
+    Connection.prototype.setMetaInfo = function (params) {
+        this._metaInfo = params;
+    };
+
+    Connection.prototype.getMetaInfo = function () {
+        return this._metaInfo;
+    };
+    /***************************** END OF --- CONNECTION'S META INFO **************************/
 
     return Connection;
 });

@@ -14,7 +14,8 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
+        CONNECTION_TARGET_NAME = "target",
+        PARTBROWSERWIDGET = 'PartBrowserWidget';
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -59,8 +60,8 @@ define(['logManager',
             return self._onBackgroundDroppableAccept(helper);
         };
 
-        this.designerCanvas.onBackgroundDrop = function (helper, position) {
-            self._onBackgroundDrop(helper, position);
+        this.designerCanvas.onBackgroundDrop = function (helper, position, event) {
+            self._onBackgroundDrop(helper, position, event);
         };
 
         this.designerCanvas.onSelectionChanged = function (selectedIds) {
@@ -101,6 +102,10 @@ define(['logManager',
 
         this.designerCanvas.onSelectionRotated = function (deg, selectedIds) {
             return self._onSelectionRotated(deg, selectedIds);
+        };
+
+        this.designerCanvas.onSetConnectionProperty = function (params) {
+            self._onSetConnectionProperty(params);
         };
 
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
@@ -180,6 +185,10 @@ define(['logManager',
         var registry = {};
         registry[nodePropertyNames.Registry.lineStyle] = {};
         _.extend(registry[nodePropertyNames.Registry.lineStyle], this._DEFAULT_LINE_STYLE);
+
+        if (params.visualStyle) {
+            _.extend(registry[nodePropertyNames.Registry.lineStyle], params.visualStyle);
+        }
 
         var p = {   "parentId": this.currentNodeInfo.id,
             "sourceId": sourceId,
@@ -304,39 +313,138 @@ define(['logManager',
         return false;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position, event) {
         var metaInfo = helper.data(CONSTANTS.META_INFO),
-            intellyPasteOpts,
+            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
             gmeID,
-            i;
+            self = this,
+            handleDrop;
+
+        handleDrop = function (key, idList, pos) {
+            var createChildParams,
+                i,
+                POS_INC = 20,
+                newID,
+                newNode,
+                newName,
+                refObj;
+
+            self._client.startTransaction();
+
+            self.logger.warning('handleDrop idList: ' + idList);
+
+            for (i = 0; i < idList.length; i+= 1) {
+                //if dragsource is PartBrowserWidget --> instantiate
+                // otherwise create reference
+                createChildParams = undefined;
+                switch (key) {
+                    case "inherit":
+                        createChildParams = { "parentId": self.currentNodeInfo.id,
+                            "baseId": idList[i]};
+
+                        newID = self._client.createChild(createChildParams);
+
+                        if (newID) {
+                            newNode = self._client.getNode(newID);
+
+                            if (newNode) {
+                                //store new position
+                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
+                                    'y': pos.y});
+                            }
+                        }
+                        break;
+                    case "reference":
+                        createChildParams = { "parentId": self.currentNodeInfo.id};
+
+                        newID = self._client.createChild(createChildParams);
+
+                        if (newID) {
+                            newNode = self._client.getNode(newID);
+
+                            if (newNode) {
+                                //store new position
+                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
+                                    'y': pos.y});
+
+                                //TODO: fixme 'ref' should come from some constants list
+                                self._client.makePointer(newID, 'ref', idList[i]);
+
+                                //figure out name
+                                refObj = self._client.getNode(idList[i]);
+                                if (refObj) {
+                                    newName = "REF - " + (refObj.getAttribute(nodePropertyNames.Attributes.name) || idList[i]);
+                                } else {
+                                    newName = "REF - " + idList[i];
+                                }
+
+                                self._client.setAttributes(newID, nodePropertyNames.Attributes.name, newName);
+                            }
+                        }
+                        break;
+                    case "move":
+                        self._client.moveMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                        break;
+                    case "copy":
+                        self._client.copyMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                        break;
+                    default:
+                }
+
+                pos.x += POS_INC;
+                pos.y += POS_INC;
+            }
+
+            self._client.completeTransaction();
+        };
 
         if (metaInfo) {
             if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
 
-                intellyPasteOpts = { "parentId": this.currentNodeInfo.id };
-
                 gmeID = metaInfo[CONSTANTS.GME_ID];
 
-                if (_.isArray(gmeID)) {
-                    for (i = 0; i < gmeID.length; i+= 1) {
-                        intellyPasteOpts[gmeID[i]] = { "attributes": {}, registry: {} };
-                        intellyPasteOpts[gmeID[i]].registry[nodePropertyNames.Registry.position] = { "x": position.x,
-                            "y": position.y };
-
-                        position.x += 20;
-                        position.y += 20;
-                    }
-                } else {
-                    intellyPasteOpts[gmeID] = { "attributes": {}, registry: {} };
-                    intellyPasteOpts[gmeID].registry[nodePropertyNames.Registry.position] = { "x": position.x,
-                        "y": position.y };
+                if (!_.isArray(gmeID)) {
+                    gmeID = [gmeID];
                 }
 
-                this._client.intellyPaste(intellyPasteOpts);
+                this.logger.warning('_onBackgroundDrop gmeID: ' + gmeID);
+
+                if (dragSource !== PARTBROWSERWIDGET) {
+                    this.designerCanvas.createMenu(function (trigger, e) {
+                        var menuItems = {};
+
+                        menuItems = {
+                            "move":  {
+                                "name": "Move here",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
+                            },
+                            "copy":  {
+                                "name": "Copy here",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
+                            },
+                            "reference":  {
+                                "name": "Create reference",
+                                callback: function(key, options) {
+                                    handleDrop(key, gmeID, position);
+                                },
+                                "icon": false
+                            }
+                        };
+
+                        return menuItems;
+                    }, this.designerCanvas.posToPageXY(position.x, position.y));
+                } else {
+                    handleDrop("inherit", gmeID, position);
+                }
             }
         }
     };
-
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
         var gmeIDs = [],
@@ -536,6 +644,36 @@ define(['logManager',
             this._client.setRegistry(gmeID, nodePropertyNames.Registry.rotation, ((regDegree || 0) + degree) % 360 );
         }
         this._client.completeTransaction();
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
+        var connectionIDs = params.connections,
+            visualParams = params.params,
+            gmeIDs = [],
+            len = connectionIDs.length,
+            id,
+            connRegLineStyle;
+
+        while (len--) {
+            id = this._ComponentID2GmeID[connectionIDs[len]];
+            if (id) {
+                gmeIDs.push(id);
+            }
+        }
+
+        len = gmeIDs.length;
+        if (len > 0) {
+            this._client.startTransaction();
+
+            while(len--) {
+                id = gmeIDs[len];
+                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
+                _.extend(connRegLineStyle, visualParams);
+                this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+            }
+
+            this._client.completeTransaction();
+        }
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

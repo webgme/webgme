@@ -102,7 +102,15 @@ define(['logManager',
         var decorator;
 
         if (this._currentNodeId === gmeID) {
-            this._processPartsOwnerNode(gmeID);
+            if (this._processPartsOwnerNode(gmeID)) {
+                //part item got loaded
+                this._updatePackage.inserted.push(gmeID);
+
+                decorator = this._getObjectDescriptor(gmeID).decorator;
+                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                    this._updatePackage.decorators.push(decorator);
+                }
+            }
         } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
             //part item got loaded
             this._updatePackage.inserted.push(gmeID);
@@ -122,7 +130,20 @@ define(['logManager',
         var decorator;
 
         if (this._currentNodeId === gmeID) {
-            this._processPartsOwnerNode(gmeID);
+            if (this._processPartsOwnerNode(gmeID)) {
+                //part item got updated
+                //we need to insert/update it s part based on if it's already there or not
+                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
+                    this._updatePackage.updated.push(gmeID);
+                } else {
+                    this._updatePackage.inserted.push(gmeID);
+                }
+
+                decorator = this._getObjectDescriptor(gmeID).decorator;
+                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                    this._updatePackage.decorators.push(decorator);
+                }
+            }
         } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
             //part item got updated
             this._updatePackage.updated.push(gmeID);
@@ -142,8 +163,6 @@ define(['logManager',
         if (this._currentNodeId === gmeID) {
 
         }
-
-        this._notifyPartsByID(gmeID);
     };
 
     PartBrowserControl.prototype._processPartsOwnerNode = function (gmeID) {
@@ -179,11 +198,13 @@ define(['logManager',
                 delete this._currentNodePartsCanCreateChild[id];
 
                 //remove it from the territory
-                delete this._selfPatterns[id];
+                //only if not itself, then we need to keep it in the territory
+                if (id !== gmeID) {
+                    delete this._selfPatterns[id];
+                    territoryChanged = true;
+                }
 
                 this._logger.debug('Removing id "' + id + '" from territory...');
-
-                territoryChanged = true;
             }
 
             //check the added ones
@@ -196,8 +217,11 @@ define(['logManager',
                 this._logger.debug('Adding id "' + id + '" to territory...');
 
                 //add to the territory
-                this._selfPatterns[id] = { "children": 0 };
-                territoryChanged = true;
+                //only if not self, because it's already in the territory
+                if (id !== gmeID) {
+                    this._selfPatterns[id] = { "children": 0 };
+                    territoryChanged = true;
+                }
             }
 
             //update create child capability info
@@ -215,6 +239,9 @@ define(['logManager',
                     self._client.updateTerritory(self._territoryId, self._selfPatterns);
                 }, 10);
             }
+
+            //return if self is contained as possible children
+            return (currentMembers.indexOf(gmeID) !== -1);
         }
     };
 
@@ -323,7 +350,9 @@ define(['logManager',
 
     PartBrowserControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
         this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
-        this._componentIDPartIDMap[componentID].push(partId);
+        if (this._componentIDPartIDMap[componentID].indexOf(partId) === -1) {
+            this._componentIDPartIDMap[componentID].push(partId);
+        }
     };
 
     PartBrowserControl.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {

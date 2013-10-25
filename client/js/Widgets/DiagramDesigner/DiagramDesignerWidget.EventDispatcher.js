@@ -16,7 +16,11 @@ define(['eventDispatcher'], function (EventDispatcher) {
             "ITEM_ROTATION_CHANGED": "ITEM_ROTATION_CHANGED", //{ ID, DEG}
             "ITEM_SUBCOMPONENT_POSITION_CHANGED": "ITEM_SUBCOMPONENT_POSITION_CHANGED", // {ItemID, SubComponentID}
             "ON_COMPONENT_DELETE": "ON_COMPONENT_DELETE", // ID
-            "ON_UNREGISTER_SUBCOMPONENT": "ON_UNREGISTER_SUBCOMPONENT" // {objectID, subcomponentID}
+            "ON_UNREGISTER_SUBCOMPONENT": "ON_UNREGISTER_SUBCOMPONENT", // {objectID, subcomponentID},
+            "ON_COMPONENT_CREATE": "ON_COMPONENT_CREATE", // ID
+            "ON_COMPONENT_UPDATE": "ON_COMPONENT_UPDATE",  // ID
+            "ON_CLEAR": "ON_CLEAR", // ID
+            "ITEM_SIZE_CHANGED": "ITEM_SIZE_CHANGED" //{ ID, w, h}
         };
     };
 

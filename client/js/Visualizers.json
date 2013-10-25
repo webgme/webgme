@@ -1,8 +1,8 @@
 [
     {"id": "ModelEditor",
         "title": "ModelEditor",
-        "panel": "js/Panels/DiagramDesigner/DiagramDesignerPanel",
-        "control": "js/Panels/DiagramDesigner/ModelEditor/ModelEditorControl",
+        "panel": "js/Panels/ModelEditor/ModelEditorPanel",
+        "control": "js/Panels/ModelEditor/ModelEditorControl",
         "DEBUG_ONLY": false},
 
     {"id": "ContainmentGrid",

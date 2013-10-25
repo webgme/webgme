@@ -140,34 +140,36 @@ define(['logManager',
     };
 
     //Override to set the
-    // - 'this.hostDesignerItem.width' and
-    // - 'this.hostDesignerItem.height' attributes with the correct dimensions of this decorator
+    // - 'this.hostDesignerItem._width' and
+    // - 'this.hostDesignerItem._height' attributes with the correct dimensions of this decorator
     //The dimension information is used for many different reasons in the canvas (line routing, etc...),
     //Please set it correctly
     //NOTE - SHALL BE OVERRIDDEN
     DiagramDesignerWidgetDecoratorBase.prototype.calculateDimension = function () {
         if (this.hostDesignerItem) {
-            this.hostDesignerItem.width = this.$el.outerWidth(true);
-            this.hostDesignerItem.height = this.$el.outerHeight(true);
+            this.hostDesignerItem.setSize(this.$el.outerWidth(true), this.$el.outerHeight(true));
         }
     };
 
     //Should return the connection areas for the component with the given 'id'
     //Canvas will draw the connection to / from this coordinate
-    //'id' might be the id of this DesignerItem itself, or the
+    //'id' might be the id of this DesignerItem itself (or undefined), or the
     //'id' can be the ID of one of the SubComponents contained in this component
+    //isEnd if true, this is the destination end of the connection
+    //isEnd if false, this is the source end of the connection
+    //connectionMetaInfo object is the metaInfo of the connection component (if any)
     //result should be an array of the area descriptors
     //NOTE - SHALL BE OVERRIDDEN WHEN NEEDED
-    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (id) {
+    DiagramDesignerWidgetDecoratorBase.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [];
 
         //by default return the center point of the item
         //canvas will draw the connection to / from this coordinate
         result.push( {"id": "0",
-            "x1": this.hostDesignerItem.width / 2,
-            "y1": this.hostDesignerItem.height / 2,
-            "x2": this.hostDesignerItem.width / 2,
-            "y2": this.hostDesignerItem.height / 2,
+            "x1": this.hostDesignerItem.getWidth() / 2,
+            "y1": this.hostDesignerItem.getHeight() / 2,
+            "x2": this.hostDesignerItem.getWidth() / 2,
+            "y2": this.hostDesignerItem.getHeight() / 2,
             "angle1": 270,
             "angle2": 270,
             "len": 10} );
@@ -266,6 +268,31 @@ define(['logManager',
     //otherwise return false
     DiagramDesignerWidgetDecoratorBase.prototype.doSearch = function (searchDesc) {
         return false;
+    };
+
+    //Called when a connection drawing starts from this item (or one of it's subcomponent)
+    //can return visual properties for the connection being drawn
+    //{'width': 2,
+    // 'color': "#FF0000",
+    // 'start-arrow': "diamond",
+    // 'end-arrow': "block",
+    // 'pattern': '.'}
+    // for more information see DiagramDesignerWidget.Constants.js
+    DiagramDesignerWidgetDecoratorBase.prototype.getDrawnConnectionVisualStyle = function (subComponentId) {
+        return null;
+    };
+
+
+    //called by the controller and the decorator can specify the territory rule for itself
+    //must return an object of id - rule pairs, like
+    //{'id': {'children': 0, ...}}
+    DiagramDesignerWidgetDecoratorBase.prototype.getTerritoryQuery = function () {
+        return undefined;
+    };
+
+    //called by the controller when an event arrives about registered component ID
+    DiagramDesignerWidgetDecoratorBase.prototype.notifyComponentEvent = function (componentList) {
+        this.logger.warning('notifyComponentEvent not overridden in decorator' + JSON.stringify(componentList));
     };
 
     return DiagramDesignerWidgetDecoratorBase;

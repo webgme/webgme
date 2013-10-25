@@ -4,7 +4,7 @@
  * Author: Miklos Maroti
  */
 
-define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "core/core", "core/guidcore", "util/sax", "fs", "bin/getconfig", "storage/socketioclient", "core/newcore" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, Core, GuidCore, SAX, FS, CONFIG, Client, NewCore) {
+define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "core/tasync", "util/sax", "fs", "bin/getconfig", "storage/client", "core/core" ], function (ASSERT, Mongo, Cache, Commit, TASYNC, SAX, FS, CONFIG, Client, Core) {
 	function getParameters (option) {
 		ASSERT(option === null || typeof option === "string" && option.charAt(0) !== "-");
 
@@ -115,16 +115,7 @@ define([ "util/assert", "storage/mongo", "storage/cache", "storage/commit", "cor
 
 		project = p;
 
-		/*core = new GuidCore(new Core(project, {
-			autopersist: true
-		}));
-
-		core.persist = TASYNC.wrap(core.persist);
-		core.loadByPath = TASYNC.wrap(core.loadByPath);
-		core.loadRoot = TASYNC.wrap(core.loadRoot);
-		core.loadChildren = TASYNC.wrap(core.loadChildren);
-		core.loadPointer = TASYNC.wrap(core.loadPointer);*/
-        core = NewCore.syncCore(project,{autopersist:true});
+        core = Core(project,{autopersist:true,usertype:'tasync'});
 	}
 
 	function closeProject () {

@@ -814,8 +814,8 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             getHash: coretree.getHash,
             isEmpty: coretree.isEmpty,
 
-            loadRoot: TASYNC.unwrap(coretree.loadRoot),
-            persist: TASYNC.unwrap(coretree.persist),
+            loadRoot: coretree.loadRoot,
+            persist: coretree.persist,
             getRoot: coretree.getRoot,
 
             // containment
@@ -828,20 +828,14 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
             getChild: coretree.getChild,
 
-            loadChildx: TASYNC.unwrap(coretree.loadChild),
-            loadChild: TASYNC.unwrap(function (node, relid) {
-                return TASYNC.call(checkNode, coretree.loadChild(node, relid));
-            }),
+            loadChildx: coretree.loadChild,
+            loadChild: function(node,relid){return TASYNC.call(checkNode,coretree.loadChild(node,relid));},
 
-            loadByPathx: TASYNC.unwrap(coretree.loadByPath),
-            loadByPath: TASYNC.unwrap(function (node, path) {
-                return TASYNC.call(checkNode, coretree.loadByPath(node, path));
-            }),
+            loadByPathx: coretree.loadByPath,
+            loadByPath: function(node,path){return TASYNC.call(checkNode,coretree.loadByPath(node,path));},
 
-            loadChildrenx: TASYNC.unwrap(loadChildren),
-            loadChildren: TASYNC.unwrap(function (node) {
-                return TASYNC.call(checkNodes, loadChildren(node));
-            }),
+            loadChildrenx: loadChildren,
+            loadChildren: function(node){return TASYNC.call(checkNodes,loadChildren(node));},
 
             // modify
             createNode: createNode,
@@ -864,12 +858,12 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             getPointerPath: getPointerPath,
             hasPointer: hasPointer,
             getOutsidePointerPath: getOutsidePointerPath,
-            loadPointer: TASYNC.unwrap(loadPointer),
+            loadPointer: loadPointer,
             deletePointer: deletePointer,
             setPointer: setPointer,
             getCollectionNames: getCollectionNames,
             getCollectionPaths: getCollectionPaths,
-            loadCollection: TASYNC.unwrap(loadCollection),
+            loadCollection: loadCollection,
 
             getSingleNodeHash: getSingleNodeHash,
             getCommonPathPrefixData: getCommonPathPrefixData

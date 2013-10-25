@@ -8,24 +8,31 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    './Port'], function (CONSTANTS,
+    'loaderProgressBar',
+    './Port',
+    './DecoratorWithPorts.Constants'], function (CONSTANTS,
                          nodePropertyNames,
-                         Port) {
+                         LoaderProgressBar,
+                         Port,
+                         DecoratorWithPortsConstants) {
 
-    var DecoratorWidthPortsCore;
+    var DecoratorWidthPortsCore,
+        PROGRESS_BAR_CLASS = 'progress-bar';
 
     DecoratorWidthPortsCore = function () {
     };
 
     DecoratorWidthPortsCore.prototype._initializeVariables = function () {
         this.name = "";
+        this._refTo = undefined;
         this._portIDs = [];
         this._ports = {};
         this.skinParts = { "$name": undefined,
             "$portsContainer": undefined,
             "$portsContainerLeft": undefined,
             "$portsContainerRight": undefined,
-            "$portsContainerCenter": undefined };
+            "$portsContainerCenter": undefined,
+            "$ref": undefined};
     };
 
     DecoratorWidthPortsCore.prototype._renderContent = function () {
@@ -42,6 +49,7 @@ define(['js/Constants',
 
         this._updateName();
         this._updatePorts();
+        this._updateReference();
     };
 
     DecoratorWidthPortsCore.prototype._updateName = function () {
@@ -58,6 +66,12 @@ define(['js/Constants',
         }
     };
 
+    DecoratorWidthPortsCore.prototype._registerForNotification = function(portId) {
+    };
+
+    DecoratorWidthPortsCore.prototype._unregisterForNotification = function(portId) {
+    };
+
     /***************  CUSTOM DECORATOR PART ****************************/
     DecoratorWidthPortsCore.prototype._updatePorts = function () {
         var client = this._control._client,
@@ -71,35 +85,18 @@ define(['js/Constants',
         removedChildren = _.difference(currentChildrenIDs, newChildrenIDs);
         len = removedChildren.length;
         while (len--) {
+            this._unregisterForNotification(removedChildren[len]);
             this._removePort(removedChildren[len]);
         }
 
         addedChildren = _.difference(newChildrenIDs, currentChildrenIDs);
         len = addedChildren.length;
         while (len--) {
+            this._registerForNotification(addedChildren[len]);
             this._renderPort(addedChildren[len]);
         }
-    };
 
-    DecoratorWidthPortsCore.prototype._renderPort = function (portId) {
-        var client = this._control._client,
-            portNode = client.getNode(portId),
-            isPort = this._isPort(portNode);
-
-        if (portNode && isPort) {
-            this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
-                "decorator": this});
-
-            this._portIDs.push(portId);
-            this._addPortToContainer(portNode);
-            this._registerAsSubcomponent(portId);
-        }
-    };
-
-    DecoratorWidthPortsCore.prototype._registerAsSubcomponent = function(portId) {
-    };
-
-    DecoratorWidthPortsCore.prototype._unregisterAsSubcomponent = function(portId) {
+        this._checkTerritoryReady();
     };
 
     DecoratorWidthPortsCore.prototype._isPort = function (portNode) {
@@ -113,11 +110,24 @@ define(['js/Constants',
         return isPort;
     };
 
+    DecoratorWidthPortsCore.prototype._renderPort = function (portId) {
+        var client = this._control._client,
+            portNode = client.getNode(portId),
+            isPort = this._isPort(portNode);
+
+        if (portNode && isPort) {
+            this._ports[portId] = new Port(portId, { "title": portNode.getAttribute(nodePropertyNames.Attributes.name),
+                "decorator": this});
+
+            this._portIDs.push(portId);
+            this._addPortToContainer(portNode);
+        }
+    };
+
     DecoratorWidthPortsCore.prototype._removePort = function (portId) {
         var idx = this._portIDs.indexOf(portId);
 
         if (idx !== -1) {
-            this._unregisterAsSubcomponent(portId);
             this._ports[portId].destroy();
             delete this._ports[portId];
             this._portIDs.splice(idx,1);
@@ -198,6 +208,8 @@ define(['js/Constants',
             } else {
                 this._removePort(portId);
             }
+        } else {
+            this._renderPort(portId);
         }
     };
 
@@ -224,6 +236,133 @@ define(['js/Constants',
         }
 
         return false;
+    };
+
+
+    DecoratorWidthPortsCore.prototype._checkTerritoryReady = function () {
+        //the territory rule here is all children
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            tReady = true,
+            childrenIDs,
+            len;
+
+        if (nodeObj) {
+            childrenIDs = nodeObj.getChildrenIds();
+            len = childrenIDs.length;
+            while (len--) {
+                nodeObj = client.getNode(childrenIDs[len]);
+                if (!nodeObj) {
+                    tReady = false;
+                    break;
+                }
+            }
+        } else {
+            tReady = false;
+        }
+
+        if (tReady === true) {
+            this._hidePortProgressBar();
+        } else {
+            this._showPortProgressBar();
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._showPortProgressBar = function () {
+        var pgBar = this.$el.find('.' + PROGRESS_BAR_CLASS);
+        if (pgBar.length === 0) {
+            pgBar = $('<div/>', {'class': PROGRESS_BAR_CLASS});
+            this.$el.append(pgBar);
+
+            this._loader = new LoaderProgressBar({"containerElement": pgBar});
+            this._loader.start();
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._hidePortProgressBar = function () {
+        if (this._loader) {
+            this._loader.stop();
+            this._loader.destroy();
+            delete this._loader;
+        }
+
+        this.$el.find('.' + PROGRESS_BAR_CLASS).remove();
+    };
+
+    DecoratorWidthPortsCore.prototype._refUIDOMBase = $('<div class="' + DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS + '"><i class="icon-share"></i></div>');
+    DecoratorWidthPortsCore.prototype._updateReference = function () {
+        var refTo;
+
+        if (this._hasReference()) {
+            this.skinParts.$ref = this.$el.find('.' + DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS);
+            if (this.skinParts.$ref.length === 0) {
+                this.skinParts.$ref = this._refUIDOMBase.clone();
+                this.$el.append(this.skinParts.$ref);
+            }
+
+            refTo = this._getReferenceValue();
+
+            if (refTo !== undefined) {
+                this.skinParts.$ref.removeClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET);
+            } else {
+                this.skinParts.$ref.addClass(DecoratorWithPortsConstants.REFERENCE_POINTER_CLASS_NONSET);
+            }
+
+            //if the old value is different than the new
+            if (this._refTo !== refTo) {
+                var oldRefTo = this._refTo;
+                this._refTo = refTo;
+
+                this._refToChanged(oldRefTo, this._refTo);
+            }
+        } else {
+            if (this.skinParts.$ref) {
+                this.skinParts.$ref.remove();
+                this.skinParts.$ref = undefined;
+            }
+        }
+    };
+
+    DecoratorWidthPortsCore.prototype._refToChanged = function (oldValue, newValue) {
+
+    };
+
+    DecoratorWidthPortsCore.prototype._hasReference = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
+            hasRefPointer = false;
+
+        if (nodeObj) {
+            hasRefPointer = nodeObj.getPointerNames().indexOf(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME) !== -1;
+        }
+
+        return hasRefPointer;
+    };
+
+    DecoratorWidthPortsCore.prototype._getReferenceValue = function () {
+        var res,
+            client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
+
+        if (nodeObj) {
+            res = nodeObj.getPointer(DecoratorWithPortsConstants.REFERENCE_POINTER_NAME);
+            if (res && res.to !== undefined && res.to !== null) {
+                res = res.to;
+            } else {
+                res = undefined;
+            }
+        }
+
+        return res;
+    };
+
+    DecoratorWidthPortsCore.prototype._setReferenceValue = function (val) {
+        var client = this._control._client,
+            nodeID = this._metaInfo[CONSTANTS.GME_ID];
+
+        if (this._refTo !== val) {
+            client.makePointer(nodeID, DecoratorWithPortsConstants.REFERENCE_POINTER_NAME, val);
+        }
     };
 
     return DecoratorWidthPortsCore;

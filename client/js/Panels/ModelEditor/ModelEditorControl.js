@@ -21,7 +21,9 @@ define(['logManager',
         DECORATORS = DecoratorDB.getDecoratorsByWidget('DiagramDesigner'),
         DEFAULT_DECORATOR = "DecoratorWithPorts", /*'DefaultDecorator'*/
         WIDGET_NAME = 'DiagramDesigner',
-        DEFAULT_LINE_STYLE = {};
+        DEFAULT_LINE_STYLE = {},
+        SRC_POINTER_NAME = "source",
+        DST_POINTER_NAME = "target";
 
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
@@ -32,16 +34,14 @@ define(['logManager',
     DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
 
     ModelEditorControl = function (options) {
-        var self = this,
-            $btnGroupAutoRename,
-            $btnGroupAutoCreateModel,
-            $btnGroupPrintNodeData,
-            $btnGroupAutoCreateConnection;
+        var self = this;
 
         this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
 
         this._client = options.client;
         this._panel = options.panel;
+
+        this._firstLoad = false;
 
         //initialize core collections and variables
         this.designerCanvas = this._panel.widget;
@@ -62,10 +62,12 @@ define(['logManager',
         }
 
         this._selfPatterns = {};
-        this._components = {};
         this._GmeID2ComponentID = {};
         this._ComponentID2GmeID = {};
         this.eventQueue = [];
+        this._componentIDPartIDMap = {};
+
+        this.___SLOW_CONN = false;
 
         this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
 
@@ -113,92 +115,11 @@ define(['logManager',
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
-
-
-
         if (DEBUG === true) {
-            /************** AUTO RENAME GME NODES *****************/
-            $btnGroupAutoRename = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-                self._autoRenameGMEObjects();
-            });
-            this.designerCanvas.toolBar.addButton({ "title": "Auto rename",
-                "icon": "icon-th-list"}, $btnGroupAutoRename);
-
-            /************** END OF - AUTO RENAME GME NODES *****************/
-
-            /************** AUTO CREATE NEW NODES *****************/
-            $btnGroupAutoCreateModel = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
-                self._createGMEModels(data.num);
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 1",
-                "icon": "icon-plus-sign",
-                "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateModel);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 5",
-                "icon": "icon-plus-sign",
-                "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateModel);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 10",
-                "icon": "icon-plus-sign",
-                "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateModel);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 50",
-                "icon": "icon-plus-sign",
-                "text": "50",
-                "data": { "num": 50 }}, $btnGroupAutoCreateModel);
-
-            /************** END OF - AUTO CREATE NEW NODES *****************/
-
-            /************** AUTO CREATE NEW CONNECTIONS *****************/
-            $btnGroupAutoCreateConnection = this.designerCanvas.toolBar.addButtonGroup(function (event, data) {
-                self._createGMEConnections(data.num);
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 1 connection",
-                "icon": "icon-resize-horizontal",
-                "text": "1",
-                "data": { "num": 1 }}, $btnGroupAutoCreateConnection);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 5 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "5",
-                "data": { "num": 5 }}, $btnGroupAutoCreateConnection);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 10 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "10",
-                "data": { "num": 10 }}, $btnGroupAutoCreateConnection);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 50 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "50",
-                "data": { "num": 50 }}, $btnGroupAutoCreateConnection);
-
-            this.designerCanvas.toolBar.addButton({ "title": "Create 100 connections",
-                "icon": "icon-resize-horizontal",
-                "text": "100",
-                "data": { "num": 100 }}, $btnGroupAutoCreateConnection);
-
-            /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
-
-            /************** PRINT NODE DATA *****************/
-            $btnGroupPrintNodeData = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-                self._printNodeData();
-            });
-
-            this.designerCanvas.toolBar.addButton({ "title": "Print node data",
-                "icon": "icon-share"}, $btnGroupPrintNodeData);
-
-            /************** END OF - PRINT NODE DATA *****************/
+            this._addDebugModeExtensions();
         }
 
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
-
-
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDiagramDesignerWidgetEventHandlers();
@@ -216,8 +137,6 @@ define(['logManager',
         this.designerCanvas.clear();
 
         //clean up local hash map
-        this._components = {};
-
         this._GMEModels = [];
         this._GMEConnections = [];
 
@@ -236,7 +155,9 @@ define(['logManager',
         this.currentNodeInfo.parentId = undefined;
 
         if (nodeId) {
-            this.currentNodeInfo.parentId = desc.parentId;
+            if (desc) {
+                this.currentNodeInfo.parentId = desc.parentId;
+            }
 
             if (this.currentNodeInfo.parentId) {
                 this.$btnGroupModelHierarchyUp.show();
@@ -246,9 +167,11 @@ define(['logManager',
 
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 2 };
+            this._selfPatterns[nodeId] = { "children": 1 };
 
-            nodeName = (desc.name || " ").toUpperCase();
+            this._firstLoad = true;
+
+            nodeName = (desc && desc.name || " ").toUpperCase();
 
             this.designerCanvas.setTitle(nodeName);
             this.designerCanvas.setBackgroundText(nodeName, {'font-size': BACKGROUND_TEXT_SIZE,
@@ -315,10 +238,10 @@ define(['logManager',
 
             if (nodeId !== this.currentNodeInfo.id) {
                 //fill the descriptor based on its type
-                if (nodeObj.getBaseId() === "connection") {
+                if (this._isConnection(nodeObj)) {
                     objDescriptor.kind = "CONNECTION";
-                    objDescriptor.source = nodeObj.getPointer("source").to;
-                    objDescriptor.target = nodeObj.getPointer("target").to;
+                    objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
+                    objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
                     //clear out name not to display anything
                     objDescriptor.name = "";
@@ -368,6 +291,22 @@ define(['logManager',
         }
 
         return objDescriptor;
+    };
+
+    ModelEditorControl.prototype._isConnection = function (obj) {
+        var res = false;
+
+        if (obj) {
+
+            var ptrNames = obj.getPointerNames();
+            if (ptrNames.indexOf(SRC_POINTER_NAME) !== -1 && ptrNames.indexOf(DST_POINTER_NAME) !== -1) {
+                if (obj.getPointer(SRC_POINTER_NAME).to && obj.getPointer(DST_POINTER_NAME).to) {
+                    res = true;
+                }
+            }
+        }
+
+        return res;
     };
 
     ModelEditorControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {
@@ -428,8 +367,10 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype._dispatchEvents = function (events) {
-        var i,
-            e;
+        var i = events.length,
+            e,
+            territoryChanged = false,
+            self = this;
 
         this.logger.debug("_dispatchEvents '" + i + "' items");
 
@@ -438,72 +379,91 @@ define(['logManager',
         /** 2: connections second, dependency if a connection is connected to an other connection **/
         var orderedItemEvents = [];
         var orderedConnectionEvents = [];
+
+        if (this._delayedConnections && this._delayedConnections.length > 0) {
+            /*this.logger.warning('_delayedConnections: ' + this._delayedConnections.length );*/
+            for (i = 0; i < this._delayedConnections.length; i += 1) {
+                orderedConnectionEvents.push({'etype': CONSTANTS.TERRITORY_EVENT_LOAD,
+                                              'eid': this._delayedConnections[i],
+                                              'desc': this._getObjectDescriptor(this._delayedConnections[i]) });
+            }
+        }
+
+        this._delayedConnections = [];
+
         var unloadEvents = [];
         i = events.length;
         while (i--) {
             e = events[i];
+
             if (e.etype === CONSTANTS.TERRITORY_EVENT_UNLOAD) {
                 unloadEvents.push(e);
             } else if (e.desc.kind === "MODEL") {
                 orderedItemEvents.push(e);
             } else if (e.desc.kind === "CONNECTION") {
-                //check to see if SRC and DST is another connection
-                //if so, put this guy AFTER them
-                var srcGMEID = e.desc.source;
-                var dstGMEID = e.desc.target;
-                var srcConnIdx = -1;
-                var dstConnIdx = -1;
-                var j = orderedConnectionEvents.length;
-                while (j--) {
-                    var ce = orderedConnectionEvents[j];
-                    if (ce.id === srcGMEID) {
-                        srcConnIdx = j;
-                    } else if (ce.id === dstGMEID) {
-                        dstConnIdx = j;
+                if (e.desc.parentId == this.currentNodeInfo.id) {
+                    //check to see if SRC and DST is another connection
+                    //if so, put this guy AFTER them
+                    var srcGMEID = e.desc.source;
+                    var dstGMEID = e.desc.target;
+                    var srcConnIdx = -1;
+                    var dstConnIdx = -1;
+                    var j = orderedConnectionEvents.length;
+                    while (j--) {
+                        var ce = orderedConnectionEvents[j];
+                        if (ce.id === srcGMEID) {
+                            srcConnIdx = j;
+                        } else if (ce.id === dstGMEID) {
+                            dstConnIdx = j;
+                        }
+
+                        if (srcConnIdx !== -1 && dstConnIdx !== -1) {
+                            break;
+                        }
                     }
 
-                    if (srcConnIdx !== -1 && dstConnIdx !== -1) {
-                        break;
+                    var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
+
+                    //check to see if this guy is a DEPENDENT of any already processed CONNECTION
+                    //insert BEFORE THEM
+                    var MAX_VAL = 999999999;
+                    var depSrcConnIdx = MAX_VAL;
+                    var depDstConnIdx = MAX_VAL;
+                    var j = orderedConnectionEvents.length;
+                    while (j--) {
+                        var ce = orderedConnectionEvents[j];
+                        if (e.desc.id === ce.desc.source) {
+                            depSrcConnIdx = j;
+                        } else if (e.desc.id === ce.desc.target) {
+                            depDstConnIdx = j;
+                        }
+
+                        if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
+                            break;
+                        }
                     }
-                }
 
-                var insertIdxAfter = Math.max(srcConnIdx, dstConnIdx);
-
-                //check to see if this guy is a DEPENDENT of any already processed CONNECTION
-                //insert BEFORE THEM
-                var MAX_VAL = 999999999;
-                var depSrcConnIdx = MAX_VAL;
-                var depDstConnIdx = MAX_VAL;
-                var j = orderedConnectionEvents.length;
-                while (j--) {
-                    var ce = orderedConnectionEvents[j];
-                    if (e.desc.id === ce.desc.source) {
-                        depSrcConnIdx = j;
-                    } else if (e.desc.id === ce.desc.target) {
-                        depDstConnIdx = j;
+                    var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
+                    if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
+                        orderedConnectionEvents.push(e);
+                    } else {
+                        if (insertIdxAfter !== -1 &&
+                            insertIdxBefore === MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
+                        } else if (insertIdxAfter === -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                        } else if (insertIdxAfter !== -1 &&
+                            insertIdxBefore !== MAX_VAL) {
+                            orderedConnectionEvents.splice(insertIdxBefore,0,e);
+                        }
                     }
-
-                    if (depSrcConnIdx !== MAX_VAL && depDstConnIdx !== MAX_VAL) {
-                        break;
-                    }
-                }
-
-                var insertIdxBefore = Math.min(depSrcConnIdx, depDstConnIdx);
-                if (insertIdxAfter === -1 && insertIdxBefore === MAX_VAL) {
-                    orderedConnectionEvents.push(e);
                 } else {
-                    if (insertIdxAfter !== -1 &&
-                        insertIdxBefore === MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxAfter + 1,0,e);
-                    } else if (insertIdxAfter === -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    } else if (insertIdxAfter !== -1 &&
-                        insertIdxBefore !== MAX_VAL) {
-                        orderedConnectionEvents.splice(insertIdxBefore,0,e);
-                    }
+                    orderedItemEvents.push(e);
                 }
+
             }
+
         }
 
         /** LOG ORDERED CONNECTION LIST ********************/
@@ -523,11 +483,37 @@ define(['logManager',
         }
         /** END OF --- LOG ORDERED CONNECTION LIST ********************/
 
-        events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
+        //events = unloadEvents.concat(orderedItemEvents, orderedConnectionEvents);
+        events = unloadEvents.concat(orderedItemEvents);
         i = events.length;
+
+        this._notifyPackage = {};
 
         this.designerCanvas.beginUpdate();
 
+        //items
+        for (i = 0; i < events.length; i += 1) {
+            e = events[i];
+            switch (e.etype) {
+                case CONSTANTS.TERRITORY_EVENT_LOAD:
+                    territoryChanged = this._onLoad(e.eid, e.desc) || territoryChanged;
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UPDATE:
+                    this._onUpdate(e.eid, e.desc);
+                    break;
+                case CONSTANTS.TERRITORY_EVENT_UNLOAD:
+                    territoryChanged = this._onUnload(e.eid) || territoryChanged;
+                    break;
+            }
+        }
+
+        this._handleDecoratorNotification();
+
+        //connections
+        events = orderedConnectionEvents;
+        i = events.length;
+
+        //items
         for (i = 0; i < events.length; i += 1) {
             e = events[i];
             switch (e.etype) {
@@ -546,6 +532,44 @@ define(['logManager',
         this.designerCanvas.endUpdate();
 
         this.designerCanvas.hideProgressbar();
+
+        //update the territory
+        if (territoryChanged) {
+            //TODO: review this async here
+            if (this.___SLOW_CONN === true) {
+                setTimeout(function () {
+                 self.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
+                 self._client.updateTerritory(self._territoryId, self._selfPatterns);
+                 }, 2000);
+            } else {
+                this.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
+                this._client.updateTerritory(this._territoryId, this._selfPatterns);
+            }
+        }
+
+        //check if firstload
+        if (this._firstLoad === true) {
+            this._firstLoad = false;
+
+            //check if there is active selection set in client
+            var activeSelection = this._client.getActiveSelection();
+
+            if (activeSelection && activeSelection.length > 0) {
+                i = activeSelection.length;
+                var gmeID;
+                var ddSelection = [];
+                while (i--) {
+                    //try to find each object present in the active selection mapped to DiagramDesigner element
+                    gmeID = activeSelection[i];
+
+                    if (this._GmeID2ComponentID[gmeID]) {
+                        ddSelection = ddSelection.concat(this._GmeID2ComponentID[gmeID]);
+                    }
+                }
+
+                this.designerCanvas.select(ddSelection);
+            }
+        }
 
         this.logger.debug("_dispatchEvents '" + events.length + "' items - DONE");
 
@@ -571,7 +595,29 @@ define(['logManager',
             decClass,
             objDesc,
             sources = [],
-            destinations = [];
+            destinations = [],
+            getDecoratorTerritoryQueries,
+            territoryChanged = false,
+            self = this;
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            self._selfPatterns[entry] = query[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
+
 
         //component loaded
         //we are interested in the load of sub_components of the opened component
@@ -596,6 +642,9 @@ define(['logManager',
 
                         this._GmeID2ComponentID[gmeID].push(uiComponent.id);
                         this._ComponentID2GmeID[uiComponent.id] = gmeID;
+
+                        getDecoratorTerritoryQueries(uiComponent._decoratorInstance);
+
                     }
 
                     if (objDesc.kind === "CONNECTION") {
@@ -609,36 +658,46 @@ define(['logManager',
                         var k = sources.length;
                         var l = destinations.length;
 
-                        while (k--) {
-                            while (l--) {
-                                objDesc.srcObjId = sources[k].objId;
-                                objDesc.srcSubCompId = sources[k].subCompId;
-                                objDesc.dstObjId = destinations[l].objId;
-                                objDesc.dstSubCompId = destinations[l].subCompId;
-                                objDesc.reconnectable = true;
-                                objDesc.editable = true;
+                        if (k > 0 && l > 0) {
+                            while (k--) {
+                                while (l--) {
+                                    objDesc.srcObjId = sources[k].objId;
+                                    objDesc.srcSubCompId = sources[k].subCompId;
+                                    objDesc.dstObjId = destinations[l].objId;
+                                    objDesc.dstSubCompId = destinations[l].subCompId;
+                                    objDesc.reconnectable = true;
+                                    objDesc.editable = true;
 
-                                delete objDesc.source;
-                                delete objDesc.target;
+                                    delete objDesc.source;
+                                    delete objDesc.target;
 
-                                uiComponent = this.designerCanvas.createConnection(objDesc);
+                                    uiComponent = this.designerCanvas.createConnection(objDesc);
 
-                                this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
 
-                                this._GmeID2ComponentID[gmeID].push(uiComponent.id);
-                                this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
+                                }
                             }
+                        } else {
+                            //the connection is here, but no valid endpoint on canvas
+                            //save the connection
+                            this._delayedConnections.push(gmeID);
                         }
                     }
                 } else {
                     //supposed to be the grandchild of the currently open node
                     //--> load of port
-                    if(this._GMEModels.indexOf(objD.parentId) !== -1){
+                    /*if(this._GMEModels.indexOf(objD.parentId) !== -1){
                         this._onUpdate(objD.parentId,this._getObjectDescriptor(objD.parentId));
-                    }
+                    }*/
+                    this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_LOAD);
                 }
             }
         }
+
+        return territoryChanged;
+
     };
 
     ModelEditorControl.prototype._onUpdate = function (gmeID, objDesc) {
@@ -706,6 +765,11 @@ define(['logManager',
                                     len -= 1;
                                 } else {
                                     this.logger.warning('Updating connections...Existing connections are less than the needed src-dst combo...');
+                                    //let's create a connection
+                                    var uiComponent = this.designerCanvas.createConnection(objDesc);
+                                    this.logger.debug('Connection: ' + uiComponent.id + ' for GME object: ' + objDesc.id);
+                                    this._GmeID2ComponentID[gmeID].push(uiComponent.id);
+                                    this._ComponentID2GmeID[uiComponent.id] = gmeID;
                                 }
                             }
                         }
@@ -723,23 +787,7 @@ define(['logManager',
                     }
                 } else {
                     //update about a subcomponent - will be handled in the decorator
-                    //find the host and send update to it
-                    var sCompExist = false;
-                    for (objId in this._GMEID2Subcomponent[gmeID]) {
-                        if (this._GMEID2Subcomponent[gmeID].hasOwnProperty(objId)) {
-                            sCompId = this._GMEID2Subcomponent[gmeID][objId];
-                            sCompExist = true;
-                            this.designerCanvas.updateDesignerItemSubComponent(objId, sCompId);
-                        }
-                    }
-
-                    //the guy was not registered for being subcomponent
-                    //try to locate it's parent
-                    if (sCompExist === false) {
-                        if(this._GMEModels.indexOf(objDesc.parentId) !== -1){
-                            this._onUpdate(objDesc.parentId,this._getObjectDescriptor(objDesc.parentId));
-                        }
-                    }
+                    this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UPDATE);
                 }
             }
         }
@@ -747,7 +795,28 @@ define(['logManager',
 
     ModelEditorControl.prototype._onUnload = function (gmeID) {
         var componentID,
-            len;
+            len,
+            getDecoratorTerritoryQueries,
+            self = this,
+            territoryChanged = false;
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            delete self._selfPatterns[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
 
         if (gmeID === this.currentNodeInfo.id) {
             //the opened model has been removed from territoy --> most likely deleted...
@@ -760,6 +829,10 @@ define(['logManager',
                 while (len--) {
                     componentID = this._GmeID2ComponentID[gmeID][len];
 
+                    if (this.designerCanvas.itemIds.indexOf(componentID) !== -1) {
+                        getDecoratorTerritoryQueries(this.designerCanvas.items[componentID]._decoratorInstance);
+                    }
+
                     this.designerCanvas.deleteComponent(componentID);
 
                     delete this._ComponentID2GmeID[componentID];
@@ -768,8 +841,11 @@ define(['logManager',
                 delete this._GmeID2ComponentID[gmeID];
             } else {
                 //probably a subcomponent has been deleted - will be handled in the decorator
+                this._checkComponentDependency(gmeID, CONSTANTS.TERRITORY_EVENT_UNLOAD);
             }
         }
+
+        return territoryChanged;
     };
 
     //TODO: check this here...
@@ -778,102 +854,12 @@ define(['logManager',
         this._client.removeUI(this._territoryId);
     };
 
-
-
-    ModelEditorControl.prototype._autoRenameGMEObjects = function () {
-        var i = this._GMEModels.length,
-            counter = i,
-            prefix = "MODEL_";
-
-        this._client.startTransaction();
-        while (i--) {
-            this._client.setAttributes(this._GMEModels[i], nodePropertyNames.Attributes.name, prefix + (counter - i));
-        }
-        this._client.completeTransaction();
-    };
-
-    ModelEditorControl.prototype._createGMEModels = function (num) {
-        var counter = this._GMEModels.length,
-            prefix = "MODEL_";
-
-        this._client.startTransaction();
-
-        while (num--) {
-            this._client.createChild({ "parentId": this.currentNodeInfo.id,
-                "name": prefix + counter });
-
-            counter += 1;
-        }
-        this._client.completeTransaction();
-    };
-
-    ModelEditorControl.prototype._createGMEConnections = function (num) {
-        var counter = this._GMEConnections.length,
-            allGMEID = [],
-            i,
-            sourceId,
-            targetId,
-            connDesc;
-
-        for (i in this._GmeID2ComponentID) {
-            if (this._GmeID2ComponentID.hasOwnProperty(i)) {
-                if (this._GMEModels.indexOf(i) !== -1) {
-                    allGMEID.pushUnique(i);
-                }
-            }
-        }
-
-        for (i in this._GMEID2Subcomponent) {
-            if (this._GMEID2Subcomponent.hasOwnProperty(i)) {
-                allGMEID.pushUnique(i);
-            }
-        }
-
-        i = allGMEID.length;
-
-        this._client.startTransaction();
-
-        while (num--) {
-            targetId = sourceId = Math.floor((Math.random()*( i / 2 )));
-            while (targetId === sourceId) {
-                targetId = Math.floor((Math.random()*(i / 2 ) + (i / 2)));
-            }
-
-            var registry = {};
-            registry[nodePropertyNames.Registry.lineStyle] = {};
-            _.extend(registry[nodePropertyNames.Registry.lineStyle], DEFAULT_LINE_STYLE);
-
-            connDesc = {   "parentId": this.currentNodeInfo.id,
-                "sourceId": allGMEID[sourceId],
-                "targetId": allGMEID[targetId],
-                "registry": registry };
-
-            this._client.makeConnection(connDesc);
-
-            counter += 1;
-        }
-        this._client.completeTransaction();
-    };
-
     ModelEditorControl.prototype._onModelHierarchyUp = function () {
         if (this.currentNodeInfo.parentId) {
             this._client.setSelectedObjectId(this.currentNodeInfo.parentId);
         }
     };
 
-    ModelEditorControl.prototype._printNodeData = function () {
-        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
-            len = idList.length,
-            node;
-
-        while (len--) {
-            node = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
-
-            if (node) {
-                node.printData();
-            }
-        }
-    };
 
     ModelEditorControl.prototype._createConnectionVisualStyleRegistryFields = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
@@ -975,6 +961,56 @@ define(['logManager',
 
         return {'sources': sources,
                 'destinations': destinations};
+    };
+
+    ModelEditorControl.prototype.registerComponentIDForPartID = function (componentID, partId) {
+        this._componentIDPartIDMap[componentID] = this._componentIDPartIDMap[componentID] || [];
+        if (this._componentIDPartIDMap[componentID].indexOf(partId) === -1) {
+            this._componentIDPartIDMap[componentID].push(partId);
+        }
+    };
+
+    ModelEditorControl.prototype.unregisterComponentIDFromPartID = function (componentID, partId) {
+        var idx;
+
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[componentID]) {
+            idx = this._componentIDPartIDMap[componentID].indexOf(partId);
+            if (idx !== -1) {
+                this._componentIDPartIDMap[componentID].splice(idx, 1);
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._checkComponentDependency = function (gmeID, eventType) {
+        var len;
+        if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
+            len = this._componentIDPartIDMap[gmeID].length;
+            while (len--) {
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
+                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push({'id': gmeID, 'event': eventType});
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._handleDecoratorNotification = function () {
+        var gmeID,
+            i,
+            itemID;
+
+        for (gmeID in this._notifyPackage) {
+            if (this._notifyPackage.hasOwnProperty(gmeID)) {
+                this.logger.debug('NotifyPartDecorator: ' + gmeID + ', componentIDs: ' + JSON.stringify(this._notifyPackage[gmeID]));
+
+                if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+                    //src is a DesignerItem
+                    i = this._GmeID2ComponentID[gmeID].length;
+                    while (i--) {
+                        itemID = this._GmeID2ComponentID[gmeID][i];
+                        this.designerCanvas.notifyItemComponentEvents(itemID, this._notifyPackage[gmeID]);
+                    }
+                }
+            }
+        }
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

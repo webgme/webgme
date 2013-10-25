@@ -4,7 +4,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
         'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (Connection,
                                                    DiagramDesignerWidgetConstants) {
 
-    var DiagramDesignerWidget;
+    var DiagramDesignerWidget,
+        CONNECTION_IN_DRAW_CLASS = "connection-drawing";
 
     DiagramDesignerWidget = function () {
 
@@ -172,10 +173,20 @@ define(['js/Widgets/DiagramDesigner/Connection',
         this.logger.warning("onModifyConnectionEnd with parameters: '" + JSON.stringify(params) + "'");
     };
 
+    /*************** NO CONNECTION START / END UI CLASS ADD/REMOVE ***********/
+    DiagramDesignerWidget.prototype._connectionDrawStartAddClass = function () {
+        this.skinParts.$itemsContainer.addClass(CONNECTION_IN_DRAW_CLASS);
+    };
+
+    DiagramDesignerWidget.prototype._connectionDrawEndRemoveClass = function () {
+        this.skinParts.$itemsContainer.removeClass(CONNECTION_IN_DRAW_CLASS);
+    };
 
     /**************** ON_END_CONNECTION_DRAW EVENT HANDLER *******************/
     DiagramDesignerWidget.prototype._onEndConnectionDraw = function () {
         var i;
+
+        this._connectionDrawEndRemoveClass();
 
         i = this.itemIds.length;
         while (i--) {
@@ -271,6 +282,9 @@ define(['js/Widgets/DiagramDesigner/Connection',
                 'srcSubCompMetaInfo': decoratorPackages[i][2],
                 'connectors': decoratorPackages[i][3]} );
         }
+
+        //add class to items container
+        this._connectionDrawStartAddClass();
     };
 
     DiagramDesignerWidget.prototype.onFilterNewConnectionDroppableEnds = function (params) {
@@ -398,6 +412,8 @@ define(['js/Widgets/DiagramDesigner/Connection',
                     'connectors': decoratorPackages[i][3]} );
             }
         }
+
+        this._connectionDrawStartAddClass();
     };
 
     DiagramDesignerWidget.prototype.onFilterReconnectionDroppableEnds = function (params) {

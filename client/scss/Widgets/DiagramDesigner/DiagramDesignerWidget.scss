@@ -37,6 +37,8 @@ $connection-connector-background-color: #FFFFFF;
 
 $rotation-deg-color: #666666;
 
+$connection-drawing-connector-background-color: #00FF00;
+
 .diagram-designer {
   outline: none;
 
@@ -221,6 +223,14 @@ $rotation-deg-color: #666666;
       .designer-connection.highlighted,
       .c-t.highlighted {
         opacity: 1.0;
+      }
+    }
+
+    &.connection-drawing {
+      .connector {
+        &:hover {
+          background-color: $connection-drawing-connector-background-color;
+        }
       }
     }
   }

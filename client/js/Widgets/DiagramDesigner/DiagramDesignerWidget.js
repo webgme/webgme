@@ -26,6 +26,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Keyboard',
     'js/Widgets/DiagramDesigner/HighlightManager',
     'js/Widgets/DiagramDesigner/SearchManager',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -45,7 +46,8 @@ define(['logManager',
                                                       DiagramDesignerWidgetZoom,
                                                       DiagramDesignerWidgetKeyboard,
                                                       HighlightManager,
-                                                      SearchManager) {
+                                                      SearchManager,
+                                                      DiagramDesignerWidgetContextMenu) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -119,6 +121,9 @@ define(['logManager',
         //by default connection item to connections are enabled
         this._connectToConnection = true;
 
+        //by default connections do not jump on crossings
+        this._connectionJumpXing = false;
+
         //initialize UI
         this._initializeUI();
 
@@ -141,7 +146,7 @@ define(['logManager',
         };
 
         this.selectionManager.onSelectionChanged = function (selectedIds) {
-            self.onSelectionChanged(selectedIds);
+            self._onSelectionChanged(selectedIds);
         };
 
         //initiate Drag Manager (if needed)
@@ -328,17 +333,17 @@ define(['logManager',
                 "icon": "icon-th",
                 "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
-            /*this.toolBar.addButton({ "title": "Diagonal",
-                "icon": "icon-signal",
-                "data": { "mode": "diagonal" }}, this.skinParts.$btnGroupItemAutoOptions );*/
-
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {
+                this.toolBar.addButton({ "title": "Cozy Grid layout",
+                    "icon": "icon-th-large",
+                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
                 //progress text in toolbar for debug only
                 this.skinParts.$progressText = this.toolBar.addLabel();
 
                 //route manager selection
-                this.$btnGroupConnectionRouteManager = this.toolBar.addButtonGroup(function (event, data) {
+                this.$btnGroupConnectionRouteManager = this.toolBar.addRadioButtonGroup(function (event, data) {
                     self._onConnectionRouteManagerChanged(data.type);
                 });
 
@@ -348,6 +353,7 @@ define(['logManager',
 
                 this.toolBar.addButton({ "title": "Basic+ route manager",
                     "text": "RM #2",
+                    "selected": true,
                     "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
 
                 this.toolBar.addButton({ "title": "AutoRouter",
@@ -381,6 +387,72 @@ define(['logManager',
                     "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
                 },
                 this.$btnGroupOperatingMode);
+
+
+            //toggle button for show common/all fields
+            this.$btnGroupXING = this.toolBar.addButtonGroup();
+
+            this.toolBar.addToggleButton(
+                {"text": "XING",
+                 "title": "Turn connection crossing jumps on/off",
+                    "clickFn": function (event, data, isPressed) {
+                        self._setConnectionXingJumpMode(isPressed);
+                    }}, this.$btnGroupXING);
+
+            //connection visual style setting buttons
+            /************** AUTO CREATE NEW NODES *****************/
+            this.$ddlConnectionArrowStart = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-left" });
+            this.$ddlConnectionPattern = this.toolBar.addDropDownMenu({ "icon": "icon-minus", "class": 'toolbar-group-small-margin' });
+            this.$ddlConnectionArrowEnd = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-right", "class": 'toolbar-group-small-margin' });
+
+            var createArrowMenuItem = function (arrowType, isEnd) {
+                var size = arrowType === DiagramDesignerWidgetConstants.LINE_ARROWS.NONE ? "" : "-xwide-xlong",
+                    startArrow = isEnd ? null : arrowType + size,
+                    endArrow = isEnd ? arrowType + size : null;
+
+                return { "title": arrowType,
+                        "icon": self._createLineStyleMenuItem(null, null, null, startArrow, endArrow),
+                        "clickFn": function (/*event, data*/) {
+                            var p = {};
+                            if (isEnd) {
+                                p[DiagramDesignerWidgetConstants.LINE_END_ARROW] = endArrow;
+                            } else {
+                                p[DiagramDesignerWidgetConstants.LINE_START_ARROW] = startArrow;
+                            }
+                            self._setConnectionProperty(p);
+                        }
+                };
+            };
+
+            var createPatternMenuItem = function (pattern) {
+                return { "title": pattern,
+                    "icon": self._createLineStyleMenuItem(null, null, DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern], null, null),
+                    "clickFn": function (/*event, data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern];
+                        self._setConnectionProperty(p);
+                    }
+                };
+            };
+
+            for (var a in DiagramDesignerWidgetConstants.LINE_ARROWS) {
+                if (DiagramDesignerWidgetConstants.LINE_ARROWS.hasOwnProperty([a])) {
+                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], false), this.$ddlConnectionArrowStart);
+                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], true), this.$ddlConnectionArrowEnd);
+                }
+            }
+
+            for (var a in DiagramDesignerWidgetConstants.LINE_PATTERNS) {
+                if (DiagramDesignerWidgetConstants.LINE_PATTERNS.hasOwnProperty([a])) {
+                    this.toolBar.addButtonMenuItem(createPatternMenuItem(a), this.$ddlConnectionPattern);
+                }
+            }
+
+            this.$ddlConnectionArrowStart.enabled(false);
+            this.$ddlConnectionPattern.enabled(false);
+            this.$ddlConnectionArrowEnd.enabled(false);
+
+            /************** END OF - AUTO CREATE NEW NODES *****************/
         }
 
         //CHILDREN container
@@ -406,11 +478,12 @@ define(['logManager',
 
             this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
 
-            this.skinParts.$diagramDesignerWidgetBody.append(this.skinParts.$dropRegion);
+            this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
 
             /* SET UP DROPPABLE DROP REGION */
             this.skinParts.$dropRegion.droppable({
                 over: function( event, ui ) {
+                    self.selectionManager.clear();
                     self._onBackgroundDroppableOver(ui);
                 },
                 out: function( event, ui ) {
@@ -440,6 +513,33 @@ define(['logManager',
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
+    };
+
+    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow) {
+        var el = $('<div/>'),
+            path,
+            hSize = 50,
+            vSize = 20,
+            paper = Raphael(el[0], hSize, vSize),
+            pathParams = {};
+
+        width = width || 1;
+        color = color || "#000000";
+        pattern = pattern || DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID;
+        startArrow = startArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
+        endArrow = endArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
+
+        el.attr({"style": "height: " + vSize + "px; width: " + hSize + "px;"});
+
+        path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + ", L" + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+
+        path.attr({ "arrow-start": startArrow,
+            "arrow-end": endArrow,
+            "stroke":  color,
+            "stroke-width": width,
+            "stroke-dasharray": pattern});
+
+        return el;
     };
 
     DiagramDesignerWidget.prototype._attachScrollHandler = function (el) {
@@ -498,6 +598,19 @@ define(['logManager',
             "top": top };
     };
 
+    DiagramDesignerWidget.prototype.posToPageXY = function (x, y) {
+        var childrenContainerOffset = this._offset,
+            childrenContainerScroll = this._scrollPos,
+            pX = x * this._zoomRatio,
+            pY = y * this._zoomRatio;
+
+        pX += childrenContainerOffset.left - childrenContainerScroll.left;
+        pY += childrenContainerOffset.top - childrenContainerScroll.top;
+
+        return { "x": pX > 0 ? pX : 0,
+            "y": pY > 0 ? pY : 0 };
+    };
+
     DiagramDesignerWidget.prototype.clear = function () {
         var i;
 
@@ -515,6 +628,8 @@ define(['logManager',
         this._actualSize = { "w": 0, "h": 0 };
 
         this._resizeItemContainer();
+
+        this.dispatchEvent(this.events.ON_CLEAR);
     };
 
     DiagramDesignerWidget.prototype.deleteComponent = function (componentId) {
@@ -595,7 +710,9 @@ define(['logManager',
             doRenderGetLayout,
             doRenderSetLayout,
             items = this.items,
-            affectedItems = [];
+            affectedItems = [],
+            dispatchEvents,
+            self = this;
 
         this.logger.debug("_refreshScreen START");
 
@@ -640,6 +757,18 @@ define(['logManager',
         
         doRenderSetLayout(this._insertedDesignerItemIDs);
         doRenderSetLayout(this._updatedDesignerItemIDs);
+
+        /*********** SEND CREATE / UPDATE EVENTS about created/updated items **********/
+        dispatchEvents = function (itemIDList, eventType) {
+            var i = itemIDList.length;
+
+            while (i--) {
+                self.dispatchEvent(eventType, itemIDList[i]);
+            }
+        };
+        dispatchEvents(this._insertedDesignerItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._updatedDesignerItemIDs, this.events.ON_COMPONENT_UPDATE);
+        /*********************/
 
 
         /***************** THEN HANDLE THE CONNECTIONS *****************/
@@ -711,11 +840,11 @@ define(['logManager',
         var posXDelta,
             posYDelta;
 
-        if (pX < 0) {
+        if (pX < this.gridSize) {
             pX = this.gridSize;
         }
 
-        if (pY < 0) {
+        if (pY < this.gridSize) {
             pY = this.gridSize;
         }
 
@@ -839,6 +968,27 @@ define(['logManager',
 
     /************************** SELECTION CHANGED HANDLER ****************************/
 
+    DiagramDesignerWidget.prototype._onSelectionChanged = function (selectedIds) {
+        //check if there is at least any connection selected
+        //if so enable the connection visual style buttons, otherwise
+        //disable it
+        var len = selectedIds.length,
+            connectionSelected = false;
+
+        while (len--) {
+            if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
+                connectionSelected = true;
+                break;
+            };
+        }
+
+        this.$ddlConnectionArrowEnd.enabled(connectionSelected);
+        this.$ddlConnectionArrowStart.enabled(connectionSelected);
+        this.$ddlConnectionPattern.enabled(connectionSelected);
+
+        this.onSelectionChanged(selectedIds);
+    };
+
     DiagramDesignerWidget.prototype.onSelectionChanged = function (selectedIds) {
         this.logger.debug("DiagramDesignerWidget.onSelectionChanged IS NOT OVERRIDDEN IN A CONTROLLER...");
     };
@@ -862,19 +1012,26 @@ define(['logManager',
         switch (mode) {
             case "diagonal":
                 while (i--) {
-                    w = this.items[this.itemIds[i]].width;
-                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    w = this.items[this.itemIds[i]].getWidth();
+                    h = Math.max(h, this.items[this.itemIds[i]].getHeight());
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
                     newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;
                     y += h + dy;
                 }
                 break;
+            case "cozygrid":
             case "grid":
             default:
+                dx = 20;
+                dy = 20;
+                if (mode === "cozygrid") {
+                    dx = 100;
+                    dy = 100;
+                }
                 while (i--) {
-                    w = this.items[this.itemIds[i]].width;
-                    h = Math.max(h, this.items[this.itemIds[i]].height);
+                    w = this.items[this.itemIds[i]].getWidth();
+                    h = Math.max(h, this.items[this.itemIds[i]].getHeight());
                     this.updateDesignerItem(this.itemIds[i], {"position": {"x": x, "y": y}});
                     newPositions[this.itemIds[i]] = { "x": this.items[this.itemIds[i]].positionX, "y": this.items[this.itemIds[i]].positionY };
                     x += w + dx;
@@ -943,7 +1100,7 @@ define(['logManager',
             posY = mPos.mY;
 
         if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(helper, { "x": posX, "y": posY });
+            this.onBackgroundDrop(helper, { "x": posX, "y": posY }, event);
         }
 
         this._doAcceptDroppable(false);
@@ -964,7 +1121,7 @@ define(['logManager',
         return false;
     };
 
-    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position) {
+    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position, event) {
         this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDrop not overridden in controller!!! position: '" + JSON.stringify(position) + "'");
     };
 
@@ -1119,6 +1276,11 @@ define(['logManager',
         this.selectionManager.setSelection(this.connectionIds, false);
     };
 
+    DiagramDesignerWidget.prototype.select = function (selectionList) {
+        this.selectionManager.clear();
+        this.selectionManager.setSelection(selectionList, false);
+    };
+
     /*************** END OF --- SELECTION API ******************************************/
 
 
@@ -1133,18 +1295,6 @@ define(['logManager',
     };
 
     /************ END OF --- COPY PASTE API **********************/
-
-    /************ CONNECTION END DROPPABLE ACCEPT **********************/
-    DiagramDesignerWidget.prototype.onConnectionCreateConnectableAccept = function (params) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionCreateConnectableAccept not overridden in controller, returning TRUE. params: " + JSON.stringify(params));
-        return true;
-    };
-
-    DiagramDesignerWidget.prototype.onConnectionReconnectConnectableAccept = function (params) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onConnectionReconnectConnectableAccept not overridden in controller, returning TRUE. params: " + JSON.stringify(params));
-        return true;
-    };
-    /************ END OF --- CONNECTION END DROPPABLE ACCEPT **********************/
 
     /************************* CONNECTION SEGMENT POINTS CHANGE ************************/
     DiagramDesignerWidget.prototype.onConnectionSegmentPointsChange = function (params) {
@@ -1267,10 +1417,63 @@ define(['logManager',
     DiagramDesignerWidget.prototype.connectToConnectionEnabled = function (enabled) {
         this._connectToConnection = enabled;
     };
-
-
     /*********************** END OF --- CONNECT TO CONNECTION ENABLE / DISABLE *****************************/
 
+
+    /*********************** CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
+    DiagramDesignerWidget.prototype._setConnectionXingJumpMode = function (enabled) {
+        var i = this.connectionIds.length;
+
+        if (this._connectionJumpXing !== enabled) {
+            this._connectionJumpXing = enabled;
+
+            this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        }
+    };
+    /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
+
+
+    /*********************** SET CONNECTION VISUAL PROPERTIES *****************************/
+    DiagramDesignerWidget.prototype._setConnectionProperty = function (params) {
+        var selectedIds = this.selectionManager.getSelectedElements(),
+            len = selectedIds.length,
+            selectedConnections = [],
+            p;
+
+        while (len--) {
+            if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
+                selectedConnections.push(selectedIds[len]);
+            };
+        }
+
+        if (selectedConnections.length > 0) {
+            p = {'connections': selectedConnections,
+                 'params': params};
+
+            this.onSetConnectionProperty(p);
+        }
+    };
+
+    DiagramDesignerWidget.prototype.onSetConnectionProperty = function (params) {
+        this.logger.warning("DiagramDesignerWidget.prototype.onSetConnectionProperty IS NOT OVERRIDDEN IN CONTROLLER. params: '" + JSON.stringify(params));
+    };
+    /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
+
+    DiagramDesignerWidget.prototype._enableDroppable = function (enabled) {
+        if (this.skinParts.$dropRegion && this.skinParts.$dropRegion.hasClass('ui-droppable')) {
+            if (enabled === true) {
+                this.skinParts.$dropRegion.droppable("enable");
+                if (this._savedAcceptDroppable !== undefined) {
+                    this._doAcceptDroppable(this._savedAcceptDroppable);
+                    this._savedAcceptDroppable = undefined;
+                }
+            } else {
+                this.skinParts.$dropRegion.droppable("disable");
+                this._savedAcceptDroppable = this._acceptDroppable;
+                this._doAcceptDroppable(false);
+            }
+        }
+    };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
@@ -1282,6 +1485,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetEventDispatcher.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
+
 
     return DiagramDesignerWidget;
 });

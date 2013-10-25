@@ -22,16 +22,21 @@ define(['logManager'], function (logManager) {
     };
 
     ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
-        var i = idList.length;
+        var i;
 
         this.logger.debug('Redraw connection request: ' + idList.length);
+
+        //NOTE: here it is not enough to update the connections the canvas asked for
+        //because updating one connections' endpoint (connection area switch) can cause
+        //other connections to be redrawn that was originally not requested to do so
+        idList = this.diagramDesigner.connectionIds.slice(0);
 
         //1 - update all the connection endpoint connectable area information
         this._updateEndpointInfo(idList);
 
         //2 - we have each connection end connectability info
         //find the closest areas for each connection
-        while (i--) {
+        for (i = 0; i < idList.length; i += 1) {
             this._updateConnectionCoordinates(idList[i]);
         }
 
@@ -47,7 +52,8 @@ define(['logManager'], function (logManager) {
             srcObjId,
             srcSubCompId,
             dstObjId,
-            dstSubCompId;
+            dstSubCompId,
+            connectionMetaInfo;
 
         this.endpointConnectionAreaInfo = {};
 
@@ -59,12 +65,14 @@ define(['logManager'], function (logManager) {
             dstObjId = canvas.connectionEndIDs[connId].dstObjId;
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._getEndpointConnectionAreas(srcObjId, srcSubCompId);
-            this._getEndpointConnectionAreas(dstObjId, dstSubCompId);
+            connectionMetaInfo = canvas.items[connId].getMetaInfo();
+
+            this._getEndpointConnectionAreas(srcObjId, srcSubCompId, false, connectionMetaInfo);
+            this._getEndpointConnectionAreas(dstObjId, dstSubCompId, true, connectionMetaInfo);
         }
     };
 
-    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId) {
+    ConnectionRouteManagerBasic.prototype._getEndpointConnectionAreas = function (objId, subCompId, isEnd, connectionMetaInfo) {
         var longid = subCompId ? objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + subCompId : objId,
             res,
             canvas = this.diagramDesigner,
@@ -79,7 +87,7 @@ define(['logManager'], function (logManager) {
                (subCompId !== undefined && this.diagramDesigner._itemSubcomponentsMap[objId] && this.diagramDesigner._itemSubcomponentsMap[objId].indexOf(subCompId) !== -1)) {
 
                 designerItem = canvas.items[objId];
-                res = designerItem.getConnectionAreas(subCompId) || [];
+                res = designerItem.getConnectionAreas(subCompId, isEnd, connectionMetaInfo) || [];
 
                 j = res.length;
                 while (j--) {
