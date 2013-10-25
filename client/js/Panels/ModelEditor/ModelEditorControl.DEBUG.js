@@ -147,6 +147,7 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
                 if (newNode) {
                     this._client.setAttributes(newID, nodePropertyNames.Attributes.name, prefix + counter);
                     this._client.setRegistry(newID, nodePropertyNames.Registry.decorator, "");
+                    this._client.setRegistry(newID, nodePropertyNames.Registry.isPort, true);
                 }
             }
 
