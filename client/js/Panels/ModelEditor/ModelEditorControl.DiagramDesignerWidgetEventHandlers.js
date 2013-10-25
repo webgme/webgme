@@ -275,32 +275,6 @@ define(['logManager',
         //TODO: add event handling here that a subcomponent disappeared
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._switchToNextDecorator = function (id) {
-        var objDesc = this._getObjectDescriptor(id),
-            nextDec = "DecoratorWithPorts";
-
-        switch (objDesc.decorator) {
-            case "DefaultDecorator":
-                nextDec = "CircleDecorator";
-                break;
-            case "CircleDecorator":
-                nextDec = "DecoratorWithPorts";
-                break;
-            case "DecoratorWithPorts":
-                nextDec = "AttributesDecorator";
-                break;
-            case "AttributesDecorator":
-                nextDec = "DefaultDecorator";
-                break;
-            default:
-                break;
-        }
-
-        this._client.startTransaction();
-        this._client.setRegistry(id, nodePropertyNames.Registry.decorator, nextDec);
-        this._client.completeTransaction();
-    };
-
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
         var metaInfo = helper.data(CONSTANTS.META_INFO);
