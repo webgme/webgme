@@ -1816,6 +1816,13 @@ define([
 
                 //ASSERT(_nodes[_id]);
 
+                var printData = function(){
+                    //TODO - what to print here - now we use as testing method...
+                    console.log('kecso1',_core.getPointerPath(_nodes[_id].node,'src'));
+                    _core.setPointer(_nodes[_id].node,'src',null);
+                    console.log('kecso2',_core.getPointerPath(_nodes[_id].node,'src'));
+                };
+
                 if(_nodes[_id]){
                     return {
                         getParentId : getParentId,
@@ -1842,7 +1849,9 @@ define([
                         getEditablePointerDescriptor   : getEditablePointerDescriptor,
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
-                        getBase                        : getBase
+                        getBase                        : getBase,
+
+                        printData: printData
 
                     }
                 }

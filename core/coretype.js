@@ -104,14 +104,10 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             }
             return ownRelIds;
         };
-        /*
 		core.loadChildren = function(node) {
 			ASSERT(isValidNode(node));
 
             //now we made it not recursive so we only check the children of the base
-            if(node.base !== null){
-                console.log(kecso);
-            }
             var inhertChildren = node.base === null ? [] : TASYNC.call(__loadBaseArray, oldcore.loadChildren(core.getBase(node)));
             var ownChildren = TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
             var findChild = function(children,relid){
@@ -133,19 +129,23 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                     }
                 }
 
+                var presize = own.length;
                 for(var i=0;i<missingChildren.length;i++){
                     var newChild = core.createNode(node,findChild(inherited,missingChildren[i]),missingChildren[i]);
                     own.push(newChild);
                 }
 
+                if(own.length > presize){
+                    core.persist(core.getRoot(node));
+                }
                 return own;
             };
             return TASYNC.call(createMissingChildren,ownChildren,inhertChildren);
-		};*/
-        core.loadChildren = function(node) {
+		};
+        /*core.loadChildren = function(node) {
             ASSERT(isValidNode(node));
             return TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
-        };
+        };*/
 
 
         core.loadCollection = function(node, name) {
