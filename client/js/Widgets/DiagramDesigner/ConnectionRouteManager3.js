@@ -54,6 +54,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     };
 
+    ConnectionRouteManager3.prototype.destroy = function () {
+    };
+
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
         var i;
 

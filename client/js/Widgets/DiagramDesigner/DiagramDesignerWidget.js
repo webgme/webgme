@@ -1055,6 +1055,10 @@ define(['logManager',
     /********* ROUTE MANAGER CHANGE **********************/
 
     DiagramDesignerWidget.prototype._onConnectionRouteManagerChanged = function (type) {
+        if (this.connectionRouteManager) {
+            this.connectionRouteManager.destroy();
+        }
+
         switch(type) {
             case "basic":
                 this.connectionRouteManager = new ConnectionRouteManagerBasic({"diagramDesigner": this});
