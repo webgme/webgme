@@ -334,7 +334,7 @@ define(['logManager',
     ModelEditorControl.prototype.processNextInQueue = function () {
         var nextBatchInQueue,
             len = this.eventQueue.length,
-            decoratorsToDownload = [],
+            decoratorsToDownload = [DEFAULT_DECORATOR],
             itemDecorator,
             self = this;
 
@@ -350,7 +350,9 @@ define(['logManager',
                     itemDecorator = nextBatchInQueue[len].desc.decorator;
 
                     if (itemDecorator && itemDecorator !== "") {
-                        decoratorsToDownload.pushUnique(itemDecorator);
+                        if (decoratorsToDownload.indexOf(itemDecorator) === -1) {
+                            decoratorsToDownload.pushUnique(itemDecorator);
+                        }
                     }
                 }
             }
