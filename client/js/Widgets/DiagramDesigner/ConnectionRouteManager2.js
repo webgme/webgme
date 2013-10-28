@@ -125,7 +125,7 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManager2.prototype._getEndpointConnectionAreas = function (connId, objId, subCompId, isEnd, connectionMetaInfo) {
         var longid = this._getEndPointID(connId, objId, subCompId),
             eID = this._getEndPointID(undefined, objId, subCompId),
-            res,
+            res = [],
             canvas = this.diagramDesigner,
             j,
             designerItem;
