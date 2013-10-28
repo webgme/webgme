@@ -31,30 +31,40 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         //Adding event listeners
         var self = this;
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, function(_canvas, ID) {
+
+        this._onComponentUpdate = function(_canvas, ID) {
             self.logger.warning("ON_COMPONENT_UPDATE: " + ID);
             //self.autorouter.setBox();
-        });
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, function(_canvas, ID) {
+        this._onComponentCreate = function(_canvas, ID) {
             self.logger.warning("Added Component: " + ID);
             self.insertItem( ID );
-        });
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, function(_canvas, eventArgs) {
+        this._onItemPositionChanged = function(_canvas, eventArgs) {
             if( !self._autorouterBoxes[eventArgs.ID] )
                 self.insertItem( eventArgs.ID );
             self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "dx": eventArgs.x, "dy": eventArgs.y });
-        });
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, function(_canvas) {
+        this._onClear = function(_canvas, eventArgs) {
             self.logger.warning("Clearing...");
             self._initializeGraph();
-        });
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
 
     };
 
     ConnectionRouteManager3.prototype.destroy = function () {
+        //removeEventListener(eventName, handler);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
