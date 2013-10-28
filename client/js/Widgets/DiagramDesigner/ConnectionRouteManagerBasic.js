@@ -21,6 +21,9 @@ define(['logManager'], function (logManager) {
     ConnectionRouteManagerBasic.prototype.initialize = function () {
     };
 
+    ConnectionRouteManagerBasic.prototype.destroy = function () {
+    };
+
     ConnectionRouteManagerBasic.prototype.redrawConnections = function (idList) {
         var i;
 
