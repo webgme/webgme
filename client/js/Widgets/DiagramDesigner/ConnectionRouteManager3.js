@@ -26,28 +26,38 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Define container that will map obj+subID -> box
         this._autorouterBoxes = {};
         this._autorouterPorts = {}; //Maps boxIds to an array of port ids that have been mapped
-        this._autorouterPath = {};
+        this._autorouterPaths = {};
         this.autorouter.clear();
 
         //Adding event listeners
         var self = this;
 
-        this._onComponentUpdate = function(_canvas, ID) {
+/*
+        this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
+            //this.diagramDesigner.itemIds
+            //this.diagramDesigner.connectionIds
             self.logger.warning("ON_COMPONENT_UPDATE: " + ID);
             //self.autorouter.setBox();
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
+*/
 
-        this._onComponentCreate = function(_canvas, ID) {
+        this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Added Component: " + ID);
             self.insertItem( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
+        this._onComponentDelete = function(_canvas, ID) {//Boxes and lines
+            self.logger.warning("Deleting : " + ID);
+            self.deleteItem( ID );
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
+        //ON_UNREGISTER_SUBCOMPONENT
+
         this._onItemPositionChanged = function(_canvas, eventArgs) {
-            if( !self._autorouterBoxes[eventArgs.ID] )
-                self.insertItem( eventArgs.ID );
-            self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "dx": eventArgs.x, "dy": eventArgs.y });
+            if( self._autorouterBoxes[eventArgs.ID] )
+                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "dx": eventArgs.x, "dy": eventArgs.y });
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
@@ -61,8 +71,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     ConnectionRouteManager3.prototype.destroy = function () {
         //removeEventListener(eventName, handler);
-        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
+        //this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
     };
@@ -109,7 +120,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var pathPoints,
             realPathPoints;
         for (i = 0; i < idList.length; i += 1) {
-            pathPoints = this.autorouter.getPathPoints(this._autorouterPath[idList[i]]);
+            pathPoints = this.autorouter.getPathPoints(this._autorouterPaths[idList[i]]);
             realPathPoints = [];
             for(var j = 0; j < pathPoints.length; j++){
                 realPathPoints.push({'x': pathPoints[j][0], 'y': pathPoints[j][1] });
@@ -146,7 +157,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.autorouter.clear();
         this._autorouterBoxes = {};
         this._autorouterPorts = {};
-        this._autorouterPath = {};
+        this._autorouterPaths = {};
 
         this.endpointConnectionAreaInfo = {};
 
@@ -256,21 +267,28 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterBoxes[objId] = this.autorouter.addBox(boxdefinition);
     };
 
-    ConnectionRouteManager3.prototype.deleteItem = function (objId) {
-        //TODO find a way to delete all the ports from the dictionary. 
+    ConnectionRouteManager3.prototype.deleteItem = function (objId) {//TODO Check if it is a Box or Connection
         //If I can query them from the objId, I can clear the entries with that info
-        var box = this._autorouterBoxes[objId],
-            i = this._autorouterPorts[objId].length;
+        var item = this.diagramDesigner.items[objId],
+            connIds = this.diagramDesigner.connectionIds,
+            itemIds = this.diagramDesigner.itemIds;
+        if(itemIds.indexOf(objId) !== -1){
+            item = this._autorouterBoxes[objId];
 
-        while( i-- ){
-            var id = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + this._autorouterPorts[objId][i]; //ID of child port
-            this._autorouterBoxes[id] = undefined;
+            var i = this._autorouterPorts[objId] ? this._autorouterPorts[objId].length : 0;
+            while( i-- ){
+                var id = objId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + this._autorouterPorts[objId][i]; //ID of child port
+                this._autorouterBoxes[id] = undefined;
+            }
+
+            this._autorouterBoxes[objId] = undefined;
+        }else if(connIds.indexOf(objId) !== -1){
+            //If objId is a connection
+            item = this._autorouterPaths[objId];
+
         }
+            this.autorouter.remove(item);
 
-        this.autorouter.remove(box);
-        this._autorouterBoxes[objId] = undefined;
-
-        this._autorouterBoxes[itemIdList[i]] = this.autorouter.addBox(boxdefinition);
     };
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {
@@ -343,8 +361,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
 
         //Create the path
-        if(this._autorouterPath[connectionId] === undefined){
-            this._autorouterPath[connectionId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId].ports[sIndex],
+        if(this._autorouterPaths[connectionId] === undefined){
+            this._autorouterPaths[connectionId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId].ports[sIndex],
                                                                            "dst": this._autorouterBoxes[tId].ports[tIndex] });
         }
 

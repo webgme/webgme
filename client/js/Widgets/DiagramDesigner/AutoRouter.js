@@ -1012,15 +1012,15 @@ define(['logManager'], function (logManager) {
             //Wrapper Functions
             this.getLength = function(){
                 return ArPointList.length;
-            }
+            };
 
             this.getArPointList = function(){
                 return ArPointList;
-            }
+            };
 
             this.get = function(index){
                 return ArPointList[index];
-            }
+            };
 
             this.push = function(element){
                 //this[length++] = element;
@@ -1028,11 +1028,11 @@ define(['logManager'], function (logManager) {
                     ArPointList.push(element);
                 else
                     ArPointList.push([element]);
-            }
+            };
 
             this.indexOf = function(element){
                 return ArPointList.indexOf(element);
-            }
+            };
 
             this.splice = function(start, amt, insert){
                 if(insert !== undefined){
@@ -1041,7 +1041,7 @@ define(['logManager'], function (logManager) {
                     var res = ArPointList.splice(start, amt);
 
                 return res;
-            }
+            };
 
             //Functions
 
@@ -1060,7 +1060,7 @@ define(['logManager'], function (logManager) {
                 end = ArPointList[pos];
 
                 return pos;
-            }
+            };
 
            this.getTailEdge = function(start, end){
                 if( ArPointList.length < 2 )
@@ -1075,7 +1075,7 @@ define(['logManager'], function (logManager) {
                 start = ArPointList[pos];
 
                 return { "pos": pos, "start": start, "end": end };
-            }
+            };
 
            this.getNextEdge = function(pos, start, end){
                 if(DEBUG)
@@ -1090,7 +1090,7 @@ define(['logManager'], function (logManager) {
                     pos = ArPointList.length;
                 else
                     end = ArPointList[p];
-            }
+            };
 
            this.getPrevEdge = function(pos, start, end){
                 if(DEBUG)
@@ -1101,7 +1101,7 @@ define(['logManager'], function (logManager) {
                     start = ArPointList[pos];
         
                 return { "pos": pos, "start": start, "end": end };
-            }
+            };
 
            this.getEdge = function(pos, start, end){
                 if(DEBUG)
@@ -1111,7 +1111,7 @@ define(['logManager'], function (logManager) {
                 assert( pos < ArPointList.length, "ArPointListPath.getEdge: pos < ArPointList.length FAILED" );
 
                 end = ArPointList[pos];
-            }
+            };
 
            this.getHeadEdgePtrs = function(start, end){
                 if( ArPointList.length < 2 )
@@ -1126,7 +1126,7 @@ define(['logManager'], function (logManager) {
                 end.assign(ArPointList[pos]); //&
 
                 return pos;
-            }
+            };
 
            this.getTailEdgePtrs = function(start, end){
                 var result = {};
@@ -1150,7 +1150,7 @@ define(['logManager'], function (logManager) {
                 result.start = start;
                 result.end = end;
                 return result;
-            }
+            };
 
            this.getNextEdgePtrs = function(pos, start, end){
                 if(DEBUG)
@@ -1159,7 +1159,7 @@ define(['logManager'], function (logManager) {
                 start.assign(ArPointList[pos++]);
                 if (pos < ArPointList.length)
                     end.assign(ArPointList[pos]);
-            }
+            };
 
            this.getPrevEdgePtrs = function(pos, start, end){
                 var result = {};
@@ -1176,7 +1176,7 @@ define(['logManager'], function (logManager) {
                 result.start = start;
                 result.end = end;
                 return result;
-            }
+            };
 
            this.getEdgePtrs = function(pos, start, end){
                 if(DEBUG)
@@ -1186,14 +1186,14 @@ define(['logManager'], function (logManager) {
                 assert( pos < ArPointList.length, "ArPointListPath.getEdgePtrs: pos < ArPointList.length FAILED");
 
                 end.assign(ArPointList[pos]);
-            }
+            };
 
            this.getStartPoint = function(pos){
                 if(DEBUG)
                     AssertValidPos(pos);
 
                 return ArPointList[pos];//&
-            }
+            };
 
            this.getEndPoint = function(pos){
                 if(DEBUG)
@@ -1203,7 +1203,7 @@ define(['logManager'], function (logManager) {
                 assert( pos < ArPointList.length, "ArPointListPath.getEndPoint: pos < ArPointList.length FAILED" );
 
                 return ArPointList[pos];//&
-            }
+            };
 
            this.getPointBeforeEdge = function(pos){
                 if(DEBUG)
@@ -1214,7 +1214,7 @@ define(['logManager'], function (logManager) {
                     return null;
 
                 return ArPointList[pos]; //&
-            }
+            };
 
            this.getPointAfterEdge = function(pos){
                 if(DEBUG)
@@ -1228,7 +1228,7 @@ define(['logManager'], function (logManager) {
                     return null;
 
                 return ArPointList[pos];//&
-            }
+            };
 
            this.getEdgePosBeforePoint = function(pos){
                 if(DEBUG)
@@ -1236,7 +1236,7 @@ define(['logManager'], function (logManager) {
 
                 pos--;
                 return pos;
-            }
+            };
 
            this.getEdgePosAfterPoint = function(pos){
                 if(DEBUG)
@@ -1248,7 +1248,7 @@ define(['logManager'], function (logManager) {
                     return ArPointList.length;
 
                 return pos;
-            }
+            };
 
            this.getEdgePosForStartPoint = function(startpoint){
                 var pos = 0;
@@ -1264,11 +1264,11 @@ define(['logManager'], function (logManager) {
 
                 assert( pos < ArPointList.length, "ArPointListPath.getEdgePosForStartPoint: pos < ArPointList.length FAILED" );
                 return pos;
-            }
+            };
 
             this.assertValid = function(){
                 
-            }
+            };
 
            this.assertValidPos = function(pos){
                 assert( pos < ArPointList.length, "ArPointListPath.assertValidPos: pos < ArPointList.length FAILED" );
@@ -1282,7 +1282,7 @@ define(['logManager'], function (logManager) {
 
                     p++;
                 }
-            }
+            };
 
            this.dumpPoints = function(msg){
                 console.log(msg + ", points dump begin:");
@@ -1294,7 +1294,7 @@ define(['logManager'], function (logManager) {
                     i++;
                 }
                 console.log("points dump end.");
-            }
+            };
 
 
         };
@@ -2149,56 +2149,56 @@ define(['logManager'], function (logManager) {
                 }
 
                 return null;
-            }
+            };
 
             this.equals = function(otherEdge){
                 return this === otherEdge; //This checks if they reference the same object
-            }
+            };
 
             this.getOwner = function (){
                 return owner;
-            }
+            };
 
             this.setOwner = function (newOwner){
                 owner = newOwner;
-            }
+            };
 
             this.getStartPointPrev = function (){
                 return startpoint_prev !== null ? 
                     ((startpoint_prev instanceof Array) ? new ArPoint(startpoint_prev[0]) : new ArPoint(startpoint_prev)) 
                         : emptyPoint;
-            }
+            };
 
             this.isStartPointPrevNull = function () {
                 return startpoint_prev == null;
-            }
+            };
 
             this.setStartPointPrev = function (point){
                 startpoint_prev = point;
-            }
+            };
 
             this.getStartPointPtr = function(){
                 return startpoint;
-            }
+            };
 
             this.getEndPointPtr = function(){
                 return endpoint;
-            }
+            };
 
             this.getStartPoint = function (){
                 
                 return startpoint !== null ? 
                     (startpoint instanceof Array ? new ArPoint(startpoint[0]) : new ArPoint(startpoint)) 
                         : emptyPoint;//returning copy of startpoint
-            }
+            };
 
             this.isSameStartPointByPointer = function(point){
                 return startpoint.equals(point);
-            }
+            };
 
             this.isStartPointNull = function (){
                 return startpoint === null;
-            }
+            };
 
             this.setStartPoint = function (point, b){
                 if(!startpoint || point instanceof Array){
@@ -2209,31 +2209,31 @@ define(['logManager'], function (logManager) {
 
                 if(b !== false)
                     this.recalculateDirection();
-            }
+            };
 
             this.setStartPointX = function(_x){
                 if(startpoint instanceof Array)
                     startpoint[0].x = _x;
                 else
                     startpoint.x = _x;
-            }
+            };
 
             this.setStartPointY = function(_y){
                 if(startpoint instanceof Array)
                     startpoint[0].y = _y;
                 else
                     startpoint.y = _y;
-            }
+            };
 
             this.getEndPoint = function(){
                 return endpoint !== null ? 
                     (endpoint instanceof Array ? new ArPoint(endpoint[0]) : new ArPoint(endpoint)) 
                         : emptyPoint;
-            }
+            };
 
             this.isEndPointNull = function(){
                 return endpoint == null;
-            }
+            };
 
             this.setEndPoint = function(point, b){
                 if(!endpoint || point instanceof Array)
@@ -2243,96 +2243,96 @@ define(['logManager'], function (logManager) {
 
                 if(b !== false)
                     this.recalculateDirection();
-            }
+            };
             
             this.setStartAndEndPoint = function(startPoint, endPoint){
                 this.setStartPoint(startPoint, false); //wait until setting the endpoint to recalculateDirection
                 this.setEndPoint(endPoint);
-            }
+            };
                 
             this.setEndPointX = function (_x){
                 if(!endpoint || endpoint instanceof Array)
                     endpoint[0].x = _x;
                 else
                     endpoint.x = _x;
-            }
+            };
 
             this.setEndPointY = function (_y){
                 if(!endpoint || endpoint instanceof Array)
                     endpoint[0].y = _y;
                 else
                     endpoint.y = _y;
-            }
+            };
 
             this.getEndPointNext = function(){
                 return endpoint_next !== null ? 
                     ((endpoint_next instanceof Array) ? new ArPoint(endpoint_next[0]) : new ArPoint(endpoint_next)) 
                         : emptyPoint;
-            }
+            };
 
             this.isEndPointNextNull = function(){
                 return endpoint_next === null;
-            }
+            };
             
             this.setEndPointNext = function(point){
                 endpoint_next = point;
-            }
+            };
 
             this.getPositionY = function(){
                 return position_y;
-            }
+            };
 
             this.setPositionY = function(_y ){
                 position_y = _y;
-            }
+            };
 
             this.addToPositionY = function(dy){
                 position_y += dy;
-            }
+            };
 
             this.getPositionX1 = function(){
                 return position_x1;
-            }
+            };
 
             this.setPositionX1 = function(_x1){
                 position_x1 = _x1;
-            }
+            };
 
             this.getPositionX2 = function(){
                 return position_x2;
-            }
+            };
 
             this.setPositionX2 = function(_x2){
                 position_x2 = _x2;
-            }
+            };
 
             this.getBracketClosing = function() {
                 return bracket_closing;
-            }
+            };
 
             this.setBracketClosing = function(bool, debug){
                 bracket_closing = bool;
-            }
+            };
 
             this.getBracketOpening = function() {
                 return bracket_opening;
-            }
+            };
 
             this.setBracketOpening = function(bool){
                 bracket_opening = bool;
-            }
+            };
 
             this.getOrderNext = function(){
                 return order_next;
-            }
+            };
 
             this.setOrderNext = function(orderNext){
                 order_next = orderNext;
-            }
+            };
 
             this.getOrderPrev = function(){
                 return order_prev;
-            }
+            };
 
             /*
              * This is a temporary method. Remove when bugs are all gone. It tests the linked list for problems.
@@ -2369,54 +2369,38 @@ define(['logManager'], function (logManager) {
                     loneRanger = loneRanger.getOrderNext();
                 }
                 
-            }
+            };
 
             this.setOrderPrev = function(orderPrev){
                 order_prev = orderPrev;
-            }
+            };
 
             this.getSectionX1 = function(){
                 return section_x1;
-            }
+            };
 
             this.setSectionX1 = function(x1){
                 section_x1 = x1;
-            }
+            };
 
             this.getSectionX2 = function(){
                 return section_x2;
-            }
+            };
 
             this.setSectionX2 = function(x2){
                 section_x2 = x2;
-//REMOVE
-/*
- * This next part is just a temporary patch for a problem. I will need to adjust it.
- * Specifically, this prevents the autorouter from crashing when a box moves to a position where
- * the open space is restricted and forces multiple paths to overlap. 
- * 
- * Unfortunately, this patch allows them to overlap (in exchange for a non-crashing autorouter).
-
-if(x2 < section_x1){
-var q = undefined;
-section_x2 = section_x1;
-section_x1 = x2;
-//_logger.warning("Setting section_x2 to value less than section_x1. Swapping section_x2 and section_x1.");
-}
- */
-//REMOVE_END
-            }
+            };
 
             this.getSectionNext = function(arg){
 
                 return section_next != undefined ? section_next[0] : null;
-            }
+            };
 
             this.getSectionNextPtr = function(){
                 if(!section_next || !section_next[0])
                     section_next = [ new AutoRouterEdge() ];
                 return section_next;
-            }
+            };
 
             this.setSectionNext = function(nextSection){
                 if(nextSection instanceof Array){
@@ -2425,58 +2409,58 @@ section_x1 = x2;
                     section_next = [nextSection];
                 }
 
-            }
+            };
 
             this.getSectionDown = function(debug){ //Returns pointer - if not null
 
                 return section_down != undefined ? section_down[0] : null;
 
-            }
+            };
 
             this.getSectionDownPtr = function(){
                 if(!section_down || !section_down[0])
                     section_down = [ new AutoRouterEdge() ];
                 return section_down;
-            }
+            };
 
             this.setSectionDown = function(downSection){
                 if(section_down instanceof Array)
                     section_down = downSection;
                 else 
                     section_down = [downSection];
-            }
+            };
 
             this.getEdgeFixed = function(){
                 return edge_fixed;
-            }
+            };
 
             this.setEdgeFixed = function(ef){ //boolean
                 edge_fixed = ef;
-            }
+            };
 
             this.getEdgeCustomFixed = function(){
                 return edge_customFixed;
-            }
+            };
 
             this.setEdgeCustomFixed = function(ecf){
                 edge_customFixed = ecf;
-            }
+            };
 
             this.getEdgeCanpassed =  function(){
                 return edge_canpassed;
-            }
+            };
 
             this.setEdgeCanpassed =  function(ecp){
                 edge_canpassed = ecp;
-            }
+            };
 
             this.getDirection = function(){
                 return edge_direction;
-            }
+            };
 
             this.setDirection = function(dir){
                 edge_direction = dir;
-            }
+            };
 
             this.recalculateDirection = function(){
                 assert(startpoint !== null && endpoint !== null, "AREdge.recalculateDirection: startpoint !== null && endpoint !== null FAILED!");
@@ -2484,47 +2468,47 @@ section_x1 = x2;
                     edge_direction = getDir(endpoint[0].minus((startpoint instanceof Array ? startpoint[0] : startpoint)));
                 else
                     edge_direction = getDir(endpoint.minus((startpoint instanceof Array ? startpoint[0] : startpoint)));
-            }
+            };
 
             this.getBlockPrev = function(){
                 return block_prev;
-            }
+            };
 
             this.setBlockPrev = function(prevBlock){
                 block_prev = prevBlock;
-            }
+            };
 
             this.getBlockNext = function(){
                 return block_next;
-            }
+            };
 
             this.setBlockNext = function(nextBlock){
                 block_next = nextBlock;
-            }
+            };
 
             this.getBlockTrace = function(){
                 return block_trace;
-            }
+            };
 
             this.setBlockTrace = function(traceBlock){
                 block_trace = traceBlock;
-            }
+            };
 
             this.getClosestPrev = function(){
                 return closest_prev;
-            }
+            };
 
             this.setClosestPrev = function(cp){
                 closest_prev = cp;
-            }
+            };
 
             this.getClosestNext = function(){
                 return closest_next;
-            }
+            };
 
             this.setClosestNext = function(cp){
                 closest_next = cp;
-            }
+            };
 
         };
 
@@ -2555,11 +2539,11 @@ section_x1 = x2;
                 checkOrder();
                 checkSection();
                 delete this;
-            }
+            };
 
             this.setOwner = function(newOwner){
                 owner = newOwner;
-            }
+            };
 
             this.addEdges = function(path){
                 if(path instanceof AutoRouterPath){
@@ -2776,7 +2760,7 @@ section_x1 = x2;
                     }
 
                 }
-            }
+            };
 
             this.deleteEdges = function (object){
                 var edge = order_first;
@@ -2791,16 +2775,16 @@ section_x1 = x2;
                         edge = edge.getOrderNext();
                 }
                     
-            }
+            };
 
             this.deleteAllEdges = function(){
                 while(order_first)
                     this.Delete(order_first);
-            }
+            };
 
             this.isEmpty = function(){
                 return order_first === null;
-            } 
+            }; 
 
             this.getEdge = function(path, startpoint, endpoint){
                 var edge = order_first;
@@ -2814,7 +2798,7 @@ section_x1 = x2;
 
                 assert( edge !== null, "AREdgeList.getEdge: edge !== null FAILED!");
                 return edge;
-            }
+            };
 
             this.getEdgeByPointer = function(startpoint, endpoint){
                 var edge = order_first;
@@ -2827,7 +2811,7 @@ section_x1 = x2;
 
                 assert(edge !== null, "AREdgeList.getEdgeByPointer: edge !== null FAILED!");
                 return edge;
-            }
+            };
 
             function setEdgeByPointer(pEdge, newEdge){
                 assert(newEdge instanceof AutoRouterEdge, "AREdgeList.setEdgeByPointer: newEdge instanceof AutoRouterEdge FAILED!");
@@ -2841,7 +2825,7 @@ section_x1 = x2;
 
                 assert(edge !== null, "AREdgeList.setEdgeByPointer: edge !== null FAILED!");
                 edge = newEdge;
-            }
+            };
 
             this.getEdgeAt = function(point, nearness){
                 var edge = order_first;
@@ -2854,7 +2838,7 @@ section_x1 = x2;
                 }
 
                 return null;
-            }        
+            };        
                    
                 //--Private Functions
             function position_GetRealY(edge, y){
@@ -3040,7 +3024,7 @@ _logger.warning("Adding "
 + before.getEndPoint().x + "," + before.getEndPoint().y + " in the EdgeList" );
 */
 //REMOVE_END
-            }
+            };
 
             this.insertAfter = function(edge, after){
                 assert( edge !== null && after !== null && !edge.equals(after), "AREdgeList.insertAfter:  edge !== null && after !== null && !edge.equals(after) FAILED"); 
@@ -3063,7 +3047,7 @@ _logger.warning("Adding "
                 }
 
                 after.setOrderNext(edge);
-            }
+            };
 
             this.insertLast = function(edge){
                 assert( edge !== null, "AREdgeList.insertLast: edge !== null FAILED" );
@@ -3086,7 +3070,7 @@ _logger.warning("Adding "
                     order_first = edge;
                     order_last = edge;
                 }
-            }
+            };
 
             this.insert = function(edge){
                 assert( edge !== null, "AREdgeList.insert:  edge !== null FAILED");
@@ -3105,7 +3089,7 @@ _logger.warning("Adding "
                     this.insertBefore(edge, insert);
                 else
                     this.insertLast(edge);
-            }
+            };
 
             this.remove = function(edge){
                 assert( edge !== null, "AREdgeList.remove:  edge !== null FAILED");
@@ -3124,7 +3108,7 @@ _logger.warning("Adding "
 
                 edge.setOrderNext(null);
                 edge.setOrderPrev(null);
-            }
+            };
 
             this.Delete = function(edge){
                 assert( edge !== null, "AREdgeList.Delete: edge !== null FAILED" );
@@ -3134,7 +3118,7 @@ _logger.warning("Adding "
                 edge.setOwner(null);
 
                 delete edge;
-            }
+            };
 
                 //-- Private
 
@@ -3667,7 +3651,7 @@ _logger.warning("Adding "
                 }
 
                 return modified;
-            }
+            };
 
             this.block_PushForward = function(blocked, blocker){
                 var modified = false;
@@ -3760,7 +3744,7 @@ _logger.warning("Adding "
 
 
                 return modified;
-            }
+            };
 
             this.block_ScanForward = function(){
                 positionAll_LoadX();
@@ -3840,7 +3824,7 @@ _logger.warning("Adding "
                 positionAll_StoreY();
 
                 return modified;
-            }
+            };
 
             this.block_ScanBackward = function(){
                     positionAll_LoadX();
@@ -3922,7 +3906,7 @@ _logger.warning("Adding "
                     positionAll_StoreY();
 
                     return modified;
-                }
+                };
                     
             this.block_SwitchWrongs = function(){
                     var was = false;
@@ -4010,7 +3994,7 @@ _logger.warning("Adding "
                         positionAll_StoreY();
 
                     return was;
-                }
+                };
 
         };
         var AutoRouterGraph = function (){
@@ -4056,7 +4040,7 @@ _logger.warning("Adding "
                         assert(endPort != null, "ARGraph.remove: endPort != null FAILED");
                         var endbox = endPort.getOwner();
 
-                        if( (startbox.equals(box) || endbox.equals(box)) )
+                        if( (startbox === box || endbox === box) )
                         {
                             //DeletePath:
                             if (path.hasOwner())
@@ -5306,7 +5290,7 @@ _logger.warning("Adding "
                 assert( box != null, "ARGraph.createBox: box != null FAILED" );
 
                 return box;
-            }
+            };
 
             this.addBox = function(box){
                 assert(box != null, "ARGraph.addBox: box != null FAILED");
@@ -5331,11 +5315,11 @@ _logger.warning("Adding "
                 boxes.push(box);
 
                 addBoxAndPortEdges(box);
-            }
+            };
 
             this.setBufferBoxes = function(boxes){
                 bufferBoxes = boxes;
-            }
+            };
 
             this.deleteBox = function(box){
                 assert(box != null, "ARGraph.deleteBox: box != null FAILED");
@@ -5349,7 +5333,7 @@ _logger.warning("Adding "
                 
                 box.destroy();
                 delete box;
-            }
+            };
 
             this.shiftBoxBy = function(box, offset){
                 assert(box != null, "ARGraph.shiftBoxBy: box != null FAILED");
@@ -5363,7 +5347,7 @@ _logger.warning("Adding "
                 var rect = box.getRect();
                 disconnectPathsClipping(rect);
                 disconnectPathsFrom(box);
-            }
+            };
 
             this.setBoxRect = function(box, rect){
                 if (box === null)
@@ -5375,7 +5359,7 @@ _logger.warning("Adding "
 
                 disconnectPathsClipping(rect);
                 disconnectPathsFrom(box);
-            }
+            };
 
             this.autoRoute = function(){
                 //createBufferBoxes(); //TODO Finish this!
@@ -5593,7 +5577,7 @@ _logger.warning("Adding "
 
                 _logger.info("c has been decremented " + (100 - c) + " times");
                 return updated;
-            }
+            };
 
             this.deletePath = function(path){
                 assert(path != null, "ARGraph.deletePath: path != null FAILED");
@@ -5609,7 +5593,7 @@ _logger.warning("Adding "
 
                 path.destroy();
                 delete path;
-            }
+            };
 
             this.deleteAll = function(addBackSelfEdges){
                 deleteAllPaths();
@@ -5617,7 +5601,7 @@ _logger.warning("Adding "
                 deleteAllEdges();
                 if (addBackSelfEdges)
                     addSelfEdges();
-            }
+            };
 
             this.getPathAt = function(point, nearness){
                 var iter = 0;
@@ -5633,7 +5617,7 @@ _logger.warning("Adding "
                 }
 
                 return null;
-            }
+            };
 
             this.addPath = function(isAutoRouted, startport, endport){
                 var path = new AutoRouterPath();
@@ -5644,7 +5628,7 @@ _logger.warning("Adding "
                 add(path);
 
                 return path;
-            }
+            };
 
             this.isEdgeFixed = function(path, startpoint, endpoint){
                 var d = getDir(endpoint.minus(startpoint)),
@@ -5658,124 +5642,122 @@ _logger.warning("Adding "
 
                 assert(false, "ARGraph.isEdgeFixed: FAILED");
                 return true;
-            }
+            };
 
             this.destroy = function(){
                 deleteAll(false);
 
                 horizontal.SetOwner(null);
                 vertical.SetOwner(null);
-            }
+            };
 
-            if(DEBUG){
-                this.assertValid = function(){
-                    var iter = 0;
+            this.assertValid = function(){
+                var iter = 0;
 
-                    while (iter < boxes.length)
-                    {
-                        assertValidBox(boxes[iter]);
-                        ++iter;
-                    }
-
-                    var iter2 = 0;
-                    
-                    while(iter2 < paths.length)
-                    {
-                        assertValidPath(paths[iter2]);
-                        ++iter2;
-                    }
+                while (iter < boxes.length)
+                {
+                    assertValidBox(boxes[iter]);
+                    ++iter;
                 }
 
-                this.assertValidBox = function(box){
-                    box.assertValid();
-                    assert( box.getOwner().equals(this), "ARGraph.assertValidBox: box.getOwner().equals(this) FAILED");
+                var iter2 = 0;
+                
+                while(iter2 < paths.length)
+                {
+                    assertValidPath(paths[iter2]);
+                    ++iter2;
+                }
+            };
 
-                    var iter = boxes.indexOf(box);
-                    assert (iter != -1, "ARGraph.assertValidBox: iter != -1 FAILED");
+            this.assertValidBox = function(box){
+                box.assertValid();
+                assert( box.getOwner().equals(this), "ARGraph.assertValidBox: box.getOwner().equals(this) FAILED");
+
+                var iter = boxes.indexOf(box);
+                assert (iter != -1, "ARGraph.assertValidBox: iter != -1 FAILED");
+            };
+
+            this.assertValidPath = function(path){
+                path.assertValid();
+                assert( path.getOwner().equals(this), "ARGraph.assertValidPath: path.getOwner().equals(this) FAILED");
+
+                var iter = paths.indexOf(path);
+                assert (iter != -1, "ARGraph.assertValidPath: iter != -1 FAILED");
+
+                var pointList = path.getPointList(),
+                    startPort = path.getStartPort();
+
+                assert(startPort != null, "ARGraph.assertValidPath: startPort != null FAILED");
+                startPort.assertValid();
+                var ownerBox = startPort.getOwner(),
+                    boxOwnerGraph = ownerBox.getOwner();
+                assert( boxOwnerGraph.equals(this), "ARGraph.assertValidPath: boxOwnerGraph.equals(this) FAILED");
+                ownerBox.assertValidPort(startPort);
+
+                if( path.isConnected() )
+                    startPort.assertValidStartEndPoint(pointList[0], Dir_None, 1);
+
+                var endPort = path.getEndPort();
+                assert(endPort != null, "ARGraph.assertValidPath: endPort != null FAILED");
+                endPort.assertValid();
+                var ownerBox2 = endPort.getOwner();
+                assert( ownerBox2.getOwner().equals(this), "ARGraph.assertValidPath: ownerBox2.getOwner().equals(this) FAILED");
+                ownerBox2.assertValidPort(endPort);
+
+                if( path.isConnected() )
+                {
+                    var itr = pointList.length;
+                    endPort.assertValidStartEndPoint(pointList[--itr], Dir_None, 0);
+                }
+                else
+                {
+                    assert( path.hasNoPoint(), "ARGraph.assertValidPath: path.hasNoPoint() FAILED" );
                 }
 
-                this.assertValidPath = function(path){
-                    path.assertValid();
-                    assert( path.getOwner().equals(this), "ARGraph.assertValidPath: path.getOwner().equals(this) FAILED");
+                path.assertValidPoints();
 
-                    var iter = paths.indexOf(path);
-                    assert (iter != -1, "ARGraph.assertValidPath: iter != -1 FAILED");
+                if( pointList.length !== 0)
+                {
+                    assert( pointList.length >= 2, "ARGraph.assertValidPath: pointList.length >= 2 FAILED" );
+                    var pos = 0;
+                    assert( pos != pointList.length, "ARGraph.assertValidPath: pos != pointList.length FAILED");
 
-                    var pointList = path.getPointList(),
-                        startPort = path.getStartPort();
+                    assert( isPointInBox(pointList[pos++]), "ARGraph.assertValidPath: isPointInBox(pointList[pos++]) FAILED");
 
-                    assert(startPort != null, "ARGraph.assertValidPath: startPort != null FAILED");
-                    startPort.assertValid();
-                    var ownerBox = startPort.getOwner(),
-                        boxOwnerGraph = ownerBox.getOwner();
-                    assert( boxOwnerGraph.equals(this), "ARGraph.assertValidPath: boxOwnerGraph.equals(this) FAILED");
-                    ownerBox.assertValidPort(startPort);
-
-                    if( path.isConnected() )
-                        startPort.assertValidStartEndPoint(pointList[0], Dir_None, 1);
-
-                    var endPort = path.getEndPort();
-                    assert(endPort != null, "ARGraph.assertValidPath: endPort != null FAILED");
-                    endPort.assertValid();
-                    var ownerBox2 = endPort.getOwner();
-                    assert( ownerBox2.getOwner().equals(this), "ARGraph.assertValidPath: ownerBox2.getOwner().equals(this) FAILED");
-                    ownerBox2.assertValidPort(endPort);
-
-                    if( path.isConnected() )
+                    while( pos < pointList.length)
                     {
-                        var itr = pointList.length;
-                        endPort.assertValidStartEndPoint(pointList[--itr], Dir_None, 0);
-                    }
-                    else
-                    {
-                        assert( path.hasNoPoint(), "ARGraph.assertValidPath: path.hasNoPoint() FAILED" );
-                    }
-
-                    path.assertValidPoints();
-
-                    if( pointList.length !== 0)
-                    {
-                        assert( pointList.length >= 2, "ARGraph.assertValidPath: pointList.length >= 2 FAILED" );
-                        var pos = 0;
-                        assert( pos != pointList.length, "ARGraph.assertValidPath: pos != pointList.length FAILED");
-
-                        assert( isPointInBox(pointList[pos++]), "ARGraph.assertValidPath: isPointInBox(pointList[pos++]) FAILED");
-
-                        while( pos < pointList.length)
-                        {
-                            var p = pointList[pos++];
-                            if( pos != pointList.length)
-                                assert( !isPointInBox(p), "ARGraph.assertValidPath: !isPointInBox(p) FAILED");
-                            else
-                                assert( isPointInBox(p), "ARGraph.assertValidPath: isPointInBox(p) FAILED" );
-                        }
+                        var p = pointList[pos++];
+                        if( pos != pointList.length)
+                            assert( !isPointInBox(p), "ARGraph.assertValidPath: !isPointInBox(p) FAILED");
+                        else
+                            assert( isPointInBox(p), "ARGraph.assertValidPath: isPointInBox(p) FAILED" );
                     }
                 }
+            };
 
-                this.dumpPaths = function(pos, c){
-                    console.log("Paths dump pos " + pos + ", c " + c);
-                    var iter = 0,
-                        i = 0;
+            this.dumpPaths = function(pos, c){
+                console.log("Paths dump pos " + pos + ", c " + c);
+                var iter = 0,
+                    i = 0;
 
-                    while (iter < paths.length)
-                    {
-                        console.log(i + ". Path: ");
-                        (paths[iter]).getPointList().dumpPoints("DumpPaths");
+                while (iter < paths.length)
+                {
+                    console.log(i + ". Path: ");
+                    (paths[iter]).getPointList().dumpPoints("DumpPaths");
 
-                        ++iter;
-                        i++;
-                    }
-
-                    dumpEdgeLists();
+                    ++iter;
+                    i++;
                 }
 
-                this.dumpEdgeLists = function(){
-                    if(DEBUG_DEEP){
-                        horizontal.dumpEdges("Horizontal edges:");
-                        vertical.dumpEdges("Vertical edges:");
-                    }
+                dumpEdgeLists();
+            };
+
+            this.dumpEdgeLists = function(){
+                if(DEBUG_DEEP){
+                    horizontal.dumpEdges("Horizontal edges:");
+                    vertical.dumpEdges("Vertical edges:");
                 }
-            }
+            };
 
             // AutoRouterGraph
         };
@@ -5799,7 +5781,7 @@ _logger.warning("Adding "
             this.Delete = function (){
                 deleteAll();
                 this.setOwner(null);
-            }
+            };
 
             //----Points
 
@@ -5814,7 +5796,7 @@ _logger.warning("Adding "
                 }
                 
                 return points.getLength();
-            }
+            };
 
             function getEdgePosAt(point, nearness){
                 var tmp = points.getTailEdge(a, b),
@@ -5835,44 +5817,44 @@ _logger.warning("Adding "
                 }
 
                 return points.getLength();
-            }
+            };
 
             this.getOwner = function(){
                 return owner;
-            }
+            };
 
             this.hasOwner = function(){
                 return owner !== null;
-            }
+            };
 
             this.setOwner = function(newOwner){
                 owner = newOwner;
-            }
+            };
 
             this.setStartPort = function(newPort){
                 startport = newPort;
-            }
+            };
 
             this.setEndPort = function(newPort){
                 endport = newPort;
-            }
+            };
 
             this.clearPorts = function(){
                 startport = null;
                 endport = null;
-            }
+            };
 
             this.getStartPort = function(){
                 return startport;
-            }
+            };
 
             this.getEndPort = function(){
                 return endport;
-            }
+            };
 
             this.isConnected = function(){
                 return (state & ARPATHST_Connected) != 0;
-            }
+            };
 
             this.addTail = function(pt){
                 assert( !this.isConnected(), "ARPath.addTail: !this.isConnected() FAILED");
@@ -5880,40 +5862,40 @@ if(!(pt instanceof Array)){
 pt = [pt];
 }
                 points.push(pt);
-            }
+            };
 
             this.deleteAll = function(){
                 points = new ArPointListPath();
                 state = ARPATHST_Default;
-            }
+            };
 
             this.hasNoPoint = function(){
                 return points.getLength() === 0;
-            }
+            };
 
             this.getPointCount = function(){
                 return points.getLength();
-            }
+            };
 
             this.getStartPoint = function(){
                 assert( points.getLength() >= 2, "ARPath.getStartPoint: points.getLength() >= 2 FAILED");
                 return points[0];
-            }
+            };
 
             this.getEndPoint = function(){
                 assert( points.getLength() >= 2, "ARPath.getEndPoint: points.getLength() >= 2 FAILED");
                 return points[points.getLength() - 1];
-            }
+            };
 
             this.getStartBox = function(){
                 var startbox = startport.getOwner();
                 return startbox.getRect();
-            }
+            };
 
             this.getEndBox = function(){
                 var endbox = endport.getOwner();
                 return endbox.getRect();
-            }
+            };
 
             this.getOutOfBoxStartPoint = function(hintDir){//TODO consider adding a len
                 var startBoxRect = this.getStartBox();
@@ -5936,7 +5918,7 @@ pt = [pt];
                 assert( points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxStartPoint: points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
 
                 return p;
-            }
+            };
 
             this.getOutOfBoxEndPoint = function(hintDir){
                 var endBoxRect = this.getEndBox();
@@ -5960,7 +5942,7 @@ pt = [pt];
                 assert( points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == (d), "ARPath.getOutOfBoxEndPoint: points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)).equals(d) FAILED"); 
 
                 return p;
-            }
+            };
 
             this.simplifyTrivially = function(){
                 assert( !this.isConnected(), "ARPath.simplifyTrivially: !isConnected() FAILED" );
@@ -6018,11 +6000,11 @@ pt = [pt];
 
             if(DEBUG)
                 AssertValidPoints();
-            }
+            };
 
             this.getPointList = function(){
                 return points;
-            }
+            };
 
             this.setPoints = function(npoints){
                 points = new ArPointListPath();
@@ -6031,7 +6013,7 @@ pt = [pt];
                 while(pos < npoints.getLength()){
                     points.push(npoints.pos);
                 }
-            }
+            };
 
             this.getSurroundRect = function(){
                 var rect = new ArRect(INT_MAX,INT_MAX,INT_MIN,INT_MIN),
@@ -6054,15 +6036,15 @@ pt = [pt];
                 }
 
                 return rect;
-            }
+            };
 
             this.isEmpty = function(){
                 return points.getLength() === 0;
-            }
+            };
 
             this.isPathAt = function(pt, nearness){
                 return getEdgePosAt(point, nearness) != points.getLength()();
-            }
+            };
 
             this.isPathClip = function(r, isStartOrEndRect){
                 var tmp = points.getTailEdge(a, b),
@@ -6095,31 +6077,31 @@ pt = [pt];
                 }
 
                 return false;
-            }
+            };
 
             this.setAttributes = function(attr){
                 attributes = attr;
-            }
+            };
 
             this.getAttributes = function(){
                 return attributes;
-            }
+            };
 
             this.isFixed = function(){
                 return ((attributes & ARPATH_Fixed) != 0);
-            }
+            };
 
             this.isMoveable = function(){
                 return ((attributes & ARPATH_Fixed) === 0);
-            }
+            };
 
             this.isHighLighted = function(){
                 return ((attributes & ARPATH_HighLighted) != 0);
-            }
+            };
 
             this.getState = function(){
                 return state;
-            }
+            };
 
             this.setState = function(s){
                 assert( owner !== null, "ARPath.setState: owner !== null FAILED");
@@ -6127,7 +6109,7 @@ pt = [pt];
                 state = s;
                 if(DEBUG)
                     assertValid();
-            }
+            };
 
             this.getEndDir = function(){
                 var a = attributes & ARPATH_EndMask;
@@ -6135,7 +6117,7 @@ pt = [pt];
                         a & ARPATH_EndOnRight ? Dir_Right :
                         a & ARPATH_EndOnBottom ? Dir_Bottom :
                         a & ARPATH_EndOnLeft ? Dir_Left : Dir_None;
-            }
+            };
 
             this.getStartDir = function(){
                 var a = attributes & ARPATH_StartMask;
@@ -6143,19 +6125,19 @@ pt = [pt];
                         a & ARPATH_StartOnRight ? Dir_Right :
                         a & ARPATH_StartOnBottom ? Dir_Bottom :
                         a & ARPATH_StartOnLeft ? Dir_Left : Dir_None;
-            }
+            };
                 
             this.setEndDir = function(arpath_end){
                 attributes = (attributes & ~ARPATH_EndMask) + arpath_end;
-            }
+            };
 
             this.setStartDir = function(arpath_start){
                 attributes = (attributes & ~ARPATH_StartMask) + arpath_start;
-            }
+            };
 
             this.setCustomPathData = function(pDat){
                 customPathData = pDat;
-            }
+            };
             
             this.applyCustomizationsBeforeAutoConnectPoints = function(plist){
                 plist = [];
@@ -6175,7 +6157,7 @@ pt = [pt];
                     }
                     ++ii;
                 }
-            }
+            };
 
             this.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
                 if (customPathData.length === 0)
@@ -6258,7 +6240,7 @@ pt = [pt];
                     points.getNextEdgePtrs(pos, startpoint, endpoint);
                     currEdgeIndex++;
                 }
-            }
+            };
 
             this.removePathCustomizations = function(){
                 var ii = 0;
@@ -6266,7 +6248,7 @@ pt = [pt];
                     pathDataToDelete.push(customPathData[ii++]);
                 }
                 customPathData = [];
-            }
+            };
 
             this.markPathCustomizationsForDeletion = function(asp){
                 var ii = 0;
@@ -6275,7 +6257,7 @@ pt = [pt];
                         pathDataToDelete.push(customPathData[ii]);
                     ++ii;
                 }
-            }
+            };
 
             this.removeInvalidPathCustomizations = function(asp){
                 // We only inhibit/delete those edges, which has an edge count
@@ -6296,22 +6278,22 @@ pt = [pt];
                         ++ii;
                     }
                 }
-            }
+            };
             
             this.areTherePathCustomizations = function(){
                 return customPathData.length !== 0;
-            }
+            };
 
             this.areThereDeletedPathCustomizations = function(){
                 return pathDataToDelete.length !== 0;
-            }
+            };
 
             this.getDeletedCustomPathData = function(cpd){
                 var ii = 0;
                 while(ii < pathDataToDelete.length){
                     cpd.push(pathDataToDelete[ii++]);
                 }
-            }
+            };
 
             this.getCustomizedEdgeIndexes = function(indexes){
                 indexes = [];
@@ -6326,31 +6308,29 @@ pt = [pt];
                     }
                     ++ii;
                 }
-            }
+            };
 
             this.isAutoRouted = function(){
                 return isAutoRoutingOn;
-            }
+            };
             
             this.setAutoRouting = function(arState){
                 isAutoRoutingOn = arState;
-            }
+            };
 
             this.destroy = function(){
                 this.setStartPort(null);
                 this.setEndPort(null);
-            }
+            };
 
             this.getExtPtr = function(){
                 return extptr;
-            }
+            };
 
             this.setExtPtr = function(p){
                 extptr = p;
-            }
+            };
 
-            if(DEBUG){
-            
             this.assertValid = function(){
                 if( startport !== null )
                     startport.assertValid();
@@ -6362,16 +6342,14 @@ pt = [pt];
                     assert( points.getLength() !== 0, "ARPath.assertValid: points.getLength() !== 0 FAILED" );
                 else
                     assert( points.getLength() === 0, "ARPath.assertValid: points.getLength() === 0 FAILED");
-            }
+            };
 
             this.assertValidPos = function(pos){
                 return pos < points.getLength();
-            }
+            };
 
             this.assertValidPoints = function(){
-            }
-                
-            }
+            };
             
         };
 
@@ -7052,7 +7030,17 @@ pt = [pt];
         };
 
         AutoRouter.prototype.remove = function(item){
-            router.remove(item);
+            assert(item !== undefined, "AutoRouter:remove Cannot remove undefined object");
+            item = item.box || item;
+
+            if(item instanceof AutoRouterBox){
+                this.router.deleteBox(item);
+
+            }else if(item instanceof AutoRouterPath){
+                this.router.deletePath(item);
+
+            }else
+                throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath";
         };
 
         AutoRouter.prototype.move = function( box, details ){
