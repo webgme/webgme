@@ -7,18 +7,21 @@ define(['js/Constants',
     'text!../Core/ModelDecorator.html',
     '../Core/ModelDecorator.Core',
     '../Core/ModelDecorator.Constants',
+    'js/DragDrop/DragConstants',
+    'js/DragDrop/DragHelper',
     'css!./ModelDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DiagramDesignerWidgetDecoratorBase,
                                                           DiagramDesignerWidgetConstants,
                                                           modelDecoratorTemplate,
                                                           ModelDecoratorCore,
-                                                          ModelDecoratorConstants) {
+                                                          ModelDecoratorConstants,
+                                                          DragConstants,
+                                                          DragHelper) {
 
     var ModelDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "ModelDecoratorDiagramDesignerWidget",
         PORT_CONTAINER_OFFSET_Y = 21,
-        TREEBROWSERWIDGET = 'TreeBrowserWidget',
         ACCEPT_DROPPABLE_CLASS = 'accept-droppable',
         DRAGGABLE_MOUSE = 'DRAGGABLE';
 
@@ -353,24 +356,13 @@ define(['js/Constants',
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDrop = function (helper) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO),
-            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
-            gmeID;
+        var dragInfo = helper.data(DragConstants.DRAG_INFO),
+            dragItems = DragHelper.getDragItems(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo);
 
         if (this.__acceptDroppable === true) {
-
-            if (dragSource === TREEBROWSERWIDGET) {
-                if (metaInfo) {
-                    if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                        gmeID = metaInfo[CONSTANTS.GME_ID];
-
-                        if (gmeID && (!_.isArray(gmeID) || (gmeID.length === 1))) {
-
-                            this._setReferenceValue(gmeID);
-
-                        }
-                    }
-                }
+            if (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1) {
+                this._setReferenceValue(dragItems[0]);
             }
         }
 
@@ -378,23 +370,11 @@ define(['js/Constants',
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__onBackgroundDroppableAccept = function (helper) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO),
-            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
-            gmeID;
+        var dragInfo = helper.data(DragConstants.DRAG_INFO),
+            dragItems = DragHelper.getDragItems(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo);
 
-        if (dragSource === TREEBROWSERWIDGET) {
-            if (metaInfo) {
-                if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                    gmeID = metaInfo[CONSTANTS.GME_ID];
-
-                    if (gmeID && (!_.isArray(gmeID) || (gmeID.length === 1))) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
+        return (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1);
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__doAcceptDroppable = function (accept) {

@@ -20,7 +20,8 @@ $diagram-designer-selection-outline-s-btn-shadow-end: rgba(0, 0, 0, 0.6);
 /*error decorator properties*/
 $error-decorator-background-color: #F2DEDE;
 
-$items-accept-droppable-background-color: rgba(0, 255, 0, 0.05);
+$accept-droppable-background-color: rgba(0, 255, 0, 0.1);
+$reject-droppable-background-color: rgba(255, 0, 0, 0.1);
 
 $path-edit-segment-color: rgba(0, 0, 0, 0);
 $new-segment-point-marker-background-color: #FFFF00;
@@ -235,7 +236,7 @@ $connection-drawing-connector-background-color: #00FF00;
     }
   }
 
-  .dropRegion {
+  .drop-region {
     width: 0;
     height: 0;
     position: absolute;
@@ -243,7 +244,11 @@ $connection-drawing-connector-background-color: #00FF00;
     left: 0;
 
     &.accept-droppable {
-      background-color: $items-accept-droppable-background-color;
+      background-color: $accept-droppable-background-color;
+    }
+
+    &.reject-droppable {
+      background-color: $reject-droppable-background-color;
     }
   }
 }

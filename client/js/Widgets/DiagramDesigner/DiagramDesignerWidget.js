@@ -27,6 +27,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/HighlightManager',
     'js/Widgets/DiagramDesigner/SearchManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -47,11 +48,11 @@ define(['logManager',
                                                       DiagramDesignerWidgetKeyboard,
                                                       HighlightManager,
                                                       SearchManager,
-                                                      DiagramDesignerWidgetContextMenu) {
+                                                      DiagramDesignerWidgetContextMenu,
+                                                      DiagramDesignerWidgetDroppable) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
-        ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
         GUID_DIGITS = 6;
@@ -472,44 +473,7 @@ define(['logManager',
         this._resizeItemContainer();
 
         if (this._droppable === true) {
-            //hook up drop event handler on children container
-
-            this._acceptDroppable = false;
-
-            this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
-
-            this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
-
-            /* SET UP DROPPABLE DROP REGION */
-            this.skinParts.$dropRegion.droppable({
-                over: function( event, ui ) {
-                    self.selectionManager.clear();
-                    self._onBackgroundDroppableOver(ui);
-                },
-                out: function( event, ui ) {
-                    self._onBackgroundDroppableOut(ui);
-                },
-                drop: function (event, ui) {
-                    self._onBackgroundDrop(event, ui);
-                },
-                activate: function( event, ui ) {
-                    var m = 0;
-                    if (ui.helper) {
-                        if (self.mode === self.OPERATING_MODES.DESIGN) {
-                            self.skinParts.$dropRegion.css({"width": self._containerSize.w - 2 * m,
-                                "height": self._containerSize.h - 2 * m,
-                                "top": self._scrollPos.top + m,
-                                "left": self._scrollPos.left + m });
-                        }    
-                    }
-                },
-                deactivate: function( event, ui ) {
-                    self.skinParts.$dropRegion.css({"width": "0px",
-                        "height": "0px",
-                        "top": "0px",
-                        "left": "0px"});
-                }
-            });
+            this._initDroppable();
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
@@ -1083,55 +1047,6 @@ define(['logManager',
 
     /********* ROUTE MANAGER CHANGE **********************/
 
-    /************** ITEM CONTAINER DROPPABLE HANDLERS *************/
-
-    DiagramDesignerWidget.prototype._onBackgroundDroppableOver = function (ui) {
-        var helper = ui.helper;
-
-        if (this.onBackgroundDroppableAccept(helper) === true) {
-            this._doAcceptDroppable(true);
-        }
-    };
-
-    DiagramDesignerWidget.prototype._onBackgroundDroppableOut = function (/*ui*/) {
-        this._doAcceptDroppable(false);
-    };
-
-    DiagramDesignerWidget.prototype._onBackgroundDrop = function (event, ui) {
-        var helper = ui.helper,
-            mPos = this.getAdjustedMousePos(event),
-            posX = mPos.mX,
-            posY = mPos.mY;
-
-        if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(helper, { "x": posX, "y": posY }, event);
-        }
-
-        this._doAcceptDroppable(false);
-    };
-
-    DiagramDesignerWidget.prototype._doAcceptDroppable = function (accept) {
-        if (accept === true) {
-            this._acceptDroppable = true;
-            this.skinParts.$dropRegion.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
-        } else {
-            this._acceptDroppable = false;
-            this.skinParts.$dropRegion.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
-        }
-    };
-
-    DiagramDesignerWidget.prototype.onBackgroundDroppableAccept = function (helper) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDroppableAccept not overridden in controller!!!");
-        return false;
-    };
-
-    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position, event) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDrop not overridden in controller!!! position: '" + JSON.stringify(position) + "'");
-    };
-
-    /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
-
-    
     /********** GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ********/
 
     DiagramDesignerWidget.prototype._getAssociatedConnectionsForItems = function (itemIdList) {
@@ -1463,22 +1378,6 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
-    DiagramDesignerWidget.prototype._enableDroppable = function (enabled) {
-        if (this.skinParts.$dropRegion && this.skinParts.$dropRegion.hasClass('ui-droppable')) {
-            if (enabled === true) {
-                this.skinParts.$dropRegion.droppable("enable");
-                if (this._savedAcceptDroppable !== undefined) {
-                    this._doAcceptDroppable(this._savedAcceptDroppable);
-                    this._savedAcceptDroppable = undefined;
-                }
-            } else {
-                this.skinParts.$dropRegion.droppable("disable");
-                this._savedAcceptDroppable = this._acceptDroppable;
-                this._doAcceptDroppable(false);
-            }
-        }
-    };
-
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
@@ -1490,6 +1389,7 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
 
 
     return DiagramDesignerWidget;

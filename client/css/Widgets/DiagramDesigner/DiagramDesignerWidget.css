@@ -150,14 +150,16 @@
       opacity: 1.0; }
     .diagram-designer .items.connection-drawing .connector:hover {
       background-color: lime; }
-  .diagram-designer .dropRegion {
+  .diagram-designer .drop-region {
     width: 0;
     height: 0;
     position: absolute;
     top: 0;
     left: 0; }
-    .diagram-designer .dropRegion.accept-droppable {
-      background-color: rgba(0, 255, 0, 0.05); }
+    .diagram-designer .drop-region.accept-droppable {
+      background-color: rgba(0, 255, 0, 0.1); }
+    .diagram-designer .drop-region.reject-droppable {
+      background-color: rgba(255, 0, 0, 0.1); }
 
 div.diagram-designer-zoom {
   height: 100px;

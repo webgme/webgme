@@ -4,11 +4,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
-    './MetaRelations'], function (logManager,
+    './MetaRelations',
+    'js/DragDrop/DragHelper'], function (logManager,
                                         util,
                                         CONSTANTS,
                                         nodePropertyNames,
-                                        MetaRelations) {
+                                        MetaRelations,
+                                        DragHelper) {
 
     var MetaEditorControlDiagramDesignerWidgetEventHandlers;
 
@@ -31,12 +33,12 @@ define(['logManager',
             self._onSelectionDelete(idList);
         };
 
-        this.diagramDesigner.onBackgroundDroppableAccept = function (helper) {
-            return self._onBackgroundDroppableAccept(helper);
+        this.diagramDesigner.onBackgroundDroppableAccept = function (event, dragInfo) {
+            return self._onBackgroundDroppableAccept(event, dragInfo);
         };
 
-        this.diagramDesigner.onBackgroundDrop = function (helper, position) {
-            self._onBackgroundDrop(helper, position);
+        this.diagramDesigner.onBackgroundDrop = function (event, dragInfo, position) {
+            self._onBackgroundDrop(event, dragInfo, position);
         };
 
         this.diagramDesigner.onCheckChanged = function (value, isChecked) {
@@ -54,26 +56,15 @@ define(['logManager',
     /**********************************************************/
     /*  HANDLE OBJECT DRAG & DROP ACCEPTANCE                  */
     /**********************************************************/
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO),
-            gmeIDList,
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
+        var gmeIDList = DragHelper.getDragItems(dragInfo),
             i;
 
         //return true if there is at least one item among the dragged ones that is not on the sheet yet
-        if (metaInfo) {
-            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                gmeIDList = metaInfo[CONSTANTS.GME_ID];
-
-                if (_.isArray(gmeIDList)) {
-                    for (i = 0; i < gmeIDList.length; i+= 1) {
-                        if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
-                            return true;
-                        }
-                    }
-                } else {
-                    if (this._GMENodes.indexOf(gmeIDList) === -1 ) {
-                        return true;
-                    }
+        if (gmeIDList.length > 0) {
+            for (i = 0; i < gmeIDList.length; i+= 1) {
+                if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
+                    return true;
                 }
             }
         }
@@ -88,9 +79,8 @@ define(['logManager',
     /**********************************************************/
     /*  HANDLE OBJECT DRAG & DROP TO SHEET                    */
     /**********************************************************/
-    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO),
-            gmeIDList,
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
+        var gmeIDList = DragHelper.getDragItems(dragInfo),
             cNode = this._client.getNode(this.currentNodeInfo.id),
             registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
             i,
@@ -110,24 +100,17 @@ define(['logManager',
             return added;
         };
 
-        if (metaInfo) {
-            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                gmeIDList = metaInfo[CONSTANTS.GME_ID];
 
-                if (_.isArray(gmeIDList)) {
-                    for (i = 0; i < gmeIDList.length; i += 1) {
-                        if (addMember(gmeIDList[i], position)) {
-                            position.x += 20;
-                            position.y += 20;
-                        }
-                    }
-                } else {
-                    addMember(gmeIDList, position);
+        if (gmeIDList.length > 0) {
+            for (i = 0; i < gmeIDList.length; i += 1) {
+                if (addMember(gmeIDList[i], position)) {
+                    position.x += 20;
+                    position.y += 20;
                 }
-
-                this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
             }
         }
+
+        this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
     };
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */

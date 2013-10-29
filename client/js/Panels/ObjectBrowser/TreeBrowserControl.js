@@ -197,6 +197,17 @@ define(['logManager',
             client.createChild({parentId: nodeId});
         };
 
+
+        treeBrowser.getDragEffects = function (el) {
+            return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
+                treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
+        };
+
+        treeBrowser.getDragItems = function (el) {
+            return treeBrowser.getSelectedIDs();
+        };
+
         refresh = function (eventType, objectId) {
             var nodeDescriptor = null,
                 currentChildId = null,

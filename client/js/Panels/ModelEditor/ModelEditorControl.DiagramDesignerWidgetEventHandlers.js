@@ -4,11 +4,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants'], function (logManager,
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
+    'js/DragDrop/DragHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
-                                                        DiagramDesignerWidgetConstants) {
+                                                        DiagramDesignerWidgetConstants,
+                                                        DragHelper) {
 
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
@@ -56,12 +58,12 @@ define(['logManager',
             self._onUnregisterSubcomponent(objID, sCompID);
         };
 
-        this.designerCanvas.onBackgroundDroppableAccept = function (helper) {
-            return self._onBackgroundDroppableAccept(helper);
+        this.designerCanvas.onBackgroundDroppableAccept = function (event, dragInfo) {
+            return self._onBackgroundDroppableAccept(event, dragInfo);
         };
 
-        this.designerCanvas.onBackgroundDrop = function (helper, position, event) {
-            self._onBackgroundDrop(helper, position, event);
+        this.designerCanvas.onBackgroundDrop = function (event, dragInfo, position) {
+            self._onBackgroundDrop(event, dragInfo, position);
         };
 
         this.designerCanvas.onSelectionChanged = function (selectedIds) {
@@ -276,20 +278,22 @@ define(['logManager',
     };
 
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (helper) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO);
-        if (metaInfo) {
-            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
-                return true;
-            }
-        }
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
+        var accept = false,
+            items = DragHelper.getDragItems(dragInfo),
+            effects = DragHelper.getDragEffects(dragInfo);
 
-        return false;
+        accept = (items.length > 0 && (effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_COPY) !== -1 ||
+            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_MOVE) !== -1 ||
+            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 ||
+            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) !== -1));
+
+        return accept;
     };
 
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (helper, position, event) {
-        var metaInfo = helper.data(CONSTANTS.META_INFO),
-            dragSource = helper.data(CONSTANTS.DRAG_SOURCE),
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
+        var items = DragHelper.getDragItems(dragInfo),
+            effects = DragHelper.getDragEffects(dragInfo),
             gmeID,
             self = this,
             handleDrop;
@@ -305,14 +309,12 @@ define(['logManager',
 
             self._client.startTransaction();
 
-            self.logger.warning('handleDrop idList: ' + idList);
-
             for (i = 0; i < idList.length; i+= 1) {
                 //if dragsource is PartBrowserWidget --> instantiate
                 // otherwise create reference
                 createChildParams = undefined;
                 switch (key) {
-                    case "inherit":
+                    case "CREATE_INSTANCE":
                         createChildParams = { "parentId": self.currentNodeInfo.id,
                             "baseId": idList[i]};
 
@@ -328,7 +330,7 @@ define(['logManager',
                             }
                         }
                         break;
-                    case "reference":
+                    case "CREATE_REFERENCE":
                         createChildParams = { "parentId": self.currentNodeInfo.id};
 
                         newID = self._client.createChild(createChildParams);
@@ -356,10 +358,10 @@ define(['logManager',
                             }
                         }
                         break;
-                    case "move":
+                    case "MOVE":
                         self._client.moveMoreNodes(self.currentNodeInfo.id, [idList[i]]);
                         break;
-                    case "copy":
+                    case "COPY":
                         self._client.copyMoreNodes(self.currentNodeInfo.id, [idList[i]]);
                         break;
                     default:
@@ -372,50 +374,53 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
-        if (metaInfo) {
-            if (metaInfo.hasOwnProperty(CONSTANTS.GME_ID)) {
+        if (items.length > 0) {
+            this.logger.debug('_onBackgroundDrop gmeID: ' + items);
 
-                gmeID = metaInfo[CONSTANTS.GME_ID];
+            //only one possibility to drop
+            if (effects.length === 1 && effects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                handleDrop('CREATE_INSTANCE', items, position);
+            } else {
+                //multiple drop possibility, create context menu
+                this.designerCanvas.createMenu(function (trigger, e) {
+                    var menuItems = {},
+                        i;
 
-                if (!_.isArray(gmeID)) {
-                    gmeID = [gmeID];
-                }
+                    for (i = 0; i < effects.length; i += 1) {
+                        switch (effects[i]) {
+                            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                                menuItems['COPY'] = {
+                                    "name": "Copy here",
+                                    callback: function(key, options) {
+                                        handleDrop(key, items, position);
+                                    },
+                                    "icon": false
+                                };
+                                break;
+                            case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                                menuItems['MOVE'] = {
+                                        "name": "Move here",
+                                        callback: function(key, options) {
+                                            handleDrop(key, items, position);
+                                        },
+                                        "icon": false
+                                    };
+                                break;
+                            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                                menuItems['CREATE_REFERENCE'] = {
+                                    "name": "Create reference here",
+                                    callback: function(key, options) {
+                                        handleDrop(key, items, position);
+                                    },
+                                    "icon": false
+                                };
+                                break;
+                            default:
+                        }
+                    }
 
-                this.logger.warning('_onBackgroundDrop gmeID: ' + gmeID);
-
-                if (dragSource !== PARTBROWSERWIDGET) {
-                    this.designerCanvas.createMenu(function (trigger, e) {
-                        var menuItems = {};
-
-                        menuItems = {
-                            "move":  {
-                                "name": "Move here",
-                                callback: function(key, options) {
-                                    handleDrop(key, gmeID, position);
-                                },
-                                "icon": false
-                            },
-                            "copy":  {
-                                "name": "Copy here",
-                                callback: function(key, options) {
-                                    handleDrop(key, gmeID, position);
-                                },
-                                "icon": false
-                            },
-                            "reference":  {
-                                "name": "Create reference",
-                                callback: function(key, options) {
-                                    handleDrop(key, gmeID, position);
-                                },
-                                "icon": false
-                            }
-                        };
-
-                        return menuItems;
-                    }, this.designerCanvas.posToPageXY(position.x, position.y));
-                } else {
-                    handleDrop("inherit", gmeID, position);
-                }
+                    return menuItems;
+                }, this.designerCanvas.posToPageXY(position.x, position.y));
             }
         }
     };

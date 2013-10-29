@@ -11,6 +11,7 @@ define([], function () {
          * TERRITORY EVENTS
          */
         SELF : "__SELF__",
+
         /*
          * CLASS DEFINITIONS
          */
@@ -27,6 +28,9 @@ define([], function () {
         SEGMENT_POINT_MOVE_PATH_CLASS : 'segment-point-move-path',
         HIGHLIGHT_MODE_CLASS: 'highlight-mode',
         ITEM_HIGHLIGHT_CLASS: 'highlighted',
+        DROP_REGION_CLASS: 'drop-region',
+        DROP_REGION_ACCEPT_DROPPABLE_CLASS: 'accept-droppable',
+        DROP_REGION_REJECT_DROPPABLE_CLASS: 'reject-droppable',
 
         /*DOM ELEMENT ATTRIBUTES*/
         DATA_ITEM_ID : 'data-oid',

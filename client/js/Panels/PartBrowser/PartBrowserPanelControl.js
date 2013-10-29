@@ -20,6 +20,8 @@ define(['logManager',
         this._currentNodeParts = [];
         this._componentIDPartIDMap = {};
 
+        this._initDragDropFeatures();
+
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
     };
@@ -394,6 +396,18 @@ define(['logManager',
         while (len--) {
             this._partBrowserView.setEnabled(this._currentNodeParts[len], this._currentNodePartsCanCreateChild[this._currentNodeParts[len]]);
         }
+    };
+
+    PartBrowserControl.prototype._initDragDropFeatures = function () {
+        var dragEffects = this._partBrowserView.DRAG_EFFECTS;
+
+        this._partBrowserView.getDragEffects = function (el) {
+            return [dragEffects.DRAG_CREATE_INSTANCE];
+        };
+
+        this._partBrowserView.getDragItems = function (el) {
+            return [el.attr('id')];
+        };
     };
 
     return PartBrowserControl;

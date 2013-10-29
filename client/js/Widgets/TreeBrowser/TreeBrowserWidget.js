@@ -10,13 +10,13 @@
 define(['logManager',
     'js/Constants',
     './TreeBrowserWidget.Keyboard',
+    'js/DragDrop/DragSource',
     'lib/jquery/jquery.dynatree-1.2.4.min',
     'lib/jquery/jquery.contextMenu',
-    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard) {
+    'css!/css/Widgets/TreeBrowser/TreeBrowserWidget'], function (logManager, CONSTANTS, TreeBrowserWidgetKeyboard, dragSource) {
 
     var NODE_PROGRESS_CLASS = 'node-progress',
-        TREE_BROWSER_CLASS = "tree-browser",
-        TREEBROWSERWIDGET = 'TreeBrowserWidget';
+        TREE_BROWSER_CLASS = "tree-browser";
 
     var TreeBrowserWidget = function (container/*, params*/) {
         //get this._logger instance for this component
@@ -395,8 +395,32 @@ define(['logManager',
     };
 
     TreeBrowserWidget.prototype._makeNodeDraggable = function (node) {
-        var self = this,
-            nodeEl = $(node.span),
+        var nodeEl = $(node.span),
+            self = this;
+
+        dragSource.makeDraggable(nodeEl, {
+            'helper': function (event) {
+                return self._dragHelper(this, event);
+            },
+            'dragItems': function (el) {
+                return self.getDragItems(el);
+            },
+            'dragEffects': function (el) {
+                return self.getDragEffects(el);
+            },
+            'dragParams': function (el) {
+                return self.getDragParams(el);
+            }
+        });
+    };
+
+    /* OVERWRITE DragSource.prototype.dragHelper */
+    TreeBrowserWidget.prototype._dragHelper = function (el, event) {
+        var helperEl = el.clone(),
+            wrapper = $('<div class="' + TREE_BROWSER_CLASS + '"><ul class="dynatree-container"><li></li></ul></div>'),
+            selectedIds,
+            selNodes,
+            i,
             removeClasses = ['dynatree-selected',
             'dynatree-focus',
             'dynatree-has-children',
@@ -405,49 +429,47 @@ define(['logManager',
             'dynatree-exp-cdl',
             'dynatree-ico-c'];
 
-        nodeEl.draggable({
-            zIndex: 100000,
-            appendTo: $(CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first(),
-            cursorAt: { left: 0, top: -2 },
-            helper: function (/*event*/) {
-                var helperEl = nodeEl.clone(),
-                    wrapper = $('<div class="' + TREE_BROWSER_CLASS + '"><ul class="dynatree-container"><li></li></ul></div>'),
-                    metaInfo,
-                    selectedIds,
-                    selNodes,
-                    i;
+        //trim down unnecessary DOM elements from it
+        helperEl.children().first().remove();
+        helperEl.removeClass(removeClasses.join(' '));
 
-                //trim down unnecessary DOM elements from it
-                helperEl.children().first().remove();
-                helperEl.removeClass(removeClasses.join(' '));
+        wrapper.find('li').append(helperEl);
 
-                wrapper.find('li').append(helperEl);
+        helperEl = wrapper;
 
-                helperEl = wrapper;
-
-                selectedIds = [];
-                selNodes = self._treeEl.dynatree("getTree").getSelectedNodes();
-                for (i = 0; i < selNodes.length; i += 1) {
-                    if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
-                        selectedIds.push(selNodes[i].data.key);
-                    }
-                }
-
-                if (selectedIds.length > 1) {
-                    var t = helperEl.find('.dynatree-title').text();
-                    helperEl.find('.dynatree-title').text(t + ' (+' + (selectedIds.length - 1) + ')');
-                }
-
-                //add extra GME related drag info
-                metaInfo = {};
-                metaInfo[CONSTANTS.GME_ID] =  selectedIds;
-                helperEl.data(CONSTANTS.META_INFO, metaInfo);
-                helperEl.data(CONSTANTS.DRAG_SOURCE, TREEBROWSERWIDGET);
-
-                return helperEl;
+        selectedIds = [];
+        selNodes = this._treeEl.dynatree("getTree").getSelectedNodes();
+        for (i = 0; i < selNodes.length; i += 1) {
+            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].data.key);
             }
-        });
+        }
+
+        if (selectedIds.length > 1) {
+            var t = helperEl.find('.dynatree-title').text();
+            helperEl.find('.dynatree-title').text(t + ' (+' + (selectedIds.length - 1) + ')');
+        }
+
+        return helperEl;
     };
+
+    TreeBrowserWidget.prototype.getDragItems = function (el) {
+        this._logger.warning("TreeBrowserWidget.getDragItems is not overridden in the controller!!!");
+        return [];
+    };
+
+    TreeBrowserWidget.prototype.getDragEffects = function (el) {
+        this._logger.warning("TreeBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        return [];
+    };
+
+    TreeBrowserWidget.prototype.getDragParams = function (el) {
+        this._logger.debug("TreeBrowserWidget.getDragParams is not overridden in the controller!!!");
+        return undefined;
+    };
+
+    TreeBrowserWidget.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
+
 
     TreeBrowserWidget.prototype._nodeCreate = function (nodeToEdit) {
 
@@ -624,6 +646,21 @@ define(['logManager',
 
         //return the complete action set for this node
         return menuItems;
+    };
+
+    TreeBrowserWidget.prototype.getSelectedIDs = function () {
+        var selectedIds = [],
+            selNodes,
+            i;
+
+        selNodes = this._treeEl.dynatree("getTree").getSelectedNodes();
+        for (i = 0; i < selNodes.length; i += 1) {
+            if (selNodes[i].data.addClass !== NODE_PROGRESS_CLASS) {
+                selectedIds.push(selNodes[i].data.key);
+            }
+        }
+
+        return selectedIds;
     };
 
     _.extend(TreeBrowserWidget.prototype, TreeBrowserWidgetKeyboard.prototype);
