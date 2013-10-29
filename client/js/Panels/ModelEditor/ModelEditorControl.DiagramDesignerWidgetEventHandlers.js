@@ -382,45 +382,38 @@ define(['logManager',
                 handleDrop('CREATE_INSTANCE', items, position);
             } else {
                 //multiple drop possibility, create context menu
-                this.designerCanvas.createMenu(function (trigger, e) {
-                    var menuItems = {},
-                        i;
+                var menuItems = {},
+                    i;
 
-                    for (i = 0; i < effects.length; i += 1) {
-                        switch (effects[i]) {
-                            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                                menuItems['COPY'] = {
-                                    "name": "Copy here",
-                                    callback: function(key, options) {
-                                        handleDrop(key, items, position);
-                                    },
-                                    "icon": false
-                                };
-                                break;
-                            case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
-                                menuItems['MOVE'] = {
-                                        "name": "Move here",
-                                        callback: function(key, options) {
-                                            handleDrop(key, items, position);
-                                        },
-                                        "icon": false
-                                    };
-                                break;
-                            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
-                                menuItems['CREATE_REFERENCE'] = {
-                                    "name": "Create reference here",
-                                    callback: function(key, options) {
-                                        handleDrop(key, items, position);
-                                    },
-                                    "icon": false
-                                };
-                                break;
-                            default:
-                        }
+                for (i = 0; i < effects.length; i += 1) {
+                    switch (effects[i]) {
+                        case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                            menuItems['COPY'] = {
+                                "name": "Copy here",
+                                "icon": false
+                            };
+                            break;
+                        case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                            menuItems['MOVE'] = {
+                                "name": "Move here",
+                                "icon": false
+                            };
+                            break;
+                        case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                            menuItems['CREATE_REFERENCE'] = {
+                                "name": "Create reference here",
+                                "icon": false
+                            };
+                            break;
+                        default:
                     }
+                }
 
-                    return menuItems;
-                }, this.designerCanvas.posToPageXY(position.x, position.y));
+                this.designerCanvas.createMenu(menuItems, function (key) {
+                        handleDrop(key, items, position);
+                    },
+                    this.designerCanvas.posToPageXY(position.x, position.y)
+                );
             }
         }
     };
