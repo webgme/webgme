@@ -126,9 +126,8 @@ define(['js/DragDrop/DropTarget',
         if (this.skinParts.$dropRegion) {
             if (enabled === true) {
                 dropTarget.enableDroppable(this.skinParts.$dropRegion, true);
-                this.skinParts.$dropRegion.droppable("enable");
                 if (this._savedAcceptDroppable !== undefined) {
-                    this._doAcceptDroppable(this._savedAcceptDroppable, false);
+                    this._doAcceptDroppable(this._savedAcceptDroppable, true);
                     this._savedAcceptDroppable = undefined;
                 }
             } else {
