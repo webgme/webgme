@@ -21,9 +21,14 @@ using requirejs (see the scripts in the bin directory).
 
 ``` 
 	var webGME = require('webgme');
-	var storage = new webgme.storage.mongo({host:'my database address', port:'port to communicate with mongoDB' });
+	var storage = new webGME.clientStorage({'type':'node'}); //other parameters of config can be override here as well, but this must be set
 	storage.openDatabase(function(err){
 		if(!err) {
+		    storage.openProject(function(err,project){
+		        if(!err){
+		            var core = webGME.core(project); //for additional options check the code
+		        }
+		    }
 		}
 	});
 ```
