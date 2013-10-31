@@ -7,59 +7,37 @@
 using namespace v8;
 
 
-class Api {
-  public:
-    Persistent <Object> common_;
-    Persistent <Object> tasync_;
+namespace Api {
 
-    Api(Handle <Object> common, Handle <Object> tasync){
+  static Persistent <Object> common;
+  static Persistent <Object> tasync;
 
-      common_ = Persistent<Object>::New(common);
-      tasync_= Persistent<Object>::New(tasync);
-      CERR << "API Instantiated" << std::endl;
-      CERR << "Common: " << common_->GetIdentityHash() << std::endl;
-      CERR << "Tasync: " << tasync_->GetIdentityHash() << std::endl;
-    }
+  inline Handle<Value> GetObjectAttr(Handle<Value> object, const char * attr){
+    HandleScope scope;
+    return scope.Close(object->ToObject()->Get(String::New(attr)));
+  }
 
-    static Handle<Value> CallMethod(Handle<Object> object, const char * method, int argc = 0, Handle<Value> argv[] = NULL){
-      HandleScope scope;
-      CERR << "Calling: " << method << std::endl;
-      Local<Function> func = Local<Function>::Cast(object->Get(String::New(method)));
-      return scope.Close(func->Call(Context::GetCurrent()->Global(), argc, argv));
+  Handle<Value> CallTasyncMethod(Handle<Function> method, const unsigned int argc = 0, Handle<Value> argv[] = NULL){
+    HandleScope scope;
+    CERR << "Calling with Tasync: " << std::endl;
+    // create a new array of arguments, with the first argument as the function.
+    Handle<Value> new_argv[argc+1] ;
+    new_argv[0] = method;
+    for(unsigned int i=0; i < argc; i++){
+      new_argv[i+1] = argv[i];
     }
-    static inline Handle<Value> GetObjectAttr(Handle<Value> object, const char * attr){
-      HandleScope scope;
-      return scope.Close(object->ToObject()->Get(String::New(attr)));
-    }
+    return scope.Close(node::MakeCallback(tasync, "debugcall", argc+1, new_argv));
+  }
 
-    Handle<Value> CallCommonMethod(const char * method, int argc = 0, Handle<Value> argv[] = NULL){
-      HandleScope scope;
-      CERR << "Calling: " << method << ", argc: " << argc << std::endl;
-      CERR << "Common: " << common_->GetIdentityHash() << std::endl;
-      CERR << "Tasync: " << tasync_->GetIdentityHash() << std::endl;
-      Local<Function> func = Local<Function>::Cast(common_->Get(String::New(method)));
-      return scope.Close(CallTasyncMethod(func, argc, argv));
-    }
+  Handle<Value> CallCommonMethod(const char * method, int argc = 0, Handle<Value> argv[] = NULL){
+    HandleScope scope;
+    CERR << "Calling: " << method << ", argc: " << argc << std::endl;
+    Local<Function> func = Local<Function>::Cast(common->Get(String::New(method)));
+    return scope.Close(CallTasyncMethod(func, argc, argv));
+  }
 
-    Handle<Value> CallTasyncMethod(Handle<Function> method, const unsigned int argc = 0, Handle<Value> argv[] = NULL){
-      HandleScope scope;
-      CERR << "Calling with Tasync: " << std::endl;
-      // create a new array of arguments, with the first argument as the function.
-      Handle<Value> new_argv[argc+1] ;
-      new_argv[0] = method;
-      for(unsigned int i=0; i < argc; i++){
-        new_argv[i+1] = argv[i];
-      }
-      return scope.Close(Api::CallMethod(tasync_, "debugcall", argc+1, new_argv));
-    }
 
-    ~Api(){
-      CERR << "Destruction" << std::endl;
-      common_.Dispose();
-      tasync_.Dispose();
-    }
-};
-Api* api = NULL;
+}
 
 /*
  * Iterate through the list of an object's property names and print them out
@@ -75,8 +53,6 @@ void ListPropertyNames(Handle<Object> o){
 
 class Interpreter: public node::ObjectWrap {
   public:
-
-#define GET_API(args) api
 
     static void Init(Handle<Object> target) {
       // Prepare constructor template
@@ -96,9 +72,10 @@ class Interpreter: public node::ObjectWrap {
       HandleScope scope;
 
       Interpreter* intrp= new Interpreter();
-      // BUG: looks like a bad way to do this. Should come up with a better way to share common and tasync.
-      if(api == NULL)
-        api = new Api(args[0]->ToObject(), args[1]->ToObject());
+
+      Api::common = Persistent<Object>::New(args[0]->ToObject());
+      Api::tasync= Persistent<Object>::New(args[1]->ToObject());
+
       CERR << "THIS: " << args.This()->GetIdentityHash() << std::endl;
       intrp->Wrap(args.This());
       CERR << "THIS2: " << args.This()->GetIdentityHash() << std::endl;
@@ -110,21 +87,18 @@ class Interpreter: public node::ObjectWrap {
     static Handle<Value> PrintChildrenImpl(const Arguments& args){
       HandleScope scope;
       CERR << args.Length() << std::endl;
-      CERR << "Array length: " << Local<Array>::Cast(args[0])->Length() << std::endl;
       Local<Array> children =  Local<Array>::Cast(args[0]);
-      Handle<Value> core = GET_API(args)->CallCommonMethod("getCore");
+      CERR << "Array length: " << children->Length() << std::endl;
+      Handle<Value> core = Api::CallCommonMethod("getCore");
       CERR << "Attributes" << std::endl;
       const unsigned argc = 2;
       Handle<Value> argv[argc]={children->Get(0),String::New("name")};
       for(unsigned int i=0; i < children->Length(); i++){
         argv[0] = children->Get(i);
-        Handle<Value> name = Api::CallMethod(core->ToObject(), "getAttribute", argc, argv);
-        CERR << *String::AsciiValue(name) << std::endl;
+        Handle<Value> name = node::MakeCallback(core->ToObject(), "getAttribute", argc, argv);
+        std::cout << *String::AsciiValue(name) << std::endl;
       }
-      //ListPropertyNames(args[0]->ToObject());
-      //CERR << "Hash: " << *String::AsciiValue(args[0]->ToString()) << std::endl;
       return scope.Close(Undefined());
-      //return scope.Close(GET_API(args)->CallTasyncMethod(FunctionTemplate::New(PrintChildrenImpl)->GetFunction(), argc, argv));
     }
 
     static Handle<Value> TraverseTree(const Arguments& args){
@@ -132,43 +106,41 @@ class Interpreter: public node::ObjectWrap {
       CERR << args.Length() << std::endl;
       CERR << "THIS: " << args.This()->GetIdentityHash() << std::endl;
       //CERR << "Hash: " << *String::AsciiValue(args[0]->ToString()) << std::endl;
-      Handle<Value> core = GET_API(args)->CallCommonMethod("getCore");
+      Handle<Value> core = Api::CallCommonMethod("getCore");
       const int argc = 1;
       Handle<Value> argv[argc] = {Api::GetObjectAttr(args[0],"root")};
-      Handle<Value> rootFuture = Api::CallMethod(core->ToObject(), "loadRoot", argc, argv);
+      Handle<Value> rootFuture = node::MakeCallback(core->ToObject(), "loadRoot", argc, argv);
       Handle<Function> loadChildren = Handle<Function>::Cast(Api::GetObjectAttr(core, "loadChildren"));
       argv[0] = rootFuture;
-      Handle<Value> childrenFuture = GET_API(args)->CallTasyncMethod(loadChildren, argc, argv);
+      Handle<Value> childrenFuture = Api::CallTasyncMethod(loadChildren, argc, argv);
       argv[0] = childrenFuture;
-      return scope.Close(GET_API(args)->CallTasyncMethod(FunctionTemplate::New(PrintChildrenImpl)->GetFunction(), argc, argv));
+      return scope.Close(Api::CallTasyncMethod(FunctionTemplate::New(PrintChildrenImpl)->GetFunction(), argc, argv));
     }
 
     static Handle<Value> InvokeEx(const Arguments& args){
       HandleScope scope;
-      CERR << args.Length() << std::endl;
-      CERR << "THIS: " << args.This()->GetIdentityHash() << std::endl;
-      CERR << "Common: " << api->common_->GetIdentityHash() << std::endl;
-      CERR << "Tasync: " << api->tasync_->GetIdentityHash() << std::endl;
+      //CERR << args.Length() << std::endl;
+      //CERR << "THIS: " << args.This()->GetIdentityHash() << std::endl;
+      //CERR << "Common: " << Api::common->GetIdentityHash() << std::endl;
+      //CERR << "Tasync: " << Api::tasync->GetIdentityHash() << std::endl;
       return scope.Close(PrintChildren(args));
     }
 
     static Handle<Value> GetCommit(const Arguments& args){
       HandleScope scope;
       CERR << "THIS: " << args.This()->GetIdentityHash() << std::endl;
-      CERR << "Common: " << api->common_->GetIdentityHash() << std::endl;
-      CERR << "Tasync: " << api->tasync_->GetIdentityHash() << std::endl;
-      Handle<Value> proj = api->CallCommonMethod("getProject");
+      Handle<Value> proj = Api::CallCommonMethod("getProject");
       ListPropertyNames(proj->ToObject());
       const int argc = 2;
       Handle<Value> argv[argc] = {String::New("master"), Null()};
-      Handle<Value> hashFuture = Api::CallMethod(proj->ToObject(), "getBranchHash", argc, argv);
+      Handle<Value> hashFuture = node::MakeCallback(proj->ToObject(), "getBranchHash", argc, argv);
       const int argc_2 = 1;
       Handle<Value> argv_2[argc_2] = {hashFuture};
       Handle<Function> loadObject = Handle<Function>::Cast(Api::GetObjectAttr(proj, "loadObject"));
-      Handle<Value> newObject = GET_API(args)->CallTasyncMethod(loadObject, argc_2, argv_2);
+      Handle<Value> newObject = Api::CallTasyncMethod(loadObject, argc_2, argv_2);
       argv_2[0] = newObject;
       // TASYNC.call(traversetree, newObject)
-      return scope.Close(api->CallTasyncMethod(FunctionTemplate::New(TraverseTree)->GetFunction(), argc_2, argv_2));
+      return scope.Close(Api::CallTasyncMethod(FunctionTemplate::New(TraverseTree)->GetFunction(), argc_2, argv_2));
     }
 
     static Handle<Value> PrintChildren(const Arguments& args){
@@ -181,20 +153,6 @@ class Interpreter: public node::ObjectWrap {
     ~Interpreter(){};
 };
 
-
-
-/*
- *Handle<Value> TestSync(const Arguments& args) {
- *  HandleScope scope;
- *
- *  CERR << "Addon Api " << args.Length() << std::endl;
- *  Interpreter* my_interp = new Interpreter(args[0]->ToObject(), args[1]->ToObject());
- *
- *  Handle<Value> rc = my_interp->PrintChildren();
- *  //delete my_interp;
- *  return scope.Close(rc);
- *}
- */
 
 void Init(Handle<Object> exports) {
   Interpreter::Init(exports);
