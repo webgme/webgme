@@ -670,45 +670,61 @@ define([
                     }
                 }
             }
+            function isFalseNode(core,node){
+                if(core.isFalseNode(node)){
+                    core.deleteNode(node);
+                    return true;
+                }
+                return false;
+            }
             function storeNode(node,basic){
-                basic = basic || true;
+                //basic = basic || true;
                 var path = _core.getPath(node);
-                if(_nodes[path]){
-                    //TODO we try to avoid this
+                if(isFalseNode(_core,node)){
+                    delete _nodes[path];
+                    path = null;
                 } else {
-                    _nodes[path] = {node:node,hash:"",incomplete:true,basic:basic};
+                    if(_nodes[path]){
+                        //TODO we try to avoid this
+                    } else {
+                        _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
+                    }
                 }
                 return path;
             }
 
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
-                if(!nodesSoFar[path]){
-                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
-                }
-                if(level>0){
-                    if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
-                        core.loadChildren(nodesSoFar[path].node,function(err,children){
-                            if(!err && children){
-                                var missing = children.length;
-                                var error = null;
-                                for(var i=0;i<children.length;i++){
-                                    loadChildrenPattern(core,nodesSoFar,children[i],level-1,function(err){
-                                        error = error || err;
-                                        if(--missing === 0){
-                                            callback(error);
-                                        }
-                                    });
+                if(isFalseNode(core,node)){
+                    callback(null);
+                } else {
+                    if(!nodesSoFar[path]){
+                        nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
+                    }
+                    if(level>0){
+                        if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
+                            core.loadChildren(nodesSoFar[path].node,function(err,children){
+                                if(!err && children){
+                                    var missing = children.length;
+                                    var error = null;
+                                    for(var i=0;i<children.length;i++){
+                                        loadChildrenPattern(core,nodesSoFar,children[i],level-1,function(err){
+                                            error = error || err;
+                                            if(--missing === 0){
+                                                callback(error);
+                                            }
+                                        });
+                                    }
+                                } else {
+                                    callback(err);
                                 }
-                            } else {
-                                callback(err);
-                            }
-                        });
+                            });
+                        } else {
+                            callback(null);
+                        }
                     } else {
                         callback(null);
                     }
-                } else {
-                    callback(null);
                 }
             }
             function loadPattern(core,id,pattern,nodesSoFar,callback){
@@ -735,11 +751,15 @@ define([
                     core.loadByPath(base,id,function(err,node){
                         if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
-                            if(!nodesSoFar[path]){
-                                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
+                            if(isFalseNode(core,node)){
+                                callback(null);
+                            } else {
+                                if(!nodesSoFar[path]){
+                                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
+                                }
+                                base = node;
+                                baseLoaded();
                             }
-                            base = node;
-                            baseLoaded();
                         } else {
                             callback(err);
                         }

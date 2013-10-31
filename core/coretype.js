@@ -35,7 +35,16 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			}
 		}
 
+        function isFalseNode(node) {
+            //TODO this hack should be removed, but now it seems just fine :)
+            if(typeof core.getPointerPath(node,"base") === "undefined" /*&& node.base !== null*/){
+                return true;
+            }
+            return false;
+        }
+
 		core.isValidNode = isValidNode;
+        core.isFalseNode = isFalseNode;
 
 		// ----- navigation
 
@@ -176,6 +185,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
                 node.base = base;
 			} else {
                 node.base = null;
+                oldcore.setPointer(node,"base",null);
             }
 
 			return node;
