@@ -9,13 +9,15 @@ define(['logManager',
     'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
-    'js/KeyboardManager'], function (logManager,
+    'js/KeyboardManager',
+    './WebGME.History'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
                                             LayoutManager,
                                             DecoratorManager,
-                                            KeyboardManager) {
+                                            KeyboardManager,
+                                            WebGMEHistory) {
 
     var _webGMEStart = function () {
         var lm,
@@ -40,6 +42,8 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
+
+            WebGMEHistory.setClient(client);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
