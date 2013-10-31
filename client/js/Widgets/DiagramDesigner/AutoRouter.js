@@ -1,3 +1,4 @@
+//"use strict";
 //Will need to be converted to strict mode and convert logic
 
 define(['logManager'], function (logManager) {
@@ -11,7 +12,7 @@ define(['logManager'], function (logManager) {
          CONNECTIONCUSTOMIZATIONDATAVERSION = 0,
          EMPTYCONNECTIONCUSTOMIZATIONDATAMAGIC = -1,
          DEBUG =  false,
-         BUFFER = 1,
+         BUFFER = 10,
 
          EDLS_S = ED_SMALLGAP,
          EDLS_R = ED_SMALLGAP + 1, 
@@ -597,13 +598,34 @@ define(['logManager'], function (logManager) {
             return rect.left;
         };
 
-        var getRectOuterCoord = function (rect, dir){
+        var getParentRectOuterCoord = function (bufferObject, dir, point){
+            var children = bufferObject.children,
+                i = 0,
+                res = dir === 1 || dir === 2 ? ED_MINCOORD : ED_MAXCOORD;
+
+            assert( isRightAngle(dir), "getParentRectOuterCoord: isRightAngle(dir) FAILED"); 
+
+            while( i < children.length ){
+
+                if( isPointInDirFrom( point, children[i].getRect(), dir ) && 
+                        isPointBetweenSides(point, children[i].getRect(), dir) &&
+                        isCoordInDirFrom(res, getRectOuterCoord( children[i].getRect(), dir ), reverseDir(dir)) ){
+
+                    res = getRectOuterCoord( children[i].getRect(), dir );
+                }
+                ++i;
+            }
+
+            return res;
+        };
+
+        var getRectOuterCoord = function (rect, dir, len){
             assert( isRightAngle(dir), "ArHelper.getRectOuterCoord: isRightAngle(dir) FAILED" );
             assert( rect instanceof ArRect, "ArHelper.getRectOuterCoord: rect instanceof ArRect FAILED. 'rect' is " + rect);
-            var d = 1,//BUFFER + 1, //How far to exit the box
+            var d = len ? len + 1 : 1,//BUFFER + 1, //How far to exit the box
                 t = rect.ceil - d,
-                r = rect.right + 1 - d,
-                b = rect.floor + 1 - d,
+                r = rect.right + d - 1,
+                b = rect.floor + d - 1,
                 l = rect.left - d;
 
             switch( dir )
@@ -852,8 +874,23 @@ define(['logManager'], function (logManager) {
                 return Dir_Left;
             }
 
-            assert(false, "ArHelper.getSkewDir: Error on line 732");
+            assert(false, "ArHelper.getSkewDir: Error ");
             return Dir_Skew;
+        };
+
+        var isPointInDirFromChildren = function (point, fromParent, dir){
+            var children = fromParent.children,
+                i = 0;
+
+            assert( isRightAngle(dir), "isPointInDirFromChildren: isRightAngle(dir) FAILED"); 
+
+            while( i < children.length ){
+                if( isPointInDirFrom( point, children[i].getRect(), dir ))
+                    return true;
+                ++i;
+            }
+
+            return false;
         };
 
         var isPointInDirFrom = function (point, from, dir){
@@ -1406,9 +1443,6 @@ define(['logManager'], function (logManager) {
                 this.x = otherPoint.x;
                 this.y = otherPoint.y;
 
-                this.x = Math.round(x);
-                this.y = Math.round(y);
-        
                 return this;
             }
         };
@@ -4229,29 +4263,44 @@ _logger.warning("Adding "
                 return rect;
             }
 
-            function getOutOfBox(point, dir){
+            function getOutOfBox(details){
+                var point = details.point,
+                    dir = details.dir,
+                    len = details.len,
+                    box = details.box;
+
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
 
-                var boxby = null,
-                    iter = 0;
+                if( box ){
+                    var boxRect = box.getRect();
 
-                while (iter < boxes.length)
-                {
-                    var boxRect = (boxes[iter]).getRect();
-                    if( boxRect.ptInRect(point) )
+                    if(isHorizontal(dir))
+                        point.x = getRectOuterCoord(boxRect, dir, len);
+                    else
+                        point.y = getRectOuterCoord(boxRect, dir, len);
+                }else{
+
+                    var boxby = null,
+                        iter = box !== undefined ? boxes.indexOf(box) : 0; //start at the box index if it is given
+
+                    while (iter < boxes.length)
                     {
-                        boxby = boxes[iter];
-                        iter = 0;
+                        var boxRect = (boxes[iter]).getRect();
+                        if( boxRect.ptInRect(point) )
+                        {
+                            boxby = boxes[iter];
+                            iter = 0;
 
-                        if(isHorizontal(dir))
-                            point.x = getRectOuterCoord(boxRect, dir);
-                        else
-                            point.y = getRectOuterCoord(boxRect, dir);
+                            if(isHorizontal(dir))
+                                point.x = getRectOuterCoord(boxRect, dir, len);
+                            else
+                                point.y = getRectOuterCoord(boxRect, dir, len);
+                        }
+                        ++iter;
                     }
-                    ++iter;
                 }
 
-                return boxby;
+                return boxby || box;
             }
 
             function goToNextBox(point, dir, stop1, stop2){
@@ -4273,20 +4322,21 @@ _logger.warning("Adding "
                     iter = 0,
                     boxList = bufferBoxes.length > 0 ? bufferBoxes : boxes;
 
-                //Add a new collection that handles overlapping boxes (creates a larger encompassing box)
-                while (iter < boxList.length)
-                {
-                    var boxRect = ((boxList[iter]).getRect());
-
-                    if( isPointInDirFrom(point, boxRect, reverseDir(dir)) &&
-                        isPointBetweenSides(point, boxRect, dir) &&
-                        isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) )
+                    //Add a new collection that handles overlapping boxes (creates a larger encompassing box)
+                    while (iter < boxList.length)
                     {
-                        stophere = getRectOuterCoord(boxRect, reverseDir(dir));
-                        boxby = boxList[iter];
+                        var boxRect = boxList[iter].box ?  boxList[iter].box.getRect() : boxList[iter].getRect();
+
+                        if( isPointInDirFrom(point, boxRect, reverseDir(dir)) &&
+                                isPointBetweenSides(point, boxRect, dir) &&
+                                isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) ) //TODO 
+                        {
+                            stophere = getRectOuterCoord(boxRect, reverseDir(dir));
+                            boxby = boxList[iter].box || boxList[iter];
+                        }
+
+                        ++iter;
                     }
-                    ++iter;
-                }
 
                 if(isHorizontal(dir))
                     point.x = stophere;
@@ -4419,12 +4469,33 @@ _logger.warning("Adding "
                     var enddir = endPort.port_OnWhichEdge(endpoint);
                     assert( isRightAngle(startdir) && isRightAngle(enddir), "ARGraph.connect: isRightAngle(startdir) && isRightAngle(enddir) FAILED" );
 
+                    //Find the bufferbox containing startpoint, endpoint
+                    var startBox,
+                        endBox;
+                    if( bufferBoxes.length > 0 ){
+                        var j = bufferBoxes.length;
+
+                        while(j-- && (!startBox || !endBox) ){
+                            if( bufferBoxes[j].box.getRect().ptInRect(startpoint) )
+                                startBox = bufferBoxes[j].box;
+
+                            if( bufferBoxes[j].box.getRect().ptInRect(endpoint) )
+                                endBox = bufferBoxes[j].box;
+                        }
+                    }
+
                     var start = new ArPoint(startpoint);
-                    getOutOfBox(start, startdir);
+                    getOutOfBox({ "point": start, 
+                                    "dir": startdir, 
+                                    //"len": Math.max(BUFFER, STEMLENGTH), 
+                                    "box": startBox || startPort.getOwner()} );
                     assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
                     var end = new ArPoint(endpoint);
-                    getOutOfBox(end, enddir);
+                    getOutOfBox({ "point": end, 
+                                    "dir": enddir, 
+                                    //"len": Math.max(BUFFER, STEMLENGTH), 
+                                    "box": endBox || endPort.getOwner()} );
                     assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
                     assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -4502,8 +4573,7 @@ _logger.warning("Adding "
 
                     if (retend == ret.getLength() ){
                         ret.push([new ArPoint(start)]);
-                        retend = ret.getLength(); //This should give the index of the newly inserted value
-                        retend--;
+                        retend = ret.getLength() - 1; //This should give the index of the newly inserted value
                     }else{
                         retend++;
                         if(retend === ret.getLength()){
@@ -4580,7 +4650,6 @@ _logger.warning("Adding "
                                 ret.splice(retend + 1, 0, [new ArPoint(start)]); //insert after
                             }
                             old.assign(start);
-                            //old = start;
 
                             if(isHorizontal(dir1))
                             {
@@ -4596,6 +4665,16 @@ _logger.warning("Adding "
                             {
                                 goToNextBox(start, dir1, end);
                             }
+/*
+                            var bool = getPointCoord(start, dir1) > getPointCoord(end, dir1) ;
+                            if( dir1 && dir1 < 3 ) 
+                                    bool = getPointCoord(start, dir1) < getPointCoord(end, dir1);
+
+                            if( bool )
+                            {
+                                goToNextBox(start, dir1, end);
+                            }
+*/
                         }
 
                         assert( !start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
@@ -5235,17 +5314,24 @@ _logger.warning("Adding "
                 var i = boxes.length,
                     k = -1,
                     j = 0,
+                    added = false,
                     bufferBox,
-                    rect;
+                    rect,
+                    collection = [];
 
                 bufferBoxes = [];
 
                 while( i-- ){
-                    rect = boxes[i].getRect();
+                    rect = new ArRect(boxes[i].getRect());
                     rect.inflateRect(BUFFER);
                     bufferBox = new AutoRouterBox();
                     bufferBox.setRect(rect);
 
+                    while( collection[++k] && collection[k].getRect().left < rect.left); //Get index for insertion
+                    collection.splice( k, 0, bufferBox );
+                    k = -1;
+
+/* TODO Optimize
                     while( bufferBoxes[++k] && bufferBoxes[k].getRect().right < rect.left); //Get first possibility of overlap 
                     while( bufferBoxes[k] && bufferBoxes[k].getRect().left < rect.right){ //Until there cannot be an overlap
                         if( j == -1 && rect.left < bufferBoxes[k].getRect().left )
@@ -5253,17 +5339,66 @@ _logger.warning("Adding "
                         
                         if( bufferBoxes[k] && !bufferBoxes[k].getRect().intersect(rect).isRectEmpty() ){
                             bufferBoxes[k].getRect().unionAssign(rect);
-                            j = -1;
+                            added = true;
                         }
                         k++;
                     };
 
-                    if(j !== -1){
-                        bufferBoxes.splice(k, 0, bufferBox);
+                    if(!added){
+                        bufferBoxes.splice((j !== -1 ? j : k), 0, bufferBox);
                     }
 
                     j = -1;
                     k = -1;
+                    added = false;
+*/
+                }
+
+                var groups = []; //Groups will contain grouped boxes by overlap
+                i = 0;
+
+                while( i < collection.length ){ //Adding element 'i' to the appropriate group
+                    var added = false;
+                    j = 0;
+
+                    while( j < groups.length && !added ){ //Check all groups for intersection
+                            var k = 0;
+
+                            while( k < groups[j].length && !added ){ //Check all boxes in the given group
+
+                                if( !groups[j][k].getRect().intersect( collection[i].getRect() ).isRectEmpty() ){
+                                    groups[j].push( collection[i] );
+                                    added = true;
+
+                                }else
+                                    k++;
+                            }
+                        j++;
+                    }
+
+                    if( !added )
+                        groups.push( [ collection[i] ] );
+
+                    i++;
+                }
+
+                //Now to create the parent objects and add them to the bufferBoxes
+                i = 0;
+                while( i < groups.length ){
+                    var k = 0,
+                        r = new ArRect(),
+                        parentBox = new AutoRouterBox();
+
+                   parentBox.setRect(new ArRect(0, 0, 4, 4));//Avoiding the assert for now
+
+                    while( k < groups[i].length ){
+                        r = groups[i][k].getRect().union(r); //Creating Parent Box
+                        k++;
+                    }
+
+                    parentBox.getRect().setRect(r);
+                    bufferBoxes.push( { "box": parentBox, "children": groups[i] });
+                    i++;
                 }
 
             }
@@ -5362,7 +5497,7 @@ _logger.warning("Adding "
             };
 
             this.autoRoute = function(){
-                //createBufferBoxes(); //TODO Finish this!
+                createBufferBoxes(); //TODO Finish this!
                 connectAllDisconnectedPaths();
 
                 var updated = 0,
@@ -5902,6 +6037,7 @@ pt = [pt];
 
                 assert( hintDir != Dir_Skew, "ARPath.getOutOfBoxStartPoint: hintDir != Dir_Skew FAILED"  );
                 assert( points.getLength() >= 2, "ARPath.getOutOfBoxStartPoint: points.getLength() >= 2 FAILED" );
+
                 var pos = 0,
                     p = new ArPoint(points.get(pos++)[0]);
                     var d = getDir(points.get(pos)[0].minus(p));
@@ -7049,6 +7185,10 @@ pt = [pt];
             dy = details.dy !== undefined ? details.dy : details.y - box.getRect().ceil;
 
             this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
+        };
+
+        AutoRouter.prototype.setMinimumGap = function( min ){
+            this.router.setBuffer( Math.floor(min) );
         };
 
 
