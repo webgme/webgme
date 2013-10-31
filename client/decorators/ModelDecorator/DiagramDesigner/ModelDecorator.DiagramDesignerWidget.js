@@ -299,9 +299,9 @@ define(['js/Constants',
         if (this.skinParts.$ref) {
             icon = this.skinParts.$ref.find('i').first();
             if (this.skinParts.$ref.hasClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET)) {
-                icon.removeClass(inverseClass);
+                this.skinParts.$ref.removeClass(inverseClass);
             } else {
-                icon.addClass(inverseClass);
+                this.skinParts.$ref.addClass(inverseClass);
             }
 
             //edit droppable mode

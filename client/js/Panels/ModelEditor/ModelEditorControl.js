@@ -66,6 +66,7 @@ define(['logManager',
         this.eventQueue = [];
         this._componentIDPartIDMap = {};
 
+        //TODO: experiemtnal only, remove!!!
         this.___SLOW_CONN = false;
 
         this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
