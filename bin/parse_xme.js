@@ -398,7 +398,7 @@ if (typeof define !== "function") {
             }
 
             if (!refport) {
-                refport = core.createNode({parent:reference,guid:""+core.getRegistry(reference,"refPortCount")});
+                refport = core.createNode({parent:reference,relid:""+core.getRegistry(reference,"refPortCount")});
                 core.setRegistry(reference,'refPortCount',core.getRegistry(reference,"refPortCount")+1);
                 core.setAttribute(refport, "name", core.getAttribute(target, "name"));
                 core.setRegistry(refport, "position", core.getRegistry(target, "position"));
