@@ -13,6 +13,7 @@ Each script supports the `-help` command line parameter which will list all poss
 * parse_xme: parses a gme classic xme file and inports it into a webgme database.
 * database_info: prints out the projects and branches stored on the given database.
 * serialize_to_xml: creates a classic gme xme file from the given webgme project
+* update_project: updates the given branch of a project to the latest version of webGME. this ensures that all new functions will be available without negatively affecting already made data.
 
 # Library usage
 
