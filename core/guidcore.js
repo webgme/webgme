@@ -94,7 +94,8 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 		//modified functions
 		_core.createNode = function (parameters) {
 			parameters = parameters || {};
-			var guid = parameters.guid || GUID();
+			var guid = parameters.guid || GUID(),
+				parent = parameters.parent;
 
 			ASSERT(GUID_REGEXP.test(guid));
 
