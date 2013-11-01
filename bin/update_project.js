@@ -138,29 +138,28 @@ requirejs([ "util/common", "util/assert", "core/tasync" ], function (COMMON, ASS
     }
 
     function updateNode(core,node){
-        console.log('checking '+core.getPath(node,core.getRoot(node)));
+        var text = " - "+core.getPath(node,core.getRoot(node))+' : '+core.getAttribute(node,"name")+" - ";
         var basepath = core.getPointerPath(node,"base");
         if(basepath === undefined){
             core.setPointer(node,"base",null);
+            text+= "updated";
+        } else {
+            text += "checked";
         }
+        console.log(text);
         return;
     }
     function traverseNode (core,node){
         updateNode(core,node);
-        if(core.getChildrenRelids(node).length > 0){
-            var children = core.loadChildren(node);
-            var traverseChildren = function(core,nodearray){
-                var done;
-                for(var i=0;i<nodearray.length;i++){
-                    done = traverseNode(core,nodearray[i]);
-                }
-                return TASYNC.call(function(){return;},done);
+        var children = core.loadChildren(node);
+        var traverseChildren = function(core,nodearray){
+            var done;
+            for(var i=0;i<nodearray.length;i++){
+                done = TASYNC.call(traverseNode,core,nodearray[i],done);
             }
-            return TASYNC.call(traverseChildren,core,children);
-        } else {
-            return;
+            return TASYNC.call(function(){return;},done);
         }
-
+        return TASYNC.call(traverseChildren,core,children);
     }
     function updateProject(core,roothash){
         var root = core.loadRoot(roothash);
@@ -168,7 +167,7 @@ requirejs([ "util/common", "util/assert", "core/tasync" ], function (COMMON, ASS
         return TASYNC.call(saveChanges,core,root,done);
     }
     function saveChanges(core,root){
-        console.log("Waiting for objects to be saved ...");
+        console.log("Finalizing the update...");
         var done = core.persist(root);
         var hash = core.getHash(root);
         return TASYNC.join(hash, done);
