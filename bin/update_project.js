@@ -11,7 +11,7 @@ requirejs.config({
     baseUrl: __dirname + "/.."
 });
 
-requirejs([ "util/common", "util/assert", "core/tasync" ], function (COMMON, ASSERT, TASYNC) {
+requirejs([ "util/common", "util/assert", "core/tasync", "util/guid" ], function (COMMON, ASSERT, TASYNC,GUID) {
     "use strict";
 
     TASYNC.trycatch(main, function (error) {
@@ -137,14 +137,21 @@ requirejs([ "util/common", "util/assert", "core/tasync" ], function (COMMON, ASS
         }, done);
     }
 
-    function updateNode(core,node){
+    function updateNode(core,node){ //TODO this method should be always up-to-date...
         var text = " - "+core.getPath(node,core.getRoot(node))+' : '+core.getAttribute(node,"name")+" - ";
         var basepath = core.getPointerPath(node,"base");
         if(basepath === undefined){
             core.setPointer(node,"base",null);
-            text+= "updated";
+            text += "base set";
         } else {
-            text += "checked";
+            text += "base checked";
+        }
+        var relguid = core.getAttribute(node,"_relguid");
+        if(relguid === undefined || relguid === null){
+            core.setGuid(node,GUID());
+            text += " - guid set";
+        } else {
+            text += " - guid checked";
         }
         console.log(text);
         return;
