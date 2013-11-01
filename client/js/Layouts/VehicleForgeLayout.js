@@ -8,173 +8,39 @@
 
 define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     'logManager',
-    'text!html/Layouts/VehicleForge/VehicleForgeLayout.html',
+    './DefaultLayout',
+    'text!html/Layouts/Default/DefaultLayout.html',
     'text!./VehicleForgeLayoutConfig.json'], function (_jQueryLayout,
                                                                logManager,
+                                                               DefaultLayout,
                                                                vehicleForgeLayoutTemplate,
                                                                VehicleForgeLayoutConfigJSON) {
 
     var VehicleForgeLayout,
-        SPACING_OPEN_TOUCH = 10,
-        SPACING_CLOSED_TOUCH = 10,
-        SPACING_OPEN_DESKTOP = 3,
-        SPACING_CLOSED_DESKTOP = 6,
-        SPACING_OPEN = SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
-        SPACING_CLOSED = SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
         CONFIG = JSON.parse(VehicleForgeLayoutConfigJSON);
 
     VehicleForgeLayout = function () {
         this._logger = logManager.create('VehicleForgeLayout');
+
+        //call parent's constructor
+        DefaultLayout.apply(this, [{'logger': this._logger,
+                                    'panels': CONFIG.panels,
+                                    'template': vehicleForgeLayoutTemplate}]);
     };
 
-    VehicleForgeLayout.prototype.init = function () {
-        var self = this;
+    //inherit from PanelBaseWithHeader
+    _.extend(VehicleForgeLayout.prototype, DefaultLayout.prototype);
 
-        this._body = $('body');
-        this._body.html(vehicleForgeLayoutTemplate);
-
-        this._leftPanel = this._body.find('div.ui-layout-west');
-        this._mainPanel = this._body.find('div.ui-layout-center');
-        this._rightPanel = this._body.find('div.ui-layout-east');
-
-        this._headerPanel = this._body.find('div.ui-layout-north > div.navbar-inner');
-        this._footerPanel = this._body.find('div.ui-layout-south > div.navbar-inner');
-
-        this._rightPanels = [];
-        this._leftPanels = [];
-        this._centerPanels = [];
-
-        this._body.layout({
-            defaults: {
-            }
-            ,  north: {
-                closable :false,
-                resizable: false,
-                slidable: false,
-                spacing_open: 0
-            }
-            ,  south: {
-                closable :false,
-                resizable: false,
-                slidable: false,
-                spacing_open: 0,
-                size: 27        //has to match footer CSS settings (height + border)
-            }
-            ,  east: {
-                size: 202,
-                resizable: false,
-                slidable: false,
-                spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED,
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onEastResize();
-                }
-            }
-            ,  west: {
-                size: 202,
-                resizable: false,
-                slidable: false,
-                spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED,
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    //self._onWestResize();
-                }
-            },
-            center : {
-                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
-                    self._onCenterResize();
-                }
-            }
-        });
-
-        this.panels = CONFIG.panels;
-    };
-
-    VehicleForgeLayout.prototype.addToContainer = function (panel, container) {
-        if (container === 'header') {
-            this._headerPanel.append(panel.$pEl);
-        } else if (container === 'footer') {
-            this._footerPanel.append(panel.$pEl);
-        } else if (container === 'left') {
-            this._leftPanel.append(panel.$pEl);
-            this._leftPanels.push(panel);
-        } else if (container === 'right') {
-            this._rightPanel.append(panel.$pEl);
-            this._rightPanels.push(panel);
-            this._onEastResize();
-        } else if (container === 'main') {
-            this._mainPanel.append(panel.$pEl);
-            this._centerPanels.push(panel);
-            this._onCenterResize();
-        }
-    };
-
-    VehicleForgeLayout.prototype.remove = function (panel) {
-        var idx;
-
-        //check it in the right pane
-        idx = this._rightPanels.indexOf(panel);
-
-        //check it in the left pane if not found in right
-        if (idx === -1) {
-            idx = this._leftPanels.indexOf(panel);
-
-            //check it in the center pane if not found in left
-            if (idx === -1) {
-                idx = this._centerPanels.indexOf(panel);
-
-                if (idx === -1) {
-                    this._logger.warning("Panel to be removed not found");
-                } else {
-                    this._centerPanels.splice(idx, 1);
-                    this._onCenterResize();
-                }
-            } else {
-                this._leftPanels.splice(idx, 1);
-            }
-        } else {
-            this._rightPanels.splice(idx, 1);
-            this._onEastResize();
-        }
-    };
-
-    VehicleForgeLayout.prototype.destroy = function () {
-        this._body.empty();
-    };
-
-    VehicleForgeLayout.prototype._onCenterResize = function () {
-        var len = this._centerPanels.length,
-            w = this._mainPanel.width(),
-            h = this._mainPanel.height(),
-            pHeight = Math.floor(h / len),
-            i;
-
-        for (i = 0; i < len; i += 1) {
-            this._centerPanels[i].setSize(w, pHeight);
-        }
-    };
-
-    VehicleForgeLayout.prototype._onEastResize = function () {
-        var len = this._rightPanels.length,
-            w = this._rightPanel.width(),
-            h = this._rightPanel.height(),
-            pHeight = Math.floor(h / len),
-            i;
-
-        for (i = 0; i < len; i += 1) {
-            this._rightPanels[i].setSize(w, pHeight);
-        }
-    };
 
     VehicleForgeLayout.prototype._onWestResize = function () {
-        var len = this._leftPanels.length,
-            w = this._leftPanel.width(),
-            h = this._leftPanel.height(),
+        var len = this._westPanels.length,
+            w = this._westPanel.width(),
+            h = this._westPanel.height(),
             pHeight = Math.floor(h / len),
             i;
 
         for (i = 0; i < len; i += 1) {
-            this._leftPanels[i].setSize(w, pHeight);
+            this._westPanels[i].setSize(w, pHeight);
         }
     };
 

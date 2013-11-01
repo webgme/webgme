@@ -35,25 +35,32 @@ define(['js/PanelBase/PanelBase',
     _.extend(FooterControlsPanel.prototype, __parent__.prototype);
 
     FooterControlsPanel.prototype._initialize = function () {
-        this.$el.html('<div class="pull-left inline"></div><div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+        //main container
+        var navBar = $('<div/>', {'class': "navbar navbar-inverse navbar-fixed-bottom"});
+        var navBarInner = $('<div/>', {'class': "navbar-inner"});
 
-        var pullLeft = this.$el.find('.pull-left').first();
+        navBar.append(navBarInner);
+        this.$el.append(navBar);
+
+        navBarInner.html('<div class="pull-left inline"></div><div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
+
+        var pullLeft = navBarInner.find('.pull-left').first();
         //add version UI piece
         pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
 
-        var keyBoardManagerEl = this.$el.find('.keyBoardManager').first();
+        var keyBoardManagerEl = navBarInner.find('.keyBoardManager').first();
         new KeyboardManagerWidget(keyBoardManagerEl);
 
-        var logLevelManagerEl = this.$el.find('.logLevelManager').first();
+        var logLevelManagerEl = navBarInner.find('.logLevelManager').first();
         new LogLevelManagerWidget(logLevelManagerEl);
 
-        var networkStatusEl = this.$el.find('.networkStatus').first();
+        var networkStatusEl = navBarInner.find('.networkStatus').first();
         new NetworkStatusWidget(networkStatusEl, this._client);
 
-        var branchStatusEl = this.$el.find('.branchStatus').first();
+        var branchStatusEl = navBarInner.find('.branchStatus').first();
         new BranchStatusWidget(branchStatusEl, this._client);
 
-        var branchSelectorEl = this.$el.find('.branchSelector').first();
+        var branchSelectorEl = navBarInner.find('.branchSelector').first();
         new BranchSelectorWidget(branchSelectorEl, this._client);
     };
 

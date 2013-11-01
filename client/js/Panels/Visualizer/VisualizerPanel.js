@@ -99,7 +99,7 @@ define(['logManager',
                 PanelClass = this._visualizers[visualizer].panel;
                 if (PanelClass) {
                     this._activePanel = new PanelClass(this._layoutManager, {'client': this._client});
-                    this._layoutManager.addPanel(visualizer, this._activePanel, 'main');
+                    this._layoutManager.addPanel(visualizer, this._activePanel, 'center');
                 }
 
                 ControlClass = this._visualizers[visualizer].control;

@@ -10,7 +10,7 @@ define(['logManager',
         'css!/css/Widgets/ProjectTitle/ProjectTitleWidget'], function (logManager) {
 
     var ProjectTitleWidget,
-        PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title"><span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
+        PROJECT_TITLE_WIDGET_TEMPLATE = '<div class="project-title navbar-text"><span class="title">WebGME</span><span class="readOnlyInfo">[READ ONLY]</span></div>';
 
     ProjectTitleWidget = function (containerEl, client) {
         this._logger = logManager.create("ProjectTitleWidget");

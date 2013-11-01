@@ -11,27 +11,27 @@
 
         {"id": "VisualizerPanel",
             "panel": "Visualizer/VisualizerPanel",
-            "container": "left",
+            "container": "west",
             "DEBUG_ONLY": false},
 
         {"id": "ProjectPanel",
             "panel": "Project/ProjectPanel",
-            "container": "left",
+            "container": "west",
             "DEBUG_ONLY": false},
 
         {"id": "PartBrowserPanel",
             "panel": "PartBrowser/PartBrowserPanel",
-            "container": "left",
+            "container": "west",
             "DEBUG_ONLY": false},
 
         {"id": "ObjectBrowserPanel",
             "panel": "ObjectBrowser/ObjectBrowserPanel",
-            "container": "right",
+            "container": "east",
             "DEBUG_ONLY": false},
 
         {"id": "PropertyEditorPanel",
             "panel": "PropertyEditor/PropertyEditorPanel",
-            "container": "right",
+            "container": "east",
             "DEBUG_ONLY": false}
     ]
 }

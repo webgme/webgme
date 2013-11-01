@@ -56,6 +56,21 @@
 
 
 /*** NAVBAR extension ***/
+.navbar-fixed-top {
+    height: 41px;
+    min-height: 41px;
+}
+
+.navbar-fixed-top .navbar-inner {
+    height: 40px;
+    min-height: 40px;
+}
+
+.navbar-fixed-bottom {
+    height: 27px;
+    min-height: 27px;
+}
+
 .navbar-fixed-bottom .navbar-inner {
     height: 26px;
     min-height: 26px;

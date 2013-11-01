@@ -5,16 +5,16 @@
  */
 
 $read-only-color : #777777;
+$project-title-color: #FFFFFF;
 
 .project-title {
   margin-left: 10px;
-  padding-top: 10px;
+  margin-right: 10px;
 
   .title {
     font-size: 20px;
     font-weight: 200;
-    line-height: 20px;
-    color: #ffffff;
+    color: $project-title-color;
   }
 
   .readOnlyInfo {
