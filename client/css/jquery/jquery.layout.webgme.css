@@ -4,7 +4,11 @@
 
 .ui-layout-north,
 .ui-layout-south {
-    border: 0;
+    border-width: 0;
+}
+
+.ui-layout-north {
+    border-bottom-width: 1px;
 }
 
 .ui-layout-south {
@@ -13,8 +17,15 @@
 
 .ui-layout-center {
     overflow: hidden;   /*prevent center panel scrollbars if panel header is too wide, to many controls*/
+    border-top-width: 0;
 }
 
 .ui-layout-east {
     overflow: hidden;   /*no scroll in right panel*/
+    border-top-width: 0;
+}
+
+.ui-layout-west {
+    overflow: hidden;   /*no scroll in right panel*/
+    border-top-width: 0;
 }
