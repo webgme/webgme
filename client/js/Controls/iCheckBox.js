@@ -12,16 +12,16 @@ define(['jquery',
     iCheckBox = function (options) {
         var self = this;
 
-        this._checkedText = options.checkedText || DEFAULT_CHECKED_TEXT;
+        this._checkedText = (options && options.checkedText) || DEFAULT_CHECKED_TEXT;
         this._checkedText = this._checkedText.toUpperCase();
-        this._uncheckedText = options.uncheckedText || DEFAULT_UNCHECKED_TEXT;
+        this._uncheckedText = (options && options.uncheckedText) || DEFAULT_UNCHECKED_TEXT;
         this._uncheckedText = this._uncheckedText.toUpperCase();
 
         this.el = $('<div class="iCheckBox checked"><div class="sw"></div><div class="txt">' + this._checkedText + '</div></div>');
 
         this._txt = this.el.find('.txt').first();
 
-        if (options.hasOwnProperty("checked")) {
+        if (options && options.hasOwnProperty("checked")) {
             this.setChecked(options.checked);
         }
 
@@ -30,7 +30,7 @@ define(['jquery',
             event.stopPropagation();
         });
 
-        this._checkChangedFn = options.checkChangedFn;
+        this._checkChangedFn = options && options.checkChangedFn;
     };
 
     iCheckBox.prototype._toggleChecked = function () {
