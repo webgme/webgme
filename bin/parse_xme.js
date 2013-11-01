@@ -101,7 +101,7 @@ if (typeof define !== "function") {
                     }
                     var guid = tag.attributes['guid'];
                     guid = guid.replace(/[{,}]/g,"");
-                    tag.node = core.createNode(stack[stack.length - 1].node,relid,guid);
+                    tag.node = core.createNode({parent:stack[stack.length - 1].node,relid:relid,guid:guid});
                     core.setRegistry(tag.node,'refPortCount',0);
                     //**********
                     objects += 1;
@@ -398,7 +398,7 @@ if (typeof define !== "function") {
             }
 
             if (!refport) {
-                refport = core.createNode(reference,""+core.getRegistry(reference,"refPortCount"));
+                refport = core.createNode({parent:reference,guid:""+core.getRegistry(reference,"refPortCount")});
                 core.setRegistry(reference,'refPortCount',core.getRegistry(reference,"refPortCount")+1);
                 core.setAttribute(refport, "name", core.getAttribute(target, "name"));
                 core.setRegistry(refport, "position", core.getRegistry(target, "position"));
