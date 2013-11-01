@@ -92,11 +92,13 @@ define([ "util/assert", "util/guid" ], function (ASSERT, GUID) {
 		};
 
 		//modified functions
-		_core.createNode = function (parent, relid, guid) {
-			ASSERT(guid === null || guid === undefined || GUID_REGEXP.test(guid));
+		_core.createNode = function (parameters) {
+			parameters = parameters || {};
+			var guid = parameters.guid || GUID();
 
-			var node = _innerCore.createNode(parent, relid);
-			guid = guid || GUID();
+			ASSERT(GUID_REGEXP.test(guid));
+
+			var node = _innerCore.createNode(parameters);
 			guid = toInternalGuid(guid);
 
 			var relguid = "";

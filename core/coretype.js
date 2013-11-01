@@ -131,7 +131,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
                 var presize = own.length;
                 for(var i=0;i<missingChildren.length;i++){
-                    var newChild = core.createNode(node,findChild(inherited,missingChildren[i]),missingChildren[i]);
+                    var newChild = core.createNode({parent:node,base:findChild(inherited,missingChildren[i]),relid:missingChildren[i]});
                     own.push(newChild);
                 }
 
@@ -164,18 +164,23 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 		// ----- creation
 
-		core.createNode = function(parent, base, relid) {
+		core.createNode = function(parameters) {
+			parameters = parameters || {};
+			var base = parameters.base,
+				parent = parameters.parent;
+
+
 			ASSERT(!parent || isValidNode(parent));
 			ASSERT(!base || isValidNode(base));
-			ASSERT(typeof relid === "undefined" || typeof relid === "string");
 
-			var node = oldcore.createNode(parent, relid);
+			var node = oldcore.createNode(parameters);
 			if (!!base) {
 				oldcore.setPointer(node, "base", base);
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
 			} else {
                 node.base = null;
+                oldcore.setPointer(node,"base",null);
             }
 
 			return node;

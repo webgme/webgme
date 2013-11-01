@@ -575,13 +575,13 @@ define([
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setAttribute(root,"name","ROOT");
-                var metameta = core.createNode(root);
+                var metameta = core.createNode({parent:root});
                 core.setAttribute(metameta,"name","METAMETA");
-                var meta = core.createNode(root);
+                var meta = core.createNode({parent:root});
                 core.setAttribute(meta,"name","META");
-                var proj = core.createNode(root);
+                var proj = core.createNode({parent:root});
                 core.setAttribute(proj,"name","PROJECT");
-                var fco = core.createNode(metameta);
+                var fco = core.createNode({parent:metameta});
                 core.setAttribute(fco,"name","FCO");
                 core.setRegistry(fco,"isConnection",false);
                 core.setRegistry(fco,"position",{ "x": 100, "y": 100});
@@ -1177,7 +1177,7 @@ define([
                         returnArray = {};
 
                     //creating the 'from' object
-                    var tempFrom = _core.createNode(parent);
+                    var tempFrom = _core.createNode({parent:parent});
                     //and moving every node under it
                     for(var i=0;i<nodePaths.length;i++){
                         helpArray[nodePaths[i]] = {};
@@ -1401,7 +1401,7 @@ define([
                         if(_nodes[parameters.baseId]){
                             baseNode = _nodes[parameters.baseId].node || baseNode;
                         }
-                        var child = _core.createNode(_nodes[parameters.parentId].node, baseNode);
+                        var child = _core.createNode({parent:_nodes[parameters.parentId].node, base:baseNode});
                         if (parameters.position) {
                             _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
                         } else {
@@ -1498,7 +1498,7 @@ define([
                         typeof _nodes[parameters.parentId].node === 'object' &&
                         typeof _nodes[parameters.sourceId].node === 'object' &&
                         typeof _nodes[parameters.targetId].node === 'object'){
-                        var connection = _core.createNode(_nodes[parameters.parentId].node);
+                        var connection = _core.createNode({parent:_nodes[parameters.parentId].node});
                         _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
                         _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
                         _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
