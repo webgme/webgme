@@ -90,6 +90,14 @@ define(['logManager',
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
+        /* OCL CONTSTRAINT VALIDATION */
+        this.$btnGroupOCLValidate = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
+            self._onOCLValidate();
+        });
+
+        this.designerCanvas.toolBar.addButton({ "title": "Validate ALL",
+            "icon": "icon-fire"}, this.$btnGroupOCLValidate);
+
         /************** VISUAL STYLES HIERARCHY BUTTON ****************/
         this.$btnGroupVisualStyles = this.designerCanvas.toolBar.addButtonGroup();
 
@@ -1009,6 +1017,12 @@ define(['logManager',
                 }
             }
         }
+    };
+
+    ModelEditorControl.prototype._onOCLValidate = function () {
+        //OCL Validation goes here...
+        //WebGMEGlobal.OCLManager.validate()....
+        this.logger.warning('OCL Validate all clicked...');
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
