@@ -5,7 +5,8 @@ define([], function () {
     "use strict";
 
     var attributeNames = {  "name" : "name",
-                            "directed": "directed" },
+                            "directed": "directed",
+                            "OCLConstraint": "OCLConstraint"},
         registryNames = {   "position" : "position",
                             "rotation": "rotation",
                             "decorator": "decorator",
