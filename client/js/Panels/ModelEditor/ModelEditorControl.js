@@ -1021,9 +1021,8 @@ define(['logManager',
 
     ModelEditorControl.prototype._onOCLValidate = function () {
         //OCL Validation goes here...
-        //WebGMEGlobal.OCLManager.validate()....
         this.logger.warning('OCL Validate all clicked...');
-        WebGMEGlobal.ObjectConstraintManager.validateAll();
+        WebGMEGlobal.ObjectConstraintManager.validateAll("root");
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

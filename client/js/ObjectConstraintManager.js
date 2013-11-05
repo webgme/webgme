@@ -1,4 +1,4 @@
-define(['logManager'], function (logManager) {
+define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropertyNames) {
   "use strict";
 
   var logger, client;
@@ -8,9 +8,33 @@ define(['logManager'], function (logManager) {
     client = client_;
   };
 
-  ObjectConstraintManager.prototype.validateAll = function() {
-    var root = client.getNode("root");
-    console.dir(root);
+  ObjectConstraintManager.prototype.validateAll = function(id) {
+
+    validate(id);
+
+    function validate (id) {
+
+      // Validate the node itself..
+      logger.info("Validating node: " + id);
+      var node = client.getNode(id);
+      var constraint = node.getAttribute(nodePropertyNames.Attributes.OCLConstraint);
+      if ( constraint !== undefined && constraint !== "" ) {
+        var result = eval("(" + constraint + ")();");
+        if (result) {
+            logger.warn('No Validation');
+        } else {
+            logger.warn('!!Validation!!!');
+        }
+      }
+
+      // Call validation for the node's children
+      var children = node.getChildrenIds();
+      children.forEach(function(child) {
+        validate(child);
+      });
+
+    }
+
   };
 
   return ObjectConstraintManager;
