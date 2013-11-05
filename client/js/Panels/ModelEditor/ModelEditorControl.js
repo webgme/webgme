@@ -1023,6 +1023,7 @@ define(['logManager',
         //OCL Validation goes here...
         //WebGMEGlobal.OCLManager.validate()....
         this.logger.warning('OCL Validate all clicked...');
+        WebGMEGlobal.ObjectConstraintManager.validateAll();
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions
