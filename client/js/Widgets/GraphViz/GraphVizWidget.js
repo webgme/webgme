@@ -367,6 +367,9 @@ define(['logManager',
     GraphVizWidget.prototype.onBackgroundDblClick = function () {
     };
 
+    GraphVizWidget.prototype.destroy = function () {
+    };
+
     _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);
 
     return GraphVizWidget;
