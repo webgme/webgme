@@ -11,7 +11,8 @@ define(['logManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager',
     'js/PanelManager/PanelManager',
-    './WebGME.History'], function (logManager,
+    './WebGME.History',
+    'js/Clipboard/ClipboardHelper'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -19,7 +20,8 @@ define(['logManager',
                                             DecoratorManager,
                                             KeyboardManager,
                                             PanelManager,
-                                            WebGMEHistory) {
+                                            WebGMEHistory,
+                                            ClipboardHelper) {
 
     var _webGMEStart = function () {
         var lm,
@@ -36,6 +38,7 @@ define(['logManager',
         //TODO: might need to be changed
         WebGMEGlobal.KeyboardManager = new KeyboardManager();
         WebGMEGlobal.PanelManager = new PanelManager();
+        WebGMEGlobal.ClipboardHelper = ClipboardHelper;
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {

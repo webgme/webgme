@@ -33,6 +33,12 @@ define(['logManager'], function (logManager) {
                 this._activePanel.setActive(true);
             }
         }
+
+        WebGMEGlobal.ClipboardHelper.captureFocus();
+    };
+
+    PanelManager.prototype.getActivePanel = function () {
+        return this._activePanel;
     };
 
 

@@ -28,6 +28,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/SearchManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
+    './DiagramDesignerWidget.Clipboard',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -49,7 +50,8 @@ define(['logManager',
                                                       HighlightManager,
                                                       SearchManager,
                                                       DiagramDesignerWidgetContextMenu,
-                                                      DiagramDesignerWidgetDroppable) {
+                                                      DiagramDesignerWidgetDroppable,
+                                                      DiagramDesignerWidgetClipboard) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -1399,6 +1401,7 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
 
 
     return DiagramDesignerWidget;

@@ -110,6 +110,10 @@ define(['logManager',
             self._onSetConnectionProperty(params);
         };
 
+        this.designerCanvas.onCopy = function () {
+            return self._onCopy();
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -646,6 +650,32 @@ define(['logManager',
 
             this._client.completeTransaction();
         }
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onCopy = function () {
+        var res = [],
+            selectedIDs = this.designerCanvas.selectionManager.getSelectedElements(),
+            i = selectedIDs.length,
+            gmeID,
+            obj,
+            nodeObj;
+
+        while(i--) {
+            gmeID = this._ComponentID2GmeID[selectedIDs[i]];
+            obj = {'ID': gmeID,
+                   'Name': undefined,
+                   'Position': undefined};
+
+            nodeObj = this._client.getNode(gmeID);
+            if (nodeObj) {
+                obj.Name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+                obj.Position = nodeObj.getRegistry(nodePropertyNames.Registry.position);
+            }
+
+            res.push(obj);
+        }
+
+        return res;
     };
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;

@@ -2,10 +2,12 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
+    'js/Clipboard/ISupportClipboard',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     './ModelEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
+             ISupportClipboard,
              DiagramDesignerWidget,
              ModelEditorControl) {
 
@@ -32,6 +34,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     //inherit from PanelBaseWithHeader
     _.extend(ModelEditorPanel.prototype, PanelBaseWithHeader.prototype);
     _.extend(ModelEditorPanel.prototype, IActivePanel.prototype);
+    _.extend(ModelEditorPanel.prototype, ISupportClipboard.prototype);
 
     ModelEditorPanel.prototype._initialize = function () {
         var self = this;
@@ -84,6 +87,16 @@ define(['js/PanelBase/PanelBaseWithHeader',
     /* override IActivePanel.prototype.onDeactivate */
     ModelEditorPanel.prototype.onDeactivate = function () {
         this.control.detachClientEventListeners();
+    };
+
+    /* override ISupportClipboard.prototype.onCopy */
+    ModelEditorPanel.prototype.onCopy = function () {
+        return this.widget.onCopy();
+    };
+
+    /* override ISupportClipboard.prototype.onPaste */
+    ModelEditorPanel.prototype.onPaste = function (data) {
+        return this.widget.onPaste(data);
     };
 
     return ModelEditorPanel;
