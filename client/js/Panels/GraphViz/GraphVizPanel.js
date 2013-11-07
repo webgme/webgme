@@ -1,13 +1,14 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
+    'js/PanelManager/IActivePanel',
     'js/Widgets/GraphViz/GraphVizWidget',
     './GraphVizPanelControl'], function (PanelBaseWithHeader,
+                                         IActivePanel,
                                             GraphVizWidget,
                                             GraphVizPanelControl) {
 
-    var GraphVizPanel,
-        __parent__ = PanelBaseWithHeader;
+    var GraphVizPanel;
 
     GraphVizPanel = function (layoutManager, params) {
         var options = {};
@@ -17,7 +18,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options, layoutManager]);
+        PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
@@ -28,7 +29,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(GraphVizPanel.prototype, __parent__.prototype);
+    _.extend(GraphVizPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(GraphVizPanel.prototype, IActivePanel.prototype);
 
     GraphVizPanel.prototype._initialize = function () {
         var self = this;
@@ -41,13 +43,18 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.setTitle = function (title) {
             self.setTitle(title);
         };
+
+        this.control = new GraphVizPanelControl({"client": this._client,
+            "widget": this.widget});
+
+        this.onActivate();
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     GraphVizPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
-        __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
+        PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         //this._graphVizWidget.setReadOnly(isReadOnly);
     };
@@ -55,6 +62,21 @@ define(['js/PanelBase/PanelBaseWithHeader',
     GraphVizPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
+    };
+
+    GraphVizPanel.prototype.destroy = function () {
+        this.control.destroy();
+        this.widget.destroy();
+
+        PanelBaseWithHeader.prototype.destroy.call(this);
+    };
+
+    GraphVizPanel.prototype.onActivate = function () {
+        this.control.attachClientEventListeners();
+    };
+
+    GraphVizPanel.prototype.onDeactivate = function () {
+        this.control.detachClientEventListeners();
     };
 
     return GraphVizPanel;

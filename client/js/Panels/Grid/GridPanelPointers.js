@@ -3,18 +3,18 @@
 define(['js/PanelBase/PanelBaseWithHeader',
         'js/PanelManager/IActivePanel',
         'js/Widgets/DataGrid/DataGridWidget',
-        './GridPanelContainmentControl'
+        './GridPanelContainmentControlPointers'
         ], function (PanelBaseWithHeader,
                      IActivePanel,
                      DataGridWidget,
-                     GridPanelContainmentControl) {
+                     GridPanelContainmentControlPointers) {
 
-    var GridPanel;
+    var GridPanelPointers;
 
-    GridPanel = function (layoutManager, params) {
+    GridPanelPointers = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GridPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GridPanelPointers";
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
@@ -26,20 +26,20 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //initialize UI
         this._initialize();
 
-        this.logger.debug("GridPanel ctor finished");
+        this.logger.debug("GridPanelPointers ctor finished");
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(GridPanel.prototype, PanelBaseWithHeader.prototype);
-    _.extend(GridPanel.prototype, IActivePanel.prototype);
+    _.extend(GridPanelPointers.prototype, PanelBaseWithHeader.prototype);
+    _.extend(GridPanelPointers.prototype, IActivePanel.prototype);
 
-    GridPanel.prototype._initialize = function () {
+    GridPanelPointers.prototype._initialize = function () {
         //set Widget title
         this.setTitle("ContainmentGrid");
 
         this.widget = new DataGridWidget(this.$el, {'toolBar': this.toolBar});
 
-        this.control = new GridPanelContainmentControl({"client": this._client,
+        this.control = new GridPanelContainmentControlPointers({"client": this._client,
             "widget": this.widget,
             "panel": this});
 
@@ -48,27 +48,27 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    GridPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
+    GridPanelPointers.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
         PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
     };
 
-    GridPanel.prototype.destroy = function () {
+    GridPanelPointers.prototype.destroy = function () {
         this.control.destroy();
         this.widget.destroy();
 
         PanelBaseWithHeader.prototype.destroy.call(this);
     };
 
-    GridPanel.prototype.onActivate = function () {
+    GridPanelPointers.prototype.onActivate = function () {
         this.control.attachClientEventListeners();
     };
 
-    GridPanel.prototype.onDeactivate = function () {
+    GridPanelPointers.prototype.onDeactivate = function () {
         this.control.detachClientEventListeners();
     };
 
-    return GridPanel;
+    return GridPanelPointers;
 });

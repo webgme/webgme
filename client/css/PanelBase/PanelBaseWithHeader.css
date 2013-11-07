@@ -2,8 +2,9 @@
   box-sizing: border-box; }
   .panel-base-wh .panel-header {
     padding: 5px;
-    height: 30px;
+    height: 28px;
     background-color: #efefef;
+    border-bottom: 2px solid rgba(0, 0, 0, 0);
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap; }
@@ -45,6 +46,8 @@
     display: inline-block; }
   .panel-base-wh.read-only .panel-body {
     background-color: #fbfbfb; }
+  .panel-base-wh.active-panel .panel-header {
+    border-bottom-color: rgba(82, 168, 236, 0.8); }
 
 .side-panel .panel-base-wh {
   position: relative;
@@ -57,8 +60,9 @@
   background-color: whitesmoke; }
   .side-panel .panel-base-wh .panel-header {
     padding: 3px;
-    height: 18px;
-    background-color: whitesmoke; }
+    height: 16px;
+    background-color: whitesmoke;
+    border-bottom: 2px solid rgba(0, 0, 0, 0); }
     .side-panel .panel-base-wh .panel-header .panel-header-title {
       font-size: 11px;
       line-height: 18px;
@@ -73,3 +77,5 @@
     padding: 3px; }
   .side-panel .panel-base-wh.read-only .panel-body {
     background-color: #fbfbfb; }
+  .side-panel .panel-base-wh.active-panel .panel-header {
+    border-bottom-color: rgba(82, 168, 236, 0.8); }

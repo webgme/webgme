@@ -10,6 +10,7 @@ define(['logManager',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager',
+    'js/PanelManager/PanelManager',
     './WebGME.History'], function (logManager,
                                             CONFIG,
                                             Client,
@@ -17,6 +18,7 @@ define(['logManager',
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
+                                            PanelManager,
                                             WebGMEHistory) {
 
     var _webGMEStart = function () {
@@ -33,6 +35,7 @@ define(['logManager',
         //as of now it's a global variable just to make access to it easier
         //TODO: might need to be changed
         WebGMEGlobal.KeyboardManager = new KeyboardManager();
+        WebGMEGlobal.PanelManager = new PanelManager();
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {

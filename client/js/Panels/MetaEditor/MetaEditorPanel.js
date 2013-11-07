@@ -1,12 +1,15 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
-    'js/Widgets/MetaEditor/MetaEditorWidget'
+    'js/PanelManager/IActivePanel',
+    'js/Widgets/MetaEditor/MetaEditorWidget',
+    './MetaEditorControl'
 ], function (PanelBaseWithHeader,
-             MetaEditorWidget) {
+             IActivePanel,
+             MetaEditorWidget,
+             MetaEditorControl) {
 
-    var MetaEditorPanel,
-        __parent__ = PanelBaseWithHeader;
+    var MetaEditorPanel;
 
     MetaEditorPanel = function (layoutManager, params) {
         var options = {};
@@ -16,7 +19,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options, layoutManager]);
+        PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
@@ -27,7 +30,8 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(MetaEditorPanel.prototype, __parent__.prototype);
+    _.extend(MetaEditorPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(MetaEditorPanel.prototype, IActivePanel.prototype);
 
     MetaEditorPanel.prototype._initialize = function () {
         var self = this;
@@ -40,13 +44,18 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.setTitle = function (title) {
             self.setTitle(title);
         };
+
+        this.control = new MetaEditorControl({"client": this._client,
+            "widget": this.widget});
+
+        this.onActivate();
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     MetaEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
-        __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
+        PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
     };
@@ -54,6 +63,21 @@ define(['js/PanelBase/PanelBaseWithHeader',
     MetaEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
+    };
+
+    MetaEditorPanel.prototype.destroy = function () {
+        this.control.destroy();
+        this.widget.destroy();
+
+        PanelBaseWithHeader.prototype.destroy.call(this);
+    };
+
+    MetaEditorPanel.prototype.onActivate = function () {
+        this.control.attachClientEventListeners();
+    };
+
+    MetaEditorPanel.prototype.onDeactivate = function () {
+        this.control.detachClientEventListeners();
     };
 
     return MetaEditorPanel;

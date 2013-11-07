@@ -1,35 +1,39 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget'
+    'js/PanelManager/IActivePanel',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
+    './ModelEditorControl'
 ], function (PanelBaseWithHeader,
-             DiagramDesignerWidget) {
+             IActivePanel,
+             DiagramDesignerWidget,
+             ModelEditorControl) {
 
-    var DiagramDesignerPanel,
-        __parent__ = PanelBaseWithHeader;
+    var ModelEditorPanel;
 
-    DiagramDesignerPanel = function (layoutManager, params) {
+    ModelEditorPanel = function (layoutManager, params) {
         var options = {};
         //set properties from options
-        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "DiagramDesignerPanel";
+        options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "ModelEditorPanel";
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options, layoutManager]);
+        PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
         //initialize UI
         this._initialize();
 
-        this.logger.debug("DiagramDesignerPanel ctor finished");
+        this.logger.debug("ModelEditorPanel ctor finished");
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(DiagramDesignerPanel.prototype, __parent__.prototype);
+    _.extend(ModelEditorPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(ModelEditorPanel.prototype, IActivePanel.prototype);
 
-    DiagramDesignerPanel.prototype._initialize = function () {
+    ModelEditorPanel.prototype._initialize = function () {
         var self = this;
 
         //set Widget title
@@ -40,21 +44,41 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.setTitle = function (title) {
             self.setTitle(title);
         };
+
+        this.control = new ModelEditorControl({"client": this._client,
+            "widget": this.widget});
+
+        this.onActivate();
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
-    DiagramDesignerPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
+    ModelEditorPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
-        __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
+        PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
     };
 
-    DiagramDesignerPanel.prototype.onResize = function (width, height) {
+    ModelEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
     };
 
-    return DiagramDesignerPanel;
+    ModelEditorPanel.prototype.destroy = function () {
+        this.control.destroy();
+        this.widget.destroy();
+
+        PanelBaseWithHeader.prototype.destroy.call(this);
+    };
+
+    ModelEditorPanel.prototype.onActivate = function () {
+        this.control.attachClientEventListeners();
+    };
+
+    ModelEditorPanel.prototype.onDeactivate = function () {
+        this.control.detachClientEventListeners();
+    };
+
+    return ModelEditorPanel;
 });

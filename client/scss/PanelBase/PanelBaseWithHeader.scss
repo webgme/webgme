@@ -1,4 +1,6 @@
 $panel-header-background-color: #EFEFEF;
+$panel-header-active-background-color: rgba(82, 168, 236, 0.8);
+$panel-header-active-title-color: #FFF;
 $panel-body-background-color: #FFFFFF;
 $panel-body-background-color-read-only: #FBFBFB;
 
@@ -10,13 +12,18 @@ $sidepane-panel-body-background-color-read-only: #FBFBFB;
 $sidepane-panel-border-color: #E9E9E9;
 $sidepane-panel-border-radius: 4px;
 
+$panel-header-height: 30px;
+$side-panel-header-height: 18px;
+$panel-border-bottom-width: 2px;
+
 .panel-base-wh {
   box-sizing: border-box;
 
   .panel-header {
     padding: 5px;
-    height: 30px;
+    height: $panel-header-height - $panel-border-bottom-width;
     background-color: $panel-header-background-color;
+    border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
     /*overflow: visible;
     overflow-x: hidden;*/
     white-space: nowrap;
@@ -95,6 +102,12 @@ $sidepane-panel-border-radius: 4px;
       background-color: $panel-body-background-color-read-only;
     }
   }
+
+  &.active-panel {
+    .panel-header {
+      border-bottom-color: $panel-header-active-background-color;
+    }
+  }
 }
 
 
@@ -114,8 +127,9 @@ $sidepane-panel-border-radius: 4px;
 
     .panel-header {
       padding: 3px;
-      height: 18px;
+      height: $side-panel-header-height - $panel-border-bottom-width;
       background-color: $sidepane-panel-header-background-color;
+      border-bottom: $panel-border-bottom-width solid rgba(0, 0, 0, 0);
 
       .panel-header-title {
         font-size: 11px;
@@ -139,6 +153,12 @@ $sidepane-panel-border-radius: 4px;
     &.read-only {
       .panel-body {
         background-color: $sidepane-panel-body-background-color-read-only;
+      }
+    }
+
+    &.active-panel {
+      .panel-header {
+        border-bottom-color: $panel-header-active-background-color;
       }
     }
   }
