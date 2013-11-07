@@ -16,8 +16,6 @@ define(['logManager'], function (logManager) {
         this._logger = logManager.create('PanelManager');
 
         this._activePanel = undefined;
-
-        var self = this;
     };
 
 
