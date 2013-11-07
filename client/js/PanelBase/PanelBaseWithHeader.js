@@ -90,7 +90,7 @@ define(['js/PanelBase/PanelBase',
         //TITLE IN HEADER BAR
         if (options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true) {
             this.$panelHeaderTitle = $('<div/>', {
-                "class" : "panel-header-title user-select-on"
+                "class" : "panel-header-title"
             });
             this.$panelHeader.append(this.$panelHeaderTitle);
         }
