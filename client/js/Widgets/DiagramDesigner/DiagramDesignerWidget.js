@@ -326,19 +326,20 @@ define(['logManager',
         if (this.toolBar) {
             /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
                 //add extra visual piece
-            this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-                self.itemAutoLayout(data.mode);
-            });
-
-            this.toolBar.addButton({ "title": "Grid layout",
-                "icon": "icon-th",
-                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {
+                /*this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+                    self.itemAutoLayout(data.mode);
+                });
+
+                this.toolBar.addButton({ "title": "Grid layout",
+                    "icon": "icon-th",
+                    "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
                 this.toolBar.addButton({ "title": "Cozy Grid layout",
                     "icon": "icon-th-large",
-                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );
+                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );*/
 
                 //progress text in toolbar for debug only
                 this.skinParts.$progressText = this.toolBar.addLabel();
