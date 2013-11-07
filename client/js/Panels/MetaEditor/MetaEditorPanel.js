@@ -45,6 +45,10 @@ define(['js/PanelBase/PanelBaseWithHeader',
             self.setTitle(title);
         };
 
+        this.widget.onUIActivity = function () {
+            WebGMEGlobal.PanelManager.setActivePanel(self);
+        };
+
         this.control = new MetaEditorControl({"client": this._client,
             "widget": this.widget});
 
@@ -72,10 +76,12 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.prototype.destroy.call(this);
     };
 
+    /* override IActivePanel.prototype.onActivate */
     MetaEditorPanel.prototype.onActivate = function () {
         this.control.attachClientEventListeners();
     };
 
+    /* override IActivePanel.prototype.onDeactivate */
     MetaEditorPanel.prototype.onDeactivate = function () {
         this.control.detachClientEventListeners();
     };

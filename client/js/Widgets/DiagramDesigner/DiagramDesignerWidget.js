@@ -1379,6 +1379,14 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
+    DiagramDesignerWidget.prototype._triggerUIActivity = function () {
+        this.onUIActivity();
+    };
+
+    DiagramDesignerWidget.prototype.onUIActivity = function () {
+        this.logger.warning("DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...");
+    };
+
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget

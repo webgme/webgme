@@ -50,32 +50,45 @@ define(['logManager',
         //handle mouse down in designer-items
         this.$el.on('mousedown.SelectionManagerItem', 'div.' + DiagramDesignerWidgetConstants.DESIGNER_ITEM_CLASS,  function (event) {
             var itemId = $(this).attr("id");
+
+            self._diagramDesigner._triggerUIActivity();
+
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
                 self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._diagramDesigner.onElementMouseDown(itemId);
                 self._setSelection([itemId], self._isMultiSelectionModifierKeyPressed(event));
-                event.stopPropagation();
-                event.preventDefault();
             }
+
+            event.stopPropagation();
+            event.preventDefault();
         });
 
         //handle mouse down in designer-connections
         this.$el.on('mousedown.SelectionManagerConnection', 'path[class="' + DiagramDesignerWidgetConstants.DESIGNER_CONNECTION_CLASS +'"]',  function (event) {
             var connId = $(this).attr("id").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ARROW_END_ID_PREFIX, "").replace(DiagramDesignerWidgetConstants.PATH_SHADOW_ID_PREFIX, "");
+
+            self._diagramDesigner._triggerUIActivity();
+
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.READ_ONLY ||
                 self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._diagramDesigner.onElementMouseDown(connId);
                 self._setSelection([connId], self._isMultiSelectionModifierKeyPressed(event));
-                event.stopPropagation();
-                event.preventDefault();
             }
+
+            event.stopPropagation();
+            event.preventDefault();
         });
 
         //handle mouse down on background --> start rubberband selection
         this.$el.on('mousedown.SelectionManager', function (event) {
+
+            self._diagramDesigner._triggerUIActivity();
+
             if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
                 self._onBackgroundMouseDown(event);
             }
+
+            event.stopPropagation();
         });
     };
 

@@ -111,6 +111,8 @@ define(['logManager',
                 sCompId = el.attr(DiagramDesignerWidgetConstants.DATA_SUBCOMPONENT_ID),
                 buttonLeft = event.which === 1;
 
+            self._diagramDesigner._triggerUIActivity();
+
             if (buttonLeft) {
                 if (objId === undefined || objId === null) {
                     self.logger.error('MOUSEDOWN on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
