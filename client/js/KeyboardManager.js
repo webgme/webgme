@@ -103,11 +103,13 @@ define(['logManager'], function (logManager) {
         if (this._listener !== l) {
             this._listener = l;
 
-            if (!this._listener.onKeyDown) {
-                this._logger.warning('Listener is missing "onKeyDown"...');
-            }
-            if (!this._listener.onKeyUp) {
-                this._logger.warning('Listener is missing "onKeyUp"...');
+            if (this._listener) {
+                if (!this._listener.onKeyDown) {
+                    this._logger.warning('Listener is missing "onKeyDown"...');
+                }
+                if (!this._listener.onKeyUp) {
+                    this._logger.warning('Listener is missing "onKeyUp"...');
+                }
             }
         }
     };
