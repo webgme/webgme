@@ -2,10 +2,12 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
+    'js/Clipboard/ISupportClipboard',
     'js/Widgets/MetaEditor/MetaEditorWidget',
     './MetaEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
+             ISupportClipboard,
              MetaEditorWidget,
              MetaEditorControl) {
 
@@ -32,6 +34,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     //inherit from PanelBaseWithHeader
     _.extend(MetaEditorPanel.prototype, PanelBaseWithHeader.prototype);
     _.extend(MetaEditorPanel.prototype, IActivePanel.prototype);
+    _.extend(MetaEditorPanel.prototype, ISupportClipboard.prototype);
 
     MetaEditorPanel.prototype._initialize = function () {
         var self = this;
@@ -84,6 +87,16 @@ define(['js/PanelBase/PanelBaseWithHeader',
     /* override IActivePanel.prototype.onDeactivate */
     MetaEditorPanel.prototype.onDeactivate = function () {
         this.control.detachClientEventListeners();
+    };
+
+    /* override ISupportClipboard.prototype.onCopy */
+    MetaEditorPanel.prototype.onCopy = function () {
+        return this.widget.onCopy();
+    };
+
+    /* override ISupportClipboard.prototype.onPaste */
+    MetaEditorPanel.prototype.onPaste = function (data) {
+        return this.widget.onPaste(data);
     };
 
     return MetaEditorPanel;
