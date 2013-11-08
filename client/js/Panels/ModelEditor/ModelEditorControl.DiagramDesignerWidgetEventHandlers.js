@@ -114,6 +114,10 @@ define(['logManager',
             return self._onCopy();
         };
 
+        this.designerCanvas.onPaste = function (data) {
+            return self._onPaste(data);
+        };
+
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
     };
 
@@ -677,6 +681,35 @@ define(['logManager',
 
         return res;
     };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onPaste = function (data) {
+        var len,
+            objDesc,
+            copyOpts = { "parentId": this.currentNodeInfo.id };
+
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            this.logger.error('Can not create JSON object from pasted string: ' + data);
+            data = undefined;
+        }
+
+        if (data && _.isArray(data)) {
+            len = data.length;
+
+            while (len--) {
+                objDesc = data[len];
+
+                if (objDesc && objDesc.ID) {
+                    copyOpts[objDesc.ID] = {};
+                }
+            }
+
+            this._client.intellyPaste(copyOpts);
+        }
+
+    };
+
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
 });
