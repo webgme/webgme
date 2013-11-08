@@ -690,7 +690,7 @@ define(['logManager',
         try {
             data = JSON.parse(data);
         } catch (e) {
-            this.logger.error('Can not create JSON object from pasted string: ' + data);
+            this.logger.error('Can not create JSON object from pasted string: "' + data + '"');
             data = undefined;
         }
 
