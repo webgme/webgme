@@ -16,8 +16,7 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target",
-        PARTBROWSERWIDGET = 'PartBrowserWidget';
+        CONNECTION_TARGET_NAME = "target";
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -287,7 +286,7 @@ define(['logManager',
 
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
-        var accept = false,
+        var accept,
             items = DragHelper.getDragItems(dragInfo),
             effects = DragHelper.getDragEffects(dragInfo);
 
@@ -318,8 +317,6 @@ define(['logManager',
             self._client.startTransaction();
 
             for (i = 0; i < idList.length; i+= 1) {
-                //if dragsource is PartBrowserWidget --> instantiate
-                // otherwise create reference
                 createChildParams = undefined;
                 switch (key) {
                     case "CREATE_INSTANCE":
