@@ -123,7 +123,8 @@
 .model-decorator .ports .right .port .connector {
   left: 57px; }
 .model-decorator.accept-droppable {
-  background-color: lime; }
+  background-color: lime;
+  cursor: alias; }
 
 .selected .model-decorator {
   border: 1px solid #52a8ec;
