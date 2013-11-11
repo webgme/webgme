@@ -17,6 +17,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
       // Validate the node itself..
       logger.info("Validating node: " + id);
       var node = client.getNode(id);
+      var node_name = node.getAttribute('name');
       
       // find if the node has a Constraint Object
       // and collect them in a constraints array
@@ -34,6 +35,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
             var constraint = grandchild_node.getAttribute(nodePropertyNames.Attributes.OCLConstraint);
             if ( constraint !== undefined || constraint !== "" ) {
               var constraint_obj = {
+                node_name: node_name,
                 name: grandchild_name,
                 constraint: constraint
               };
@@ -47,12 +49,12 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
 
         var result = eval("(" + constraint.constraint + ")();");
 
-        var msg = "[[ " + constraint.name + " ]]";
+        var msg = '[[ <' + constraint.name + '> of <' + constraint.node_name + '> ]]';
         if (result) {
-            logger.warn('No violation of a constraint on ' +
+            logger.warn('No violation of a constraint: ' +
               msg);
         } else {
-            logger.warn('!!Violation of a constraint on ' +
+            logger.warn('!!Violation of a constraint: ' +
               msg + "!!!");
         }
 
