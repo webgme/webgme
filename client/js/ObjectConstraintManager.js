@@ -17,15 +17,46 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
       // Validate the node itself..
       logger.info("Validating node: " + id);
       var node = client.getNode(id);
-      var constraint = node.getAttribute(nodePropertyNames.Attributes.OCLConstraint);
-      if ( constraint !== undefined && constraint !== "" ) {
-        var result = eval("(" + constraint + ")();");
-        if (result) {
-            logger.warn('No Validation');
-        } else {
-            logger.warn('!!Validation!!!');
+      
+      // find if the node has a Constraint Object
+      // and collect them in a constraints array
+      var constraints = [];
+
+      var children = node.getChildrenIds();
+      children.forEach(function(child) {
+        var child_node = client.getNode(child);
+        var child_name = child_node.getAttribute('name');
+        if (child_name == 'Constraints') {
+          var grandchildren = child_node.getChildrenIds();
+          grandchildren.forEach(function(grandchild) {
+            var grandchild_node = client.getNode(grandchild);
+            var grandchild_name = grandchild_node.getAttribute('name');
+            var constraint = grandchild_node.getAttribute(nodePropertyNames.Attributes.OCLConstraint);
+            if ( constraint !== undefined || constraint !== "" ) {
+              var constraint_obj = {
+                name: grandchild_name,
+                constraint: constraint
+              };
+              constraints.push(constraint_obj);
+            }
+          });
         }
-      }
+      });
+
+      constraints.forEach(function(constraint) {
+
+        var result = eval("(" + constraint.constraint + ")();");
+
+        var msg = "[[ " + constraint.name + " ]]";
+        if (result) {
+            logger.warn('No violation of a constraint on ' +
+              msg);
+        } else {
+            logger.warn('!!Violation of a constraint on ' +
+              msg + "!!!");
+        }
+
+      });
 
       // Call validation for the node's children
       var children = node.getChildrenIds();
