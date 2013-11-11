@@ -291,13 +291,11 @@ define(['js/Constants',
     /**** Override from ModelDecoratorCore ****/
     ModelDecoratorDiagramDesignerWidget.prototype._updateReference = function () {
         var inverseClass = 'inverse-on-hover',
-            icon,
             self = this;
 
         ModelDecoratorCore.prototype._updateReference.call(this);
 
         if (this.skinParts.$ref) {
-            icon = this.skinParts.$ref.find('i').first();
             if (this.skinParts.$ref.hasClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET)) {
                 this.skinParts.$ref.removeClass(inverseClass);
             } else {
