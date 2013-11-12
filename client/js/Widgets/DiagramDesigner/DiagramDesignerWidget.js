@@ -28,6 +28,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/SearchManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
+    './DiagramDesignerWidget.Draggable',
     './DiagramDesignerWidget.Clipboard',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
@@ -51,6 +52,7 @@ define(['logManager',
                                                       SearchManager,
                                                       DiagramDesignerWidgetContextMenu,
                                                       DiagramDesignerWidgetDroppable,
+                                                      DiagramDesignerWidgetDraggable,
                                                       DiagramDesignerWidgetClipboard) {
 
     var DiagramDesignerWidget,
@@ -153,8 +155,8 @@ define(['logManager',
         };
 
         //initiate Drag Manager (if needed)
-        this.dragManager = new DragManager({"diagramDesigner": this});
-        this.dragManager.initialize(this.skinParts.$itemsContainer);
+        //this.dragManager = new DragManager({"diagramDesigner": this});
+        //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         //initiate Connection Router (if needed)
@@ -1163,7 +1165,7 @@ define(['logManager',
     /************** API REGARDING TO MANAGERS ***********************/
 
     DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
-        this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+        //this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
     DiagramDesignerWidget.prototype.enableRotate = function (enabled) {
@@ -1228,7 +1230,7 @@ define(['logManager',
         if (this.mode !== mode) {
             this.highlightManager.deactivate();
             this.selectionManager.deactivate();
-            this.dragManager.deactivate();
+            //this.dragManager.deactivate();
             this.connectionDrawingManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
@@ -1241,7 +1243,7 @@ define(['logManager',
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
-                    this.dragManager.activate();
+                    //this.dragManager.activate();
                     this.connectionDrawingManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
@@ -1402,7 +1404,7 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
-
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
 
     return DiagramDesignerWidget;
 });
