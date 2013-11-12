@@ -48,6 +48,15 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
+        this._onComponentResize = function(_canvas, ID) {//Boxes and lines
+            self.logger.warning("Resized Component: " + ID.ID); 
+            if( self._autorouterBoxes[ID.ID] )
+                self._resizeItem( ID.ID );
+            else
+                self.insertItem( ID.ID );
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
+
         this._onComponentDelete = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Deleting : " + ID);
             self.deleteItem( ID );
@@ -73,6 +82,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //removeEventListener(eventName, handler);
         //this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
@@ -81,7 +91,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
         var i;
 
-        this.logger.debug('Redraw connection request: ' + idList.length);
+        console.log('About to REDRAW');
 
         this.profiler.clear();
         this.profiler.startProfile('redrawConnections');
@@ -288,6 +298,39 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         }
             this.autorouter.remove(item);
+
+    };
+
+    ConnectionRouteManager3.prototype._resizeItem = function (objId) {
+        var canvas = this.diagramDesigner,
+            isEnd = true, //TODO
+            connectionMetaInfo,
+            designerItem = canvas.items[objId],
+            newCoord = designerItem.getBoundingBox(),
+            newBox = { 'x1': newCoord.x, 
+                       'x2': newCoord.x2, 
+                       'y1': newCoord.y, 
+                       'y2': newCoord.y2,
+          'ConnectionAreas': [] },
+            connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
+            portIds = this._autorouterPorts[objId],
+            i;
+
+        //Create the new box connection areas
+        i = connAreas.length;
+        while (i--) {
+            //Building up the ConnectionAreas obiect
+            newBox.ConnectionAreas.push([ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ]);
+        }
+
+        //Update Box 
+        this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
+
+        //Resize Ports Based on Connections
+        i = portIds !== undefined ? portIds.length : 0;
+        while( i-- ){
+            this._updatePort( objId, portIds[i] );
+        }
 
     };
 
