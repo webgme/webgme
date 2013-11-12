@@ -19,7 +19,6 @@ delConstraint(node,name)
 define([ "util/assert" ], function (ASSERT) {
     "use strict";
     var CONSTRAINTS_RELID = "_constraints";
-    //var C_RELID_PREFIX = "_c_";
     var C_DEF_PRIORITY = 1;
     function constraintCore (_innerCore) {
         var _core = {};
@@ -48,7 +47,10 @@ define([ "util/assert" ], function (ASSERT) {
             }
             return relId;
         };
-
+        var getRegConstName = function(name){
+            return "_ch#_"+name;
+        };
+        
         _core.getConstraint = function(node,name){
             ASSERT(_innerCore.isValidNode(node));
             var constraintsNode = _innerCore.getChild(node,CONSTRAINTS_RELID);
@@ -80,6 +82,7 @@ define([ "util/assert" ], function (ASSERT) {
             _innerCore.setAttribute(constraintNode,"name",name);
             _innerCore.setAttribute(constraintNode,"script",constraintObj.script);
             _innerCore.setAttribute(constraintNode,"priority",constraintObj.priority);
+            _innerCore.setRegistry(node,getRegConstName(name),(_innerCore.getRegistry(node,getRegConstName(name)) || 0)+1);
         };
 
         _core.delConstraint = function(node,name){
@@ -90,6 +93,7 @@ define([ "util/assert" ], function (ASSERT) {
                 var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
                 _innerCore.deleteNode(constraintNode);
             }
+            _innerCore.delRegistry(node,getRegConstName(name));
         };
 
         _core.getConstraintNames = function(node){
