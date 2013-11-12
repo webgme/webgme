@@ -33,9 +33,24 @@ define(['./DragEffects',
                 helperEl.css({'pointer-events':'none'});
 
                 //add DRAG info
-                helperEl.data(DragConstants.DRAG_INFO, _createDragInfo(el, params));
+                helperEl.data(DragConstants.DRAG_INFO, _createDragInfo(el, params, event));
 
                 return helperEl;
+            },
+            start: function( event, ui ) {
+                if (params && _.isFunction(params.start)) {
+                    return params.start.call(el, event);
+                }
+            },
+            drag: function( event, ui ) {
+                if (params && _.isFunction(params.drag)) {
+                    return params.drag.call(el, event);
+                }
+            },
+            stop: function( event, ui ) {
+                if (params && _.isFunction(params.stop)) {
+                    return params.stop.call(el, event);
+                }
             }
         });
     };
@@ -59,7 +74,7 @@ define(['./DragEffects',
         return el.hasClass('ui-draggable');
     };
 
-    var _createDragInfo = function (el, params) {
+    var _createDragInfo = function (el, params, event) {
         var dragInfo = {};
 
         dragInfo[DragConstants.DRAG_ITEMS] = [];
@@ -74,7 +89,7 @@ define(['./DragEffects',
 
         dragInfo[DragConstants.DRAG_PARAMS] = undefined;
         if (params && _.isFunction(params.dragParams)) {
-            dragInfo[DragConstants.DRAG_PARAMS] = params.dragParams(el);
+            dragInfo[DragConstants.DRAG_PARAMS] = params.dragParams(el, event);
         }
 
         return dragInfo;
@@ -82,6 +97,8 @@ define(['./DragEffects',
 
     return {
         DRAG_EFFECTS: DragEffects,
+        DEFAULT_CURSOR_AT: {'left': DEFAULT_CURSOR_AT.left,
+                            'top': DEFAULT_CURSOR_AT.top},
         makeDraggable: _makeDraggable,
         destroyDraggable: _destroyDraggable,
         enableDraggable: _enableDraggable
