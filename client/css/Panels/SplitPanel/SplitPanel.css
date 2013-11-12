@@ -20,7 +20,11 @@
     box-sizing: border-box; }
     .split-panel .splitter.vertical {
       border-left-width: 1px;
-      border-right-width: 1px; }
+      border-right-width: 1px;
+      cursor: ew-resize; }
     .split-panel .splitter.horizontal {
       border-top-width: 1px;
-      border-bottom-width: 1px; }
+      border-bottom-width: 1px;
+      cursor: ns-resize; }
+    .split-panel .splitter.resize {
+      background-color: #C4E1A4; }

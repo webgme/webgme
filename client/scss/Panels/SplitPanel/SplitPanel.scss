@@ -27,11 +27,17 @@
     &.vertical {
       border-left-width: 1px;
       border-right-width: 1px;
+      cursor: ew-resize;
     }
 
     &.horizontal {
       border-top-width: 1px;
       border-bottom-width: 1px;
+      cursor: ns-resize;
+    }
+
+    &.resize {
+      background-color: #C4E1A4;
     }
   }
 }

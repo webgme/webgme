@@ -16,7 +16,11 @@ define(['js/PanelBase/PanelBase',
         SPLITTER_CLASS = "splitter",
         SPLITTER_SIZE = 4,
         VERTICAL_CLASS = "vertical",
-        HORIZONTAL_CLASS = "horizontal";
+        HORIZONTAL_CLASS = "horizontal",
+        SPLITTER_RESIZE_CLASS = "resize",
+        MINIMUM_PANEL_SIZE = 50,
+        SPLITTER_SNAP_FROM_DISTANCE = 25,
+        SPLITTER_RESIZE_PADDING = 2;
 
     SplitPanel = function (layoutManager, params) {
         var options = {};
@@ -28,6 +32,8 @@ define(['js/PanelBase/PanelBase',
 
         this._panel1 = undefined;
         this._panel2 = undefined;
+
+        this._splitterPos = 0.5;
 
         //initialize UI
         this._initialize();
@@ -74,13 +80,21 @@ define(['js/PanelBase/PanelBase',
             event.stopPropagation();
         });
 
+        this._splitter.on('mousedown', function (event) {
+            self._startPanelResize(event);
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
         this._updateUI();
     };
 
     SplitPanel.prototype._updateUI = function () {
         var verticalSplit = this._width > this._height,
-            w = this._width,
-            h = this._height,
+            w1 = this._width,
+            h1 = this._height,
+            w2 = this._width,
+            h2 = this._height,
             sw = SPLITTER_SIZE,
             sh = SPLITTER_SIZE,
             p1_top = 0,
@@ -103,24 +117,20 @@ define(['js/PanelBase/PanelBase',
         if (has2Panels) {
             if (verticalSplit) {
                 sh = this._height;
-                w = Math.floor((this._width - sw) / 2);
-                if (w * 2 + sw !== this._width) {
-                    sw = this._width - 2 * w;
-                }
+                w1 = Math.floor((this._width - sw) * this._splitterPos);
+                w2 = this._width - w1 - sw;
                 this._splitter.addClass(VERTICAL_CLASS);
                 p1_left = 0;
-                splitter_left = w;
-                p2_left = w + sw;
+                splitter_left = w1;
+                p2_left = w1 + sw;
             } else {
                 sw = this._width;
-                h = Math.floor((this._height - sh) / 2);
-                if (h * 2 + sh !== this._height) {
-                    sh = this._height - 2 * h;
-                }
+                h1 = Math.floor((this._height - sh) * this._splitterPos);
+                h2 = this._height - h1 - sh;
                 this._splitter.addClass(HORIZONTAL_CLASS);
                 p1_top = 0;
-                splitter_top = h;
-                p2_top = h + sh;
+                splitter_top = h1;
+                p2_top = h1 + sh;
             }
 
             this._splitter.css({'width': sw,
@@ -128,32 +138,34 @@ define(['js/PanelBase/PanelBase',
                 'top': splitter_top,
                 'left': splitter_left});
 
-            this._panel1Container.css({'width': w,
-                'height': h,
+            this._panel1Container.css({'width': w1,
+                'height': h1,
                 'top': p1_top,
                 'left': p1_left});
 
-            this._panel2Container.css({'width': w,
-                'height': h,
+            this._panel2Container.css({'width': w2,
+                'height': h2,
                 'top': p2_top,
                 'left': p2_left});
 
             if (this._panel1) {
-                this._panel1.setSize(w, h);
+                this._panel1.setSize(w1, h1);
             }
 
             if (this._panel2) {
-                this._panel2.setSize(w, h);
+                this._panel2.setSize(w2, h2);
             }
         } else {
-            this._panel1Container.css({'width': w,
-                'height': h,
+            this._panel1Container.css({'width': w1,
+                'height': h1,
                 'top': p1_top,
                 'left': p1_left});
 
             if (this._panel1) {
-                this._panel1.setSize(w, h);
+                this._panel1.setSize(w1, h1);
             }
+
+            this._splitterPos = 0.5;
         }
     };
 
@@ -214,6 +226,82 @@ define(['js/PanelBase/PanelBase',
                 WebGMEGlobal.PanelManager.setActivePanel(this._panel2);
             }
         //}
+    };
+
+    SplitPanel.prototype._startPanelResize = function (event) {
+        var self = this,
+            verticalSplit = this._width > this._height;
+
+        this._splitterResize = this._splitter.clone().addClass(SPLITTER_RESIZE_CLASS);
+        this.$el.append(this._splitterResize);
+
+        this._splitterResizePos = this._splitterPos;
+        this._splitStartMousePos = verticalSplit ? event.pageX : event.pageY;
+
+
+        $(document).on('mousemove.SplitPanel', function (event) { self._onMouseMove(event); });
+        $(document).on('mouseup.SplitPanel', function (event) { self._onMouseUp(event); });
+    };
+
+    SplitPanel.prototype._onMouseMove = function (event) {
+        var verticalSplit = this._width > this._height,
+            mousePos = verticalSplit ? event.pageX : event.pageY,
+            mouseDelta = mousePos - this._splitStartMousePos,
+            maxVal = verticalSplit ? this._width :  this._height,
+            resizeDelta = mouseDelta / maxVal,
+            snapDistance = SPLITTER_SNAP_FROM_DISTANCE / maxVal,
+            minPanelSize = MINIMUM_PANEL_SIZE / maxVal;
+
+        this._splitterResizePos =  this._splitterPos + resizeDelta;
+
+        if (this._splitterResizePos >= 0.5 - snapDistance &&
+            this._splitterResizePos <= 0.5 + snapDistance) {
+            this._splitterResizePos = 0.5;
+        }
+
+        if (this._splitterResizePos < minPanelSize) {
+            this._splitterResizePos = minPanelSize;
+        }
+
+        if (this._splitterResizePos > 1 - minPanelSize) {
+            this._splitterResizePos = 1 - minPanelSize;
+        }
+
+        this._updateSplitterResize();
+    };
+
+    SplitPanel.prototype._updateSplitterResize = function () {
+        var verticalSplit = this._width > this._height,
+            sw = SPLITTER_SIZE + 2 * SPLITTER_RESIZE_PADDING,
+            sh = SPLITTER_SIZE + 2 * SPLITTER_RESIZE_PADDING,
+            splitter_left,
+            splitter_top;
+
+        if (verticalSplit) {
+            sh = this._height;
+            splitter_left = Math.floor((this._width - sw) * this._splitterResizePos);
+        } else {
+            sw = this._width;
+            splitter_top = Math.floor((this._height - sh) * this._splitterResizePos);
+        }
+
+        this._splitterResize.css({'width': sw,
+            'height': sh,
+            'top': splitter_top,
+            'left': splitter_left});
+    };
+
+    SplitPanel.prototype._onMouseUp = function (event) {
+        $(document).off('mousemove.SplitPanel');
+        $(document).off('mouseup.SplitPanel');
+
+        this._splitterPos = this._splitterResizePos;
+
+        this._splitterResize.remove();
+        this._splitterResize = undefined;
+        this._splitterResizePos = undefined;
+
+        this._updateUI();
     };
 
     return SplitPanel;
