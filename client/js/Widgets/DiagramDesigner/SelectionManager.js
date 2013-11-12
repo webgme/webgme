@@ -110,7 +110,7 @@ define(['logManager',
     };
 
     SelectionManager.prototype.getSelectedElements = function () {
-        return this._selectedElements;
+        return this._selectedElements.slice(0);
     };
 
     SelectionManager.prototype.clear = function () {
