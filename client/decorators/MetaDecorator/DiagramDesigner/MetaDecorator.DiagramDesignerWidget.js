@@ -7,43 +7,46 @@ define(['js/Constants',
     './Attribute',
     './AttributeDetailsDialog',
     'js/Panels/MetaEditor/MetaRelations',
+    './MetaDecorator.DiagramDesignerWidget.Constraints',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DefaultDecoratorDiagramDesignerWidget,
                                                           MetaDecoratorTemplate,
                                                           Attribute,
                                                           AttributeDetailsDialog,
-                                                          MetaRelations) {
+                                                          MetaRelations,
+                                                          MetaDecoratorDiagramDesignerWidgetConstraints) {
 
-    var MetaDecorator,
-        __parent__ = DefaultDecoratorDiagramDesignerWidget,
-        __parent_proto__ = DefaultDecoratorDiagramDesignerWidget.prototype,
+    var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "MetaDecorator";
 
-    MetaDecorator = function (options) {
+    MetaDecoratorDiagramDesignerWidget = function (options) {
 
         var opts = _.extend( {}, options);
 
-        __parent__.apply(this, [opts]);
+        DefaultDecoratorDiagramDesignerWidget.apply(this, [opts]);
 
         this.name = "";
         this._attributeNames = [];
         this._attributes = {};
         this._skinParts = { "$name": undefined,
                             "$attributesContainer": undefined,
-                            "$addAttributeContainer": undefined };
+                            "$addAttributeContainer": undefined,
+                            "$constraintsContainer": undefined,
+                            "$addConstraintContainer": undefined};
 
         this.logger.debug("MetaDecorator ctor");
     };
 
-    _.extend(MetaDecorator.prototype, __parent_proto__);
-    MetaDecorator.prototype.DECORATORID = DECORATOR_ID;
+    _.extend(MetaDecoratorDiagramDesignerWidget.prototype, DefaultDecoratorDiagramDesignerWidget.prototype);
+    MetaDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
+    _.extend(MetaDecoratorDiagramDesignerWidget.prototype, MetaDecoratorDiagramDesignerWidgetConstraints.prototype);
 
     /*********************** OVERRIDE DECORATORBASE MEMBERS **************************/
 
-    MetaDecorator.prototype.$DOMBase = $(MetaDecoratorTemplate);
+    MetaDecoratorDiagramDesignerWidget.prototype.$DOMBase = $(MetaDecoratorTemplate);
 
-    MetaDecorator.prototype.on_addTo = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
         this._renderContent();
@@ -60,7 +63,7 @@ define(['js/Constants',
             event.preventDefault();
         });
 
-        //set the "Add new..." editable
+        //set the "Add new..." clickhandler
         this._skinParts.$addAttributeContainer.on("click", null, function (event) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 self._onNewAttributeClick();
@@ -70,7 +73,7 @@ define(['js/Constants',
         });
     };
 
-    MetaDecorator.prototype._renderContent = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype._renderContent = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             self = this;
@@ -82,19 +85,7 @@ define(['js/Constants',
         //find name placeholder
         this._skinParts.$name = this.$el.find(".name");
         this._skinParts.$attributesContainer = this.$el.find(".attributes");
-        this._skinParts.$addAttributeContainer = this.$el.find(".add-new");
-
-        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
-            this._skinParts.$addAttributeContainer.detach();
-        }
-
-        /* FILL WITH DATA */
-        if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
-            this._refreshName();
-
-            this._updateAttributes();
-        }
+        this._skinParts.$addAttributeContainer = this.$el.find(".add-new-attribute");
 
         this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
@@ -118,9 +109,27 @@ define(['js/Constants',
             e.stopPropagation();
             e.preventDefault();
         });
+
+        //call the Constraint's extension's init render code
+        this._renderContentConstraints();
+
+        if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
+            this._skinParts.$addAttributeContainer.detach();
+            this._skinParts.$addConstraintContainer.detach();
+        }
+
+        /* FILL WITH DATA */
+        if (nodeObj) {
+            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
+            this._refreshName();
+
+            this._updateAttributes();
+            this._updateConstraints();
+        }
+
     };
 
-    MetaDecorator.prototype.update = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype.update = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newName = "";
@@ -134,16 +143,17 @@ define(['js/Constants',
             }
 
             this._updateAttributes();
+            this._updateConstraints();
         }
     };
 
-    MetaDecorator.prototype._refreshName = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
         this._skinParts.$name.text(this.name);
         this._skinParts.$name.attr("title", this.name);
     };
 
     /***************  CUSTOM DECORATOR PART ****************************/
-    MetaDecorator.prototype._updateAttributes = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype._updateAttributes = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             newAttributes = nodeObj ? nodeObj.getAttributeNames() : [],
@@ -178,7 +188,7 @@ define(['js/Constants',
 
     };
 
-    MetaDecorator.prototype._addAttribute = function (attrName) {
+    MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
             attrMetaDescriptor = nodeObj.getAttributeDescriptor(attrName);
@@ -190,7 +200,7 @@ define(['js/Constants',
     };
 
 
-    MetaDecorator.prototype._removeAttribute = function (attrName) {
+    MetaDecoratorDiagramDesignerWidget.prototype._removeAttribute = function (attrName) {
         var idx = this._attributeNames.indexOf(attrName);
 
         if (idx !== -1) {
@@ -201,7 +211,7 @@ define(['js/Constants',
     };
 
 
-    MetaDecorator.prototype.destroy = function () {
+    MetaDecoratorDiagramDesignerWidget.prototype.destroy = function () {
         var len = this._attributeNames.length;
         while (len--) {
             this._removeAttribute(this._attributeNames[len]);
@@ -210,7 +220,7 @@ define(['js/Constants',
 
     /**************** EDIT NODE TITLE ************************/
 
-    MetaDecorator.prototype._onNodeTitleChanged = function (oldValue, newValue) {
+    MetaDecoratorDiagramDesignerWidget.prototype._onNodeTitleChanged = function (oldValue, newValue) {
         var client = this._control._client;
 
         client.setAttributes(this._metaInfo[CONSTANTS.GME_ID], nodePropertyNames.Attributes.name, newValue);
@@ -219,20 +229,25 @@ define(['js/Constants',
     /**************** END OF - EDIT NODE TITLE ************************/
 
     /**************** CREATE NEW ATTRIBUTE ********************/
-    MetaDecorator.prototype._onNewAttributeClick = function () {
+
+    MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
+        this._onNewClick(this._attributeNames, this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._onNewAttributeCreate);
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer, saveFn) {
         var inputCtrl,
-            w = this._skinParts.$attributesContainer.width(),
+            w = itemContainer.width(),
             cancel,
             save,
             endEdit,
             self = this,
             ctrlGroup;
 
-        this._skinParts.$addAttributeContainer.detach();
+        addNewContainer.detach();
 
         endEdit = function () {
             ctrlGroup.remove();
-            self._skinParts.$addAttributeContainer.insertAfter(self._skinParts.$attributesContainer);
+            addNewContainer.insertAfter(itemContainer);
         };
 
         cancel = function () {
@@ -242,10 +257,11 @@ define(['js/Constants',
         save = function () {
             var attrName = inputCtrl.val();
 
-            if (self._isValidName(attrName)) {
+            if (self._isValidName(attrName, existingNames)) {
                 //call onNewAttrCreate
-                self._onNewAttributeCreate(attrName);
-
+                if (_.isFunction(saveFn)) {
+                    saveFn.call(self, attrName);
+                }
                 //call finish
                 endEdit();
             }
@@ -264,7 +280,7 @@ define(['js/Constants',
 
         ctrlGroup.append(inputCtrl);
 
-        ctrlGroup.insertAfter(this._skinParts.$attributesContainer);
+        ctrlGroup.insertAfter(itemContainer);
 
         //finally put the control in focus
         inputCtrl.focus();
@@ -293,7 +309,7 @@ define(['js/Constants',
                 }
             }
         ).keyup( function (/*event*/) {
-            if (self._isValidName(inputCtrl.val())) {
+            if (self._isValidName(inputCtrl.val(), existingNames)) {
                 ctrlGroup.removeClass("error");
             } else {
                 ctrlGroup.addClass("error");
@@ -304,7 +320,7 @@ define(['js/Constants',
     };
 
 
-    MetaDecorator.prototype._onNewAttributeCreate = function (attrName) {
+    MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeCreate = function (attrName) {
         var desc,
             self = this,
             attrNames = this._attributeNames.slice(0),
@@ -324,34 +340,36 @@ define(['js/Constants',
         });
     };
 
-    MetaDecorator.prototype._isValidName = function (attrName) {
+    MetaDecoratorDiagramDesignerWidget.prototype._isValidName = function (attrName, collection) {
         var result = true;
 
         if (attrName === '' ||
             typeof attrName !== 'string' ||
-            this._attributeNames.indexOf(attrName) !== -1) {
+            collection.indexOf(attrName) !== -1) {
             result = false;
         }
 
         return result;
     };
 
-    MetaDecorator.prototype.readOnlyMode = function (readOnlyMode) {
-        __parent_proto__.readOnlyMode.call(this, readOnlyMode);
+    MetaDecoratorDiagramDesignerWidget.prototype.readOnlyMode = function (readOnlyMode) {
+        DefaultDecoratorDiagramDesignerWidget.prototype.readOnlyMode.call(this, readOnlyMode);
 
         this._setReadOnlyMode(readOnlyMode);
     };
 
-    MetaDecorator.prototype._setReadOnlyMode = function (readOnly) {
+    MetaDecoratorDiagramDesignerWidget.prototype._setReadOnlyMode = function (readOnly) {
         if (readOnly === true) {
             this._skinParts.$addAttributeContainer.detach();
+            this._skinParts.$addConstraintContainer.detach();
             this.$el.find('input.new-attr').val('').blur();
         } else {
             this._skinParts.$addAttributeContainer.insertAfter(this._skinParts.$attributesContainer);
+            this._skinParts.$addConstraintContainer.insertAfter(this._skinParts.$constraintsContainer);
         }
     };
 
-    MetaDecorator.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
+    MetaDecoratorDiagramDesignerWidget.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
         var client = this._control._client,
             objID = this._metaInfo[CONSTANTS.GME_ID];
 
@@ -381,7 +399,7 @@ define(['js/Constants',
         client.completeTransaction();
     };
 
-    MetaDecorator.prototype.deleteAttributeDescriptor = function (attrName) {
+    MetaDecoratorDiagramDesignerWidget.prototype.deleteAttributeDescriptor = function (attrName) {
         var client = this._control._client,
             objID = this._metaInfo[CONSTANTS.GME_ID];
 
@@ -399,8 +417,10 @@ define(['js/Constants',
         client.completeTransaction();
     };
 
+    /********* END OF --- ATTRIBUTES **************************************/
 
-    MetaDecorator.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
+
+    MetaDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
             edge = 10,
             LEN = 20,
@@ -473,5 +493,6 @@ define(['js/Constants',
         return result;
     };
 
-    return MetaDecorator;
+
+    return MetaDecoratorDiagramDesignerWidget;
 });

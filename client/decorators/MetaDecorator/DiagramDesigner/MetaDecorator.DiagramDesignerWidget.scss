@@ -1,5 +1,6 @@
 @import "../../../scss/Widgets/DiagramDesigner/Connector";
 @import "Attribute";
+@import "Constraint";
 
 $min-width: 90px;
 $height: 40px;
@@ -8,9 +9,11 @@ $padding: 0 3px 0 3px;
 $background-color: #FFFFFF;
 $selected-background-color: lighten($background-color, 10);
 $selected-border: 1px solid #52A8EC;
-$attributes-background-color: rgba(255, 255, 0, 0.5);
 $attributes-add-new-hover-background-color: #DBEAFC;
 $selected-attributes-add-new-hover-background-color: #FFFFC0;
+$attribute-height: 16px;
+$hover-background-color: #EEE;
+$section-title-background-color: #F3F3F3;
 
 .meta-decorator {
   min-width: $min-width;
@@ -31,28 +34,72 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
     padding: $padding;
   }
 
-  .attributes {
-    /*background-color: $attributes-background-color;*/
+  .attributes,
+  .constraints{
     font-size: 10px;
     min-height: 1px;
     margin-bottom: 0;
     padding: $padding;
 
+    li {
+      div {
+        white-space: nowrap;
+        position: relative;
+        height: $attribute-height;
+        line-height: $attribute-height;
+
+        &:hover {
+          cursor: pointer;
+          background-color: $hover-background-color;
+        }
+
+        .n {
+          float: left;
+          margin-right: 3px;
+          max-width: 90px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: left;
+        }
+
+        .t {
+          float: right;
+          text-align: right;
+        }
+      }
+    }
+  }
+
+  .attributes {
     @include attribute();
   }
 
-  .add-new {
+  .constraints {
+    @include constraint();
+  }
+
+  .add-new-attribute,
+  .add-new-constraint {
     font-size: 10px;
     cursor: pointer;
-
-    [class^="icon-"],
-    [class*=" icon-"] {
-      margin-top: -1px;
-    }
 
     &:hover {
       background-color: $attributes-add-new-hover-background-color;
     }
+  }
+
+  .attributes-title,
+  .constraints-title {
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    background-color: $section-title-background-color;
+    line-height: 13px;
+  }
+
+  .constraints-title {
+    border-top: 1px dashed #999999;
   }
 
   input[type=text].new-attr {
@@ -84,7 +131,8 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
     border: $selected-border;
     background-color: $selected-background-color;
 
-    .add-new {
+    .add-new-attribute,
+    .add-new-constraint {
       &:hover {
         background-color: $selected-attributes-add-new-hover-background-color;
       }
@@ -95,11 +143,14 @@ $selected-attributes-add-new-hover-background-color: #FFFFC0;
 .items {
   &.highlight-mode {
     .meta-decorator {
-      .attributes {
-        .attr {
-          &:hover {
-            cursor: default;
-            background-color: $background-color;
+      .attributes,
+      .constraints {
+        li {
+          div {
+            &:hover {
+              cursor: default;
+              background-color: $background-color;
+            }
           }
         }
       }
