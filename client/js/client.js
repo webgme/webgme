@@ -1823,19 +1823,19 @@ define([
                 };
 
                 //constraint functions
-                var getDescriptorNames = function(){
-                    return _core.getDescriptorNames(_nodes[_id].node);
+                var getConstraintNames = function(){
+                    return _core.getConstraintNames(_nodes[_id].node);
                 };
-                var getDescriptor = function(name){
-                    return _core.getDescriptor(_nodes[_id].node,name);
+                var getConstraint = function(name){
+                    return _core.getConstraint(_nodes[_id].node,name);
                 };
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
                     //TODO - what to print here - now we use as testing method...
-                    console.log('kecso1',_core.getPointerPath(_nodes[_id].node,'src'));
-                    _core.setPointer(_nodes[_id].node,'src',null);
-                    console.log('kecso2',_core.getPointerPath(_nodes[_id].node,'src'));
+                    console.log('printing info of node '+_id);
+                    console.log('not implemented');
+                    console.log('printing info of node '+_id+' done');
                 };
 
                 if(_nodes[_id]){
@@ -1867,8 +1867,8 @@ define([
                         getBase                        : getBase,
 
                         //constraint functions
-                        getDescriptorNames : getDescriptorNames,
-                        getDescriptor : getDescriptor,
+                        getConstraintNames : getConstraintNames,
+                        getConstraint : getConstraint,
 
                         printData: printData
 
