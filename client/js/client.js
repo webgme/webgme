@@ -1648,7 +1648,7 @@ define([
             //constraint functions
             function setConstraint(path,name,constraintObj){
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
-                    _core.setConstraint(_nodes[path].node,constraintObj);
+                    _core.setConstraint(_nodes[path].node,name,constraintObj);
                     saveRoot('setConstraint('+path+','+name+')');
                 }
             }
