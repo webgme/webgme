@@ -7,7 +7,7 @@ define(['js/Constants',
                                             Constraint) {
 
     var MetaDecoratorDiagramDesignerWidgetConstraints,
-        SCRIPT_TEMPLATE = "function () {\n//return TRUE if constraint is valid, return FALSE otherwise\nreturn true;\n}";
+        SCRIPT_TEMPLATE = "function(client, node) {\n//return TRUE if the constraint is valid, otherwise return FALSE\nreturn true;\n}";
 
     MetaDecoratorDiagramDesignerWidgetConstraints = function () {
     };
