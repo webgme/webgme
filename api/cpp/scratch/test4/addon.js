@@ -15,10 +15,20 @@ function(COMMON, TASYNC){
 
     TASYNC.call_sync = function(){
         var fiber = Fiber.current;
-        var done = TASYNC.call.apply(null,arguments);
+        //console.log("Debug Tasync: " + arguments.length);
+        //var done = TASYNC.call.apply(null,arguments); // Note: This is not the same as TASYNC.apply
+        var args = Array.prototype.slice.call(arguments);
+        var func = args.shift();
+        //console.log("Func: ")
+        //console.log(func)
+        var that = args.pop();
+        //console.log("That: ")
+        //console.log(that)
+        //console.log("Args: " + args.length)
+        var done = TASYNC.apply(func, args, that);
         // Check if returned value is a TASYNC future
         if (TASYNC.isFuture(done)){
-            //console.log("Returned from " + arguments[0] + " is a future")
+            //console.log("Returned from " + arguments[0].name + " is a future")
             TASYNC.call(function(val){
                 done = val;
                 //console.log(done);
@@ -45,7 +55,7 @@ function(COMMON, TASYNC){
         var interp = new addon.Interpreter(COMMON, TASYNC);
 
         // Launch interpreter
-        TASYNC.call_sync(interp.invokeEx);
+        TASYNC.call_sync(interp.invokeEx,[], null);
 
         TASYNC.call_sync(COMMON.closeProject);
         COMMON.closeDatabase();
