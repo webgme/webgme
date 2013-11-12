@@ -76,7 +76,7 @@ define([ "util/assert" ], function (ASSERT) {
             }
 
             var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
-            constraintNode.priority = constraintNode.priority || C_DEF_PRIORITY;
+            constraintObj.priority = constraintObj.priority || C_DEF_PRIORITY;
             _innerCore.setAttribute(constraintNode,"name",constraintObj.name);
             _innerCore.setAttribute(constraintNode,"script",constraintObj.script);
             _innerCore.setAttribute(constraintNode,"priority",constraintObj.priority);
@@ -87,7 +87,8 @@ define([ "util/assert" ], function (ASSERT) {
             var constraintsNode = _innerCore.getChild(node,CONSTRAINTS_RELID);
             var constRelId = getConstraintRelId(constraintsNode,name);
             if(constRelId){
-
+                var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
+                _innerCore.deleteNode(constraintNode);
             }
         };
 

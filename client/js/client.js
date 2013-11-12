@@ -1652,6 +1652,12 @@ define([
                     saveRoot('setConstraint('+path+')');
                 }
             }
+            function delConstraint(path,name){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delConstraint(_nodes[path].node,name);
+                    saveRoot('delConstraint('+path+')');
+                }
+            }
 
             //territory functions
             function addUI(ui, oneevent, guid) {
@@ -1836,6 +1842,13 @@ define([
                     console.log('printing info of node '+_id);
                     console.log('not implemented');
                     console.log('printing info of node '+_id+' done');
+
+                    //testfunction placeholder
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.setConstraint(_nodes[_id].node,{name:"proba",script:"test"});
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.delConstraint(_nodes[_id].node,"proba");
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
                 };
 
                 if(_nodes[_id]){
@@ -2014,6 +2027,7 @@ define([
 
                 //constraint
                 setConstraint: setConstraint,
+                delConstraint: delConstraint,
 
 
                 //territory functions for the UI
