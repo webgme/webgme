@@ -1646,16 +1646,16 @@ define([
             }
 
             //constraint functions
-            function setConstraint(path,constraintObj){
+            function setConstraint(path,name,constraintObj){
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.setConstraint(_nodes[path].node,constraintObj);
-                    saveRoot('setConstraint('+path+')');
+                    saveRoot('setConstraint('+path+','+name+')');
                 }
             }
             function delConstraint(path,name){
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.delConstraint(_nodes[path].node,name);
-                    saveRoot('delConstraint('+path+')');
+                    saveRoot('delConstraint('+path+'name'+')');
                 }
             }
 
@@ -1845,7 +1845,7 @@ define([
 
                     //testfunction placeholder
                     console.log(_core.getConstraintNames(_nodes[_id].node));
-                    _core.setConstraint(_nodes[_id].node,{name:"proba",script:"test"});
+                    _core.setConstraint(_nodes[_id].node,"proba",{});
                     console.log(_core.getConstraintNames(_nodes[_id].node));
                     _core.delConstraint(_nodes[_id].node,"proba");
                     console.log(_core.getConstraintNames(_nodes[_id].node));

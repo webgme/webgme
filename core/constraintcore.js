@@ -56,7 +56,6 @@ define([ "util/assert" ], function (ASSERT) {
             if(constRelId){
                 var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
                 return {
-                    "name":_innerCore.getAttribute(constraintNode,"name"),
                     "script":_innerCore.getAttribute(constraintNode,"script"),
                     "priority":_innerCore.getAttribute(constraintNode,"priority")
                 };
@@ -65,11 +64,11 @@ define([ "util/assert" ], function (ASSERT) {
             }
         };
 
-        _core.setConstraint = function(node,constraintObj){
+        _core.setConstraint = function(node,name,constraintObj){
             ASSERT(_innerCore.isValidNode(node));
-            ASSERT(typeof constraintObj === 'object' && typeof constraintObj.name === 'string' && typeof constraintObj.script === 'string');
+            ASSERT(typeof constraintObj === 'object' && typeof name === 'string');
             var constraintsNode = _innerCore.getChild(node,CONSTRAINTS_RELID);
-            var constRelId = getConstraintRelId(constraintsNode,constraintObj.name);
+            var constRelId = getConstraintRelId(constraintsNode,name);
             if(!constRelId){
                 //we should create a new one
                 constRelId = createNewConstraintRelId(constraintsNode);
@@ -77,7 +76,8 @@ define([ "util/assert" ], function (ASSERT) {
 
             var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
             constraintObj.priority = constraintObj.priority || C_DEF_PRIORITY;
-            _innerCore.setAttribute(constraintNode,"name",constraintObj.name);
+            constraintObj.script = constraintObj.script || "console.log(\"empty constraint\");";
+            _innerCore.setAttribute(constraintNode,"name",name);
             _innerCore.setAttribute(constraintNode,"script",constraintObj.script);
             _innerCore.setAttribute(constraintNode,"priority",constraintObj.priority);
         };
