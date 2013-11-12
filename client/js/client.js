@@ -1645,6 +1645,14 @@ define([
                 }
             }
 
+            //constraint functions
+            function setConstraint(path,constraintObj){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setConstraint(_nodes[path].node,constraintObj);
+                    saveRoot('setConstraint('+path+')');
+                }
+            }
+
             //territory functions
             function addUI(ui, oneevent, guid) {
                 guid = guid || GUID();
@@ -1814,6 +1822,13 @@ define([
                     return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
+                //constraint functions
+                var getDescriptorNames = function(){
+                    return _core.getDescriptorNames(_nodes[_id].node);
+                };
+                var getDescriptor = function(name){
+                    return _core.getDescriptor(_nodes[_id].node,name);
+                };
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
@@ -1850,6 +1865,10 @@ define([
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
                         getBase                        : getBase,
+
+                        //constraint functions
+                        getDescriptorNames : getDescriptorNames,
+                        getDescriptor : getDescriptor,
 
                         printData: printData
 
@@ -1992,6 +2011,9 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
+
+                //constraint
+                setConstraint: setConstraint,
 
 
                 //territory functions for the UI
