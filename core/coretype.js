@@ -44,7 +44,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         }
 
 		core.isValidNode = isValidNode;
-        core.isFalseNode = isFalseNode;
 
 		// ----- navigation
 
@@ -60,16 +59,30 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		};
 
 		function __loadRoot2(node) {
-            ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
+            ASSERT(typeof node.base === "undefined" || node.base === null); //kecso - TODO it should be undefined, but maybe because of the cache it can be null
 
 			node.base = null;
 			return node;
 		}
 
-		core.loadChild = function(node, relid) {
-			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBase, oldcore.loadChild(node, relid));
-		};
+        core.loadChild = function(node,relid){
+            var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
+            var base = core.getBase(node);
+            var basechild = null;
+            if(base){
+                basechild = TASYNC.call(__loadBase,oldcore.loadChild(base,relid));
+            }
+            return TASYNC.call(function(ch,bch,n,r){
+                var done = null;
+                if(ch === null){
+                    if(bch !== null){
+                        ch = core.createNode({base:bch,parent:n,relid:r});
+                        done = core.persist(core.getRoot(n));
+                    }
+                }
+                return TASYNC.call(function(child){return child;},ch,done);
+            },child,basechild,node,relid);
+        };
 
 		core.loadByPath = function(node, path) {
 			ASSERT(isValidNode(node));
@@ -85,10 +98,21 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(typeof node.base === "undefined" || typeof node.base === "object");
 
 			if (typeof node.base === "undefined") {
-				return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
+                if(isFalseNode(node)){
+                    core.deleteNode(node);
+                    return null;
+                } else {
+                    return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
+                }
 			} else {
-				// TODO: check if base has moved
-				return node;
+                var oldpath = core.getPath(node.base);
+                var newpath = core.getPointerPath(node,"base");
+                if(oldpath !== newpath){
+                    delete node.base;
+                    return __loadBase(node);
+                } else {
+                    return node;
+                }
 			}
 		}
 
@@ -113,48 +137,23 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             }
             return ownRelIds;
         };
-		core.loadChildren = function(node) {
-			ASSERT(isValidNode(node));
-
-            //now we made it not recursive so we only check the children of the base
-            var inhertChildren = node.base === null ? [] : TASYNC.call(__loadBaseArray, oldcore.loadChildren(core.getBase(node)));
-            var ownChildren = TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
-            var findChild = function(children,relid){
-                for(var i=0;i<children.length;i++){
-                    if(core.getRelid(children[i]) === relid){
-                        return children[i];
-                    }
-                }
-                return null;
-            };
-            var createMissingChildren = function(own,inherited){
-                //we should create inherited children which missing
-                var inheritRelIds = node.base === null ? [] : oldcore.getChildrenRelids(core.getBase(node));
-                var ownRelIds = oldcore.getChildrenRelids(node);
-                var missingChildren = [];
-                for(var i=0;i<inheritRelIds.length;i++){
-                    if(ownRelIds.indexOf(inheritRelIds[i]) === -1){
-                        missingChildren.push(inheritRelIds[i]);
-                    }
-                }
-
-                var presize = own.length;
-                for(var i=0;i<missingChildren.length;i++){
-                    var newChild = core.createNode({parent:node,base:findChild(inherited,missingChildren[i]),relid:missingChildren[i]});
-                    own.push(newChild);
-                }
-
-                if(own.length > presize){
-                    core.persist(core.getRoot(node));
-                }
-                return own;
-            };
-            return TASYNC.call(createMissingChildren,ownChildren,inhertChildren);
-		};
-        /*core.loadChildren = function(node) {
+        
+        core.loadChildren = function(node) {
             ASSERT(isValidNode(node));
-            return TASYNC.call(__loadBaseArray, oldcore.loadChildren(node));
-        };*/
+            var relids = core.getChildrenRelids(node);
+            var children = [];
+            for(var i = 0; i< relids.length; i++)
+                children[i] = core.loadChild(node,relids[i]);
+            return TASYNC.call(function(n){
+                var newn = [];
+                for(var i=0; i<n.length;i++){
+                    if(n[i] !== null){
+                        newn.push(n[i]);
+                    }
+                }
+                return newn;
+            },TASYNC.lift(children));
+        };
 
 
         core.loadCollection = function(node, name) {
@@ -168,14 +167,22 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			for ( var i = 0; i < nodes.length; ++i)
 				nodes[i] = __loadBase(nodes[i]);
 
-			return TASYNC.lift(nodes);
+			return TASYNC.call(function(n){
+                var newn = [];
+                for(var i=0; i<n.length;i++){
+                    if(n[i] !== null){
+                        newn.push(n[i]);
+                    }
+                }
+                return newn;
+            },TASYNC.lift(nodes));
 		}
 
 		// ----- creation
 
 		core.createNode = function(parameters) {
 			parameters = parameters || {};
-			var base = parameters.base,
+			var base = parameters.base || null,
 				parent = parameters.parent;
 
 
@@ -183,14 +190,8 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			ASSERT(!base || isValidNode(base));
 
 			var node = oldcore.createNode(parameters);
-			if (!!base) {
-				oldcore.setPointer(node, "base", base);
-                //TODO maybe this is not the best way, needs to be double checked
-                node.base = base;
-			} else {
-                node.base = null;
-                oldcore.setPointer(node,"base",null);
-            }
+            node.base = base;
+            oldcore.setPointer(node,"base",base);
 
 			return node;
 		};
