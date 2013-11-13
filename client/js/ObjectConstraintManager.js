@@ -47,18 +47,23 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
 
       constraints.forEach(function(constraint) {
 
-        var result = eval("(" + constraint.constraint + ")();");
+        var result = eval("(" + constraint.constraint + ")(client, node);");
 
         var msg = '[[ <' + constraint.name + '> of <' + constraint.node_name + '> ]]';
         if (result) {
             logger.warn('No violation of a constraint: ' +
               msg);
         } else {
-            logger.warn('!!Violation of a constraint: ' +
+            logger.error('!!Violation of a constraint: ' +
               msg + "!!!");
         }
 
       });
+
+      // var y = function(input, callback) {
+      //   //
+      //   callback(withsomething);
+      // }
 
       // Call validation for the node's children
       var children = node.getChildrenIds();
