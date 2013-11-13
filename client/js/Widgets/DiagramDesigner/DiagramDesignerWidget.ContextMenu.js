@@ -11,7 +11,8 @@ define(['lib/jquery/jquery.contextMenu'], function () {
 
     DiagramDesignerWidgetContextMenu.prototype.createMenu = function (menuItems, fnCallback, position) {
         var logger = this.logger,
-            _destroyMenu = this._destroyMenu;
+            _destroyMenu = this._destroyMenu,
+            itemsContainer = this.skinParts.$itemsContainer;
 
         _destroyMenu();
 
@@ -31,10 +32,11 @@ define(['lib/jquery/jquery.contextMenu'], function () {
                 return {
                     callback: function(key, options) {
                         logger.debug('DiagramDesignerWidgetContextMenu_clicked: ' + key);
+                        _destroyMenu();
+                        itemsContainer.off('mousedown.DiagramDesignerWidgetContextMenu');
                         if (fnCallback) {
                             fnCallback(key);
                         }
-                        _destroyMenu();
                     },
                     items: menuItems
                 };
@@ -43,6 +45,11 @@ define(['lib/jquery/jquery.contextMenu'], function () {
 
         position = position || {x: 200, y: 200};
         $(MENU_SELECTOR).contextMenu(position);
+
+        itemsContainer.on('mousedown.DiagramDesignerWidgetContextMenu', function () {
+            _destroyMenu();
+            itemsContainer.off('mousedown.DiagramDesignerWidgetContextMenu');
+        });
     };
 
     DiagramDesignerWidgetContextMenu.prototype._destroyMenu = function () {
