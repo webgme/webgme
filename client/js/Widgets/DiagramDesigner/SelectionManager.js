@@ -146,8 +146,6 @@ define(['logManager',
 
         this.logger.debug("SelectionManager._onBackgroundMouseDown at: " + JSON.stringify(mousePos));
 
-        this._diagramDesigner._registerKeyboardListener();
-
         if (leftButton === true) {
             //start drawing selection rubber-band
             this._rubberbandSelection = { "x": mousePos.mX,

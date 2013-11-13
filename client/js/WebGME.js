@@ -9,7 +9,7 @@ define(['logManager',
     'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
-    'js/KeyboardManager',
+    'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
     'js/Clipboard/ClipboardHelper'], function (logManager,
@@ -33,12 +33,6 @@ define(['logManager',
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME'),
             selectObject;
-
-        //as of now it's a global variable just to make access to it easier
-        //TODO: might need to be changed
-        WebGMEGlobal.KeyboardManager = new KeyboardManager();
-        WebGMEGlobal.PanelManager = new PanelManager();
-        WebGMEGlobal.ClipboardHelper = ClipboardHelper;
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {
@@ -68,6 +62,13 @@ define(['logManager',
 
             //load the panels
             loadPanels(panels);
+
+            //as of now it's a global variable just to make access to it easier
+            //TODO: might need to be changed
+            WebGMEGlobal.ClipboardHelper = ClipboardHelper;
+            WebGMEGlobal.ClipboardHelper.captureFocus();
+            WebGMEGlobal.KeyboardManager = new KeyboardManager(WebGMEGlobal.ClipboardHelper.getEl());
+            WebGMEGlobal.PanelManager = new PanelManager();
         });
 
         loadPanels = function (panels) {

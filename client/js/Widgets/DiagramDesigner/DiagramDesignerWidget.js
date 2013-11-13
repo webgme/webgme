@@ -302,7 +302,6 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
-        this._unregisterKeyboardListener();
         this.__loader.destroy();
         //TODO: what about item and connection destroys????
     };
@@ -863,8 +862,6 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
         this.logger.debug("onElementMouseDown: " + elementId);
-
-        this._registerKeyboardListener();
     };
 
     /************************** DRAG ITEM ***************************/

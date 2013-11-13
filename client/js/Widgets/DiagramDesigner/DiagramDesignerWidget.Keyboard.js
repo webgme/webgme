@@ -6,21 +6,14 @@
 
 "use strict";
 
-define([], function () {
+define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
 
     var DiagramDesignerWidgetKeyboard;
 
     DiagramDesignerWidgetKeyboard = function () {
-
     };
 
-    DiagramDesignerWidgetKeyboard.prototype._registerKeyboardListener = function () {
-        WebGMEGlobal.KeyboardManager.registerListener(this);
-    };
-
-    DiagramDesignerWidgetKeyboard.prototype._unregisterKeyboardListener = function () {
-        WebGMEGlobal.KeyboardManager.registerListener(undefined);
-    };
+    _.extend(DiagramDesignerWidgetKeyboard.prototype, IKeyTarget.prototype);
 
     DiagramDesignerWidgetKeyboard.prototype.onKeyDown = function (eventArgs) {
         var ret = true;

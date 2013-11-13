@@ -11,19 +11,21 @@ define(['logManager'], function (logManager) {
 
     var KeyboardManager,
         specialKeys = {
-        8: "backspace", 9: "tab", 13: "return", 16: "shift", 17: "ctrl", 18: "alt", 19: "pause",
-            20: "capslock", 27: "esc", 32: "space", 33: "pageup", 34: "pagedown", 35: "end", 36: "home",
-            37: "left", 38: "up", 39: "right", 40: "down", 45: "insert", 46: "del",
-            96: "0", 97: "1", 98: "2", 99: "3", 100: "4", 101: "5", 102: "6", 103: "7",
-            104: "8", 105: "9", 106: "*", 107: "+", 109: "-", 110: ".", 111 : "/",
-            112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8",
-            120: "f9", 121: "f10", 122: "f11", 123: "f12", 144: "numlock", 145: "scroll", 191: "/", 224: "meta"
-    };
+            8: "backspace", 9: "tab", 13: "return", 16: "shift", 17: "ctrl", 18: "alt", 19: "pause",
+                20: "capslock", 27: "esc", 32: "space", 33: "pageup", 34: "pagedown", 35: "end", 36: "home",
+                37: "left", 38: "up", 39: "right", 40: "down", 45: "insert", 46: "del",
+                96: "0", 97: "1", 98: "2", 99: "3", 100: "4", 101: "5", 102: "6", 103: "7",
+                104: "8", 105: "9", 106: "*", 107: "+", 109: "-", 110: ".", 111 : "/",
+                112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8",
+                120: "f9", 121: "f10", 122: "f11", 123: "f12", 144: "numlock", 145: "scroll", 191: "/", 224: "meta"
+        },
+        NO_FIRE = ['ctrl+c', 'ctrl+x', 'ctrl+v'];
 
-    KeyboardManager = function () {
+    KeyboardManager = function (el) {
         this._logger = logManager.create('KeyboardManager');
 
         this._listener = null;
+        this._el = el || $(document);
 
         this.setEnabled(true);
     };
@@ -32,19 +34,21 @@ define(['logManager'], function (logManager) {
         var self = this;
 
         if (enabled === true) {
-            $(document).on("keydown.KeyboardManager keyup.KeyboardManager", function (event) {
+            this._el.on("keydown.KeyboardManager keyup.KeyboardManager", function (event) {
                 self._keyHandler(event);
             });
         } else {
-            $(document).off("keydown.KeyboardManager");
-            $(document).off("keyup.KeyboardManager");
+            this._el.off("keydown.KeyboardManager");
+            this._el.off("keyup.KeyboardManager");
         }
     };
 
     KeyboardManager.prototype._keyHandler = function (event) {
         // Don't fire in text/key-accepting inputs
         if (( /textarea|select/i.test( event.target.nodeName ) || event.target.type === "text") ) {
-            return;
+            if (event.target !== this._el[0]) {
+                return;
+            }
         }
 
         if (this._listener) {
@@ -83,12 +87,13 @@ define(['logManager'], function (logManager) {
 
             var ret;
 
-            if (event.type === 'keydown') {
-                ret = this._listener.onKeyDown && this._listener.onKeyDown(eventArgs);
-            } else if (event.type === 'keyup'){
-                ret = this._listener.onKeyUp && this._listener.onKeyUp(eventArgs);
+            if (NO_FIRE.indexOf(eventArgs.combo) === -1){
+                if (event.type === 'keydown') {
+                    ret = this._listener.onKeyDown && this._listener.onKeyDown(eventArgs);
+                } else if (event.type === 'keyup'){
+                    ret = this._listener.onKeyUp && this._listener.onKeyUp(eventArgs);
+                }
             }
-
 
             if ( ret !== undefined ) {
                 if ( (event.result = ret) === false ) {
@@ -96,22 +101,26 @@ define(['logManager'], function (logManager) {
                     event.stopPropagation();
                 }
             }
+
+            WebGMEGlobal.ClipboardHelper.captureFocus();
         }
     };
 
-    KeyboardManager.prototype.registerListener = function (l) {
+    KeyboardManager.prototype.setListener = function (l) {
         if (this._listener !== l) {
             this._listener = l;
 
             if (this._listener) {
-                if (!this._listener.onKeyDown) {
+                if (!_.isFunction(this._listener.onKeyDown)) {
                     this._logger.warning('Listener is missing "onKeyDown"...');
                 }
-                if (!this._listener.onKeyUp) {
+                if (!_.isFunction(this._listener.onKeyUp)) {
                     this._logger.warning('Listener is missing "onKeyUp"...');
                 }
             }
         }
+
+        WebGMEGlobal.ClipboardHelper.captureFocus();
     };
 
     return KeyboardManager;

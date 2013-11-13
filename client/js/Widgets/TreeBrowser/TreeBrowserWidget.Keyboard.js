@@ -6,20 +6,21 @@
 
 "use strict";
 
-define([], function () {
+define(['js/KeyboardManager/IKeyTarget'], function (IKeyTarget) {
 
     var TreeBrowserWidgetKeyboard;
 
     TreeBrowserWidgetKeyboard = function () {
-
     };
 
+    _.extend(TreeBrowserWidgetKeyboard.prototype, IKeyTarget.prototype);
+
     TreeBrowserWidgetKeyboard.prototype._registerKeyboardListener = function () {
-        WebGMEGlobal.KeyboardManager.registerListener(this);
+        WebGMEGlobal.KeyboardManager.setListener(this);
     };
 
     TreeBrowserWidgetKeyboard.prototype._unregisterKeyboardListener = function () {
-        WebGMEGlobal.KeyboardManager.registerListener(undefined);
+        WebGMEGlobal.KeyboardManager.setListener(undefined);
     };
 
     TreeBrowserWidgetKeyboard.prototype.onKeyDown = function (eventArgs) {
@@ -121,6 +122,9 @@ define([], function () {
         }
 
         return ret;
+    };
+
+    TreeBrowserWidgetKeyboard.prototype.onKeyUp = function (eventArgs) {
     };
 
 

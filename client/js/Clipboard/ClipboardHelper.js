@@ -27,8 +27,8 @@ define([], function () {
 
         $('body').on('mousedown.ClipboardHelper', _captureFocusOnBody);
         $('body').on('mouseup.ClipboardHelper', _captureFocusOnBody);
-        $('body').on('keydown.ClipboardHelper', _captureFocusOnBody);
-        $('body').on('keyup.ClipboardHelper', _captureFocusOnBody);
+        /*$('body').on('keydown.ClipboardHelper', _captureFocusOnBody);
+        $('body').on('keyup.ClipboardHelper', _captureFocusOnBody);*/
 
         _txtArea.on('copy', _onCopy);
         _txtArea.on('paste', _onPaste);
@@ -93,6 +93,11 @@ define([], function () {
         return event.originalEvent.clipboardData || window.clipboardData;
     };
 
+    var _getEl = function () {
+        return _txtArea;
+    };
+
     //return utility functions
-    return { captureFocus: _captureFocus };
+    return { captureFocus: _captureFocus,
+             getEl: _getEl};
 });
