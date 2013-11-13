@@ -122,13 +122,24 @@ public:
     return scope.Close(Api::CallTasyncMethod(func_, argc, argv, object_));
   }
 
+  template<class...A> Handle<Value> CallVar(A...args){
+    HandleScope scope;
+    const int argc = sizeof...(args);
+    Handle<Value> argv[argc] = {args...};
+    return scope.Close(Api::CallTasyncMethod(func_, argc, argv, object_));
+  }
+
   /**
    * Operator () override
    */
-  Handle<Value> operator()(const unsigned int argc = 0, 
-                     Handle<Value> argv[] = NULL){
-    return Call(argc, argv);
+
+  template<class...A> Handle<Value> operator()(A...args){
+    HandleScope scope;
+    const int argc = sizeof...(args);
+    Handle<Value> argv[argc] = {args...};
+    return scope.Close(Api::CallTasyncMethod(func_, argc, argv, object_));
   }
+
 protected:
   Handle<Function> func_;
 };
@@ -181,30 +192,19 @@ class Interpreter: public node::ObjectWrap {
       FunctionMap projmap(proj->ToObject());
       FunctionMap coremap(core->ToObject());
 
-      const int argc = 2;
-
-      Handle<Value> argv[argc] = {String::New("master"), Null()};
-      Handle<Value> hash = projmap["getBranchHash"](argc, argv);
+      Handle<Value> hash = projmap["getBranchHash"](String::New("master"), Null());
 
       CERR << "Hash: " << *String::AsciiValue(hash->ToString()) << std::endl;
-      argv[0] = hash;
 
-      //Handle<Value> commit = projmap("loadObject", 1, argv); 
-      ObjectMap commit(projmap["loadObject"](1, argv));
+      ObjectMap commit(projmap["loadObject"](hash));
+      Handle<Value> root = coremap["loadRoot"](commit["root"]);
 
-      //argv[0] = Api::GetObjectAttr(commit, "root");
-      argv[0] = commit["root"];
-      Handle<Value> root = coremap["loadRoot"](1, argv);
-
-      argv[0] = root;
-      Handle<Array> children = Handle<Array>::Cast(coremap["loadChildren"](1, argv));
+      Handle<Array> children = Handle<Array>::Cast(coremap["loadChildren"](root));
 
       CERR << "Children length: " << children->Length() << std::endl;
-      argv[1]=String::New("name");
 
       for(unsigned int i=0; i < children->Length(); i++){
-        argv[0] = children->Get(i);
-        Handle<Value> name = coremap["getAttribute"](argc, argv);
+        Handle<Value> name = coremap["getAttribute"](children->Get(i), String::New("name"));
         std::cout << *String::AsciiValue(name) << std::endl;
       }
 
