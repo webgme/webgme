@@ -55,6 +55,10 @@ define(['logManager',
             return self._getDragParams(selectedElements, event);
         };
 
+        this.diagramDesigner.getDragItems = function (selectedElements) {
+            return self._getDragItems(selectedElements);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -103,7 +107,7 @@ define(['logManager',
             addMember,
             repositionMember,
             selectedIDs = [],
-            self = this;
+            componentID;
 
         addMember = function (gmeID, position) {
             var added = false;
@@ -123,7 +127,6 @@ define(['logManager',
             if (registry.Members.indexOf(gmeID) !== -1) {
                 registry.MemberCoord[gmeID] = { "x": position.x,
                     "y": position.y};
-                selectedIDs.push(self._GMEID2ComponentID[gmeID]);
             }
         };
 
@@ -131,12 +134,22 @@ define(['logManager',
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
             if (gmeIDList.length === 0) {
                 //params.position holds the old coordinates of the items being dragged
+                //update UI
+                this.diagramDesigner.beginUpdate();
+
                 for (i in params.positions) {
                     if (params.positions.hasOwnProperty(i)) {
                         repositionMember(i, {'x': position.x + params.positions[i].x,
                                              'y': position.y + params.positions[i].y});
+
+                        componentID = this._GMEID2ComponentID[i];
+
+                        selectedIDs.push(componentID);
+                        this.diagramDesigner.updateDesignerItem(componentID, { "position": {"x": position.x + params.positions[i].x, "y": position.y + params.positions[i].y }});
                     }
                 }
+
+                this.diagramDesigner.endUpdate();
                 this.diagramDesigner.select(selectedIDs);
             }
         } else {
@@ -302,6 +315,10 @@ define(['logManager',
         return params;
     };
 
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
+        return [];
+    };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
 });
