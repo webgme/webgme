@@ -767,7 +767,9 @@ define(['logManager',
             }
         };
         dispatchEvents(this._insertedDesignerItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._insertedConnectionIDs, this.events.ON_COMPONENT_CREATE);
         dispatchEvents(this._updatedDesignerItemIDs, this.events.ON_COMPONENT_UPDATE);
+        dispatchEvents(this._updatedConnectionIDs, this.events.ON_COMPONENT_UPDATE);
         /*********************/
 
 
