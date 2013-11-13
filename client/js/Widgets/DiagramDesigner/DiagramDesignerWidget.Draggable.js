@@ -78,7 +78,7 @@ define(['js/DragDrop/DragSource',
     };
 
     DiagramDesignerWidgetDraggable.prototype.getDragEffects = function (selectedElements) {
-        var effects = [dragSource.DRAG_EFFECTS.DRAG_COPY, dragSource.DRAG_EFFECTS.DRAG_MOVE, dragSource.DRAG_EFFECTS.DRAG_CREATE_REFERENCE]
+        var effects = [dragSource.DRAG_EFFECTS.DRAG_MOVE];
         this.logger.debug("DiagramDesignerWidgetDraggable.getDragEffects is not overridden in the controller!!! selectedElements: " + selectedElements + ". Returning default: " + effects);
         return effects;
     };
