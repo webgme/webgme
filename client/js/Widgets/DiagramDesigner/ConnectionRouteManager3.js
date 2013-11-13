@@ -29,6 +29,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var self = this;
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
+            self.logger.warning("Adding " + ID);
             self.insertItem( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
@@ -71,10 +72,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
-        var i;
+        var i = idList.length;
 
         if( !this._initialized )
             this._initializeGraph();
+
+        this._updateConnectionPorts( idList );
 
         console.log('About to REDRAW');
 
@@ -158,18 +161,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         }
 
         //Next, I will update the ports as necessary
-        i = connIdList.length;
-        while(i--){
-            connId = connIdList[i];
-            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
-            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
-            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
-
-            this._updatePort(srcObjId, srcSubCompId);
-            this._updatePort(dstObjId, dstSubCompId);
-        }
-
+        this._updateConnectionPorts(connIdList);
+       
         this._initialized = true;
 
     };
@@ -316,6 +309,27 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this._updatePort( objId, portIds[i] );
         }
 
+    };
+
+    ConnectionRouteManager3.prototype._updateConnectionPorts = function (idList) {
+        var canvas = this.diagramDesigner,
+            connId,
+            srcObjId,
+            srcSubCompId,
+            dstObjId,
+            dstSubCompId,
+            i = idList.length;
+
+        while(i--){
+            connId = idList[i];
+            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
+
+            this._updatePort(srcObjId, srcSubCompId);
+            this._updatePort(dstObjId, dstSubCompId);
+        }
     };
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {
