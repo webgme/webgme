@@ -55,7 +55,7 @@ function(COMMON, TASYNC){
         var interp = new addon.Interpreter(COMMON, TASYNC);
 
         // Launch interpreter
-        TASYNC.call_sync(interp.invokeEx,[], null);
+        TASYNC.call_sync(interp.invokeEx,[], interp);
 
         TASYNC.call_sync(COMMON.closeProject);
         COMMON.closeDatabase();
