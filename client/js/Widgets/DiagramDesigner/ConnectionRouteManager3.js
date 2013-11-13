@@ -23,7 +23,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
-        this._initializeGraph();
+        this._clearGraph();
 
         //Adding event listeners
         var self = this;
@@ -65,7 +65,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onClear = function(_canvas, eventArgs) {
             self.logger.warning("Clearing Screen");
-            self._initializeGraph();
+            self._clearGraph();
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
 
@@ -82,6 +82,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
         var i;
+
+        if( !this._initialized )
+            this._initializeGraph();
 
         console.log('About to REDRAW');
 
@@ -133,6 +136,16 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         return idList;
     };
 
+    ConnectionRouteManager3.prototype._clearGraph = function () {
+        this.autorouter.clear();
+        this._autorouterBoxes = {};//Define container that will map obj+subID -> box
+        this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
+        this._autorouterPaths = {};
+        this.endpointConnectionAreaInfo = {};
+
+        this._initialized = false;
+    };
+
     ConnectionRouteManager3.prototype._initializeGraph = function () {
         /*
          * In this method, we will update the boxes using the canvas.itemIds list and
@@ -150,13 +163,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             dstObjId,
             dstSubCompId;
 
-        this.autorouter.clear();
-        this._autorouterBoxes = {};//Define container that will map obj+subID -> box
-        this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
-        this._autorouterPaths = {};
-
-        this.endpointConnectionAreaInfo = {};
-
         while(i--){
             this.insertItem(itemIdList[i]);
         }
@@ -173,6 +179,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this._updatePort(srcObjId, srcSubCompId);
             this._updatePort(dstObjId, dstSubCompId);
         }
+
+        this._initialized = true;
 
     };
 
