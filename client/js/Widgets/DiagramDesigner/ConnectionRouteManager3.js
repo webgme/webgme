@@ -28,22 +28,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Adding event listeners
         var self = this;
 
-/*
-        this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
-            //this.diagramDesigner.itemIds
-            //this.diagramDesigner.connectionIds
-            self.logger.warning("ON_COMPONENT_UPDATE: " + ID);
-            //self.autorouter.setBox();
-        };
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
-*/
-
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.insertItem( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
-        this._onComponentResize = function(_canvas, ID) {//Boxes and lines
+        this._onComponentResize = function(_canvas, ID) {
             if( self._autorouterBoxes[ID.ID] )
                 self._resizeItem( ID.ID );
             else

@@ -1953,6 +1953,9 @@ define(['logManager'], function (logManager) {
 
                 port.setOwner(this);
                 ports.push(port);
+
+                if(owner instanceof AutoRouterGraph)
+                    owner.addEdges(port);
             }
 
             function deletePort(port){
@@ -2365,43 +2368,6 @@ define(['logManager'], function (logManager) {
                 return order_prev;
             };
 
-            /*
-             * This is a temporary method. Remove when bugs are all gone. It tests the linked list for problems.
-             */
-            function testList(edge, insert){
-                var loneRanger,
-                    tonto = edge;
-
-                loneRanger = tonto;
-                while(loneRanger){
-                    tonto = loneRanger.getOrderPrev();
-                    while(tonto){
-                        if(loneRanger === tonto)
-                            return;
-                        //assert(loneRanger !== tonto, "Duplicates have been put into the list!\n" + tonto.getStartPoint().x + "," + tonto.getStartPoint().y + 
-                         //   "\nWhen inserting " + (insert ? insert.getStartPoint().x + "," + insert.getStartPoint().y : "null") );
-                        tonto = tonto.getOrderPrev();
-                    }
-                    if(!loneRanger.getOrderPrev())
-                        break;
-                    else
-                        loneRanger = loneRanger.getOrderPrev();
-                }
-
-                while(loneRanger){
-                    tonto = loneRanger.getOrderNext();
-                    while(tonto){
-                        if(loneRanger === tonto)
-                            return;
-                        //assert(loneRanger !== tonto, "Duplicates have been put into the list!\n" + tonto.getStartPoint().x + "," + tonto.getStartPoint().y + 
-                         //   "\nWhen inserting " + (insert ? insert.getStartPoint().x + "," + insert.getStartPoint().y : "null") );
-                        tonto = tonto.getOrderNext();
-                    }
-                    loneRanger = loneRanger.getOrderNext();
-                }
-                
-            };
-
             this.setOrderPrev = function(orderPrev){
                 order_prev = orderPrev;
             };
@@ -2434,15 +2400,21 @@ define(['logManager'], function (logManager) {
             };
 
             this.setSectionNext = function(nextSection){
+/*
                 if(nextSection instanceof Array){
-                    section_next = nextSection;
+                    section_next = nextSection;  //Don't want to actually change the pointer
                 }else {
                     section_next = [nextSection];
                 }
+*/
+                nextSection = nextSection instanceof Array ? nextSection[0] : nextSection;
+                if(section_next instanceof Array)
+                    section_next[0] = nextSection;
+                else 
+                    section_next = [nextSection];
+             };
 
-            };
-
-            this.getSectionDown = function(debug){ //Returns pointer - if not null
+            this.getSectionDown = function(){ //Returns pointer - if not null
 
                 return section_down != undefined ? section_down[0] : null;
 
@@ -4031,9 +4003,9 @@ _logger.warning("Adding "
         var AutoRouterGraph = function (){
             var horizontal = new AutoRouterEdgeList(true),
                 vertical = new AutoRouterEdgeList(false),
-                boxes = [], //new AutoRouterBoxList(),
+                boxes = [], 
                 bufferBoxes = [],
-                paths = [], //new AutoRouterPathList(),
+                paths = [], 
                 selfPoints = [],
                 self = this;
                 
@@ -4049,6 +4021,8 @@ _logger.warning("Adding "
             this.getSelfPoints = function(){
                 return selfPoints;
             }
+
+            this.addEdges = addEdges; //This needs to be made public to allow for dynamically adding ports
 
             addSelfEdges();
 
@@ -5661,7 +5635,7 @@ _logger.warning("Adding "
             };
 
             this.autoRoute = function(){
-                createBufferBoxes(); //TODO Finish this!
+                createBufferBoxes(); 
                 connectAllDisconnectedPaths();
 
                 var updated = 0,
