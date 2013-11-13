@@ -121,6 +121,10 @@ define(['logManager',
             return self._getDragItems(selectedElements);
         };
 
+        this.designerCanvas.getDragEffects = function (selectedElements) {
+            return self._getDragEffects(selectedElements);
+        };
+
         this._oGetDragParams = this.designerCanvas.getDragParams;
         this.designerCanvas.getDragParams = function (selectedElements, event) {
             return self._getDragParams(selectedElements, event);
@@ -841,6 +845,11 @@ define(['logManager',
         }
 
         return params;
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragEffects = function (selectedElements) {
+        return [DragHelper.DRAG_EFFECTS.DRAG_COPY, DragHelper.DRAG_EFFECTS.DRAG_MOVE, DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
     };
 
 
