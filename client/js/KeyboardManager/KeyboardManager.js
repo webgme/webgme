@@ -9,8 +9,7 @@
 define(['logManager'], function (logManager) {
     "use strict";
 
-    var KeyboardManager,
-        specialKeys = {
+    var specialKeys = {
             8: "backspace", 9: "tab", 13: "return", 16: "shift", 17: "ctrl", 18: "alt", 19: "pause",
                 20: "capslock", 27: "esc", 32: "space", 33: "pageup", 34: "pagedown", 35: "end", 36: "home",
                 37: "left", 38: "up", 39: "right", 40: "down", 45: "insert", 46: "del",
@@ -19,39 +18,107 @@ define(['logManager'], function (logManager) {
                 112: "f1", 113: "f2", 114: "f3", 115: "f4", 116: "f5", 117: "f6", 118: "f7", 119: "f8",
                 120: "f9", 121: "f10", 122: "f11", 123: "f12", 144: "numlock", 145: "scroll", 191: "/", 224: "meta"
         },
-        NO_FIRE = ['ctrl+c', 'ctrl+x', 'ctrl+v'];
+        NO_FIRE = ['ctrl+c', 'ctrl+x', 'ctrl+v'],
+        CLIPBOARD_HELPER_CLASS = 'webgme-clipboard-helper',
+        TEXT_AREA_CONTENT = 'webgme-clipboard',
+        UPDATE_BROWSER_MESSAGE = 'Your browser seems to be out of date :(. Please update your browser to the latest and greatest version!',
+        _txtArea,
+        _enabled = false,
+        _logger = logManager.create('KeyboardManager'),
+        _listener = null;
 
-    KeyboardManager = function (el) {
-        this._logger = logManager.create('KeyboardManager');
+    var _captureFocus = function () {
+        if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
+            return;
+        }
 
-        this._listener = null;
-        this._el = el || $(document);
+        if (!_txtArea) {
+            _initializeClipboardHelper();
+        }
 
-        this.setEnabled(true);
+        _txtArea.val(TEXT_AREA_CONTENT).select().focus();
     };
 
-    KeyboardManager.prototype.setEnabled = function (enabled) {
-        var self = this;
+    var _setListener = function (l) {
+        if (_listener !== l) {
+            _listener = l;
 
-        if (enabled === true) {
-            this._el.on("keydown.KeyboardManager keyup.KeyboardManager", function (event) {
-                self._keyHandler(event);
-            });
-        } else {
-            this._el.off("keydown.KeyboardManager");
-            this._el.off("keyup.KeyboardManager");
+            if (_listener) {
+                if (!_.isFunction(_listener.onKeyDown)) {
+                    _logger.warning('Listener is missing "onKeyDown"...');
+                }
+                if (!_.isFunction(_listener.onKeyUp)) {
+                    _logger.warning('Listener is missing "onKeyUp"...');
+                }
+            }
+        }
+
+        _captureFocus();
+    };
+
+    var _initializeClipboardHelper = function () {
+        if (_txtArea) {
+            return;
+        }
+
+        _txtArea = $('<textarea/>', {'class': CLIPBOARD_HELPER_CLASS});
+
+        _txtArea.css({'position': 'absolute',
+            'top': '-10000px',
+            'left': '-10000px'});
+
+        $('body').append(_txtArea);
+    };
+
+    var _setEnabled = function (enabled) {
+        if (WebGMEGlobal.SUPPORTS_TOUCH === true) {
+            return;
+        }
+
+        if (_enabled !== enabled) {
+
+            _enabled = enabled;
+
+            if (_enabled === true) {
+                _initializeClipboardHelper();
+
+                _txtArea.on("keydown.KeyboardManager keyup.KeyboardManager", _keyHandler);
+
+                $('body').on('mousedown.KeyboardManager', _captureFocusOnBody);
+                $('body').on('mouseup.KeyboardManager', _captureFocusOnBody);
+
+                _txtArea.on('copy.KeyboardManager', _onCopy);
+                _txtArea.on('paste.KeyboardManager', _onPaste);
+            } else {
+                _txtArea.off("keydown.KeyboardManager");
+                _txtArea.off("keyup.KeyboardManager");
+
+                $('body').off('mousedown.KeyboardManager');
+                $('body').off('mouseup.KeyboardManager');
+
+                _txtArea.off('copy.KeyboardManager');
+                _txtArea.off('paste.KeyboardManager');
+            }
         }
     };
 
-    KeyboardManager.prototype._keyHandler = function (event) {
+    var _captureFocusOnBody = function (event) {
+        var tagName = event && event.target && event.target.tagName;
+        var noCapture = ['INPUT', 'TEXTAREA', 'SELECT'];
+        if (noCapture.indexOf(tagName) === -1) {
+            _captureFocus();
+        }
+    };
+
+    var _keyHandler = function (event) {
         // Don't fire in text/key-accepting inputs
         if (( /textarea|select/i.test( event.target.nodeName ) || event.target.type === "text") ) {
-            if (event.target !== this._el[0]) {
+            if (event.target !== _txtArea[0]) {
                 return;
             }
         }
 
-        if (this._listener) {
+        if (_listener) {
             var eventArgs = {'type': event.type,
                 'character': undefined,
                 'altKey': event.altKey,
@@ -83,15 +150,15 @@ define(['logManager'], function (logManager) {
 
             eventArgs.combo += eventArgs.character;
 
-            this._logger.debug(JSON.stringify(eventArgs));
+            _logger.debug(JSON.stringify(eventArgs));
 
             var ret;
 
             if (NO_FIRE.indexOf(eventArgs.combo) === -1){
                 if (event.type === 'keydown') {
-                    ret = this._listener.onKeyDown && this._listener.onKeyDown(eventArgs);
+                    ret = _listener.onKeyDown && _listener.onKeyDown(eventArgs);
                 } else if (event.type === 'keyup'){
-                    ret = this._listener.onKeyUp && this._listener.onKeyUp(eventArgs);
+                    ret = _listener.onKeyUp && _listener.onKeyUp(eventArgs);
                 }
             }
 
@@ -102,26 +169,50 @@ define(['logManager'], function (logManager) {
                 }
             }
 
-            WebGMEGlobal.ClipboardHelper.captureFocus();
+            _captureFocus();
         }
     };
 
-    KeyboardManager.prototype.setListener = function (l) {
-        if (this._listener !== l) {
-            this._listener = l;
 
-            if (this._listener) {
-                if (!_.isFunction(this._listener.onKeyDown)) {
-                    this._logger.warning('Listener is missing "onKeyDown"...');
+    var _onCopy = function (event) {
+        var clipboardData = _getClipboardData(event);
+
+        if (clipboardData) {
+            if (_listener && _.isFunction(_listener.onCopy)) {
+                var data = _listener.onCopy();
+                if (typeof data !== "string") {
+                    data = JSON.stringify(data);
                 }
-                if (!_.isFunction(this._listener.onKeyUp)) {
-                    this._logger.warning('Listener is missing "onKeyUp"...');
-                }
+                clipboardData.setData('text', data);
             }
+            event.preventDefault();
+            event.stopPropagation();
+        } else {
+            alert(UPDATE_BROWSER_MESSAGE);
         }
-
-        WebGMEGlobal.ClipboardHelper.captureFocus();
     };
 
-    return KeyboardManager;
+    var _onPaste = function (event) {
+        var clipboardData = _getClipboardData(event);
+
+        if (clipboardData) {
+            if (_listener && _.isFunction(_listener.onPaste)) {
+                var data = clipboardData.getData('text');
+                _listener.onPaste(data);
+            }
+            event.preventDefault();
+            event.stopPropagation();
+        } else {
+            alert(UPDATE_BROWSER_MESSAGE);
+        }
+    };
+
+    var _getClipboardData = function (event) {
+        return event.originalEvent.clipboardData || window.clipboardData;
+    };
+
+
+    return { captureFocus: _captureFocus,
+             setListener: _setListener,
+             setEnabled: _setEnabled };
 });

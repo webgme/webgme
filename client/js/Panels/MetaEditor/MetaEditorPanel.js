@@ -2,16 +2,12 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
-    'js/Clipboard/ISupportClipboard',
     'js/Widgets/MetaEditor/MetaEditorWidget',
-    './MetaEditorControl',
-    'js/KeyboardManager/IKeyTarget'
+    './MetaEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
-             ISupportClipboard,
              MetaEditorWidget,
-             MetaEditorControl,
-             IKeyTarget) {
+             MetaEditorControl) {
 
     var MetaEditorPanel;
 
@@ -36,8 +32,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
     //inherit from PanelBaseWithHeader
     _.extend(MetaEditorPanel.prototype, PanelBaseWithHeader.prototype);
     _.extend(MetaEditorPanel.prototype, IActivePanel.prototype);
-    _.extend(MetaEditorPanel.prototype, ISupportClipboard.prototype);
-    _.extend(MetaEditorPanel.prototype, IKeyTarget.prototype);
 
     MetaEditorPanel.prototype._initialize = function () {
         var self = this;
@@ -94,26 +88,6 @@ define(['js/PanelBase/PanelBaseWithHeader',
     MetaEditorPanel.prototype.onDeactivate = function () {
         this.control.detachClientEventListeners();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
-    };
-
-    /* override ISupportClipboard.prototype.onCopy */
-    MetaEditorPanel.prototype.onCopy = function () {
-        return this.widget.onCopy();
-    };
-
-    /* override ISupportClipboard.prototype.onPaste */
-    MetaEditorPanel.prototype.onPaste = function (data) {
-        return this.widget.onPaste(data);
-    };
-
-    /* override IKeyTarget.prototype.onKeyDown */
-    MetaEditorPanel.prototype.onKeyDown = function (eventArgs) {
-        return this.widget.onKeyDown(eventArgs);
-    };
-
-    /* override IKeyTarget.prototype.onKeyUp */
-    MetaEditorPanel.prototype.onKeyUp = function (eventArgs) {
-        return this.widget.onKeyUp(eventArgs);
     };
 
     return MetaEditorPanel;

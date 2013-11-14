@@ -20,21 +20,19 @@ define(['logManager'], function (logManager) {
 
 
     PanelManager.prototype.setActivePanel = function (p) {
-        if (this._activePanel !== p) {
-            if (this._activePanel) {
-                //deactivate currently active panel
-                this._activePanel.setActive(false);
-            }
-
-            this._activePanel = undefined;
-
-            if (p && _.isFunction(p.setActive)) {
-                this._activePanel = p;
-                this._activePanel.setActive(true);
-            }
+        if (this._activePanel) {
+            //deactivate currently active panel
+            this._activePanel.setActive(false);
         }
 
-        WebGMEGlobal.ClipboardHelper.captureFocus();
+        this._activePanel = undefined;
+
+        if (p && _.isFunction(p.setActive)) {
+            this._activePanel = p;
+            this._activePanel.setActive(true);
+        }
+
+        WebGMEGlobal.KeyboardManager.captureFocus();
     };
 
     PanelManager.prototype.getActivePanel = function () {

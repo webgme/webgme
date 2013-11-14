@@ -1,6 +1,7 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'pre-alpha' };
+var WebGMEGlobal = { 'version': 'pre-alpha',
+    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -11,8 +12,7 @@ define(['logManager',
     'js/Decorators/DecoratorManager',
     'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
-    './WebGME.History',
-    'js/Clipboard/ClipboardHelper'], function (logManager,
+    './WebGME.History'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -20,8 +20,7 @@ define(['logManager',
                                             DecoratorManager,
                                             KeyboardManager,
                                             PanelManager,
-                                            WebGMEHistory,
-                                            ClipboardHelper) {
+                                            WebGMEHistory) {
 
     var _webGMEStart = function () {
         var lm,
@@ -65,9 +64,8 @@ define(['logManager',
 
             //as of now it's a global variable just to make access to it easier
             //TODO: might need to be changed
-            WebGMEGlobal.ClipboardHelper = ClipboardHelper;
-            WebGMEGlobal.ClipboardHelper.captureFocus();
-            WebGMEGlobal.KeyboardManager = new KeyboardManager(WebGMEGlobal.ClipboardHelper.getEl());
+            WebGMEGlobal.KeyboardManager = KeyboardManager;
+            WebGMEGlobal.KeyboardManager.setEnabled(true);
             WebGMEGlobal.PanelManager = new PanelManager();
         });
 

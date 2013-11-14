@@ -108,7 +108,7 @@ define(['logManager',
                 //override just to prevent default dynatree behavior
                 //onFocus: null, // null: set focus to node.
                 var tnFocused = this.tnFocused;
-                //NOTE: in WebGMEGlobal.ClipboardHelper.captureFocus(); the tnFocused will be cleared out
+                //NOTE: in WebGMEGlobal.KeyboardManager.captureFocus(); the tnFocused will be cleared out
                 //since the original control looses focus
                 //need to save it back
                 self._registerKeyboardListener();
