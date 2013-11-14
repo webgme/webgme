@@ -758,7 +758,7 @@ define(['logManager',
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate);
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -790,7 +790,7 @@ define(['logManager',
         /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
-        this._deletedDesignerItemIDs = []
+        this._deletedDesignerItemIDs = [];
 
         this._insertedConnectionIDs = [];
         this._updatedConnectionIDs = [];
@@ -903,7 +903,7 @@ define(['logManager',
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -1044,7 +1044,7 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         this.selectionManager.showSelectionOutline();
     };
@@ -1275,7 +1275,7 @@ define(['logManager',
             this.items[this.itemIds[i]].renderSetLayoutInfo();
         }
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         i = this.connectionIds.length;
         while (i--) {
@@ -1350,7 +1350,7 @@ define(['logManager',
         if (this._connectionJumpXing !== enabled) {
             this._connectionJumpXing = enabled;
 
-            this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+            this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
         }
     };
     /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
@@ -1388,6 +1388,17 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onUIActivity = function () {
         this.logger.warning("DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...");
+    };
+
+    DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
+        var res;
+        try {
+            res = this.connectionRouteManager.redrawConnections(connIDs) || []
+        } catch (e) {
+            res = [];
+            this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + JSON.stringify(e));
+        }
+        return res;
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
