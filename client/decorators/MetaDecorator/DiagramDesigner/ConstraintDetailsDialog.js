@@ -8,8 +8,10 @@
 
 define(['clientUtil',
     'text!./ConstraintDetailsDialog.html',
+    'codemirror',
     'css!./ConstraintDetailsDialog'], function ( util,
-                                                constraintDetailsDialogTemplate) {
+                                                 constraintDetailsDialogTemplate,
+                                                 CodeMirror) {
 
     var ConstraintDetailsDialog;
 
@@ -25,6 +27,7 @@ define(['clientUtil',
         this._dialog.modal('show');
 
         this._dialog.on('shown', function () {
+            self._codeMirror.refresh();
             self._inputName.focus().trigger('keyup');
         });
 
@@ -43,7 +46,7 @@ define(['clientUtil',
 
         closeSave = function () {
             var constDesc = {'name': self._inputName.val(),
-                            'script': self._inputScript.val(),
+                            'script': self._codeMirror.getValue(),
                             'priority': self._inputPriority.val()};
 
             self._dialog.modal('hide');
@@ -74,9 +77,10 @@ define(['clientUtil',
         this._btnDelete = this._dialog.find('.btn-delete').first();
 
         this._pName = this._el.find('#pName').first();
+        this._pScript = this._el.find('#pScript').first();
+        this._scriptEditor = this._pScript.find('div.controls').first();
 
         this._inputName = this._el.find('#inputName').first();
-        this._inputScript = this._el.find('#inputScript').first();
         this._inputPriority = this._el.find('#inputPriority').first();
 
         //hook up event handlers
@@ -108,7 +112,7 @@ define(['clientUtil',
 
         //click on SAVE button
         this._btnSave.on('click', function (event) {
-            var val = self._inputName.val();
+            var val = self._codeMirror.getValue();
 
             event.stopPropagation();
             event.preventDefault();
@@ -133,8 +137,12 @@ define(['clientUtil',
 
         //fill controls based on the currently edited constraint
         this._inputName.val(constraintDesc.name).focus();
-        this._inputScript.val(constraintDesc.script);
         this._inputPriority.val(constraintDesc.priority);
+
+       this._codeMirror = CodeMirror(this._scriptEditor[0], {
+            value: constraintDesc.script,
+            mode:  "javascript"
+       });
     };
 
 

@@ -6,3 +6,5 @@
 .constraint-details-dialog {
   width: 760px !important;
   margin-left: -380px !important; }
+  .constraint-details-dialog .modal-body {
+    max-height: 500px; }

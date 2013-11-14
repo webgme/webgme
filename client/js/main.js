@@ -37,7 +37,9 @@ require.config({
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "loaderCircles": "js/Loader/LoaderCircles",
-        "loaderProgressBar": "js/Loader/LoaderProgressBar"
+        "loaderProgressBar": "js/Loader/LoaderProgressBar",
+
+        "codemirror": 'lib/codemirror/codemirror.amd'
     },
     shim: {
         'jquery-ui': ['jquery'],
