@@ -1,0 +1,12 @@
+{
+  "name": "Interpreter",
+  "version": "0.0.1",
+  "description": "C++ Interpreter for WebGME",
+  "main": "init.js",
+  "private": true,
+  "gypfile": true,
+
+  "dependencies": {
+    "fiber": " >= 1.0.3"
+  }
+}
