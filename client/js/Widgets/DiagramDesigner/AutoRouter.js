@@ -82,8 +82,7 @@ define(['logManager'], function (logManager) {
  
        this.router = new AutoRouterGraph();
     };
-                //TODO PathCustomizationType enum
-        //Next, we will load all necessary components for the AutoRouter
+    //TODO PathCustomizationType enum
 
         var CustomPathData = function (){
             var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
@@ -454,7 +453,6 @@ define(['logManager'], function (logManager) {
                 return false;
 
             var end2 = new ArPoint(end);
-            //end2 -= start;
             end2.subtract(start);
             x1 -= start.x;
             x2 -= start.x;
@@ -478,7 +476,6 @@ define(['logManager'], function (logManager) {
                 return false;
 
             var end2 = new ArPoint(end);
-            //end2 -= start;
             end2.subtract(start);
             y1 -= start.y;
             y2 -= start.y;
@@ -601,20 +598,20 @@ define(['logManager'], function (logManager) {
             var children = bufferObject.children,
                 i = 0,
                 box = null,
-                res = getRectOuterCoord(bufferObject.box.getRect(), inDir);
+                res = getRectOuterCoord(bufferObject.box, inDir);
 
             assert( isRightAngle(inDir), "getChildRectOuterCoordFrom: isRightAngle(inDir) FAILED"); 
             //The next assert fails if the point is in the opposite direction of the rectangle that it is checking.
             // e.g. The point is checking when it will hit the box from the right but the point is on the left
-            assert( !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)) FAILED"); 
+            assert( !isPointInDirFrom(point, bufferObject.box, (inDir)), "getChildRectOuterCoordFrom: !isPointInDirFrom(point, bufferObject.box.getRect(), (inDir)) FAILED"); 
 
             while( i < children.length ){
 
-                if( isPointInDirFrom( point, children[i].getRect(), reverseDir(inDir) ) && 
-                        isPointBetweenSides(point, children[i].getRect(), inDir) &&
-                        isCoordInDirFrom(res, getRectOuterCoord( children[i].getRect(), reverseDir(inDir) ), (inDir)) ){
+                if( isPointInDirFrom( point, children[i], reverseDir(inDir) ) && 
+                        isPointBetweenSides(point, children[i], inDir) &&
+                        isCoordInDirFrom(res, getRectOuterCoord( children[i], reverseDir(inDir) ), (inDir)) ){
 
-                    res = getRectOuterCoord( children[i].getRect(), reverseDir(inDir) );
+                    res = getRectOuterCoord( children[i], reverseDir(inDir) );
                     box = children[i];
                 }
                 ++i;
@@ -1867,9 +1864,12 @@ define(['logManager'], function (logManager) {
                 rect = new ArRect(),
                 atomic = false,
                 selfPoints = [],
-                ports = [];
+                ports = [],
+                id;
 
             //functions
+            this.setID = setID;
+            this.getID = getID;
             this.getOwner = getOwner;
             this.hasOwner = hasOwner;
             this.setOwner = setOwner;
@@ -1912,6 +1912,14 @@ define(['logManager'], function (logManager) {
                 ports = []; 
 
                 atomic = false;
+            }
+
+            function setID(_id){
+                id = _id;
+            }
+
+            function getID(){
+                return id;
             }
 
             function getOwner(){
@@ -2890,8 +2898,9 @@ define(['logManager'], function (logManager) {
                 }
             }
 
-            function position_GetRealX(edge, x1, x2){
+            function position_GetRealX(edge){
                 assert( edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(),"AREdgeList.position_GetRealX: edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
+                var x1, x2;
 
                 if( ishorizontal ){
                     assert( edge.getStartPoint().y === edge.getEndPoint().y, "AREdgeList.position_GetRealX: edge.getStartPoint().y === edge.getEndPoint().y FAILED");
@@ -2920,8 +2929,9 @@ define(['logManager'], function (logManager) {
                 return [x1, x2];
             }
 
-            function position_GetRealO(edge, o1, o2){
+            function position_GetRealO(edge){
                 assert( edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull(), "AREdgeList.position_GetRealO: edge !== null && !edge.isStartPointNull() && !edge.isEndPointNull() FAILED");
+                var o1, o2;
 
                 if(ishorizontal){
                     assert( edge.getStartPoint().y === edge.getEndPoint().y, "AREdgeList.position_GetRealO: edge.getStartPoint().y === edge.getEndPoint().y FAILED");
@@ -2947,6 +2957,8 @@ define(['logManager'], function (logManager) {
                         o2 = edge.isStartPointPrevNull() ? 0 : edge.getStartPointPrev().x - edge.getStartPoint().x;
                     }
                 }
+
+                return [o1, o2];
             }
 
             function position_LoadY(edge){
@@ -3500,14 +3512,19 @@ _logger.warning("Adding "
             function bracket_ShouldBeSwitched(edge, next){
                 assert( edge != null && next != null, "AREdgeList.bracket_ShouldBeSwitched: edge != null && next != null FAILED");
 
-                var ex1, ex2, eo1, eo2;
-                position_GetRealX(edge, ex1, ex2);
-                position_GetRealO(edge, eo1, eo2);
-
-                var nx1, nx2, no1, no2;
-                position_GetRealX(next, nx1, nx2);
-                position_GetRealO(next, no1, no2);
-
+                var ex = position_GetRealX(edge),
+                    ex1 = ex[0], 
+                    ex2 = ex[1], 
+                    eo = position_GetRealO(edge),
+                    eo1 = eo[0], 
+                    eo2 = eo[1],
+                    nx = position_GetRealX(next),
+                    nx1 = nx[0], 
+                    nx2 = nx[1], 
+                    no = position_GetRealO(next),
+                    no1 = no[0], 
+                    no2 = no[1];
+                
                 var c1, c2;
 
                 if( (nx1 < ex1 && ex1 < nx2 && eo1 > 0 ) || (ex1 < nx1 && nx1 < ex2 && no1 < 0) )
@@ -3919,8 +3936,8 @@ _logger.warning("Adding "
                     var second = order_first;
                     while( second != null )
                     {
-                        if( second.getClosestPrev() != null && second.getClosestPrev().getClosestNext() !== (second) && //Check if it references itself
-                            second.getClosestNext() != null && second.getClosestNext().getClosestPrev() == (second) )
+                        if( second.getClosestPrev() !== null && second.getClosestPrev().getClosestNext() !== (second) && //Check if it references itself
+                            second.getClosestNext() !== null && second.getClosestNext().getClosestPrev() === (second) )
                             
                         {
                             assert( !second.getEdgeFixed(), "AREdgeList.block_SwitchWrongs: !second.getEdgeFixed() FAILED");
@@ -3928,10 +3945,10 @@ _logger.warning("Adding "
                             var edge = second,
                                 next = edge.getClosestNext();
 
-                            while( next != null && edge.equals(next.getClosestPrev()) )
+                            while( next !== null && edge === next.getClosestPrev() )
                             {
-                                assert( edge != null && !edge.getEdgeFixed(), "AREdgeList.block_SwitchWrongs: edge != null && !edge.getEdgeFixed() FAILED");
-                                assert( next != null && !next.getEdgeFixed(), "AREdgeList.block_SwitchWrongs: next != null && !next.getEdgeFixed() FAILED");
+                                assert( edge !== null && !edge.getEdgeFixed(), "AREdgeList.block_SwitchWrongs: edge != null && !edge.getEdgeFixed() FAILED");
+                                assert( next !== null && !next.getEdgeFixed(), "AREdgeList.block_SwitchWrongs: next != null && !next.getEdgeFixed() FAILED");
 
                                 var ey = edge.getPositionY(),
                                     ny = next.getPositionY();
@@ -3946,8 +3963,8 @@ _logger.warning("Adding "
                                     edge.setEdgeCanpassed(true);
                                     next.setEdgeCanpassed(true);
 
-                                    var a = slideButNotPassEdges(edge, (ny+ey)/2 + 0.001) != null;
-                                    a |= slideButNotPassEdges(next, (ny+ey)/2 - 0.001) != null;
+                                    var a = slideButNotPassEdges(edge, (ny+ey)/2 + 0.001) !== null;
+                                    a = slideButNotPassEdges(next, (ny+ey)/2 - 0.001) !== null || a;
 
                                     if( a )
                                     {
@@ -3961,10 +3978,10 @@ _logger.warning("Adding "
                                         break;
                                     }
 
-                                    if( edge.getClosestPrev() != null && edge.getClosestPrev().getClosestNext().equals(edge) )
+                                    if( edge.getClosestPrev() !== null && edge.getClosestPrev().getClosestNext() === edge )
                                         edge.getClosestPrev().setClosestNext(next);
 
-                                    if( next.getClosestNext() != null && next.getClosestNext().getClosestPrev().equals(next))
+                                    if( next.getClosestNext() !== null && next.getClosestNext().getClosestPrev() === next)
                                         next.getClosestNext().setClosestPrev(edge);
 
                                     edge.setClosestNext(next.getClosestNext());
@@ -3977,7 +3994,7 @@ _logger.warning("Adding "
 
                                     assert( !bracket_ShouldBeSwitched(next, edge), "AREdgeList.block_SwitchWrongs: !Bracket_ShouldBeSwitched(next, edge) FAILED");
 
-                                    if( next.getClosestPrev() != null && next.getClosestPrev().getClosestNext().equals(next) )
+                                    if( next.getClosestPrev() !== null && next.getClosestPrev().getClosestNext() === next )
                                         edge = next.getClosestPrev();
                                     else
                                         next = edge.getClosestNext();
@@ -4007,7 +4024,8 @@ _logger.warning("Adding "
                 bufferBoxes = [],
                 paths = [], 
                 selfPoints = [],
-                self = this;
+                self = this,
+                box2bufferBox = {}; //maps boxId to corresponding bufferbox object
                 
             horizontal.setOwner(this);
             vertical.setOwner(this);
@@ -4234,25 +4252,28 @@ _logger.warning("Adding "
                 return rect;
             }
 
+            function getOutOfBufferBox(details){
+            //TODO Finish this!
+            // It is important to look at the ways to get out of the box...
+            }
+
             function getOutOfBox(details){
                 var point = details.point,
                     dir = details.dir,
                     len = details.len,
-                    box = details.box;
+                    boxRect = details.box instanceof ArRect ? details.box : details.box.getRect();
 
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
-
-                if( box ){
-                    var boxRect = box.getRect();
 
                     if(isHorizontal(dir))
                         point.x = getRectOuterCoord(boxRect, dir, len);
                     else
                         point.y = getRectOuterCoord(boxRect, dir, len);
-                }else{
 
+/*
+Old Logic:
                     var boxby = null,
-                        iter = box !== undefined ? boxes.indexOf(box) : 0; //start at the box index if it is given
+                        iter = 0; 
 
                     while (iter < boxes.length)
                     {
@@ -4269,9 +4290,11 @@ _logger.warning("Adding "
                         }
                         ++iter;
                     }
-                }
+*/
 
-                return boxby || box;
+                assert( !boxRect.ptInRect( point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point ) FAILED");
+
+                return boxRect;
             }
 
             function goToNextBufferBox( details ){
@@ -4300,7 +4323,7 @@ _logger.warning("Adding "
                     //Add a new collection that handles overlapping boxes (creates a larger encompassing box)
                     while (iter < boxList.length)
                     {
-                        var boxRect = boxList[iter].box ?  boxList[iter].box.getRect() : boxList[iter].getRect();
+                        var boxRect = boxList[iter].box;
 
                         if( !isPointInDirFrom(point, boxRect, dir) && //Add support for entering the parent box
                                 isPointBetweenSides(point, boxRect, dir) &&     // if it will not put the point in a corner (relative to dir2)
@@ -4312,7 +4335,8 @@ _logger.warning("Adding "
                         }
 
                         if( boxRect.ptInRect(point) ){
-                            assert( boxList[iter].children.length > 1, "ARGraph.goToNextBufferBox:boxList[iter].children.length > 1 FAILED"); //It should only enter parent buffer boxes
+                            //This fails if the point is in a box that isn't a parent box
+                            //assert( boxList[iter].children.length > 1, "ARGraph.goToNextBufferBox:boxList[iter].children.length > 1 FAILED"); //It should only enter parent buffer boxes
                             var p2 = new ArPoint(point), //temp point used for testing
                                 pStop1,//Potential STOPhere value #1
                                 pStop2 = getChildRectOuterCoordFrom( boxList[iter], dir, p2).coord,
@@ -4373,7 +4397,7 @@ _logger.warning("Adding "
                     while( child.box !== null ){
                         //If there exists a child box in dir2, then get the child box's outerCoord in the given direction
                         //Recheck until there doesn't exist a child box in dir2
-                        stophere = getRectOuterCoord(child.box.getRect(), reverseDir(dir1)); //Back the test point up so doesn't hit child
+                        stophere = getRectOuterCoord(child.box, reverseDir(dir1)); //Back the test point up so doesn't hit child
 
                         if(isHorizontal(dir1))//update test point
                             p2.x = stophere;
@@ -4384,7 +4408,7 @@ _logger.warning("Adding "
                     }
 
                 }else{//No children or dir1 === dir2
-                    stophere = getRectOuterCoord(bufferObject.box.getRect(), reverseDir(dir1));
+                    stophere = getRectOuterCoord(bufferObject.box, reverseDir(dir1));
                 }
 
                 return stophere;
@@ -4557,32 +4581,19 @@ _logger.warning("Adding "
                     assert( isRightAngle(startdir) && isRightAngle(enddir), "ARGraph.connect: isRightAngle(startdir) && isRightAngle(enddir) FAILED" );
 
                     //Find the bufferbox containing startpoint, endpoint
-                    var startBox,
-                        endBox;
-                    if( bufferBoxes.length > 0 ){
-                        var j = bufferBoxes.length;
-
-                        while(j-- && (!startBox || !endBox) ){
-                            if( bufferBoxes[j].box.getRect().ptInRect(startpoint) )
-                                startBox = bufferBoxes[j].box;
-
-                            if( bufferBoxes[j].box.getRect().ptInRect(endpoint) )
-                                endBox = bufferBoxes[j].box;
-                        }
-                    }
+                    var startBox = box2bufferBox[startPort.getOwner().getID()].box,
+                        endBox = box2bufferBox[endPort.getOwner().getID()].box;
 
                     var start = new ArPoint(startpoint);
                     getOutOfBox({ "point": start, 
                                     "dir": startdir, 
-                                    //"len": Math.max(BUFFER, STEMLENGTH), 
-                                    "box": startBox || startPort.getOwner()} );
+                                    "box": startBox } );
                     assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
                     var end = new ArPoint(endpoint);
                     getOutOfBox({ "point": end, 
                                     "dir": enddir, 
-                                    //"len": Math.max(BUFFER, STEMLENGTH), 
-                                    "box": endBox || endPort.getOwner()} );
+                                    "box": endBox } );
                     assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
                     assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -4685,7 +4696,8 @@ _logger.warning("Adding "
                     if( start.equals(old) )
                     {
                         assert( box != null, "ARGraph.connectPoints: box != null FAILED");
-                        var rect = box.getRect();
+var tst = 0;
+                        var rect = box; 
 
                         if( dir2 == Dir_None ){
                             dir2 = nextClockwiseDir(dir1);
@@ -4694,6 +4706,7 @@ _logger.warning("Adding "
                         assert( dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None, "ARGraph.connectPoints: dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None FAILED");
 
                         if( isPointIn( start, rect) ){
+tst = 1;
                             var swp = dir1;
 
                             dir1 = dir2;
@@ -4702,7 +4715,7 @@ _logger.warning("Adding "
 
                             if( bufferObject.box.getRect().intersect( rect ).isRectEmpty() ){
                                 var futureDir = exGetMajorDir(end.minus( start )),
-                                    canExit = !isCoordInDirFrom( getChildOuterRectFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
+                                    canExit = !isCoordInDirFrom( getChildRectOuterCoordFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
 
                                 assert( futureDir === dir1 || futureDir === dir2, "ARGraph.connectPoints: futureDir === dir1 || futureDir === dir2 FAILED"); 
 
@@ -4730,7 +4743,7 @@ _logger.warning("Adding "
 
                                     //calculate future direction
                                     futureDir = exGetMajorDir(end.minus( start ));
-                                    canExit = !isCoordInDirFrom( getChildOuterRectFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
+                                    canExit = !isCoordInDirFrom( getChildRectOuterCoordFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
                                 }
 
                             }
@@ -4738,6 +4751,7 @@ _logger.warning("Adding "
                         }
                         else if( isPointInDirFrom(end, rect, dir2) )
                         {
+tst = 2;
                             assert( !isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !isPointInDirFrom(start, rect, dir2) FAILED");
                             //goToNextBox(start, dir2, end);
                             if( bufferBoxes.length === 0 ){
@@ -4750,6 +4764,7 @@ _logger.warning("Adding "
                         }
                         else
                         {
+tst = 3;
                             assert( isPointBetweenSides(end, rect, dir1), "ARGraph.connectPoints: isPointBetweenSides(end, rect, dir1) FAILED" );
                             assert( !isPointIn(end, rect), "ARGraph.connectPoints: !isPointIn(end, rect) FAILED" );
 
@@ -5477,6 +5492,7 @@ _logger.warning("Adding "
                     added = false,
                     bufferBox,
                     rect,
+                    box,
                     collection = [];
 
                 bufferBoxes = [];
@@ -5484,11 +5500,10 @@ _logger.warning("Adding "
                 while( i-- ){
                     rect = new ArRect(boxes[i].getRect());
                     rect.inflateRect(BUFFER);
-                    bufferBox = new AutoRouterBox();
-                    bufferBox.setRect(rect);
+                    box = { "rect": rect, "id": boxes[i].getID() };
 
-                    while( collection[++k] && collection[k].getRect().left < rect.left); //Get index for insertion
-                    collection.splice( k, 0, bufferBox );
+                    while( collection[++k] && collection[k].rect.left < box.rect.left); //Get index for insertion
+                    collection.splice( k, 0, box);
                     k = -1;
                 }
 
@@ -5496,26 +5511,40 @@ _logger.warning("Adding "
                 i = 0;
 
                 while( i < collection.length ){ //Adding element 'i' to the appropriate group
-                    var added = false;
+                    var overlaps = [];
                     j = 0;
 
-                    while( j < groups.length && !added ){ //Check all groups for intersection
+                    while( j < groups.length ){ //Check all groups for intersection
                             var k = 0;
 
-                            while( k < groups[j].length && !added ){ //Check all boxes in the given group
+                            while( k < groups[j].length ){ //Check all boxes in the given group
 
-                                if( !groups[j][k].getRect().intersect( collection[i].getRect() ).isRectEmpty() ){
-                                    groups[j].push( collection[i] );
-                                    added = true;
+                                if( groups[j][k] && !groups[j][k].rect.intersect( collection[i].rect ).isRectEmpty() ){
+                                    //groups[j].push( collection[i] );
+                                    overlaps.push(j);
+                                    break;
 
-                                }else
-                                    k++;
+                                }
+                                k++;
                             }
                         j++;
                     }
 
-                    if( !added )
+                    //Combine all intersectings groups into one
+
+                    if( overlaps.length > 0 ){
+                        var n = overlaps.length,
+                            group = [];
+
+                        //Move all overlapping groups to group
+                        while( n-- ){
+                            group = group.concat(groups.splice( overlaps[n], 1)[0]);
+                        }
+                        group.push( collection[i] );
+                        groups.push(group);
+                    }else{
                         groups.push( [ collection[i] ] );
+                    }
 
                     i++;
                 }
@@ -5524,19 +5553,21 @@ _logger.warning("Adding "
                 i = 0;
                 while( i < groups.length ){
                     var k = 0,
-                        r = new ArRect(),
-                        parentBox = new AutoRouterBox();
-
-                   parentBox.setRect(new ArRect(0, 0, 4, 4));//Avoiding the assert for now
+                        parentBox = new ArRect( groups[i][0].rect );
 
                     while( k < groups[i].length ){
-                        r = groups[i][k].getRect().union(r); //Creating Parent Box
+                        parentBox.unionAssign( groups[i][k].rect ); //Creating Parent Box
+                        box2bufferBox[groups[i][k].id] = bufferBoxes.length;// match the box id with bufferbox index
+                        groups[i][k] = groups[i][k].rect;
                         k++;
                     }
 
-                    parentBox.getRect().setRect(r);
                     bufferBoxes.push( { "box": parentBox, "children": groups[i] });
                     i++;
+                }
+
+                for( id in box2bufferBox ){ //change the indices to bufferbox elements 
+                    box2bufferBox[id] = bufferBoxes[ box2bufferBox[id] ];
                 }
 
             }
@@ -5572,26 +5603,19 @@ _logger.warning("Adding "
                     return;
 
                 var rect = box.getRect();
-/*
-                var buffRect = new ArRect(rect),//Create buffered rectangle
-                    bufferBox = new AutoRouterBox();
-
-                buffRect.inflateRect(buffer);
-                bufferBox.setRect(buffRect);
-                bufferBoxes.push(bufferBox);
-*/
 
                 disconnectPathsClipping(rect);
 
                 box.setOwner(this);
+                var boxId = boxes.length.toString();
+                while( boxId.length < 6 ){
+                    boxId = "0" + boxId;
+                }
+                box.setID("BOX_" + boxId);
 
                 boxes.push(box);
 
                 addBoxAndPortEdges(box);
-            };
-
-            this.setBufferBoxes = function(boxes){
-                bufferBoxes = boxes;
             };
 
             this.deleteBox = function(box){

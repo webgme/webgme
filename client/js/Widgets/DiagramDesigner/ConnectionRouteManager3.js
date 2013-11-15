@@ -30,7 +30,10 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Adding " + ID);
-            self.insertItem( ID );
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 )
+                self.insertBox( ID );
+            else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
+                self.insertConnection( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
@@ -38,7 +41,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             if( self._autorouterBoxes[ID.ID] )
                 self._resizeItem( ID.ID );
             else
-                self.insertItem( ID.ID );
+                self.insertBox( ID.ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
 
@@ -144,8 +147,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
          * In this method, we will update the boxes using the canvas.itemIds list and
          * add any ports as needed (from the canvas.connectionIds)
          */
-        this.logger.warning("Initializing Screen");
-        
         var canvas = this.diagramDesigner,
             connIdList = canvas.connectionIds,
             itemIdList = canvas.itemIds,
@@ -157,7 +158,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             dstSubCompId;
 
         while(i--){
-            this.insertItem(itemIdList[i]);
+            this.insertBox(itemIdList[i]);
         }
 
         //Next, I will update the ports as necessary
@@ -167,60 +168,19 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     };
 
-    ConnectionRouteManager3.prototype._updateBoxesAndPorts = function () {
+    ConnectionRouteManager3.prototype.insertConnection = function (connId) {
         var canvas = this.diagramDesigner,
-            connIdList = canvas.connectionIds,
-            itemIdList = canvas.itemIds,
-            i = itemIdList.length,
-            connId,
-            srcObjId,
-            srcSubCompId,
-            dstObjId,
-            dstSubCompId;
-
-        this.endpointConnectionAreaInfo = {};
-
-        //first, I will update the boxes as needed
-        while(i--){
-
-                if(this._autorouterBoxes[itemIdList[i]] === undefined){//Shouldn't need this when the insert event is implemented
-                    this.insertItem(itemIdList[i]);
-                }else{
-                    var currBox = canvas.items[itemIdList[i]].getBoundingBox(),
-                        oldBox = this._autorouterBoxes[itemIdList[i]].box.getRect(),
-                        dx = currBox.x - oldBox.left,
-                        dy = currBox.y - oldBox.ceil,
-                        dw = (currBox.width) - (oldBox.getWidth()),
-                        dh = (currBox.height) - (oldBox.getHeight());
-                
-                    //if(dw !== 0 || dh !== 0){
-                        //this.autorouter.setBox(this._autorouterBoxes[itemIdList[i]].box, currBox);
-
-//                    }else 
-                    if(dx !== 0 || dy !== 0){
-                        this.autorouter.router.shiftBoxBy(this._autorouterBoxes[itemIdList[i]].box, { "cx": dx, "cy": dy });
-                    }
-                }
-
-
-        }
-
-        //Next, I will update the ports as necessary
-        i = connIdList.length;
-        while(i--){
-            connId = connIdList[i];
-            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
-            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
+            srcObjId = canvas.connectionEndIDs[connId].srcObjId,
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId,
             dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
 
-            this._updatePort(srcObjId, srcSubCompId);
-            this._updatePort(dstObjId, dstSubCompId);
-        }
+        this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
+        this._updatePort(dstObjId, dstSubCompId);
+        this._updateConnectionCoordinates( connId );
+     };
 
-    };
-
-    ConnectionRouteManager3.prototype.insertItem = function (objId) {
+    ConnectionRouteManager3.prototype.insertBox = function (objId) {
         var canvas = this.diagramDesigner,
             designerItem,
             areas, //TODO change to create incoming and outgoing ports
@@ -254,7 +214,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterBoxes[objId] = this.autorouter.addBox(boxdefinition);
     };
 
-    ConnectionRouteManager3.prototype.deleteItem = function (objId) {//TODO Check if it is a Box or Connection
+    ConnectionRouteManager3.prototype.deleteItem = function (objId) {
         //If I can query them from the objId, I can clear the entries with that info
         var item = this.diagramDesigner.items[objId],
             connIds = this.diagramDesigner.connectionIds,
