@@ -16,8 +16,7 @@ define(['logManager',
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
         CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target",
-        PARTBROWSERWIDGET = 'PartBrowserWidget';
+        CONNECTION_TARGET_NAME = "target";
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -108,6 +107,27 @@ define(['logManager',
 
         this.designerCanvas.onSetConnectionProperty = function (params) {
             self._onSetConnectionProperty(params);
+        };
+
+        this.designerCanvas.onCopy = function () {
+            return self._onCopy();
+        };
+
+        this.designerCanvas.onPaste = function (data) {
+            return self._onPaste(data);
+        };
+
+        this.designerCanvas.getDragItems = function (selectedElements) {
+            return self._getDragItems(selectedElements);
+        };
+
+        this.designerCanvas.getDragEffects = function (selectedElements) {
+            return self._getDragEffects(selectedElements);
+        };
+
+        this._oGetDragParams = this.designerCanvas.getDragParams;
+        this.designerCanvas.getDragParams = function (selectedElements, event) {
+            return self._getDragParams(selectedElements, event);
         };
 
         this.logger.debug("attachDiagramDesignerWidgetEventHandlers finished");
@@ -279,7 +299,7 @@ define(['logManager',
 
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
-        var accept = false,
+        var accept,
             items = DragHelper.getDragItems(dragInfo),
             effects = DragHelper.getDragEffects(dragInfo);
 
@@ -294,9 +314,13 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
         var items = DragHelper.getDragItems(dragInfo),
             effects = DragHelper.getDragEffects(dragInfo),
+            params = DragHelper.getDragParams(dragInfo),
             gmeID,
             self = this,
-            handleDrop;
+            handleDrop,
+            ctrlKey = event.ctrlKey || event.metaKey,
+            shiftKey = event.shiftKey,
+            handleSelfDrop;
 
         handleDrop = function (key, idList, pos) {
             var createChildParams,
@@ -310,8 +334,6 @@ define(['logManager',
             self._client.startTransaction();
 
             for (i = 0; i < idList.length; i+= 1) {
-                //if dragsource is PartBrowserWidget --> instantiate
-                // otherwise create reference
                 createChildParams = undefined;
                 switch (key) {
                     case "CREATE_INSTANCE":
@@ -362,7 +384,9 @@ define(['logManager',
                         self._client.moveMoreNodes(self.currentNodeInfo.id, [idList[i]]);
                         break;
                     case "COPY":
-                        self._client.copyMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                        handleSelfDrop('COPY', idList, pos, params);
+                        i = idList.length;
+
                         break;
                     default:
                 }
@@ -374,46 +398,140 @@ define(['logManager',
             self._client.completeTransaction();
         };
 
+        handleSelfDrop = function (type, items, dropPosition, selfDropParams) {
+            var i,
+                gmeID,
+                componentID,
+                len,
+                selectedIDs = [];
+
+            switch (type) {
+                case 'REPOSITION':
+                    var oldPos;
+
+                    //update UI
+                    self.designerCanvas.beginUpdate();
+
+                    i = items.length;
+                    while (i--) {
+                        gmeID = items[i];
+                        oldPos = selfDropParams.positions[gmeID];
+                        if (!oldPos) {
+                            oldPos = {'x': 0, 'y': 0};
+                        }
+
+                        if (self._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+                            len = self._GmeID2ComponentID[gmeID].length;
+                            while (len--) {
+                                componentID = self._GmeID2ComponentID[gmeID][len];
+                                selectedIDs.push(componentID);
+                                self.designerCanvas.updateDesignerItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
+                            }
+                        }
+                    }
+
+                    self.designerCanvas.endUpdate();
+                    self.designerCanvas.select(selectedIDs);
+
+                    //update object internals
+                    setTimeout(function () {
+                        self._client.startTransaction();
+                        i = items.length;
+                        while (i--) {
+                            gmeID = items[i];
+                            oldPos = selfDropParams.positions[gmeID];
+                            if (!oldPos) {
+                                oldPos = {'x': 0, 'y': 0};
+                            }
+                            self._client.setRegistry(gmeID, nodePropertyNames.Registry.position, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                        }
+
+                        self._client.completeTransaction();
+                    }, 10);
+
+                    break;
+                case 'COPY':
+                    var copyOpts = { "parentId": self.currentNodeInfo.id };
+                    i = items.length;
+                    while (i--) {
+                        gmeID = items[i];
+
+                        copyOpts[gmeID] = {};
+
+                        oldPos = selfDropParams.positions[gmeID];
+                        if (oldPos) {
+                            copyOpts[gmeID][REGISTRY_STRING] = {};
+                            copyOpts[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y };
+                        }
+                    }
+                    self._client.intellyPaste(copyOpts);
+                    break;
+                default:
+            }
+
+
+        };
+
         if (items.length > 0) {
             this.logger.debug('_onBackgroundDrop gmeID: ' + items);
 
-            //only one possibility to drop
-            if (effects.length === 1 && effects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                handleDrop('CREATE_INSTANCE', items, position);
-            } else {
-                //multiple drop possibility, create context menu
-                var menuItems = {},
-                    i;
+            if (params && params.parentID && params.parentID === this.currentNodeInfo.id) {
+                //if the params contains parentID, check if the parent is the same as the currently opened no
+                //it might be coming from the same hierarchy
 
-                for (i = 0; i < effects.length; i += 1) {
-                    switch (effects[i]) {
-                        case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                            menuItems['COPY'] = {
-                                "name": "Copy here",
-                                "icon": false
-                            };
-                            break;
-                        case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
-                            menuItems['MOVE'] = {
-                                "name": "Move here",
-                                "icon": false
-                            };
-                            break;
-                        case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
-                            menuItems['CREATE_REFERENCE'] = {
-                                "name": "Create reference here",
-                                "icon": false
-                            };
-                            break;
-                        default:
-                    }
+                //CTRL key --> copy
+                //no key --> reposition
+                if (!shiftKey && !ctrlKey) {
+                    //no key pressed at drop --> reposition
+                    setTimeout(function () {
+                        handleSelfDrop('REPOSITION', items, position, params);
+                    }, 1);
+                } else if (!shiftKey && ctrlKey) {
+                    //COPY
+                    setTimeout(function () {
+                        handleSelfDrop('COPY', items, position, params);
+                    }, 1);
                 }
+            } else {
+                //no parentID present
+                //only one possibility to drop
+                if (effects.length === 1 && effects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                    handleDrop('CREATE_INSTANCE', items, position);
+                } else {
+                    //multiple drop possibility, create context menu
+                    var menuItems = {},
+                        i;
 
-                this.designerCanvas.createMenu(menuItems, function (key) {
-                        handleDrop(key, items, position);
-                    },
-                    this.designerCanvas.posToPageXY(position.x, position.y)
-                );
+                    for (i = 0; i < effects.length; i += 1) {
+                        switch (effects[i]) {
+                            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                                menuItems['COPY'] = {
+                                    "name": "Copy here",
+                                    "icon": false
+                                };
+                                break;
+                            case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                                menuItems['MOVE'] = {
+                                    "name": "Move here",
+                                    "icon": false
+                                };
+                                break;
+                            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                                menuItems['CREATE_REFERENCE'] = {
+                                    "name": "Create reference here",
+                                    "icon": false
+                                };
+                                break;
+                            default:
+                        }
+                    }
+
+                    this.designerCanvas.createMenu(menuItems, function (key) {
+                            handleDrop(key, items, position);
+                        },
+                        this.designerCanvas.posToPageXY(position.x, position.y)
+                    );
+                }
             }
         }
     };
@@ -647,6 +765,93 @@ define(['logManager',
             this._client.completeTransaction();
         }
     };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onCopy = function () {
+        var res = [],
+            selectedIDs = this.designerCanvas.selectionManager.getSelectedElements(),
+            i = selectedIDs.length,
+            gmeID,
+            obj,
+            nodeObj;
+
+        while(i--) {
+            gmeID = this._ComponentID2GmeID[selectedIDs[i]];
+            obj = {'ID': gmeID,
+                   'Name': undefined,
+                   'Position': undefined};
+
+            nodeObj = this._client.getNode(gmeID);
+            if (nodeObj) {
+                obj.Name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
+                obj.Position = nodeObj.getRegistry(nodePropertyNames.Registry.position);
+            }
+
+            res.push(obj);
+        }
+
+        return res;
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onPaste = function (data) {
+        var len,
+            objDesc,
+            copyOpts = { "parentId": this.currentNodeInfo.id };
+
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            this.logger.error('Can not create JSON object from pasted string: "' + data + '"');
+            data = undefined;
+        }
+
+        if (data && _.isArray(data)) {
+            len = data.length;
+
+            while (len--) {
+                objDesc = data[len];
+
+                if (objDesc && objDesc.ID) {
+                    copyOpts[objDesc.ID] = {};
+                }
+            }
+
+            this._client.intellyPaste(copyOpts);
+        }
+
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
+        var res = [],
+            i = selectedElements.length;
+
+        while(i--) {
+            res.push(this._ComponentID2GmeID[selectedElements[i]]);
+        }
+
+        return res;
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
+        var oParams = this._oGetDragParams.call(this.designerCanvas, selectedElements, event),
+            params = { 'positions': {},
+                       'parentID': this.currentNodeInfo.id },
+            i;
+
+        for (i in oParams.positions) {
+            if (oParams.positions.hasOwnProperty(i)) {
+                params.positions[this._ComponentID2GmeID[i]] = oParams.positions[i];
+            }
+        }
+
+        return params;
+    };
+
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragEffects = function (selectedElements) {
+        return [DragHelper.DRAG_EFFECTS.DRAG_COPY, DragHelper.DRAG_EFFECTS.DRAG_MOVE, DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
+    };
+
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
 });

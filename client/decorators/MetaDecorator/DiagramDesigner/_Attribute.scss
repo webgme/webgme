@@ -1,32 +1,4 @@
-$attribute-height: 16px;
-$hover-background-color: #eeeeee;
-
 @mixin attribute() {
-  .attr {
-    white-space: nowrap;
-    position: relative;
-    height: $attribute-height;
-    line-height: $attribute-height;
-
-    &:hover {
-      cursor: pointer;
-      background-color: $hover-background-color;
-    }
-
-    .n {
-      float: left;
-      margin-right: 3px;
-      max-width: 90px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: left;
-    }
-
-    .t {
-      float: right;
-      text-align: right;
-    }
-  }
 }
 
 

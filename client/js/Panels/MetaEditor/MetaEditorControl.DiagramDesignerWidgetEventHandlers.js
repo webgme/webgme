@@ -12,7 +12,8 @@ define(['logManager',
                                         MetaRelations,
                                         DragHelper) {
 
-    var MetaEditorControlDiagramDesignerWidgetEventHandlers;
+    var MetaEditorControlDiagramDesignerWidgetEventHandlers,
+        DRAG_PARAMS_META_CONTAINER_ID = 'metaContainerID';
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -49,6 +50,14 @@ define(['logManager',
             self._onConnectionDstTextChanged(connId, oldValue, newValue);
         };
 
+        this._oGetDragParams = this.diagramDesigner.getDragParams;
+        this.diagramDesigner.getDragParams = function (selectedElements, event) {
+            return self._getDragParams(selectedElements, event);
+        };
+
+        this.diagramDesigner.getDragItems = function (selectedElements) {
+            return self._getDragItems(selectedElements);
+        };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
@@ -58,18 +67,28 @@ define(['logManager',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
-            i;
+            params = DragHelper.getDragParams(dragInfo),
+            i,
+            accept = false;
 
-        //return true if there is at least one item among the dragged ones that is not on the sheet yet
-        if (gmeIDList.length > 0) {
-            for (i = 0; i < gmeIDList.length; i+= 1) {
-                if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
-                    return true;
+        //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
+        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
+            if (gmeIDList.length === 0) {
+                accept = true;
+            }
+        } else {
+            //return true if there is at least one item among the dragged ones that is not on the sheet yet
+            if (gmeIDList.length > 0) {
+                for (i = 0; i < gmeIDList.length; i+= 1) {
+                    if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
+                        accept = true;
+                        break;
+                    }
                 }
             }
         }
 
-        return false;
+        return accept;
     };
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP ACCEPTANCE       */
@@ -81,10 +100,14 @@ define(['logManager',
     /**********************************************************/
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
+            params = DragHelper.getDragParams(dragInfo),
             cNode = this._client.getNode(this.currentNodeInfo.id),
             registry = cNode.getEditableRegistry(this._META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
             i,
-            addMember;
+            addMember,
+            repositionMember,
+            selectedIDs = [],
+            componentID;
 
         addMember = function (gmeID, position) {
             var added = false;
@@ -100,12 +123,43 @@ define(['logManager',
             return added;
         };
 
+        repositionMember = function (gmeID, position) {
+            if (registry.Members.indexOf(gmeID) !== -1) {
+                registry.MemberCoord[gmeID] = { "x": position.x,
+                    "y": position.y};
+            }
+        };
 
-        if (gmeIDList.length > 0) {
-            for (i = 0; i < gmeIDList.length; i += 1) {
-                if (addMember(gmeIDList[i], position)) {
-                    position.x += 20;
-                    position.y += 20;
+        //check to see it self drop and reposition or dropping fro somewhere else
+        if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
+            if (gmeIDList.length === 0) {
+                //params.position holds the old coordinates of the items being dragged
+                //update UI
+                this.diagramDesigner.beginUpdate();
+
+                for (i in params.positions) {
+                    if (params.positions.hasOwnProperty(i)) {
+                        repositionMember(i, {'x': position.x + params.positions[i].x,
+                                             'y': position.y + params.positions[i].y});
+
+                        componentID = this._GMEID2ComponentID[i];
+
+                        selectedIDs.push(componentID);
+                        this.diagramDesigner.updateDesignerItem(componentID, { "position": {"x": position.x + params.positions[i].x, "y": position.y + params.positions[i].y }});
+                    }
+                }
+
+                this.diagramDesigner.endUpdate();
+                this.diagramDesigner.select(selectedIDs);
+            }
+        } else {
+            //return true if there is at least one item among the dragged ones that is not on the sheet yet
+            if (gmeIDList.length > 0) {
+                for (i = 0; i < gmeIDList.length; i += 1) {
+                    if (addMember(gmeIDList[i], position)) {
+                        position.x += 20;
+                        position.y += 20;
+                    }
                 }
             }
         }
@@ -243,6 +297,28 @@ define(['logManager',
     /************************************************************************/
     /*  END OF --- HANDLE OBJECT / CONNECTION DELETION IN THE ASPECT ASPECT */
     /************************************************************************/
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragParams = function (selectedElements, event) {
+        var oParams = this._oGetDragParams.call(this.diagramDesigner, selectedElements, event),
+            params = { 'positions': {} },
+            i;
+
+        params[DRAG_PARAMS_META_CONTAINER_ID] = this.currentNodeInfo.id;
+
+        for (i in oParams.positions) {
+            if (oParams.positions.hasOwnProperty(i)) {
+                params.positions[this._ComponentID2GMEID[i]] = oParams.positions[i];
+            }
+        }
+
+        return params;
+    };
+
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
+        return [];
+    };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
 });

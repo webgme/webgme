@@ -1,6 +1,7 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'pre-alpha' };
+var WebGMEGlobal = { 'version': 'pre-alpha',
+    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -9,7 +10,8 @@ define(['logManager',
     'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
-    'js/KeyboardManager',
+    'js/KeyboardManager/KeyboardManager',
+    'js/PanelManager/PanelManager',
     './WebGME.History',
     'js/ObjectConstraintManager'], function (logManager,
                                             CONFIG,
@@ -18,6 +20,7 @@ define(['logManager',
                                             LayoutManager,
                                             DecoratorManager,
                                             KeyboardManager,
+                                            PanelManager,
                                             WebGMEHistory,
                                             ObjectConstraintManager) {
 
@@ -31,10 +34,6 @@ define(['logManager',
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME'),
             selectObject;
-
-        //as of now it's a global variable just to make access to it easier
-        //TODO: might need to be changed
-        WebGMEGlobal.KeyboardManager = new KeyboardManager();
 
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {
@@ -66,6 +65,12 @@ define(['logManager',
 
             //load the panels
             loadPanels(panels);
+
+            //as of now it's a global variable just to make access to it easier
+            //TODO: might need to be changed
+            WebGMEGlobal.KeyboardManager = KeyboardManager;
+            WebGMEGlobal.KeyboardManager.setEnabled(true);
+            WebGMEGlobal.PanelManager = new PanelManager();
         });
 
         loadPanels = function (panels) {

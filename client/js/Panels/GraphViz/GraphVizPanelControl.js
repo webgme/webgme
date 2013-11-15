@@ -17,10 +17,9 @@ define(['logManager',
         this._logger = logManager.create("GraphVizControl");
 
         this._client = options.client;
-        this._panel = options.panel;
 
         //initialize core collections and variables
-        this._graphVizWidget = this._panel.widget;
+        this._graphVizWidget = options.widget;
 
         this._currentNodeId = null;
         this._currentNodeParentId = undefined;
@@ -32,7 +31,6 @@ define(['logManager',
         this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         };
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         this._logger.debug("Created");
     };
@@ -243,6 +241,15 @@ define(['logManager',
     };
 
     GraphVizControl.prototype.destroy = function () {
+        this.detachClientEventListeners();
+    };
+
+    GraphVizControl.prototype.attachClientEventListeners = function () {
+        this.detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    GraphVizControl.prototype.detachClientEventListeners = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 

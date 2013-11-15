@@ -14,7 +14,7 @@ define(['logManager',
         var self = this;
         this._client = options.client;
         this._panel = options.panel;
-        this._dataGridWidget = this._panel.widget;
+        this._dataGridWidget = options.widget;
 
         this._currentNodeId = null;
 
@@ -23,7 +23,6 @@ define(['logManager',
         this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         };
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         //attach all the event handlers for event's coming from DesignerCanvas
         this.attachDataGridWidgetEventHandlers();
@@ -60,7 +59,7 @@ define(['logManager',
     };
 
     GridPanelContainmentControPointers.prototype.destroy = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        this.detachClientEventListeners();
         this._client.removeUI(this._territoryId);
     };
 
@@ -171,6 +170,15 @@ define(['logManager',
             }
 
             return nodeDescriptor;
+    };
+
+    GridPanelContainmentControPointers.prototype.attachClientEventListeners = function () {
+        this.detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    GridPanelContainmentControPointers.prototype.detachClientEventListeners = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     //attach GridPanelContainmentControPointers - DataGridViewEventHandlers event handler functions

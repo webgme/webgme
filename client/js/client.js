@@ -670,61 +670,45 @@ define([
                     }
                 }
             }
-            function isFalseNode(core,node){
-                if(core.isFalseNode(node)){
-                    core.deleteNode(node);
-                    return true;
-                }
-                return false;
-            }
             function storeNode(node,basic){
                 //basic = basic || true;
                 var path = _core.getPath(node);
-                if(isFalseNode(_core,node)){
-                    delete _nodes[path];
-                    path = null;
+                if(_nodes[path]){
+                    //TODO we try to avoid this
                 } else {
-                    if(_nodes[path]){
-                        //TODO we try to avoid this
-                    } else {
-                        _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
-                    }
+                    _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
                 }
                 return path;
             }
 
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
-                if(isFalseNode(core,node)){
-                    callback(null);
-                } else {
-                    if(!nodesSoFar[path]){
-                        nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
-                    }
-                    if(level>0){
-                        if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
-                            core.loadChildren(nodesSoFar[path].node,function(err,children){
-                                if(!err && children){
-                                    var missing = children.length;
-                                    var error = null;
-                                    for(var i=0;i<children.length;i++){
-                                        loadChildrenPattern(core,nodesSoFar,children[i],level-1,function(err){
-                                            error = error || err;
-                                            if(--missing === 0){
-                                                callback(error);
-                                            }
-                                        });
-                                    }
-                                } else {
-                                    callback(err);
+                if(!nodesSoFar[path]){
+                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
+                }
+                if(level>0){
+                    if(core.getChildrenRelids(nodesSoFar[path].node).length>0){
+                        core.loadChildren(nodesSoFar[path].node,function(err,children){
+                            if(!err && children){
+                                var missing = children.length;
+                                var error = null;
+                                for(var i=0;i<children.length;i++){
+                                    loadChildrenPattern(core,nodesSoFar,children[i],level-1,function(err){
+                                        error = error || err;
+                                        if(--missing === 0){
+                                            callback(error);
+                                        }
+                                    });
                                 }
-                            });
-                        } else {
-                            callback(null);
-                        }
+                            } else {
+                                callback(err);
+                            }
+                        });
                     } else {
                         callback(null);
                     }
+                } else {
+                    callback(null);
                 }
             }
             function loadPattern(core,id,pattern,nodesSoFar,callback){
@@ -751,15 +735,11 @@ define([
                     core.loadByPath(base,id,function(err,node){
                         if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
-                            if(isFalseNode(core,node)){
-                                callback(null);
-                            } else {
-                                if(!nodesSoFar[path]){
-                                    nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
-                                }
-                                base = node;
-                                baseLoaded();
+                            if(!nodesSoFar[path]){
+                                nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
                             }
+                            base = node;
+                            baseLoaded();
                         } else {
                             callback(err);
                         }
@@ -1665,6 +1645,20 @@ define([
                 }
             }
 
+            //constraint functions
+            function setConstraint(path,name,constraintObj){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setConstraint(_nodes[path].node,name,constraintObj);
+                    saveRoot('setConstraint('+path+','+name+')');
+                }
+            }
+            function delConstraint(path,name){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delConstraint(_nodes[path].node,name);
+                    saveRoot('delConstraint('+path+'name'+')');
+                }
+            }
+
             //territory functions
             function addUI(ui, oneevent, guid) {
                 guid = guid || GUID();
@@ -1834,13 +1828,27 @@ define([
                     return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
+                //constraint functions
+                var getConstraintNames = function(){
+                    return _core.getConstraintNames(_nodes[_id].node);
+                };
+                var getConstraint = function(name){
+                    return _core.getConstraint(_nodes[_id].node,name);
+                };
                 //ASSERT(_nodes[_id]);
 
                 var printData = function(){
                     //TODO - what to print here - now we use as testing method...
-                    console.log('kecso1',_core.getPointerPath(_nodes[_id].node,'src'));
-                    _core.setPointer(_nodes[_id].node,'src',null);
-                    console.log('kecso2',_core.getPointerPath(_nodes[_id].node,'src'));
+                    console.log('printing info of node '+_id);
+                    console.log('not implemented');
+                    console.log('printing info of node '+_id+' done');
+
+                    //testfunction placeholder
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.setConstraint(_nodes[_id].node,"proba",{});
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.delConstraint(_nodes[_id].node,"proba");
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
                 };
 
                 if(_nodes[_id]){
@@ -1870,6 +1878,10 @@ define([
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
                         getBase                        : getBase,
+
+                        //constraint functions
+                        getConstraintNames : getConstraintNames,
+                        getConstraint : getConstraint,
 
                         printData: printData
 
@@ -2012,6 +2024,10 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
+
+                //constraint
+                setConstraint: setConstraint,
+                delConstraint: delConstraint,
 
 
                 //territory functions for the UI

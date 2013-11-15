@@ -26,10 +26,9 @@ define(['logManager',
         this.logger = options.logger || logManager.create(options.loggerName || "MetaEditorControl");
 
         this._client = options.client;
-        this._panel = options.panel;
 
         //initialize core collections and variables
-        this.diagramDesigner = this._panel.widget;
+        this.diagramDesigner = options.widget;
 
         this._META_EDITOR_REGISTRY_KEY = META_EDITOR_REGISTRY_KEY;
 
@@ -41,7 +40,6 @@ define(['logManager',
         this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         };
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         if (this.diagramDesigner === undefined) {
             this.logger.error("ModelEditorControl's DiagramDesigner is not specified...");
@@ -188,7 +186,7 @@ define(['logManager',
 
     //might not be the best approach
     MetaEditorControl.prototype.destroy = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        this.detachClientEventListeners();
         this._client.removeUI(this._territoryId);
         this.diagramDesigner.clear();
     };
@@ -1402,6 +1400,15 @@ define(['logManager',
     /****************************************************************************/
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
+
+    MetaEditorControl.prototype.attachClientEventListeners = function () {
+        this.detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    MetaEditorControl.prototype.detachClientEventListeners = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions
     _.extend(MetaEditorControl.prototype, MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype);

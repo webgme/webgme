@@ -94,7 +94,6 @@ define(['logManager',
     };
 
     DataGridWidget.prototype.destroy = function () {
-        __parent_proto__.destroy.call(this);
     };
 
     DataGridWidget.prototype._initializeTable = function (columns) {

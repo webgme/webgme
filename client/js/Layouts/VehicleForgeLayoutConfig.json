@@ -21,7 +21,6 @@
 
         {"id": "ModelEditor",
             "panel": "ModelEditor/ModelEditorPanel",
-            "control": "ModelEditor/ModelEditorControl",
             "container": "center",
             "DEBUG_ONLY": false}
     ]

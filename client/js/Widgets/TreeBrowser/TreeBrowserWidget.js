@@ -101,11 +101,18 @@ define(['logManager',
             onClick: function (node, event) {
                 //override just to prevent default dynatree behavior
                 //onClick: null, // null: generate focus, expand, activate, select events.
+                self._registerKeyboardListener();
             },
 
             onFocus: function (node) {
                 //override just to prevent default dynatree behavior
                 //onFocus: null, // null: set focus to node.
+                var tnFocused = this.tnFocused;
+                //NOTE: in WebGMEGlobal.KeyboardManager.captureFocus(); the tnFocused will be cleared out
+                //since the original control looses focus
+                //need to save it back
+                self._registerKeyboardListener();
+                this.tnFocused = tnFocused;
             },
 
             onDblClick: function (node, event) {

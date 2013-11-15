@@ -4,9 +4,6 @@ var DEBUG = true;
 var _webGME_jquery_ver = '2.0.3';
 var _webGME_jqueryui_ver = '1.10.3';
 
-//touch device detection
-var SUPPORTS_TOUCH = 'ontouchstart' in window || navigator.msMaxTouchPoints;
-
 // configure require path and modules
 require.config({
     baseUrl: "/",
@@ -40,7 +37,9 @@ require.config({
         "notificationManager": 'js/NotificationManager',
         "clientUtil": 'js/util',
         "loaderCircles": "js/Loader/LoaderCircles",
-        "loaderProgressBar": "js/Loader/LoaderProgressBar"
+        "loaderProgressBar": "js/Loader/LoaderProgressBar",
+
+        "codemirror": 'lib/codemirror/codemirror.amd'
     },
     shim: {
         'jquery-ui': ['jquery'],

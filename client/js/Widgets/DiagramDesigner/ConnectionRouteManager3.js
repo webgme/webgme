@@ -23,33 +23,26 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
-        //Define container that will map obj+subID -> box
-        this._autorouterBoxes = {};
-        this._autorouterPorts = {}; //Maps boxIds to an array of port ids that have been mapped
-        this._autorouterPaths = {};
-        this.autorouter.clear();
+        this._clearGraph();
 
         //Adding event listeners
         var self = this;
 
-/*
-        this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
-            //this.diagramDesigner.itemIds
-            //this.diagramDesigner.connectionIds
-            self.logger.warning("ON_COMPONENT_UPDATE: " + ID);
-            //self.autorouter.setBox();
-        };
-        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
-*/
-
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
-            self.logger.warning("Added Component: " + ID);
+            self.logger.warning("Adding " + ID);
             self.insertItem( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
+        this._onComponentResize = function(_canvas, ID) {
+            if( self._autorouterBoxes[ID.ID] )
+                self._resizeItem( ID.ID );
+            else
+                self.insertItem( ID.ID );
+        };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
+
         this._onComponentDelete = function(_canvas, ID) {//Boxes and lines
-            self.logger.warning("Deleting : " + ID);
             self.deleteItem( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
@@ -57,13 +50,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onItemPositionChanged = function(_canvas, eventArgs) {
             if( self._autorouterBoxes[eventArgs.ID] )
-                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "dx": eventArgs.x, "dy": eventArgs.y });
+                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": eventArgs.x, "y": eventArgs.y });
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
         this._onClear = function(_canvas, eventArgs) {
-            self.logger.warning("Clearing...");
-            self._initializeGraph();
+            self.logger.warning("Clearing Screen");
+            self._clearGraph();
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
 
@@ -71,17 +64,22 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     ConnectionRouteManager3.prototype.destroy = function () {
         //removeEventListener(eventName, handler);
-        //this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
     };
 
     ConnectionRouteManager3.prototype.redrawConnections = function (idList) {
-        var i;
+        var i = idList.length;
 
-        this.logger.debug('Redraw connection request: ' + idList.length);
+        if( !this._initialized )
+            this._initializeGraph();
+
+        this._updateConnectionPorts( idList );
+
+        console.log('About to REDRAW');
 
         this.profiler.clear();
         this.profiler.startProfile('redrawConnections');
@@ -93,16 +91,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         i = idList.length;
 
-        //0 - clear out autorouter
-        //this.autorouter.clear();
-
-        this.profiler.startProfile('_updateBoxesAndPorts');
-        //1 - update all box information the connection endpoint connectable area information
-        this._updateBoxesAndPorts(idList);
-        this.profiler.endProfile('_updateBoxesAndPorts');
-
         this.profiler.startProfile('_updateConnectionCoordinates');
-        //2 - we have each connection end connectability info
+        //1 - we have each connection end connectability info
         //find the closest areas for each connection
         while (i--) {
             this._updateConnectionCoordinates(idList[i]);
@@ -110,12 +100,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.profiler.endProfile('_updateConnectionCoordinates');
 
 
-        //3 autoroute
+        //2 - autoroute
         this.profiler.startProfile('autoroute');
         this.autorouter.autoroute();
         this.profiler.endProfile('autoroute');
 
-        //4 - Get the path points and redraw
+        //3 - Get the path points and redraw
         this.profiler.startProfile('setConnectionRenderData');
         var pathPoints,
             realPathPoints;
@@ -131,7 +121,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.profiler.endProfile('setConnectionRenderData');
 
         //need to return the IDs of the connections that was really
-        //redrawn or any other visual property chenged (width, etc)
+        //redrawn or any other visual property changed (width, etc)
 
         this.profiler.endProfile('redrawConnections');
         this.profiler.dump();
@@ -139,11 +129,23 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         return idList;
     };
 
+    ConnectionRouteManager3.prototype._clearGraph = function () {
+        this.autorouter.clear();
+        this._autorouterBoxes = {};//Define container that will map obj+subID -> box
+        this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
+        this._autorouterPaths = {};
+        this.endpointConnectionAreaInfo = {};
+
+        this._initialized = false;
+    };
+
     ConnectionRouteManager3.prototype._initializeGraph = function () {
         /*
          * In this method, we will update the boxes using the canvas.itemIds list and
          * add any ports as needed (from the canvas.connectionIds)
          */
+        this.logger.warning("Initializing Screen");
+        
         var canvas = this.diagramDesigner,
             connIdList = canvas.connectionIds,
             itemIdList = canvas.itemIds,
@@ -154,29 +156,14 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             dstObjId,
             dstSubCompId;
 
-        this.autorouter.clear();
-        this._autorouterBoxes = {};
-        this._autorouterPorts = {};
-        this._autorouterPaths = {};
-
-        this.endpointConnectionAreaInfo = {};
-
         while(i--){
             this.insertItem(itemIdList[i]);
         }
 
         //Next, I will update the ports as necessary
-        i = connIdList.length;
-        while(i--){
-            connId = connIdList[i];
-            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
-            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
-            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
-            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
-
-            this._updatePort(srcObjId, srcSubCompId);
-            this._updatePort(dstObjId, dstSubCompId);
-        }
+        this._updateConnectionPorts(connIdList);
+       
+        this._initialized = true;
 
     };
 
@@ -289,6 +276,60 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         }
             this.autorouter.remove(item);
 
+    };
+
+    ConnectionRouteManager3.prototype._resizeItem = function (objId) {
+        var canvas = this.diagramDesigner,
+            isEnd = true, //TODO
+            connectionMetaInfo,
+            designerItem = canvas.items[objId],
+            newCoord = designerItem.getBoundingBox(),
+            newBox = { 'x1': newCoord.x, 
+                       'x2': newCoord.x2, 
+                       'y1': newCoord.y, 
+                       'y2': newCoord.y2,
+          'ConnectionAreas': [] },
+            connAreas = designerItem.getConnectionAreas(objId, isEnd, connectionMetaInfo),
+            portIds = this._autorouterPorts[objId],
+            i;
+
+        //Create the new box connection areas
+        i = connAreas.length;
+        while (i--) {
+            //Building up the ConnectionAreas obiect
+            newBox.ConnectionAreas.push([ [ connAreas[i].x1, connAreas[i].y1 ], [ connAreas[i].x2, connAreas[i].y2 ] ]);
+        }
+
+        //Update Box 
+        this.autorouter.setBox(this._autorouterBoxes[objId], newBox);
+
+        //Resize Ports Based on Connections
+        i = portIds !== undefined ? portIds.length : 0;
+        while( i-- ){
+            this._updatePort( objId, portIds[i] );
+        }
+
+    };
+
+    ConnectionRouteManager3.prototype._updateConnectionPorts = function (idList) {
+        var canvas = this.diagramDesigner,
+            connId,
+            srcObjId,
+            srcSubCompId,
+            dstObjId,
+            dstSubCompId,
+            i = idList.length;
+
+        while(i--){
+            connId = idList[i];
+            srcObjId = canvas.connectionEndIDs[connId].srcObjId;
+            srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId;
+            dstObjId = canvas.connectionEndIDs[connId].dstObjId;
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
+
+            this._updatePort(srcObjId, srcSubCompId);
+            this._updatePort(dstObjId, dstSubCompId);
+        }
     };
 
     ConnectionRouteManager3.prototype._updatePort = function (objId, subCompId) {

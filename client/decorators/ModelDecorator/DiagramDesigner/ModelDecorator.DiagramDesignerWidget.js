@@ -291,13 +291,11 @@ define(['js/Constants',
     /**** Override from ModelDecoratorCore ****/
     ModelDecoratorDiagramDesignerWidget.prototype._updateReference = function () {
         var inverseClass = 'inverse-on-hover',
-            icon,
             self = this;
 
         ModelDecoratorCore.prototype._updateReference.call(this);
 
         if (this.skinParts.$ref) {
-            icon = this.skinParts.$ref.find('i').first();
             if (this.skinParts.$ref.hasClass(ModelDecoratorConstants.REFERENCE_POINTER_CLASS_NONSET)) {
                 this.skinParts.$ref.removeClass(inverseClass);
             } else {
@@ -374,7 +372,9 @@ define(['js/Constants',
             dragItems = DragHelper.getDragItems(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo);
 
-        return (dragItems.length === 1 && dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1);
+        return (dragItems.length === 1 &&
+                dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
+                dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1);
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__doAcceptDroppable = function (accept) {

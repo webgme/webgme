@@ -38,12 +38,11 @@ define(['logManager',
         this.logger = options.logger || logManager.create(options.loggerName || "ModelEditorControl");
 
         this._client = options.client;
-        this._panel = options.panel;
 
         this._firstLoad = false;
 
         //initialize core collections and variables
-        this.designerCanvas = this._panel.widget;
+        this.designerCanvas = options.widget;
 
         if (this._client === undefined) {
             this.logger.error("ModelEditorControl's client is not specified...");
@@ -53,7 +52,6 @@ define(['logManager',
         this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         };
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         if (this.designerCanvas === undefined) {
             this.logger.error("ModelEditorControl's DesignerCanvas is not specified...");
@@ -136,7 +134,7 @@ define(['logManager',
     };
 
     ModelEditorControl.prototype.selectedObjectChanged = function (nodeId) {
-        var desc = this._getObjectDescriptor(nodeId),
+        var desc,
             nodeName;
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
@@ -163,6 +161,7 @@ define(['logManager',
         this.currentNodeInfo.parentId = undefined;
 
         if (nodeId) {
+            desc = this._getObjectDescriptor(nodeId);
             if (desc) {
                 this.currentNodeInfo.parentId = desc.parentId;
             }
@@ -251,7 +250,7 @@ define(['logManager',
                     objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
-                    //clear out name not to display anything
+                    //clear out name not to display anything for connections
                     objDescriptor.name = "";
 
                     if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
@@ -544,11 +543,11 @@ define(['logManager',
             //TODO: review this async here
             if (this.___SLOW_CONN === true) {
                 setTimeout(function () {
-                 self.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
+                 self.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
                  self._client.updateTerritory(self._territoryId, self._selfPatterns);
                  }, 2000);
             } else {
-                this.logger.warning('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
+                this.logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(this._selfPatterns));
                 this._client.updateTerritory(this._territoryId, this._selfPatterns);
             }
         }
@@ -856,7 +855,7 @@ define(['logManager',
 
     //TODO: check this here...
     ModelEditorControl.prototype.destroy = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        this.detachClientEventListeners();
         this._client.removeUI(this._territoryId);
     };
 
@@ -1023,6 +1022,15 @@ define(['logManager',
         //OCL Validation goes here...
         this.logger.warning('OCL Validate all clicked...');
         WebGMEGlobal.ObjectConstraintManager.validateAll("root");
+    };
+
+    ModelEditorControl.prototype.attachClientEventListeners = function () {
+        this.detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    ModelEditorControl.prototype.detachClientEventListeners = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

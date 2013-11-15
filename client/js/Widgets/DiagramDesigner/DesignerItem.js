@@ -86,6 +86,8 @@ define(['logManager',
             "top": this.positionY });
 
         this._attachUserInteractions();
+
+        this.canvas._makeDraggable(this);
     };
 
     DesignerItem.prototype._attachUserInteractions = function () {
@@ -186,6 +188,8 @@ define(['logManager',
 
     DesignerItem.prototype.destroy = function () {
         this._destroying = true;
+
+        this.canvas._destroyDraggable(this);
 
         //destroy old decorator
         this._callDecoratorMethod("destroy");

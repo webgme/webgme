@@ -27,6 +27,7 @@ define(['./DragEffects',
         };
 
         el.droppable({
+            tolerance: "pointer",
             over: function( event, ui ) {
                 doCallBack('over', event, ui);
             },

@@ -55,6 +55,7 @@
 
   &.accept-droppable {
     background-color: $accept-droppable-background-color;
+    cursor: alias;
   }
 }
 

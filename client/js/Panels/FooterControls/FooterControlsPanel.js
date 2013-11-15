@@ -38,30 +38,42 @@ define(['js/PanelBase/PanelBase',
         //main container
         var navBar = $('<div/>', {'class': "navbar navbar-inverse navbar-fixed-bottom"});
         var navBarInner = $('<div/>', {'class': "navbar-inner"});
+        var separator = $('<div class="spacer pull-right"></div>');
+        var widgetPlaceHolder = $('<div class="pull-right"></div>');
 
         navBar.append(navBarInner);
         this.$el.append(navBar);
 
-        navBarInner.html('<div class="pull-left inline"></div><div class="spacer pull-right"></div><div class="keyBoardManager pull-right"></div><div class="spacer pull-right"></div><div class="logLevelManager pull-right"></div><div class="spacer pull-right"></div><div class="pull-right networkStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchStatus"></div><div class="spacer pull-right"></div><div class="pull-right branchSelector"></div>');
-
-        var pullLeft = navBarInner.find('.pull-left').first();
         //add version UI piece
+        var pullLeft = $('<div class="pull-left inline"></div>');
         pullLeft.append($('<div class="navbar-text"><div class="webgme-version">version: ' + WebGMEGlobal.version + '</div></div>'));
+        navBarInner.append(pullLeft);
 
-        var keyBoardManagerEl = navBarInner.find('.keyBoardManager').first();
-        new KeyboardManagerWidget(keyBoardManagerEl);
+        //padding from screen right edge
+        navBarInner.append(separator.clone());
 
-        var logLevelManagerEl = navBarInner.find('.logLevelManager').first();
+        //keyboard enable/disbale widget (NOTE: only on non touch device)
+        if (WebGMEGlobal.SUPPORTS_TOUCH !== true) {
+            var keyBoardManagerEl = widgetPlaceHolder.clone();
+            new KeyboardManagerWidget(keyBoardManagerEl);
+            navBarInner.append(keyBoardManagerEl).append(separator.clone());
+        }
+
+        var logLevelManagerEl = widgetPlaceHolder.clone();
         new LogLevelManagerWidget(logLevelManagerEl);
+        navBarInner.append(logLevelManagerEl).append(separator.clone());
 
-        var networkStatusEl = navBarInner.find('.networkStatus').first();
+        var networkStatusEl = widgetPlaceHolder.clone();
         new NetworkStatusWidget(networkStatusEl, this._client);
+        navBarInner.append(networkStatusEl).append(separator.clone());
 
-        var branchStatusEl = navBarInner.find('.branchStatus').first();
+        var branchStatusEl = widgetPlaceHolder.clone();
         new BranchStatusWidget(branchStatusEl, this._client);
+        navBarInner.append(branchStatusEl).append(separator.clone());
 
-        var branchSelectorEl = navBarInner.find('.branchSelector').first();
+        var branchSelectorEl = widgetPlaceHolder.clone();
         new BranchSelectorWidget(branchSelectorEl, this._client);
+        navBarInner.append(branchSelectorEl).append(separator.clone());
     };
 
     return FooterControlsPanel;

@@ -28,6 +28,8 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/SearchManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
+    './DiagramDesignerWidget.Draggable',
+    './DiagramDesignerWidget.Clipboard',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -49,7 +51,9 @@ define(['logManager',
                                                       HighlightManager,
                                                       SearchManager,
                                                       DiagramDesignerWidgetContextMenu,
-                                                      DiagramDesignerWidgetDroppable) {
+                                                      DiagramDesignerWidgetDroppable,
+                                                      DiagramDesignerWidgetDraggable,
+                                                      DiagramDesignerWidgetClipboard) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -151,8 +155,8 @@ define(['logManager',
         };
 
         //initiate Drag Manager (if needed)
-        this.dragManager = new DragManager({"diagramDesigner": this});
-        this.dragManager.initialize(this.skinParts.$itemsContainer);
+        //this.dragManager = new DragManager({"diagramDesigner": this});
+        //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         //initiate Connection Router (if needed)
@@ -298,7 +302,6 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
-        this._unregisterKeyboardListener();
         this.__loader.destroy();
         //TODO: what about item and connection destroys????
     };
@@ -326,19 +329,20 @@ define(['logManager',
         if (this.toolBar) {
             /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
                 //add extra visual piece
-            this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-                self.itemAutoLayout(data.mode);
-            });
-
-            this.toolBar.addButton({ "title": "Grid layout",
-                "icon": "icon-th",
-                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {
+                /*this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+                    self.itemAutoLayout(data.mode);
+                });
+
+                this.toolBar.addButton({ "title": "Grid layout",
+                    "icon": "icon-th",
+                    "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
                 this.toolBar.addButton({ "title": "Cozy Grid layout",
                     "icon": "icon-th-large",
-                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );
+                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );*/
 
                 //progress text in toolbar for debug only
                 this.skinParts.$progressText = this.toolBar.addLabel();
@@ -731,7 +735,9 @@ define(['logManager',
             }
         };
         dispatchEvents(this._insertedDesignerItemIDs, this.events.ON_COMPONENT_CREATE);
+        dispatchEvents(this._insertedConnectionIDs, this.events.ON_COMPONENT_CREATE);
         dispatchEvents(this._updatedDesignerItemIDs, this.events.ON_COMPONENT_UPDATE);
+        dispatchEvents(this._updatedConnectionIDs, this.events.ON_COMPONENT_UPDATE);
         /*********************/
 
 
@@ -752,7 +758,7 @@ define(['logManager',
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate);
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -784,7 +790,7 @@ define(['logManager',
         /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
-        this._deletedDesignerItemIDs = []
+        this._deletedDesignerItemIDs = [];
 
         this._insertedConnectionIDs = [];
         this._updatedConnectionIDs = [];
@@ -856,8 +862,6 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
         this.logger.debug("onElementMouseDown: " + elementId);
-
-        this._registerKeyboardListener();
     };
 
     /************************** DRAG ITEM ***************************/
@@ -899,7 +903,7 @@ define(['logManager',
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -1040,7 +1044,7 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         this.selectionManager.showSelectionOutline();
     };
@@ -1160,7 +1164,7 @@ define(['logManager',
     /************** API REGARDING TO MANAGERS ***********************/
 
     DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
-        this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+        //this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
     DiagramDesignerWidget.prototype.enableRotate = function (enabled) {
@@ -1225,7 +1229,7 @@ define(['logManager',
         if (this.mode !== mode) {
             this.highlightManager.deactivate();
             this.selectionManager.deactivate();
-            this.dragManager.deactivate();
+            //this.dragManager.deactivate();
             this.connectionDrawingManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
@@ -1238,7 +1242,7 @@ define(['logManager',
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
-                    this.dragManager.activate();
+                    //this.dragManager.activate();
                     this.connectionDrawingManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
@@ -1271,7 +1275,7 @@ define(['logManager',
             this.items[this.itemIds[i]].renderSetLayoutInfo();
         }
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         i = this.connectionIds.length;
         while (i--) {
@@ -1346,7 +1350,7 @@ define(['logManager',
         if (this._connectionJumpXing !== enabled) {
             this._connectionJumpXing = enabled;
 
-            this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+            this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
         }
     };
     /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
@@ -1378,6 +1382,25 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
+    DiagramDesignerWidget.prototype._triggerUIActivity = function () {
+        this.onUIActivity();
+    };
+
+    DiagramDesignerWidget.prototype.onUIActivity = function () {
+        this.logger.warning("DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...");
+    };
+
+    DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
+        var res;
+        try {
+            res = this.connectionRouteManager.redrawConnections(connIDs) || []
+        } catch (e) {
+            res = [];
+            this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + JSON.stringify(e));
+        }
+        return res;
+    };
+
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
@@ -1390,7 +1413,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
-
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
 
     return DiagramDesignerWidget;
 });

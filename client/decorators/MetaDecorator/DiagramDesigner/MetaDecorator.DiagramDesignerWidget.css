@@ -14,38 +14,51 @@
     text-overflow: ellipsis;
     border-bottom: 1px solid #000000;
     padding: 0 3px 0 3px; }
-  .meta-decorator .attributes {
-    /*background-color: $attributes-background-color;*/
+  .meta-decorator .attributes,
+  .meta-decorator .constraints {
     font-size: 10px;
     min-height: 1px;
     margin-bottom: 0;
     padding: 0 3px 0 3px; }
-    .meta-decorator .attributes .attr {
+    .meta-decorator .attributes li div,
+    .meta-decorator .constraints li div {
       white-space: nowrap;
       position: relative;
       height: 16px;
       line-height: 16px; }
-      .meta-decorator .attributes .attr:hover {
+      .meta-decorator .attributes li div:hover,
+      .meta-decorator .constraints li div:hover {
         cursor: pointer;
         background-color: #eeeeee; }
-      .meta-decorator .attributes .attr .n {
+      .meta-decorator .attributes li div .n,
+      .meta-decorator .constraints li div .n {
         float: left;
         margin-right: 3px;
         max-width: 90px;
         overflow: hidden;
         text-overflow: ellipsis;
         text-align: left; }
-      .meta-decorator .attributes .attr .t {
+      .meta-decorator .attributes li div .t,
+      .meta-decorator .constraints li div .t {
         float: right;
         text-align: right; }
-  .meta-decorator .add-new {
+  .meta-decorator .add-new-attribute,
+  .meta-decorator .add-new-constraint {
     font-size: 10px;
     cursor: pointer; }
-    .meta-decorator .add-new [class^="icon-"],
-    .meta-decorator .add-new [class*=" icon-"] {
-      margin-top: -1px; }
-    .meta-decorator .add-new:hover {
+    .meta-decorator .add-new-attribute:hover,
+    .meta-decorator .add-new-constraint:hover {
       background-color: #dbeafc; }
+  .meta-decorator .attributes-title,
+  .meta-decorator .constraints-title {
+    font-size: 9px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-align: center;
+    background-color: #f3f3f3;
+    line-height: 13px; }
+  .meta-decorator .constraints-title {
+    border-top: 1px dashed #999999; }
   .meta-decorator input[type=text].new-attr {
     font-size: 10px; }
   .meta-decorator .control-group {
@@ -72,9 +85,11 @@
 .selected .meta-decorator {
   border: 1px solid #52a8ec;
   background-color: white; }
-  .selected .meta-decorator .add-new:hover {
+  .selected .meta-decorator .add-new-attribute:hover,
+  .selected .meta-decorator .add-new-constraint:hover {
     background-color: #ffffc0; }
 
-.items.highlight-mode .meta-decorator .attributes .attr:hover {
+.items.highlight-mode .meta-decorator .attributes li div:hover,
+.items.highlight-mode .meta-decorator .constraints li div:hover {
   cursor: default;
   background-color: white; }

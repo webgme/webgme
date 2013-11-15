@@ -309,8 +309,64 @@ define(['logManager'], function (logManager) {
             if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
                 //self connection
                 //insert 2 extra points
-                connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x + 100,
-                    "y": connectionPathPoints[1].y - 100});
+                var lastIdx = connectionPathPoints.length - 1;
+                if (connectionPathPoints[0].x === connectionPathPoints[lastIdx].x) {
+                    if (connectionPathPoints[0].y === connectionPathPoints[lastIdx].y) {
+                        //x coordinates are the same
+                        //y coordinates are the same
+                        if (sourceCoordinates.angle1 >= 0 && sourceCoordinates.angle2 < 90) {
+                            //EAST
+                            connectionPathPoints.splice(2, 0,
+                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y - 20},
+                                { "x": connectionPathPoints[1].x + 40, "y": connectionPathPoints[1].y },
+                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y + 20},
+                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                        } else if (sourceCoordinates.angle1 >= 90 && sourceCoordinates.angle2 < 180) {
+                            //SOUTH
+                            connectionPathPoints.splice(2, 0,
+                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y + 20},
+                                { "x": connectionPathPoints[1].x , "y": connectionPathPoints[1].y + 40},
+                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y + 20},
+                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                        } else if (sourceCoordinates.angle1 >= 180 && sourceCoordinates.angle2 < 270) {
+                            //WEST
+                            connectionPathPoints.splice(2, 0,
+                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y - 20},
+                                { "x": connectionPathPoints[1].x - 40, "y": connectionPathPoints[1].y },
+                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y + 20},
+                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                        } else if (sourceCoordinates.angle1 >= 270 && sourceCoordinates.angle2 < 360) {
+                            //NORTH
+                            connectionPathPoints.splice(2, 0,
+                                { "x": connectionPathPoints[1].x - 20, "y": connectionPathPoints[1].y - 20},
+                                { "x": connectionPathPoints[1].x , "y": connectionPathPoints[1].y - 40},
+                                { "x": connectionPathPoints[1].x + 20, "y": connectionPathPoints[1].y - 20},
+                                { "x": connectionPathPoints[1].x, "y": connectionPathPoints[1].y});
+                        }
+
+                    } else {
+                        //x coordinates are the same
+                        //y coordinates are different
+                        var bbbox = canvas.items[srcObjId].getBoundingBox();
+                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x + bbbox.width / 2 + 20,
+                            "y": connectionPathPoints[1].y}, { "x": connectionPathPoints[2].x + bbbox.width / 2 + 20,
+                            "y": connectionPathPoints[2].y});
+                    }
+                } else {
+                    if (connectionPathPoints[0].y === connectionPathPoints[lastIdx].y) {
+                        //x coordinates are different
+                        //y coordinates are the same
+                        var bbbox = canvas.items[srcObjId].getBoundingBox();
+                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[1].x,
+                            "y": connectionPathPoints[1].y + bbbox.height / 2 + 20}, { "x": connectionPathPoints[2].x,
+                            "y": connectionPathPoints[2].y + bbbox.height / 2 + 20});
+                    } else {
+                        //x coordinates are different
+                        //y coordinates are different
+                        connectionPathPoints.splice(2, 0, { "x": connectionPathPoints[2].x,
+                            "y": connectionPathPoints[1].y});
+                    }
+                }
             } else {
                 //only vertical or horizontal lines are allowed, so insert extra segment points if needed
                 connectionPathPointsTemp = connectionPathPoints.slice(0);
