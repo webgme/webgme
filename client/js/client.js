@@ -11,7 +11,8 @@ define([
     'storage/log',
     'storage/commit',
     'logManager',
-    'util/url'
+    'util/url',
+    'meta/metastorage'
 ],
     function (
         ASSERT,
@@ -26,7 +27,8 @@ define([
         Log,
         Commit,
         LogManager,
-        URL
+        URL,
+        MetaStorage
         ) {
 
         function COPY(object){
@@ -1645,6 +1647,25 @@ define([
                 }
             }
 
+            function getMeta(path){
+                //TODO too much of copy, so we should make it some other way
+                var nodes = {};
+                for(var i in _nodes){
+                    nodes[i] = nodes[i].node;
+                }
+                return MetaStorage.getMeta(_core,nodes,path);
+            }
+
+            function setMeta(path,metaObj){
+                var nodes = {};
+                for(var i in _nodes){
+                    nodes[i] = nodes[i].node;
+                }
+                MetaStorage.setMeta(_core,nodes,path,metaObj);
+                //TODO we should check if it was really any set
+                saveRoot('setMeta('+path+')');
+            }
+
             //constraint functions
             function setConstraint(path,name,constraintObj){
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
@@ -2024,6 +2045,8 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
+                getMeta: getMeta,
+                setMeta: setMeta,
 
                 //constraint
                 setConstraint: setConstraint,
