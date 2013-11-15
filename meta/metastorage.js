@@ -162,5 +162,5 @@ define([], function () {
         };
     }
 
-    return metaCore;
+    return metaStorage;
 });
