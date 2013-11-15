@@ -39,7 +39,8 @@ require.config({
         "loaderCircles": "js/Loader/LoaderCircles",
         "loaderProgressBar": "js/Loader/LoaderProgressBar",
 
-        "codemirror": 'lib/codemirror/codemirror.amd'
+        "codemirror": 'lib/codemirror/codemirror.amd',
+        "jquery-csszoom": 'lib/jquery/jquery.csszoom'
     },
     shim: {
         'jquery-ui': ['jquery'],
@@ -49,7 +50,8 @@ require.config({
         'jquery-WebGME': ['bootstrap'],
         'jquery-dataTables': ['jquery'],
         'jquery-dataTables-bootstrapped': ['jquery-dataTables'],
-        'WebGME': ['jquery-WebGME']
+        'WebGME': ['jquery-WebGME'],
+        'jquery-csszoom': ['jquery-ui']
     }
 });
 

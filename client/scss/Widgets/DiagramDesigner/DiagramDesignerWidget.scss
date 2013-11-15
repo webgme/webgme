@@ -253,29 +253,16 @@ $connection-drawing-connector-background-color: #00FF00;
   }
 }
 
-div.diagram-designer-zoom {
-  height: 100px;
-  width: 3px;
+div.css-zoom {
   position: absolute;
   top: 60px;
   left: 10px;
 
-  a.ui-slider-handle {
-    width: 15px;
-    height: 15px;
-    left: -7px;
-    outline: none;
+  a.ui-slider-handle .css-zoom-label {
+    top: -2px;
+  }
 
-    [class*="icon-"] {
-      margin-top: -2px;
-    }
-
-    .diagram-designer-zoom-label {
-      top: -2px;
-      left: 17px;
-      position: absolute;
-      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;  //same as Bootstrap
-      font-size: 10px;
-    }
+  i {
+    margin-top: -2px;
   }
 }

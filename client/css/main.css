@@ -5,6 +5,7 @@
 @import url("jquery/jquery.layout.webgme.css");
 @import url("jquery/jquery.dataTables.bootstrapped.css");
 @import url("jquery/jquery.gritter.css");
+@import url("jquery/jquery.csszoom.css");
 
 /* OWN STYLES */
 html,body {
