@@ -40,9 +40,7 @@ define(['clientUtil',
 
     MetaTextEditorDialog.prototype._initDialog = function (metaText, saveCallBack) {
         var self = this,
-            closeSave,
-            closeDelete,
-            isValidConstraintName;
+            closeSave;
 
         closeSave = function () {
             self._dialog.modal('hide');
