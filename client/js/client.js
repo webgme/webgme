@@ -1651,7 +1651,7 @@ define([
                 //TODO too much of copy, so we should make it some other way
                 var nodes = {};
                 for(var i in _nodes){
-                    nodes[i] = nodes[i].node;
+                    nodes[i] = _nodes[i].node;
                 }
                 return MetaStorage.getMeta(_core,nodes,path);
             }
@@ -1659,7 +1659,7 @@ define([
             function setMeta(path,metaObj){
                 var nodes = {};
                 for(var i in _nodes){
-                    nodes[i] = nodes[i].node;
+                    nodes[i] = _nodes[i].node;
                 }
                 MetaStorage.setMeta(_core,nodes,path,metaObj);
                 //TODO we should check if it was really any set

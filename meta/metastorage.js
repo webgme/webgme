@@ -71,7 +71,7 @@ define([], function () {
                 }
 
                 //pointers and pointer lists
-                var pointerNames = core.getRegistry(metaNode,"pointerNames");
+                var pointerNames = core.getRegistry(metaNode,"pointerNames") || [];
                 for(var i=0;i<pointerNames.length;i++){
                     var pointerNode = core.getChild(metaNode,"_p_"+pointerNames[i]);
                     var pointer = {};
@@ -162,5 +162,5 @@ define([], function () {
         };
     }
 
-    return metaStorage;
+    return metaStorage();
 });
