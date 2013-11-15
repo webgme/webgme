@@ -81,6 +81,14 @@
       top: -6px; }
     .meta-decorator .connector.bottom {
       bottom: -6px; }
+  .meta-decorator .text-meta {
+    position: absolute;
+    top: 0;
+    right: 1px;
+    height: 15px;
+    width: 15px;
+    margin-top: 2px;
+    border-radius: 5px; }
 
 .selected .meta-decorator {
   border: 1px solid #52a8ec;

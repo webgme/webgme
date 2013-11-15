@@ -8,6 +8,7 @@ define(['js/Constants',
     './AttributeDetailsDialog',
     'js/Panels/MetaEditor/MetaRelations',
     './MetaDecorator.DiagramDesignerWidget.Constraints',
+    './MetaTextEditorDialog',
     'css!./MetaDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                           nodePropertyNames,
                                                           DefaultDecoratorDiagramDesignerWidget,
@@ -15,7 +16,8 @@ define(['js/Constants',
                                                           Attribute,
                                                           AttributeDetailsDialog,
                                                           MetaRelations,
-                                                          MetaDecoratorDiagramDesignerWidgetConstraints) {
+                                                          MetaDecoratorDiagramDesignerWidgetConstraints,
+                                                          MetaTextEditorDialog) {
 
     var MetaDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "MetaDecorator";
@@ -112,6 +114,17 @@ define(['js/Constants',
 
         //call the Constraint's extension's init render code
         this._renderContentConstraints();
+
+        //render text-editor based META editing UI piece
+        this._skinParts.$textMetaEditorBtn = $('<i class="icon-cog text-meta"></i>');
+        this.$el.append(this._skinParts.$textMetaEditorBtn);
+        this._skinParts.$textMetaEditorBtn.on('click', function (event) {
+            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+               self._showMetaTextEditorDialog();
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
 
         if (this.hostDesignerItem.canvas.getIsReadOnlyMode() === true) {
             this._skinParts.$addAttributeContainer.detach();
@@ -493,6 +506,21 @@ define(['js/Constants',
         return result;
     };
 
+    MetaDecoratorDiagramDesignerWidget.prototype._showMetaTextEditorDialog = function () {
+        var client = this._control._client,
+            dialog = new MetaTextEditorDialog(),
+            metaObj = client.getMeta(this._metaInfo[CONSTANTS.GME_ID]),
+            self = this;
+
+        dialog.show(JSON.stringify(metaObj), function (text) {
+                try {
+                    var newMetaObj = JSON.parse(text);
+                    client.setMeta(self._metaInfo[CONSTANTS.GME_ID], newMetaObj);
+                } catch (e) {
+                    self.logger.error('Saving META failed... Either not JSON object or something else went wrong...');
+                }
+            });
+    };
 
     return MetaDecoratorDiagramDesignerWidget;
 });
