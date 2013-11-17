@@ -209,7 +209,7 @@ requirejs(['logManager',
             res.send(404);
         });
     });
-    app.get(/^\/.*\.(js|html|gif|png|bmp)/,ensureAuthenticated,function(req,res){
+    app.get(/^\/.*\.(js|html|gif|png|bmp|svg)/,ensureAuthenticated,function(req,res){
         res.sendfile(staticclientdirpath+req.path,function(err){
             res.send(404);
         });
