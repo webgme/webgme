@@ -4,6 +4,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
   var logger, client;
   
   var ObjectConstraintManager = function(client_) {
+    logManager.setLogLevel(logManager.logLevels.INFO);
     logger = logManager.create('ObjectConstraintManager');
     client = client_;
   };
@@ -15,43 +16,25 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
     function validate (id) {
 
       // Validate the node itself..
-      logger.info("Validating node: " + id);
       var node = client.getNode(id);
       var node_name = node.getAttribute('name');
-      
-      // find if the node has a Constraint Object
-      // and collect them in a constraints array
-      var constraints = [];
+      logger.info('Validating node: ' + id + ' ' + node_name);
 
-      var children = node.getChildrenIds();
-      children.forEach(function(child) {
-        var child_node = client.getNode(child);
-        var child_name = child_node.getAttribute('name');
-        if (child_name == 'Constraints') {
-          var grandchildren = child_node.getChildrenIds();
-          grandchildren.forEach(function(grandchild) {
-            var grandchild_node = client.getNode(grandchild);
-            var grandchild_name = grandchild_node.getAttribute('name');
-            var constraint = grandchild_node.getAttribute(nodePropertyNames.Attributes.OCLConstraint);
-            if ( constraint !== undefined || constraint !== "" ) {
-              var constraint_obj = {
-                node_name: node_name,
-                name: grandchild_name,
-                constraint: constraint
-              };
-              constraints.push(constraint_obj);
-            }
-          });
-        }
+      var constraints = [];
+      var constraint_names = node.getConstraintNames();
+      constraint_names.forEach(function(constraint_name) {
+        var constraint_obj = node.getConstraint(constraint_name);
+        constraint_obj.name = constraint_name;
+        constraints.push(constraint_obj);
       });
 
       constraints.forEach(function(constraint) {
 
-        var result = eval("(" + constraint.constraint + ")(client, node);");
+        var result = eval("(" + constraint.script + ")(client, node);");
 
-        var msg = '[[ <' + constraint.name + '> of <' + constraint.node_name + '> ]]';
+        var msg = '[[ <' + constraint.name + '> of <' + node_name + '> ]]';
         if (result) {
-            logger.warn('No violation of a constraint: ' +
+            logger.info('No violation of a constraint: ' +
               msg);
         } else {
             logger.error('!!Violation of a constraint: ' +
