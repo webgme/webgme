@@ -209,7 +209,12 @@ if (typeof define !== "function") {
 
             core.setRegistry(tag.node, "metameta", tag.name);
             core.setRegistry(tag.node, "isPort", tag.name === "atom");
-            core.setRegistry(tag.node, "decorator", "");
+
+            //create empty decorator registry field if not present
+            if (!core.getRegistry(tag.node, "decorator")) {
+                core.setRegistry(tag.node, "decorator", "");
+            }
+            
 
             if (tag.name === "connection") {
                 core.setRegistry(tag.node, "isConnection", true);
