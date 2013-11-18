@@ -12,7 +12,7 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'meta/metastorage'
+    'meta/meta'
 ],
     function (
         ASSERT,
@@ -28,7 +28,7 @@ define([
         Commit,
         LogManager,
         URL,
-        MetaStorage
+        META
         ) {
 
         function COPY(object){
@@ -56,6 +56,7 @@ define([
                 _branch = null,
                 _branchState = null,
                 _nodes = {},
+                _metaNodes = {},
                 _inTransaction = false,
                 _users = {},
                 _patterns = {},
@@ -453,7 +454,9 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
+                        _metaNodes = {};
                         _core = getNewCore(_project);
+                        META.initialize(_core,_metaNodes);
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -535,6 +538,7 @@ define([
                     _inTransaction = false;
                     _core = null;
                     _nodes = {};
+                    _metaNodes = {};
                     //_commitObject = null;
                     _patterns = {};
                     _clipboard = [];
@@ -675,6 +679,7 @@ define([
             function storeNode(node,basic){
                 //basic = basic || true;
                 var path = _core.getPath(node);
+                _metaNodes[path] = node;
                 if(_nodes[path]){
                     //TODO we try to avoid this
                 } else {
@@ -685,6 +690,7 @@ define([
 
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
+                _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
                     nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                 }
@@ -737,6 +743,7 @@ define([
                     core.loadByPath(base,id,function(err,node){
                         if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
+                            _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
                                 nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
                             }
@@ -756,6 +763,7 @@ define([
                         var missing = 0,
                             error = null;
                         _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
+                        _metaNodes[_core.getPath(root)] = root;
 
                         for(var i in _users){
                             for(var j in _users[i].PATTERNS){
@@ -1647,24 +1655,6 @@ define([
                 }
             }
 
-            function getMeta(path){
-                //TODO too much of copy, so we should make it some other way
-                var nodes = {};
-                for(var i in _nodes){
-                    nodes[i] = _nodes[i].node;
-                }
-                return MetaStorage.getMeta(_core,nodes,path);
-            }
-
-            function setMeta(path,metaObj){
-                var nodes = {};
-                for(var i in _nodes){
-                    nodes[i] = _nodes[i].node;
-                }
-                MetaStorage.setMeta(_core,nodes,path,metaObj);
-                //TODO we should check if it was really any set
-                saveRoot('setMeta('+path+')');
-            }
 
             //constraint functions
             function setConstraint(path,name,constraintObj){
@@ -1812,7 +1802,8 @@ define([
 
                 //META
                 var getValidChildrenTypes = function(){
-                    return getMemberIds('ValidChildren');
+                    //return getMemberIds('ValidChildren');
+                    return META.getValidChildrenTypes(_id);
                 };
                 var getAttributeDescriptor = function(attributename){
                     return _core.getAttributeDescriptor(_nodes[_id].node,attributename);
@@ -2045,8 +2036,18 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
-                getMeta: getMeta,
-                setMeta: setMeta,
+                //we simply propagate the functions of META
+                getMeta: META.getMeta,
+                setMeta: function(path,meta){META.setMeta(path,meta);saveRoot("setMeta("+path+")");},
+                isValidChild: META.isValidChild,
+                isValidTarget: META.isValidTarget,
+                isValidAttribute: META.isValidAttribute,
+                getValidChildrenTypes: META.getValidChildrenTypes,
+                getValidTargetTypes: META.getValidTargetTypes,
+                hasOwnMetaRules : META.hasOwnMetaRules,
+                filterValidTarget : META.filterValidTarget,
+                getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
+                getOwnValidTargetTypes: META.getOwnValidTargetTypes,
 
                 //constraint
                 setConstraint: setConstraint,
