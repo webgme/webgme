@@ -23,18 +23,14 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
     var node_name = node.getAttribute('name');
     logger.info('Validating node: ' + id + ' ' + node_name);
 
-    var constraints = [];
-    var constraint_names = node.getConstraintNames();
-    constraint_names.forEach(function(constraint_name) {
+    var constraints = node.getConstraintNames().map(function(constraint_name) {
       var constraint_obj = node.getConstraint(constraint_name);
       constraint_obj.name = constraint_name;
-      constraints.push(constraint_obj);
+      return constraint_obj;
     });
 
     constraints.forEach(function(constraint) {
-
       var result = eval("(" + constraint.script + ")(client, node);");
-
       var msg = '[[ <' + constraint.name + '> of <' + node_name + '> ]]';
       if (result) {
           logger.info('No violation of a constraint: ' +
@@ -43,7 +39,6 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
           logger.error('!!Violation of a constraint: ' +
             msg + "!!!");
       }
-
     });
 
     // var y = function(input, callback) {
