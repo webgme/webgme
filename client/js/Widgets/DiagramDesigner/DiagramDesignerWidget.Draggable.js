@@ -62,8 +62,8 @@ define(['js/DragDrop/DragSource',
                 'height': (selectionBBox.y2 - selectionBBox.y) * this._zoomRatio,
                 'border': '2px dashed #666',
                 'background-color': 'rgba(100, 100, 100, 0.1)',
-                'margin-top': selectionBBox.y - mousePos.mY + dragSource.DEFAULT_CURSOR_AT.top,
-                'margin-left': selectionBBox.x - mousePos.mX + dragSource.DEFAULT_CURSOR_AT.left});
+                'margin-top': (selectionBBox.y - mousePos.mY + dragSource.DEFAULT_CURSOR_AT.top) * this._zoomRatio,
+                'margin-left': (selectionBBox.x - mousePos.mX + dragSource.DEFAULT_CURSOR_AT.left) * this._zoomRatio});
 
             helperEl.html()
         }
