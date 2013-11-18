@@ -52,6 +52,11 @@ define(['js/PanelBase/PanelBase',
         var userProfileEl = $('<div/>', {'class': "inline pull-right"});
         new UserProfileWidget(userProfileEl, this._client);
         navBarInner.append(userProfileEl);
+
+        //toolbar
+        var toolBar = $('<div/>', {'class': "toolbar-container"});
+        this.$el.append(toolBar);
+
     };
 
     return HeaderPanel;

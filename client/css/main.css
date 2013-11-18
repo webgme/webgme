@@ -98,6 +98,14 @@ div.spacer {
     z-index: 10 !important;
 }
 
+div.toolbar-container {
+    position: relative;
+    overflow: hidden;
+    top: 41px;
+    height: 27px;
+    background-color: #F5F5F5;
+}
+
 /********WEBKIT SCROLLBAR **********/
 
 *::-webkit-scrollbar{height:10px;width:10px;overflow:visible;}
