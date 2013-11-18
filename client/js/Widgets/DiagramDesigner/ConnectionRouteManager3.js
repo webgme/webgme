@@ -23,6 +23,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
+        this._initialized = false;
         this._clearGraph();
 
         //Adding event listeners
@@ -30,14 +31,18 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Adding " + ID);
-            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 )
-                self.insertBox( ID );
-            else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
+
+                if( self._autorouterBoxes[ID] === undefined )
+                    self.insertBox( ID );
+
+            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
                 self.insertConnection( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
+            self.logger.warning("Resizing " + ID.ID);
             if( self._autorouterBoxes[ID.ID] )
                 self._resizeItem( ID.ID );
             else
@@ -142,8 +147,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
         this.endpointConnectionAreaInfo = {};
-
-        this._initialized = false;
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {

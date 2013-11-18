@@ -1907,7 +1907,7 @@ define(['logManager'], function (logManager) {
             function deleteAllPorts(){
                 for(i = 0; i < ports.length; i++){
                     ports[i].setOwner(null);
-                    delete ports[i];
+                    ports[i] = null;
                 }
 
                 ports = []; 
@@ -1979,7 +1979,7 @@ define(['logManager'], function (logManager) {
 
                 delPort = ports.splice(index, 1);
                 delPort.setOwner(null);
-                delete delPort;
+                delPort = null;
 
                 atomic = false;
 
@@ -2551,7 +2551,7 @@ define(['logManager'], function (logManager) {
             this.destroy = function(){
                 checkOrder();
                 checkSection();
-                delete this;
+                this = null;
             };
 
             this.setOwner = function(newOwner){
@@ -3133,7 +3133,7 @@ _logger.warning("Adding "
 
                 edge.setOwner(null);
 
-                delete edge;
+                edge = undefined;
             };
 
                 //-- Private
@@ -4117,14 +4117,14 @@ _logger.warning("Adding "
             }
 
             function deleteAllBoxes(){
-                for (var i = 0; i < boxes.length; i++)
+                var i = boxes.length;
+                while( i-- )
                 {
                     //deleteBoxAndPortEdges(boxes[i]);	// no need: there's a deleteAllEdges in deleteAll
                     boxes[i].destroy();
-                    delete boxes[i];
+                    boxes.splice(i, 1);
                 }
 
-                boxes = [];
             }
 
             function getBoxList(){
@@ -4209,7 +4209,7 @@ _logger.warning("Adding "
 
                     (paths[iter]).setOwner(null);
                     (paths[iter]).destroy();
-                    delete (paths[iter]);
+                    (paths[iter]) = null;
                     ++iter;
                 }
 
@@ -5632,7 +5632,7 @@ tst = 3;
                 }
                 
                 box.destroy();
-                delete box;
+                box = null;
             };
 
             this.shiftBoxBy = function(box, offset){
@@ -5892,7 +5892,7 @@ _logger.info("About to vertical.block_SwitchWrongs()");
                 }
 
                 path.destroy();
-                delete path;
+                path = null;
             };
 
             this.deleteAll = function(addBackSelfEdges){
@@ -6708,7 +6708,7 @@ pt = [pt];
 
             function destroy(){
                 this.setOwner(null);
-                delete this;
+                this = null;
             }
 
             function getOwner(){
@@ -6945,11 +6945,16 @@ pt = [pt];
 
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
+            this.boxes = [];
+            this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
+            this.ports = [];
+            this.paths = [];
+            this.boxId2Path = {};
         };
 
         AutoRouter.prototype.destroy = function(){
             this.router.destroy();
-            delete this.router;
+            this.router = null;
         };
 
         AutoRouter.prototype.addBox = function(size){
