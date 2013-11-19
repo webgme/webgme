@@ -1194,12 +1194,18 @@ define(['logManager'], function (logManager) {
             };
 
            this.getNextEdgePtrs = function(pos, start, end){
+               var result = {};
                 if(DEBUG)
                     AssertValidPos(pos);
 
                 start.assign(ArPointList[pos++]);
                 if (pos < ArPointList.length)
                     end.assign(ArPointList[pos]);
+
+                result.pos = pos;
+                result.start = start;
+                result.end = end;
+                return result;
             };
 
            this.getPrevEdgePtrs = function(pos, start, end){
@@ -2236,7 +2242,7 @@ define(['logManager'], function (logManager) {
             };
 
             this.isSameStartPointByPointer = function(point){
-                return startpoint.equals(point);
+                return startpoint === point;
             };
 
             this.isStartPointNull = function (){
@@ -4606,8 +4612,7 @@ Old Logic:
 
                     if (!isAutoRouted)
                     {
-                        var ret2;
-                        path.applyCustomizationsBeforeAutoConnectPoints(ret2);
+                        var ret2 = path.applyCustomizationsBeforeAutoConnectPoints();
 
                         if (ret2.length > 0)
                         {
@@ -5011,39 +5016,39 @@ tst = 3;
                 }
 
                 var pointpos = pos,
-                    point = points[pos++], //replacing GetNext
+                    point = points.get(pos++)[0], 
                     npointpos = pos;
-                if( npointpos == points.length)
+                if( npointpos == points.getLength())
                     return false;
-                var npoint = points[pos++],
+                var npoint = points.get(pos++)[0],
                     nnpointpos = pos;
-                if( nnpointpos == points.length)
+                if( nnpointpos == points.getLength())
                     return false;
 
                 pos = pointpos;
                 pos--;
                 var ppointpos = pos; 
 
-                if( ppointpos == points.length)
+                if( ppointpos === points.getLength() || ppointpos < 0 )
                     return false;
 
-                var ppoint = points[pos--],
+                var ppoint = points.get(pos--)[0],
                     pppointpos = pos; 
 
-                if( pppointpos == points.length)
+                if( pppointpos === points.getLength() || pppointpos < 0 )
                     return false;
 
                 if( npoint.equals(point)) 
                     return false; // direction of zero-length edges can't be determined, so don't delete them
 
-                assert( pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, 
-                    "ARGraph.candeleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
+                assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), 
+                    "ARGraph.candeleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
 
                 var dir = getDir(npoint.minus(point));
                 assert( isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
-                var newpoint;
+                var newpoint = new ArPoint();
 
                 if(ishorizontal){
                     newpoint.x = getPointCoord(npoint, ishorizontal);
@@ -5053,7 +5058,7 @@ tst = 3;
                     newpoint.x = getPointCoord(ppoint, !ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED" );
+                assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED" );
 
                 if( isLineClipBoxes(newpoint, npoint) ) return false;
                 if( isLineClipBoxes(newpoint, ppoint) ) return false;
@@ -5069,47 +5074,47 @@ tst = 3;
                     points.AssertValidPos(pos);
                 }
 
-                var pointpos = pos,
-                    point = points[pos++], //&*(pos++); //Was GetNext with &
+                var pointpos = pos, //Getting the next, and next-next, points
+                    point = points.get(pos++),
                     npointpos = pos,
-                    npoint = points[pos++], //&*(pos++); //Was GetNext with &
+                    npoint = points.get(pos++),
                     nnpointpos = pos,
-                    nnpoint = points[pos++], //&*(pos++); //Was GetNext with &
+                    nnpoint = points.get(pos++),
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
 
-                var ppointpos = pos,
-                    ppoint = points[pos--], //&*(pos--); 
+                var ppointpos = pos, //Getting the prev, prev-prev points
+                    ppoint = points.get(pos--),
                     pppointpos = pos,
-                    pppoint = points[pos--]; //&*(pos--); 
+                    pppoint = points.get(pos--);
 
-                assert( pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
-                assert( pppoint != null && ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteTwoEdgesAt: pppoint != null && ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
+                assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
+                assert( pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
-                var dir = getDir(npoint.minus(point));
+                var dir = getDir(npoint[0].minus(point[0]));
                 assert( isRightAngle(dir), "ARGraph.deleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
-                var newpoint;
+                var newpoint = new ArPoint();
                 if(ishorizontal){
-                    newpoint.x = getPointCoord(npoint, ishorizontal);
-                    newpoint.y = getPointCoord(ppoint, !ishorizontal);
+                    newpoint.x = getPointCoord(npoint[0], ishorizontal);
+                    newpoint.y = getPointCoord(ppoint[0], !ishorizontal);
                 }else{
-                    newpoint.x = getPointCoord(ppoint, !ishorizontal);
-                    newpoint.y = getPointCoord(npoint, ishorizontal);
+                    newpoint.x = getPointCoord(ppoint[0], !ishorizontal);
+                    newpoint.y = getPointCoord(npoint[0], ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
+                assert( getDir(newpoint.minus(ppoint[0])) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
 
-                assert( !isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
-                assert( !isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, npoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, ppoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
 
                 var hlist = getEdgeList(ishorizontal),
-                    vlist = getEdgeList(!ishorizontal),
+                    vlist = getEdgeList(!ishorizontal);
 
-                    ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
+                var ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
                     pedge = vlist.getEdgeByPointer(ppoint, point),
                     nedge = hlist.getEdgeByPointer(point, npoint),
                     nnedge = vlist.getEdgeByPointer(npoint, nnpoint);
@@ -5119,27 +5124,22 @@ tst = 3;
                 vlist.Delete(pedge);
                 hlist.Delete(nedge);
 
-                points.splice(pointpos, 1);
-                points.splice(npointpos, 1);
-                points.splice(ppointpos++, 0, newpoint); //insert point
-                points.splice(ppointpos--, 1); //delete the point that was in the location of new point
-
-                assert( ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point), "ARGraph.deleteTwoEdgesAt: ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point) FAILED");
+                points.splice(ppointpos, 3, [ newpoint ]);
                 ppedge.setEndPointNext(nnpoint);
+                ppedge.setEndPoint(newpoint); 
 
-                assert( nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point), "ARGraph.deleteTwoEdgesAt: nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point) FAILED");
-                nnedge.setStartPoint(ppoint);
+                nnedge.setStartPoint(newpoint);
                 nnedge.setStartPointPrev(pppoint);
 
-                if( nnnpointpos < points.length)
+                if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //Used to have &*
                     assert( nnnedge != null, "ARGraph.deleteTwoEdgesAt: nnnedge != null FAILED");
-                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+                    assert( nnnedge.getStartPointPrev().equals(new ArPoint(npoint[0])) && nnnedge.getStartPoint().equals(new ArPoint(nnpoint[0])), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
-                if( nnpoint.equals(newpoint) )
+                if( nnpoint[0].equals(newpoint) )
                     deleteSamePointsAt(path, points, ppointpos);
 
                 if(DEBUG_DEEP){
@@ -5158,22 +5158,22 @@ tst = 3;
                 }
 
                 var pointpos = pos,
-                    point = points[pos++], //&*
+                    point = points.get(pos++), //&*
                     npointpos = pos,
-                    npoint = points[pos++], //&*
+                    npoint = points.get(pos++), //&*
                     nnpointpos = pos,
-                    nnpoint = points[pos++], //&*
+                    nnpoint = points.get(pos++), //&*
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
             
                 var ppointpos = pos;
-                    point = points[pos--], //&*
+                    point = points.get(pos--), //&*
                     pppointpos = pos;
-                    pppoint = pos == points.length ? null : points[pos--];//&*
+                    pppoint = pos == points.getLength() ? null : points.get(pos--);//&*
 
-                assert( ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteSamePointsAt: ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
+                assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteSamePointsAt: ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
                 assert( point.equals(npoint) && !point.equals(ppoint), "ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED");
 
@@ -5196,7 +5196,7 @@ tst = 3;
                 points.splice(pointpos, 1);
                 points.splice(npointpos, 1);
 
-                if( pppointpos < points.length)
+                if( pppointpos < points.getLength())
                 {
                     var ppedge = vlist.getEdgeByPointer(pppoint, ppoint);
                     assert( ppedge != null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point), "ARGraph.deleteSamePointsAt: ppedge != null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point) FAILED");
@@ -5207,7 +5207,7 @@ tst = 3;
                 nnedge.setStartPoint(ppoint);
                 nnedge.setStartPointPrev(pppoint);
 
-                if( nnnpointpos < points.length)
+                if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
                     assert( nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED");
@@ -5231,7 +5231,7 @@ tst = 3;
                         var pointList = path.getPointList(),
                             pointpos = 0;
 
-                        while( pointpos < pointList.length)
+                        while( pointpos < pointList.getLength() )
                         {
                             if( candeleteTwoEdgesAt(path, pointList, pointpos) )
                             {
@@ -6440,13 +6440,18 @@ pt = [pt];
                 customPathData = pDat;
             };
             
-            this.applyCustomizationsBeforeAutoConnectPoints = function(plist){
+            this.applyCustomizationsBeforeAutoConnectPoints = function(){
                 plist = [];
 
                 if (customPathData.length === 0)
                     return;
 
                 var ii = 0;
+                while( ii < customPathData.length ){
+                    //if( !isAutoRoutingOn ) //Do we need this?
+                    plist.push( ArPoint(customPathData[ii]) );
+                }
+/*
                 while (ii < customPathData.length){
                     if ((customPathData[ii]).getType() == SimpleEdgeDisplacement) {
                         // it is done in a next phase
@@ -6458,6 +6463,9 @@ pt = [pt];
                     }
                     ++ii;
                 }
+*/
+
+                return plist;
             };
 
             this.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
@@ -6502,11 +6510,11 @@ pt = [pt];
                                         var startRect = startport.getRect(),
                                             endRect = endport.getRect(),
                                             minLimit = (currEdgeIndex == 0 ?
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.top : startRect.left) :
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.top : endRect.left)),
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.ceil : startRect.left) :
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.ceil : endRect.left)),
                                             maxLimit = (currEdgeIndex == 0 ?
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.bottom : startRect.right) :
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.bottom : endRect.right)),
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.floor : startRect.right) :
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.floor : endRect.right)),
                                             valueToSet = (customPathData[ii]).IsHorizontalOrVertical() ? yToSet : xToSet;
                                         if (valueToSet < minLimit || valueToSet > maxLimit)
                                             doNotApply = true;
@@ -6538,7 +6546,11 @@ pt = [pt];
                             ++ii;
                     }
 
-                    points.getNextEdgePtrs(pos, startpoint, endpoint);
+                    var tmp = points.getNextEdgePtrs(pos, startpoint, endpoint);
+                    pos = tmp.pos; 
+                    startpoint = tmp.start;
+                    endpoint = tmp.end;
+
                     currEdgeIndex++;
                 }
             };
@@ -7083,10 +7095,31 @@ pt = [pt];
                                     ary1 = Math.min( connArea[j][0][1], connArea[j][1][1]) + 1;
                                     ary2 = Math.max( connArea[j][0][1], connArea[j][1][1]) - 1;
 
-                                    attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
-                                        (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
-                                        (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
-                                        (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+                                    arx1 = ( arx1 + arx2 )/2 - 2; //For now, we are simply creating a 
+                                    arx2 = arx1 + 4; //connection point in the center of the rectangle
+                                    ary1 = ( ary1 + ary2 )/2 - 2;
+                                    ary2 = ary1 + 4;
+
+                                    var dceil = Math.abs(ary1 - y1),
+                                        dfloor =  Math.abs(ary1 - y2),
+                                        dleft = Math.abs(arx1 - x1),
+                                        dright = Math.abs(arx1 - x2),
+                                        min = Math.min( dceil, dfloor, dleft, dright );
+
+                                    if( min === dceil )
+                                        attr = ARPORT_StartOnTop + ARPORT_EndOnTop;
+                                    if( min === dfloor )
+                                        attr = ARPORT_StartOnBottom + ARPORT_EndOnBottom;
+                                    if( min === dleft )
+                                        attr = ARPORT_StartOnLeft + ARPORT_EndOnLeft;
+                                    if( min === dright )
+                                        attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
+
+
+                                    //attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                     //   (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                      //  (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                       // (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
 
                                 }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
                                     var _x1 = Math.min( connArea[j][0][0], connArea[j][1][0]),
@@ -7441,8 +7474,8 @@ pt = [pt];
 
         AutoRouter.prototype.move = function( box, details ){
             //Make sure details is in dx, dy
-            dx = details.dx !== undefined ? details.dx : details.x - box.getRect().left;
-            dy = details.dy !== undefined ? details.dy : details.y - box.getRect().ceil;
+            dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left );
+            dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
 
             this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
         };

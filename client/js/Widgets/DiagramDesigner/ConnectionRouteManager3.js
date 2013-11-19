@@ -57,8 +57,11 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //ON_UNREGISTER_SUBCOMPONENT
 
         this._onItemPositionChanged = function(_canvas, eventArgs) {
-            if( self._autorouterBoxes[eventArgs.ID] )
-                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": eventArgs.x, "y": eventArgs.y });
+            if( self._autorouterBoxes[eventArgs.ID] ){
+                var x = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().x,
+                    y = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().y;
+                self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": x, "y": y });
+}
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
