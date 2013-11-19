@@ -11,7 +11,8 @@ define([
     'storage/log',
     'storage/commit',
     'logManager',
-    'util/url'
+    'util/url',
+    'meta/meta'
 ],
     function (
         ASSERT,
@@ -26,7 +27,8 @@ define([
         Log,
         Commit,
         LogManager,
-        URL
+        URL,
+        META
         ) {
 
         function COPY(object){
@@ -54,6 +56,7 @@ define([
                 _branch = null,
                 _branchState = null,
                 _nodes = {},
+                _metaNodes = {},
                 _inTransaction = false,
                 _users = {},
                 _patterns = {},
@@ -451,7 +454,9 @@ define([
                         _projectName = name;
                         _inTransaction = false;
                         _nodes = {};
+                        _metaNodes = {};
                         _core = getNewCore(_project);
+                        META.initialize(_core,_metaNodes);
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -533,6 +538,7 @@ define([
                     _inTransaction = false;
                     _core = null;
                     _nodes = {};
+                    _metaNodes = {};
                     //_commitObject = null;
                     _patterns = {};
                     _clipboard = [];
@@ -575,13 +581,13 @@ define([
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setAttribute(root,"name","ROOT");
-                var metameta = core.createNode(root);
+                var metameta = core.createNode({parent:root});
                 core.setAttribute(metameta,"name","METAMETA");
-                var meta = core.createNode(root);
+                var meta = core.createNode({parent:root});
                 core.setAttribute(meta,"name","META");
-                var proj = core.createNode(root);
+                var proj = core.createNode({parent:root});
                 core.setAttribute(proj,"name","PROJECT");
-                var fco = core.createNode(metameta);
+                var fco = core.createNode({parent:metameta});
                 core.setAttribute(fco,"name","FCO");
                 core.setRegistry(fco,"isConnection",false);
                 core.setRegistry(fco,"position",{ "x": 100, "y": 100});
@@ -671,18 +677,20 @@ define([
                 }
             }
             function storeNode(node,basic){
-                basic = basic || true;
+                //basic = basic || true;
                 var path = _core.getPath(node);
+                _metaNodes[path] = node;
                 if(_nodes[path]){
                     //TODO we try to avoid this
                 } else {
-                    _nodes[path] = {node:node,hash:"",incomplete:true,basic:basic};
+                    _nodes[path] = {node:node,hash:""/*,incomplete:true,basic:basic*/};
                 }
                 return path;
             }
 
             function loadChildrenPattern(core,nodesSoFar,node,level,callback){
                 var path = core.getPath(node);
+                _metaNodes[path] = node;
                 if(!nodesSoFar[path]){
                     nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:true,basic:true};
                 }
@@ -735,6 +743,7 @@ define([
                     core.loadByPath(base,id,function(err,node){
                         if(!err && node && !core.isEmpty(node)){
                             var path = core.getPath(node);
+                            _metaNodes[path] = node;
                             if(!nodesSoFar[path]){
                                 nodesSoFar[path] = {node:node,hash:core.getSingleNodeHash(node),incomplete:false,basic:true};
                             }
@@ -754,6 +763,7 @@ define([
                         var missing = 0,
                             error = null;
                         _loadNodes[_core.getPath(root)] = {node:root,hash:_core.getSingleNodeHash(root),incomplete:true,basic:true};
+                        _metaNodes[_core.getPath(root)] = root;
 
                         for(var i in _users){
                             for(var j in _users[i].PATTERNS){
@@ -1177,7 +1187,7 @@ define([
                         returnArray = {};
 
                     //creating the 'from' object
-                    var tempFrom = _core.createNode(parent);
+                    var tempFrom = _core.createNode({parent:parent});
                     //and moving every node under it
                     for(var i=0;i<nodePaths.length;i++){
                         helpArray[nodePaths[i]] = {};
@@ -1401,7 +1411,7 @@ define([
                         if(_nodes[parameters.baseId]){
                             baseNode = _nodes[parameters.baseId].node || baseNode;
                         }
-                        var child = _core.createNode(_nodes[parameters.parentId].node, baseNode);
+                        var child = _core.createNode({parent:_nodes[parameters.parentId].node, base:baseNode});
                         if (parameters.position) {
                             _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
                         } else {
@@ -1498,7 +1508,7 @@ define([
                         typeof _nodes[parameters.parentId].node === 'object' &&
                         typeof _nodes[parameters.sourceId].node === 'object' &&
                         typeof _nodes[parameters.targetId].node === 'object'){
-                        var connection = _core.createNode(_nodes[parameters.parentId].node);
+                        var connection = _core.createNode({parent:_nodes[parameters.parentId].node});
                         _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
                         _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
                         _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
@@ -1645,6 +1655,21 @@ define([
                 }
             }
 
+
+            //constraint functions
+            function setConstraint(path,name,constraintObj){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setConstraint(_nodes[path].node,name,constraintObj);
+                    saveRoot('setConstraint('+path+','+name+')');
+                }
+            }
+            function delConstraint(path,name){
+                if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delConstraint(_nodes[path].node,name);
+                    saveRoot('delConstraint('+path+'name'+')');
+                }
+            }
+
             //territory functions
             function addUI(ui, oneevent, guid) {
                 guid = guid || GUID();
@@ -1777,7 +1802,8 @@ define([
 
                 //META
                 var getValidChildrenTypes = function(){
-                    return getMemberIds('ValidChildren');
+                    //return getMemberIds('ValidChildren');
+                    return META.getValidChildrenTypes(_id);
                 };
                 var getAttributeDescriptor = function(attributename){
                     return _core.getAttributeDescriptor(_nodes[_id].node,attributename);
@@ -1814,7 +1840,28 @@ define([
                     return _core.getPath(_core.getBase(_nodes[_id].node));
                 };
 
+                //constraint functions
+                var getConstraintNames = function(){
+                    return _core.getConstraintNames(_nodes[_id].node);
+                };
+                var getConstraint = function(name){
+                    return _core.getConstraint(_nodes[_id].node,name);
+                };
                 //ASSERT(_nodes[_id]);
+
+                var printData = function(){
+                    //TODO - what to print here - now we use as testing method...
+                    console.log('printing info of node '+_id);
+                    console.log('not implemented');
+                    console.log('printing info of node '+_id+' done');
+
+                    //testfunction placeholder
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.setConstraint(_nodes[_id].node,"proba",{});
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                    _core.delConstraint(_nodes[_id].node,"proba");
+                    console.log(_core.getConstraintNames(_nodes[_id].node));
+                };
 
                 if(_nodes[_id]){
                     return {
@@ -1842,7 +1889,13 @@ define([
                         getEditablePointerDescriptor   : getEditablePointerDescriptor,
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
-                        getBase                        : getBase
+                        getBase                        : getBase,
+
+                        //constraint functions
+                        getConstraintNames : getConstraintNames,
+                        getConstraint : getConstraint,
+
+                        printData: printData
 
                     }
                 }
@@ -1983,6 +2036,22 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
+                //we simply propagate the functions of META
+                getMeta: META.getMeta,
+                setMeta: function(path,meta){META.setMeta(path,meta);saveRoot("setMeta("+path+")");},
+                isValidChild: META.isValidChild,
+                isValidTarget: META.isValidTarget,
+                isValidAttribute: META.isValidAttribute,
+                getValidChildrenTypes: META.getValidChildrenTypes,
+                getValidTargetTypes: META.getValidTargetTypes,
+                hasOwnMetaRules : META.hasOwnMetaRules,
+                filterValidTarget : META.filterValidTarget,
+                getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
+                getOwnValidTargetTypes: META.getOwnValidTargetTypes,
+
+                //constraint
+                setConstraint: setConstraint,
+                delConstraint: delConstraint,
 
 
                 //territory functions for the UI

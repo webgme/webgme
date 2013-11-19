@@ -22,18 +22,13 @@ define(['logManager',
         OPENING = 'opening',
         CLOSING = 'CLOSING',
         NODE_SIZE = 15,
-        TREE_LEVEL_DISTANCE = 180,
-        DEFAULT_ZOOM_VALUES = [0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5];
+        TREE_LEVEL_DISTANCE = 180;
 
     GraphVizWidget = function (container, params) {
         this._logger = logManager.create("GraphVizWidget");
 
         this._el = container;
         this.toolBar = params.toolBar;
-
-        //define zoom value
-        this._zoom = 1.0;
-        this._zoomValues = params.zoomValues || DEFAULT_ZOOM_VALUES;
 
         this._initialize();
 
@@ -365,6 +360,9 @@ define(['logManager',
     };
 
     GraphVizWidget.prototype.onBackgroundDblClick = function () {
+    };
+
+    GraphVizWidget.prototype.destroy = function () {
     };
 
     _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);

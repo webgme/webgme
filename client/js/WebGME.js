@@ -1,6 +1,7 @@
 "use strict";
 
-var WebGMEGlobal = { 'version': 'pre-alpha' };
+var WebGMEGlobal = { 'version': 'pre-alpha',
+    'SUPPORTS_TOUCH': 'ontouchstart' in window || navigator.msMaxTouchPoints }; //touch device detection}
 
 // let require load all the toplevel needed script and call us on domReady
 define(['logManager',
@@ -9,13 +10,17 @@ define(['logManager',
     'clientUtil',
     'js/LayoutManager/LayoutManager',
     'js/Decorators/DecoratorManager',
-    'js/KeyboardManager'], function (logManager,
+    'js/KeyboardManager/KeyboardManager',
+    'js/PanelManager/PanelManager',
+    './WebGME.History'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
                                             LayoutManager,
                                             DecoratorManager,
-                                            KeyboardManager) {
+                                            KeyboardManager,
+                                            PanelManager,
+                                            WebGMEHistory) {
 
     var _webGMEStart = function () {
         var lm,
@@ -28,10 +33,6 @@ define(['logManager',
             logger = logManager.create('WebGME'),
             selectObject;
 
-        //as of now it's a global variable just to make access to it easier
-        //TODO: might need to be changed
-        WebGMEGlobal.KeyboardManager = new KeyboardManager();
-
         lm = new LayoutManager();
         lm.loadLayout(layoutToLoad, function () {
             var panels = [],
@@ -40,6 +41,8 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
+
+            WebGMEHistory.setClient(client);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {
@@ -58,6 +61,12 @@ define(['logManager',
 
             //load the panels
             loadPanels(panels);
+
+            //as of now it's a global variable just to make access to it easier
+            //TODO: might need to be changed
+            WebGMEGlobal.KeyboardManager = KeyboardManager;
+            WebGMEGlobal.KeyboardManager.setEnabled(true);
+            WebGMEGlobal.PanelManager = new PanelManager();
         });
 
         loadPanels = function (panels) {

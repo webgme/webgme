@@ -84,6 +84,7 @@ define([ "util/assert"], function (ASSERT) {
             if(getMemberRelId(node,setName,member) === null){
                 var setMember =  innerCore.getChild(setNode,createNewMemberRelid(setNode));
                 innerCore.setPointer(setMember,'member',member);
+                innerCore.setRegistry(setMember,"_","_");//TODO hack, somehow the empty children have been removed during persist
                 setModified(node,setName);
             }
         };

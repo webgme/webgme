@@ -3,14 +3,17 @@
 define(['logManager',
     'loaderProgressBar',
     'js/PanelBase/PanelBaseWithHeader',
+    'js/Panels/SplitPanel/SplitPanel',
     'text!js/Visualizers.json',
+    'js/Controls/iCheckBox',
     'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     PanelBaseWithHeader,
-                                    VisualizersJSON) {
+                                    SplitPanel,
+                                    VisualizersJSON,
+                                    iCheckBox) {
 
-    var VisualizerPanel,
-        __parent__ = PanelBaseWithHeader;
+    var VisualizerPanel;
 
     VisualizerPanel = function (layoutManager, params) {
         var options = {};
@@ -19,7 +22,7 @@ define(['logManager',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options]);
+        PanelBaseWithHeader.apply(this, [options]);
 
         this._client = params.client;
         this._layoutManager = layoutManager;
@@ -27,9 +30,8 @@ define(['logManager',
         //initialize UI
         this._initialize();
 
-        this._activeContoller = null;
-        this._activePanel = null;
-        this._activeVisualizer = "";
+        this._activePanel = {};
+        this._activeVisualizer = {};
         this._currentNodeID = null;
         this._visualizers = {};
 
@@ -39,7 +41,7 @@ define(['logManager',
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(VisualizerPanel.prototype, __parent__.prototype);
+    _.extend(VisualizerPanel.prototype, PanelBaseWithHeader.prototype);
 
     VisualizerPanel.prototype._initialize = function () {
         var self = this;
@@ -49,13 +51,28 @@ define(['logManager',
 
         this.$el.addClass('visualizer-panel');
 
-        this._ul = $('<ul class="nav nav-pills nav-stacked">');
+        var p2Editor = $('<div/>', {'style': 'margin-left: 10px; margin-bottom: 10px'});
+        this._cb2Editor = new iCheckBox({'checked': false,
+                                         'checkChangedFn': function (isChecked) {
+                                             self._p2Editor(isChecked);
+                                         }});
+        p2Editor.append('Two editor panels:');
+        p2Editor.append(this._cb2Editor.el);
+        this._cb2Editor.el.css({'top': '5px', 'margin-left': '10px'});
+        this.$el.append(p2Editor);
 
-        this.$el.append(this._ul);
+        this._panel1VisContainer = $('<div/>');
+        this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
+        this._ul1.attr("data-id", 'p1');
+        this._panel1VisContainer.append($('<div class="pp">Panel 1:</div>'));
+        this._panel1VisContainer.append(this._ul1);
 
-        this._ul.on('click', '> li', function (event) {
-            var vis = $(this).attr("data-id");
-            self._setActiveVisualizer(vis);
+        this.$el.append(this._panel1VisContainer);
+
+        this.$el.on('click', 'ul > li:not(.active)', function (event) {
+            var vis = $(this).attr("data-id"),
+                ul = $(this).parent();
+            self._setActiveVisualizer(vis, ul);
             event.stopPropagation();
             event.preventDefault();
         });
@@ -63,54 +80,47 @@ define(['logManager',
         this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         });
+
+        this._splitPanel = new SplitPanel();
+        this._layoutManager.addPanel('visualizerSplitPanel', this._splitPanel, 'center');
     };
 
     VisualizerPanel.prototype._loadVisualizers = function () {
         var self = this;
 
         this.addRange(JSON.parse(VisualizersJSON), function () {
-            self.setActiveVisualizer('ModelEditor');
+            self._setActiveVisualizer('ModelEditor', self._ul1);
         });
     };
 
-    VisualizerPanel.prototype._setActiveVisualizer = function (visualizer) {
+    VisualizerPanel.prototype._setActiveVisualizer = function (visualizer, ul) {
         var PanelClass,
-            ControlClass;
+            ControlClass,
+            panel = ul.attr('data-id');
 
-        if (this._activeVisualizer !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
+        if (this._activeVisualizer[panel] !== visualizer && this._visualizers.hasOwnProperty(visualizer)) {
 
-            //destroy current controller and visualizer
-            if (this._activeContoller && this._activeContoller.destroy) {
-                this._activeContoller.destroy();
-            }
-            if (this._activePanel && this._activePanel.destroy) {
-                this._layoutManager.removePanel(this._activeVisualizer);
-                this._activePanel.destroy();
+            //destroy current visualizer
+            if (this._activePanel[panel] && this._activePanel[panel].destroy) {
+                this._activePanel[panel].destroy();
             }
 
-            this._activeVisualizer = visualizer;
-            this._ul.find('> li').removeClass('active');
-            this._ul.find('> li[data-id="' + visualizer + '"]').addClass('active');
+            this._activeVisualizer[panel] = visualizer;
+            ul.find('> li').removeClass('active');
+            ul.find('> li[data-id="' + visualizer + '"]').addClass('active');
 
-            this._activeContoller = null;
-            this._activePanel = null;
+            this._activePanel[panel] = null;
 
             if (this._visualizers[visualizer]) {
                 PanelClass = this._visualizers[visualizer].panel;
                 if (PanelClass) {
-                    this._activePanel = new PanelClass(this._layoutManager, {'client': this._client});
-                    this._layoutManager.addPanel(visualizer, this._activePanel, 'main');
-                }
-
-                ControlClass = this._visualizers[visualizer].control;
-                if (ControlClass) {
-                    this._activeContoller = new ControlClass({"client": this._client,
-                        "panel": this._activePanel});
+                    this._activePanel[panel] = new PanelClass(this._layoutManager, {'client': this._client});
+                    this._splitPanel.setPanel(this._activePanel[panel], panel);
                 }
 
                 if (this._currentNodeID) {
-                    if (this._activeContoller) {
-                        this._activeContoller.selectedObjectChanged(this._currentNodeID);
+                    if (this._activePanel[panel] && this._activePanel[panel].control) {
+                        this._activePanel[panel].control.selectedObjectChanged(this._currentNodeID);
                     }
                 }
             }
@@ -157,9 +167,9 @@ define(['logManager',
             li.attr("data-id", menuDesc.id);
             a.text(menuDesc.title);
 
-            this._ul.append(li);
+            this._ul1.append(li);
 
-            if (menuDesc.panel && menuDesc.control) {
+            if (menuDesc.panel) {
 
                 loaderDiv = $("<div/>", { "class": "vis-loader"});
 
@@ -167,12 +177,10 @@ define(['logManager',
                 li.loader.start();
                 a.append(loaderDiv);
 
-                require([menuDesc.panel,
-                    menuDesc.control],
-                    function (panelClass, controlClass) {
-                        self.logger.debug("downloaded: " + menuDesc.panel + ", " + menuDesc.control);
-                        self._visualizers[menuDesc.id] = {"panel": panelClass,
-                            "control": controlClass};
+                require([menuDesc.panel],
+                    function (panelClass) {
+                        self.logger.debug("downloaded: " + menuDesc.panel);
+                        self._visualizers[menuDesc.id] = {"panel": panelClass};
                         self._removeLoader(li, loaderDiv);
                         doCallBack();
                     },
@@ -215,12 +223,37 @@ define(['logManager',
         }
     };
 
-    VisualizerPanel.prototype.setActiveVisualizer = function (visualizer) {
-        this._setActiveVisualizer(visualizer);
-    };
-
     VisualizerPanel.prototype.selectedObjectChanged = function (currentNodeId) {
         this._currentNodeID = currentNodeId;
+    };
+
+    VisualizerPanel.prototype._p2Editor = function (enabled) {
+        if (enabled) {
+            //show 2 panels
+            this._panel2VisContainer = this._panel1VisContainer.clone();
+            this._panel2VisContainer.find('ul').attr("data-id", 'p2');
+            this._panel2VisContainer.find('.pp').text('Panel 2:');
+            this.$el.append(this._panel2VisContainer);
+            //find the selected on
+            var activeLi = this._panel2VisContainer.find('ul > li.active'),
+                vis = activeLi.attr("data-id"),
+                ul = activeLi.parent();
+            this._setActiveVisualizer(vis, ul);
+        } else {
+            //destroy current controller and visualizer
+            var panel = 'p2';
+            if (this._activePanel[panel] && this._activePanel[panel].destroy) {
+                this._activePanel[panel].destroy();
+            }
+
+            this._activePanel[panel] = null;
+            this._activeVisualizer[panel] = null;
+
+
+            this._panel2VisContainer.remove();
+            this._panel2VisContainer = undefined;
+            this._splitPanel.deletePanel('p2');
+        }
     };
 
     return VisualizerPanel;

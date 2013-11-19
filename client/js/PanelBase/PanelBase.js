@@ -70,7 +70,8 @@ define(['jquery',
 
     /* METHOD CALLED WHEN THE PARENT CONTAINER SIZE HAS CHANGED AND WIDGET SHOULD RESIZE ITSELF ACCORDINGLY */
     PanelBase.prototype.setSize = function (width, height) {
-        this._getSize();
+        this.size = {"width": width,
+            "height": height};
 
         this.onResize(this.size.width, this.size.height);
     };

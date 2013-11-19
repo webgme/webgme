@@ -12,13 +12,6 @@ define([], function () {
 
 
     function nullPointerCore (_innerCore) {
-
-        //helper functions
-        function updateDescriptorHash(node){
-            var descriptors = _innerCore.getChild(node,DESCR_ID);
-            var dCount = _innerCore.getRegistry(node,'d_count') || 0;
-            _innerCore.setRegistry(node,'d_count',dCount + 1);
-        }
         var _core = {};
         for(var i in _innerCore){
             _core[i] = _innerCore[i]
@@ -41,6 +34,14 @@ define([], function () {
                 return null;
             } else {
                 return path;
+            }
+        };
+        _core.loadPointer = function(node,name){
+            var path = _core.getPointerPath(node,name);
+            if(path === null){
+                return null;
+            } else {
+                return _innerCore.loadPointer(node,name);
             }
         };
 

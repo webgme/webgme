@@ -14,14 +14,13 @@ define(['logManager',
         var self = this;
         this._client = options.client;
         this._panel = options.panel;
-        this._dataGridWidget = this._panel.widget;
+        this._dataGridWidget = options.widget;
 
         this._currentNodeId = null;
 
         this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
         };
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
 
         this._logger = logManager.create("GridPanelContainmentControl");
 
@@ -47,8 +46,6 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
 
-            this._displayedParts = {};
-
             var desc = this._discoverNode(nodeId);
             var title = (desc.Attributes && desc.Attributes.name ? desc.Attributes.name + " " : "N/A ") + "(" + desc.ID + ")";
             this._panel.setTitle(title);
@@ -60,7 +57,7 @@ define(['logManager',
     };
 
     GridPanelContainmentControl.prototype.destroy = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        this.detachClientEventListeners();
         this._client.removeUI(this._territoryId);
     };
 
@@ -122,7 +119,6 @@ define(['logManager',
 
                 cNode = this._client.getNode(gmeID),
                 _getNodePropertyValues,
-                _getSetMembershipInfo,
                 _getPointerInfo;
 
             _getNodePropertyValues = function (node, propNameFn, propValueFn) {
@@ -159,6 +155,15 @@ define(['logManager',
             }
 
             return nodeDescriptor;
+    };
+
+    GridPanelContainmentControl.prototype.attachClientEventListeners = function () {
+        this.detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    GridPanelContainmentControl.prototype.detachClientEventListeners = function () {
+        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     //attach GridPanelContainmentControl - DataGridViewEventHandlers event handler functions

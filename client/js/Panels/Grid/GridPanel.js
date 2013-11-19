@@ -1,12 +1,15 @@
 "use strict";
 
 define(['js/PanelBase/PanelBaseWithHeader',
-        'js/Widgets/DataGrid/DataGridWidget'
+        'js/PanelManager/IActivePanel',
+        'js/Widgets/DataGrid/DataGridWidget',
+        './GridPanelContainmentControl'
         ], function (PanelBaseWithHeader,
-                     DataGridWidget) {
+                     IActivePanel,
+                     DataGridWidget,
+                     GridPanelContainmentControl) {
 
-    var GridPanel,
-        __parent__ = PanelBaseWithHeader;
+    var GridPanel;
 
     GridPanel = function (layoutManager, params) {
         var options = {};
@@ -16,7 +19,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
 
         //call parent's constructor
-        __parent__.apply(this, [options, layoutManager]);
+        PanelBaseWithHeader.apply(this, [options, layoutManager]);
 
         this._client = params.client;
 
@@ -27,22 +30,44 @@ define(['js/PanelBase/PanelBaseWithHeader',
     };
 
     //inherit from PanelBaseWithHeader
-    _.extend(GridPanel.prototype, __parent__.prototype);
+    _.extend(GridPanel.prototype, PanelBaseWithHeader.prototype);
+    _.extend(GridPanel.prototype, IActivePanel.prototype);
 
     GridPanel.prototype._initialize = function () {
         //set Widget title
         this.setTitle("ContainmentGrid");
 
         this.widget = new DataGridWidget(this.$el, {'toolBar': this.toolBar});
+
+        this.control = new GridPanelContainmentControl({"client": this._client,
+            "widget": this.widget,
+            "panel": this});
+
+        this.onActivate();
     };
 
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     GridPanel.prototype.onReadOnlyChanged = function (isReadOnly) {
         //apply parent's onReadOnlyChanged
-        __parent__.prototype.onReadOnlyChanged.call(this, isReadOnly);
+        PanelBaseWithHeader.prototype.onReadOnlyChanged.call(this, isReadOnly);
 
         this.widget.setReadOnly(isReadOnly);
+    };
+
+    GridPanel.prototype.destroy = function () {
+        this.control.destroy();
+        this.widget.destroy();
+
+        PanelBaseWithHeader.prototype.destroy.call(this);
+    };
+
+    GridPanel.prototype.onActivate = function () {
+        this.control.attachClientEventListeners();
+    };
+
+    GridPanel.prototype.onDeactivate = function () {
+        this.control.detachClientEventListeners();
     };
 
     return GridPanel;

@@ -249,9 +249,14 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             return list;
         };
 
-        var createNode = function (parent, relid) {
-            ASSERT(!parent || isValidNode(parent));
+        var createNode = function (parameters) {
+            parameters = parameters || {};
+            var relid = parameters.relid,
+                parent = parameters.parent;
 
+            ASSERT(!parent || isValidNode(parent));
+            ASSERT(!relid || typeof relid === 'string');
+            
             var node;
             if (parent) {
                 if (relid) {

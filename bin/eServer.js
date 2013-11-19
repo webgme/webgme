@@ -25,7 +25,8 @@ requirejs.config({
         "config": 'config',
         "cli": 'cli',
         "bin": 'bin',
-        "auth": 'auth'
+        "auth": 'auth',
+        "meta": 'meta'
 
     }
 });
@@ -196,7 +197,7 @@ requirejs(['logManager',
 
     //static contents
     //javascripts - core and transportation related files
-    app.get(/^\/(common|util|storage|core|config|auth|bin)\/.*\.js/,ensureAuthenticated,function(req,res){
+    app.get(/^\/(common|util|storage|core|config|auth|bin|meta)\/.*\.js/,ensureAuthenticated,function(req,res){
         res.sendfile(path.join(staticdirpath,req.path),function(err){
             res.send(404);
         });
@@ -208,7 +209,7 @@ requirejs(['logManager',
             res.send(404);
         });
     });
-    app.get(/^\/.*\.(js|html|gif|png|bmp)/,ensureAuthenticated,function(req,res){
+    app.get(/^\/.*\.(js|html|gif|png|bmp|svg)/,ensureAuthenticated,function(req,res){
         res.sendfile(staticclientdirpath+req.path,function(err){
             res.send(404);
         });

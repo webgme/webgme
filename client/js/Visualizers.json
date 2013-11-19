@@ -2,30 +2,25 @@
     {"id": "ModelEditor",
         "title": "ModelEditor",
         "panel": "js/Panels/ModelEditor/ModelEditorPanel",
-        "control": "js/Panels/ModelEditor/ModelEditorControl",
         "DEBUG_ONLY": false},
 
     {"id": "ContainmentGrid",
         "title": "Containment Grid - All",
         "panel": "js/Panels/Grid/GridPanel",
-        "control": "js/Panels/Grid/GridPanelContainmentControl",
         "DEBUG_ONLY": false},
 
-    {"id": "ContainmentGrid22",
+    {"id": "ContainmentGridPointers",
         "title": "Containment Grid - Pointers",
-        "panel": "js/Panels/Grid/GridPanel",
-        "control": "js/Panels/Grid/GridPanelContainmentControlPointers",
-        "DEBUG_ONLY": true},
+        "panel": "js/Panels/Grid/GridPanelPointers",
+        "DEBUG_ONLY": false},
 
     {"id": "GraphViz",
         "title": "Graph visualizer",
         "panel": "js/Panels/GraphViz/GraphVizPanel",
-        "control": "js/Panels/GraphViz/GraphVizPanelControl",
         "DEBUG_ONLY": false},
 
     {"id": "METAEditor",
         "title": "METAEditor",
         "panel": "js/Panels/MetaEditor/MetaEditorPanel",
-        "control": "js/Panels/MetaEditor/MetaEditorControl",
         "DEBUG_ONLY": false}
 ]

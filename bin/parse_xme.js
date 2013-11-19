@@ -101,7 +101,7 @@ if (typeof define !== "function") {
                     }
                     var guid = tag.attributes['guid'];
                     guid = guid.replace(/[{,}]/g,"");
-                    tag.node = core.createNode(stack[stack.length - 1].node,relid,guid);
+                    tag.node = core.createNode({parent:stack[stack.length - 1].node,relid:relid,guid:guid});
                     core.setRegistry(tag.node,'refPortCount',0);
                     //**********
                     objects += 1;
@@ -209,7 +209,12 @@ if (typeof define !== "function") {
 
             core.setRegistry(tag.node, "metameta", tag.name);
             core.setRegistry(tag.node, "isPort", tag.name === "atom");
-            core.setRegistry(tag.node, "decorator", "");
+
+            //create empty decorator registry field if not present
+            if (!core.getRegistry(tag.node, "decorator")) {
+                core.setRegistry(tag.node, "decorator", "");
+            }
+            
 
             if (tag.name === "connection") {
                 core.setRegistry(tag.node, "isConnection", true);
@@ -398,7 +403,7 @@ if (typeof define !== "function") {
             }
 
             if (!refport) {
-                refport = core.createNode(reference,""+core.getRegistry(reference,"refPortCount"));
+                refport = core.createNode({parent:reference,relid:""+core.getRegistry(reference,"refPortCount")});
                 core.setRegistry(reference,'refPortCount',core.getRegistry(reference,"refPortCount")+1);
                 core.setAttribute(refport, "name", core.getAttribute(target, "name"));
                 core.setRegistry(refport, "position", core.getRegistry(target, "position"));

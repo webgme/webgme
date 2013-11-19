@@ -27,6 +27,9 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/HighlightManager',
     'js/Widgets/DiagramDesigner/SearchManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.ContextMenu',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
+    './DiagramDesignerWidget.Draggable',
+    './DiagramDesignerWidget.Clipboard',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -47,11 +50,13 @@ define(['logManager',
                                                       DiagramDesignerWidgetKeyboard,
                                                       HighlightManager,
                                                       SearchManager,
-                                                      DiagramDesignerWidgetContextMenu) {
+                                                      DiagramDesignerWidgetContextMenu,
+                                                      DiagramDesignerWidgetDroppable,
+                                                      DiagramDesignerWidgetDraggable,
+                                                      DiagramDesignerWidgetClipboard) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
-        ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS = "accept-droppable",
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
         DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
         GUID_DIGITS = 6;
@@ -150,8 +155,8 @@ define(['logManager',
         };
 
         //initiate Drag Manager (if needed)
-        this.dragManager = new DragManager({"diagramDesigner": this});
-        this.dragManager.initialize(this.skinParts.$itemsContainer);
+        //this.dragManager = new DragManager({"diagramDesigner": this});
+        //this.dragManager.initialize(this.skinParts.$itemsContainer);
 
         /*********** CONNECTION DRAWING COMPONENT *************/
         //initiate Connection Router (if needed)
@@ -297,7 +302,6 @@ define(['logManager',
     };
 
     DiagramDesignerWidget.prototype.destroy = function () {
-        this._unregisterKeyboardListener();
         this.__loader.destroy();
         //TODO: what about item and connection destroys????
     };
@@ -325,19 +329,20 @@ define(['logManager',
         if (this.toolBar) {
             /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
                 //add extra visual piece
-            this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-                self.itemAutoLayout(data.mode);
-            });
-
-            this.toolBar.addButton({ "title": "Grid layout",
-                "icon": "icon-th",
-                "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
 
             /************** ROUTING MANAGER SELECTION **************************/
             if (DEBUG === true) {
+                /*this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
+                    self.itemAutoLayout(data.mode);
+                });
+
+                this.toolBar.addButton({ "title": "Grid layout",
+                    "icon": "icon-th",
+                    "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
+
                 this.toolBar.addButton({ "title": "Cozy Grid layout",
                     "icon": "icon-th-large",
-                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );
+                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );*/
 
                 //progress text in toolbar for debug only
                 this.skinParts.$progressText = this.toolBar.addLabel();
@@ -472,44 +477,7 @@ define(['logManager',
         this._resizeItemContainer();
 
         if (this._droppable === true) {
-            //hook up drop event handler on children container
-
-            this._acceptDroppable = false;
-
-            this.skinParts.$dropRegion = $('<div/>', { "class" :"dropRegion" });
-
-            this.skinParts.$dropRegion.insertBefore(this.skinParts.$itemsContainer);
-
-            /* SET UP DROPPABLE DROP REGION */
-            this.skinParts.$dropRegion.droppable({
-                over: function( event, ui ) {
-                    self.selectionManager.clear();
-                    self._onBackgroundDroppableOver(ui);
-                },
-                out: function( event, ui ) {
-                    self._onBackgroundDroppableOut(ui);
-                },
-                drop: function (event, ui) {
-                    self._onBackgroundDrop(event, ui);
-                },
-                activate: function( event, ui ) {
-                    var m = 0;
-                    if (ui.helper) {
-                        if (self.mode === self.OPERATING_MODES.DESIGN) {
-                            self.skinParts.$dropRegion.css({"width": self._containerSize.w - 2 * m,
-                                "height": self._containerSize.h - 2 * m,
-                                "top": self._scrollPos.top + m,
-                                "left": self._scrollPos.left + m });
-                        }    
-                    }
-                },
-                deactivate: function( event, ui ) {
-                    self.skinParts.$dropRegion.css({"width": "0px",
-                        "height": "0px",
-                        "top": "0px",
-                        "left": "0px"});
-                }
-            });
+            this._initDroppable();
         }
 
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
@@ -790,7 +758,7 @@ define(['logManager',
 
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate);
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -822,7 +790,7 @@ define(['logManager',
         /* clear collections */
         this._insertedDesignerItemIDs = [];
         this._updatedDesignerItemIDs = [];
-        this._deletedDesignerItemIDs = []
+        this._deletedDesignerItemIDs = [];
 
         this._insertedConnectionIDs = [];
         this._updatedConnectionIDs = [];
@@ -894,8 +862,6 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.onElementMouseDown = function (elementId) {
         this.logger.debug("onElementMouseDown: " + elementId);
-
-        this._registerKeyboardListener();
     };
 
     /************************** DRAG ITEM ***************************/
@@ -937,7 +903,7 @@ define(['logManager',
         
         this.logger.debug('Redraw connection request: ' + connectionIDsToUpdate.length + '/' + this.connectionIds.length);
 
-        redrawnConnectionIDs = this.connectionRouteManager.redrawConnections(connectionIDsToUpdate) || [];
+        redrawnConnectionIDs = this._redrawConnections(connectionIDsToUpdate) || [];
 
         this.logger.debug('Redrawn/Requested: ' + redrawnConnectionIDs.length + '/' + connectionIDsToUpdate.length);
 
@@ -1078,62 +1044,13 @@ define(['logManager',
 
         this.connectionRouteManager.initialize();
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         this.selectionManager.showSelectionOutline();
     };
 
     /********* ROUTE MANAGER CHANGE **********************/
 
-    /************** ITEM CONTAINER DROPPABLE HANDLERS *************/
-
-    DiagramDesignerWidget.prototype._onBackgroundDroppableOver = function (ui) {
-        var helper = ui.helper;
-
-        if (this.onBackgroundDroppableAccept(helper) === true) {
-            this._doAcceptDroppable(true);
-        }
-    };
-
-    DiagramDesignerWidget.prototype._onBackgroundDroppableOut = function (/*ui*/) {
-        this._doAcceptDroppable(false);
-    };
-
-    DiagramDesignerWidget.prototype._onBackgroundDrop = function (event, ui) {
-        var helper = ui.helper,
-            mPos = this.getAdjustedMousePos(event),
-            posX = mPos.mX,
-            posY = mPos.mY;
-
-        if (this._acceptDroppable === true) {
-            this.onBackgroundDrop(helper, { "x": posX, "y": posY }, event);
-        }
-
-        this._doAcceptDroppable(false);
-    };
-
-    DiagramDesignerWidget.prototype._doAcceptDroppable = function (accept) {
-        if (accept === true) {
-            this._acceptDroppable = true;
-            this.skinParts.$dropRegion.addClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
-        } else {
-            this._acceptDroppable = false;
-            this.skinParts.$dropRegion.removeClass(ITEMS_CONTAINER_ACCEPT_DROPPABLE_CLASS);
-        }
-    };
-
-    DiagramDesignerWidget.prototype.onBackgroundDroppableAccept = function (helper) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDroppableAccept not overridden in controller!!!");
-        return false;
-    };
-
-    DiagramDesignerWidget.prototype.onBackgroundDrop = function (helper, position, event) {
-        this.logger.warning("DiagramDesignerWidget.prototype.onBackgroundDrop not overridden in controller!!! position: '" + JSON.stringify(position) + "'");
-    };
-
-    /*********** END OF - ITEM CONTAINER DROPPABLE HANDLERS **********/
-
-    
     /********** GET THE CONNECTIONS THAT GO IN / OUT OF ITEMS ********/
 
     DiagramDesignerWidget.prototype._getAssociatedConnectionsForItems = function (itemIdList) {
@@ -1247,7 +1164,7 @@ define(['logManager',
     /************** API REGARDING TO MANAGERS ***********************/
 
     DiagramDesignerWidget.prototype.enableDragCopy = function (enabled) {
-        this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
+        //this.dragManager.enableMode( this.dragManager.DRAGMODE_COPY, enabled);
     };
 
     DiagramDesignerWidget.prototype.enableRotate = function (enabled) {
@@ -1312,7 +1229,7 @@ define(['logManager',
         if (this.mode !== mode) {
             this.highlightManager.deactivate();
             this.selectionManager.deactivate();
-            this.dragManager.deactivate();
+            //this.dragManager.deactivate();
             this.connectionDrawingManager.deactivate();
             this.searchManager.deactivate();
             this._setComponentsReadOnly(true);
@@ -1325,7 +1242,7 @@ define(['logManager',
                 case DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN:
                     this.mode = this.OPERATING_MODES.DESIGN;
                     this.selectionManager.activate();
-                    this.dragManager.activate();
+                    //this.dragManager.activate();
                     this.connectionDrawingManager.activate();
                     this.searchManager.activate();
                     this._setComponentsReadOnly(false);
@@ -1358,7 +1275,7 @@ define(['logManager',
             this.items[this.itemIds[i]].renderSetLayoutInfo();
         }
 
-        this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+        this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
 
         i = this.connectionIds.length;
         while (i--) {
@@ -1433,7 +1350,7 @@ define(['logManager',
         if (this._connectionJumpXing !== enabled) {
             this._connectionJumpXing = enabled;
 
-            this.connectionRouteManager.redrawConnections(this.connectionIds.slice(0).sort() || []) ;
+            this._redrawConnections(this.connectionIds.slice(0).sort() || []) ;
         }
     };
     /*********************** END OF --- CONNECTION CROSSING JUMP ENABLE / DISABLE *****************************/
@@ -1465,20 +1382,23 @@ define(['logManager',
     };
     /*********************** ENBD OF --- SET CONNECTION VISUAL PROPERTIES *****************************/
 
-    DiagramDesignerWidget.prototype._enableDroppable = function (enabled) {
-        if (this.skinParts.$dropRegion && this.skinParts.$dropRegion.hasClass('ui-droppable')) {
-            if (enabled === true) {
-                this.skinParts.$dropRegion.droppable("enable");
-                if (this._savedAcceptDroppable !== undefined) {
-                    this._doAcceptDroppable(this._savedAcceptDroppable);
-                    this._savedAcceptDroppable = undefined;
-                }
-            } else {
-                this.skinParts.$dropRegion.droppable("disable");
-                this._savedAcceptDroppable = this._acceptDroppable;
-                this._doAcceptDroppable(false);
-            }
+    DiagramDesignerWidget.prototype._triggerUIActivity = function () {
+        this.onUIActivity();
+    };
+
+    DiagramDesignerWidget.prototype.onUIActivity = function () {
+        this.logger.warning("DiagramDesignerWidget.prototype.onUIActivity IS NOT OVERRIDDEN...");
+    };
+
+    DiagramDesignerWidget.prototype._redrawConnections = function (connIDs) {
+        var res;
+        try {
+            res = this.connectionRouteManager.redrawConnections(connIDs) || []
+        } catch (e) {
+            res = [];
+            this.logger.error('connectionRouteManager.redrawConnections failed with error: ' + JSON.stringify(e));
         }
+        return res;
     };
 
     /************** END OF - API REGARDING TO MANAGERS ***********************/
@@ -1492,7 +1412,9 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetZoom.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetKeyboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetContextMenu.prototype);
-
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
 
     return DiagramDesignerWidget;
 });

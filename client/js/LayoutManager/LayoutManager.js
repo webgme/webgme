@@ -16,7 +16,6 @@ define(['logManager',
         this._logger.debug('LayoutManager created.');
         this._startProgressBar();
         this._panels = {};
-        this._controllers = {};
     };
 
     LayoutManager.prototype.loadLayout = function (layout, fnCallback) {
@@ -63,11 +62,8 @@ define(['logManager',
     LayoutManager.prototype.loadPanel = function (params, fnCallback) {
         var self = this,
             panel = params.panel,
-            control = params.control,
             container = params.container,
-            client = params.params.client,
             rPath = PANEL_PATH + panel,
-            rControllerPath = control ? PANEL_PATH + control : undefined,
             fn;
 
         this._logger.debug('LayoutManager loadPanel with name: "' + name + '", container: "' + container + '"');
@@ -81,24 +77,14 @@ define(['logManager',
         if (this._panels[panel]) {
             this._logger.error('A Panel with the same name already exist!!!');
         } else {
-            require([rPath,
-                    rControllerPath],
-                function (Panel, Controller) {
+            require([rPath],
+                function (Panel) {
                     if (Panel) {
                         self._logger.debug("Panel '" + panel + "' has been downloaded...");
                         self._panels[panel] = new Panel(self, params.params);
 
                         self._currentLayout.addToContainer(self._panels[panel], container);
                         self._panels[panel].afterAppend();
-
-                        if (Controller) {
-                            self._controllers[control] = new Controller({"client": client,
-                                "panel": self._panels[panel]});
-                        } else {
-                            if (rControllerPath) {
-                                self._logger.error("Controller '" + control + "' has been downloaded...BUT UNDEFINED!!!");
-                            }
-                        }
                     } else {
                         self._logger.error("Panel '" + panel + "' has been downloaded...BUT UNDEFINED!!!");
                     }

@@ -13,29 +13,31 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
         SPACING_CLOSED_TOUCH = 10,
         SPACING_OPEN_DESKTOP = 3,
         SPACING_CLOSED_DESKTOP = 6,
-        SPACING_OPEN = SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
-        SPACING_CLOSED = SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
+        SPACING_OPEN = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_OPEN_TOUCH : SPACING_OPEN_DESKTOP,
+        SPACING_CLOSED = WebGMEGlobal.SUPPORTS_TOUCH ? SPACING_CLOSED_TOUCH : SPACING_CLOSED_DESKTOP,
         CONFIG = JSON.parse(DefaultLayoutConfigJSON);
 
-    DefaultLayout = function () {
-        this._logger = logManager.create('DefaultLayout');
+    DefaultLayout = function (params) {
+        this._logger = (params && params.logger) || logManager.create('DefaultLayout');
+        this.panels = (params && params.panels) || CONFIG.panels;
+        this._template = (params && params.template) || defaultLayoutTemplate;
     };
 
     DefaultLayout.prototype.init = function () {
         var self = this;
 
         this._body = $('body');
-        this._body.html(defaultLayoutTemplate);
+        this._body.html(this._template);
 
-        this._leftPanel = this._body.find('div.ui-layout-west');
-        this._mainPanel = this._body.find('div.ui-layout-center');
-        this._rightPanel = this._body.find('div.ui-layout-east');
+        this._westPanel = this._body.find('div.ui-layout-west');
+        this._centerPanel = this._body.find('div.ui-layout-center');
+        this._eastPanel = this._body.find('div.ui-layout-east');
 
-        this._headerPanel = this._body.find('div.ui-layout-north > div.navbar-inner');
-        this._footerPanel = this._body.find('div.ui-layout-south > div.navbar-inner');
+        this._headerPanel = this._body.find('div.ui-layout-north');
+        this._footerPanel = this._body.find('div.ui-layout-south');
 
-        this._rightPanels = [];
-        this._leftPanels = [];
+        this._eastPanels = [];
+        this._westPanels = [];
         this._centerPanels = [];
 
         this._body.layout({
@@ -45,7 +47,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 closable :false,
                 resizable: false,
                 slidable: false,
-                spacing_open: 0
+                spacing_open: 0,
+                size: 41
             }
             ,  south: {
                 closable :false,
@@ -69,7 +72,10 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 resizable: false,
                 slidable: false,
                 spacing_open: SPACING_OPEN,
-                spacing_closed: SPACING_CLOSED
+                spacing_closed: SPACING_CLOSED,
+                onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
+                    self._onWestResize();
+                }
             },
             center : {
                 onresize : function (/*paneName, paneElement, paneState, paneOptions, layoutName*/) {
@@ -77,8 +83,6 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 }
             }
         });
-
-        this.panels = CONFIG.panels;
     };
 
     DefaultLayout.prototype.addToContainer = function (panel, container) {
@@ -86,15 +90,16 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
             this._headerPanel.append(panel.$pEl);
         } else if (container === 'footer') {
             this._footerPanel.append(panel.$pEl);
-        } else if (container === 'left') {
-            this._leftPanel.append(panel.$pEl);
-            this._leftPanels.push(panel);
-        } else if (container === 'right') {
-            this._rightPanel.append(panel.$pEl);
-            this._rightPanels.push(panel);
+        } else if (container === 'west') {
+            this._westPanel.append(panel.$pEl);
+            this._westPanels.push(panel);
+            this._onWestResize();
+        } else if (container === 'east') {
+            this._eastPanel.append(panel.$pEl);
+            this._eastPanels.push(panel);
             this._onEastResize();
-        } else if (container === 'main') {
-            this._mainPanel.append(panel.$pEl);
+        } else if (container === 'center') {
+            this._centerPanel.append(panel.$pEl);
             this._centerPanels.push(panel);
             this._onCenterResize();
         }
@@ -103,14 +108,14 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     DefaultLayout.prototype.remove = function (panel) {
           var idx;
 
-        //check it in the right pane
-        idx = this._rightPanels.indexOf(panel);
+        //check it in the east pane
+        idx = this._eastPanels.indexOf(panel);
 
-        //check it in the left pane if not found in right
+        //check it in the west pane if not found in east
         if (idx === -1) {
-            idx = this._leftPanels.indexOf(panel);
+            idx = this._westPanels.indexOf(panel);
 
-            //check it in the center pane if not found in left
+            //check it in the center pane if not found in west
             if (idx === -1) {
                 idx = this._centerPanels.indexOf(panel);
 
@@ -121,10 +126,10 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                     this._onCenterResize();
                 }
             } else {
-                this._leftPanels.splice(idx, 1);
+                this._westPanels.splice(idx, 1);
             }
         } else {
-            this._rightPanels.splice(idx, 1);
+            this._eastPanels.splice(idx, 1);
             this._onEastResize();
         }
     };
@@ -135,8 +140,8 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
 
     DefaultLayout.prototype._onCenterResize = function () {
         var len = this._centerPanels.length,
-            w = this._mainPanel.width(),
-            h = this._mainPanel.height(),
+            w = this._centerPanel.width(),
+            h = this._centerPanel.height(),
             pHeight = Math.floor(h / len),
             i;
 
@@ -146,15 +151,18 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
     };
 
     DefaultLayout.prototype._onEastResize = function () {
-        var len = this._rightPanels.length,
-            w = this._rightPanel.width(),
-            h = this._rightPanel.height(),
+        var len = this._eastPanels.length,
+            w = this._eastPanel.width(),
+            h = this._eastPanel.height(),
             pHeight = Math.floor(h / len),
             i;
 
         for (i = 0; i < len; i += 1) {
-            this._rightPanels[i].setSize(w, pHeight);
+            this._eastPanels[i].setSize(w, pHeight);
         }
+    };
+
+    DefaultLayout.prototype._onWestResize = function () {
     };
 
     return DefaultLayout;

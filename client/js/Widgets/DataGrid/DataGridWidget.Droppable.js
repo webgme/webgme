@@ -1,6 +1,6 @@
 "use strict";
 
-define([], function () {
+define(['js/DragDrop/DropTarget'], function (dropTarget) {
 
     var DataGridWidgetDroppable,
         MOUSE_EVENT_POSTFIX = 'DataGridWidgetDroppable',
@@ -19,35 +19,35 @@ define([], function () {
 
         this._oTDAcceptDrop = false;
 
-        table.droppable({
-            over: function( event, ui ) {
-                //self._onBackgroundDroppableOver(ui);
+        dropTarget.makeDroppable(table, {
+            over: function(event, dragInfo) {
+                //self._onBackgroundDroppableOver(event, dragInfo);
             },
-            out: function( event, ui ) {
-                //self._onBackgroundDroppableOut(ui);
+            out: function(event, dragInfo) {
+                //self._onBackgroundDroppableOut(event, dragInfo);
             },
-            drop: function (/*event, ui*/) {
-                self._onTableDrop();
+            drop: function (event, dragInfo) {
+                self._onTableDrop(event, dragInfo);
             },
-            activate: function( event, ui ) {
-                self._activateDroppable(ui);
+            activate: function(event, dragInfo) {
+                self._activateDroppable(event, dragInfo);
             },
-            deactivate: function( /*event, ui*/ ) {
-                self._deactivateDroppable();
+            deactivate: function(event, dragInfo) {
+                self._deactivateDroppable(event, dragInfo);
             }
         });
     };
 
     DataGridWidgetDroppable.prototype._detachDroppable = function (table) {
-        table.droppable( "destroy" );
+        dropTarget.destroyDroppable(table);
     };
 
-    DataGridWidgetDroppable.prototype._activateDroppable = function (ui) {
+    DataGridWidgetDroppable.prototype._activateDroppable = function (event, dragInfo) {
         var self = this;
 
         if (this._readOnly !== true && this._droppable === true) {
 
-            this._draggedData = ui.helper.data();
+            this._draggedData = dragInfo;
 
             this._droppableTable.on('mousemove.' + MOUSE_EVENT_POSTFIX, 'td', function (/*event*/) {
                 self._onCellMouseMove($(this));

@@ -2,13 +2,14 @@
 
 define(['logManager',
     'js/Constants',
+    'js/DragDrop/DragSource',
     'css!/css/Widgets/PartBrowser/PartBrowserWidget'], function (logManager,
-                                                                 CONSTANTS) {
+                                                                 CONSTANTS,
+                                                                 dragSource) {
 
     var PartBrowserWidget,
         PART_BROWSER_CLASS = "part-browser",
-        PART_CLASS = "part",
-        PARTBROWSERWIDGET = 'PartBrowserWidget';
+        PART_CLASS = "part";
 
     PartBrowserWidget = function (container, params) {
         this._logger = logManager.create("PartBrowserWidget");
@@ -80,55 +81,72 @@ define(['logManager',
 
     PartBrowserWidget.prototype._makeDraggable = function (params) {
         var el = params.el,
-            self = this,
-            partId = params.partId;
+            self = this;
 
-        //hook up draggable
-        el.draggable({
-            helper: function () {
-                var draggedEl = self.$_DOMBase.clone(),
-                    DecoratorClass = self._parts[partId].decoratorClass,
-                    existingDecoratorInstance =  self._parts[partId].decoratorInstance,
-                    decoratorInstance,
-                    partContainerLi = $("<li/>"),
-                    metaInfo = existingDecoratorInstance.getMetaInfo();
-
-                decoratorInstance = new DecoratorClass();
-                decoratorInstance.setControl(existingDecoratorInstance.getControl());
-                decoratorInstance.setMetaInfo(metaInfo);
-
-                //render the part inside 'draggedEl'
-                decoratorInstance.beforeAppend();
-                draggedEl.append(decoratorInstance.$el);
-
-                //add part's GUI
-                self._list.append(partContainerLi.append(draggedEl));
-
-                decoratorInstance.afterAppend();
-
-                draggedEl.remove();
-                partContainerLi.remove();
-
-                //set it up with GME related info
-                draggedEl.data(CONSTANTS.META_INFO, metaInfo);
-                draggedEl.data(CONSTANTS.DRAG_SOURCE, PARTBROWSERWIDGET);
-
-                return draggedEl;
+        dragSource.makeDraggable(el, {
+            'dragItems': function (el) {
+                return self.getDragItems(el);
             },
-            zIndex: 200000,
-            cursorAt: {
-                left: 0,
-                top: 0
+            'dragEffects': function (el) {
+                return self.getDragEffects(el);
             },
-            appendTo: $(CONSTANTS.ALL_OVER_THE_SCREEN_DRAGGABLE_PARENT_ID).first()
+            'dragParams': function (el) {
+                return self.getDragParams(el);
+            }
         });
     };
+
+    PartBrowserWidget.prototype.getDragItems = function (el) {
+        this._logger.warning("PartBrowserWidget.getDragItems is not overridden in the controller!!!");
+        return [];
+    };
+
+    PartBrowserWidget.prototype.getDragEffects = function (el) {
+        this._logger.warning("PartBrowserWidget.getDragEffects is not overridden in the controller!!!");
+        return [];
+    };
+
+    PartBrowserWidget.prototype.getDragParams = function (el) {
+        this._logger.debug("PartBrowserWidget.getDragParams is not overridden in the controller!!!");
+        return undefined;
+    };
+
+    PartBrowserWidget.prototype.DRAG_EFFECTS = dragSource.DRAG_EFFECTS;
+
+    /* OVERWRITE DragSource.prototype.dragHelper */
+    //TODO: check if really necessary and clone is really not an option
+    /*PartBrowserWidget.prototype.dragHelper = function (el, event) {
+        var draggedEl = self.$_DOMBase.clone(),
+            DecoratorClass = self._parts[partId].decoratorClass,
+            existingDecoratorInstance =  self._parts[partId].decoratorInstance,
+            decoratorInstance,
+            partContainerLi = $("<li/>"),
+            metaInfo = existingDecoratorInstance.getMetaInfo();
+
+        decoratorInstance = new DecoratorClass();
+        decoratorInstance.setControl(existingDecoratorInstance.getControl());
+        decoratorInstance.setMetaInfo(metaInfo);
+
+        //render the part inside 'draggedEl'
+        decoratorInstance.beforeAppend();
+        draggedEl.append(decoratorInstance.$el);
+
+        //add part's GUI
+        self._list.append(partContainerLi.append(draggedEl));
+
+        decoratorInstance.afterAppend();
+
+        draggedEl.remove();
+        partContainerLi.remove();
+
+        return draggedEl;
+    };*/
 
     PartBrowserWidget.prototype.removePart = function (partId) {
         var partContainer = this._list.find("div[id='" + partId + "']");
 
         if (partContainer.length > 0) {
-            partContainer.draggable( "destroy" );
+            dragSource.destroyDraggable(partContainer);
             partContainer = partContainer.parent(); //this is the <li> contains the part
             partContainer.remove();
             partContainer.empty();
@@ -192,10 +210,11 @@ define(['logManager',
     /* OVERRIDE FROM WIDGET-WITH-HEADER */
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     PartBrowserWidget.prototype.setReadOnly = function (isReadOnly) {
-        if (isReadOnly === true) {
-            this._list.find('.' + PART_CLASS).draggable('disable');
-        } else {
-            this._list.find('.' + PART_CLASS).draggable('enable');
+        var items = this._list.find('.' + PART_CLASS),
+            i = items.length;
+
+        while (i--) {
+            dragSource.enableDraggable($(items[i]), !isReadOnly);
         }
     };
 
@@ -210,12 +229,10 @@ define(['logManager',
 
 
     PartBrowserWidget.prototype.setEnabled = function (partId, enabled) {
-        var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined,
-            enabledStr = enabled ? 'enable' : 'disable';
+        var partContainerDiv = this._partDraggableEl[partId] ? this._partDraggableEl[partId] : undefined;
 
-        if (partContainerDiv &&
-            partContainerDiv.hasClass('ui-draggable')) {
-            partContainerDiv.draggable(enabledStr);
+        if (partContainerDiv) {
+            dragSource.enableDraggable(partContainerDiv, enabled);
         }
     };
 
