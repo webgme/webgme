@@ -36,7 +36,7 @@ namespace webgme {
         object_.Dispose();
       };
 
-      Handle<Value> operator[](const char* key){
+      Handle<Value> operator[](const char* key) const{
         HandleScope scope;
         return scope.Close(object_->Get(String::New(key)));
       }
@@ -104,7 +104,7 @@ namespace webgme {
       FunctionMap (Handle<Value> o):ObjectMap(o){
         //CERR << o->ToString() << " Hash: " << object_->GetIdentityHash() << std::endl;
       }
-      TasyncCallable operator[](const char* key){
+      TasyncCallable operator[](const char* key) const{
         //return TasyncCallable(object_->Get(String::New(key)));
         return TasyncCallable(object_, key);
       }
