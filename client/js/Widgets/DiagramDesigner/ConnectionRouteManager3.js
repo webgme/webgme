@@ -114,8 +114,12 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.profiler.startProfile('_updateConnectionCoordinates');
         //1 - set custom defined paths
         while (i--) {
-            if( this.diagramDesigner.items[ idList[i] ].segmentPoints === undefined ){
-                this._autorouterPaths[ idList[i] ];
+            if( this.diagramDesigner.items[ idList[i] ].segmentPoints.length !== 0 ){
+console.log(idList[i] + " has custom points!");
+                this.autorouter.setPathCustomPoints({
+                        "path": this._autorouterPaths[ idList[i] ], 
+                        "points": this.diagramDesigner.items[ idList[i] ].segmentPoints
+                        });;
             }
         }
         this.profiler.endProfile('_updateConnectionCoordinates');

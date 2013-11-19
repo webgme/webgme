@@ -2573,7 +2573,7 @@ define(['logManager'], function (logManager) {
                         customizedIndexes = {},
                         indexes = [];
 
-                    path.getCustomizedEdgeIndexes(indexes);
+                    //path.getCustomizedEdgeIndexes(indexes);
 
                     if(isPathAutoRouted){
                         var i = -1;
@@ -4617,7 +4617,6 @@ Old Logic:
 
                         if (ret2.length > 0)
                         {
-                            ret = [];
                             var pos = 0;
                             while( pos < ret2.length)
                             {
@@ -6431,6 +6430,9 @@ pt = [pt];
 
             this.setCustomPathData = function(pDat){
                 customPathData = pDat;
+                //Disconnect path 
+                // Technically, this should only happen with single point customizations - not with edge shifts.
+                this.deleteAll();
             };
             
             this.applyCustomizationsBeforeAutoConnectPoints = function(){
@@ -6441,8 +6443,7 @@ pt = [pt];
 
                 var ii = 0;
                 while( ii < customPathData.length ){
-                    //if( !isAutoRoutingOn ) //Do we need this?
-                    plist.push( ArPoint(customPathData[ii]) );
+                    plist.push( [ new ArPoint(customPathData[ii++]) ] );
                 }
 /*
                 while (ii < customPathData.length){
@@ -6606,8 +6607,8 @@ pt = [pt];
                 var ii = 0;
                 while(ii < customPathData.length)
                 {
-                    if (IsAutoRouted() && (customPathData[ii]).getType() == SimpleEdgeDisplacement ||
-                        !IsAutoRouted() && (customPathData[ii]).getType() != SimpleEdgeDisplacement)
+                    if (this.isAutoRouted() && (customPathData[ii]).getType() == SimpleEdgeDisplacement ||
+                        !this.isAutoRouted() && (customPathData[ii]).getType() != SimpleEdgeDisplacement)
                     {
                         var edgeIndex = (customPathData[ii]).getEdgeIndex();
                         indexes.push(edgeIndex);
@@ -7492,6 +7493,8 @@ pt = [pt];
             }
 
             args.path.setCustomPathData( points );
+//Disconnect Path TODO
+            //args.path.is
 
         };
 
