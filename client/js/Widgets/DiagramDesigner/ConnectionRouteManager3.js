@@ -29,6 +29,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         //Adding event listeners
         var self = this;
 
+        this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
+            self.logger.warning("Updating " + ID);
+            if( self.diagramDesigner.items[ID].rotation !== 0 )
+                self._resizeItem( ID );
+       };
+        this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
+
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Adding " + ID);
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
@@ -60,8 +67,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             if( self._autorouterBoxes[eventArgs.ID] ){
                 var x = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().x,
                     y = self.diagramDesigner.items[eventArgs.ID].getBoundingBox().y;
+
                 self.autorouter.move(self._autorouterBoxes[eventArgs.ID].box, { "x": x, "y": y });
-}
+            }
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 

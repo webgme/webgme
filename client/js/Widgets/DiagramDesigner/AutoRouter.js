@@ -5193,8 +5193,7 @@ tst = 3;
                 vlist.Delete(pedge);
                 hlist.Delete(nedge);
 
-                points.splice(pointpos, 1);
-                points.splice(npointpos, 1);
+                points.splice(pointpos, 2);
 
                 if( pppointpos < points.getLength())
                 {
