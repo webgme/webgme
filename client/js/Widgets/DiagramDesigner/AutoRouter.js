@@ -75,6 +75,7 @@ define(['logManager'], function (logManager) {
        this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
        this.ports = [];
        this.paths = [];
+       this.boxId2Path = {};
 
        ED_MAXCOORD = (graphDetails && graphDetails.coordMax !== undefined ? graphDetails.coordMax : false) || ED_MAXCOORD;
        ED_MINCOORD = (graphDetails && graphDetails.coordMin !== undefined ? graphDetails.coordMin : false) || ED_MINCOORD;
@@ -1193,12 +1194,18 @@ define(['logManager'], function (logManager) {
             };
 
            this.getNextEdgePtrs = function(pos, start, end){
+               var result = {};
                 if(DEBUG)
                     AssertValidPos(pos);
 
                 start.assign(ArPointList[pos++]);
                 if (pos < ArPointList.length)
                     end.assign(ArPointList[pos]);
+
+                result.pos = pos;
+                result.start = start;
+                result.end = end;
+                return result;
             };
 
            this.getPrevEdgePtrs = function(pos, start, end){
@@ -1486,10 +1493,10 @@ define(['logManager'], function (logManager) {
                 console.log("Invalid ArRect Constructor");
             }
 
-            this.left = Left;
-            this.ceil = Ceil;
-            this.floor = Floor;
-            this.right = Right;
+            this.left = Math.round( Left );
+            this.ceil = Math.round( Ceil );
+            this.floor = Math.round( Floor );
+            this.right = Math.round( Right );
 
             //functions
             this.getWidth = getWidth;
@@ -1906,7 +1913,7 @@ define(['logManager'], function (logManager) {
             function deleteAllPorts(){
                 for(i = 0; i < ports.length; i++){
                     ports[i].setOwner(null);
-                    delete ports[i];
+                    ports[i] = null;
                 }
 
                 ports = []; 
@@ -1978,7 +1985,7 @@ define(['logManager'], function (logManager) {
 
                 delPort = ports.splice(index, 1);
                 delPort.setOwner(null);
-                delete delPort;
+                delPort = null;
 
                 atomic = false;
 
@@ -2235,7 +2242,7 @@ define(['logManager'], function (logManager) {
             };
 
             this.isSameStartPointByPointer = function(point){
-                return startpoint.equals(point);
+                return startpoint === point;
             };
 
             this.isStartPointNull = function (){
@@ -2550,7 +2557,7 @@ define(['logManager'], function (logManager) {
             this.destroy = function(){
                 checkOrder();
                 checkSection();
-                delete this;
+                this = null;
             };
 
             this.setOwner = function(newOwner){
@@ -3132,7 +3139,7 @@ _logger.warning("Adding "
 
                 edge.setOwner(null);
 
-                delete edge;
+                edge = undefined;
             };
 
                 //-- Private
@@ -4116,14 +4123,14 @@ _logger.warning("Adding "
             }
 
             function deleteAllBoxes(){
-                for (var i = 0; i < boxes.length; i++)
+                var i = boxes.length;
+                while( i-- )
                 {
                     //deleteBoxAndPortEdges(boxes[i]);	// no need: there's a deleteAllEdges in deleteAll
                     boxes[i].destroy();
-                    delete boxes[i];
+                    boxes.splice(i, 1);
                 }
 
-                boxes = [];
             }
 
             function getBoxList(){
@@ -4208,7 +4215,7 @@ _logger.warning("Adding "
 
                     (paths[iter]).setOwner(null);
                     (paths[iter]).destroy();
-                    delete (paths[iter]);
+                    (paths[iter]) = null;
                     ++iter;
                 }
 
@@ -4605,8 +4612,7 @@ Old Logic:
 
                     if (!isAutoRouted)
                     {
-                        var ret2;
-                        path.applyCustomizationsBeforeAutoConnectPoints(ret2);
+                        var ret2 = path.applyCustomizationsBeforeAutoConnectPoints();
 
                         if (ret2.length > 0)
                         {
@@ -5010,39 +5016,39 @@ tst = 3;
                 }
 
                 var pointpos = pos,
-                    point = points[pos++], //replacing GetNext
+                    point = points.get(pos++)[0], 
                     npointpos = pos;
-                if( npointpos == points.length)
+                if( npointpos == points.getLength())
                     return false;
-                var npoint = points[pos++],
+                var npoint = points.get(pos++)[0],
                     nnpointpos = pos;
-                if( nnpointpos == points.length)
+                if( nnpointpos == points.getLength())
                     return false;
 
                 pos = pointpos;
                 pos--;
                 var ppointpos = pos; 
 
-                if( ppointpos == points.length)
+                if( ppointpos === points.getLength() || ppointpos < 0 )
                     return false;
 
-                var ppoint = points[pos--],
+                var ppoint = points.get(pos--)[0],
                     pppointpos = pos; 
 
-                if( pppointpos == points.length)
+                if( pppointpos === points.getLength() || pppointpos < 0 )
                     return false;
 
                 if( npoint.equals(point)) 
                     return false; // direction of zero-length edges can't be determined, so don't delete them
 
-                assert( pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, 
-                    "ARGraph.candeleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
+                assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), 
+                    "ARGraph.candeleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
 
                 var dir = getDir(npoint.minus(point));
                 assert( isRightAngle(dir), "ARGraph.candeleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
-                var newpoint;
+                var newpoint = new ArPoint();
 
                 if(ishorizontal){
                     newpoint.x = getPointCoord(npoint, ishorizontal);
@@ -5052,7 +5058,7 @@ tst = 3;
                     newpoint.x = getPointCoord(ppoint, !ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED" );
+                assert( getDir(newpoint.minus(ppoint)) === dir, "ARGraph.candeleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED" );
 
                 if( isLineClipBoxes(newpoint, npoint) ) return false;
                 if( isLineClipBoxes(newpoint, ppoint) ) return false;
@@ -5068,47 +5074,47 @@ tst = 3;
                     points.AssertValidPos(pos);
                 }
 
-                var pointpos = pos,
-                    point = points[pos++], //&*(pos++); //Was GetNext with &
+                var pointpos = pos, //Getting the next, and next-next, points
+                    point = points.get(pos++),
                     npointpos = pos,
-                    npoint = points[pos++], //&*(pos++); //Was GetNext with &
+                    npoint = points.get(pos++),
                     nnpointpos = pos,
-                    nnpoint = points[pos++], //&*(pos++); //Was GetNext with &
+                    nnpoint = points.get(pos++),
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
 
-                var ppointpos = pos,
-                    ppoint = points[pos--], //&*(pos--); 
+                var ppointpos = pos, //Getting the prev, prev-prev points
+                    ppoint = points.get(pos--),
                     pppointpos = pos,
-                    pppoint = points[pos--]; //&*(pos--); 
+                    pppoint = points.get(pos--);
 
-                assert( pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteTwoEdgesAt: pppointpos < points.length && ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
-                assert( pppoint != null && ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteTwoEdgesAt: pppoint != null && ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
+                assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
+                assert( pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
-                var dir = getDir(npoint.minus(point));
+                var dir = getDir(npoint[0].minus(point[0]));
                 assert( isRightAngle(dir), "ARGraph.deleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
-                var newpoint;
+                var newpoint = new ArPoint();
                 if(ishorizontal){
-                    newpoint.x = getPointCoord(npoint, ishorizontal);
-                    newpoint.y = getPointCoord(ppoint, !ishorizontal);
+                    newpoint.x = getPointCoord(npoint[0], ishorizontal);
+                    newpoint.y = getPointCoord(ppoint[0], !ishorizontal);
                 }else{
-                    newpoint.x = getPointCoord(ppoint, !ishorizontal);
-                    newpoint.y = getPointCoord(npoint, ishorizontal);
+                    newpoint.x = getPointCoord(ppoint[0], !ishorizontal);
+                    newpoint.y = getPointCoord(npoint[0], ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
+                assert( getDir(newpoint.minus(ppoint[0])) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
 
-                assert( !isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
-                assert( !isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, npoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, ppoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
 
                 var hlist = getEdgeList(ishorizontal),
-                    vlist = getEdgeList(!ishorizontal),
+                    vlist = getEdgeList(!ishorizontal);
 
-                    ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
+                var ppedge = hlist.getEdgeByPointer(pppoint, ppoint),
                     pedge = vlist.getEdgeByPointer(ppoint, point),
                     nedge = hlist.getEdgeByPointer(point, npoint),
                     nnedge = vlist.getEdgeByPointer(npoint, nnpoint);
@@ -5118,27 +5124,22 @@ tst = 3;
                 vlist.Delete(pedge);
                 hlist.Delete(nedge);
 
-                points.splice(pointpos, 1);
-                points.splice(npointpos, 1);
-                points.splice(ppointpos++, 0, newpoint); //insert point
-                points.splice(ppointpos--, 1); //delete the point that was in the location of new point
-
-                assert( ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point), "ARGraph.deleteTwoEdgesAt: ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point) FAILED");
+                points.splice(ppointpos, 3, [ newpoint ]);
                 ppedge.setEndPointNext(nnpoint);
+                ppedge.setEndPoint(newpoint); 
 
-                assert( nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point), "ARGraph.deleteTwoEdgesAt: nnedge.getStartPoint().equals(npoint) && nnedge.getStartPointPrev().equals(point) FAILED");
-                nnedge.setStartPoint(ppoint);
+                nnedge.setStartPoint(newpoint);
                 nnedge.setStartPointPrev(pppoint);
 
-                if( nnnpointpos < points.length)
+                if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //Used to have &*
                     assert( nnnedge != null, "ARGraph.deleteTwoEdgesAt: nnnedge != null FAILED");
-                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+                    assert( nnnedge.getStartPointPrev().equals(new ArPoint(npoint[0])) && nnnedge.getStartPoint().equals(new ArPoint(nnpoint[0])), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
-                if( nnpoint.equals(newpoint) )
+                if( nnpoint[0].equals(newpoint) )
                     deleteSamePointsAt(path, points, ppointpos);
 
                 if(DEBUG_DEEP){
@@ -5157,22 +5158,22 @@ tst = 3;
                 }
 
                 var pointpos = pos,
-                    point = points[pos++], //&*
+                    point = points.get(pos++), //&*
                     npointpos = pos,
-                    npoint = points[pos++], //&*
+                    npoint = points.get(pos++), //&*
                     nnpointpos = pos,
-                    nnpoint = points[pos++], //&*
+                    nnpoint = points.get(pos++), //&*
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
             
                 var ppointpos = pos;
-                    point = points[pos--], //&*
+                    point = points.get(pos--), //&*
                     pppointpos = pos;
-                    pppoint = pos == points.length ? null : points[pos--];//&*
+                    pppoint = pos == points.getLength() ? null : points.get(pos--);//&*
 
-                assert( ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length, "ARGraph.deleteSamePointsAt: ppointpos < points.length && pointpos < points.length && npointpos < points.length && nnpointpos < points.length FAILED");
+                assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteSamePointsAt: ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
                 assert( point.equals(npoint) && !point.equals(ppoint), "ARGraph.deleteSamePointsAt: point.equals(npoint) && !point.equals(ppoint) FAILED");
 
@@ -5192,10 +5193,9 @@ tst = 3;
                 vlist.Delete(pedge);
                 hlist.Delete(nedge);
 
-                points.splice(pointpos, 1);
-                points.splice(npointpos, 1);
+                points.splice(pointpos, 2);
 
-                if( pppointpos < points.length)
+                if( pppointpos < points.getLength())
                 {
                     var ppedge = vlist.getEdgeByPointer(pppoint, ppoint);
                     assert( ppedge != null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point), "ARGraph.deleteSamePointsAt: ppedge != null && ppedge.getEndPoint().equals(ppoint) && ppedge.getEndPointNext().equals(point) FAILED");
@@ -5206,7 +5206,7 @@ tst = 3;
                 nnedge.setStartPoint(ppoint);
                 nnedge.setStartPointPrev(pppoint);
 
-                if( nnnpointpos < points.length)
+                if( nnnpointpos < points.getLength())
                 {
                     var nnnedge = vlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //&*
                     assert( nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteSamePointsAt: nnnedge != null && nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED");
@@ -5230,7 +5230,7 @@ tst = 3;
                         var pointList = path.getPointList(),
                             pointpos = 0;
 
-                        while( pointpos < pointList.length)
+                        while( pointpos < pointList.getLength() )
                         {
                             if( candeleteTwoEdgesAt(path, pointList, pointpos) )
                             {
@@ -5573,6 +5573,8 @@ tst = 3;
             }
 
             //Public Functions
+            this.disconnect = disconnect;
+
             this.setBuffer = function(newBuffer){
                 BUFFER = newBuffer;
             };
@@ -5629,7 +5631,7 @@ tst = 3;
                 }
                 
                 box.destroy();
-                delete box;
+                box = null;
             };
 
             this.shiftBoxBy = function(box, offset){
@@ -5655,7 +5657,6 @@ tst = 3;
                 addBoxAndPortEdges(box);
 
                 disconnectPathsClipping(rect);
-                disconnectPathsFrom(box);
             };
 
             this.autoRoute = function(){
@@ -5890,7 +5891,7 @@ _logger.info("About to vertical.block_SwitchWrongs()");
                 }
 
                 path.destroy();
-                delete path;
+                path = null;
             };
 
             this.deleteAll = function(addBackSelfEdges){
@@ -6438,13 +6439,18 @@ pt = [pt];
                 customPathData = pDat;
             };
             
-            this.applyCustomizationsBeforeAutoConnectPoints = function(plist){
+            this.applyCustomizationsBeforeAutoConnectPoints = function(){
                 plist = [];
 
                 if (customPathData.length === 0)
                     return;
 
                 var ii = 0;
+                while( ii < customPathData.length ){
+                    //if( !isAutoRoutingOn ) //Do we need this?
+                    plist.push( ArPoint(customPathData[ii]) );
+                }
+/*
                 while (ii < customPathData.length){
                     if ((customPathData[ii]).getType() == SimpleEdgeDisplacement) {
                         // it is done in a next phase
@@ -6456,6 +6462,9 @@ pt = [pt];
                     }
                     ++ii;
                 }
+*/
+
+                return plist;
             };
 
             this.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
@@ -6500,11 +6509,11 @@ pt = [pt];
                                         var startRect = startport.getRect(),
                                             endRect = endport.getRect(),
                                             minLimit = (currEdgeIndex == 0 ?
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.top : startRect.left) :
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.top : endRect.left)),
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.ceil : startRect.left) :
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.ceil : endRect.left)),
                                             maxLimit = (currEdgeIndex == 0 ?
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.bottom : startRect.right) :
-                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.bottom : endRect.right)),
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? startRect.floor : startRect.right) :
+                                            ((customPathData[ii]).IsHorizontalOrVertical() ? endRect.floor : endRect.right)),
                                             valueToSet = (customPathData[ii]).IsHorizontalOrVertical() ? yToSet : xToSet;
                                         if (valueToSet < minLimit || valueToSet > maxLimit)
                                             doNotApply = true;
@@ -6536,7 +6545,11 @@ pt = [pt];
                             ++ii;
                     }
 
-                    points.getNextEdgePtrs(pos, startpoint, endpoint);
+                    var tmp = points.getNextEdgePtrs(pos, startpoint, endpoint);
+                    pos = tmp.pos; 
+                    startpoint = tmp.start;
+                    endpoint = tmp.end;
+
                     currEdgeIndex++;
                 }
             };
@@ -6706,7 +6719,7 @@ pt = [pt];
 
             function destroy(){
                 this.setOwner(null);
-                delete this;
+                this = null;
             }
 
             function getOwner(){
@@ -6943,11 +6956,16 @@ pt = [pt];
 
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
+            this.boxes = [];
+            this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
+            this.ports = [];
+            this.paths = [];
+            this.boxId2Path = {};
         };
 
         AutoRouter.prototype.destroy = function(){
             this.router.destroy();
-            delete this.router;
+            this.router = null;
         };
 
         AutoRouter.prototype.addBox = function(size){
@@ -6974,6 +6992,7 @@ pt = [pt];
 
             this.router.addBox(box);
             this.boxes.push(box);
+            this.boxId2Path[ box.getID() ] = { 'in': [], 'out': [] };
 
             return { "box": box, "ports": p }; 
         };
@@ -7070,21 +7089,42 @@ pt = [pt];
 
                                 }else if(connArea[j].length == 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
                                          && connArea[j][0][1] != connArea[j][1][1]) {//[ [x1, y1], [x2, y2] ]
-                                    arx1 = connArea[j][0][0] + 1;
-                                    arx2 = connArea[j][1][0] - 1;
-                                    ary1 = connArea[j][0][1] + 1;
-                                    ary2 = connArea[j][1][1] - 1;
+                                    arx1 = Math.min( connArea[j][0][0], connArea[j][1][0]) + 1;
+                                    arx2 = Math.max( connArea[j][0][0], connArea[j][1][0]) - 1;
+                                    ary1 = Math.min( connArea[j][0][1], connArea[j][1][1]) + 1;
+                                    ary2 = Math.max( connArea[j][0][1], connArea[j][1][1]) - 1;
 
-                                    attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
-                                        (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
-                                        (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
-                                        (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
+                                    arx1 = ( arx1 + arx2 )/2 - 2; //For now, we are simply creating a 
+                                    arx2 = arx1 + 4; //connection point in the center of the rectangle
+                                    ary1 = ( ary1 + ary2 )/2 - 2;
+                                    ary2 = ary1 + 4;
+
+                                    var dceil = Math.abs(ary1 - y1),
+                                        dfloor =  Math.abs(ary1 - y2),
+                                        dleft = Math.abs(arx1 - x1),
+                                        dright = Math.abs(arx1 - x2),
+                                        min = Math.min( dceil, dfloor, dleft, dright );
+
+                                    if( min === dceil )
+                                        attr = ARPORT_StartOnTop + ARPORT_EndOnTop;
+                                    if( min === dfloor )
+                                        attr = ARPORT_StartOnBottom + ARPORT_EndOnBottom;
+                                    if( min === dleft )
+                                        attr = ARPORT_StartOnLeft + ARPORT_EndOnLeft;
+                                    if( min === dright )
+                                        attr = ARPORT_StartOnRight + ARPORT_EndOnRight;
+
+
+                                    //attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
+                                     //   (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
+                                      //  (ary1 - 1 == y1 ? ARPORT_EndOnTop * isStart : 0) + 
+                                       // (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
 
                                 }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
-                                    var _x1 = connArea[j][0][0],
-                                        _x2 = connArea[j][1][0],
-                                        _y1 = connArea[j][0][1],
-                                        _y2 = connArea[j][1][1],
+                                    var _x1 = Math.min( connArea[j][0][0], connArea[j][1][0]),
+                                        _x2 = Math.max( connArea[j][0][0], connArea[j][1][0]),
+                                        _y1 = Math.min( connArea[j][0][1], connArea[j][1][1]),
+                                        _y2 = Math.max( connArea[j][0][1], connArea[j][1][1]),
                                         horizontal = (_y1 == _y2 ? true : false); 
 
                                     //If it is a single point of connection, we will expand it to a rect
@@ -7217,6 +7257,79 @@ pt = [pt];
             return p;
         };
 
+        AutoRouter.prototype._getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
+        var i,
+            j,
+            dx,
+            dy,
+            srcP,
+            dstP,
+            minLength = -1,
+            srcConnectionPoints = [],
+            dstConnectionPoints = [],
+            cLength;
+
+        //Make sure srcPorts, dstPorts are arrays of ports
+        if( srcPorts instanceof AutoRouterBox )
+            srcPorts = srcPorts.getPortList(); 
+        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
+            srcPorts = srcPorts.ports; 
+        else
+            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
+
+        if( dstPorts instanceof AutoRouterBox )
+            dstPorts = dstPorts.getPortList(); 
+        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
+            dstPorts = dstPorts.ports; 
+        else
+            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
+
+        for(i = 0; i < srcPorts.length; i++){
+            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
+        }
+        for(i = 0; i < dstPorts.length; i++){
+            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
+        }
+
+
+        if (segmentPoints && segmentPoints.length > 0) {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+
+                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+
+                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
+                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
+
+                    cLength = Math.sqrt(dx * dx + dy * dy);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        }
+
+        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
+    }
+
         AutoRouter.prototype.addPath = function(a){
             if( !a.src || !a.dst)
                 throw "AutoRouter:addPath missing source or destination";
@@ -7228,12 +7341,18 @@ pt = [pt];
                 endDir = a.endDirection || a.end,
                 path;
 
-            assert(src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
-            assert(dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
-                path = this.router.addPath(autoroute, 
-                        (src instanceof AutoRouterPort ? src : src.ports[0]),  //Assuming that src is either a port or a { box, ports }
-                        (dst instanceof AutoRouterPort ? dst : dst.ports[0]));  //Assuming that dst is either a port or a { box, ports }
+            assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
+            assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
+            if( src.ports || dst.ports ){
+                var srcPorts = src.ports || src,
+                    dstPorts = dst.ports || dst,
+                    portsInfo = this._getClosestPorts(srcPorts, dstPorts);
 
+                src = portsInfo.src;
+                dst = portsInfo.dst;
+            }
+
+                path = this.router.addPath(autoroute, src, dst);
 
             if(startDir || endDir){ 
                 var start = startDir != undefined ? (startDir.indexOf("top") != -1 ? ARPATH_StartOnTop : 0) +
@@ -7255,6 +7374,10 @@ pt = [pt];
             }
 
             this.paths.push(path);
+
+            //Register the path under box id
+            this.boxId2Path[src.getOwner().getID()].out.push(path);
+            this.boxId2Path[dst.getOwner().getID()].in.push(path);
             return path;
         };
 
@@ -7285,18 +7408,36 @@ pt = [pt];
                 y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
                 y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
                 connAreas = size.ConnectionAreas,
-                rect = new ArRect(x1, y1, x2, y2);
+                rect = new ArRect(x1, y1, x2, y2),
+                paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
+                i = paths.in.length;
 
             //TODO Remove the ports belonging to the box. Additional ports will cause breakage
             //Perform the same horizontal/vertical stretches/translations on the ports. Then add them back.
 
-            //First, I will need to handle the ports. I will need to decide if the ports should be resized or 
+            //First, I will need to collect the paths that will need to be adjusted
+
+            //Next, I will need to handle the ports. I will need to decide if the ports should be resized or 
             //simply throw an error if the box resize messes up the ports...
-            //assert( box.getPortCount() == 0 , "AutoRouter:setBox Cannot setBox of a box that still has ports. Remove ports before setting box.");
             box.deleteAllPorts();
             boxObject.ports = [];
             this.router.setBoxRect(box, rect);
             this.setConnectionAreas(boxObject, connAreas);
+
+            while( i-- ){
+                var pathSrc = paths.in[i].getStartPort().getOwner(),
+                    newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
+                paths.in[i].setEndPort( newEndPort );
+                this.router.disconnect( paths.in[i] );
+            }
+
+            i = paths.out.length;
+            while( i-- ){
+                var pathDst = paths.out[i].getEndPort().getOwner(),
+                    newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
+                paths.out[i].setStartPort( newStartPort );
+                this.router.disconnect( paths.out[i] );
+            }
         };
 
         AutoRouter.prototype.setConnectionAreas = function(boxObject, connArea){
@@ -7310,7 +7451,8 @@ pt = [pt];
             }
 
             ports = this.addPort(box, connArea);
-            
+            boxObject.ports = ports;
+
             return { "box": box, "ports": ports };
         };
 
@@ -7319,10 +7461,11 @@ pt = [pt];
             item = item.box || item;
 
             if(item instanceof AutoRouterBox){
+                this.boxId2Path[ item.getID() ] = undefined;
                 this.router.deleteBox(item);
 
             }else if(item instanceof AutoRouterPath){
-                this.router.deletePath(item);
+                this.router.deletePath(item); //This should remove it from boxId2Path dictionary also
 
             }else
                 throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath";
@@ -7330,8 +7473,8 @@ pt = [pt];
 
         AutoRouter.prototype.move = function( box, details ){
             //Make sure details is in dx, dy
-            dx = details.dx !== undefined ? details.dx : details.x - box.getRect().left;
-            dy = details.dy !== undefined ? details.dy : details.y - box.getRect().ceil;
+            dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left );
+            dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
 
             this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
         };
