@@ -4304,13 +4304,13 @@ Old Logic:
                 return boxRect;
             }
 
-            function goToNextBufferBox( details ){
-                var point = details.point,
-                    end = details.end,
-                    dir = details.dir,
-                    dir2 = details.dir2 === undefined || !isRightAngle(details.dir2) ? (end instanceof ArPoint ? 
-                            exGetMajorDir(end.minus(point)) : Dir_None) : details.dir2,
-                    stophere = details.end !== undefined ? details.end : 
+            function goToNextBufferBox( args ){
+                var point = args.point,
+                    end = args.end,
+                    dir = args.dir,
+                    dir2 = args.dir2 === undefined || !isRightAngle(args.dir2) ? (end instanceof ArPoint ? 
+                            exGetMajorDir(end.minus(point)) : Dir_None) : args.dir2,
+                    stophere = args.end !== undefined ? args.end : 
                         (dir === 1 || dir === 2 ? ED_MAXCOORD : ED_MINCOORD );
 
                 if( dir2 === dir )
@@ -4381,7 +4381,8 @@ Old Logic:
                 // get the point into the box as far as possible in dir1 such that it can always exit by traveling straight dir2.
                 // We will enter the box as far as possible in dir1 then back up until we can exit in dir2 (if needed). 
                 // We return the significant coordinate of the moved point.
-                var stophere;
+                var stophere; 
+                    //dir3 = exGetMajorDir(end.minus(start));
 
                 //Setting the stophere value
                 if( bufferObject.children.length > 1 && dir1 != dir2){ 
@@ -7477,7 +7478,20 @@ pt = [pt];
         };
 
         AutoRouter.prototype.setPathCustomPoints = function( args ){ //path, [ [x
-            var path = args.path;
+            var points = [],
+                i = 0;
+            if( !args.path instanceof AutoRouterPath )
+                throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
+
+            args.path.setAutoRouting( false );
+            
+            //Convert args.points to array of [ArPoint] 's
+            while ( i < args.points.length ){
+                points.push(new ArPoint( args.points[i][0], args.points[i][1] ));
+                ++i;
+            }
+
+            args.path.setCustomPathData( points );
 
         };
 
