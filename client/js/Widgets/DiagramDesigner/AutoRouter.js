@@ -75,6 +75,7 @@ define(['logManager'], function (logManager) {
        this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
        this.ports = [];
        this.paths = [];
+       this.boxId2Path = {};
 
        ED_MAXCOORD = (graphDetails && graphDetails.coordMax !== undefined ? graphDetails.coordMax : false) || ED_MAXCOORD;
        ED_MINCOORD = (graphDetails && graphDetails.coordMin !== undefined ? graphDetails.coordMin : false) || ED_MINCOORD;
@@ -1486,10 +1487,10 @@ define(['logManager'], function (logManager) {
                 console.log("Invalid ArRect Constructor");
             }
 
-            this.left = Left;
-            this.ceil = Ceil;
-            this.floor = Floor;
-            this.right = Right;
+            this.left = Math.round( Left );
+            this.ceil = Math.round( Ceil );
+            this.floor = Math.round( Floor );
+            this.right = Math.round( Right );
 
             //functions
             this.getWidth = getWidth;
@@ -1906,7 +1907,7 @@ define(['logManager'], function (logManager) {
             function deleteAllPorts(){
                 for(i = 0; i < ports.length; i++){
                     ports[i].setOwner(null);
-                    delete ports[i];
+                    ports[i] = null;
                 }
 
                 ports = []; 
@@ -1978,7 +1979,7 @@ define(['logManager'], function (logManager) {
 
                 delPort = ports.splice(index, 1);
                 delPort.setOwner(null);
-                delete delPort;
+                delPort = null;
 
                 atomic = false;
 
@@ -2550,7 +2551,7 @@ define(['logManager'], function (logManager) {
             this.destroy = function(){
                 checkOrder();
                 checkSection();
-                delete this;
+                this = null;
             };
 
             this.setOwner = function(newOwner){
@@ -3132,7 +3133,7 @@ _logger.warning("Adding "
 
                 edge.setOwner(null);
 
-                delete edge;
+                edge = undefined;
             };
 
                 //-- Private
@@ -4116,14 +4117,14 @@ _logger.warning("Adding "
             }
 
             function deleteAllBoxes(){
-                for (var i = 0; i < boxes.length; i++)
+                var i = boxes.length;
+                while( i-- )
                 {
                     //deleteBoxAndPortEdges(boxes[i]);	// no need: there's a deleteAllEdges in deleteAll
                     boxes[i].destroy();
-                    delete boxes[i];
+                    boxes.splice(i, 1);
                 }
 
-                boxes = [];
             }
 
             function getBoxList(){
@@ -4208,7 +4209,7 @@ _logger.warning("Adding "
 
                     (paths[iter]).setOwner(null);
                     (paths[iter]).destroy();
-                    delete (paths[iter]);
+                    (paths[iter]) = null;
                     ++iter;
                 }
 
@@ -5573,6 +5574,8 @@ tst = 3;
             }
 
             //Public Functions
+            this.disconnect = disconnect;
+
             this.setBuffer = function(newBuffer){
                 BUFFER = newBuffer;
             };
@@ -5629,7 +5632,7 @@ tst = 3;
                 }
                 
                 box.destroy();
-                delete box;
+                box = null;
             };
 
             this.shiftBoxBy = function(box, offset){
@@ -5655,7 +5658,6 @@ tst = 3;
                 addBoxAndPortEdges(box);
 
                 disconnectPathsClipping(rect);
-                disconnectPathsFrom(box);
             };
 
             this.autoRoute = function(){
@@ -5890,7 +5892,7 @@ _logger.info("About to vertical.block_SwitchWrongs()");
                 }
 
                 path.destroy();
-                delete path;
+                path = null;
             };
 
             this.deleteAll = function(addBackSelfEdges){
@@ -6706,7 +6708,7 @@ pt = [pt];
 
             function destroy(){
                 this.setOwner(null);
-                delete this;
+                this = null;
             }
 
             function getOwner(){
@@ -6943,11 +6945,16 @@ pt = [pt];
 
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
+            this.boxes = [];
+            this.bufferBoxes = []; //Used for covering general off-limits areas in original path finding
+            this.ports = [];
+            this.paths = [];
+            this.boxId2Path = {};
         };
 
         AutoRouter.prototype.destroy = function(){
             this.router.destroy();
-            delete this.router;
+            this.router = null;
         };
 
         AutoRouter.prototype.addBox = function(size){
@@ -6974,6 +6981,7 @@ pt = [pt];
 
             this.router.addBox(box);
             this.boxes.push(box);
+            this.boxId2Path[ box.getID() ] = { 'in': [], 'out': [] };
 
             return { "box": box, "ports": p }; 
         };
@@ -7070,10 +7078,10 @@ pt = [pt];
 
                                 }else if(connArea[j].length == 2 && connArea[j][0][0] != connArea[j][1][0] //connection RECTANGLE
                                          && connArea[j][0][1] != connArea[j][1][1]) {//[ [x1, y1], [x2, y2] ]
-                                    arx1 = connArea[j][0][0] + 1;
-                                    arx2 = connArea[j][1][0] - 1;
-                                    ary1 = connArea[j][0][1] + 1;
-                                    ary2 = connArea[j][1][1] - 1;
+                                    arx1 = Math.min( connArea[j][0][0], connArea[j][1][0]) + 1;
+                                    arx2 = Math.max( connArea[j][0][0], connArea[j][1][0]) - 1;
+                                    ary1 = Math.min( connArea[j][0][1], connArea[j][1][1]) + 1;
+                                    ary2 = Math.max( connArea[j][0][1], connArea[j][1][1]) - 1;
 
                                     attr = (arx1  - 1 == x1 ? ARPORT_EndOnLeft * isStart : 0) + 
                                         (arx2 + 1 == x2 ? ARPORT_EndOnRight * isStart : 0) + 
@@ -7081,10 +7089,10 @@ pt = [pt];
                                         (ary2 + 1 == y2 ? ARPORT_EndOnBottom * isStart : 0);
 
                                 }else{//using points to designate the connection area: [ [x1, y1], [x2, y2] ]
-                                    var _x1 = connArea[j][0][0],
-                                        _x2 = connArea[j][1][0],
-                                        _y1 = connArea[j][0][1],
-                                        _y2 = connArea[j][1][1],
+                                    var _x1 = Math.min( connArea[j][0][0], connArea[j][1][0]),
+                                        _x2 = Math.max( connArea[j][0][0], connArea[j][1][0]),
+                                        _y1 = Math.min( connArea[j][0][1], connArea[j][1][1]),
+                                        _y2 = Math.max( connArea[j][0][1], connArea[j][1][1]),
                                         horizontal = (_y1 == _y2 ? true : false); 
 
                                     //If it is a single point of connection, we will expand it to a rect
@@ -7217,6 +7225,79 @@ pt = [pt];
             return p;
         };
 
+        AutoRouter.prototype._getClosestPorts = function(srcPorts, dstPorts, segmentPoints){
+        var i,
+            j,
+            dx,
+            dy,
+            srcP,
+            dstP,
+            minLength = -1,
+            srcConnectionPoints = [],
+            dstConnectionPoints = [],
+            cLength;
+
+        //Make sure srcPorts, dstPorts are arrays of ports
+        if( srcPorts instanceof AutoRouterBox )
+            srcPorts = srcPorts.getPortList(); 
+        else if( srcPorts.ports && srcPorts.ports[0] instanceof AutoRouterPort )
+            srcPorts = srcPorts.ports; 
+        else
+            srcPorts = srcPorts instanceof Array ? srcPorts : [ srcPorts ];
+
+        if( dstPorts instanceof AutoRouterBox )
+            dstPorts = dstPorts.getPortList(); 
+        else if( dstPorts.ports && dstPorts.ports[0] instanceof AutoRouterPort )
+            dstPorts = dstPorts.ports; 
+        else
+            dstPorts = dstPorts instanceof Array ? dstPorts : [ dstPorts ];
+
+        for(i = 0; i < srcPorts.length; i++){
+            srcConnectionPoints.push(srcPorts[i].getRect().getCenter());
+        }
+        for(i = 0; i < dstPorts.length; i++){
+            dstConnectionPoints.push(dstPorts[i].getRect().getCenter());
+        }
+
+
+        if (segmentPoints && segmentPoints.length > 0) {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
+
+                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
+                        "dst": Math.abs(dstConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
+
+                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.dst * dx.dst + dy.dst * dy.dst);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        } else {
+            for (i = 0; i < srcConnectionPoints.length; i += 1) {
+                for (j = 0; j < dstConnectionPoints.length; j += 1) {
+                    dx = Math.abs(srcConnectionPoints[i].x - dstConnectionPoints[j].x);
+                    dy = Math.abs(srcConnectionPoints[i].y - dstConnectionPoints[j].y);
+
+                    cLength = Math.sqrt(dx * dx + dy * dy);
+
+                    if (minLength === -1 || minLength > cLength) {
+                        minLength = cLength;
+                        srcP = i;
+                        dstP = j;
+                    }
+                }
+            }
+        }
+
+        return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
+    }
+
         AutoRouter.prototype.addPath = function(a){
             if( !a.src || !a.dst)
                 throw "AutoRouter:addPath missing source or destination";
@@ -7228,12 +7309,18 @@ pt = [pt];
                 endDir = a.endDirection || a.end,
                 path;
 
-            assert(src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
-            assert(dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
-                path = this.router.addPath(autoroute, 
-                        (src instanceof AutoRouterPort ? src : src.ports[0]),  //Assuming that src is either a port or a { box, ports }
-                        (dst instanceof AutoRouterPort ? dst : dst.ports[0]));  //Assuming that dst is either a port or a { box, ports }
+            assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
+            assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
+            if( src.ports || dst.ports ){
+                var srcPorts = src.ports || src,
+                    dstPorts = dst.ports || dst,
+                    portsInfo = this._getClosestPorts(srcPorts, dstPorts);
 
+                src = portsInfo.src;
+                dst = portsInfo.dst;
+            }
+
+                path = this.router.addPath(autoroute, src, dst);
 
             if(startDir || endDir){ 
                 var start = startDir != undefined ? (startDir.indexOf("top") != -1 ? ARPATH_StartOnTop : 0) +
@@ -7255,6 +7342,10 @@ pt = [pt];
             }
 
             this.paths.push(path);
+
+            //Register the path under box id
+            this.boxId2Path[src.getOwner().getID()].out.push(path);
+            this.boxId2Path[dst.getOwner().getID()].in.push(path);
             return path;
         };
 
@@ -7285,18 +7376,36 @@ pt = [pt];
                 y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
                 y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
                 connAreas = size.ConnectionAreas,
-                rect = new ArRect(x1, y1, x2, y2);
+                rect = new ArRect(x1, y1, x2, y2),
+                paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
+                i = paths.in.length;
 
             //TODO Remove the ports belonging to the box. Additional ports will cause breakage
             //Perform the same horizontal/vertical stretches/translations on the ports. Then add them back.
 
-            //First, I will need to handle the ports. I will need to decide if the ports should be resized or 
+            //First, I will need to collect the paths that will need to be adjusted
+
+            //Next, I will need to handle the ports. I will need to decide if the ports should be resized or 
             //simply throw an error if the box resize messes up the ports...
-            //assert( box.getPortCount() == 0 , "AutoRouter:setBox Cannot setBox of a box that still has ports. Remove ports before setting box.");
             box.deleteAllPorts();
             boxObject.ports = [];
             this.router.setBoxRect(box, rect);
             this.setConnectionAreas(boxObject, connAreas);
+
+            while( i-- ){
+                var pathSrc = paths.in[i].getStartPort().getOwner(),
+                    newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
+                paths.in[i].setEndPort( newEndPort );
+                this.router.disconnect( paths.in[i] );
+            }
+
+            i = paths.out.length;
+            while( i-- ){
+                var pathDst = paths.out[i].getEndPort().getOwner(),
+                    newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
+                paths.out[i].setStartPort( newStartPort );
+                this.router.disconnect( paths.out[i] );
+            }
         };
 
         AutoRouter.prototype.setConnectionAreas = function(boxObject, connArea){
@@ -7310,7 +7419,8 @@ pt = [pt];
             }
 
             ports = this.addPort(box, connArea);
-            
+            boxObject.ports = ports;
+
             return { "box": box, "ports": ports };
         };
 
@@ -7319,10 +7429,11 @@ pt = [pt];
             item = item.box || item;
 
             if(item instanceof AutoRouterBox){
+                this.boxId2Path[ item.getID() ] = undefined;
                 this.router.deleteBox(item);
 
             }else if(item instanceof AutoRouterPath){
-                this.router.deletePath(item);
+                this.router.deletePath(item); //This should remove it from boxId2Path dictionary also
 
             }else
                 throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath";

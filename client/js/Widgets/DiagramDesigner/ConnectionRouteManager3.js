@@ -23,6 +23,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     };
 
     ConnectionRouteManager3.prototype.initialize = function () {
+        this._initialized = false;
         this._clearGraph();
 
         //Adding event listeners
@@ -30,14 +31,18 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Adding " + ID);
-            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 )
-                self.insertBox( ID );
-            else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
+
+                if( self._autorouterBoxes[ID] === undefined )
+                    self.insertBox( ID );
+
+            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 )
                 self.insertConnection( ID );
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
+            self.logger.warning("Resizing " + ID.ID);
             if( self._autorouterBoxes[ID.ID] )
                 self._resizeItem( ID.ID );
             else
@@ -97,9 +102,13 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.profiler.startProfile('_updateConnectionCoordinates');
         //1 - we have each connection end connectability info
         //find the closest areas for each connection
+/*
         while (i--) {
-            this._updateConnectionCoordinates(idList[i]);
+            if( this._autorouterPaths[ idList[i] ] === undefined ){
+                this.insertConnection(idList[i]);
+            }
         }
+*/
         this.profiler.endProfile('_updateConnectionCoordinates');
 
 
@@ -138,8 +147,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
         this.endpointConnectionAreaInfo = {};
-
-        this._initialized = false;
     };
 
     ConnectionRouteManager3.prototype._initializeGraph = function () {
@@ -161,6 +168,11 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this.insertBox(itemIdList[i]);
         }
 
+        i = connIdList.length;
+        while( i-- ){
+            this.insertConnection(connIdList[i]);
+        }
+
         //Next, I will update the ports as necessary
         this._updateConnectionPorts(connIdList);
        
@@ -173,11 +185,14 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             srcObjId = canvas.connectionEndIDs[connId].srcObjId,
             srcSubCompId = canvas.connectionEndIDs[connId].srcSubCompId,
             dstObjId = canvas.connectionEndIDs[connId].dstObjId,
-            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId;
+            dstSubCompId = canvas.connectionEndIDs[connId].dstSubCompId,
+            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
+            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId;
 
         this._updatePort(srcObjId, srcSubCompId);//Adding ports for connection
         this._updatePort(dstObjId, dstSubCompId);
-        this._updateConnectionCoordinates( connId );
+        this._autorouterPaths[connId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId],
+                                                                           "dst": this._autorouterBoxes[tId] });
      };
 
     ConnectionRouteManager3.prototype.insertBox = function (objId) {
@@ -314,109 +329,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
             this._autorouterPorts[objId].push(subCompId);
         }
      };
-
-    ConnectionRouteManager3.prototype._updateConnectionCoordinates = function (connectionId) {
-        var canvas = this.diagramDesigner,
-            srcObjId = canvas.connectionEndIDs[connectionId].srcObjId,
-            srcSubCompId = canvas.connectionEndIDs[connectionId].srcSubCompId,
-            dstObjId = canvas.connectionEndIDs[connectionId].dstObjId,
-            dstSubCompId = canvas.connectionEndIDs[connectionId].dstSubCompId,
-            sId = srcSubCompId ? srcObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + srcSubCompId : srcObjId,
-            tId = dstSubCompId ? dstObjId + DESIGNERITEM_SUBCOMPONENT_SEPARATOR + dstSubCompId : dstObjId,
-            segmentPoints = canvas.items[connectionId].segmentPoints,
-            sourceConnectionPoints = [], //this._autorouterBoxes[sId].ports, //this.endpointConnectionAreaInfo[sId] || [],
-            targetConnectionPoints = [], //this._autorouterBoxes[tId].ports, //this.endpointConnectionAreaInfo[tId] || [],
-            sourceCoordinates = null,
-            targetCoordinates = null,
-            closestConnPoints,
-            connectionPathPoints = [],
-            len,
-            i,
-            sIndex,
-            tIndex;
-
-            for(i = 0; i < this._autorouterBoxes[sId].ports.length; i++){
-                sourceConnectionPoints.push(this._autorouterBoxes[sId].ports[i].getRect().getCenter());
-            }
-            for(i = 0; i < this._autorouterBoxes[tId].ports.length; i++){
-                targetConnectionPoints.push(this._autorouterBoxes[tId].ports[i].getRect().getCenter());
-            }
-
-
-
-
-        if (sourceConnectionPoints.length > 0 && targetConnectionPoints.length > 0) {
-
-            if (srcObjId === dstObjId && srcSubCompId === dstSubCompId) {
-                //connection's source and destination is the same object/port
-                sIndex = 0;
-                tIndex = targetConnectionPoints.length > 1 ? 1 : 0;
-
-            } else {
-                closestConnPoints = this._getClosestPoints(sourceConnectionPoints, targetConnectionPoints, segmentPoints);
-                sIndex = closestConnPoints[0];
-                tIndex = closestConnPoints[1];
-            }
-
-        }
-
-
-        //Create the path
-        if(this._autorouterPaths[connectionId] === undefined){
-            this._autorouterPaths[connectionId] = this.autorouter.addPath({ "src": this._autorouterBoxes[sId].ports[sIndex],
-                                                                           "dst": this._autorouterBoxes[tId].ports[tIndex] });
-        }
-
-    };
-
-    //figure out the shortest side to choose between the two
-    ConnectionRouteManager3.prototype._getClosestPoints = function (srcConnectionPoints, tgtConnectionPoints, segmentPoints) {
-        var i,
-            j,
-            dx,
-            dy,
-            srcP,
-            tgtP,
-            minLength = -1,
-            cLength;
-
-        if (segmentPoints && segmentPoints.length > 0) {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    dx = { "src": Math.abs(srcConnectionPoints[i].x - segmentPoints[0][1]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].x - segmentPoints[segmentPoints.length - 1][0])};
-
-                    dy =  { "src": Math.abs(srcConnectionPoints[i].y - segmentPoints[0][1]),
-                        "tgt": Math.abs(tgtConnectionPoints[j].y - segmentPoints[segmentPoints.length - 1][1])};
-
-                    cLength = Math.sqrt(dx.src * dx.src + dy.src * dy.src) + Math.sqrt(dx.tgt * dx.tgt + dy.tgt * dy.tgt);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        tgtP = j;
-                    }
-                }
-            }
-        } else {
-            for (i = 0; i < srcConnectionPoints.length; i += 1) {
-                for (j = 0; j < tgtConnectionPoints.length; j += 1) {
-                    dx = Math.abs(srcConnectionPoints[i].x - tgtConnectionPoints[j].x);
-                    dy = Math.abs(srcConnectionPoints[i].y - tgtConnectionPoints[j].y);
-
-                    cLength = Math.sqrt(dx * dx + dy * dy);
-
-                    if (minLength === -1 || minLength > cLength) {
-                        minLength = cLength;
-                        srcP = i;
-                        tgtP = j;
-                    }
-                }
-            }
-        }
-
-        return [srcP, tgtP];
-    };
 
     return ConnectionRouteManager3;
 });
