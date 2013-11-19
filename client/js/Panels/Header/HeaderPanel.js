@@ -8,9 +8,13 @@
 
 define(['js/PanelBase/PanelBase',
         'js/Widgets/ProjectTitle/ProjectTitleWidget',
-        'js/Widgets/UserProfile/UserProfileWidget'], function (PanelBase,
+        'js/Widgets/UserProfile/UserProfileWidget',
+        'js/Toolbar/Toolbar',
+        './DefaultToolbar'], function (PanelBase,
                                                                  ProjectTitleWidget,
-                                                                 UserProfileWidget) {
+                                                                 UserProfileWidget,
+                                                                 toolbar,
+                                                                 DefaultToolbar) {
 
     var HeaderPanel,
         __parent__ = PanelBase;
@@ -54,9 +58,11 @@ define(['js/PanelBase/PanelBase',
         navBarInner.append(userProfileEl);
 
         //toolbar
-        var toolBar = $('<div/>', {'class': "toolbar-container"});
-        this.$el.append(toolBar);
-
+        var toolBarEl = $('<div/>', {'class': "toolbar-container"});
+        this.$el.append(toolBarEl);
+        toolbar.createToolbar(toolBarEl);
+        WebGMEGlobal.Toolbar = toolbar;
+        new DefaultToolbar(this._client);
     };
 
     return HeaderPanel;
