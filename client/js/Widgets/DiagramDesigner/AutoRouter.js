@@ -2241,8 +2241,8 @@ define(['logManager'], function (logManager) {
                         : emptyPoint;//returning copy of startpoint
             };
 
-            this.isSameStartPointByPointer = function(point){
-                return startpoint === point;
+            this.isSameStartPoint = function(point){
+                return startpoint[0].equals( point[0] );
             };
 
             this.isStartPointNull = function (){
@@ -2808,7 +2808,7 @@ define(['logManager'], function (logManager) {
                 var edge = order_first;
                 while( edge !== null ){
 
-                    if( edge.isSameStartPointByPointer(startpoint))
+                    if( edge.isSameStartPoint(startpoint))
                         break;
 
                     edge = edge.getOrderNext();
@@ -2821,7 +2821,7 @@ define(['logManager'], function (logManager) {
             this.getEdgeByPointer = function(startpoint, endpoint){
                 var edge = order_first;
                 while( edge !== null ){
-                    if(edge.isSameStartPointByPointer(startpoint))
+                    if(edge.isSameStartPoint(startpoint))
                         break;
 
                     edge = edge.getOrderNext();
@@ -5015,28 +5015,21 @@ tst = 3;
                     points.AssertValidPos(pos);
                 }
 
+                if( pos + 2 >= points.getLength() || pos < 1 )
+                    return false;
+
                 var pointpos = pos,
                     point = points.get(pos++)[0], 
                     npointpos = pos;
-                if( npointpos == points.getLength())
-                    return false;
                 var npoint = points.get(pos++)[0],
                     nnpointpos = pos;
-                if( nnpointpos == points.getLength())
-                    return false;
 
                 pos = pointpos;
                 pos--;
                 var ppointpos = pos; 
 
-                if( ppointpos === points.getLength() || ppointpos < 0 )
-                    return false;
-
                 var ppoint = points.get(pos--)[0],
                     pppointpos = pos; 
-
-                if( pppointpos === points.getLength() || pppointpos < 0 )
-                    return false;
 
                 if( npoint.equals(point)) 
                     return false; // direction of zero-length edges can't be determined, so don't delete them
@@ -7481,6 +7474,11 @@ pt = [pt];
 
         AutoRouter.prototype.setMinimumGap = function( min ){
             this.router.setBuffer( Math.floor(min/2) );
+        };
+
+        AutoRouter.prototype.setPathCustomPoints = function( args ){ //path, [ [x
+            var path = args.path;
+
         };
 
 
