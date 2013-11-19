@@ -12,7 +12,7 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'meta/meta'
+    'coreclient/meta'
 ],
     function (
         ASSERT,

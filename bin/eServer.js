@@ -26,7 +26,7 @@ requirejs.config({
         "cli": 'cli',
         "bin": 'bin',
         "auth": 'auth',
-        "meta": 'meta'
+        "coreclient": 'coreclient'
 
     }
 });
@@ -197,7 +197,7 @@ requirejs(['logManager',
 
     //static contents
     //javascripts - core and transportation related files
-    app.get(/^\/(common|util|storage|core|config|auth|bin|meta)\/.*\.js/,ensureAuthenticated,function(req,res){
+    app.get(/^\/(common|util|storage|core|config|auth|bin|coreclient)\/.*\.js/,ensureAuthenticated,function(req,res){
         res.sendfile(path.join(staticdirpath,req.path),function(err){
             res.send(404);
         });

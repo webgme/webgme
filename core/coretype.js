@@ -99,8 +99,9 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			if (typeof node.base === "undefined") {
                 if(isFalseNode(node)){
+                    var root = core.getRoot(node);
                     core.deleteNode(node);
-                    return null;
+                    return TASYNC.call(function(){return null;},core.persist(root));
                 } else {
                     return TASYNC.call(__loadBase2, node, oldcore.loadPointer(node, "base"));
                 }
