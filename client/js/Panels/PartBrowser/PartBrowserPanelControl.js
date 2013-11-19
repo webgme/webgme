@@ -171,7 +171,6 @@ define(['logManager',
         var node = this._client.getNode(gmeID),
             currentMembers = [],
             oldMembers = this._currentNodeParts.slice(0),
-            containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [],
             len,
             diff,
             idx,
@@ -182,10 +181,7 @@ define(['logManager',
 
         if (node) {
             //get possible targets from MetaDescriptor
-            len = containmentMetaDescriptor.length;
-            while(len--) {
-                currentMembers.push(containmentMetaDescriptor[len].target);
-            }
+            currentMembers = this._client.getValidChildrenTypes(gmeID);
 
             //check the deleted ones
             diff = _.difference(oldMembers, currentMembers);
