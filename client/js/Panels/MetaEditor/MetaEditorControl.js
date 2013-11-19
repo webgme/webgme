@@ -814,7 +814,7 @@ define(['logManager',
     /***********************************************************************************/
     MetaEditorControl.prototype._processNodeMetaContainment = function (gmeID) {
         var node = this._client.getNode(gmeID),
-            containmentMetaDescriptor = node.getChildrenMetaDescriptor() || [],
+            containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
             len,
             oldMetaContainment,
             newMetaContainment = {'targets': []},
@@ -827,8 +827,8 @@ define(['logManager',
 
         len = containmentMetaDescriptor.length;
         while(len--) {
-            newMetaContainment.targets.push(containmentMetaDescriptor[len].target);
-            newMetaContainment[containmentMetaDescriptor[len].target] = {'multiplicity': containmentMetaDescriptor[len].multiplicity};
+            newMetaContainment.targets.push(containmentMetaDescriptor[len].id);
+            newMetaContainment[containmentMetaDescriptor[len].id] = {'multiplicity': ""+(containmentMetaDescriptor[len].min || 0)+".."+(containmentMetaDescriptor[len].max || '*')};
         }
 
         //compute updated connections
@@ -899,20 +899,20 @@ define(['logManager',
 
         len = pointerNames.length;
         while (len--) {
-            pointerMetaDescriptor = node.getPointerDescriptor(pointerNames[len]);
+            pointerMetaDescriptor = this._client.getValidTargetItems(gmeID,pointerNames[len]);
 
             if (pointerMetaDescriptor) {
-                lenTargets = pointerMetaDescriptor.targets.length;
+                lenTargets = pointerMetaDescriptor.length;
                 while (lenTargets--) {
-                    combinedName = pointerNames[len] + "_" + pointerMetaDescriptor.targets[lenTargets];
+                    combinedName = pointerNames[len] + "_" + pointerMetaDescriptor[lenTargets].id;
 
                     newMetaPointers.names.push(pointerNames[len]);
 
                     newMetaPointers.combinedNames.push(combinedName);
 
-                    newMetaPointers[combinedName] = {'name': pointerMetaDescriptor.name,
-                        'target': pointerMetaDescriptor.targets[lenTargets],
-                        'multiplicity': pointerMetaDescriptor.multiplicity};
+                    newMetaPointers[combinedName] = {'name': pointerNames[len],
+                        'target': pointerMetaDescriptor[lenTargets].id,
+                        'multiplicity': ""+(pointerMetaDescriptor[lenTargets].min || 0)+".."+(pointerMetaDescriptor[lenTargets].max || '*')};
                 }
             }
         }

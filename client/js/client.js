@@ -12,7 +12,7 @@ define([
     'storage/commit',
     'logManager',
     'util/url',
-    'coreclient/meta'
+    'coreclient/metaforgui'
 ],
     function (
         ASSERT,
@@ -456,7 +456,7 @@ define([
                         _nodes = {};
                         _metaNodes = {};
                         _core = getNewCore(_project);
-                        META.initialize(_core,_metaNodes);
+                        META.initialize(_core,_metaNodes,saveRoot);
                         if(_commitCache){
                             _commitCache.clearCache();
                         } else {
@@ -2036,9 +2036,24 @@ define([
                 delChildrenMetaDescriptor: delChildrenMetaDescriptor,
                 setBase: setBase,
                 delBase: delBase,
+
                 //we simply propagate the functions of META
-                getMeta: META.getMeta,
-                setMeta: function(path,meta){META.setMeta(path,meta);saveRoot("setMeta("+path+")");},
+                getMeta : META.getMeta,
+                setMeta : META.setMeta,
+                getChildrenMeta: META.getChildrenMeta,
+                getChildrenMetaAttribute: META.getChildrenMetaAttribute,
+                setChildrenMetaAttribute: META.setChildrenMetaAttribute,
+                getValidChildrenItems: META.getValidChildrenItems,
+                updateValidChildrenItem: META.updateValidChildrenItem,
+                removeValidChildrenItem: META.removeValidChildrenItem,
+                getAttributeSchema: META.getAttributeSchema,
+                setAttributeSchema: META.setAttributeSchema,
+                getPointerMeta: META.getPointerMeta,
+                getValidTargetItems: META.getValidTargetItems,
+                updateValidTargetItem: META.updateValidTargetItem,
+                removeValidTargetItem: META.removeValidTargetItem,
+                getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
+                getOwnValidTargetTypes: META.getOwnValidTargetTypes,
                 isValidChild: META.isValidChild,
                 isValidTarget: META.isValidTarget,
                 isValidAttribute: META.isValidAttribute,
@@ -2046,8 +2061,7 @@ define([
                 getValidTargetTypes: META.getValidTargetTypes,
                 hasOwnMetaRules : META.hasOwnMetaRules,
                 filterValidTarget : META.filterValidTarget,
-                getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
-                getOwnValidTargetTypes: META.getOwnValidTargetTypes,
+                //end of META functions
 
                 //constraint
                 setConstraint: setConstraint,

@@ -9,11 +9,13 @@ define([], function () {
     function metaStorage () {
         var _core = null,
             _nodes = null,
+            _save = function(){},
             _initialized = false;
 
-        function initialize(core,nodes){
+        function initialize(core,nodes,save){
             _core = core;
             _nodes = nodes;
+            _save = save;
             _initialized = true;
         }
 
@@ -65,12 +67,12 @@ define([], function () {
                 var childrenNode = _core.getChild(metaNode,"children");
                 //children
                 if(_core.isEmpty(childrenNode)){
-                    meta.children = {"types":null};
+                    meta.children = {"items":null};
                 } else {
                     meta.children = {};
-                    meta.children.types = _core.getMemberPaths(childrenNode,"types");
-                    for(var i=0;i<meta.children.types.length;i++){
-                        meta.children.types[i] = pathToRefObject(meta.children.types[i]);
+                    meta.children.items = _core.getMemberPaths(childrenNode,"items");
+                    for(var i=0;i<meta.children.items.length;i++){
+                        meta.children.items[i] = pathToRefObject(meta.children.items[i]);
                     }
                     meta.children.min = _core.getAttribute(childrenNode,"min");
                     meta.children.max = _core.getAttribute(childrenNode,"max");
@@ -88,12 +90,12 @@ define([], function () {
                 for(var i=0;i<pointerNames.length;i++){
                     var pointerNode = _core.getChild(metaNode,"_p_"+pointerNames[i]);
                     var pointer = {};
-                    pointer.types = _core.getMemberPaths(pointerNode,"types");
+                    pointer.items = _core.getMemberPaths(pointerNode,"items");
                     pointer.min = _core.getAttribute(pointerNode,"min");
                     pointer.max = _core.getAttribute(pointerNode,"max");
 
-                    for(var j=0;j<pointer.types.length;j++){
-                        pointer.types[j] = pathToRefObject(pointer.types[j]);
+                    for(var j=0;j<pointer.items.length;j++){
+                        pointer.items[j] = pathToRefObject(pointer.items[j]);
                     }
 
                     meta.pointers[pointerNames[i]] = pointer;
@@ -114,7 +116,7 @@ define([], function () {
                 metaNode = _core.getChild(node,"_meta");
                 if(meta.children){
                     var childrenNode = _core.getChild(metaNode,"children");
-                    if(meta.children.types && meta.children.types.length){
+                    if(meta.children.items && meta.children.items.length){
                         if(meta.children.min){
                             _core.setAttribute(childrenNode,"min",meta.children.min);
                         }
@@ -122,10 +124,10 @@ define([], function () {
                             _core.setAttribute(childrenNode,"max",meta.children.max);
                         }
 
-                        for(var i=0;i<meta.children.types.length;i++){
-                            var targetPath = refObjectToPath(meta.children.types[i]);
+                        for(var i=0;i<meta.children.items.length;i++){
+                            var targetPath = refObjectToPath(meta.children.items[i]);
                             if(targetPath && _nodes[targetPath]){
-                                _core.addMember(childrenNode,"types",_nodes[targetPath]);
+                                _core.addMember(childrenNode,"items",_nodes[targetPath]);
                             }
                         }
 
@@ -145,7 +147,7 @@ define([], function () {
                     for(var i in meta.pointers){
                         pointerNames.push(i);
                         var pointerNode = _core.getChild(metaNode,"_p_"+i);
-                        if(meta.pointers[i].types && meta.pointers[i].types.length){
+                        if(meta.pointers[i].items && meta.pointers[i].items.length){
                             if(meta.pointers[i].min){
                                 _core.setAttribute(pointerNode,"min",meta.pointers[i].min);
                             }
@@ -153,10 +155,10 @@ define([], function () {
                                 _core.setAttribute(pointerNode,"max",meta.pointers[i].max);
                             }
 
-                            for(var j=0;j<meta.pointers[i].types.length;j++){
-                                var targetPath = refObjectToPath(meta.pointers[i].types[j]);
+                            for(var j=0;j<meta.pointers[i].items.length;j++){
+                                var targetPath = refObjectToPath(meta.pointers[i].items[j]);
                                 if(targetPath && _nodes[targetPath]){
-                                    _core.addMember(pointerNode,"types",_nodes[targetPath]);
+                                    _core.addMember(pointerNode,"items",_nodes[targetPath]);
                                 }
                             }
 
@@ -165,6 +167,8 @@ define([], function () {
 
                     _core.setRegistry(metaNode,"pointerNames",pointerNames);
                 }
+
+                _save("setMeta("+path+")");
             }
         }
 
@@ -205,8 +209,8 @@ define([], function () {
             if(node && child){
                 var metaNode = _core.getChild(node,"_meta");
                 var childrenNode = _core.getChild(metaNode,"children");
-                var types = _core.getMemberPaths(childrenNode,"types");
-                return isValidTypeOfArray(childPath,types);
+                var items = _core.getMemberPaths(childrenNode,"items");
+                return isValidTypeOfArray(childPath,items);
             }
             return false;
         }
@@ -217,8 +221,8 @@ define([], function () {
             if(node && target){
                 var meta = _core.getChild(node,"_meta");
                 var pointer = _core.getChild(meta,"_p_"+name);
-                var types = _core.getMemberPaths(pointer,"types");
-                return isValidTypeOfArray(targetPath,types);
+                var items = _core.getMemberPaths(pointer,"items");
+                return isValidTypeOfArray(targetPath,items);
             }
             return false;
         }
@@ -231,7 +235,7 @@ define([], function () {
         function getValidChildrenTypes(path){
             var node = _nodes[path];
             if(node){
-                return _core.getMemberPaths(_core.getChild(_core.getChild(node,"_meta"),"children"),"types");
+                return _core.getMemberPaths(_core.getChild(_core.getChild(node,"_meta"),"children"),"items");
             }
             return [];
         }
@@ -239,7 +243,7 @@ define([], function () {
         function getValidTargetTypes(path,name){
             var node = _nodes[path];
             if(node){
-                return _core.getMemberPaths(_core.getChild(_core.getChild(node,"_meta"),"_p_"+name),"types");
+                return _core.getMemberPaths(_core.getChild(_core.getChild(node,"_meta"),"_p_"+name),"items");
             }
             return [];
         }
@@ -266,36 +270,38 @@ define([], function () {
 
         function getOwnValidChildrenTypes(path){
             var node = _nodes[path];
-            var types = [];
+            var items = [];
             if(node){
                 var own = getValidChildrenTypes(path);
                 var base = getValidChildrenTypes(_core.getPath(_core.getBase(node)));
                 for(var i= 0;i<own.length;i++){
                     if(base.indexOf(own[i]) === -1){
-                        types.push(own[i]);
+                        items.push(own[i]);
                     }
                 }
             }
-            return types;
+            return items;
         }
 
         function getOwnValidTargetTypes(path,name){
             var node = _nodes[path];
-            var types = [];
+            var items = [];
             if(node){
                 var own = getValidTargetTypes(path,name);
                 var base = getValidTargetTypes(_core.getPath(_core.getBase(node)),name);
                 for(var i= 0;i<own.length;i++){
                     if(base.indexOf(own[i]) === -1){
-                        types.push(own[i]);
+                        items.push(own[i]);
                     }
                 }
             }
-            return types;
+            return items;
         }
 
         return {
             initialize: initialize,
+            refObjectToPath : refObjectToPath,
+            pathToRefObject : pathToRefObject,
             getMeta : getMeta,
             setMeta : setMeta,
             isValidChild: isValidChild,
