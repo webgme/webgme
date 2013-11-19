@@ -19,21 +19,56 @@ define([], function () {
     DefaultToolbar.prototype._initialize = function () {
         var toolbar = WebGMEGlobal.Toolbar;
 
-        var tbgProject = toolbar.addToolbarGroup();
+        var btnProject = toolbar.addButton({ "title": "Manage projects...",
+            "icon": "icon-tags",
+            "data": {'type': 'Manage projects...'},
+            "clickFn": function (data) {
+                alert(JSON.stringify(data));
+            }});
 
-        var btnProject = tbgProject.addButton({ "title": "Manage projects...",
-            "icon": "icon-tags" });
+        var btnProjectRepository = toolbar.addButton({ "title": "Project repository...",
+            "icon": "icon-road",
+            "data": {'type': 'Project repository'},
+            "clickFn": function (data) {
+                alert(JSON.stringify(data));
+            } });
 
-        var btnProjectRepository = tbgProject.addButton({ "title": "Project repository...",
-            "icon": "icon-road" });
+        var btnCommit = toolbar.addButton({ "title": "Commit...",
+            "icon": "icon-share",
+            "data": {'type': 'Commit...'},
+            "clickFn": function (data) {
+                alert(JSON.stringify(data));
+            } });
 
-        var btnCommit = tbgProject.addButton({ "title": "Commit...",
-            "icon": "icon-share" });
+        toolbar.addSeparator();
 
-        tbgProject.addSeparator();
+        var btnCommit1 = toolbar.addButton({ "title": "Commit1...",
+            "icon": "icon-share",
+            "clickFn": function () {
+                alert('Commit1...');
+            }});
 
-        var btnCommit1 = tbgProject.addButton({ "title": "Commit...",
-            "icon": "icon-share" });
+        var radioButtonGroup = toolbar.addRadioButtonGroup(function (data) {
+            alert(JSON.stringify(data));
+        });
+
+        radioButtonGroup.addButton({ "title": "Commit...",
+            "icon": "icon-share",
+            "data": {'type': '1'}});
+
+        radioButtonGroup.addButton({ "title": "Commit...",
+            "icon": "icon-share",
+            "data": {'type': '2'} });
+
+        radioButtonGroup.addButton({ "title": "Commit...",
+            "icon": "icon-share",
+            "data": {'type': '3'} });
+
+        var btnToggle1 = toolbar.addToggleButton({ "title": "Toggle",
+            "icon": "icon-share",
+            "clickFn": function (data, toggled) {
+                alert('toggled: ' + toggled);
+            }});
     };
 
     return DefaultToolbar;

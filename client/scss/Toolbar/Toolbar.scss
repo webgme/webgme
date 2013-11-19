@@ -4,24 +4,16 @@
  * Author: Robert Kereskenyi
  */
 
-$toolbar-group-item-margin-left: 2px;
-$toolbar-group-separator-margin: 2px;
+$toolbar-item-margin-left: 3px;
+$toolbar-separator-margin: 5px;
 
 .webgme-toolbar {
-  .toolbar-group {
-    display: inline-block;
-    margin-left: 5px;
-    top: 2px;
-    position: relative;
+  padding-top: 2px;
 
-    .separator {
-      margin-left: $toolbar-group-separator-margin;
-      margin-right: $toolbar-group-separator-margin;
-      /*background-color: #000000;*/
-      width: 15px;
-      height: 1px;
-      display: inline-block;
-    }
+  .toolbar-button {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
 
     .btn-mini {
       [class^="icon-"],
@@ -29,13 +21,21 @@ $toolbar-group-separator-margin: 2px;
         margin-top: 0px;
       }
     }
+  }
 
-    > .btn-mini {
-      margin-left: $toolbar-group-item-margin-left;
-    }
+  .separator {
+    margin-left: $toolbar-separator-margin;
+    margin-right: $toolbar-separator-margin - $toolbar-item-margin-left;
+    background-color: #CCCCCC;
+    width: 1px;
+    height: 19px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    top: 1px;
+  }
 
-    >:first-child {
-      margin-left: 0px;
-    }
+  .btn-group {
+    margin-left: $toolbar-item-margin-left;
   }
 }

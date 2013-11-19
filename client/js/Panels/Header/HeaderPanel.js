@@ -60,8 +60,7 @@ define(['js/PanelBase/PanelBase',
         //toolbar
         var toolBarEl = $('<div/>', {'class': "toolbar-container"});
         this.$el.append(toolBarEl);
-        toolbar.createToolbar(toolBarEl);
-        WebGMEGlobal.Toolbar = toolbar;
+        WebGMEGlobal.Toolbar = toolbar.createToolbar(toolBarEl);
         new DefaultToolbar(this._client);
     };
 

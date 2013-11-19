@@ -14,7 +14,7 @@ define([], function () {
             btnClass = "btn btn-mini";
 
         $btn = $('<a/>', {
-            "class": btnClass + (params.class ? " " + params.class : ""),
+            "class": btnClass,
             "href": "#",
             "title": params.title
         });
@@ -41,7 +41,7 @@ define([], function () {
         if (params.clickFn) {
             $btn.on("click", function (event) {
                 if (!$btn.hasClass("disabled")) {
-                    params.clickFn.call(this, event, $(this).data());
+                    params.clickFn.call(this, $(this).data());
                 }
                 event.stopPropagation();
                 event.preventDefault();
