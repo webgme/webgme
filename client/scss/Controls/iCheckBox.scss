@@ -27,7 +27,7 @@ div.iCheckBox {
   background: -moz-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -webkit-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
   background: -o-linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
-  background: -linear-gradient( top, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
+  background: linear-gradient( to bottom, $unchecked-background-gradient-top, $unchecked-background-gradient-bottom );
 
   .sw {
     width: $switch-width;
@@ -35,7 +35,7 @@ div.iCheckBox {
     background: -moz-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
     background: -webkit-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
     background: -o-linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
-    background: -linear-gradient( top, $switch-background-gradient-top, $switch-background-gradient-bottom );
+    background: linear-gradient( to bottom, $switch-background-gradient-top, $switch-background-gradient-bottom );
     border-radius: 3px;
     display: inline-block;
     position: absolute;
@@ -67,7 +67,7 @@ div.iCheckBox {
     background: -moz-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
     background: -webkit-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
     background: -o-linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
-    background: -linear-gradient( top, $checked-background-gradient-top, $checked-background-gradient-bottom );
+    background: linear-gradient( to bottom, $checked-background-gradient-top, $checked-background-gradient-bottom );
     .sw {
       left: $width - $switch-width - 2 * $switch-border-width;
     }
