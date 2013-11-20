@@ -9,6 +9,7 @@ $toolbar-separator-margin: 5px;
 
 .webgme-toolbar {
   padding-top: 2px;
+  white-space: nowrap;
 
   .toolbar-button {
     display: inline-block;

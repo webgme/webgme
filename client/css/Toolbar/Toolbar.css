@@ -4,7 +4,8 @@
  * Author: Robert Kereskenyi
  */
 .webgme-toolbar {
-  padding-top: 2px; }
+  padding-top: 2px;
+  white-space: nowrap; }
   .webgme-toolbar .toolbar-button {
     display: inline-block;
     margin-left: 3px;
