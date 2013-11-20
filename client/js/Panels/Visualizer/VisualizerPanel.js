@@ -5,13 +5,11 @@ define(['logManager',
     'js/PanelBase/PanelBaseWithHeader',
     'js/Panels/SplitPanel/SplitPanel',
     'text!js/Visualizers.json',
-    'js/Controls/iCheckBox',
     'css!/css/Panels/Visualizer/VisualizerPanel'], function (logManager,
                                     LoaderProgressBar,
                                     PanelBaseWithHeader,
                                     SplitPanel,
-                                    VisualizersJSON,
-                                    iCheckBox) {
+                                    VisualizersJSON) {
 
     var VisualizerPanel;
 
@@ -44,22 +42,23 @@ define(['logManager',
     _.extend(VisualizerPanel.prototype, PanelBaseWithHeader.prototype);
 
     VisualizerPanel.prototype._initialize = function () {
-        var self = this;
+        var self = this,
+            toolbar = WebGMEGlobal.Toolbar;
 
         //set Widget title
         this.setTitle("Visualizer");
 
         this.$el.addClass('visualizer-panel');
 
-        var p2Editor = $('<div/>', {'style': 'margin-left: 10px; margin-bottom: 10px'});
-        this._cb2Editor = new iCheckBox({'checked': false,
-                                         'checkChangedFn': function (isChecked) {
-                                             self._p2Editor(isChecked);
-                                         }});
-        p2Editor.append('Two editor panels:');
-        p2Editor.append(this._cb2Editor.el);
-        this._cb2Editor.el.css({'top': '5px', 'margin-left': '10px'});
-        this.$el.append(p2Editor);
+        //add toolbar controls
+        var splitViewIcon = $('<i class="icon-plane" style="background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFR1ZSAxOSBOb3YgMjAxMyAxNjozNjo0NCAtMDYwMKaJVWgAAAAHdElNRQfdCxMWKDLaKUzZAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAD5JREFUeNpj/P//PwMqMDExAZJnzpxBE2eBSMABsgo0KSYGogELskloxqBJsWBVgdUNo6bSyFTMZIFpJAQAAMcoMq0xIJLxAAAAAElFTkSuQmCC); background-position: 0 0;"></i>');
+        toolbar.addToggleButton({ "title": "Split view ON/OFF",
+            "icon": splitViewIcon,
+            "clickFn": function (data, toggled) {
+                self._p2Editor(toggled);
+            }});
+
+        toolbar.addSeparator();
 
         this._panel1VisContainer = $('<div/>');
         this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
