@@ -184,6 +184,8 @@ define([], function () {
                     _core.setRegistry(metaNode,"pointerNames",pointerNames);
                 }
 
+                var meta_event = _core.getRegistry(node,"_meta_event_") || 0;
+                    _core.setRegistry(node,"_meta_event_",meta_event+1);
                 _save("setMeta("+path+")");
             }
         }

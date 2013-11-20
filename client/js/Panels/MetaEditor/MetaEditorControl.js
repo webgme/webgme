@@ -1064,67 +1064,20 @@ define(['logManager',
 
     MetaEditorControl.prototype._createContainmentRelationship = function (containerID, objectID) {
         var containerNode = this._client.getNode(containerID),
-            objectNode = this._client.getNode(objectID),
-            containmentMetaDescriptor,
-            len,
-            alreadyExists;
+            objectNode = this._client.getNode(objectID);
 
         if (containerNode && objectNode) {
-            containmentMetaDescriptor = containerNode.getEditableChildrenMetaDescriptor() || [];
-
-            len = containmentMetaDescriptor.length;
-            alreadyExists = false;
-            while (len--) {
-                if (containmentMetaDescriptor[len].target === objectID) {
-                    alreadyExists = true;
-                    break;
-                }
-            }
-
-            if (!alreadyExists) {
-                containmentMetaDescriptor.push({'target': objectID,
-                                                'multiplicity': "0..*"});
-
-                this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
-            } else {
-                this.logger.debug('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') already exists.');
-            }
+            this._client.updateValidChildrenItem(containerID,{id:objectID});
         }
     };
 
 
     MetaEditorControl.prototype._deleteContainmentRelationship = function (containerID, objectID) {
         var containerNode = this._client.getNode(containerID),
-            objectNode = this._client.getNode(objectID),
-            containmentMetaDescriptor,
-            len,
-            alreadyExists;
+            objectNode = this._client.getNode(objectID);
 
         if (containerNode && objectNode) {
-            containmentMetaDescriptor = containerNode.getEditableChildrenMetaDescriptor() || [];
-
-            len = containmentMetaDescriptor.length;
-            alreadyExists = false;
-            while (len--) {
-                if (containmentMetaDescriptor[len].target === objectID) {
-                    alreadyExists = true;
-                    break;
-                }
-            }
-
-            if (alreadyExists) {
-                containmentMetaDescriptor.splice(len, 1);
-
-                if (containmentMetaDescriptor.length > 0) {
-                    this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
-                } else {
-                    //no more containment info, delete meta descriptor
-                    this._client.delChildrenMetaDescriptor(containerID);
-                }
-            } else {
-                //this should never happen
-                this.logger.error('ContainmentRelationship from "' + containerNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + containerID + ') to "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') does not exist.');
-            }
+            this._client.removeValidChildrenItem(containerID,objectID);
         }
     };
 
@@ -1143,23 +1096,11 @@ define(['logManager',
             //query pointer name from user
             this.diagramDesigner.selectNewPointerName(pointerNames, function (userSelectedPointerName) {
                 self._client.startTransaction();
-
-                pointerMetaDescriptor = sourceNode.getEditablePointerDescriptor(userSelectedPointerName);
-
-                if (pointerMetaDescriptor && !_.isEmpty(pointerMetaDescriptor)) {
-                    if (pointerMetaDescriptor.targets.indexOf(targetID) === -1) {
-                        pointerMetaDescriptor.targets.push(targetID);
-                    }
-                } else {
-                    pointerMetaDescriptor = {'name': userSelectedPointerName,
-                                            'targets': [targetID],
-                                            'multiplicity': "0..1"};
-
-                    //create pointer on the container node with null value
-                    self._client.makePointer(sourceID, userSelectedPointerName, null);
+                pointerMetaDescriptor = self._client.getValidTargetItems(sourceID,userSelectedPointerName);
+                if(!pointerMetaDescriptor){
+                    self._client.makePointer(sourceID,userSelectedPointerName,null);
                 }
-
-                self._client.setPointerDescriptor(sourceID, userSelectedPointerName, pointerMetaDescriptor);
+                self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,min:1,max:1});
 
                 self._client.completeTransaction();
             });
@@ -1174,21 +1115,14 @@ define(['logManager',
             idx;
 
         if (sourceNode && targetNode) {
-            pointerMetaDescriptor = sourceNode.getEditablePointerDescriptor(pointerName);
-            idx = pointerMetaDescriptor.targets.indexOf(targetID);
-            if (idx !== -1) {
-                pointerMetaDescriptor.targets.splice(idx, 1);
-                //if no more target for this pointerName, clean up
-                if (pointerMetaDescriptor.targets.length === 0) {
-                    this._client.delPointer(sourceID, pointerName);
-                    this._client.delPointerDescriptor(sourceID, pointerName);
-                } else {
-                    this._client.setPointerDescriptor(sourceID, pointerName, pointerMetaDescriptor);
-                }
-            } else {
-                //this should never happen
-                this.logger.error('_deletePointerRelationship the pointer to delete was not found... this should never happen');
+            //this._client.startTransaction();
+            this._client.removeValidTargetItem(sourceID,pointerName,targetID);
+            pointerMetaDescriptor = this._client.getValidTargetItems(sourceID,pointerName);
+            if(pointerMetaDescriptor && pointerMetaDescriptor.length === 0){
+                this._client.deleteMetaPointer(sourceID,pointerName);
+                this._client.delPointer(sourceID,pointerName);
             }
+            //this._client.completeTransaction();
         }
     };
 
@@ -1219,9 +1153,7 @@ define(['logManager',
 
             if (objectBase && !_.isEmpty(objectBase)) {
                 this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
-                //TODO: coretree does not allow registry value of 'undefined', so store {}
-                //TODO: this._client.setBase(objectID, undefined);
-                this._client.setBase(objectID, {});
+                this._client.delBase(objectID);
             }
         }
     };

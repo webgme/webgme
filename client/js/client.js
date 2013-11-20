@@ -1650,7 +1650,7 @@ define([
                     saveRoot('delBase('+path+')');
                 }*/
                 if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-                    _core.setBase(_nodes[node].node,null);
+                    _core.setBase(_nodes[path].node,null);
                     saveRoot('delBase('+path+')');
                 }
             }
@@ -2052,6 +2052,7 @@ define([
                 getValidTargetItems: META.getValidTargetItems,
                 updateValidTargetItem: META.updateValidTargetItem,
                 removeValidTargetItem: META.removeValidTargetItem,
+                deleteMetaPointer: META.deleteMetaPointer,
                 getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
                 getOwnValidTargetTypes: META.getOwnValidTargetTypes,
                 isValidChild: META.isValidChild,

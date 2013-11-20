@@ -309,14 +309,14 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
         // -------- kecso
         core.setBase = function(node,base){
-            ASSERT(isValidNode(node) && (isValidNode(base) || base === undefined || base === null));
+            ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));
             if(!!base){
                 oldcore.setPointer(node, "base", base);
                 //TODO maybe this is not the best way, needs to be double checked
                 node.base = base;
             } else {
-                oldcore.delPointer(node,'base');
-                delete node.base;
+                oldcore.setPointer(node,'base',null);
+                node.base = null;
             }
         };
 
