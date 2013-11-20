@@ -10,7 +10,7 @@
  * Utility helper functions for saving WebGME state and reload on browser back
  */
 
-define([], function () {
+define(['jquery'], function () {
 
     var _client,
         STATE_SELECTED_OBJECT_ID = 'selectedObjectId',
