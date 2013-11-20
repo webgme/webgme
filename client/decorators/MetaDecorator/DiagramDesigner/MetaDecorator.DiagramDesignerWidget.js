@@ -95,8 +95,17 @@ define(['js/Constants',
                     attrNames = self._attributeNames.slice(0),
                     dialog = new AttributeDetailsDialog(),
                     /*desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));*/
-                    atrMeta = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName);
-                var desc = _.extend({},{name:attrName,type:atrMeta.type});
+                    atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID],attrName);
+                var desc = _.extend({},{name:attrName,type:atrMeta.type,defaultValue:atrMeta.default});
+                if(atrMeta.enum && atrMeta.enum.length >0){
+                    desc.isEnum = true;
+                    desc.enumValues = [];
+                    for(var i=0;i<atrMeta.enum.length;i++){
+                        desc.enumValues.push(atrMeta.enum[i]);
+                    }
+                } else {
+                    desc.isMeta = false;
+                }
 
 
                 //pass all the other attribute names to the dialog
@@ -207,7 +216,6 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            //attrMetaDescriptor = nodeObj.getAttributeDescriptor(attrName);
             attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName) ? {name:attrName,type:client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName).type || "null"} : null;
 
         if (attrMetaDescriptor) {
@@ -405,6 +413,7 @@ define(['js/Constants',
             }
         }
 
+        /*
         client.setAttributeDescriptor(objID, attrDesc.name, attrDesc);
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
@@ -412,6 +421,13 @@ define(['js/Constants',
         {
             client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
         }
+        */
+        var attrSchema = {"type":attrDesc.type,"default":attrDesc.defaultValue};
+        if(attrDesc.isEnum){
+            attrSchema.enum = attrDesc.enumValues;
+        }
+        client.setAttributeSchema(objID,attrName,attrSchema);
+        client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
 
         client.completeTransaction();
     };
