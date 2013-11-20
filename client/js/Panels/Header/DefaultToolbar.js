@@ -28,22 +28,22 @@ define(['js/Dialogs/Projects/ProjectsDialog',
         //#1: Projects
         toolbar.addButton({ "title": "Projects...",
             "icon": "icon-folder-open",
-            "clickFn": function (data) {
+            "clickFn": function (/*data*/) {
                 var pd = new ProjectsDialog(self._client);
                 pd.show();
             }});
 
         //#2: Project repository...
-        var btnProjectRepository = toolbar.addButton({ "title": "Project repository...",
+        toolbar.addButton({ "title": "Project repository...",
             "icon": "icon-road",
-            "clickFn": function (data) {
+            "clickFn": function (/*data*/) {
                 var prd = new ProjectRepositoryDialog(self._client);
                 prd.show();
             } });
 
-        var btnCommit = toolbar.addButton({ "title": "Commit...",
+        toolbar.addButton({ "title": "Commit...",
             "icon": "icon-share-alt",
-            "clickFn": function (data) {
+            "clickFn": function (/*data*/) {
                 var cd = new CommitDialog(self._client);
                 cd.show();
             } });
