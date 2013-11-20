@@ -37,7 +37,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
         function isFalseNode(node) {
             //TODO this hack should be removed, but now it seems just fine :)
-            if(typeof core.getPointerPath(node,"base") === "undefined" /*&& node.base !== null*/){
+            if(typeof oldcore.getPointerPath(node,"base") === "undefined"){
                 return true;
             }
             return false;
@@ -89,10 +89,29 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
 		};
 
-		core.loadPointer = function(node, name) {
+		/*core.loadPointer = function(node, name) {
 			ASSERT(isValidNode(node));
 			return TASYNC.call(__loadBase, oldcore.loadPointer(node, name));
-		};
+		};*/
+        core.loadPointer = function(node,name){
+            var pointer = TASYNC.call(__loadBase,oldcore.loadPointer(node, name));
+            var base = core.getBase(node);
+            var basepointer = null;
+            if(base){
+                basepointer = TASYNC.call(__loadBase,oldcore.loadPointer(base, name));
+            }
+            return TASYNC.call(function(p,bp,n,nm){
+                var done = null;
+                if(p === null){
+                    if(bp !== null){
+                        core.setPointer(n,nm,bp);
+                        done = core.persist(core.getRoot(n));
+                        p = bp;
+                    }
+                }
+                return TASYNC.call(function(pointer){return pointer;},p,done);
+            },pointer,basepointer,node,relid);
+        };
 
 		function __loadBase(node) {
 			ASSERT(typeof node.base === "undefined" || typeof node.base === "object");
@@ -277,11 +296,11 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return Object.keys(merged);
 		};
 
-		core.getPointer = function(node, name) {
+		core.getPointerPath = function(node, name) {
 			ASSERT(isValidNode(node));
             var value;
 			do {
-				value = oldcore.getPointer(node, name);
+				value = oldcore.getPointerPath(node, name);
 				node = node.base;
 			} while (typeof value === "undefined" && node !== null);
 
