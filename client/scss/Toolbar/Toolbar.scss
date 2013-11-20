@@ -38,4 +38,40 @@ $toolbar-separator-margin: 5px;
   .btn-group {
     margin-left: $toolbar-item-margin-left;
   }
+
+  .toolbar-input {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+
+    .input-append,
+    .input-prepend {
+      margin-bottom: 0;
+    }
+  }
+
+  .toolbar-label {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    font-size: 12px;
+    line-height: 22px;
+    height: 22px;
+    vertical-align: middle;
+  }
+
+  .toolbar-checkbox {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    vertical-align: middle;
+  }
+
+  .dropdown-menu {
+    li {
+      .iCheckBox {
+        top: 1px;
+      }
+    }
+  }
 }

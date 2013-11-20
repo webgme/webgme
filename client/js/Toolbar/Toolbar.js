@@ -11,11 +11,19 @@ define(['logManager',
     './ToolbarSeparator',
     './ToolbarRadioButtonGroup',
     './ToolbarToggleButton',
+    './ToolbarTextBox',
+    './ToolbarLabel',
+    './ToolbarCheckBox',
+    './ToolbarDropDownButton',
     'css!/css/Toolbar/Toolbar'], function (logManager,
                                            ToolbarButton,
                                            ToolbarSeparator,
                                            ToolbarRadioButtonGroup,
-                                           ToolbarToggleButton) {
+                                           ToolbarToggleButton,
+                                           ToolbarTextBox,
+                                           ToolbarLabel,
+                                           ToolbarCheckBox,
+                                           ToolbarDropDownButton) {
 
     var TOOLBAR_CLASS = 'webgme-toolbar',
         _toolBar;
@@ -68,6 +76,30 @@ define(['logManager',
         var tbg = new ToolbarToggleButton(params);
         this.add(tbg);
         return tbg;
+    };
+
+    Toolbar.prototype.addTextbox = function (params) {
+        var txt = new ToolbarTextBox(params);
+        this.add(txt);
+        return txt;
+    };
+
+    Toolbar.prototype.addLabel = function () {
+        var lbl = new ToolbarLabel();
+        this.add(lbl);
+        return lbl;
+    };
+
+    Toolbar.prototype.addCheckBox = function (params) {
+        var chb = new ToolbarCheckBox(params);
+        this.add(chb);
+        return chb;
+    };
+
+    Toolbar.prototype.addDropDownButton = function (params) {
+        var btn = new ToolbarDropDownButton(params);
+        this.add(btn);
+        return btn;
     };
 
     return { createToolbar: _createToolbar };

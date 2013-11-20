@@ -24,3 +24,25 @@
     top: 1px; }
   .webgme-toolbar .btn-group {
     margin-left: 3px; }
+  .webgme-toolbar .toolbar-input {
+    display: inline-block;
+    margin-left: 3px;
+    position: relative; }
+    .webgme-toolbar .toolbar-input .input-append,
+    .webgme-toolbar .toolbar-input .input-prepend {
+      margin-bottom: 0; }
+  .webgme-toolbar .toolbar-label {
+    display: inline-block;
+    margin-left: 3px;
+    position: relative;
+    font-size: 12px;
+    line-height: 22px;
+    height: 22px;
+    vertical-align: middle; }
+  .webgme-toolbar .toolbar-checkbox {
+    display: inline-block;
+    margin-left: 3px;
+    position: relative;
+    vertical-align: middle; }
+  .webgme-toolbar .dropdown-menu li .iCheckBox {
+    top: 1px; }
