@@ -28,7 +28,6 @@ define(['logManager',
         this._logger = logManager.create("GraphVizWidget");
 
         this._el = container;
-        this.toolBar = params.toolBar;
 
         this._initialize();
 
@@ -343,11 +342,13 @@ define(['logManager',
         this._update(undefined);
 
         //approximate width of the root name
-        var rootNameWidth = this._root.name.length * 6;
-        if (this._root.children) {
-            rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+        if (this._root && this._root.name) {
+            var rootNameWidth = this._root.name.length * 6;
+            if (this._root.children) {
+                rootNameWidth = (this._root.name + " [" + this._root.children.length + "]").length * 6;
+            }
+            this._el.find('svg > g').attr("transform", "translate(" + (rootNameWidth + MARGIN) + "," + MARGIN + ")");
         }
-        this._el.find('svg > g').attr("transform", "translate(" + (rootNameWidth + MARGIN) + "," + MARGIN + ")");
     };
 
     GraphVizWidget.prototype.onNodeOpen = function (id) {
@@ -363,6 +364,12 @@ define(['logManager',
     };
 
     GraphVizWidget.prototype.destroy = function () {
+    };
+
+    GraphVizWidget.prototype.onActivate = function () {
+    };
+
+    GraphVizWidget.prototype.onDeactivate = function () {
     };
 
     _.extend(GraphVizWidget.prototype, GraphVizWidgetZoom.prototype);
