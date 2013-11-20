@@ -37,7 +37,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("ContainmentGrid");
 
-        this.widget = new DataGridWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new DataGridWidget(this.$el);
 
         this.control = new GridPanelContainmentControlPointers({"client": this._client,
             "widget": this.widget,
@@ -62,12 +62,24 @@ define(['js/PanelBase/PanelBaseWithHeader',
         PanelBaseWithHeader.prototype.destroy.call(this);
     };
 
+    GridPanelPointers.prototype.destroy = function () {
+        this.control.destroy();
+        this.widget.destroy();
+
+        PanelBaseWithHeader.prototype.destroy.call(this);
+        WebGMEGlobal.KeyboardManager.setListener(undefined);
+    };
+
     GridPanelPointers.prototype.onActivate = function () {
+        this.widget.onActivate();
         this.control.attachClientEventListeners();
+        WebGMEGlobal.KeyboardManager.setListener(this.widget);
     };
 
     GridPanelPointers.prototype.onDeactivate = function () {
+        this.widget.onDeactivate();
         this.control.detachClientEventListeners();
+        WebGMEGlobal.KeyboardManager.setListener(undefined);
     };
 
     return GridPanelPointers;

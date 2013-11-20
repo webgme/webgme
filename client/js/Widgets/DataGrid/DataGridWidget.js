@@ -24,7 +24,6 @@ define(['logManager',
         this.logger = logManager.create("DataGridWidget");
 
         this.$el = container;
-        this.toolBar = params.toolBar;
 
         //initialize UI
         this.initializeUI();
@@ -46,26 +45,6 @@ define(['logManager',
     _.extend(DataGridWidget.prototype, DataGridWidgetDroppable.prototype);
 
     DataGridWidget.prototype.initializeUI = function () {
-        var self = this;
-
-        //add FILTER box to toolbar
-        this.$filterBox = this.toolBar.addTextBox({"label": "Filter"}, function (oldVal, newVal) {
-            self._filterDataTable(newVal);
-        });
-
-        this.$infoLabel = this.toolBar.addLabel();
-
-        //add DROPDOWN MENU to toolbar for column hide/show
-        this.$ddColumnVisibility = this.toolBar.addDropDownMenu({ "text": "Columns" });
-
-        //toggle button for show common/all fields
-        var toggleButtonGroup = this.toolBar.addButtonGroup();
-
-        this.$toggleButtonAllColumns = this.toolBar.addToggleButton(
-            {"text": "Show common columns only",
-              "clickFn": function (event, data, isPressed) {
-                  self.displayCommonColumnsOnly(isPressed);
-            }}, toggleButtonGroup);
     };
 
     DataGridWidget.prototype.$_dataTableBase = $(dataTableTemplate);
@@ -89,7 +68,9 @@ define(['logManager',
             this.$table = undefined;
         }
 
-        this.$ddColumnVisibility.clear();
+        if (this.toolbarItems && this.toolbarItems.ddColumnVisibility) {
+            this.toolbarItems.ddColumnVisibility.clear();
+        }
         this._isClearing = false;
     };
 
@@ -803,17 +784,19 @@ i,
             self = this;
 
         //clear dropdown menu
-        this.$ddColumnVisibility.clear();
+        this.toolbarItems.ddColumnVisibility.clear();
         this._columnVisibilityCheckboxList = [];
         for (i = isActionButtonsInFirstColumn ? 1 : 0; i < len; i+= 1) {
 
             if (this.dataMemberID !== columns[i]["mData"]) {
-                this._columnVisibilityCheckboxList.push(this.toolBar.addCheckBoxMenuItem({"text": columns[i]["mData"],
+                var chkBtn = this.toolbarItems.ddColumnVisibility.addCheckBox({"text": columns[i]["mData"],
                     "data": { "idx": i },
                     "checkChangedFn": function (data, isChecked) {
                         self.setColumnVisibility(data.idx, isChecked);
                         self._refilterDataTable();
-                    }}, this.$ddColumnVisibility));
+                    }});
+
+                this._columnVisibilityCheckboxList.push(chkBtn);
             }
         }
     };
@@ -1027,7 +1010,7 @@ i,
             sOut = 'Displaying ' + iTotal + '/' + iMax + ' entries';
         }
 
-        this.$infoLabel.text(sOut);
+        this.toolbarItems.infoLabel.text(sOut);
     };
 
     /******* END OF --- CALCULATE ROW HEIGHT AND COLUMN WIDTHS ****************/
@@ -1063,6 +1046,79 @@ i,
 
     DataGridWidget.prototype.createColumnShowHideControl = function (columns, isColumnsGrouped, isActionButtonsInFirstColumn) {
         this._createColumnShowHideControlInToolBar(columns, isColumnsGrouped, isActionButtonsInFirstColumn);
+    };
+
+
+    DataGridWidget.prototype.onActivate = function () {
+        this._displayToolbarItems();
+    };
+
+    DataGridWidget.prototype.onDeactivate = function () {
+        this._hideToolbarItems();
+    };
+
+    DataGridWidget.prototype._initializeToolbar = function () {
+        var toolBar = WebGMEGlobal.Toolbar,
+            self = this;
+
+        this.toolbarItems = {};
+
+        //if and external toolbar exist for the component
+
+        this.toolbarItems.beginSeparator = toolBar.addSeparator();
+
+
+        //add FILTER box to toolbar
+        this.toolbarItems.filterBox = toolBar.addTextBox({
+            "label": "Filter",
+            "textChangedFn": function (oldVal, newVal) {
+                self._filterDataTable(newVal);
+            }
+        });
+
+        this.toolbarItems.infoLabel = toolBar.addLabel();
+
+        //add DROPDOWN MENU to toolbar for column hide/show
+        this.toolbarItems.ddColumnVisibility = toolBar.addDropDownButton({ "text": "Columns" });
+
+        this.toolbarItems.toggleButtonAllColumns = toolBar.addToggleButton(
+            {"text": "Show common columns only",
+                "clickFn": function (data, isPressed) {
+                    self.displayCommonColumnsOnly(isPressed);
+                }
+            }
+        );
+
+
+        this._toolbarInitialized = true;
+    };
+
+    DataGridWidget.prototype._displayToolbarItems = function () {
+        if (this._toolbarInitialized !== true) {
+            this._initializeToolbar();
+        } else {
+            for (var i in this.toolbarItems) {
+                if (this.toolbarItems.hasOwnProperty(i)) {
+                    this.toolbarItems[i].show();
+                }
+            }
+        }
+    };
+
+    DataGridWidget.prototype._hideToolbarItems = function () {
+        for (var i in this.toolbarItems) {
+            if (this.toolbarItems.hasOwnProperty(i)) {
+                this.toolbarItems[i].hide();
+            }
+        }
+    };
+
+    DataGridWidget.prototype._removeToolbarItems = function () {
+        for (var i in this.toolbarItems) {
+            if (this.toolbarItems.hasOwnProperty(i)) {
+                this.toolbarItems[i].destroy();
+            }
+        }
     };
 
 
