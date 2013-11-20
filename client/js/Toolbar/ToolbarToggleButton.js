@@ -6,7 +6,9 @@
 
 "use strict";
 
-define(['./ButtonBase'], function (buttonBase) {
+define(['./ButtonBase',
+        './ToolbarItemBase'], function (buttonBase,
+                                        ToolbarItemBase) {
 
     var ToolbarToggleButton;
 
@@ -29,13 +31,14 @@ define(['./ButtonBase'], function (buttonBase) {
         this.el.append(this._btn);
     };
 
+    _.extend(ToolbarToggleButton.prototype, ToolbarItemBase.prototype);
+
     ToolbarToggleButton.prototype.setToggled = function (toggled) {
         this._btn.removeClass('active');
         if (toggled === true) {
             this._btn.addClass('active');
         }
     };
-
 
     return ToolbarToggleButton;
 });

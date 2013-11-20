@@ -4,13 +4,17 @@
  * Author: Robert Kereskenyi
  */
 
-define(['./ButtonBase'], function (buttonBase) {
+define(['./ButtonBase',
+        './ToolbarItemBase'], function (buttonBase,
+                                        ToolbarItemBase) {
 
     var ToolbarSeparator;
 
     ToolbarSeparator = function () {
         this.el = $('<div class="separator"></div>');
     };
+
+    _.extend(ToolbarSeparator.prototype, ToolbarItemBase.prototype);
 
     return ToolbarSeparator;
 });

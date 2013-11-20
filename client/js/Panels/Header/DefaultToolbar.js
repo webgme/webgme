@@ -48,14 +48,14 @@ define(['js/Dialogs/Projects/ProjectsDialog',
                 cd.show();
             } });
 
-        toolbar.addSeparator();
-
         //TODO: remove
         //this._createDummyControls();
     };
 
     DefaultToolbar.prototype._createDummyControls = function () {
         var toolbar = WebGMEGlobal.Toolbar;
+
+        toolbar.addSeparator();
 
         //DEMO controls
         var btnCommit1 = toolbar.addButton({ "title": "Commit1...",
@@ -87,7 +87,7 @@ define(['js/Dialogs/Projects/ProjectsDialog',
             }});
 
 
-        var txtFind = toolbar.addTextbox({
+        var txtFind = toolbar.addTextBox({
             "prependContent": '<i class="icon-search"></i>',
             "placeholder": "Find...",
             "textChangedFn": function (oldVal, newVal) {
@@ -116,7 +116,7 @@ define(['js/Dialogs/Projects/ProjectsDialog',
                 console.log(JSON.stringify(data));
             }});
 
-        ddlCreate.addMenuItemDivider();
+        ddlCreate.addDivider();
 
         ddlCreate.addButton({ "title": "Create 10 items",
             "icon": "icon-plus-sign",
@@ -131,8 +131,6 @@ define(['js/Dialogs/Projects/ProjectsDialog',
             "checkChangedFn": function (data, isChecked) {
                 console.log('checked: ' + isChecked + " , " + JSON.stringify(data));
             }});
-
-        toolbar.addSeparator();
     };
 
     return DefaultToolbar;

@@ -6,7 +6,9 @@
 
 "use strict";
 
-define(['js/Controls/iCheckBox'], function (iCheckBox) {
+define(['js/Controls/iCheckBox',
+        './ToolbarItemBase'], function (iCheckBox,
+                                        ToolbarItemBase) {
 
     var ToolbarCheckBox;
 
@@ -18,6 +20,7 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
     };
 
     _.extend(ToolbarCheckBox.prototype, iCheckBox.prototype);
+    _.extend(ToolbarCheckBox.prototype, ToolbarItemBase.prototype);
 
     return ToolbarCheckBox;
 });

@@ -78,7 +78,7 @@ define(['logManager',
         return tbg;
     };
 
-    Toolbar.prototype.addTextbox = function (params) {
+    Toolbar.prototype.addTextBox = function (params) {
         var txt = new ToolbarTextBox(params);
         this.add(txt);
         return txt;

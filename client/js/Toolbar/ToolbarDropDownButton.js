@@ -7,8 +7,10 @@
 "use strict";
 
 define(['./ButtonBase',
-        'js/Controls/iCheckBox'], function (buttonBase,
-                                            iCheckBox) {
+        'js/Controls/iCheckBox',
+        './ToolbarItemBase'], function (buttonBase,
+                                            iCheckBox,
+                                            ToolbarItemBase) {
 
     var ToolbarDropDownButton;
 
@@ -24,6 +26,10 @@ define(['./ButtonBase',
 
         this._ulMenu = $('<ul class="dropdown-menu"></ul>');
 
+        if (params && params.menuClass) {
+            this._ulMenu.addClass(params.menuClass);
+        }
+
         btn.append(' ').append(caret);
 
         btn.addClass("dropdown-toggle");
@@ -32,8 +38,18 @@ define(['./ButtonBase',
         this.el.append(btn).append(this._ulMenu);
     };
 
+    _.extend(ToolbarDropDownButton.prototype, ToolbarItemBase.prototype);
+
     ToolbarDropDownButton.prototype.clear = function () {
         this._ulMenu.empty();
+    };
+
+    ToolbarDropDownButton.prototype.enabled = function (enabled) {
+        if (enabled === true) {
+            this.el.find('.btn').removeClass("disabled");
+        } else {
+            this.el.find('.btn').addClass("disabled");
+        }
     };
 
     ToolbarDropDownButton.prototype.addButton = function (params) {
@@ -45,7 +61,7 @@ define(['./ButtonBase',
         this._ulMenu.append(li);
     };
 
-    ToolbarDropDownButton.prototype.addMenuItemDivider = function () {
+    ToolbarDropDownButton.prototype.addDivider = function () {
         var divider = $('<li class="divider"></li>');
 
         this._ulMenu.append(divider);
@@ -73,6 +89,12 @@ define(['./ButtonBase',
         });
 
         this._ulMenu.append(chkLi);
+    };
+
+    ToolbarDropDownButton.prototype.destroy = function () {
+        this.el.remove();
+        this.el.empty();
+        this.el = undefined;
     };
 
     return ToolbarDropDownButton;

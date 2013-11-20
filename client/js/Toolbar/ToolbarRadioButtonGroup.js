@@ -12,7 +12,9 @@
 
 "use strict";
 
-define(['./ButtonBase'], function (buttonBase) {
+define(['./ButtonBase',
+        './ToolbarItemBase'], function (buttonBase,
+                                        ToolbarItemBase) {
 
     var ToolbarRadioButtonGroup;
 
@@ -35,6 +37,8 @@ define(['./ButtonBase'], function (buttonBase) {
         }
     };
 
+    _.extend(ToolbarRadioButtonGroup.prototype, ToolbarItemBase.prototype);
+
     ToolbarRadioButtonGroup.prototype.addButton = function (params) {
         var btn;
         if (params.clickFn) {
@@ -48,6 +52,12 @@ define(['./ButtonBase'], function (buttonBase) {
         if (this.el.find('.btn.active').length === 0) {
             btn.addClass('active');
         }
+
+        if (params && params.selected && params.selected === true) {
+            this.el.find('.btn.active').removeClass('active');
+            btn.addClass('active');
+        }
+
         return btn;
     };
 
@@ -58,7 +68,6 @@ define(['./ButtonBase'], function (buttonBase) {
             this.el.find('.btn').addClass("disabled");
         }
     };
-
 
     return ToolbarRadioButtonGroup;
 });

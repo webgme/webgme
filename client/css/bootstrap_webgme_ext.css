@@ -192,6 +192,10 @@ ul.dropdown-menu {
     overflow: auto;
 }
 
+.dropdown-menu.no-min-width {
+    min-width: 0;
+}
+
 
 .input-append .add-on.add-on-mini,
 .input-prepend .add-on.add-on-mini {

@@ -6,7 +6,7 @@
 
 "use strict";
 
-define([], function () {
+define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
     var ToolbarTextBox;
 
@@ -21,6 +21,8 @@ define([], function () {
                 "class": "input-medium input-mini",
                 "type" :"text"
             });
+
+        this._textBox = $textBox;
 
         if (params && params.label) {
             $label = $('<span/>', {"class":"add-on add-on-mini"});
@@ -72,6 +74,24 @@ define([], function () {
         );
 
         this.el.append($txtGroup);
+    };
+
+    _.extend(ToolbarTextBox.prototype, ToolbarItemBase.prototype);
+
+    ToolbarTextBox.prototype.enabled = function (enabled) {
+        if (enabled === true) {
+            this._textBox.removeAttr('disabled');
+        } else {
+            this._textBox.attr('disabled', 'disabled')
+        }
+    };
+
+    ToolbarTextBox.prototype.setText = function (text) {
+        this._textBox.val(text);
+    };
+
+    ToolbarTextBox.prototype.getText = function () {
+        return this._textBox.val();
     };
 
     return ToolbarTextBox;

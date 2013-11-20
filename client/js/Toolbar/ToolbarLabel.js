@@ -6,13 +6,15 @@
 
 "use strict";
 
-define([], function () {
+define(['./ToolbarItemBase'], function (ToolbarItemBase) {
 
     var ToolbarLabel;
 
     ToolbarLabel = function (params) {
         this.el = $('<div class="toolbar-label"></div>');
     };
+
+    _.extend(ToolbarLabel.prototype, ToolbarItemBase.prototype);
 
     ToolbarLabel.prototype.text = function (text) {
         this.el.text(text);
