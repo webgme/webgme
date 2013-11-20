@@ -31,8 +31,18 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Updating " + ID);
-            if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
+
+             if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
                 self._resizeItem( ID );
+
+            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){ //Segment points have been modified
+                console.log(ID + " has custom points!");
+                self.autorouter.setPathCustomPoints({
+                        "path": self._autorouterPaths[ ID ], 
+                        "points": self.diagramDesigner.items[ ID ].segmentPoints
+                        });
+            }
        };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
@@ -113,15 +123,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this.profiler.startProfile('_updateConnectionCoordinates');
         //1 - set custom defined paths
-        while (i--) {
-            if( this.diagramDesigner.items[ idList[i] ].segmentPoints.length !== 0 ){
-console.log(idList[i] + " has custom points!");
-                this.autorouter.setPathCustomPoints({
-                        "path": this._autorouterPaths[ idList[i] ], 
-                        "points": this.diagramDesigner.items[ idList[i] ].segmentPoints
-                        });;
-            }
-        }
         this.profiler.endProfile('_updateConnectionCoordinates');
 
 
@@ -185,6 +186,11 @@ console.log(idList[i] + " has custom points!");
         i = connIdList.length;
         while( i-- ){
             this.insertConnection(connIdList[i]);
+            if( canvas.items[connIdList[i]].segmentPoints.length > 0 )
+                this.autorouter.setPathCustomPoints({
+                        "path": this._autorouterPaths[ connIdList[i] ], 
+                        "points": canvas.items[ connIdList[i] ].segmentPoints
+                        });
         }
 
         //Next, I will update the ports as necessary

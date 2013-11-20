@@ -66,7 +66,12 @@ define(['logManager'], function (logManager) {
          Dir_Right	= 1,
          Dir_Bottom	= 2,
          Dir_Left	= 3,
-         Dir_Skew	= 4;
+         Dir_Skew	= 4,
+
+        //Path Custom Data
+        SimpleEdgeDisplacement = "EdgeDisplacement",
+        CustomPointCustomization = "PointCustomization",
+        CONNECTIONCUSTOMIZATIONDATAVERSION = null;
 
     var _logger = logManager.create("AutoRouter");
 
@@ -83,227 +88,228 @@ define(['logManager'], function (logManager) {
  
        this.router = new AutoRouterGraph();
     };
-    //TODO PathCustomizationType enum
 
-        var CustomPathData = function (){
-            var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
-                aspect = 0,
-                edgeIndex = 0,
-                edgeCount = 0,
-                type = SimpleEdgeDisplacement,
-                horizontalOrVerticalEdge = true,
-                x = 0,
-                y = 0,
-                l,
-                d;
+    var CustomPathData = function (_x, _y){
+        var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
+            aspect = 0,
+            edgeIndex = 0,
+            edgeCount = 0,
+            type = CustomPointCustomization, //By default, it is a point
+            horizontalOrVerticalEdge = false,
+            x = _x,
+            y = _y,
+            l,
+            d;
 
-            //Functions
-            this.assign = function(other){
-                    this.version					= other.version;
-                    this.aspect					    = other.aspect;
-                    this.edgeIndex					= other.edgeIndex;
-                    this.edgeCount					= other.edgeCount;
-                    this.type						= other.type;
-                    this.horizontalOrVerticalEdge	= other.horizontalOrVerticalEdge;
-                    this.x							= other.x;
-                    this.y							= other.y;
-                    this.l							= other.l;
-                    this.d							= other.d;
+        //Functions
+        this.assign = function(other){
+            this.version					= other.version;
+            this.aspect					    = other.aspect;
+            this.edgeIndex					= other.edgeIndex;
+            this.edgeCount					= other.edgeCount;
+            this.type						= other.type;
+            this.horizontalOrVerticalEdge	= other.horizontalOrVerticalEdge;
+            this.x							= other.x;
+            this.y							= other.y;
+            this.l							= other.l;
+            this.d							= other.d;
 
-                return this;
+            return this;
+        }
+
+        this.serialize = function(){
+            var outChannel = (this.getVersion() + "," + this.getAspect() + "," + this.getEdgeIndex() + "," + this.getEdgeCount() + "," + this.getType());
+
+            outChannel += ("," + this.isHorizontalOrVertical() ? 1 : 0 + "," + this.getX() + "," + this.getY() + "," + this.getLongDataCount());
+
+            for(var i = 0; i < this.getLongDataCount(); i++) {
+                outChannel += "," + l[i];
             }
 
-            this.serialize = function(outChannel){
-                outChannel += (getVersion() + "," + getAspect() + "," + getEdgeIndex() + "," + getEdgeCount() + "," + getType());
+            outChannel += "," + this.getDoubleDataCount();
 
-                outChannel += ("," + isHorizontalOrVertical() ? 1 : 0 + "," + getX() + "," + getY() + "," + getLongDataCount());
-
-                for(var i = 0; i < getLongDataCount(); i++) {
-                    outChannel += "," + l[i];
-                }
-            
-                outChannel += "," + getDoubleDataCount();
-
-                for(var i = 0; i < getDoubleDataCount(); i++) {
-                    outChannel += "," + d[i];
-                }
+            for(var i = 0; i < this.getDoubleDataCount(); i++) {
+                outChannel += "," + d[i];
             }
 
-            this.deserialize = function(inChannel){
-                console.log("\tResulting token: " + inChannel);
+            return outChannel;
+        }
 
-                var curSubPos = inChannel.indexOf(","),
-                    versionStr = inChannel.substr(0, curSubPos);
+        this.deserialize = function(inChannel){
+            console.log("\tResulting token: " + inChannel);
 
-                setVersion(Number(versionStr));
-                assert(getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
+            var curSubPos = inChannel.indexOf(","),
+                versionStr = inChannel.substr(0, curSubPos);
 
-                if (getVersion() != CONNECTIONCUSTOMIZATIONDATAVERSION) {
-                    // TODO: Convert from older version to newer
-                    return false;
-                }
+            setVersion(Number(versionStr));
+            assert(getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
 
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var aspectStr = inChannel.substr(0, curSubPos);
-                setAspect(Number(aspectStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeIndexStr = inChannel.substr(0, curSubPos);
-                setEdgeIndex(Number(edgeIndexStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeCountStr = inChannel.substr(0, curSubPos);
-                setEdgeCount(Number(edgeCountStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
-                setType(Number(edgeCustomTypeStr));
-
-                console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var directionStr = inChannel.substr(0, curSubPos);
-                setHorizontalOrVertical(Number(directionStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var positionStr = inChannel.substr(0, curSubPos);
-                setX(Number(positionStr));
-                
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                positionStr = inChannel.substr(0, curSubPos);
-                setY(Number(positionStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                positionStr = inChannel.substr(0, curSubPos);
-                var numOfExtraLongData = Number(positionStr);
-                assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "CustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
-
-                console.log(", Dir " + isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
-
-                for(var i = 0; i < numOfExtraLongData; i++) {
-                    positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-                    AddLongData(Number(positionStr));
-                    console.log(", l" + i + " " +  l[i])
-                }
-
-                positionStr = inChannel.substr(0, inChannel.indexOf(","));
-                var numOfExtraDoubleData = Number(positionStr);
-                assert(numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8, "CustomPathData.deserialize: numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8 FAILED");
-                console.log(", num " + numOfExtraDoubleData);
-                for(var i = 0; i < numOfExtraDoubleData; i++) {
-                    positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-                    AddDoubleData(Number(positionStr));
-                    console.log(", l" + i + " " + d[i]);
-                }
-                return true;
+            if (getVersion() != CONNECTIONCUSTOMIZATIONDATAVERSION) {
+                // TODO: Convert from older version to newer
+                return false;
             }
 
-            this.getVersion = function(){
-                return version;
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var aspectStr = inChannel.substr(0, curSubPos);
+            setAspect(Number(aspectStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeIndexStr = inChannel.substr(0, curSubPos);
+            setEdgeIndex(Number(edgeIndexStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeCountStr = inChannel.substr(0, curSubPos);
+            setEdgeCount(Number(edgeCountStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
+            setType(Number(edgeCustomTypeStr));
+
+            console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var directionStr = inChannel.substr(0, curSubPos);
+            setHorizontalOrVertical(Number(directionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var positionStr = inChannel.substr(0, curSubPos);
+            setX(Number(positionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            positionStr = inChannel.substr(0, curSubPos);
+            setY(Number(positionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            positionStr = inChannel.substr(0, curSubPos);
+            var numOfExtraLongData = Number(positionStr);
+            assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "CustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
+
+            console.log(", Dir " + isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
+
+            for(var i = 0; i < numOfExtraLongData; i++) {
+                positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
+                AddLongData(Number(positionStr));
+                console.log(", l" + i + " " +  l[i])
             }
 
-            this.setVersion = function(_version){
-                version = _version;
+            positionStr = inChannel.substr(0, inChannel.indexOf(","));
+            var numOfExtraDoubleData = Number(positionStr);
+            assert(numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8, "CustomPathData.deserialize: numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8 FAILED");
+            console.log(", num " + numOfExtraDoubleData);
+            for(var i = 0; i < numOfExtraDoubleData; i++) {
+                positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
+                AddDoubleData(Number(positionStr));
+                console.log(", l" + i + " " + d[i]);
             }
+            return true;
+        }
 
-            this.getAspect = function(){
-                return aspect;
-            }
+        this.getVersion = function(){
+            return version;
+        }
 
-            this.setAspect = function(_aspect){
-                aspect = _aspect;
-            }
+        this.setVersion = function(_version){
+            version = _version;
+        }
 
-            this.getEdgeIndex = function(){
-                return edgeIndex;
-            }
-            
-            this.setEdgeIndex = function(index){
-                edgeIndex = index;
-            }
+        this.getAspect = function(){
+            return aspect;
+        }
 
-            this.getEdgeCount = function(){
-                return edgeCount;
-            }
+        this.setAspect = function(_aspect){
+            aspect = _aspect;
+        }
 
-            this.setEdgeCount = function(count){
-                edgeCount = count;
-            }
+        this.getEdgeIndex = function(){
+            return edgeIndex;
+        }
 
-            this.getType = function(){
-                return type;
-            }
+        this.setEdgeIndex = function(index){
+            edgeIndex = index;
+        }
 
-            this.setType = function(_type){
-                type = _type;
-            }
+        this.getEdgeCount = function(){
+            return edgeCount;
+        }
 
-            this.isHorizontalOrVertical = function(){
-                return horizontalOrVerticalEdge;
-            }
+        this.setEdgeCount = function(count){
+            edgeCount = count;
+        }
 
-            this.setHorizontalOrVertical = function(parity){
-                horizontalOrVerticalEdge = parity;
-            }
+        this.getType = function(){
+            return type;
+        }
 
-            this.getX = function(){
-                return x;
-            }
+        this.setType = function(_type){
+            type = _type;
+        }
 
-            this.setX = function(_x){
-                x = _x;
-            }
+        this.isHorizontalOrVertical = function(){
+            return horizontalOrVerticalEdge;
+        }
 
-            this.getY = function(){
-                return y;
-            }
+        this.setHorizontalOrVertical = function(parity){
+            horizontalOrVerticalEdge = parity;
+        }
 
-            this.setY = function(_y){
-                y = _y;
-            }
+        this.getX = function(){
+            return x;
+        }
 
-            this.getLongDataCount = function(){
-                return l.length;
-            }
+        this.setX = function(_x){
+            x = _x;
+        }
 
-            this.getLongData = function(index){
-                return l[index];
-            }
+        this.getY = function(){
+            return y;
+        }
 
-            this.setLongData = function(index, dat){
-                l[index] = dat;
-            }
+        this.setY = function(_y){
+            y = _y;
+        }
 
-            this.addLongData = function(dat){
-                l.push(dat);
-            }
+        this.getLongDataCount = function(){
+            return l.length;
+        }
 
-            this.getDoubleDataCount = function(){
-                return d.length;
-            }
+        this.getLongData = function(index){
+            return l[index];
+        }
 
-            this.getDoubleData = function(index){
-                return d[index];
-            }
+        this.setLongData = function(index, dat){
+            l[index] = dat;
+        }
 
-            this.setDoubleData = function(index, data){
-                d[index] = data;
-            }
+        this.addLongData = function(dat){
+            l.push(dat);
+        }
 
-            this.addDoubleData = function(data){
-                d.push(data);
-            }
+        this.getDoubleDataCount = function(){
+            return d.length;
+        }
 
-        };
+        this.getDoubleData = function(index){
+            return d[index];
+        }
+
+        this.setDoubleData = function(index, data){
+            d[index] = data;
+        }
+
+        this.addDoubleData = function(data){
+            d.push(data);
+        }
+
+    };
 
 
-        var getPointCoord = function (point, horDir){
-            if(horDir === true || isHorizontal(horDir))
-                return point.x;
+    var getPointCoord = function (point, horDir){
+        if(horDir === true || isHorizontal(horDir))
+            return point.x;
 
-            else 
-                return point.y;
-        };
+        else 
+            return point.y;
+    };
 
         var inflatedRect = function (rect, a){
             var r = rect;
@@ -6064,6 +6070,7 @@ _logger.info("About to vertical.block_SwitchWrongs()");
                 state = ARPATHST_Default,
                 isAutoRoutingOn = true,
                 customPathData = [],
+                customizationType = "Points",
                 pathDataToDelete = [],
                 points = new ArPointListPath(),
                 self = this;
@@ -6430,8 +6437,8 @@ pt = [pt];
 
             this.setCustomPathData = function(pDat){
                 customPathData = pDat;
+
                 //Disconnect path 
-                // Technically, this should only happen with single point customizations - not with edge shifts.
                 this.deleteAll();
             };
             
@@ -6441,9 +6448,12 @@ pt = [pt];
                 if (customPathData.length === 0)
                     return;
 
-                var ii = 0;
-                while( ii < customPathData.length ){
-                    plist.push( [ new ArPoint(customPathData[ii++]) ] );
+                var i = 0;
+                while( i < customPathData.length ){
+                    if( customPathData[i].getType() === CustomPointCustomization )
+                        plist.push( [ new ArPoint(customPathData[i].getX(), customPathData[i].getY()) ] );
+
+                    ++i;
                 }
 /*
                 while (ii < customPathData.length){
@@ -6463,6 +6473,7 @@ pt = [pt];
             };
 
             this.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
+                //This sets customizations of the type "SimpleEdgeDisplacement"
                 if (customPathData.length === 0)
                     return;
 
@@ -6481,10 +6492,11 @@ pt = [pt];
                     }
                 }
 
-                var startpoint = null,
-                    endpoint = null,
-                    currEdgeIndex = 0,
-                    pos = points.getHeadEdgePtrs(startpoint, endpoint);
+                var currEdgeIndex = 0,
+                    tmp = points.getHeadEdgePtrs(startpoint, endpoint),
+                    endpoint = tmp.end,
+                    startpoint = tmp.start,
+                    pos = tmp.pos;
 
                 while (pos < points.getLength()){
                     var ii = 0;
@@ -6530,10 +6542,6 @@ pt = [pt];
                                     customPathData.splice(ii, 1);
                                     increment = false;
                                 }
-                            } else if ((customPathData[ii]).getType() == CustomPointCustomization) {
-                                // it is done in a previous phase
-                            } else {
-                                // unknown displacement type
                             }
                         }
                         if (increment)
@@ -7484,17 +7492,16 @@ pt = [pt];
             if( !args.path instanceof AutoRouterPath )
                 throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
 
-            args.path.setAutoRouting( false );
+            if( args.points.length > 0 )
+                args.path.setAutoRouting( false );
             
             //Convert args.points to array of [ArPoint] 's
             while ( i < args.points.length ){
-                points.push(new ArPoint( args.points[i][0], args.points[i][1] ));
+                points.push(new CustomPathData( args.points[i][0], args.points[i][1] ));
                 ++i;
             }
 
             args.path.setCustomPathData( points );
-//Disconnect Path TODO
-            //args.path.is
 
         };
 
