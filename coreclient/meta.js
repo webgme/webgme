@@ -70,8 +70,12 @@ define([], function () {
                     meta.children = {"items":null};
                 } else {
                     meta.children = {};
+                    meta.children.minItems = [];
+                    meta.children.maxItems = [];
                     meta.children.items = _core.getMemberPaths(childrenNode,"items");
                     for(var i=0;i<meta.children.items.length;i++){
+                        meta.children.minItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"min") || -1);
+                        meta.children.maxItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"max") || -1);
                         meta.children.items[i] = pathToRefObject(meta.children.items[i]);
                     }
                     meta.children.min = _core.getAttribute(childrenNode,"min");
@@ -93,9 +97,14 @@ define([], function () {
                     pointer.items = _core.getMemberPaths(pointerNode,"items");
                     pointer.min = _core.getAttribute(pointerNode,"min");
                     pointer.max = _core.getAttribute(pointerNode,"max");
+                    pointer.minItems = [];
+                    pointer.maxItems = [];
 
                     for(var j=0;j<pointer.items.length;j++){
+                        pointer.minItems.push(_core.getMemberAttribute(pointerNode,"items",pointer.items[j],"min") || -1);
+                        pointer.maxItems.push(_core.getMemberAttribute(pointerNode,"items",pointer.items[j],"max") || -1);
                         pointer.items[j] = pathToRefObject(pointer.items[j]);
+
                     }
 
                     meta.pointers[pointerNames[i]] = pointer;
@@ -128,6 +137,12 @@ define([], function () {
                             var targetPath = refObjectToPath(meta.children.items[i]);
                             if(targetPath && _nodes[targetPath]){
                                 _core.addMember(childrenNode,"items",_nodes[targetPath]);
+                                if(meta.children.minItems[i] !== -1){
+                                    _core.setMemberAttribute(childrenNode,"items",targetPath,"min",meta.children.minItems[i]);
+                                }
+                                if(meta.children.maxItems[i] !== -1){
+                                    _core.setMemberAttribute(childrenNode,"items",targetPath,"max",meta.children.maxItems[i]);
+                                }
                             }
                         }
 
@@ -159,6 +174,12 @@ define([], function () {
                                 var targetPath = refObjectToPath(meta.pointers[i].items[j]);
                                 if(targetPath && _nodes[targetPath]){
                                     _core.addMember(pointerNode,"items",_nodes[targetPath]);
+                                    if(meta.pointers[i].minItems[j] !== -1){
+                                        _core.setMemberAttribute(pointerNode,"items",targetPath,"min",meta.pointers[i].minItems[j]);
+                                    }
+                                    if(meta.pointers[i].maxItems[j] !== -1){
+                                        _core.setMemberAttribute(pointerNode,"items",targetPath,"max",meta.pointers[i].maxItems[j]);
+                                    }
                                 }
                             }
 

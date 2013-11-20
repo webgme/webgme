@@ -89,6 +89,32 @@ define([ "util/assert"], function (ASSERT) {
             }
         };
 
+        setcore.getMemberAttributeNames = function(node,setName,memberPath){
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getAttributeNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberAttribute = function(node,setName,memberPath,attrName){
+            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getAttribute(memberNode,attrName);
+            }
+        };
+        setcore.setMemberAttribute = function(node,setName,memberPath,attrName,attrValue){
+            ASSERT(typeof setName === 'string' && typeof attrName === 'string' && attrValue !== undefined);
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.setAttribute(memberNode,attrName,attrValue);
+            }
+        };
+
         return setcore;
 
     }
