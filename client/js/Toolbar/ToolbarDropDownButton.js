@@ -89,6 +89,22 @@ define(['./ButtonBase',
         });
 
         this._ulMenu.append(chkLi);
+
+        chkLi.setEnabled = function (enabled) {
+            if (enabled) {
+                chkLi.removeClass('disabled');
+            } else {
+                chkLi.addClass('disabled');
+            }
+
+            checkBox.setEnabled(enabled);
+        };
+
+        chkLi.setChecked = function (checked) {
+            checkBox.setChecked(checked);
+        };
+
+        return chkLi;
     };
 
     ToolbarDropDownButton.prototype.destroy = function () {
