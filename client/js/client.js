@@ -878,6 +878,8 @@ define([
                             callback(err);
                         });
                         loading(newRootHash);
+                    } else {
+                        _core.persist(_nodes['root'].node,function(err){});
                     }
                 } else {
                     _msg="";
@@ -2041,6 +2043,7 @@ define([
                 getMeta : META.getMeta,
                 setMeta : META.setMeta,
                 getChildrenMeta: META.getChildrenMeta,
+                setChildrenMeta: META.setChildrenMeta,
                 getChildrenMetaAttribute: META.getChildrenMetaAttribute,
                 setChildrenMetaAttribute: META.setChildrenMetaAttribute,
                 getValidChildrenItems: META.getValidChildrenItems,
@@ -2049,6 +2052,7 @@ define([
                 getAttributeSchema: META.getAttributeSchema,
                 setAttributeSchema: META.setAttributeSchema,
                 getPointerMeta: META.getPointerMeta,
+                setPointerMeta: META.setPointerMeta,
                 getValidTargetItems: META.getValidTargetItems,
                 updateValidTargetItem: META.updateValidTargetItem,
                 removeValidTargetItem: META.removeValidTargetItem,

@@ -1099,8 +1099,19 @@ define(['logManager',
                 pointerMetaDescriptor = self._client.getValidTargetItems(sourceID,userSelectedPointerName);
                 if(!pointerMetaDescriptor){
                     self._client.makePointer(sourceID,userSelectedPointerName,null);
+                    self._client.setPointerMeta(sourceID,userSelectedPointerName,{
+                        "min":1,
+                        "max":1,
+                        "items":[
+                            {
+                                id:targetID,
+                                "max":1
+                            }
+                        ]
+                    });
+                } else {
+                    self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
                 }
-                self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,min:1,max:1});
 
                 self._client.completeTransaction();
             });

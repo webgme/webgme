@@ -85,7 +85,7 @@ define([], function () {
                 }
 
                 //pointers and pointer lists
-                var pointerNames = _core.getRegistry(metaNode,"pointerNames") || [];
+                var pointerNames = _core.getPointerNames(metaNode) || [];
                 for(var i=0;i<pointerNames.length;i++){
                     var pointerNode = _core.getChild(metaNode,"_p_"+pointerNames[i]);
                     var pointer = {};
@@ -153,9 +153,8 @@ define([], function () {
                 }
 
                 if(meta.pointers){
-                    var pointerNames = [];
                     for(var i in meta.pointers){
-                        pointerNames.push(i);
+                        _core.setPointer(metaNode,i,null);
                         var pointerNode = _core.getChild(metaNode,"_p_"+i);
                         if(meta.pointers[i].items && meta.pointers[i].items.length){
                             if(meta.pointers[i].min){
@@ -180,8 +179,6 @@ define([], function () {
 
                         }
                     }
-
-                    _core.setRegistry(metaNode,"pointerNames",pointerNames);
                 }
 
                 var meta_event = _core.getRegistry(node,"_meta_event_") || 0;
