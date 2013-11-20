@@ -94,7 +94,10 @@ define(['js/Constants',
                 var attrName = $(this).find('.n').text().replace(":", ""),
                     attrNames = self._attributeNames.slice(0),
                     dialog = new AttributeDetailsDialog(),
-                    desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));
+                    /*desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));*/
+                    atrMeta = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName);
+                var desc = _.extend({},{name:attrName,type:atrMeta.type});
+
 
                 //pass all the other attribute names to the dialog
                 attrNames.splice(self._attributeNames.indexOf(attrName), 1);
@@ -204,7 +207,8 @@ define(['js/Constants',
     MetaDecoratorDiagramDesignerWidget.prototype._addAttribute = function (attrName) {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            attrMetaDescriptor = nodeObj.getAttributeDescriptor(attrName);
+            //attrMetaDescriptor = nodeObj.getAttributeDescriptor(attrName);
+            attrMetaDescriptor = client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName) ? {name:attrName,type:client.getAttributeSchema(this._metaInfo[CONSTANTS.GME_ID],attrName).type || "null"} : null;
 
         if (attrMetaDescriptor) {
             this._attributes[attrName] = new Attribute(attrMetaDescriptor);
