@@ -43,7 +43,8 @@ define(['logManager',
 
     VisualizerPanel.prototype._initialize = function () {
         var self = this,
-            toolbar = WebGMEGlobal.Toolbar;
+            toolbar = WebGMEGlobal.Toolbar,
+            btnIconBase = $('<i style="display: inline-block;width: 14px;height: 14px;line-height: 14px;vertical-align: text-top;background-repeat: no-repeat;"></i>');;
 
         //set Widget title
         this.setTitle("Visualizer");
@@ -51,14 +52,13 @@ define(['logManager',
         this.$el.addClass('visualizer-panel');
 
         //add toolbar controls
-        var splitViewIcon = $('<i class="icon-plane" style="background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFR1ZSAxOSBOb3YgMjAxMyAxNjozNjo0NCAtMDYwMKaJVWgAAAAHdElNRQfdCxMWKDLaKUzZAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAD5JREFUeNpj/P//PwMqMDExAZJnzpxBE2eBSMABsgo0KSYGogELskloxqBJsWBVgdUNo6bSyFTMZIFpJAQAAMcoMq0xIJLxAAAAAElFTkSuQmCC); background-position: 0 0;"></i>');
+        toolbar.addSeparator();
+
         toolbar.addToggleButton({ "title": "Split view ON/OFF",
-            "icon": splitViewIcon,
+            "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFR1ZSAxOSBOb3YgMjAxMyAxNjozNjo0NCAtMDYwMKaJVWgAAAAHdElNRQfdCxMWKDLaKUzZAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAD5JREFUeNpj/P//PwMqMDExAZJnzpxBE2eBSMABsgo0KSYGogELskloxqBJsWBVgdUNo6bSyFTMZIFpJAQAAMcoMq0xIJLxAAAAAElFTkSuQmCC)'),
             "clickFn": function (data, toggled) {
                 self._p2Editor(toggled);
             }});
-
-        toolbar.addSeparator();
 
         this._panel1VisContainer = $('<div/>');
         this._ul1 = $('<ul class="nav nav-pills nav-stacked">');
