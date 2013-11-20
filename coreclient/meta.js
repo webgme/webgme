@@ -66,22 +66,17 @@ define([], function () {
                 var metaNode = _core.getChild(node,"_meta");
                 var childrenNode = _core.getChild(metaNode,"children");
                 //children
-                if(_core.isEmpty(childrenNode)){
-                    meta.children = {"items":null};
-                } else {
-                    meta.children = {};
-                    meta.children.minItems = [];
-                    meta.children.maxItems = [];
-                    meta.children.items = _core.getMemberPaths(childrenNode,"items");
-                    for(var i=0;i<meta.children.items.length;i++){
-                        meta.children.minItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"min") || -1);
-                        meta.children.maxItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"max") || -1);
-                        meta.children.items[i] = pathToRefObject(meta.children.items[i]);
-                    }
-                    meta.children.min = _core.getAttribute(childrenNode,"min");
-                    meta.children.max = _core.getAttribute(childrenNode,"max");
-                    //TODO to make minItems and maxItems really available we should extend the functionality of our setmeta
+                meta.children = {};
+                meta.children.minItems = [];
+                meta.children.maxItems = [];
+                meta.children.items = _core.getMemberPaths(childrenNode,"items");
+                for(var i=0;i<meta.children.items.length;i++){
+                    meta.children.minItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"min") || -1);
+                    meta.children.maxItems.push(_core.getMemberAttribute(childrenNode,"items",meta.children.items[i],"max") || -1);
+                    meta.children.items[i] = pathToRefObject(meta.children.items[i]);
                 }
+                meta.children.min = _core.getAttribute(childrenNode,"min");
+                meta.children.max = _core.getAttribute(childrenNode,"max");
 
                 //attributes - they are simple json objects from our point of view
                 var atrNames = _core.getAttributeNames(metaNode);

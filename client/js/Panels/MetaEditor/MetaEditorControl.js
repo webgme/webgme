@@ -815,6 +815,7 @@ define(['logManager',
     MetaEditorControl.prototype._processNodeMetaContainment = function (gmeID) {
         var node = this._client.getNode(gmeID),
             containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
+            containmentOwnTypes = this._client.getOwnValidChildrenTypes(gmeID) || [],
             len,
             oldMetaContainment,
             newMetaContainment = {'targets': []},
@@ -827,8 +828,10 @@ define(['logManager',
 
         len = containmentMetaDescriptor.length;
         while(len--) {
-            newMetaContainment.targets.push(containmentMetaDescriptor[len].id);
-            newMetaContainment[containmentMetaDescriptor[len].id] = {'multiplicity': ""+(containmentMetaDescriptor[len].min || 0)+".."+(containmentMetaDescriptor[len].max || '*')};
+            if(containmentOwnTypes.indexOf(containmentMetaDescriptor[len].id) !== -1){
+                newMetaContainment.targets.push(containmentMetaDescriptor[len].id);
+                newMetaContainment[containmentMetaDescriptor[len].id] = {'multiplicity': ""+(containmentMetaDescriptor[len].min || 0)+".."+(containmentMetaDescriptor[len].max || '*')};
+            }
         }
 
         //compute updated connections
@@ -884,6 +887,7 @@ define(['logManager',
         var node = this._client.getNode(gmeID),
             pointerNames = node.getPointerNames(),
             pointerMetaDescriptor,
+            pointerOwnMetaTypes,
             len,
             oldMetaPointers,
             newMetaPointers = {'names': [], 'combinedNames': []},
@@ -900,19 +904,23 @@ define(['logManager',
         len = pointerNames.length;
         while (len--) {
             pointerMetaDescriptor = this._client.getValidTargetItems(gmeID,pointerNames[len]);
+            pointerOwnMetaTypes = this._client.getOwnValidTargetTypes(gmeID,pointerNames[len]);
+
 
             if (pointerMetaDescriptor) {
                 lenTargets = pointerMetaDescriptor.length;
                 while (lenTargets--) {
-                    combinedName = pointerNames[len] + "_" + pointerMetaDescriptor[lenTargets].id;
+                    if(pointerOwnMetaTypes.indexOf(pointerMetaDescriptor[lenTargets].id) !== -1){
+                        combinedName = pointerNames[len] + "_" + pointerMetaDescriptor[lenTargets].id;
 
-                    newMetaPointers.names.push(pointerNames[len]);
+                        newMetaPointers.names.push(pointerNames[len]);
 
-                    newMetaPointers.combinedNames.push(combinedName);
+                        newMetaPointers.combinedNames.push(combinedName);
 
-                    newMetaPointers[combinedName] = {'name': pointerNames[len],
-                        'target': pointerMetaDescriptor[lenTargets].id,
-                        'multiplicity': ""+(pointerMetaDescriptor[lenTargets].min || 0)+".."+(pointerMetaDescriptor[lenTargets].max || '*')};
+                        newMetaPointers[combinedName] = {'name': pointerNames[len],
+                            'target': pointerMetaDescriptor[lenTargets].id,
+                            'multiplicity': ""+(pointerMetaDescriptor[lenTargets].min || 0)+".."+(pointerMetaDescriptor[lenTargets].max || '*')};
+                    }
                 }
             }
         }
