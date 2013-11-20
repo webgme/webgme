@@ -61,48 +61,6 @@ define(['logManager',
         //set default connection type to containment
         this._setNewConnectionType(MetaRelations.META_RELATIONS.CONTAINMENT);
 
-        /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DIAGRAM DESIGNER ******************/
-
-        /************** CREATE META RELATION CONNECTION TYPES *****************/
-        this._$btnGroupObjectRelations = this.diagramDesigner.toolBar.addRadioButtonGroup(function (event, data) {
-            self._setNewConnectionType(data.connType);
-        });
-
-        this.diagramDesigner.toolBar.addButton({ "title": "Containment",
-            "selected": true,
-            "data": { "connType": MetaRelations.META_RELATIONS.CONTAINMENT },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)}, this._$btnGroupObjectRelations);
-
-        this.diagramDesigner.toolBar.addButton({ "title": "Inheritance",
-            "selected": false,
-            "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)}, this._$btnGroupObjectRelations);
-
-        this.diagramDesigner.toolBar.addButton({ "title": "Pointer",
-            "selected": false,
-            "data": { "connType": MetaRelations.META_RELATIONS.POINTER },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)}, this._$btnGroupObjectRelations);
-
-        this.diagramDesigner.toolBar.addButton({ "title": "PointerList",
-            "selected": false,
-            "data": { "connType": MetaRelations.META_RELATIONS.POINTERLIST },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)}, this._$btnGroupObjectRelations);
-
-        /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
-
-
-        /************** PRINT NODE DATA *****************/
-        var $btnGroupPrintNodeData = this.diagramDesigner.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._printNodeData();
-        });
-
-        this.diagramDesigner.toolBar.addButton({ "title": "Print node data",
-            "icon": "icon-share"}, $btnGroupPrintNodeData);
-        /************** END OF - PRINT NODE DATA *****************/
-
-
-        /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
-
         this._initFilterPanel();
 
         //attach all the event handlers for event's coming from DiagramDesigner
@@ -186,7 +144,7 @@ define(['logManager',
 
     //might not be the best approach
     MetaEditorControl.prototype.destroy = function () {
-        this.detachClientEventListeners();
+        this._detachClientEventListeners();
         this._client.removeUI(this._territoryId);
         this.diagramDesigner.clear();
     };
@@ -1005,8 +963,7 @@ define(['logManager',
     /****************************************************************************/
 
     MetaEditorControl.prototype._setNewConnectionType = function (connType) {
-        var connProps = MetaRelations.getLineVisualDescriptor(connType),
-            metaInfo;
+        var connProps = MetaRelations.getLineVisualDescriptor(connType);
 
         if (this._connType !== connType) {
             this._connType = connType;
@@ -1401,13 +1358,102 @@ define(['logManager',
     /*               END OF --- CONNECTION DESTINATION TEXT CHANGE              */
     /****************************************************************************/
 
-    MetaEditorControl.prototype.attachClientEventListeners = function () {
-        this.detachClientEventListeners();
+    MetaEditorControl.prototype._attachClientEventListeners = function () {
+        this._detachClientEventListeners();
         this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
-    MetaEditorControl.prototype.detachClientEventListeners = function () {
+    MetaEditorControl.prototype._detachClientEventListeners = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    MetaEditorControl.prototype.onActivate = function () {
+        this._attachClientEventListeners();
+        this._displayToolbarItems();
+    };
+
+    MetaEditorControl.prototype.onDeactivate = function () {
+        this._detachClientEventListeners();
+        this._hideToolbarItems();
+    };
+
+    MetaEditorControl.prototype._displayToolbarItems = function () {
+        if (this._toolbarInitialized !== true) {
+            this._initializeToolbar();
+        } else {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].show();
+            }
+        }
+    };
+
+    MetaEditorControl.prototype._hideToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].hide();
+            }
+        }
+    };
+
+    MetaEditorControl.prototype._removeToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].destroy();
+            }
+        }
+    };
+
+    MetaEditorControl.prototype._initializeToolbar = function () {
+        var toolBar = WebGMEGlobal.Toolbar,
+            self = this;
+
+        this._toolbarItems = [];
+
+        /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DIAGRAM DESIGNER ******************/
+
+        /************** CREATE META RELATION CONNECTION TYPES *****************/
+        this._radioButtonGroupMetaRelationType = toolBar.addRadioButtonGroup(function (data) {
+            self._setNewConnectionType(data.connType);
+        });
+        this._toolbarItems.push(this._radioButtonGroupMetaRelationType);
+
+        this._radioButtonGroupMetaRelationType.addButton({ "title": "Containment",
+            "selected": true,
+            "data": { "connType": MetaRelations.META_RELATIONS.CONTAINMENT },
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)}, this._$btnGroupObjectRelations);
+
+        this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
+            "selected": false,
+            "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)}, this._$btnGroupObjectRelations);
+
+        this._radioButtonGroupMetaRelationType.addButton({ "title": "Pointer",
+            "selected": false,
+            "data": { "connType": MetaRelations.META_RELATIONS.POINTER },
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)}, this._$btnGroupObjectRelations);
+
+        this._radioButtonGroupMetaRelationType.addButton({ "title": "PointerList",
+            "selected": false,
+            "data": { "connType": MetaRelations.META_RELATIONS.POINTERLIST },
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)}, this._$btnGroupObjectRelations);
+
+        /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
+
+
+        /************** PRINT NODE DATA *****************/
+        this._btnPrintNodeMetaData = toolBar.addButton({ "title": "Print node META data",
+            "icon": "icon-share",
+            "clickFn": function (/*data*/){
+                self._printNodeData();
+            }});
+        this._toolbarItems.push(this._btnPrintNodeMetaData);
+        /************** END OF - PRINT NODE DATA *****************/
+
+
+        /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
+
+
+        this._toolbarInitialized = true;
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions

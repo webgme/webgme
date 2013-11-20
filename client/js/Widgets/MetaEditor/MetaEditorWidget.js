@@ -30,16 +30,6 @@ define(['logManager',
         __parent_proto__._initializeUI.apply(this, arguments);
         this.logger.debug("MetaEditorWidget._initializeUI");
 
-        //remove route manager selection buttons
-        if (this.$btnGroupConnectionRouteManager) {
-            this.$btnGroupConnectionRouteManager.remove();
-        }
-
-        //remove connection start/end arrow and line pattern selector
-        this.$ddlConnectionArrowStart.remove();
-        this.$ddlConnectionPattern.remove();
-        this.$ddlConnectionArrowEnd.remove();
-
         //disable connection to a connection
         this._connectToConnection = false;
 
@@ -117,6 +107,25 @@ define(['logManager',
         if (this._filterCheckboxes[value] && !this._filterCheckboxes[value].isChecked()) {
             this._filterCheckboxes[value].setChecked(true);
         }
+    };
+
+    MetaEditorWidget.prototype._initializeToolbar = function () {
+        DiagramDesignerWidget.prototype._initializeToolbar.call(this);
+
+        //remove route manager selection buttons
+        /*this.toolbarItems.radioButtonGroupRouteManager.destroy();
+        delete this.toolbarItems.radioButtonGroupRouteManager;*/
+
+        //remove connection start/end arrow and line pattern selector
+        this.toolbarItems.ddbtnConnectionArrowStart.destroy();
+        delete this.toolbarItems.ddbtnConnectionArrowStart;
+
+        this.toolbarItems.ddbtnConnectionPattern.destroy();
+        delete this.toolbarItems.ddbtnConnectionPattern;
+
+        this.toolbarItems.ddbtnConnectionArrowEnd.destroy();
+        delete this.toolbarItems.ddbtnConnectionArrowEnd;
+
     };
 
     return MetaEditorWidget;

@@ -72,59 +72,6 @@ define(['logManager',
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
-
-
-        /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
-
-        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnGroupModelHierarchyUp = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._onModelHierarchyUp();
-        });
-
-        this.designerCanvas.toolBar.addButton({ "title": "Go to parent",
-            "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp);
-
-        this.$btnGroupModelHierarchyUp.hide();
-
-        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
-
-        /* OCL CONTSTRAINT VALIDATION */
-        this.$btnGroupOCLValidate = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._onOCLValidate();
-        });
-
-        this.designerCanvas.toolBar.addButton({ "title": "Validate ALL",
-            "icon": "icon-fire"}, this.$btnGroupOCLValidate);
-
-        /************** VISUAL STYLES HIERARCHY BUTTON ****************/
-        this.$btnGroupVisualStyles = this.designerCanvas.toolBar.addButtonGroup();
-
-        this.$btnConnectionVisualStyleRegistryFields = this.designerCanvas.toolBar.addButton(
-             { "title": "Add connection visual style registry fields",
-                "icon": "icon-random",
-                "clickFn": function (/*event, data*/) {
-                    self._createConnectionVisualStyleRegistryFields();
-                }
-             }, this.$btnGroupVisualStyles);
-
-        this.$btnConnectionVisualStyleRegistryFields.enabled(false);
-
-        this.$btnConnectionRemoveSegmentPoints = this.designerCanvas.toolBar.addButton(
-            { "title": "Remove segment points",
-                "icon": "icon-remove-circle",
-                "clickFn": function (/*event, data*/) {
-                    self._removeConnectionSegmentPoints();
-                }
-            }, this.$btnGroupVisualStyles);
-
-        this.$btnConnectionRemoveSegmentPoints.enabled(false);
-
-        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
-
-        if (DEBUG === true) {
-            this._addDebugModeExtensions();
-        }
-
         /****************** END OF - ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
 
         //attach all the event handlers for event's coming from DesignerCanvas
@@ -167,9 +114,9 @@ define(['logManager',
             }
 
             if (this.currentNodeInfo.parentId) {
-                this.$btnGroupModelHierarchyUp.show();
+                this.$btnModelHierarchyUp.show();
             } else {
-                this.$btnGroupModelHierarchyUp.hide();
+                this.$btnModelHierarchyUp.hide();
             }
 
             //put new node's info into territory rules
@@ -855,7 +802,8 @@ define(['logManager',
 
     //TODO: check this here...
     ModelEditorControl.prototype.destroy = function () {
-        this.detachClientEventListeners();
+        this._detachClientEventListeners();
+        this._removeToolbarItems();
         this._client.removeUI(this._territoryId);
     };
 
@@ -1024,13 +972,115 @@ define(['logManager',
         this.logger.warning('OCL Validate all clicked...');
     };
 
-    ModelEditorControl.prototype.attachClientEventListeners = function () {
-        this.detachClientEventListeners();
+    ModelEditorControl.prototype._attachClientEventListeners = function () {
+        this._detachClientEventListeners();
         this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
-    ModelEditorControl.prototype.detachClientEventListeners = function () {
+    ModelEditorControl.prototype._detachClientEventListeners = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    ModelEditorControl.prototype.onActivate = function () {
+        this._attachClientEventListeners();
+        this._displayToolbarItems();
+    };
+
+    ModelEditorControl.prototype.onDeactivate = function () {
+        this._detachClientEventListeners();
+        this._hideToolbarItems();
+    };
+
+    ModelEditorControl.prototype._displayToolbarItems = function () {
+        if (this._toolbarInitialized !== true) {
+            this._initializeToolbar();
+            if (DEBUG === true) {
+                this._addDebugModeExtensions();
+            }
+        } else {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].show();
+            }
+            if (DEBUG === true) {
+                this._showDebugModeExtensions();
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._hideToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].hide();
+            }
+            if (DEBUG === true) {
+                this._hideDebugModeExtensions();
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._removeToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].destroy();
+            }
+            if (DEBUG === true) {
+                this._removeDebugModeExtensions();
+            }
+        }
+    };
+
+    ModelEditorControl.prototype._initializeToolbar = function () {
+        var toolBar = WebGMEGlobal.Toolbar,
+            self = this;
+
+        this._toolbarItems = [];
+
+        /****************** ADD BUTTONS AND THEIR EVENT HANDLERS TO DESIGNER CANVAS ******************/
+
+        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
+        this.$btnModelHierarchyUp = toolBar.addButton({ "title": "Go to parent",
+            "icon": "icon-circle-arrow-up",
+            "clickFn": function (/*data*/) {
+                self._onModelHierarchyUp();
+            }
+        });
+        this._toolbarItems.push(this.$btnModelHierarchyUp);
+
+        this.$btnModelHierarchyUp.hide();
+
+
+        /************************ OCL CONTSTRAINT VALIDATION ******************/
+        this.$btnConstraintValidate = toolBar.addButton({ "title": "Validate",
+            "icon": "icon-fire",
+            "clickFn": function (/*data*/) {
+                self._onOCLValidate();
+            }
+        });
+        this._toolbarItems.push(this.$btnConstraintValidate);
+
+        /************** VISUAL STYLES HIERARCHY BUTTON ****************/
+        this.$btnConnectionVisualStyleRegistryFields = toolBar.addButton(
+            { "title": "Add connection visual style registry fields",
+                "icon": "icon-random",
+                "clickFn": function (/*data*/) {
+                    self._createConnectionVisualStyleRegistryFields();
+                }
+            });
+        this._toolbarItems.push(this.$btnConnectionVisualStyleRegistryFields);
+        this.$btnConnectionVisualStyleRegistryFields.enabled(false);
+
+        this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
+            { "title": "Remove segment points",
+                "icon": "icon-remove-circle",
+                "clickFn": function (/*data*/) {
+                    self._removeConnectionSegmentPoints();
+                }
+            });
+        this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
+        this.$btnConnectionRemoveSegmentPoints.enabled(false);
+
+
+        this._toolbarInitialized = true;
     };
 
     //attach ModelEditorControl - DesignerCanvas event handler functions

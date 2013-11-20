@@ -9,103 +9,128 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
 
     ModelEditorControlDEBUG.prototype._addDebugModeExtensions = function () {
         var self = this,
-            $btnGroupAutoRename,
-            $btnGroupPrintNodeData,
-            $ddlCreate;
+            toolBar = WebGMEGlobal.Toolbar;
 
         this.logger.warning("ModelEditorControlDEBUG _addDebugModeExtensions activated...");
 
+        this._debugToolbarItems = [];
+
         /************** AUTO RENAME GME NODES *****************/
-        $btnGroupAutoRename = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._autoRenameGMEObjects();
-        });
-        this.designerCanvas.toolBar.addButton({ "title": "Auto rename",
-            "icon": "icon-th-list"}, $btnGroupAutoRename);
+        this.debugbtnAutoRename = toolBar.addButton(
+            { "title": "Auto rename",
+            "icon": "icon-th-list",
+            "clickFn": function (/*data*/) {
+                self._autoRenameGMEObjects();
+            }}
+        );
+
+        this._debugToolbarItems.push(this.debugbtnAutoRename);
 
         /************** END OF - AUTO RENAME GME NODES *****************/
 
         /************** AUTO CREATE NEW NODES *****************/
-        $ddlCreate = this.designerCanvas.toolBar.addDropDownMenu({ "text": "Create..." });
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 item",
+        this.debugddlCreate = toolBar.addDropDownButton({ "text": "Create..." });
+        this._debugToolbarItems.push(this.debugddlCreate);
+
+        this.debugddlCreate.addButton({
+            "title": "Create 1 item",
             "icon": "icon-plus-sign",
             "text": "1 item",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEModels(1);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 items",
+        this.debugddlCreate.addButton({ "title": "Create 5 items",
             "icon": "icon-plus-sign",
             "text": "5 items",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/* data*/) {
                 self._createGMEModels(5);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 items",
+        this.debugddlCreate.addButton({ "title": "Create 10 items",
             "icon": "icon-plus-sign",
             "text": "10 items",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEModels(10);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 items",
+        this.debugddlCreate.addButton({ "title": "Create 50 items",
             "icon": "icon-plus-sign",
             "text": "50 items",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEModels(50);
-            }}, $ddlCreate);
+            }});
 
         /************** END OF - AUTO CREATE NEW NODES *****************/
 
-        this.designerCanvas.toolBar.addMenuItemDivider($ddlCreate);
+        this.debugddlCreate.addDivider();
 
         /************** AUTO CREATE NEW CONNECTIONS *****************/
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 1 connection",
+        this.debugddlCreate.addButton({ "title": "Create 1 connection",
             "icon": "icon-resize-horizontal",
             "text": "1 connection",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEConnections(1);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 5 connections",
+        this.debugddlCreate.addButton({ "title": "Create 5 connections",
             "icon": "icon-resize-horizontal",
             "text": "5 connections",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEConnections(5);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 10 connections",
+        this.debugddlCreate.addButton({ "title": "Create 10 connections",
             "icon": "icon-resize-horizontal",
             "text": "10 connections",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEConnections(10);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 50 connections",
+        this.debugddlCreate.addButton({ "title": "Create 50 connections",
             "icon": "icon-resize-horizontal",
             "text": "50 connections",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEConnections(50);
-            }}, $ddlCreate);
+            }});
 
-        this.designerCanvas.toolBar.addButtonMenuItem({ "title": "Create 100 connections",
+        this.debugddlCreate.addButton({ "title": "Create 100 connections",
             "icon": "icon-resize-horizontal",
             "text": "100 connections",
-            "clickFn": function (/*event, data*/) {
+            "clickFn": function (/*data*/) {
                 self._createGMEConnections(100);
-            }}, $ddlCreate);
+            }});
 
         /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
         /************** PRINT NODE DATA *****************/
-        $btnGroupPrintNodeData = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._printNodeData();
-        });
 
-        this.designerCanvas.toolBar.addButton({ "title": "Print node data",
-            "icon": "icon-share"}, $btnGroupPrintNodeData);
-
+        this.debugbtnPrintNodeData = toolBar.addButton({ "title": "Print node data",
+            "icon": "icon-share",
+            "clickFn": function (/*data*/){
+                self._printNodeData();
+            }});
+        this._debugToolbarItems.push(this.debugbtnPrintNodeData);
         /************** END OF - PRINT NODE DATA *****************/
 
+    };
+
+    ModelEditorControlDEBUG.prototype._showDebugModeExtensions = function () {
+        for (var i = 0; i < this._debugToolbarItems.length; i++) {
+            this._debugToolbarItems[i].show();
+        }
+    };
+
+    ModelEditorControlDEBUG.prototype._hideDebugModeExtensions = function () {
+        for (var i = 0; i < this._debugToolbarItems.length; i++) {
+            this._debugToolbarItems[i].hide();
+        }
+    };
+
+    ModelEditorControlDEBUG.prototype._removeDebugModeExtensions = function () {
+        for (var i = 0; i < this._debugToolbarItems.length; i++) {
+            this._debugToolbarItems[i].destroy();
+        }
     };
 
     ModelEditorControlDEBUG.prototype._autoRenameGMEObjects = function () {

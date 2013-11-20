@@ -80,13 +80,15 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
     /* override IActivePanel.prototype.onActivate */
     MetaEditorPanel.prototype.onActivate = function () {
-        this.control.attachClientEventListeners();
+        this.widget.onActivate();
+        this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
     };
 
     /* override IActivePanel.prototype.onDeactivate */
     MetaEditorPanel.prototype.onDeactivate = function () {
-        this.control.detachClientEventListeners();
+        this.widget.onDeactivate();
+        this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
     };
 
