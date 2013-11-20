@@ -2,7 +2,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
   "use strict";
 
   var self, logger, client;
-  var toBeValidated;
+  var territoryId, toBeValidated;
   
   var ObjectConstraintManager = function(client_) {
     self = this;
@@ -13,7 +13,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
 
   ObjectConstraintManager.prototype.validateAll = function(id) {
     toBeValidated = id;
-    var territoryId = client.addUI(this, true);
+    territoryId = client.addUI(this, true);
     client.updateTerritory(territoryId, {root: {'children': Number.MAX_VALUE}});
   };
 
@@ -56,6 +56,7 @@ define(['logManager', 'js/NodePropertyNames'], function (logManager, nodePropert
   ObjectConstraintManager.prototype.onOneEvent = function (events) {
     logger.info('Territory is updated, validation begins');
     self.validate(toBeValidated);
+    client.removeUI(territoryId);
   }
 
   return ObjectConstraintManager;
