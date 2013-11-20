@@ -85,7 +85,7 @@ define(['logManager',
             self = this;
 
         checkBox = new iCheckBox({
-            "checkChangedFn": function (isChecked) {
+            "checkChangedFn": function (data, isChecked) {
                 self._checkChanged(value, isChecked);
             }});
 

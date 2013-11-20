@@ -292,11 +292,11 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             onCheckChanged,
             chkFieldEpx;
 
-        onCheckChanged = function (checked) {
+        onCheckChanged = function (idata, isChecked) {
             var data = chkLi.data();
 
             if (params.checkChangedFn) {
-                params.checkChangedFn.call(this, data, checked);
+                params.checkChangedFn.call(this, data, isChecked);
             }
         };
 
@@ -358,11 +358,11 @@ define(['js/Controls/iCheckBox'], function (iCheckBox) {
             chkFieldEpx,
             p = {};
 
-        onCheckChanged = function (checked) {
+        onCheckChanged = function (idata, isChecked) {
             var data = chkFieldEpx.el.data();
 
             if (params.checkChangedFn) {
-                params.checkChangedFn.call(this, data, checked);
+                params.checkChangedFn.call(this, data, isChecked);
             }
         };
 

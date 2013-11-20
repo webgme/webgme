@@ -26,7 +26,7 @@ define(['logManager',
     KeyboardManagerWidget.prototype._initializeUI = function () {
         this.__checkbox = new iCheckBox({"checkedText": 'ON',
             "uncheckedText": 'OFF',
-            "checkChangedFn": function (isChecked) {
+            "checkChangedFn": function (data, isChecked) {
                 WebGMEGlobal.KeyboardManager.setEnabled(isChecked);
             }});
 

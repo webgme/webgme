@@ -14,7 +14,7 @@ define(['js/Controls/PropertyGrid/Widgets/WidgetBase',
 
             this.__checkbox = new iCheckBox({"checkedText": 'YES',
                                              "uncheckedText": 'NO',
-                                             "checkChangedFn": function (isChecked) {
+                                             "checkChangedFn": function (data, isChecked) {
                                                  self.setValue(isChecked);
                                                  self.fireFinishChange();
                                              }});
