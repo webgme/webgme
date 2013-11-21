@@ -150,8 +150,8 @@ define(['logManager',
 
     GraphVizControl.prototype.isConnection = function (obj) {
         var res = false,
-            SRC_POINTER_NAME = "source",
-            DST_POINTER_NAME = "target";
+            SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
+            DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
         if (obj) {
             var ptrNames = obj.getPointerNames();
