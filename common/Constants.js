@@ -20,11 +20,17 @@ define([], function () {
         GME_ID: 'GME_ID',
 
         /*
+         * ROOT OBJECT ID
+         */
+        PROJECT_ROOT_ID: 'root',
+
+        /*
          * Dedicated POINTER names
          */
-         POINTER_SOURCE : 'source',
-         POINTER_TARGET : 'target',
-         POINTER_REF: 'ref',
+         POINTER_SOURCE : 'source',     //dedicated connection source pointer name
+         POINTER_TARGET : 'target',     //dedicated connection target pointer name
+         POINTER_REF: 'ref',    //dedicated reference pointer name
+         POINTER_BASE: 'base',  //dedicated inheritance pointer name
 
          /*
           * Dedicated SET names
