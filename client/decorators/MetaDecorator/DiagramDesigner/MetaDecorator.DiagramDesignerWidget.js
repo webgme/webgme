@@ -532,7 +532,7 @@ define(['js/Constants',
             metaObj = client.getMeta(this._metaInfo[CONSTANTS.GME_ID]),
             self = this;
 
-        dialog.show(JSON.stringify(metaObj), function (text) {
+        dialog.show(JSON.stringify(metaObj, undefined, 2), function (text) {
                 try {
                     var newMetaObj = JSON.parse(text);
                     client.setMeta(self._metaInfo[CONSTANTS.GME_ID], newMetaObj);
