@@ -25,15 +25,19 @@ define(['jquery',
             this.setChecked(options.checked);
         }
 
+        if (options && options.data) {
+            this.el.data(options.data);
+        }
+
         this.el.on('click', null, function (event) {
-            self._toggleChecked();
+            self.toggleChecked();
             event.stopPropagation();
         });
 
         this._checkChangedFn = options && options.checkChangedFn;
     };
 
-    iCheckBox.prototype._toggleChecked = function () {
+    iCheckBox.prototype.toggleChecked = function () {
         this.setChecked(!this.isChecked());
     };
 
@@ -43,7 +47,8 @@ define(['jquery',
 
     iCheckBox.prototype.setChecked = function (isChecked) {
         var checkBox = this.el,
-            checkState = this.el.hasClass(CHECKED_CLASS);
+            checkState = this.el.hasClass(CHECKED_CLASS),
+            data = this.el.data();
 
         if (!checkBox.hasClass(DISABLED_CLASS)) {
 
@@ -52,7 +57,7 @@ define(['jquery',
                 this._txt.text( isChecked ? this._checkedText : this._uncheckedText );
 
                 if (this._checkChangedFn) {
-                    this._checkChangedFn.call(this, isChecked);
+                    this._checkChangedFn.call(this, data, isChecked);
                 }
             }
         }

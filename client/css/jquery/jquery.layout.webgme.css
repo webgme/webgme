@@ -11,6 +11,7 @@
     border-bottom-width: 1px;
 }
 
+.ui-layout-north,
 .ui-layout-south {
     overflow: visible;  /*enable the popups to be shown*/
 }

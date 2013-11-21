@@ -30,6 +30,7 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Droppable',
     './DiagramDesignerWidget.Draggable',
     './DiagramDesignerWidget.Clipboard',
+    './DiagramDesignerWidget.Toolbar',
     'css!/css/Widgets/DiagramDesigner/DiagramDesignerWidget'], function (logManager,
                                                       CONSTANTS,
                                                       raphaeljs,
@@ -53,7 +54,8 @@ define(['logManager',
                                                       DiagramDesignerWidgetContextMenu,
                                                       DiagramDesignerWidgetDroppable,
                                                       DiagramDesignerWidgetDraggable,
-                                                      DiagramDesignerWidgetClipboard) {
+                                                      DiagramDesignerWidgetClipboard,
+                                                      DiagramDesignerWidgetToolbar) {
 
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
@@ -93,12 +95,15 @@ define(['logManager',
 
         //if the widget supports search functionality
         this._defaultSearchUI = true;
-        if (params.hasOwnProperty('defaultSearchUI')) {
+        if (params && params.hasOwnProperty('defaultSearchUI')) {
             this._defaultSearchUI = params.defaultSearchUI;
         }
 
-        //toolbar instance
-        this.toolBar = params.toolBar;
+        //if the widget needs lineStyleControls
+        this._lineStyleControls = true;
+        if (params && params.hasOwnProperty('lineStyleControls')) {
+            this._lineStyleControls = params.lineStyleControls;
+        }
 
         //END OF --- Get DiagramDesignerWidget parameters from options
 
@@ -269,7 +274,9 @@ define(['logManager',
     /* METHOD CALLED WHEN THE WIDGET'S READ-ONLY PROPERTY CHANGES */
     DiagramDesignerWidget.prototype.setReadOnly = function (isReadOnly) {
         this._setReadOnlyMode(isReadOnly);
-        this.$btnGroupOperatingMode.enabled(!isReadOnly);
+        if (this.toolbarItems && this.toolbarItems.radioButtonGroupOperatingMode) {
+            this.toolbarItems.radioButtonGroupOperatingMode.enabled(!isReadOnly);
+        }
     };
 
     DiagramDesignerWidget.prototype.getIsReadOnlyMode = function () {
@@ -303,6 +310,7 @@ define(['logManager',
 
     DiagramDesignerWidget.prototype.destroy = function () {
         this.__loader.destroy();
+        this._removeToolbarItems();
         //TODO: what about item and connection destroys????
     };
 
@@ -324,141 +332,6 @@ define(['logManager',
 
         //TODO: $diagramDesignerWidgetBody --> this.$el;
         this.skinParts.$diagramDesignerWidgetBody = this.$el;
-
-        //if and external toolbar exist for the component
-        if (this.toolBar) {
-            /******** ADDITIONAL BUTTON GROUP CONTAINER**************/
-                //add extra visual piece
-
-            /************** ROUTING MANAGER SELECTION **************************/
-            if (DEBUG === true) {
-                /*this.skinParts.$btnGroupItemAutoOptions = this.toolBar.addButtonGroup(function (event, data) {
-                    self.itemAutoLayout(data.mode);
-                });
-
-                this.toolBar.addButton({ "title": "Grid layout",
-                    "icon": "icon-th",
-                    "data": { "mode": "grid" }}, this.skinParts.$btnGroupItemAutoOptions );
-
-                this.toolBar.addButton({ "title": "Cozy Grid layout",
-                    "icon": "icon-th-large",
-                    "data": { "mode": "cozygrid" }}, this.skinParts.$btnGroupItemAutoOptions );*/
-
-                //progress text in toolbar for debug only
-                this.skinParts.$progressText = this.toolBar.addLabel();
-
-                //route manager selection
-                this.$btnGroupConnectionRouteManager = this.toolBar.addRadioButtonGroup(function (event, data) {
-                    self._onConnectionRouteManagerChanged(data.type);
-                });
-
-                this.toolBar.addButton({ "title": "Basic route manager",
-                    "text": "RM #1",
-                    "data": { "type": "basic"}}, this.$btnGroupConnectionRouteManager );
-
-                this.toolBar.addButton({ "title": "Basic+ route manager",
-                    "text": "RM #2",
-                    "selected": true,
-                    "data": { "type": "basic2"}}, this.$btnGroupConnectionRouteManager );
-
-                this.toolBar.addButton({ "title": "AutoRouter",
-                    "text": "RM #3",
-                    "data": { "type": "basic3"}}, this.$btnGroupConnectionRouteManager );
-            }
-            /************** END OF - ROUTING MANAGER SELECTION **************************/
-
-            this.$btnGroupOperatingMode = this.toolBar.addRadioButtonGroup(function (event, data) {
-                self.setOperatingMode(data.mode);
-            });
-
-            this.toolBar.addButton(
-                {"icon": "icon-lock",
-                    "title": "Read-only mode",
-                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.READ_ONLY}
-                },
-                this.$btnGroupOperatingMode);
-
-            this.toolBar.addButton(
-                {"icon": "icon-move",
-                    "title": "Design mode",
-                    "selected": true,
-                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.DESIGN}
-                },
-                this.$btnGroupOperatingMode);
-
-            this.toolBar.addButton(
-                {"icon": "icon-eye-open",
-                    "title": "Highlight mode",
-                    "data": {"mode": DiagramDesignerWidgetOperatingModes.prototype.OPERATING_MODES.HIGHLIGHT}
-                },
-                this.$btnGroupOperatingMode);
-
-
-            //toggle button for show common/all fields
-            this.$btnGroupXING = this.toolBar.addButtonGroup();
-
-            this.toolBar.addToggleButton(
-                {"text": "XING",
-                 "title": "Turn connection crossing jumps on/off",
-                    "clickFn": function (event, data, isPressed) {
-                        self._setConnectionXingJumpMode(isPressed);
-                    }}, this.$btnGroupXING);
-
-            //connection visual style setting buttons
-            /************** AUTO CREATE NEW NODES *****************/
-            this.$ddlConnectionArrowStart = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-left" });
-            this.$ddlConnectionPattern = this.toolBar.addDropDownMenu({ "icon": "icon-minus", "class": 'toolbar-group-small-margin' });
-            this.$ddlConnectionArrowEnd = this.toolBar.addDropDownMenu({ "icon": "icon-arrow-right", "class": 'toolbar-group-small-margin' });
-
-            var createArrowMenuItem = function (arrowType, isEnd) {
-                var size = arrowType === DiagramDesignerWidgetConstants.LINE_ARROWS.NONE ? "" : "-xwide-xlong",
-                    startArrow = isEnd ? null : arrowType + size,
-                    endArrow = isEnd ? arrowType + size : null;
-
-                return { "title": arrowType,
-                        "icon": self._createLineStyleMenuItem(null, null, null, startArrow, endArrow),
-                        "clickFn": function (/*event, data*/) {
-                            var p = {};
-                            if (isEnd) {
-                                p[DiagramDesignerWidgetConstants.LINE_END_ARROW] = endArrow;
-                            } else {
-                                p[DiagramDesignerWidgetConstants.LINE_START_ARROW] = startArrow;
-                            }
-                            self._setConnectionProperty(p);
-                        }
-                };
-            };
-
-            var createPatternMenuItem = function (pattern) {
-                return { "title": pattern,
-                    "icon": self._createLineStyleMenuItem(null, null, DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern], null, null),
-                    "clickFn": function (/*event, data*/) {
-                        var p = {};
-                        p[DiagramDesignerWidgetConstants.LINE_PATTERN] = DiagramDesignerWidgetConstants.LINE_PATTERNS[pattern];
-                        self._setConnectionProperty(p);
-                    }
-                };
-            };
-
-            for (var a in DiagramDesignerWidgetConstants.LINE_ARROWS) {
-                if (DiagramDesignerWidgetConstants.LINE_ARROWS.hasOwnProperty([a])) {
-                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], false), this.$ddlConnectionArrowStart);
-                    this.toolBar.addButtonMenuItem(createArrowMenuItem(DiagramDesignerWidgetConstants.LINE_ARROWS[a], true), this.$ddlConnectionArrowEnd);
-                }
-            }
-
-            for (var a in DiagramDesignerWidgetConstants.LINE_PATTERNS) {
-                if (DiagramDesignerWidgetConstants.LINE_PATTERNS.hasOwnProperty([a])) {
-                    this.toolBar.addButtonMenuItem(createPatternMenuItem(a), this.$ddlConnectionPattern);
-                }
-            }
-
-            this.$ddlConnectionArrowStart.enabled(false);
-            this.$ddlConnectionPattern.enabled(false);
-            this.$ddlConnectionArrowEnd.enabled(false);
-
-            /************** END OF - AUTO CREATE NEW NODES *****************/
-        }
 
         //CHILDREN container
         this.skinParts.$itemsContainer = $('<div/>', {
@@ -660,8 +533,8 @@ define(['logManager',
             msg += " D: " + deletedLen;
 
             this.logger.debug(msg);
-            if (DEBUG === true) {
-                this.skinParts.$progressText.text(msg);
+            if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
+                this.toolbarItems.progressText.text(msg);
             }
 
             this._refreshScreen();
@@ -950,9 +823,19 @@ define(['logManager',
             };
         }
 
-        this.$ddlConnectionArrowEnd.enabled(connectionSelected);
-        this.$ddlConnectionArrowStart.enabled(connectionSelected);
-        this.$ddlConnectionPattern.enabled(connectionSelected);
+        if (this.toolbarItems) {
+            if (this.toolbarItems.ddbtnConnectionArrowEnd) {
+                this.toolbarItems.ddbtnConnectionArrowEnd.enabled(connectionSelected);
+            }
+
+            if (this.toolbarItems.ddbtnConnectionArrowStart) {
+                this.toolbarItems.ddbtnConnectionArrowStart.enabled(connectionSelected);
+            }
+
+            if (this.toolbarItems.ddbtnConnectionPattern) {
+                this.toolbarItems.ddbtnConnectionPattern.enabled(connectionSelected);
+            }
+        }
 
         this.onSelectionChanged(selectedIds);
     };
@@ -1401,6 +1284,14 @@ define(['logManager',
         return res;
     };
 
+    DiagramDesignerWidget.prototype.onActivate = function () {
+        this._displayToolbarItems();
+    };
+
+    DiagramDesignerWidget.prototype.onDeactivate = function () {
+        this._hideToolbarItems();
+    };
+
     /************** END OF - API REGARDING TO MANAGERS ***********************/
 
     //additional code pieces for DiagramDesignerWidget
@@ -1415,6 +1306,8 @@ define(['logManager',
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDroppable.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetClipboard.prototype);
     _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetDraggable.prototype);
+    _.extend(DiagramDesignerWidget.prototype, DiagramDesignerWidgetToolbar.prototype);
+
 
     return DiagramDesignerWidget;
 });

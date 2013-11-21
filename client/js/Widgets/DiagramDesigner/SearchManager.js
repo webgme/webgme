@@ -35,26 +35,20 @@ define(['logManager',
         this._diagramDesigner.addEventListener(this._diagramDesigner.events.ON_COMPONENT_DELETE, function (__diagramDesigner, componentId) {
             self._onComponentDelete(componentId);
         });
-
-        if (this._diagramDesigner._defaultSearchUI === true) {
-            this._filterBox = this._diagramDesigner.toolBar.addTextBox({"prependContent": '<i class="icon-search"></i>', "placeholder": "Find..."}, function (oldVal, newVal) {
-                self.filterItems(newVal);
-            });
-        }
     };
 
     SearchManager.prototype.activate = function () {
-        if (this._filterBox) {
-            this._filterBox.removeAttr('disabled');
-            this._filterBox.val('');
+        if (this._diagramDesigner.toolbarItems && this._diagramDesigner.toolbarItems.filterBox) {
+            this._diagramDesigner.toolbarItems.filterBox.enabled(true);
+            this._diagramDesigner.toolbarItems.filterBox.setText('');
         }
         this.filterItems('');
     };
 
     SearchManager.prototype.deactivate = function () {
-        if (this._filterBox) {
-            this._filterBox.val('');
-            this._filterBox.attr('disabled', 'disabled');
+        if (this._diagramDesigner.toolbarItems && this._diagramDesigner.toolbarItems.filterBox) {
+            this._diagramDesigner.toolbarItems.filterBox.setText('');
+            this._diagramDesigner.toolbarItems.filterBox.enabled(false);
         }
         this.filterItems('');
     };

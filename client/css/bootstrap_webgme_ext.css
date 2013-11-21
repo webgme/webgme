@@ -191,3 +191,25 @@ ul.dropdown-menu {
     max-height: 600px;
     overflow: auto;
 }
+
+.dropdown-menu.no-min-width {
+    min-width: 0;
+}
+
+
+.input-append .add-on.add-on-mini,
+.input-prepend .add-on.add-on-mini {
+    height: 12px;
+    font-size: 12px;
+    line-height: 12px;
+}
+
+.input-append .add-on.add-on-mini [class^="icon-"],
+.input-append .add-on.add-on-mini [class*=" icon-"],
+.input-prepend .add-on.add-on-mini [class^="icon-"],
+.input-prepend .add-on.add-on-mini [class*=" icon-"] {
+    margin-top: -1px;
+}
+
+input.no-focus-collapse:not(:focus) {
+    width: 30px; }

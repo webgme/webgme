@@ -38,6 +38,12 @@ define(['logManager',
     GraphVizControl.prototype._initWidgetEventHandlers = function () {
         var self = this;
 
+        this._graphVizWidget.onBackgroundDblClick = function () {
+            if (self._currentNodeParentId) {
+                self._client.setSelectedObjectId(self._currentNodeParentId);
+            }
+        };
+
         this._graphVizWidget.onNodeOpen = function (id) {
             self._selfPatterns[id] = { "children": 1 };
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
@@ -76,37 +82,6 @@ define(['logManager',
 
             self._client.updateTerritory(self._territoryId, self._selfPatterns);
         };
-
-        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
-        this.$btnGroupModelHierarchyUp = this._graphVizWidget.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._client.setSelectedObjectId(self._currentNodeParentId);
-        });
-
-        this._graphVizWidget.toolBar.addButton({ "title": "Go to parent",
-            "icon": "icon-circle-arrow-up"}, this.$btnGroupModelHierarchyUp);
-
-        this.$btnGroupModelHierarchyUp.hide();
-
-        this._graphVizWidget.onBackgroundDblClick = function () {
-            if (self._currentNodeParentId) {
-                self._client.setSelectedObjectId(self._currentNodeParentId);
-            }
-        };
-
-        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
-
-        /************** MODEL / CONNECTION filter *******************/
-
-        this._graphVizWidget.toolBar.addLabel().text('SHOW CONNECTIONS:');
-
-        this._graphVizWidget.toolBar.addCheckBox({ "title": "Go to parent",
-            "checkChangedFn": function(data, checked){
-                self._displayModelsOnly = !checked;
-                self._generateData();
-            }
-        });
-
-        /************** END OF - MODEL / CONNECTION filter *******************/
     };
 
     GraphVizControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -130,14 +105,12 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 0 };
 
-            this._displayedParts = [];
-
             this._graphVizWidget.setTitle(desc.name.toUpperCase());
 
             if (desc.parentId) {
-                this.$btnGroupModelHierarchyUp.show();
+                this.$btnModelHierarchyUp.show();
             } else {
-                this.$btnGroupModelHierarchyUp.hide();
+                this.$btnModelHierarchyUp.hide();
             }
 
             this._currentNodeParentId = desc.parentId;
@@ -162,20 +135,34 @@ define(['logManager',
                              'name': undefined,
                              'childrenIDs': undefined,
                              'parentId': undefined,
-                             'kind': MODEL};
-
-            if (nodeObj.getBaseId() === "connection") {
-                objDescriptor.kind = "CONNECTION";
-            }
+                             'isConnection': false};
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.name =  nodeObj.getAttribute(nodePropertyNames.Attributes.name);
             objDescriptor.childrenIDs = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIDs.length;
             objDescriptor.parentId = nodeObj.getParentId();
+            objDescriptor.isConnection = this.isConnection(nodeObj);
         }
 
         return objDescriptor;
+    };
+
+    GraphVizControl.prototype.isConnection = function (obj) {
+        var res = false,
+            SRC_POINTER_NAME = "source",
+            DST_POINTER_NAME = "target";
+
+        if (obj) {
+            var ptrNames = obj.getPointerNames();
+            if (ptrNames.indexOf(SRC_POINTER_NAME) !== -1 && ptrNames.indexOf(DST_POINTER_NAME) !== -1) {
+                if (obj.getPointer(SRC_POINTER_NAME).to && obj.getPointer(DST_POINTER_NAME).to) {
+                    res = true;
+                }
+            }
+        }
+
+        return res;
     };
 
     GraphVizControl.prototype.onOneEvent = function (events) {
@@ -207,14 +194,14 @@ define(['logManager',
     GraphVizControl.prototype._generateData = function () {
         var self = this;
 
-        var data = _.extend({}, this._nodes[this._currentNodeId]);
+        var data = _.extend({}, this._currentNodeId ? this._nodes[this._currentNodeId] : {});
 
         var loadRecursive = function (node) {
-            var len = node.childrenIDs.length;
+            var len = (node && node.childrenIDs) ? node.childrenIDs.length : 0;
             while (len--) {
                 node.children = node.children || [];
                 if (self._nodes[node.childrenIDs[len]]) {
-                    if ((self._displayModelsOnly === true && self._nodes[node.childrenIDs[len]].kind === MODEL) ||
+                    if ((self._displayModelsOnly === true && self._nodes[node.childrenIDs[len]].isConnection !== true) ||
                         self._displayModelsOnly === false) {
                         node.children.push(_.extend({}, self._nodes[node.childrenIDs[len]]));
                         loadRecursive(node.children[node.children.length-1]);
@@ -241,16 +228,90 @@ define(['logManager',
     };
 
     GraphVizControl.prototype.destroy = function () {
-        this.detachClientEventListeners();
+        this._detachClientEventListeners();
     };
 
-    GraphVizControl.prototype.attachClientEventListeners = function () {
-        this.detachClientEventListeners();
+    GraphVizControl.prototype._attachClientEventListeners = function () {
+        this._detachClientEventListeners();
         this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
-    GraphVizControl.prototype.detachClientEventListeners = function () {
+    GraphVizControl.prototype._detachClientEventListeners = function () {
         this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+    };
+
+    GraphVizControl.prototype.onActivate = function () {
+        this._attachClientEventListeners();
+        this._displayToolbarItems();
+    };
+
+    GraphVizControl.prototype.onDeactivate = function () {
+        this._detachClientEventListeners();
+        this._hideToolbarItems();
+    };
+
+    GraphVizControl.prototype._displayToolbarItems = function () {
+        if (this._toolbarInitialized !== true) {
+            this._initializeToolbar();
+        } else {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].show();
+            }
+        }
+    };
+
+    GraphVizControl.prototype._hideToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].hide();
+            }
+        }
+    };
+
+    GraphVizControl.prototype._removeToolbarItems = function () {
+        if (this._toolbarInitialized === true) {
+            for (var i = 0; i < this._toolbarItems.length; i++) {
+                this._toolbarItems[i].destroy();
+            }
+        }
+    };
+
+    GraphVizControl.prototype._initializeToolbar = function () {
+        var toolBar = WebGMEGlobal.Toolbar,
+            self = this;
+
+        this._toolbarItems = [];
+
+        this._toolbarItems.push(toolBar.addSeparator());
+
+        /************** GOTO PARENT IN HIERARCHY BUTTON ****************/
+        this.$btnModelHierarchyUp = toolBar.addButton({
+            "title": "Go to parent",
+            "icon": "icon-circle-arrow-up",
+            "clickFn": function (/*data*/) {
+                self._client.setSelectedObjectId(self._currentNodeParentId);
+            }
+        });
+        this._toolbarItems.push(this.$btnModelHierarchyUp);
+        this.$btnModelHierarchyUp.hide();
+        /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
+
+        /************** MODEL / CONNECTION filter *******************/
+        this.$lblShowConnection = toolBar.addLabel();
+        this.$lblShowConnection.text('SHOW CONNECTIONS:');
+        this._toolbarItems.push(this.$lblShowConnection);
+
+        this.$cbShowConnection = toolBar.addCheckBox({ "title": "Go to parent",
+            "checkChangedFn": function(data, checked){
+                self._displayModelsOnly = !checked;
+                self._generateData();
+            }
+        });
+        this._toolbarItems.push(this.$cbShowConnection);
+        /************** END OF - MODEL / CONNECTION filter *******************/
+
+
+        this._toolbarInitialized = true;
     };
 
     return GraphVizControl;

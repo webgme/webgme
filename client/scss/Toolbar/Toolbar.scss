@@ -1,0 +1,78 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+$toolbar-item-margin-left: 3px;
+$toolbar-separator-margin: 5px;
+
+.webgme-toolbar {
+  padding-top: 2px;
+  white-space: nowrap;
+
+  .toolbar-button {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+
+    .btn-mini {
+      [class^="icon-"],
+      [class*=" icon-"] {
+        margin-top: 0px;
+      }
+    }
+  }
+
+  .separator {
+    margin-left: $toolbar-separator-margin;
+    margin-right: $toolbar-separator-margin - $toolbar-item-margin-left;
+    background-color: #CCCCCC;
+    width: 1px;
+    height: 19px;
+    display: inline-block;
+    vertical-align: middle;
+    position: relative;
+    top: 1px;
+  }
+
+  .btn-group {
+    margin-left: $toolbar-item-margin-left;
+  }
+
+  .toolbar-input {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+
+    .input-append,
+    .input-prepend {
+      margin-bottom: 0;
+    }
+  }
+
+  .toolbar-label {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    font-size: 12px;
+    line-height: 22px;
+    height: 22px;
+    vertical-align: middle;
+  }
+
+  .toolbar-checkbox {
+    display: inline-block;
+    margin-left: $toolbar-item-margin-left;
+    position: relative;
+    vertical-align: middle;
+  }
+
+  .dropdown-menu {
+    li {
+      .iCheckBox {
+        top: 1px;
+      }
+    }
+  }
+}

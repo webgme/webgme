@@ -48,7 +48,7 @@ define([ 'lib/jquery/' + (DEBUG ? 'jquery.layout' : 'jquery.layout.min'),
                 resizable: false,
                 slidable: false,
                 spacing_open: 0,
-                size: 41
+                size: 69
             }
             ,  south: {
                 closable :false,

@@ -7,10 +7,13 @@
   min-width: 65px;
   min-height: 40px;
   border: 1px solid black;
-  background-color: #fbfbfb;
+  background-color: #ececec;
   padding: 3px;
   text-align: center;
-  position: relative; }
+  position: relative;
+  -webkit-box-shadow: 0px 0px 7px 0px #444444 inset;
+  -moz-box-shadow: 0px 0px 7px 0px #444444 inset;
+  box-shadow: 0px 0px 7px 0px #444444 inset; }
   .model-decorator .name {
     white-space: nowrap;
     font-size: 9px;

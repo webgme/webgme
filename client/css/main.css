@@ -94,8 +94,18 @@ div.spacer {
 }
 
 /*FIX jQueryUI layout's z-index issue that the resizer has higher z-index than the panels*/
-.ui-layout-south {
+.ui-layout-south,
+.ui-layout-north{
     z-index: 10 !important;
+}
+
+div.toolbar-container {
+    position: relative;
+    /*overflow: hidden;*/
+    overflow-x: visible;
+    top: 41px;
+    height: 27px;
+    background-color: #F5F5F5;
 }
 
 /********WEBKIT SCROLLBAR **********/

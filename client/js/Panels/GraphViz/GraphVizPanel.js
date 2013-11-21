@@ -38,7 +38,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("Graph visualizer");
 
-        this.widget = new GraphVizWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new GraphVizWidget(this.$el);
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);
@@ -69,14 +69,19 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.destroy();
 
         PanelBaseWithHeader.prototype.destroy.call(this);
+        WebGMEGlobal.KeyboardManager.setListener(undefined);
     };
 
     GraphVizPanel.prototype.onActivate = function () {
-        this.control.attachClientEventListeners();
+        this.widget.onActivate();
+        this.control.onActivate();
+        WebGMEGlobal.KeyboardManager.setListener(this.widget);
     };
 
     GraphVizPanel.prototype.onDeactivate = function () {
-        this.control.detachClientEventListeners();
+        this.widget.onDeactivate();
+        this.control.onDeactivate();
+        WebGMEGlobal.KeyboardManager.setListener(undefined);
     };
 
     return GraphVizPanel;

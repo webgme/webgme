@@ -9,20 +9,11 @@ define(['jquery-csszoom'], function () {
     };
 
     GraphVizWidgetZoom.prototype._initZoom = function () {
-        var self = this;
-
-        this._zoomLabel = this.toolBar.addLabel();
-        this._zoomEl = this._el.find('svg');
-
         //zoom
         this._zoomSlider = $('<div/>');
         this._el.parent().append(this._zoomSlider);
 
-        this._zoomSlider.csszoom({
-            'zoomTarget': this._el.find('svg'),
-            'onZoom': function (zoomLevel) {
-                self._zoomLabel.text( "Zoom: " + zoomLevel * 100 + "%" );
-            }});
+        this._zoomSlider.csszoom({'zoomTarget': this._el.find('svg')});
 
         //add zoom level UI and handlers
         this._addZoomMouseHandler(this._el);
