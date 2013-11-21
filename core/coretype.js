@@ -118,6 +118,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			if (typeof node.base === "undefined") {
                 if(isFalseNode(node)){
+                    console.log('!!! ISFALSENODE PLEAS CHECK PROJECT STRUCTURE !!!: ' + core.getPath(node));
                     var root = core.getRoot(node);
                     core.deleteNode(node);
                     return TASYNC.call(function(){return null;},core.persist(root));
