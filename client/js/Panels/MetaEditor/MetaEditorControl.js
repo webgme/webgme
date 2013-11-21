@@ -19,7 +19,7 @@ define(['logManager',
         META_EDITOR_REGISTRY_KEY = "MetaEditor",
         META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner',
-        META_RULES_CONTAINER_NODE_ID = 'root';
+        META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID;
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -1056,6 +1056,11 @@ define(['logManager',
         if (sourceNode && targetNode) {
             //get the list of existing pointers and show them in a dialog so the user can choose
             pointerNames = sourceNode.getPointerNames() || [];
+
+            //exclude ones that are dedicated META pointers and should not be overriden by the user
+            if (pointerNames.indexOf(CONSTANTS.POINTER_BASE) !== -1) {
+                pointerNames.splice(pointerNames.indexOf(CONSTANTS.POINTER_BASE), 1);
+            }
 
             //query pointer name from user
             this.diagramDesigner.selectNewPointerName(pointerNames, function (userSelectedPointerName) {
