@@ -112,10 +112,6 @@ define(['logManager',
     MetaEditorWidget.prototype._initializeToolbar = function () {
         DiagramDesignerWidget.prototype._initializeToolbar.call(this);
 
-        //remove route manager selection buttons
-        /*this.toolbarItems.radioButtonGroupRouteManager.destroy();
-        delete this.toolbarItems.radioButtonGroupRouteManager;*/
-
         //remove connection start/end arrow and line pattern selector
         this.toolbarItems.ddbtnConnectionArrowStart.destroy();
         delete this.toolbarItems.ddbtnConnectionArrowStart;
