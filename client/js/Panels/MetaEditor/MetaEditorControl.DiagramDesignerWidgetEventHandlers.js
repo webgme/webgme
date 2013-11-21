@@ -59,6 +59,10 @@ define(['logManager',
             return self._getDragItems(selectedElements);
         };
 
+        this.diagramDesigner.onSelectionChanged = function (selectedIds) {
+            self._onSelectionChanged(selectedIds);
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
@@ -318,6 +322,31 @@ define(['logManager',
 
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragItems = function (selectedElements) {
         return [];
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionChanged = function (selectedIds) {
+        var gmeIDs = [],
+            len = selectedIds.length,
+            id,
+            connectionSelected = false;
+
+        while (len--) {
+            id = this._ComponentID2GMEID[selectedIds[len]];
+            if (id &&
+                this.diagramDesigner.itemIds.indexOf(selectedIds[len]) !== -1) {
+                gmeIDs.push(id);
+            }
+        }
+
+        //nobody is selected on the canvas
+        //set the active selection to the opened guy
+        if (gmeIDs.length === 0 && this.currentNodeInfo.id) {
+            gmeIDs.push(this.currentNodeInfo.id);
+        }
+
+        if (gmeIDs.length !== 0) {
+            this._client.setPropertyEditorIdList(gmeIDs);
+        }
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
