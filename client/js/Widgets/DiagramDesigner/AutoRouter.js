@@ -66,7 +66,12 @@ define(['logManager'], function (logManager) {
          Dir_Right	= 1,
          Dir_Bottom	= 2,
          Dir_Left	= 3,
-         Dir_Skew	= 4;
+         Dir_Skew	= 4,
+
+        //Path Custom Data
+        SimpleEdgeDisplacement = "EdgeDisplacement",
+        CustomPointCustomization = "PointCustomization",
+        CONNECTIONCUSTOMIZATIONDATAVERSION = null;
 
     var _logger = logManager.create("AutoRouter");
 
@@ -83,227 +88,228 @@ define(['logManager'], function (logManager) {
  
        this.router = new AutoRouterGraph();
     };
-    //TODO PathCustomizationType enum
 
-        var CustomPathData = function (){
-            var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
-                aspect = 0,
-                edgeIndex = 0,
-                edgeCount = 0,
-                type = SimpleEdgeDisplacement,
-                horizontalOrVerticalEdge = true,
-                x = 0,
-                y = 0,
-                l,
-                d;
+    var CustomPathData = function (_x, _y){
+        var version = CONNECTIONCUSTOMIZATIONDATAVERSION,
+            aspect = 0,
+            edgeIndex = 0,
+            edgeCount = 0,
+            type = CustomPointCustomization, //By default, it is a point
+            horizontalOrVerticalEdge = false,
+            x = _x,
+            y = _y,
+            l,
+            d;
 
-            //Functions
-            this.assign = function(other){
-                    this.version					= other.version;
-                    this.aspect					    = other.aspect;
-                    this.edgeIndex					= other.edgeIndex;
-                    this.edgeCount					= other.edgeCount;
-                    this.type						= other.type;
-                    this.horizontalOrVerticalEdge	= other.horizontalOrVerticalEdge;
-                    this.x							= other.x;
-                    this.y							= other.y;
-                    this.l							= other.l;
-                    this.d							= other.d;
+        //Functions
+        this.assign = function(other){
+            this.version					= other.version;
+            this.aspect					    = other.aspect;
+            this.edgeIndex					= other.edgeIndex;
+            this.edgeCount					= other.edgeCount;
+            this.type						= other.type;
+            this.horizontalOrVerticalEdge	= other.horizontalOrVerticalEdge;
+            this.x							= other.x;
+            this.y							= other.y;
+            this.l							= other.l;
+            this.d							= other.d;
 
-                return this;
+            return this;
+        }
+
+        this.serialize = function(){
+            var outChannel = (this.getVersion() + "," + this.getAspect() + "," + this.getEdgeIndex() + "," + this.getEdgeCount() + "," + this.getType());
+
+            outChannel += ("," + this.isHorizontalOrVertical() ? 1 : 0 + "," + this.getX() + "," + this.getY() + "," + this.getLongDataCount());
+
+            for(var i = 0; i < this.getLongDataCount(); i++) {
+                outChannel += "," + l[i];
             }
 
-            this.serialize = function(outChannel){
-                outChannel += (getVersion() + "," + getAspect() + "," + getEdgeIndex() + "," + getEdgeCount() + "," + getType());
+            outChannel += "," + this.getDoubleDataCount();
 
-                outChannel += ("," + isHorizontalOrVertical() ? 1 : 0 + "," + getX() + "," + getY() + "," + getLongDataCount());
-
-                for(var i = 0; i < getLongDataCount(); i++) {
-                    outChannel += "," + l[i];
-                }
-            
-                outChannel += "," + getDoubleDataCount();
-
-                for(var i = 0; i < getDoubleDataCount(); i++) {
-                    outChannel += "," + d[i];
-                }
+            for(var i = 0; i < this.getDoubleDataCount(); i++) {
+                outChannel += "," + d[i];
             }
 
-            this.deserialize = function(inChannel){
-                console.log("\tResulting token: " + inChannel);
+            return outChannel;
+        }
 
-                var curSubPos = inChannel.indexOf(","),
-                    versionStr = inChannel.substr(0, curSubPos);
+        this.deserialize = function(inChannel){
+            console.log("\tResulting token: " + inChannel);
 
-                setVersion(Number(versionStr));
-                assert(getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
+            var curSubPos = inChannel.indexOf(","),
+                versionStr = inChannel.substr(0, curSubPos);
 
-                if (getVersion() != CONNECTIONCUSTOMIZATIONDATAVERSION) {
-                    // TODO: Convert from older version to newer
-                    return false;
-                }
+            setVersion(Number(versionStr));
+            assert(getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION, "CustomPathData.deserialize: getVersion() == CONNECTIONCUSTOMIZATIONDATAVERSION FAILED");
 
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var aspectStr = inChannel.substr(0, curSubPos);
-                setAspect(Number(aspectStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeIndexStr = inChannel.substr(0, curSubPos);
-                setEdgeIndex(Number(edgeIndexStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeCountStr = inChannel.substr(0, curSubPos);
-                setEdgeCount(Number(edgeCountStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
-                setType(Number(edgeCustomTypeStr));
-
-                console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var directionStr = inChannel.substr(0, curSubPos);
-                setHorizontalOrVertical(Number(directionStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                var positionStr = inChannel.substr(0, curSubPos);
-                setX(Number(positionStr));
-                
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                positionStr = inChannel.substr(0, curSubPos);
-                setY(Number(positionStr));
-
-                curSubPos = inChannel.indexOf(",", ++curSubPos);
-                positionStr = inChannel.substr(0, curSubPos);
-                var numOfExtraLongData = Number(positionStr);
-                assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "CustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
-
-                console.log(", Dir " + isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
-
-                for(var i = 0; i < numOfExtraLongData; i++) {
-                    positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-                    AddLongData(Number(positionStr));
-                    console.log(", l" + i + " " +  l[i])
-                }
-
-                positionStr = inChannel.substr(0, inChannel.indexOf(","));
-                var numOfExtraDoubleData = Number(positionStr);
-                assert(numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8, "CustomPathData.deserialize: numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8 FAILED");
-                console.log(", num " + numOfExtraDoubleData);
-                for(var i = 0; i < numOfExtraDoubleData; i++) {
-                    positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
-                    AddDoubleData(Number(positionStr));
-                    console.log(", l" + i + " " + d[i]);
-                }
-                return true;
+            if (getVersion() != CONNECTIONCUSTOMIZATIONDATAVERSION) {
+                // TODO: Convert from older version to newer
+                return false;
             }
 
-            this.getVersion = function(){
-                return version;
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var aspectStr = inChannel.substr(0, curSubPos);
+            setAspect(Number(aspectStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeIndexStr = inChannel.substr(0, curSubPos);
+            setEdgeIndex(Number(edgeIndexStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeCountStr = inChannel.substr(0, curSubPos);
+            setEdgeCount(Number(edgeCountStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var edgeCustomTypeStr = inChannel.substr(0, curSubPos);
+            setType(Number(edgeCustomTypeStr));
+
+            console.log("\tAsp " + getAspect() + ", Ind " + getEdgeIndex() + ", Cnt " + getEdgeCount() + ", Typ " + getType());
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var directionStr = inChannel.substr(0, curSubPos);
+            setHorizontalOrVertical(Number(directionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            var positionStr = inChannel.substr(0, curSubPos);
+            setX(Number(positionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            positionStr = inChannel.substr(0, curSubPos);
+            setY(Number(positionStr));
+
+            curSubPos = inChannel.indexOf(",", ++curSubPos);
+            positionStr = inChannel.substr(0, curSubPos);
+            var numOfExtraLongData = Number(positionStr);
+            assert(numOfExtraLongData >= 0 && numOfExtraLongData <= 4, "CustomPathData.deserialize: numOfExtraLongData >= 0 && numOfExtraLongData <= 4 FAILED");
+
+            console.log(", Dir " + isHorizontalOrVertical() + ", x " + getX() + ", y " + getY() + ", num " + numOfExtraLongData);
+
+            for(var i = 0; i < numOfExtraLongData; i++) {
+                positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
+                AddLongData(Number(positionStr));
+                console.log(", l" + i + " " +  l[i])
             }
 
-            this.setVersion = function(_version){
-                version = _version;
+            positionStr = inChannel.substr(0, inChannel.indexOf(","));
+            var numOfExtraDoubleData = Number(positionStr);
+            assert(numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8, "CustomPathData.deserialize: numOfExtraDoubleData >= 0 && numOfExtraDoubleData <= 8 FAILED");
+            console.log(", num " + numOfExtraDoubleData);
+            for(var i = 0; i < numOfExtraDoubleData; i++) {
+                positionStr = inChannel.substr(0, inChannel.indexOf(",", ++curSubPos));
+                AddDoubleData(Number(positionStr));
+                console.log(", l" + i + " " + d[i]);
             }
+            return true;
+        }
 
-            this.getAspect = function(){
-                return aspect;
-            }
+        this.getVersion = function(){
+            return version;
+        }
 
-            this.setAspect = function(_aspect){
-                aspect = _aspect;
-            }
+        this.setVersion = function(_version){
+            version = _version;
+        }
 
-            this.getEdgeIndex = function(){
-                return edgeIndex;
-            }
-            
-            this.setEdgeIndex = function(index){
-                edgeIndex = index;
-            }
+        this.getAspect = function(){
+            return aspect;
+        }
 
-            this.getEdgeCount = function(){
-                return edgeCount;
-            }
+        this.setAspect = function(_aspect){
+            aspect = _aspect;
+        }
 
-            this.setEdgeCount = function(count){
-                edgeCount = count;
-            }
+        this.getEdgeIndex = function(){
+            return edgeIndex;
+        }
 
-            this.getType = function(){
-                return type;
-            }
+        this.setEdgeIndex = function(index){
+            edgeIndex = index;
+        }
 
-            this.setType = function(_type){
-                type = _type;
-            }
+        this.getEdgeCount = function(){
+            return edgeCount;
+        }
 
-            this.isHorizontalOrVertical = function(){
-                return horizontalOrVerticalEdge;
-            }
+        this.setEdgeCount = function(count){
+            edgeCount = count;
+        }
 
-            this.setHorizontalOrVertical = function(parity){
-                horizontalOrVerticalEdge = parity;
-            }
+        this.getType = function(){
+            return type;
+        }
 
-            this.getX = function(){
-                return x;
-            }
+        this.setType = function(_type){
+            type = _type;
+        }
 
-            this.setX = function(_x){
-                x = _x;
-            }
+        this.isHorizontalOrVertical = function(){
+            return horizontalOrVerticalEdge;
+        }
 
-            this.getY = function(){
-                return y;
-            }
+        this.setHorizontalOrVertical = function(parity){
+            horizontalOrVerticalEdge = parity;
+        }
 
-            this.setY = function(_y){
-                y = _y;
-            }
+        this.getX = function(){
+            return x;
+        }
 
-            this.getLongDataCount = function(){
-                return l.length;
-            }
+        this.setX = function(_x){
+            x = _x;
+        }
 
-            this.getLongData = function(index){
-                return l[index];
-            }
+        this.getY = function(){
+            return y;
+        }
 
-            this.setLongData = function(index, dat){
-                l[index] = dat;
-            }
+        this.setY = function(_y){
+            y = _y;
+        }
 
-            this.addLongData = function(dat){
-                l.push(dat);
-            }
+        this.getLongDataCount = function(){
+            return l.length;
+        }
 
-            this.getDoubleDataCount = function(){
-                return d.length;
-            }
+        this.getLongData = function(index){
+            return l[index];
+        }
 
-            this.getDoubleData = function(index){
-                return d[index];
-            }
+        this.setLongData = function(index, dat){
+            l[index] = dat;
+        }
 
-            this.setDoubleData = function(index, data){
-                d[index] = data;
-            }
+        this.addLongData = function(dat){
+            l.push(dat);
+        }
 
-            this.addDoubleData = function(data){
-                d.push(data);
-            }
+        this.getDoubleDataCount = function(){
+            return d.length;
+        }
 
-        };
+        this.getDoubleData = function(index){
+            return d[index];
+        }
+
+        this.setDoubleData = function(index, data){
+            d[index] = data;
+        }
+
+        this.addDoubleData = function(data){
+            d.push(data);
+        }
+
+    };
 
 
-        var getPointCoord = function (point, horDir){
-            if(horDir === true || isHorizontal(horDir))
-                return point.x;
+    var getPointCoord = function (point, horDir){
+        if(horDir === true || isHorizontal(horDir))
+            return point.x;
 
-            else 
-                return point.y;
-        };
+        else 
+            return point.y;
+    };
 
         var inflatedRect = function (rect, a){
             var r = rect;
@@ -325,7 +331,7 @@ define(['logManager'], function (logManager) {
         var isPointIn = function (point, rect, nearness){
             var tmpR = new ArRect(rect);
             tmpR.inflateRect(nearness, nearness);
-            return tmpR.ptInRect(point) == true;
+            return tmpR.ptInRect(point) === true;
         };
 
         var isRectIn = function (r1, r2){
@@ -1059,6 +1065,10 @@ define(['logManager'], function (logManager) {
                 return ArPointList;
             };
 
+            this.setArPointList = function(list){
+                ArPointList = list;
+            };
+
             this.get = function(index){
                 return ArPointList[index];
             };
@@ -1073,6 +1083,10 @@ define(['logManager'], function (logManager) {
 
             this.indexOf = function(element){
                 return ArPointList.indexOf(element);
+            };
+
+            this.concat = function(element){
+                return ArPointList.concat(element);
             };
 
             this.splice = function(start, amt, insert){
@@ -2241,8 +2255,8 @@ define(['logManager'], function (logManager) {
                         : emptyPoint;//returning copy of startpoint
             };
 
-            this.isSameStartPointByPointer = function(point){
-                return startpoint === point;
+            this.isSameStartPoint = function(point){
+                return startpoint[0].equals( point[0] );
             };
 
             this.isStartPointNull = function (){
@@ -2573,7 +2587,7 @@ define(['logManager'], function (logManager) {
                         customizedIndexes = {},
                         indexes = [];
 
-                    path.getCustomizedEdgeIndexes(indexes);
+                    //path.getCustomizedEdgeIndexes(indexes);
 
                     if(isPathAutoRouted){
                         var i = -1;
@@ -2808,7 +2822,7 @@ define(['logManager'], function (logManager) {
                 var edge = order_first;
                 while( edge !== null ){
 
-                    if( edge.isSameStartPointByPointer(startpoint))
+                    if( edge.isSameStartPoint(startpoint))
                         break;
 
                     edge = edge.getOrderNext();
@@ -2821,7 +2835,7 @@ define(['logManager'], function (logManager) {
             this.getEdgeByPointer = function(startpoint, endpoint){
                 var edge = order_first;
                 while( edge !== null ){
-                    if(edge.isSameStartPointByPointer(startpoint))
+                    if(edge.isSameStartPoint(startpoint))
                         break;
 
                     edge = edge.getOrderNext();
@@ -4268,7 +4282,7 @@ _logger.warning("Adding "
                 var point = details.point,
                     dir = details.dir,
                     len = details.len,
-                    boxRect = details.box instanceof ArRect ? details.box : details.box.getRect();
+                    boxRect = details.box instanceof ArRect ? details.box : details.box.getRect(); //Assuming it is either the box or a port
 
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
 
@@ -4304,13 +4318,13 @@ Old Logic:
                 return boxRect;
             }
 
-            function goToNextBufferBox( details ){
-                var point = details.point,
-                    end = details.end,
-                    dir = details.dir,
-                    dir2 = details.dir2 === undefined || !isRightAngle(details.dir2) ? (end instanceof ArPoint ? 
-                            exGetMajorDir(end.minus(point)) : Dir_None) : details.dir2,
-                    stophere = details.end !== undefined ? details.end : 
+            function goToNextBufferBox( args ){
+                var point = args.point,
+                    end = args.end,
+                    dir = args.dir,
+                    dir2 = args.dir2 === undefined || !isRightAngle(args.dir2) ? (end instanceof ArPoint ? 
+                            exGetMajorDir(end.minus(point)) : Dir_None) : args.dir2,
+                    stophere = args.end !== undefined ? args.end : 
                         (dir === 1 || dir === 2 ? ED_MAXCOORD : ED_MINCOORD );
 
                 if( dir2 === dir )
@@ -4320,8 +4334,8 @@ Old Logic:
                     stophere = getPointCoord(stophere, dir);
                 }
 
-                assert( isRightAngle(dir), "ArGraph.goToNextBox: isRightAngle(dir) FAILED" );
-                assert( getPointCoord(point, dir) != stophere, "ArGraph.goToNextBox: getPointCoord(point, dir) != stophere FAILED" );
+                assert( isRightAngle(dir), "ArGraph.goToNextBufferBox: isRightAngle(dir) FAILED" );
+                assert( getPointCoord(point, dir) != stophere, "ArGraph.goToNextBufferBox: getPointCoord(point, dir) != stophere FAILED" );
 
                 var boxby = null,
                     iter = 0,
@@ -4381,7 +4395,8 @@ Old Logic:
                 // get the point into the box as far as possible in dir1 such that it can always exit by traveling straight dir2.
                 // We will enter the box as far as possible in dir1 then back up until we can exit in dir2 (if needed). 
                 // We return the significant coordinate of the moved point.
-                var stophere;
+                var stophere; 
+                    //dir3 = exGetMajorDir(end.minus(start));
 
                 //Setting the stophere value
                 if( bufferObject.children.length > 1 && dir1 != dir2){ 
@@ -4421,13 +4436,61 @@ Old Logic:
                 return stophere;
             }
 
+            function hugChildren(bufferObject, point, dir1, dir2, exitCondition){ 
+                // This method creates a path that enters the parent box and "hugs" the children boxes (remains within one pixel of them) 
+                // and follows them out.
+                assert( (dir1 + dir2) % 2 === 1, "ARGraph.hugChildren: One and only one direction must be horizontal");
+                var children = bufferObject.children,
+                    parentBox = bufferObject.box,
+                    initPoint = new ArPoint( point ),
+                    child = goToNextBox( point, dir1, (dir1 === 1 || dir1 === 2 ? ED_MAXCOORD : ED_MINCOORD ), children ), 
+                    finalPoint = new ArPoint(point),
+                    dir = dir2,
+                    nextDir = nextClockwiseDir( dir1 ) === dir2 ? nextClockwiseDir : prevClockwiseDir,
+                    points = [ [new ArPoint(point)] ],
+                    hasExit = true;
+
+                exitCondition = exitCondition === undefined ? function(pt) { return !parentBox.ptInRect(pt); } : exitCondition;
+
+                goToNextBox( finalPoint, reverseDir( dir ), getRectOuterCoord( child, reverseDir( dir ) ), children );
+
+                while( hasExit && !exitCondition( point, bufferObject ) ){
+                    var old = new ArPoint( point ),
+                        nextChild = goToNextBox( point, dir, getRectOuterCoord( child, dir), children );
+
+                    if( !points[ points.length - 1 ][0].equals( old ) )
+                        points.push( [new ArPoint( old )] ); //The points array should not contain the most recent point.
+
+                    if( nextChild === null ){
+                        dir = reverseDir( nextDir( dir ) );
+                    }else if ( isCoordInDirFrom( getRectOuterCoord( nextChild, reverseDir( nextDir(dir) )), 
+                                getPointCoord( point, reverseDir( nextDir(dir) )), reverseDir( nextDir(dir) )) ){
+                        dir = nextDir( dir );
+                        child = nextChild;
+                    }
+
+                    hasExit = !point.equals(finalPoint);
+                }
+
+                if( points[0][0].equals( initPoint ) )
+                    points.splice(0, 1);
+                
+                return hasExit ? points : null;
+
+            }
+
             function goToNextBox(point, dir, stop1, stop2){
-                var stophere= stop1;
+                var stophere= stop1,
+                    boxList = bufferBoxes.length > 0 ? bufferBoxes : boxes;
 
                 if(stop2 !== undefined){
-                    stophere = stop1 instanceof ArPoint ? 
-                        chooseInDir(getPointCoord(stop1, dir), getPointCoord(stop2, dir), reverseDir(dir)) :
-                        chooseInDir(stop1, stop2, reverseDir(dir));
+                    if( stop2 instanceof Array ){
+                        boxList = stop2;
+                    }else{
+                        stophere = stop1 instanceof ArPoint ? 
+                            chooseInDir(getPointCoord(stop1, dir), getPointCoord(stop2, dir), reverseDir(dir)) :
+                            chooseInDir(stop1, stop2, reverseDir(dir));
+                    }
 
                 }else if(stop1 instanceof ArPoint){
                     stophere = getPointCoord(stophere, dir);
@@ -4437,17 +4500,16 @@ Old Logic:
                 assert( getPointCoord(point, dir) != stophere, "ArGraph.goToNextBox: getPointCoord(point, dir) != stophere FAILED" );
 
                 var boxby = null,
-                    iter = 0,
-                    boxList = bufferBoxes.length > 0 ? bufferBoxes : boxes;
+                    iter = 0;
 
                     //Add a new collection that handles overlapping boxes (creates a larger encompassing box)
                     while (iter < boxList.length)
                     {
-                        var boxRect = boxList[iter].box ?  boxList[iter].box.getRect() : boxList[iter].getRect();
+                        var boxRect = boxList[iter] instanceof ArRect ?  boxList[iter] : boxList[iter].getRect();
 
                         if( isPointInDirFrom(point, boxRect, reverseDir(dir)) &&
                                 isPointBetweenSides(point, boxRect, dir) &&
-                                isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) ) //TODO 
+                                isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) ) 
                         {
                             stophere = getRectOuterCoord(boxRect, reverseDir(dir));
                             boxby = boxList[iter].box || boxList[iter];
@@ -4616,7 +4678,6 @@ Old Logic:
 
                         if (ret2.length > 0)
                         {
-                            ret = [];
                             var pos = 0;
                             while( pos < ret2.length)
                             {
@@ -4655,7 +4716,7 @@ Old Logic:
             function connectPoints(ret, start, end, hintstartdir, hintenddir){
                 assert( ret.getLength() === 0, "ArGraph.connectPoints: ret.getLength() === 0 FAILED");
 
-                var thestart = start, //TODO Should this be a copy?
+                var thestart = new ArPoint( start ), //TODO Should this be a copy?
                     retend = ret.getLength(); //I am not sure if this should be adjusted from =null to this...
 
                 //This is where we create the original path that we will later adjust
@@ -4761,12 +4822,23 @@ tst = 2;
                             assert( !isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !isPointInDirFrom(start, rect, dir2) FAILED");
                             //goToNextBox(start, dir2, end);
                             if( bufferBoxes.length === 0 ){
-                                goToNextBox(start, dir2, end); //TODO finish this
+                                goToNextBox(start, dir2, end); 
                             }else{
                                 box = goToNextBufferBox({ "point": start, "dir": dir2, "dir2": dir1, "end": end });
                             }
                             // this assert fails if two boxes are adjacent, and a connection wants to go between
                             //assert( isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: isPointInDirFrom(start, rect, dir2) FAILED");//This is not the best check with parent boxes
+                            if( start.equals( old ) ){ //Then we are in a corner
+                                var pts;
+                                if( box.children.length > 1 ){
+                                    pts = hugChildren( box, start, dir2, dir1 );
+                                }else{
+                                    pts = hugChildren( bufferObject, start, dir1, dir2 );
+                                }
+                                //Add new points to the current list 
+                                ret.setArPointList( ret.concat(pts));
+                                retend += pts.length;
+                            }
                         }
                         else
                         {
@@ -4796,66 +4868,55 @@ tst = 3;
                                 dir2 = reverseDir(dir2);
                             }
 
-                            //TESTING
-                            goToNextBufferBox({ "point": start, "dir": dir2, "dir2": dir1, "end": getRectOuterCoord(rect, dir2)});
-
-                            if( start.equals(old) )
-                                goToNextBufferBox({ "point": start, "dir": reverseDir(dir2), "dir2": dir1, "end": getRectOuterCoord(rect, reverseDir(dir2))});
-/*
-                            if(isHorizontal(dir2))
-                            {
-                                start.x = getRectOuterCoord(rect, dir2);//getRectOuterCoord(rect, dir2); TODO getChildRect...
-                            }
-                            else
-                            {
-                                start.y = getRectOuterCoord(rect, dir2);
-                            }
-*/
-
-                            assert( !start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
-                            assert(retend != ret.getLength(), "ARGraph.connectPoints: retend != ret.getLength() FAILED");
-                            retend++;
-                            if(retend == ret.getLength()){
-                                ret.push([new ArPoint(start)]);
-                                retend--;
-                            }else{
-                                ret.splice(retend + 1, 0, [new ArPoint(start)]); //insert after
-                            }
-                            old.assign(start);
-
-                            //TESTING
-                            goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": getRectOuterCoord(rect, dir1)});
-/*
-                            if(isHorizontal(dir1))
-                            {
-                                start.x = getRectOuterCoord(rect, dir1);
-                            }
-                            else
-                            {
-                                start.y = getRectOuterCoord(rect, dir1);
-                            }
-*/
-
-                            assert( isPointInDirFrom(end, start, dir1), "ARGraph.connectPoints: isPointInDirFrom(end, start, dir1) FAILED");
-                            if( getPointCoord(start, dir1) != getPointCoord(end, dir1) )
-                            {
-                                //goToNextBox(start, dir1, end);
-                                if( bufferBoxes.length === 0 ){
-                                    goToNextBox(start, dir1, end); //TODO finish this
-                                }else{
-                                    goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
+                            //If the box in the way has one child
+                            if( bufferObject.children.length === 1){
+                                if(isHorizontal(dir2))
+                                {
+                                    start.x = getRectOuterCoord(rect, dir2);//getRectOuterCoord(rect, dir2); 
                                 }
-                            }
-/*
-                            var bool = getPointCoord(start, dir1) > getPointCoord(end, dir1) ;
-                            if( dir1 && dir1 < 3 ) 
-                                    bool = getPointCoord(start, dir1) < getPointCoord(end, dir1);
+                                else
+                                {
+                                    start.y = getRectOuterCoord(rect, dir2);
+                                }
 
-                            if( bool )
-                            {
-                                goToNextBox(start, dir1, end);
+                                assert( !start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
+                                assert(retend != ret.getLength(), "ARGraph.connectPoints: retend != ret.getLength() FAILED");
+                                retend++;
+                                if(retend == ret.getLength()){
+                                    ret.push([new ArPoint(start)]);
+                                    retend--;
+                                }else{
+                                    ret.splice(retend + 1, 0, [new ArPoint(start)]); //insert after
+                                }
+                                old.assign(start);
+
+                                if(isHorizontal(dir1))
+                                {
+                                    start.x = getRectOuterCoord(rect, dir1);
+                                }
+                                else
+                                {
+                                    start.y = getRectOuterCoord(rect, dir1);
+                                }
+
+                                assert( isPointInDirFrom(end, start, dir1), "ARGraph.connectPoints: isPointInDirFrom(end, start, dir1) FAILED");
+                                if( getPointCoord(start, dir1) != getPointCoord(end, dir1) )
+                                {
+                                    //goToNextBox(start, dir1, end);
+                                    if( bufferBoxes.length === 0 ){
+                                        goToNextBox(start, dir1, end); //TODO finish this
+                                    }else{
+                                        goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
+                                    }
+                                }
+
+                            }else{ //If the box has multiple children
+tst = 4;
+                                var pts = hugChildren( bufferObject, start, dir1, dir2, function( pt, bo ) {return pt.x === bo.box.right; } ); 
+                                assert(pts !== null, "ARGraph.connectPoints: pts !== null FAILED");
+                                ret.setArPointList( ret.concat(pts));
+                                retend += pts.length;
                             }
-*/
                         }
 
                         assert( !start.equals(old), "ARGraph.connectPoints: !start.equals(old) FAILED");
@@ -5015,28 +5076,21 @@ tst = 3;
                     points.AssertValidPos(pos);
                 }
 
+                if( pos + 2 >= points.getLength() || pos < 1 )
+                    return false;
+
                 var pointpos = pos,
                     point = points.get(pos++)[0], 
                     npointpos = pos;
-                if( npointpos == points.getLength())
-                    return false;
                 var npoint = points.get(pos++)[0],
                     nnpointpos = pos;
-                if( nnpointpos == points.getLength())
-                    return false;
 
                 pos = pointpos;
                 pos--;
                 var ppointpos = pos; 
 
-                if( ppointpos === points.getLength() || ppointpos < 0 )
-                    return false;
-
                 var ppoint = points.get(pos--)[0],
                     pppointpos = pos; 
-
-                if( pppointpos === points.getLength() || pppointpos < 0 )
-                    return false;
 
                 if( npoint.equals(point)) 
                     return false; // direction of zero-length edges can't be determined, so don't delete them
@@ -6071,6 +6125,7 @@ _logger.info("About to vertical.block_SwitchWrongs()");
                 state = ARPATHST_Default,
                 isAutoRoutingOn = true,
                 customPathData = [],
+                customizationType = "Points",
                 pathDataToDelete = [],
                 points = new ArPointListPath(),
                 self = this;
@@ -6437,6 +6492,9 @@ pt = [pt];
 
             this.setCustomPathData = function(pDat){
                 customPathData = pDat;
+
+                //Disconnect path 
+                owner.disconnect(this);
             };
             
             this.applyCustomizationsBeforeAutoConnectPoints = function(){
@@ -6445,10 +6503,16 @@ pt = [pt];
                 if (customPathData.length === 0)
                     return;
 
-                var ii = 0;
-                while( ii < customPathData.length ){
-                    //if( !isAutoRoutingOn ) //Do we need this?
-                    plist.push( ArPoint(customPathData[ii]) );
+                var i = 0;
+                while( i < customPathData.length ){
+                    if( customPathData[i].getType() === CustomPointCustomization ){
+                        var pt = new ArPoint();
+                        pt.x = customPathData[i].getX();
+                        pt.y = customPathData[i].getY();
+                        plist.push( [ pt ] );
+                    }
+
+                    ++i;
                 }
 /*
                 while (ii < customPathData.length){
@@ -6468,6 +6532,7 @@ pt = [pt];
             };
 
             this.applyCustomizationsAfterAutoConnectPointsAndStuff = function(){
+                //This sets customizations of the type "SimpleEdgeDisplacement"
                 if (customPathData.length === 0)
                     return;
 
@@ -6486,10 +6551,11 @@ pt = [pt];
                     }
                 }
 
-                var startpoint = null,
-                    endpoint = null,
-                    currEdgeIndex = 0,
-                    pos = points.getHeadEdgePtrs(startpoint, endpoint);
+                var currEdgeIndex = 0,
+                    tmp = points.getHeadEdgePtrs(startpoint, endpoint),
+                    endpoint = tmp.end,
+                    startpoint = tmp.start,
+                    pos = tmp.pos;
 
                 while (pos < points.getLength()){
                     var ii = 0;
@@ -6535,10 +6601,6 @@ pt = [pt];
                                     customPathData.splice(ii, 1);
                                     increment = false;
                                 }
-                            } else if ((customPathData[ii]).getType() == CustomPointCustomization) {
-                                // it is done in a previous phase
-                            } else {
-                                // unknown displacement type
                             }
                         }
                         if (increment)
@@ -6612,8 +6674,8 @@ pt = [pt];
                 var ii = 0;
                 while(ii < customPathData.length)
                 {
-                    if (IsAutoRouted() && (customPathData[ii]).getType() == SimpleEdgeDisplacement ||
-                        !IsAutoRouted() && (customPathData[ii]).getType() != SimpleEdgeDisplacement)
+                    if (this.isAutoRouted() && (customPathData[ii]).getType() == SimpleEdgeDisplacement ||
+                        !this.isAutoRouted() && (customPathData[ii]).getType() != SimpleEdgeDisplacement)
                     {
                         var edgeIndex = (customPathData[ii]).getEdgeIndex();
                         indexes.push(edgeIndex);
@@ -7483,6 +7545,26 @@ pt = [pt];
             this.router.setBuffer( Math.floor(min/2) );
         };
 
+        AutoRouter.prototype.setPathCustomPoints = function( args ){ //path, [ [x
+            var points = [],
+                i = 0;
+            if( !args.path instanceof AutoRouterPath )
+                throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
+
+            if( args.points.length > 0 )
+                args.path.setAutoRouting( false );
+            else
+                args.path.setAutoRouting( true );
+            
+            //Convert args.points to array of [ArPoint] 's
+            while ( i < args.points.length ){
+                points.push(new CustomPathData( args.points[i][0], args.points[i][1] ));
+                ++i;
+            }
+
+            args.path.setCustomPathData( points );
+
+        };
 
     return AutoRouter;
 

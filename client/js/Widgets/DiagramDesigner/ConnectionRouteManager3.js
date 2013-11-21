@@ -31,8 +31,17 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
             self.logger.warning("Updating " + ID);
-            if( self.diagramDesigner.items[ID].rotation !== 0 )
+            if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
+
+             if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
                 self._resizeItem( ID );
+
+            }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){ //Segment points have been modified
+                self.autorouter.setPathCustomPoints({
+                        "path": self._autorouterPaths[ ID ], 
+                        "points": self.diagramDesigner.items[ ID ].segmentPoints
+                        });
+            }
        };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
@@ -84,6 +93,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     ConnectionRouteManager3.prototype.destroy = function () {
         //removeEventListener(eventName, handler);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
+        this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_SIZE_CHANGED, this._onComponentResize);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ON_COMPONENT_DELETE, this._onComponentDelete);
         this.diagramDesigner.removeEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
@@ -111,15 +121,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = idList.length;
 
         this.profiler.startProfile('_updateConnectionCoordinates');
-        //1 - we have each connection end connectability info
-        //find the closest areas for each connection
-/*
-        while (i--) {
-            if( this._autorouterPaths[ idList[i] ] === undefined ){
-                this.insertConnection(idList[i]);
-            }
-        }
-*/
+        //1 - set custom defined paths
         this.profiler.endProfile('_updateConnectionCoordinates');
 
 
@@ -157,6 +159,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this._autorouterBoxes = {};//Define container that will map obj+subID -> box
         this._autorouterPorts = {};//Maps boxIds to an array of port ids that have been mapped
         this._autorouterPaths = {};
+        this._autorouterBoxRotation = {};//Define container that will map obj+subID -> rotation
         this.endpointConnectionAreaInfo = {};
     };
 
@@ -182,6 +185,11 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         i = connIdList.length;
         while( i-- ){
             this.insertConnection(connIdList[i]);
+            if( canvas.items[connIdList[i]].segmentPoints.length > 0 )
+                this.autorouter.setPathCustomPoints({
+                        "path": this._autorouterPaths[ connIdList[i] ], 
+                        "points": canvas.items[ connIdList[i] ].segmentPoints
+                        });
         }
 
         //Next, I will update the ports as necessary
@@ -238,6 +246,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         }
 
         this._autorouterBoxes[objId] = this.autorouter.addBox(boxdefinition);
+        this._autorouterBoxRotation[objId] = canvas.items[objId].rotation;
     };
 
     ConnectionRouteManager3.prototype.deleteItem = function (objId) {
