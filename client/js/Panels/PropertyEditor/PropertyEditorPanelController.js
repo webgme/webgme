@@ -78,7 +78,8 @@ define(['logManager',
             noCommonValueColor = "#f89406",
             _getNodePropertyValues, //fn
             _filterCommon, //fn
-            _addItemsToResultList; //fn
+            _addItemsToResultList,  //fn
+            _getPointerInfo;
 
         _getNodePropertyValues = function (node, propNameFn, propValueFn) {
             var result =  {},
@@ -118,6 +119,18 @@ define(['logManager',
             }
         };
 
+        _getPointerInfo = function (node) {
+            var result = {},
+                availablePointers = node.getPointerNames(),
+                len = availablePointers.length;
+
+            while (len--) {
+                result[availablePointers[len]] = node.getPointer(availablePointers[len]).to || '';
+            }
+
+            return util.flattenObject(result);
+        };
+
         if (selectionLength > 0) {
             //get all attributes
             //get all registry elements
@@ -134,7 +147,7 @@ define(['logManager',
 
                     _filterCommon(commonRegs, flattenedRegs, i === selectionLength - 1);
 
-                    flattenedPointers = _getNodePropertyValues(cNode, "getPointerNames", "getPointer");
+                    flattenedPointers = _getPointerInfo(cNode);
 
                     _filterCommon(commonPointers, flattenedPointers, i === selectionLength - 1);
                 }
@@ -228,11 +241,7 @@ define(['logManager',
             for (var it in commonPointers) {
                 if (commonPointers.hasOwnProperty(it)) {
                     if (commonPointers.hasOwnProperty(it)) {
-                        if (it.indexOf('.from') === it.length - 5) {
-                            delete commonPointers[it];
-                        } else {
-                            commonPointers[it].readOnly = true;
-                        }
+                        commonPointers[it].readOnly = true;
                     }
                 }
             }
