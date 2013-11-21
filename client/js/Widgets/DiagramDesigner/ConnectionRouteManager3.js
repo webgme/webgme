@@ -37,7 +37,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
                 self._resizeItem( ID );
 
             }else if( self.diagramDesigner.connectionIds.indexOf( ID ) !== -1 ){ //Segment points have been modified
-                console.log(ID + " has custom points!");
                 self.autorouter.setPathCustomPoints({
                         "path": self._autorouterPaths[ ID ], 
                         "points": self.diagramDesigner.items[ ID ].segmentPoints
