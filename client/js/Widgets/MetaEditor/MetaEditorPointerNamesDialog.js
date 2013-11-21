@@ -1,12 +1,15 @@
 "use strict";
 
 define(['clientUtil',
+        'js/Constants',
         'text!html/Widgets/MetaEditor/MetaEditorPointerNamesDialog.html',
         'css!/css/Widgets/MetaEditor/MetaEditorPointerNamesDialog'], function ( util,
+                                                                                CONSTANTS,
                                                                metaEditorPointerNamesDialogTemplate) {
 
     var MetaEditorPointerNamesDialog,
-        POPULAR_POINTER_NAMES = ['src', 'dst', 'ref'];
+        POPULAR_POINTER_NAMES = [CONSTANTS.POINTER_SOURCE, CONSTANTS.POINTER_TARGET, CONSTANTS.POINTER_REF],
+        RESERVED_POINTER_NAMES = [CONSTANTS.POINTER_BASE];
 
     MetaEditorPointerNamesDialog = function () {
       
@@ -49,7 +52,7 @@ define(['clientUtil',
         };
 
         isValidPointerName = function (name) {
-            return !(name === "" || pointerNames.indexOf(name) !== -1);
+            return !(name === "" || pointerNames.indexOf(name) !== -1 || RESERVED_POINTER_NAMES.indexOf(name) !== -1);
         };
 
         this._dialog = $(metaEditorPointerNamesDialogTemplate);
