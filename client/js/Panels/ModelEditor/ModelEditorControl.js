@@ -6,12 +6,14 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     './ModelEditorControl.DEBUG',
+    'js/Utils/GMEConcepts',
     'js/Decorators/DecoratorDB'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         ModelEditorControlDEBUG,
+                                                        GMEConcepts,
                                                         DecoratorDB) {
 
     var ModelEditorControl,
@@ -192,7 +194,7 @@ define(['logManager',
 
             if (nodeId !== this.currentNodeInfo.id) {
                 //fill the descriptor based on its type
-                if (this._isConnection(nodeObj)) {
+                if (GMEConcepts.isConnection(nodeId)) {
                     objDescriptor.kind = "CONNECTION";
                     objDescriptor.source = nodeObj.getPointer(SRC_POINTER_NAME).to;
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
@@ -241,22 +243,6 @@ define(['logManager',
         }
 
         return objDescriptor;
-    };
-
-    ModelEditorControl.prototype._isConnection = function (obj) {
-        var res = false;
-
-        if (obj) {
-
-            var ptrNames = obj.getPointerNames();
-            if (ptrNames.indexOf(SRC_POINTER_NAME) !== -1 && ptrNames.indexOf(DST_POINTER_NAME) !== -1) {
-                if (obj.getPointer(SRC_POINTER_NAME).to && obj.getPointer(DST_POINTER_NAME).to) {
-                    res = true;
-                }
-            }
-        }
-
-        return res;
     };
 
     ModelEditorControl.prototype._getDefaultValueForNumber = function (cValue, defaultValue) {

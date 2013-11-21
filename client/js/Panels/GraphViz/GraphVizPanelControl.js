@@ -3,9 +3,11 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
+    'js/Utils/GMEConcepts',
     'js/NodePropertyNames'], function (logManager,
                                        util,
                                        CONSTANTS,
+                                       GMEConcepts,
                                        nodePropertyNames) {
 
     var GraphVizControl,
@@ -142,27 +144,10 @@ define(['logManager',
             objDescriptor.childrenIDs = nodeObj.getChildrenIds();
             objDescriptor.childrenNum = objDescriptor.childrenIDs.length;
             objDescriptor.parentId = nodeObj.getParentId();
-            objDescriptor.isConnection = this.isConnection(nodeObj);
+            objDescriptor.isConnection = GMEConcepts.isConnection(nodeId);
         }
 
         return objDescriptor;
-    };
-
-    GraphVizControl.prototype.isConnection = function (obj) {
-        var res = false,
-            SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
-            DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
-
-        if (obj) {
-            var ptrNames = obj.getPointerNames();
-            if (ptrNames.indexOf(SRC_POINTER_NAME) !== -1 && ptrNames.indexOf(DST_POINTER_NAME) !== -1) {
-                if (obj.getPointer(SRC_POINTER_NAME).to && obj.getPointer(DST_POINTER_NAME).to) {
-                    res = true;
-                }
-            }
-        }
-
-        return res;
     };
 
     GraphVizControl.prototype.onOneEvent = function (events) {
