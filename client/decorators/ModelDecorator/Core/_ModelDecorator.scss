@@ -4,7 +4,8 @@ $min-width: 65px;
 $height: 40px;
 $border: 1px solid #000000;
 $padding: 3px;
-$background-color: #FBFBFB;
+$background-color: #ECECEC;
+$box-shadow: 0px 0px 7px 0px #444 inset;
 $selected-background-color: #DBEAFC;
 $selected-border: 1px solid #52A8EC;
 $ports-background-color: #000000;
@@ -26,6 +27,9 @@ $ref-hover-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 2
     padding: $padding;
     text-align: center;
     position: relative;
+    -webkit-box-shadow: $box-shadow;
+    -moz-box-shadow: $box-shadow;
+    box-shadow: $box-shadow;
 
     .name {
       white-space: nowrap;
