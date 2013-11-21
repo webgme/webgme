@@ -18,7 +18,8 @@ define(['logManager',
         GME_ID = "GME_ID",
         META_EDITOR_REGISTRY_KEY = "MetaEditor",
         META_DECORATOR = "MetaDecorator",
-        WIDGET_NAME = 'DiagramDesigner';
+        WIDGET_NAME = 'DiagramDesigner',
+        META_RULES_CONTAINER_NODE_ID = 'root';
 
     MetaEditorControl = function (options) {
         var self = this;
@@ -37,9 +38,9 @@ define(['logManager',
             throw ("ModelEditorControl can not be created");
         }
 
-        this._selectedObjectChanged = function (__project, nodeId) {
+        /*this._selectedObjectChanged = function (__project, nodeId) {
             self.selectedObjectChanged(nodeId);
-        };
+        };*/
 
         if (this.diagramDesigner === undefined) {
             this.logger.error("ModelEditorControl's DiagramDesigner is not specified...");
@@ -66,12 +67,19 @@ define(['logManager',
         //attach all the event handlers for event's coming from DiagramDesigner
         this.attachDiagramDesignerWidgetEventHandlers();
 
+        //TODO: load meta container node
+        this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+
         this.logger.debug("MetaEditorControl ctor finished");
     };
 
     MetaEditorControl.prototype.selectedObjectChanged = function (nodeId) {
         var desc = this._getObjectDescriptor(nodeId),
             len;
+
+        if (nodeId !== META_RULES_CONTAINER_NODE_ID) {
+            return;
+        }
 
         this.logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
@@ -1310,12 +1318,12 @@ define(['logManager',
     /****************************************************************************/
 
     MetaEditorControl.prototype._attachClientEventListeners = function () {
-        this._detachClientEventListeners();
-        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        /*this._detachClientEventListeners();
+        this._client.addEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);*/
     };
 
     MetaEditorControl.prototype._detachClientEventListeners = function () {
-        this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
+        //this._client.removeEventListener(this._client.events.SELECTEDOBJECT_CHANGED, this._selectedObjectChanged);
     };
 
     MetaEditorControl.prototype.onActivate = function () {
