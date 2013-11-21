@@ -15,8 +15,8 @@ define(['logManager',
     var ModelEditorControlDiagramDesignerWidgetEventHandlers,
         ATTRIBUTES_STRING = "attributes",
         REGISTRY_STRING = "registry",
-        CONNECTION_SOURCE_NAME = "source",
-        CONNECTION_TARGET_NAME = "target";
+        SRC_POINTER_NAME = CONSTANTS.POINTER_SOURCE,
+        DST_POINTER_NAME = CONSTANTS.POINTER_TARGET;
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers = function () {
     };
@@ -261,7 +261,7 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[newDesc.srcObjId];
                 }
-                this._client.makePointer(gmeID, CONNECTION_SOURCE_NAME, newEndPointGMEID);
+                this._client.makePointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID);
             }
 
             //update connection endpoint - TARGET
@@ -272,7 +272,7 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[newDesc.dstObjId];
                 }
-                this._client.makePointer(gmeID, CONNECTION_TARGET_NAME, newEndPointGMEID);
+                this._client.makePointer(gmeID, DST_POINTER_NAME, newEndPointGMEID);
             }
 
             this._client.completeTransaction();
@@ -669,7 +669,7 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[srcItemID];
                 }
-                if (this._client.canMakePointer(gmeID, CONNECTION_SOURCE_NAME, newEndPointGMEID)) {
+                if (this._client.canMakePointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID)) {
                     result.push(availableConnectionSources[i]);
                 }
             }
@@ -686,7 +686,7 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[dstItemID];
                 }
-                if (this._client.canMakePointer(gmeID, CONNECTION_TARGET_NAME, newEndPointGMEID)) {
+                if (this._client.canMakePointer(gmeID, DST_POINTER_NAME, newEndPointGMEID)) {
                     result.push(availableConnectionEnds[i]);
                 }
             }
