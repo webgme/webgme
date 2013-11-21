@@ -189,7 +189,7 @@ define([], function () {
 
 
         //validation functions
-        function getBaseChain(path,node){
+        function getBaseChain(path){
             var chain = [];
             var node = _nodes[path];
             if(node){
@@ -203,7 +203,7 @@ define([], function () {
         function isTypeOf(path,typePath){
             var node = _nodes[path];
             if(node){
-                var chain = getBaseChain(_core,node);
+                var chain = getBaseChain(path);
                 if(chain.indexOf(typePath) !== -1){
                     return true;
                 }
@@ -214,6 +214,7 @@ define([], function () {
             var i=0, isGood=false;
             while(i<typePathArray.length && !isGood){
                 isGood = isTypeOf(path,typePathArray[i]);
+                i++;
             }
             return isGood;
         }

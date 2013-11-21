@@ -372,9 +372,10 @@ define(['js/Constants',
             dragItems = DragHelper.getDragItems(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo);
 
-        return (dragItems.length === 1 &&
-                dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
-                dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1);
+        return dragItems.length === 1 &&
+            dragItems[0] !== this._metaInfo[CONSTANTS.GME_ID] &&
+            dragEffects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 &&
+            this._control._client.isValidTarget(this._metaInfo[CONSTANTS.GME_ID],"ref",dragItems[0]);
     };
 
     ModelDecoratorDiagramDesignerWidget.prototype.__doAcceptDroppable = function (accept) {
