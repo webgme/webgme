@@ -237,7 +237,7 @@ define(['jquery',
 
         //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
         //by default the Attributes.name is the to-be-displayed attribute
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.DisplayAttribute, nodePropertyNames.Attributes.name);
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.DisplayFormat, "%" + nodePropertyNames.Attributes.name);
 
         //set META rules accordingly
 

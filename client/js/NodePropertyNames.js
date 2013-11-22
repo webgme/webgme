@@ -12,7 +12,7 @@ define([], function () {
                             "isPort": "isPort",
                             "lineStyle": "lineStyle",
                             "ProjectRegistry": "ProjectRegistry",
-                            "DisplayAttribute": "DisplayAttribute"};
+                            "DisplayFormat": "DisplayFormat"};
 
     return { "Attributes": attributeNames,
              "Registry": registryNames };
