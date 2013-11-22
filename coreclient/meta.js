@@ -328,7 +328,8 @@ define([], function () {
             hasOwnMetaRules : hasOwnMetaRules,
             filterValidTarget : filterValidTarget,
             getOwnValidChildrenTypes: getOwnValidChildrenTypes,
-            getOwnValidTargetTypes: getOwnValidTargetTypes
+            getOwnValidTargetTypes: getOwnValidTargetTypes,
+            isTypeOf: isTypeOf
         };
     }
 

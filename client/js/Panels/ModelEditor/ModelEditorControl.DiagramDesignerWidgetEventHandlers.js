@@ -4,11 +4,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/Utils/GMEConcepts',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'js/DragDrop/DragHelper'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
+                                                        GMEConcepts,
                                                         DiagramDesignerWidgetConstants,
                                                         DragHelper) {
 
@@ -190,7 +192,14 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onCreateNewConnection = function (params) {
         var sourceId,
-            targetId;
+            targetId,
+            parentId = this.currentNodeInfo.id,
+            createConnection,
+            _client = this._client,
+            CONTEXT_POS_OFFSET = 10,
+            menuItems = {},
+            i,
+            connTypeObj;
 
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.src][params.srcSubCompId];
@@ -204,22 +213,44 @@ define(['logManager',
             targetId = this._ComponentID2GmeID[params.dst];
         }
 
-        var registry = {};
-        registry[nodePropertyNames.Registry.lineStyle] = {};
-        _.extend(registry[nodePropertyNames.Registry.lineStyle], this._DEFAULT_LINE_STYLE);
+        var validConnectionTypes = GMEConcepts.getValidConnectionTypes(sourceId, targetId, parentId);
 
-        if (params.visualStyle) {
-            _.extend(registry[nodePropertyNames.Registry.lineStyle], params.visualStyle);
+        createConnection = function (connTypeToCreate) {
+            if (connTypeToCreate) {
+                _client.startTransaction();
+
+                //create new object
+                var newConnID = _client.createChild({'parentId': parentId, 'baseId': connTypeToCreate});
+
+                //set source and target pointers
+                _client.makePointer(newConnID, CONSTANTS.POINTER_SOURCE, sourceId);
+                _client.makePointer(newConnID, CONSTANTS.POINTER_TARGET, targetId);
+
+                _client.completeTransaction();
+            }
+        };
+
+        if (validConnectionTypes.length === 1) {
+            createConnection(validConnectionTypes[0]);
+        } else if (validConnectionTypes.length > 1) {
+            //show available connection types to the user to select one
+            for (i = 0; i < validConnectionTypes.length; i += 1) {
+                connTypeObj = this._client.getNode(validConnectionTypes[i]);
+                menuItems[validConnectionTypes[i]] = {
+                    "name": connTypeObj ? connTypeObj.getAttribute(nodePropertyNames.Attributes.name) : validConnectionTypes[i],
+                    "icon": false
+                };
+            }
+
+            var dstPosition = this.designerCanvas.items[params.dst].getBoundingBox();
+
+            this.designerCanvas.createMenu(menuItems, function (key) {
+                    createConnection(key);
+                },
+                this.designerCanvas.posToPageXY(dstPosition.x - CONTEXT_POS_OFFSET,
+                                                dstPosition.y - CONTEXT_POS_OFFSET)
+            );
         }
-
-        var p = {   "parentId": this.currentNodeInfo.id,
-            "sourceId": sourceId,
-            "targetId": targetId,
-            "registry": registry};
-
-        this.logger.warning("_onCreateNewConnection: " + JSON.stringify(p));
-
-        this._client.makeConnection(p);
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
@@ -553,7 +584,7 @@ define(['logManager',
             }
         }
 
-        this.$btnConnectionVisualStyleRegistryFields.enabled(connectionSelected);
+        //this.$btnConnectionVisualStyleRegistryFields.enabled(connectionSelected);
         this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
 
         //nobody is selected on the canvas
@@ -631,9 +662,7 @@ define(['logManager',
                 targetId = this._ComponentID2GmeID[p.dstItemID];
             }
 
-            if (this._client.canMakeConnection({   "parentId": this.currentNodeInfo.id,
-                "sourceId": sourceId,
-                "targetId": targetId }) ) {
+            if (GMEConcepts.getValidConnectionTypes(sourceId, targetId, this.currentNodeInfo.id).length > 0 ) {
                 result.push(availableConnectionEnds[i]);
             }
         }
@@ -652,13 +681,19 @@ define(['logManager',
             availableConnectionEnds = params.availableConnectionEnds,
             availableConnectionSources = params.availableConnectionSources,
             i,
-            gmeID = this._ComponentID2GmeID[connID],
             result = [],
-            newEndPointGMEID;
+            newEndPointGMEID,
+            oldEndPointGMEID,
+            connectionGMEID = this._ComponentID2GmeID[connID];
 
         if (srcDragged === true) {
             //'src' end of the connection is being dragged
             //'dst end is fix
+            if (dstSubCompID !== undefined ) {
+                oldEndPointGMEID = this._Subcomponent2GMEID[dstItemID][dstSubCompID];
+            } else {
+                oldEndPointGMEID = this._ComponentID2GmeID[dstItemID];
+            }
             //need to check for all possible 'src' if the connection's end could be changed to that value
             i = availableConnectionSources.length;
             while (i--) {
@@ -669,13 +704,19 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[srcItemID];
                 }
-                if (this._client.canMakePointer(gmeID, SRC_POINTER_NAME, newEndPointGMEID)) {
+
+                if (GMEConcepts.isValidConnection(newEndPointGMEID, oldEndPointGMEID, connectionGMEID) === true) {
                     result.push(availableConnectionSources[i]);
                 }
             }
         } else {
             //'dst' end of the connection is being dragged
             //'src end is fix
+            if (srcSubCompID !== undefined ) {
+                oldEndPointGMEID = this._Subcomponent2GMEID[srcItemID][srcSubCompID];
+            } else {
+                oldEndPointGMEID = this._ComponentID2GmeID[srcItemID];
+            }
             //need to check for all possible 'dst' if the connection's end could be changed to that value
             i = availableConnectionEnds.length;
             while (i--) {
@@ -686,7 +727,7 @@ define(['logManager',
                 } else {
                     newEndPointGMEID = this._ComponentID2GmeID[dstItemID];
                 }
-                if (this._client.canMakePointer(gmeID, DST_POINTER_NAME, newEndPointGMEID)) {
+                if (GMEConcepts.isValidConnection(oldEndPointGMEID, newEndPointGMEID, connectionGMEID) === true) {
                     result.push(availableConnectionEnds[i]);
                 }
             }

@@ -71,6 +71,8 @@ define(['logManager',
 
         this._DEFAULT_LINE_STYLE = DEFAULT_LINE_STYLE;
 
+        this._enforceMetaRules = true;
+
         //local variable holding info about the currently opened node
         this.currentNodeInfo = {"id": null, "children" : [], "parentId": null };
 
@@ -811,7 +813,7 @@ define(['logManager',
         this._client.startTransaction();
 
         while (len--) {
-            if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {
+            /*if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {*/
                 nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
 
                 if (nodeObj) {
@@ -821,7 +823,7 @@ define(['logManager',
 
                     this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, resultLineStyle);
                 }
-            }
+            /*}*/
         }
 
         this._client.completeTransaction();
@@ -1053,7 +1055,7 @@ define(['logManager',
                 }
             });
         this._toolbarItems.push(this.$btnConnectionVisualStyleRegistryFields);
-        this.$btnConnectionVisualStyleRegistryFields.enabled(false);
+        //this.$btnConnectionVisualStyleRegistryFields.enabled(false);
 
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
             { "title": "Remove segment points",
@@ -1064,6 +1066,19 @@ define(['logManager',
             });
         this._toolbarItems.push(this.$btnConnectionRemoveSegmentPoints);
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
+
+        /************ ENFORCE META RULES TOGGLE BUTTON **********************/
+        this.$btnEnforceMetaRules = toolBar.addToggleButton({
+                "icon": 'icon-exclamation-sign',
+                "text": 'Enforce META rules',
+                "title": "Enforce META rules ON/OFF",
+                "clickFn": function (data, isPressed) {
+                    self._enforceMetaRules = !self._enforceMetaRules;
+                    self.logger.warning('!!! ENFORCE META RULES IS NOT YET IMPLEMENTED !!!');
+                }}
+        );
+        this.$btnEnforceMetaRules.setToggled(this._enforceMetaRules);
+        this._toolbarItems.push(this.$btnEnforceMetaRules);
 
 
         this._toolbarInitialized = true;

@@ -292,7 +292,8 @@ define(['coreclient/meta'], function (META) {
             getValidChildrenTypes: META.getValidChildrenTypes,
             getValidTargetTypes: META.getValidTargetTypes,
             hasOwnMetaRules : META.hasOwnMetaRules,
-            filterValidTarget : META.filterValidTarget
+            filterValidTarget : META.filterValidTarget,
+            isTypeOf: META.isTypeOf
         }
     }
     return metaForGui();

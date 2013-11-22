@@ -1,7 +1,9 @@
 "use strict";
 
 define(['logManager',
+        'js/Utils/GMEConcepts',
         'text!html/Dialogs/Projects/ProjectsDialog.html'], function (logManager,
+                                                                     GMEConcepts,
                                                                projectsDialogTemplate) {
 
     var ProjectsDialog;
@@ -124,21 +126,29 @@ define(['logManager',
             }
         });
 
-        this._btnNewProjectCreate.on('click', function (event) {
+        var doCreateProject = function () {
             var val = self._txtNewProjectName.val();
 
             if (val !== "" && self._projectNames.indexOf(val) === -1) {
                 self._btnNewProjectCreate.addClass("disabled");
-
-                self._client.createProjectAsync(val,function(){
-                    self._refreshProjectList();
-                    self._panelPuttons.show();
-                    self._panelCreateNew.hide();
-                });
+                self._createNewProject(val);
             }
+        };
 
+        this._btnNewProjectCreate.on('click', function (event) {
+            doCreateProject();
             event.stopPropagation();
             event.preventDefault();
+        });
+
+        this._txtNewProjectName.on('keydown', function (event) {
+            // [enter]
+            if (event.which === 13) {
+                //create project
+                doCreateProject();
+                event.preventDefault();
+                event.stopPropagation();
+            }
         });
     };
 
@@ -182,6 +192,27 @@ define(['logManager',
             btnList[len][showMethod]();
             btnList[len][enableClass]('disabled');
         }
+    };
+
+    ProjectsDialog.prototype._createNewProject = function (projectName) {
+        var _client = this._client,
+            _dialog = this._dialog,
+            _logger = this._logger;
+
+        _client.createProjectAsync(projectName,function (err) {
+            if (!err) {
+                _client.selectProjectAsync(projectName, function (err) {
+                    if (!err) {
+                        GMEConcepts.createBasicProjectSeed();
+                        _dialog.modal('hide');
+                    } else {
+                        _logger.error('CAN NOT OPEN NEW PROJECT: ' + JSON.stringify(err));
+                    }
+                });
+            } else {
+                _logger.error('CAN NOT CREATE NEW PROJECT: ' + JSON.stringify(err));
+            }
+        });
     };
 
     return ProjectsDialog;

@@ -3,14 +3,16 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
+    'js/Utils/GMEConcepts',
     'js/NodePropertyNames'], function (logManager,
                              util,
                              CONSTANTS,
+                             GMEConcepts,
                              nodePropertyNames) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
-        DEFAULT_DECORATOR = "DefaultDecorator";
+        DEFAULT_DECORATOR = "ModelDecorator";
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
         this._client = myClient;
@@ -114,12 +116,15 @@ define(['logManager',
                 }
             }
         } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-            //part item got loaded
-            this._updatePackage.inserted.push(gmeID);
+            //validChildrenType got loaded
+            //check if not connection, because we don't display connections
+            if (GMEConcepts.isConnectionType(gmeID) === false) {
+                this._updatePackage.inserted.push(gmeID);
 
-            decorator = this._getObjectDescriptor(gmeID).decorator;
-            if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                this._updatePackage.decorators.push(decorator);
+                decorator = this._getObjectDescriptor(gmeID).decorator;
+                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                    this._updatePackage.decorators.push(decorator);
+                }
             }
         }
 
@@ -129,12 +134,14 @@ define(['logManager',
     };
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
-        var decorator;
+        var decorator,
+            isConnection = GMEConcepts.isConnectionType(gmeID) === true,
+            idx;
 
         if (this._currentNodeId === gmeID) {
             if (this._processPartsOwnerNode(gmeID)) {
                 //part item got updated
-                //we need to insert/update it s part based on if it's already there or not
+                //we need to insert/update it's part based on if it's already there or not
                 if (this._currentNodeParts.indexOf(gmeID) !== -1) {
                     this._updatePackage.updated.push(gmeID);
                 } else {
@@ -148,11 +155,30 @@ define(['logManager',
             }
         } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
             //part item got updated
-            this._updatePackage.updated.push(gmeID);
+            //we need to update/remove it's part based on if it's already there or not and it become a connection or not
+            if (isConnection) {
+                //object with gmeID is connection, remove if present already
+                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
+                    this._partBrowserView.removePart(gmeID);
 
-            decorator = this._getObjectDescriptor(gmeID).decorator;
-            if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                this._updatePackage.decorators.push(decorator);
+                    idx = this._currentNodeParts.indexOf(gmeID);
+                    this._currentNodeParts.splice(idx, 1);
+
+                    delete this._currentNodePartsCanCreateChild[id];
+                }
+            } else {
+                //object with gmeID is not a connection, update if present,
+                //display if not present
+                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
+                    this._updatePackage.updated.push(gmeID);
+                } else {
+                    this._updatePackage.inserted.push(gmeID);
+                }
+
+                decorator = this._getObjectDescriptor(gmeID).decorator;
+                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
+                    this._updatePackage.decorators.push(decorator);
+                }
             }
         }
 
@@ -163,7 +189,7 @@ define(['logManager',
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
         if (this._currentNodeId === gmeID) {
-
+            this._partBrowserView.clear();
         }
     };
 
@@ -225,8 +251,7 @@ define(['logManager',
             //update create child capability info
             len = this._currentNodeParts.length;
             while (len--) {
-                this._currentNodePartsCanCreateChild[this._currentNodeParts[len]] = this._client.canCreateChild({'parentId': gmeID,
-                                                                                                                 'objectId': this._currentNodeParts[len]});
+                this._currentNodePartsCanCreateChild[this._currentNodeParts[len]] = GMEConcepts.canCreateChild(gmeID, this._currentNodeParts[len]);
             }
 
             //update the territory

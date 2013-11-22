@@ -202,7 +202,7 @@ define(['logManager',
             };
 
             if (selectedObjIDs.length === 1) {
-                propList["ID"] = { "name": 'ID',
+                propList[" ID"] = { "name": 'ID',
                     "value": selectedObjIDs[0],
                     "valueType": typeof selectedObjIDs[0],
                     "isCommon": true,

@@ -581,7 +581,7 @@ define([
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setAttribute(root,"name","ROOT");
-                var metameta = core.createNode({parent:root});
+                /*var metameta = core.createNode({parent:root});
                 core.setAttribute(metameta,"name","METAMETA");
                 var meta = core.createNode({parent:root});
                 core.setAttribute(meta,"name","META");
@@ -591,7 +591,7 @@ define([
                 core.setAttribute(fco,"name","FCO");
                 core.setRegistry(fco,"isConnection",false);
                 core.setRegistry(fco,"position",{ "x": 100, "y": 100});
-                core.setRegistry(fco,"isMeta",true);
+                core.setRegistry(fco,"isMeta",true);*/
                 core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
@@ -1362,19 +1362,7 @@ define([
                     saveRoot('delMoreNodes('+paths+')');
                 }
             }
-            /******************* TEST CAN-CREATECHILD **********************/
-            function canCreateChild(parameters) {
-                var result = false;
-                if(_core){
-                    if(parameters.parentId &&
-                        parameters.objectId) {
-                        //TODO: implement real logic based on META and CONSTRAINTS...
-                        result = true;
-                    }
-                }
 
-                return result;
-            }
             /******************* END OF --- TEST CAN-CREATECHILD **********************/
             /*function createChild(parameters) {
                 if(_core){
@@ -1469,65 +1457,7 @@ define([
                     saveRoot('delPointer('+path+','+name+')');
                 }
             }
-            /**************TEST canMakeConnection **********************/
-            function canMakeConnection(parameters) {
-                var result = false;
 
-                if(parameters.parentId && parameters.sourceId && parameters.targetId){
-                    if(_core &&
-                        _nodes[parameters.parentId] &&
-                        _nodes[parameters.sourceId] &&
-                        _nodes[parameters.parentId] &&
-                        typeof _nodes[parameters.parentId].node === 'object' &&
-                        typeof _nodes[parameters.sourceId].node === 'object' &&
-                        typeof _nodes[parameters.targetId].node === 'object'){
-                        var sourceName = (_core.getAttribute(_nodes[parameters.sourceId].node,"name") || "").toLowerCase();
-                        var targetName = (_core.getAttribute(_nodes[parameters.targetId].node,"name") || "").toLowerCase();
-
-                        //TODO: basic rule: if all necessary parameters are present they can be connected
-                        result = true;
-
-                        //TODO: ENFORCE META AND CONSTRAINS RULES
-                        //DEMO RULE #1: OUTxxxx can be connected to only INxxx (and vica versa)
-                        if ((sourceName.indexOf('out') === 0) && (targetName.indexOf('in') !== 0) ||
-                            (sourceName.indexOf('in') === 0) && (targetName.indexOf('out') !== 0) ) {
-                            result = false;
-                        }
-                    }
-                }
-                return result;
-            }
-            /**********************************************************/
-            function makeConnection(parameters) {
-                if( canMakeConnection(parameters) &&
-                    parameters.parentId &&
-                    parameters.sourceId &&
-                    parameters.targetId){
-                    if(_core &&
-                        _nodes[parameters.parentId] &&
-                        _nodes[parameters.sourceId] &&
-                        _nodes[parameters.parentId] &&
-                        typeof _nodes[parameters.parentId].node === 'object' &&
-                        typeof _nodes[parameters.sourceId].node === 'object' &&
-                        typeof _nodes[parameters.targetId].node === 'object'){
-                        var connection = _core.createNode({parent:_nodes[parameters.parentId].node});
-                        _core.setPointer(connection,"source",_nodes[parameters.sourceId].node);
-                        _core.setPointer(connection,"target",_nodes[parameters.targetId].node);
-                        _core.setAttribute(connection,"name",_core.getAttribute(_nodes[parameters.sourceId].node,'name')+"->"+_core.getAttribute(_nodes[parameters.targetId].node,'name'));
-                        _core.setRegistry(connection,"isConnection",true);
-                        _core.setRegistry(connection,"decorator","");
-                        if (parameters.registry) {
-                            for (var regEntry in parameters.registry) {
-                                if (parameters.registry.hasOwnProperty(regEntry)) {
-                                    _core.setRegistry(connection,regEntry,parameters.registry[regEntry]);
-                                }
-                            }
-                        }
-                        storeNode(connection);
-                        saveRoot('makeConnection('+parameters.targetId+','+parameters.sourceId+','+parameters.targetId+')');
-                    }
-                }
-            }
 
             function intellyPaste(parameters) {
                 var pathestocopy = [],
@@ -2019,12 +1949,9 @@ define([
                 deleteNode: deleteNode,
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
-                canCreateChild: canCreateChild,
                 makePointer: makePointer,
                 canMakePointer: canMakePointer,
                 delPointer: delPointer,
-                makeConnection: makeConnection,
-                canMakeConnection: canMakeConnection,
                 intellyPaste: intellyPaste,
                 addMember: addMember,
                 removeMember: removeMember,
@@ -2066,6 +1993,7 @@ define([
                 getValidTargetTypes: META.getValidTargetTypes,
                 hasOwnMetaRules : META.hasOwnMetaRules,
                 filterValidTarget : META.filterValidTarget,
+                isTypeOf: META.isTypeOf,
                 //end of META functions
 
                 //constraint

@@ -10,7 +10,9 @@ define([], function () {
                             "rotation": "rotation",
                             "decorator": "decorator",
                             "isPort": "isPort",
-                            "lineStyle": "lineStyle" };
+                            "lineStyle": "lineStyle",
+                            "ProjectRegistry": "ProjectRegistry",
+                            "DisplayAttribute": "DisplayAttribute"};
 
     return { "Attributes": attributeNames,
              "Registry": registryNames };

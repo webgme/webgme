@@ -4,19 +4,21 @@ define(['logManager',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
-    './MetaRelations'], function (logManager,
+    './MetaRelations',
+    './MetaEditorConstants'], function (logManager,
                                                         util,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         DiagramDesignerWidgetConstants,
                                                         MetaEditorControlDiagramDesignerWidgetEventHandlers,
-                                                        MetaRelations) {
+                                                        MetaRelations,
+                                                        MetaEditorConstants) {
 
     "use strict";
 
     var MetaEditorControl,
         GME_ID = "GME_ID",
-        META_EDITOR_REGISTRY_KEY = "MetaEditor",
+        META_EDITOR_REGISTRY_KEY = MetaEditorConstants.META_EDITOR_REGISTRY_KEY,
         META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner',
         META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID;
@@ -68,7 +70,11 @@ define(['logManager',
         this.attachDiagramDesignerWidgetEventHandlers();
 
         //TODO: load meta container node
-        this.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+        //TODO: give the UI time to render first before start using it's features
+        setTimeout(function () {
+            self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+        }, 10);
+
 
         this.logger.debug("MetaEditorControl ctor finished");
     };
@@ -162,8 +168,7 @@ define(['logManager',
     /**********************************************************/
 
     MetaEditorControl.prototype._emptyMetaEditorRegistry = function () {
-        return { "Members": [],
-            "MemberCoord": {}};
+        return MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
     };
 
     /**********************************************************/
@@ -1246,40 +1251,40 @@ define(['logManager',
     MetaEditorControl.prototype._containmentRelationshipMultiplicityUpdate = function (containerID, objectID, oldValue, newValue) {
         var containerNode = this._client.getNode(containerID),
             objectNode = this._client.getNode(objectID),
-            containmentMetaDescriptor,
-            len,
-            alreadyExists,
+            multiplicity,
             multiplicityValid;
 
         multiplicityValid = function (value) {
-            var result,
-                pattNum = /\d+/g,
-                pattMinToMax = /\d+\.\.d+/g,
-                pattMinToMany = /\d+\.\.*/g;
+            var result = null,
+                pattNum = /^\d+$/g,
+                pattMinToMax = /^\d+\.\.\d+$/g,
+                pattMinToMany = /^\d+\.\.*$/g;
 
             //valid value for containment is 1, 0..*, x..y
-            result = pattNum.test(value) || pattMinToMax.test(value) || pattMinToMany.test(value);
+            if (pattNum.test(value)) {
+                //#1: single digit number
+                result = {'min': parseInt(value, 10),
+                          'max': parseInt(value, 10)};
+            } else if (pattMinToMax.test(value)) {
+                //#2: x..y
+                result = {'min': parseInt(value, 10),
+                    'max': parseInt(value.substring(value.indexOf('..') + 2), 10)};
+            } else if (pattMinToMany.test(value)) {
+                //#3: x..*
+                result = {'min': parseInt(value, 10),
+                    'max': -1};
+            }
 
             return result;
         };
 
         if (containerNode && objectNode) {
-            containmentMetaDescriptor = containerNode.getEditableChildrenMetaDescriptor() || [];
+            multiplicity = multiplicityValid(newValue);
+            if (multiplicity) {
 
-            len = containmentMetaDescriptor.length;
-            alreadyExists = false;
-            while (len--) {
-                if (containmentMetaDescriptor[len].target === objectID) {
-                    alreadyExists = true;
-                    break;
-                }
-            }
+                multiplicity.id = objectID;
 
-            if (alreadyExists &&
-                multiplicityValid(newValue)) {
-                containmentMetaDescriptor[len].multiplicity = newValue;
-
-                this._client.setChildrenMetaDescriptor(containerID, containmentMetaDescriptor);
+                this._client.updateValidChildrenItem(containerID, multiplicity);
             } else {
                 this._updateConnectionText(containerID, objectID, MetaRelations.META_RELATIONS.CONTAINMENT, {'dstText': oldValue,
                     'dstTextEdit': true});
