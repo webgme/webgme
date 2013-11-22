@@ -6,7 +6,7 @@ define(['logManager',
 
     var Port,
         PORT_CONNECTOR_LEN = 20,
-        PORT_DOM_HEIGHT = 20;
+        PORT_DOM_HEIGHT = 16;
 
     Port = function (id, options) {
         this.id = id;

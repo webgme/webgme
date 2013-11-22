@@ -21,7 +21,7 @@ define(['js/Constants',
 
     var ModelDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "ModelDecoratorDiagramDesignerWidget",
-        PORT_CONTAINER_OFFSET_Y = 21,
+        PORT_CONTAINER_OFFSET_Y = 15,
         ACCEPT_DROPPABLE_CLASS = 'accept-droppable',
         DRAGGABLE_MOUSE = 'DRAGGABLE';
 
