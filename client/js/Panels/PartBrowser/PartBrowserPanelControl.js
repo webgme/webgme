@@ -1,11 +1,9 @@
 "use strict";
 
 define(['logManager',
-    'clientUtil',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames'], function (logManager,
-                             util,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames) {
@@ -18,8 +16,13 @@ define(['logManager',
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
-        this._currentNodeId = null;
-        this._currentNodeParts = [];
+        //the ID of the node whose valid children types should be displayed
+        this._containerNodeId = null;
+
+        //the ID of the valid children types of the container node
+        this._validChildrenTypeIDs = [];
+
+        //decorators can use it to ask for notifications about their registered sub IDs
         this._componentIDPartIDMap = {};
 
         this._initDragDropFeatures();
@@ -32,23 +35,22 @@ define(['logManager',
         this._logger.debug("SELECTEDOBJECT_CHANGED nodeId '" + nodeId + "'");
 
         //remove current territory patterns
-        if (this._currentNodeId) {
+        if (this._containerNodeId) {
             this._client.removeUI(this._territoryId);
             this._partBrowserView.clear();
         }
 
-        this._currentNodeId = nodeId;
-        this._currentNodeParts = [];
-        this._componentIDPartIDMap = {};
-        this._currentNodePartsCanCreateChild = {};
+        this._containerNodeId = nodeId;
+        this._validChildrenTypeIDs = [];
 
-        if (this._currentNodeId) {
+        if (this._containerNodeId) {
             //put new node's info into territory rules
             this._selfPatterns = {};
-            this._selfPatterns[nodeId] = { "children": 0 };
+            this._selfPatterns[nodeId] = { "children": 1 };
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
+            this._logger.warning('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
     };
@@ -62,6 +64,7 @@ define(['logManager',
 
             objDescriptor.id = nodeObj.getId();
             objDescriptor.decorator = nodeObj.getRegistry(nodePropertyNames.Registry.decorator) || DEFAULT_DECORATOR;
+            objDescriptor.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name);
         }
 
         return objDescriptor;
@@ -71,13 +74,7 @@ define(['logManager',
         var i = events ? events.length : 0,
             e;
 
-        this._logger.debug("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
-
-        this._updatePackage = {'inserted': [],
-                               'updated': [],
-                               'decorators': [DEFAULT_DECORATOR]};
-
-        this._notifyPackage = {};
+        this._logger.warning("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
 
         while (i--) {
             e = events[i];
@@ -94,132 +91,51 @@ define(['logManager',
             }
         }
 
-        this._handleUpdatePackageDecorators(this._updatePackage);
-
-        this._handleDecoratorNotification(this._notifyPackage);
+        this._updateValidChildrenTypeDecorators();
 
         this._logger.debug("onOneEvent '" + events.length + "' items - DONE");
     };
 
     // PUBLIC METHODS
     PartBrowserControl.prototype._onLoad = function (gmeID) {
-        var decorator;
-
-        if (this._currentNodeId === gmeID) {
-            if (this._processPartsOwnerNode(gmeID)) {
-                //part item got loaded
-                this._updatePackage.inserted.push(gmeID);
-
-                decorator = this._getObjectDescriptor(gmeID).decorator;
-                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                    this._updatePackage.decorators.push(decorator);
-                }
-            }
-        } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-            //validChildrenType got loaded
-            //check if not connection, because we don't display connections
-            if (GMEConcepts.isConnectionType(gmeID) === false) {
-                this._updatePackage.inserted.push(gmeID);
-
-                decorator = this._getObjectDescriptor(gmeID).decorator;
-                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                    this._updatePackage.decorators.push(decorator);
-                }
-            }
+        if (this._containerNodeId === gmeID) {
+            this._processContainerNode(gmeID);
         }
-
-        this._buildNotifyPackageByID(gmeID);
-
-        this._updatePartDraggability();
     };
 
     PartBrowserControl.prototype._onUpdate = function (gmeID) {
-        var decorator,
-            isConnection = GMEConcepts.isConnectionType(gmeID) === true,
-            idx;
-
-        if (this._currentNodeId === gmeID) {
-            if (this._processPartsOwnerNode(gmeID)) {
-                //part item got updated
-                //we need to insert/update it's part based on if it's already there or not
-                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-                    this._updatePackage.updated.push(gmeID);
-                } else {
-                    this._updatePackage.inserted.push(gmeID);
-                }
-
-                decorator = this._getObjectDescriptor(gmeID).decorator;
-                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                    this._updatePackage.decorators.push(decorator);
-                }
-            }
-        } else if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-            //part item got updated
-            //we need to update/remove it's part based on if it's already there or not and it become a connection or not
-            if (isConnection) {
-                //object with gmeID is connection, remove if present already
-                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-                    this._partBrowserView.removePart(gmeID);
-
-                    idx = this._currentNodeParts.indexOf(gmeID);
-                    this._currentNodeParts.splice(idx, 1);
-
-                    delete this._currentNodePartsCanCreateChild[id];
-                }
-            } else {
-                //object with gmeID is not a connection, update if present,
-                //display if not present
-                if (this._currentNodeParts.indexOf(gmeID) !== -1) {
-                    this._updatePackage.updated.push(gmeID);
-                } else {
-                    this._updatePackage.inserted.push(gmeID);
-                }
-
-                decorator = this._getObjectDescriptor(gmeID).decorator;
-                if (this._updatePackage.decorators.indexOf(decorator) === -1) {
-                    this._updatePackage.decorators.push(decorator);
-                }
-            }
+        if (this._containerNodeId === gmeID) {
+            this._processContainerNode(gmeID)
         }
-
-        this._buildNotifyPackageByID(gmeID);
-
-        this._updatePartDraggability();
     };
 
     PartBrowserControl.prototype._onUnload = function (gmeID) {
-        if (this._currentNodeId === gmeID) {
+        if (this._containerNodeId === gmeID) {
+            this._logger.warning('Container node got unloaded...');
+            this._client.removeUI(this._territoryId);
             this._partBrowserView.clear();
         }
     };
 
-    PartBrowserControl.prototype._processPartsOwnerNode = function (gmeID) {
+    PartBrowserControl.prototype._processContainerNode = function (gmeID) {
         var node = this._client.getNode(gmeID),
-            currentMembers = [],
-            oldMembers = this._currentNodeParts.slice(0),
+            validChildrenTypes = [],
+            oValidChildrenTypes = this._validChildrenTypeIDs.slice(0),
             len,
             diff,
-            idx,
             id,
-            diffInserted,
-            self = this,
             territoryChanged = false;
 
         if (node) {
             //get possible targets from MetaDescriptor
-            currentMembers = this._client.getValidChildrenTypes(gmeID);
+            validChildrenTypes = this._client.getValidChildrenTypes(gmeID);
 
-            //check the deleted ones
-            diff = _.difference(oldMembers, currentMembers);
+            //the deleted ones
+            diff = _.difference(oValidChildrenTypes, validChildrenTypes);
             len = diff.length;
             while (len--) {
                 id = diff[len];
-                this._partBrowserView.removePart(id);
-
-                idx = this._currentNodeParts.indexOf(id);
-                this._currentNodeParts.splice(idx, 1);
-
-                delete this._currentNodePartsCanCreateChild[id];
+                this._removePart(id);
 
                 //remove it from the territory
                 //only if not itself, then we need to keep it in the territory
@@ -227,55 +143,46 @@ define(['logManager',
                     delete this._selfPatterns[id];
                     territoryChanged = true;
                 }
-
-                this._logger.debug('Removing id "' + id + '" from territory...');
             }
 
             //check the added ones
-            diffInserted = _.difference(currentMembers, oldMembers);
-            len = diffInserted.length;
+            diff = _.difference(validChildrenTypes, oValidChildrenTypes);
+            len = diff.length;
             while (len--) {
-                id = diffInserted[len];
-                this._currentNodeParts.push(id);
+                id = diff[len];
+                if (this._validChildrenTypeIDs.indexOf(id) === -1) {
+                    this._validChildrenTypeIDs.push(id);
 
-                this._logger.debug('Adding id "' + id + '" to territory...');
-
-                //add to the territory
-                //only if not self, because it's already in the territory
-                if (id !== gmeID) {
-                    this._selfPatterns[id] = { "children": 0 };
-                    territoryChanged = true;
+                    //add to the territory
+                    //only if not self, because it's already in the territory
+                    if (id !== gmeID) {
+                        this._selfPatterns[id] = { "children": 0 };
+                        territoryChanged = true;
+                    }
                 }
-            }
-
-            //update create child capability info
-            len = this._currentNodeParts.length;
-            while (len--) {
-                this._currentNodePartsCanCreateChild[this._currentNodeParts[len]] = GMEConcepts.canCreateChild(gmeID, this._currentNodeParts[len]);
             }
 
             //update the territory
             if (territoryChanged) {
-                //TODO: review this async here
-                setTimeout(function () {
-                    self._logger.debug('Updating territory with ruleset: ' + JSON.stringify(self._selfPatterns));
-                    self._client.updateTerritory(self._territoryId, self._selfPatterns);
-                }, 10);
+                this._doUpdateTerritory(true);
             }
-
-            //return if self is contained as possible children
-            return (currentMembers.indexOf(gmeID) !== -1);
         }
     };
 
+    PartBrowserControl.prototype._doUpdateTerritory = function (async) {
+        var territoryId = this._territoryId,
+            patterns = this._selfPatterns,
+            client = this._client,
+            logger = this._logger;
 
-    PartBrowserControl.prototype._handleUpdatePackageDecorators = function (updatePackage) {
-        var self = this;
-
-        if (updatePackage.decorators.length > 0) {
-            this._client.decoratorManager.download(updatePackage.decorators, WIDGET_NAME, function () {
-                self._decoratorsDownloaded(updatePackage);
-            });
+        if (async === true) {
+            setTimeout(function () {
+                logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
+                client.updateTerritory(territoryId, patterns);
+            }, 10);
+        } else {
+            logger.debug('Updating territory with rules: ' + JSON.stringify(patterns));
+            client.updateTerritory(territoryId, patterns);
         }
     };
 
@@ -291,74 +198,6 @@ define(['logManager',
         return result;
     };
 
-
-    PartBrowserControl.prototype._decoratorsDownloaded = function (updatePackage) {
-        var i,
-            id,
-            decoratorInstance,
-            getDecoratorTerritoryQueries,
-            territoryChanged = false,
-            self = this;
-
-        this._logger.debug('_decoratorsDownloaded: ' + updatePackage.inserted + ', ' + updatePackage.updated + ', ' + updatePackage.decorators);
-
-        getDecoratorTerritoryQueries = function (decorator) {
-            var query,
-                entry;
-
-            if (decorator) {
-                query = decorator.getTerritoryQuery();
-
-                if (query) {
-                    for (entry in query) {
-                        if (query.hasOwnProperty(entry)) {
-                            self._selfPatterns[entry] = query[entry];
-                            territoryChanged = true;
-                        }
-                    }
-                }
-            }
-        };
-
-        //handle inserted
-        i = updatePackage.inserted.length;
-        while (i--) {
-            id = updatePackage.inserted[i];
-
-            if (this._currentNodeParts.indexOf(id) !== -1) {
-                decoratorInstance = this._partBrowserView.addPart(id, this._getPartDescriptor(id));
-                getDecoratorTerritoryQueries(decoratorInstance);
-            } else {
-                //this should not happen at all
-                this._logger.debug('_decoratorsDownloaded updatePackage.inserted contains id "' + id + '" that is not part of the current object "' + this._currentNodeId + '"');
-            }
-        }
-
-        //handle updated
-        i = updatePackage.updated.length;
-        while (i--) {
-            id = updatePackage.updated[i];
-
-            if (this._currentNodeParts.indexOf(id) !== -1) {
-                decoratorInstance = this._partBrowserView.updatePart(id, this._getPartDescriptor(id));
-                getDecoratorTerritoryQueries(decoratorInstance);
-            } else {
-                //this should not happen at all
-                this._logger.debug('_decoratorsDownloaded updatePackage.updated contains id "' + id + '" that is not part of the current object "' + this._currentNodeId + '"');
-            }
-        }
-
-        this._updatePartDraggability();
-
-        //update the territory
-        if (territoryChanged) {
-            //TODO: review this async here
-            setTimeout(function () {
-                self._logger.debug('Updating territory with ruleset from decorators: ' + JSON.stringify(self._selfPatterns));
-                self._client.updateTerritory(self._territoryId, self._selfPatterns);
-            }, 10);
-        }
-    };
 
     PartBrowserControl.prototype._getPartDescriptor = function (id) {
         var desc = this._getObjectDescriptor(id);
@@ -389,40 +228,11 @@ define(['logManager',
         }
     };
 
-    PartBrowserControl.prototype._buildNotifyPackageByID = function (gmeID) {
-        var len;
-        if (this._componentIDPartIDMap && this._componentIDPartIDMap[gmeID]) {
-            len = this._componentIDPartIDMap[gmeID].length;
-            while (len--) {
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] = this._notifyPackage[this._componentIDPartIDMap[gmeID][len]] || [];
-                this._notifyPackage[this._componentIDPartIDMap[gmeID][len]].push(gmeID);
-            }
-        }
-    };
-
-    PartBrowserControl.prototype._handleDecoratorNotification = function (notifyPackage) {
-        var partId;
-        if (notifyPackage) {
-            for (partId in notifyPackage) {
-                if (notifyPackage.hasOwnProperty(partId)) {
-                    this._logger.debug('NotifyPartDecorator: ' + partId + ', GME_IDs: ' + notifyPackage[partId]);
-                    this._partBrowserView.notifyPart(partId, notifyPackage[partId]);
-                }
-            }
-        }
-    };
-
-    PartBrowserControl.prototype._updatePartDraggability = function () {
-        var len = this._currentNodeParts.length;
-        while (len--) {
-            this._partBrowserView.setEnabled(this._currentNodeParts[len], this._currentNodePartsCanCreateChild[this._currentNodeParts[len]]);
-        }
-    };
 
     PartBrowserControl.prototype._initDragDropFeatures = function () {
         var dragEffects = this._partBrowserView.DRAG_EFFECTS;
 
-        this._partBrowserView.getDragEffects = function (el) {
+        this._partBrowserView.getDragEffects = function (/*el*/) {
             return [dragEffects.DRAG_CREATE_INSTANCE];
         };
 
@@ -430,6 +240,126 @@ define(['logManager',
             return [el.attr('id')];
         };
     };
+
+
+    PartBrowserControl.prototype._removePart = function (id) {
+        var idx;
+
+        //remove from the UI
+        this._partBrowserView.removePart(id);
+
+        //fix accounting
+        idx = this._validChildrenTypeIDs.indexOf(id);
+        this._validChildrenTypeIDs.splice(idx, 1);
+    };
+
+
+    PartBrowserControl.prototype._updateValidChildrenTypeDecorators = function () {
+        var len = this._validChildrenTypeIDs.length,
+            decorators = [],
+            self = this;
+
+        while (len--) {
+            decorators.push(this._getObjectDescriptor(this._validChildrenTypeIDs[len]).decorator);
+        }
+
+        if (decorators.length > 0) {
+            this._client.decoratorManager.download(decorators, WIDGET_NAME, function () {
+                self._refreshPartList();
+            });
+        }
+    };
+
+
+    PartBrowserControl.prototype._refreshPartList = function () {
+        var childrenTypeToDisplay = [],
+            i,
+            id,
+            names = [],
+            mapNameID = {},
+            objDesc,
+            childrenWithName,
+            decoratorInstance,
+            j,
+            getDecoratorTerritoryQueries,
+            territoryChanged = false,
+            _selfPatterns = this._selfPatterns;
+
+        getDecoratorTerritoryQueries = function (decorator) {
+            var query,
+                entry;
+
+            if (decorator) {
+                query = decorator.getTerritoryQuery();
+
+                if (query) {
+                    for (entry in query) {
+                        if (query.hasOwnProperty(entry)) {
+                            _selfPatterns[entry] = query[entry];
+                            territoryChanged = true;
+                        }
+                    }
+                }
+            }
+        };
+
+        this._logger.warning('_refreshPartList this._validChildrenTypeIDs: ' + this._validChildrenTypeIDs);
+
+        //clear view
+        this._partBrowserView.clear();
+
+        //filter out the types that doesn't need to be displayed for whatever reason:
+        // - don't display validConnectionTypes
+        i = this._validChildrenTypeIDs.length;
+        while (i--) {
+            id = this._validChildrenTypeIDs[i];
+            if (GMEConcepts.isConnectionType(id) === false) {
+                childrenTypeToDisplay.push(id);
+
+                objDesc = this._getObjectDescriptor(id);
+                if (names.indexOf(objDesc.name) === -1) {
+                    names.push(objDesc.name);
+                    mapNameID[objDesc.name] = [id];
+                } else {
+                    mapNameID[objDesc.name].push(id);
+                }
+            }
+        }
+
+        this._logger.warning('_refreshPartList childrenTypeToDisplay: ' + childrenTypeToDisplay);
+
+        //sort the parts by name
+        names.sort();
+        names.reverse();
+
+        //display the parts in the order of their names
+        i = names.length;
+        while (i--) {
+            childrenWithName = mapNameID[names[i]];
+            childrenWithName.sort();
+            childrenWithName.reverse();
+            this._logger.warning(names[i] + ':  ' + childrenWithName);
+
+            j = childrenWithName.length;
+            while (j--) {
+                id = childrenWithName[j];
+                decoratorInstance = this._partBrowserView.addPart(id, this._getPartDescriptor(id));
+                getDecoratorTerritoryQueries(decoratorInstance);
+            }
+        }
+
+        //update child creation possibility
+        i = this._validChildrenTypeIDs.length;
+        while (i--) {
+            id = this._validChildrenTypeIDs[i];
+            this._partBrowserView.setEnabled(id, GMEConcepts.canCreateChild(this._containerNodeId, id));
+        }
+
+        if (territoryChanged) {
+            this._doUpdateTerritory(true);
+        }
+    };
+
 
     return PartBrowserControl;
 });
