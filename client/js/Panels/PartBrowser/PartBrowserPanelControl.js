@@ -50,7 +50,7 @@ define(['logManager',
 
             this._territoryId = this._client.addUI(this, true);
             //update the territory
-            this._logger.warning('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
+            this._logger.debug('UPDATING TERRITORY: selectedObjectChanged' + JSON.stringify(this._selfPatterns));
             this._client.updateTerritory(this._territoryId, this._selfPatterns);
         }
     };
@@ -74,7 +74,7 @@ define(['logManager',
         var i = events ? events.length : 0,
             e;
 
-        this._logger.warning("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
+        this._logger.debug("onOneEvent '" + i + "' items, events: " + JSON.stringify(events));
 
         while (i--) {
             e = events[i];
@@ -303,7 +303,7 @@ define(['logManager',
             }
         };
 
-        this._logger.warning('_refreshPartList this._validChildrenTypeIDs: ' + this._validChildrenTypeIDs);
+        this._logger.debug('_refreshPartList this._validChildrenTypeIDs: ' + this._validChildrenTypeIDs);
 
         //clear view
         this._partBrowserView.clear();
@@ -326,7 +326,7 @@ define(['logManager',
             }
         }
 
-        this._logger.warning('_refreshPartList childrenTypeToDisplay: ' + childrenTypeToDisplay);
+        this._logger.debug('_refreshPartList childrenTypeToDisplay: ' + childrenTypeToDisplay);
 
         //sort the parts by name
         names.sort();
@@ -338,7 +338,7 @@ define(['logManager',
             childrenWithName = mapNameID[names[i]];
             childrenWithName.sort();
             childrenWithName.reverse();
-            this._logger.warning(names[i] + ':  ' + childrenWithName);
+            this._logger.debug(names[i] + ':  ' + childrenWithName);
 
             j = childrenWithName.length;
             while (j--) {
