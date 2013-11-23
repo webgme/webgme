@@ -72,16 +72,29 @@ define(['logManager',
             }
         });
 
+        var openProject = function (projId) {
+            self._client.selectProjectAsync(projId,function(){
+                self._dialog.modal('hide');
+            });
+        };
+
+        this._ul.on("dblclick", "a", function (event) {
+            selectedId = $(this).attr("data-id");
+
+            event.stopPropagation();
+            event.preventDefault();
+
+            openProject(selectedId);
+        });
+
         this._btnOpen.on('click', function (event) {
             self._btnOpen.addClass("disabled");
             self._btnDelete.addClass("disabled");
 
-            self._client.selectProjectAsync(selectedId,function(){
-                self._dialog.modal('hide');
-            });
-
             event.stopPropagation();
             event.preventDefault();
+
+            openProject(selectedId);
         });
 
         this._btnDelete.on('click', function (event) {
