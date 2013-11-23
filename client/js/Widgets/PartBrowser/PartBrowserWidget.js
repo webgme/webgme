@@ -35,6 +35,13 @@ define(['logManager',
     };
 
     PartBrowserWidget.prototype.clear = function () {
+        //remove the parts first to safely detach jQueryUI draggable
+        for (var partId in this._parts) {
+            if (this._parts.hasOwnProperty(partId)) {
+                this.removePart(partId);
+            }
+        }
+
         this._list.empty();
     };
 
