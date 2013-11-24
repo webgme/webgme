@@ -69,7 +69,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             var child = TASYNC.call(__loadBase,oldcore.loadChild(node,relid));
             var base = core.getBase(node);
             var basechild = null;
-            if(base){
+            if(base && oldcore.getChildrenRelids(base).indexOf(relid) !== -1){
                 basechild = TASYNC.call(__loadBase,oldcore.loadChild(base,relid));
             }
             return TASYNC.call(function(ch,bch,n,r){
