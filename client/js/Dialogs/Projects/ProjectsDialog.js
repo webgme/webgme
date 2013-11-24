@@ -2,7 +2,8 @@
 
 define(['logManager',
         'js/Utils/GMEConcepts',
-        'text!html/Dialogs/Projects/ProjectsDialog.html'], function (logManager,
+        'text!html/Dialogs/Projects/ProjectsDialog.html',
+        'css!/css/Dialogs/Projects/ProjectsDialog'], function (logManager,
                                                                      GMEConcepts,
                                                                projectsDialogTemplate) {
 
@@ -13,6 +14,7 @@ define(['logManager',
 
         this._client = client;
         this._projectNames = [];
+        this._filter = undefined;
 
         this._logger.debug("Created");
     };
@@ -54,6 +56,11 @@ define(['logManager',
         this._btnNewProjectCreate = this._dialog.find(".btn-save");
 
         this._txtNewProjectName = this._dialog.find(".txt-project-name");
+
+        this._el.find('.tabContainer').first().groupedAlphabetTabs({'onClick': function (filter) {
+            self._filter = filter;
+            self._updateProjectNameList();
+        }});
 
         //hook up event handlers
         this._ul.on("click", "a", function (event) {
@@ -123,6 +130,9 @@ define(['logManager',
             self._panelPuttons.show();
             self._panelCreateNew.hide();
 
+            self._filter = self._el.find('.tabContainer li.active').data('filter');
+            self._updateProjectNameList();
+
             event.stopPropagation();
             event.preventDefault();
         });
@@ -136,6 +146,11 @@ define(['logManager',
             } else {
                 self._panelCreateNew.removeClass("error");
                 self._btnNewProjectCreate.removeClass("disabled");
+
+                if (val.length === 1) {
+                    self._filter = [val.toUpperCase(), val.toUpperCase()];
+                    self._updateProjectNameList();
+                }
             }
         });
 
@@ -169,29 +184,19 @@ define(['logManager',
         var self = this;
 
         this._client.getAvailableProjectsAsync(function(err,projectNames){
-            var len,
-                i,
-                li;
-
             self._activeProject = self._client.getActiveProject();
             self._projectNames = projectNames || [];
-            self._projectNames.sort();
+            self._projectNames.sort(function compare(a, b) {
+                if (a.toLowerCase() < b.toLowerCase())
+                    return -1;
+                if (a.toLowerCase() > b.toLowerCase())
+                    return 1;
 
-            len = self._projectNames.length;
+                // a must be equal to b
+                return 0;
+            });
 
-            self._ul.empty();
-
-            for (i = 0; i < len ; i += 1) {
-                li = $('<li class="center pointer"><a class="btn-env" data-id="' + self._projectNames[i] + '">' + self._projectNames[i] + '</a>');
-
-                if (self._projectNames[i] === self._activeProject) {
-                    li.addClass('active');
-                }
-
-                self._ul.append(li);
-            }
-
-            self._showButtons(false);
+            self._updateProjectNameList();
         });
     };
 
@@ -226,6 +231,37 @@ define(['logManager',
                 _logger.error('CAN NOT CREATE NEW PROJECT: ' + JSON.stringify(err));
             }
         });
+    };
+
+    ProjectsDialog.prototype._updateProjectNameList = function () {
+        var len = this._projectNames.length,
+            i,
+            li,
+            displayProject;
+
+        this._ul.empty();
+
+        for (i = 0; i < len ; i += 1) {
+            displayProject = false;
+            if (this._filter !== undefined) {
+                displayProject = (this._projectNames[i].toUpperCase()[0] >= this._filter[0] &&
+                    this._projectNames[i].toUpperCase()[0] <= this._filter[1]);
+            } else {
+                displayProject = true;
+            }
+
+            if (displayProject) {
+                li = $('<li class="center pointer"><a class="btn-env" data-id="' + this._projectNames[i] + '">' + this._projectNames[i] + '</a>');
+
+                if (this._projectNames[i] === this._activeProject) {
+                    li.addClass('active');
+                }
+
+                this._ul.append(li);
+            }
+        }
+
+        this._showButtons(false);
     };
 
     return ProjectsDialog;

@@ -35,6 +35,8 @@ define([], function () {
          POINTER_REF: 'ref',    //dedicated reference pointer name
          POINTER_BASE: 'base',  //dedicated inheritance pointer name
 
+        DISPLAY_FORMAT_ATTRIBUTE_MARKER: '$',
+
          /*
           * Dedicated SET names
           */
