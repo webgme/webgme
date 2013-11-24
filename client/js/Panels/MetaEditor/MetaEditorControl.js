@@ -641,7 +641,25 @@ define(['logManager',
     MetaEditorControl.prototype._removeConnection = function (gmeSrcId, gmeDstId, connType, pointerName) {
         var connectionID,
             idx,
-            len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length;
+            len,
+            connectionPresent = false;
+
+        //only bother if
+        //- both the source and destination is present on the screen
+        //the connection in question is drawn
+        if (this._GMENodes.indexOf(gmeSrcId)!== -1 &&
+            this._GMENodes.indexOf(gmeDstId)!== -1 &&
+            this._connectionListBySrcGMEID[gmeSrcId] &&
+            this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] &&
+            this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType]) {
+            connectionPresent = true;
+        }
+
+        if (!connectionPresent) {
+            return ;
+        }
+
+        len = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType].length;
 
         while (len--) {
             connectionID = this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType][len];
