@@ -334,10 +334,15 @@ define(['logManager',
             items = DragHelper.getDragItems(dragInfo),
             effects = DragHelper.getDragEffects(dragInfo);
 
-        accept = (items.length > 0 && (effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_COPY) !== -1 ||
-            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_MOVE) !== -1 ||
-            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 ||
-            effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) !== -1));
+        if (GMEConcepts.isProjectPROJECTBASE(this.currentNodeInfo.id)) {
+            //DO NOT ACCEPT ANYTHING IF THE PROJECT'S PROJECT_BASE IS THE CURRENTLY OPENED NODE
+            accept = false;
+        } else {
+            accept = (items.length > 0 && (effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_COPY) !== -1 ||
+                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_MOVE) !== -1 ||
+                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 ||
+                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) !== -1));
+        }
 
         return accept;
     };
