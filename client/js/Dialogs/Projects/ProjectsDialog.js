@@ -138,19 +138,20 @@ define(['logManager',
         });
 
         this._txtNewProjectName.on('keyup', function () {
-            var val = self._txtNewProjectName.val();
+            var val = self._txtNewProjectName.val(),
+                re = /^[0-9a-z_]+$/gi;
 
-            if (val === "" || self._projectNames.indexOf(val) !== -1) {
+            if (val.length === 1) {
+                self._filter = [val.toUpperCase(), val.toUpperCase()];
+                self._updateProjectNameList();
+            }
+
+            if (!re.test(val) || self._projectNames.indexOf(val) !== -1) {
                 self._panelCreateNew.addClass("error");
                 self._btnNewProjectCreate.addClass("disabled");
             } else {
                 self._panelCreateNew.removeClass("error");
                 self._btnNewProjectCreate.removeClass("disabled");
-
-                if (val.length === 1) {
-                    self._filter = [val.toUpperCase(), val.toUpperCase()];
-                    self._updateProjectNameList();
-                }
             }
         });
 
@@ -224,11 +225,11 @@ define(['logManager',
                         GMEConcepts.createBasicProjectSeed();
                         _dialog.modal('hide');
                     } else {
-                        _logger.error('CAN NOT OPEN NEW PROJECT: ' + JSON.stringify(err));
+                        _logger.error('CAN NOT OPEN NEW PROJECT: ' + err.stack);
                     }
                 });
             } else {
-                _logger.error('CAN NOT CREATE NEW PROJECT: ' + JSON.stringify(err));
+                _logger.error('CAN NOT CREATE NEW PROJECT: ' + err.stack);
             }
         });
     };
