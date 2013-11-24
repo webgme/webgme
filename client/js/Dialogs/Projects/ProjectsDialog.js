@@ -51,7 +51,8 @@ define(['logManager',
         this._btnOpen = this._dialog.find(".btn-open");
         this._btnDelete = this._dialog.find(".btn-delete");
         this._btnCreateNew = this._dialog.find(".btn-create-new");
-
+        this._btnRefresh = this._dialog.find(".btn-refresh");
+        
         this._btnNewProjectCancel = this._dialog.find(".btn-cancel");
         this._btnNewProjectCreate = this._dialog.find(".btn-save");
 
@@ -178,6 +179,14 @@ define(['logManager',
                 event.preventDefault();
                 event.stopPropagation();
             }
+        });
+
+
+        this._btnRefresh.on('click', function (event) {
+            self._refreshProjectList();
+
+            event.stopPropagation();
+            event.preventDefault();
         });
     };
 
