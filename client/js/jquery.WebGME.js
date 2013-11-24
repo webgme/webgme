@@ -23,7 +23,7 @@ define(['jquery'], function () {
                 onChangeFn = params && params.onChange || null,
                 enableEmpty = params && params.enableEmpty || false,
                 __editInPlace,
-                MIN_HEIGHT = 36,
+                MIN_HEIGHT = 16,
                 FONT_SIZE_ADJUST = 5;
 
             __editInPlace = function (el) {
