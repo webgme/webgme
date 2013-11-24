@@ -16,6 +16,9 @@ define(['logManager',
         this._panel = options.panel;
         this._dataGridWidget = options.widget;
 
+        this._dataGridWidget._rowDelete = false;
+        this._dataGridWidget._rowEdit = false;
+
         this._currentNodeId = null;
 
         this._logger = logManager.create("GridPanelContainmentControPointers");
@@ -46,10 +49,8 @@ define(['logManager',
             this._selfPatterns = {};
             this._selfPatterns[nodeId] = { "children": 1 };
 
-            this._displayedParts = {};
-
             var desc = this._discoverNode(nodeId);
-            var title = (desc.Attributes && desc.Attributes.name ? desc.Attributes.name + " " : "N/A ") + "(" + desc.ID + ")";
+            var title = (desc.Name ? desc.Name + " " : "N/A ") + "(" + desc.ID + ")";
             this._panel.setTitle(title);
 
             this._territoryId = this._client.addUI(this, true);
@@ -114,39 +115,13 @@ define(['logManager',
 
     GridPanelContainmentControPointers.prototype._discoverNode = function (gmeID) {
             var nodeDescriptor = {"ID": undefined,
-                                  "Attributes": undefined,
+                                  "Name": undefined,
                                   "ParentID": undefined,
-                                  "Registry": undefined,
                                   "Pointers": undefined},
 
                 cNode = this._client.getNode(gmeID),
-                _getNodePropertyValues,
-                _getSetMembershipInfo,
-                _getPointerInfo;
-
-            _getNodePropertyValues = function (node, propNameFn, propValueFn) {
-                var result =  {},
-                    attrNames = node[propNameFn](),
-                    len = attrNames.length;
-
-                while (--len >= 0) {
-                    result[attrNames[len]] = node[propValueFn](attrNames[len]);
-                }
-
-                return result;
-            };
-
-            _getSetMembershipInfo = function (node) {
-                var result = {},
-                    availableSets = node.getSetNames(),
-                    len = availableSets.length;
-
-                while (len--) {
-                    result[availableSets[len]] = node.getMemberIds(availableSets[len]);
-                }
-
-                return result;
-            };
+                _getPointerInfo,
+                ptr;
 
             _getPointerInfo = function (node) {
                 var result = {},
@@ -154,7 +129,10 @@ define(['logManager',
                     len = availablePointers.length;
 
                 while (len--) {
-                    result[availablePointers[len]] = node.getPointer(availablePointers[len]);
+                    ptr = node.getPointer(availablePointers[len]);
+                    if (ptr) {
+                        result[availablePointers[len]] = ptr.to;
+                    }
                 }
 
                 return result;
@@ -162,10 +140,8 @@ define(['logManager',
 
             if (cNode) {
                 nodeDescriptor.ID = gmeID;
+                nodeDescriptor.Name = cNode.getAttribute('name');
                 nodeDescriptor.ParentID = cNode.getParentId();
-                nodeDescriptor.Attributes = {'name': cNode.getAttribute('name')};
-
-                //nodeDescriptor.Registry = _getNodePropertyValues(cNode, "getRegistryNames", "getRegistry");
                 nodeDescriptor.Pointers = _getPointerInfo(cNode);
             }
 
