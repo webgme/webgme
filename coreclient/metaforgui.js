@@ -80,7 +80,7 @@ define(['coreclient/meta'], function (META) {
                         }
                     }
                     var refObj = META.pathToRefObject(newTypeObj.id);
-                    var index = rawMeta.children.items.indexOf(refObj);
+                    var index = indexOfPathInRefObjArray(rawMeta.children.items,newTypeObj.id);
                     if(index === -1){
                         index = rawMeta.children.items.length;
                         rawMeta.children.items.push(refObj);
@@ -174,7 +174,7 @@ define(['coreclient/meta'], function (META) {
                     pointer = rawMeta.pointers[name];
                 }
                 var refObj = META.pathToRefObject(targetObj.id);
-                var index = pointer.items.indexOf(refObj);
+                var index = indexOfPathInRefArray(pointer.items,targetObj.id);
                 if(index === -1){
                     index = pointer.items.length;
                     pointer.items.push(refObj);
