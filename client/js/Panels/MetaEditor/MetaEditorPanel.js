@@ -15,8 +15,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "MetaEditorPanel";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
+        options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
@@ -68,7 +67,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
     MetaEditorPanel.prototype.onResize = function (width, height) {
         this.logger.debug('onResize --> width: ' + width + ', height: ' + height);
         this.widget.onWidgetContainerResize(width, height);
-    };
+   };
 
     MetaEditorPanel.prototype.destroy = function () {
         this.control.destroy();

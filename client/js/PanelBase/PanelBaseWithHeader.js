@@ -1,13 +1,9 @@
 "use strict";
 
 define(['js/PanelBase/PanelBase',
-        'js/PanelBase/PanelToolbar',
-        'css!/css/PanelBase/PanelBaseWithHeader'], function (PanelBase,
-                                                               PanelToolbar) {
+        'css!/css/PanelBase/PanelBaseWithHeader'], function (PanelBase) {
 
     var PanelBaseWithHeader,
-        __parent__ = PanelBase,
-        __parent_proto__ = __parent__.prototype,
         BASE_CLASS = "panel-base-wh"; // /scss/PanelBase/PanelBaseWithHeader.scss
 
     //inherit from PanelBase Phase #1
@@ -16,25 +12,18 @@ define(['js/PanelBase/PanelBase',
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] || "PanelBaseWithHeader";
 
         //add PanelBaseWithHeader specific options when not present
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true ? true : false;
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] === true ? true : false;
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] = options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE] || PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE_OPTIONS.NORMAL;
-        options[PanelBaseWithHeader.OPTIONS.FILL_CONTAINER] = options[PanelBaseWithHeader.OPTIONS.FILL_CONTAINER] === true ? true : false;
+        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true;
+        options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true;
 
         //call parent's constructor
-        __parent__.apply(this, [options, layoutManager]);
+        PanelBase.apply(this, [options, layoutManager]);
 
         this.initUI(options);
     };
     //inherit from PanelBase Phase #2
     PanelBaseWithHeader.OPTIONS = _.extend(PanelBase.OPTIONS, { "HEADER_TITLE": "HEADER_TITLE",
-                                                                  "HEADER_TOOLBAR": "HEADER_TOOLBAR",
-                                                                  "HEADER_TOOLBAR_SIZE": "HEADER_TOOLBAR_SIZE",
-                                                                  "HEADER_TOOLBAR_SIZE_OPTIONS": { "NORMAL": "NORMAL",
-                                                                                           "MINI": "MINI",
-                                                                                           "MICRO": "MICRO"},
-                                                                  "FILL_CONTAINER": "FILL_CONTAINER"});
-    _.extend(PanelBaseWithHeader.prototype, __parent__.prototype);
+                                                                "FLOATING_TITLE": "FLOATING_TITLE"});
+    _.extend(PanelBaseWithHeader.prototype, PanelBase.prototype);
 
 
     /* OVERRIDE PanelBase members */
@@ -52,8 +41,6 @@ define(['js/PanelBase/PanelBase',
 
     /* CUSTOM MEMBERS */
     PanelBaseWithHeader.prototype.initUI = function (options) {
-        var self = this;
-
         //save original $el to $_el
         if (this.$_el === undefined) {
             this.$_el = this.$el;
@@ -69,58 +56,48 @@ define(['js/PanelBase/PanelBase',
         this.$panelHeader = $('<div/>', {
             "class" : "panel-header"
         });
-        this.$_el.append(this.$panelHeader);
 
         //Create Panel's BODY
         //set $el to panel-body for subclass use
         this.$el = this.$panelBody = $('<div/>', {
             "class" : "panel-body"
         });
-        this.$_el.append(this.$panelBody);
 
         //create additional visual pieces
         //READ-ONLY indicator in header
-        this.$panelHeaderReadOnlyIndicator = $('<div/>', {
+        this.$panelReadOnlyIndicator = $('<div/>', {
             "class" : "ro-icon",
             "title" : "READ-ONLY mode ON"
         });
-        this.$panelHeaderReadOnlyIndicator.append($('<i class="icon-lock"></i>'));
-        this.$panelHeader.append(this.$panelHeaderReadOnlyIndicator);
+        this.$panelReadOnlyIndicator.append($('<i class="icon-lock"></i>'));
 
         //TITLE IN HEADER BAR
         if (options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] === true) {
+            this.$_el.append(this.$panelHeader);
+            this.$_el.append(this.$panelBody);
+            this.$panelHeader.append(this.$panelReadOnlyIndicator);
             this.$panelHeaderTitle = $('<div/>', {
                 "class" : "panel-header-title"
             });
             this.$panelHeader.append(this.$panelHeaderTitle);
-        }
-
-        if (options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] === true) {
-            this.$panelHeaderToolBar = $('<div/>', {
-                "class" : "inline panel-header-toolbar"
+        } else if (options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] === true) {
+            this.$_el.append(this.$panelBody);
+            this.$_el.append(this.$panelHeader);
+            this.$panelHeader.addClass('absolute-header');
+            this.$floatingTitle = $('<div/>', {
+                "class" : "floating-title"
             });
-            this.$panelHeader.append(this.$panelHeaderToolBar);
-
-            /*this.$panelHeader.css({'overflow-y': 'visible',
-                                    'overflow-x': 'hidden'});*/
-
-            this.toolBar = new PanelToolbar(this.$panelHeaderToolBar, options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR_SIZE]);
-
-            //add default buttons
-            //#1 Read-Only button in DEBUG mode
-            if (DEBUG === true) {
-                var readOnlyButtonGroup = this.toolBar.addButtonGroup();
-
-                this.$readOnlyBtn = this.toolBar.addToggleButton(
-                    {"icon": "icon-lock",
-                     "title": "Turn read-only mode ON/OFF",
-                        "clickFn": function (event, data, isPressed) {
-                            self.setReadOnly(isPressed);
-                        }}, readOnlyButtonGroup);
-            }
+            this.$panelHeaderTitle = $('<div/>', {
+                "class" : "panel-header-title"
+            });
+            this.$floatingTitle.append(this.$panelReadOnlyIndicator);
+            this.$floatingTitle.append(this.$panelHeaderTitle);
+            this.$_el.append(this.$floatingTitle);
+        } else {
+            this.$_el.append(this.$panelHeader);
+            this.$_el.append(this.$panelBody);
+            this.$_el.append(this.$panelReadOnlyIndicator);
         }
-
-        this._fillContainer = options[PanelBaseWithHeader.OPTIONS.FILL_CONTAINER] === true ? true : false;
     };
 
     PanelBaseWithHeader.prototype.destroy = function () {
@@ -166,11 +143,6 @@ define(['js/PanelBase/PanelBase',
             this.$_el.addClass(PanelBase.READ_ONLY_CLASS);
         } else {
             this.$_el.removeClass(PanelBase.READ_ONLY_CLASS);
-        }
-
-        //in DEBUG mode set Read-only button's toggle status accordingly
-        if (this.$readOnlyBtn) {
-            this.$readOnlyBtn.setToggled(isReadOnly);
         }
     };
     /************** END OF --- CUSTOM READ-ONLY CHANGED HANDLER *****************/

@@ -15,8 +15,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         var options = {};
         //set properties from options
         options[PanelBaseWithHeader.OPTIONS.LOGGER_INSTANCE_NAME] = "GridPanelPointers";
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TITLE] = true;
-        options[PanelBaseWithHeader.OPTIONS.HEADER_TOOLBAR] = true;
+        options[PanelBaseWithHeader.OPTIONS.FLOATING_TITLE] = true;
 
         //call parent's constructor
         PanelBaseWithHeader.apply(this, [options, layoutManager]);
