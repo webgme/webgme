@@ -14,11 +14,6 @@
             "container": "west",
             "DEBUG_ONLY": false},
 
-        {"id": "ProjectPanel",
-            "panel": "Project/ProjectPanel",
-            "container": "west",
-            "DEBUG_ONLY": false},
-
         {"id": "PartBrowserPanel",
             "panel": "PartBrowser/PartBrowserPanel",
             "container": "west",
