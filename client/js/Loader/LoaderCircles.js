@@ -5,7 +5,8 @@ define(['css!/css/Loader/LoaderCircles'], function () {
     var LoaderCircles,
         CIRCLE_O_SHADOW_SIZE = 36,
         CIRCLE_BORDER_SIZE = 5,
-        MIN_SIZE = 30,
+        MIN_SIZE = 14,
+        MIN_SIZE_INNER_CIRCLE = 30,
         MAX_SIZE = 200,
         CIRCLE_I_SIZE_DIFF = 20;
 
@@ -64,6 +65,9 @@ define(['css!/css/Loader/LoaderCircles'], function () {
             }
 
             this._loaderContainer.append(this._circleOuter).append(this._circleInner);
+            if (this._size && this._size < MIN_SIZE_INNER_CIRCLE) {
+                this._circleInner.remove();
+            }
 
             this._el.append(this._loaderBackground).append(this._loaderContainer);
 
