@@ -283,7 +283,8 @@ define(['logManager',
             j,
             getDecoratorTerritoryQueries,
             territoryChanged = false,
-            _selfPatterns = this._selfPatterns;
+            _selfPatterns = this._selfPatterns,
+            partEnabled;
 
         getDecoratorTerritoryQueries = function (decorator) {
             var query,
@@ -352,7 +353,9 @@ define(['logManager',
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
-            this._partBrowserView.setEnabled(id, GMEConcepts.canCreateChild(this._containerNodeId, id));
+            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id) &&
+                        !GMEConcepts.isProjectPROJECTBASE(this._containerNodeId);
+            this._partBrowserView.setEnabled(id, partEnabled);
         }
 
         if (territoryChanged) {
