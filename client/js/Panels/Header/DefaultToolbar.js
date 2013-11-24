@@ -6,9 +6,11 @@
 
 "use strict";
 
-define(['js/Dialogs/Projects/ProjectsDialog',
+define(['clientUtil',
+    'js/Dialogs/Projects/ProjectsDialog',
     'js/Dialogs/Commit/CommitDialog',
-    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (ProjectsDialog,
+    'js/Dialogs/ProjectRepository/ProjectRepositoryDialog'], function (util,
+                                                                       ProjectsDialog,
                                                                        CommitDialog,
                                                                         ProjectRepositoryDialog) {
 
@@ -21,30 +23,33 @@ define(['js/Dialogs/Projects/ProjectsDialog',
     };
 
     DefaultToolbar.prototype._initialize = function () {
-        var toolbar = WebGMEGlobal.Toolbar;
-
-        var self = this;
+        var toolbar = WebGMEGlobal.Toolbar,
+            layoutToLoad = util.getURLParameterByName('layout'),
+            _client = this._client,
+            projectsButtonDisabledForLayouts = ['VehicleForgeLayout'];
 
         //#1: Projects
-        toolbar.addButton({ "title": "Projects...",
-            "icon": "icon-folder-open",
-            "clickFn": function (/*data*/) {
-                var pd = new ProjectsDialog(self._client);
-                pd.show();
-            }});
+        if (projectsButtonDisabledForLayouts.indexOf(layoutToLoad) === -1) {
+            toolbar.addButton({ "title": "Projects...",
+                "icon": "icon-folder-open",
+                "clickFn": function (/*data*/) {
+                    var pd = new ProjectsDialog(_client);
+                    pd.show();
+                }});
+        }
 
         //#2: Project repository...
         toolbar.addButton({ "title": "Project repository...",
             "icon": "icon-road",
             "clickFn": function (/*data*/) {
-                var prd = new ProjectRepositoryDialog(self._client);
+                var prd = new ProjectRepositoryDialog(_client);
                 prd.show();
             } });
 
         toolbar.addButton({ "title": "Commit...",
             "icon": "icon-share-alt",
             "clickFn": function (/*data*/) {
-                var cd = new CommitDialog(self._client);
+                var cd = new CommitDialog(_client);
                 cd.show();
             } });
 
