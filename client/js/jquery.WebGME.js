@@ -176,4 +176,45 @@ define(['jquery'], function () {
             return width;
         }
     });
+
+    $.fn.extend({
+        groupedAlphabetTabs : function (params) {
+            var _defaultParams = {'groups': ['A - E', 'F - J', 'K - O', 'P - T', 'U - Z']},
+                opts = {},
+                ulBase = $('<ul class="nav nav-tabs"></ul>'),
+                liBase = $('<li class=""><a href="#" data-toggle="tab"></a></li>'),
+                ul,
+                li;
+
+            $.extend(opts, _defaultParams, params);
+
+            ul = ulBase.clone();
+            li = liBase.clone();
+            li.addClass('active');
+            li.find('a').text('ALL');
+            ul.append(li);
+
+            for (var i = 0; i <opts.groups.length; i += 1) {
+                var start = opts.groups[i].split('-')[0].trim();
+                var end = opts.groups[i].split('-')[1].trim();
+                li = liBase.clone();
+                li.find('a').text(opts.groups[i]);
+                li.data('filter', [start,end]);
+                ul.append(li);
+            }
+
+            this.each(function () {
+                $(this).append(ul.clone(true));
+                $(this).on("click.groupedAlphabetTabs", 'li', function (event) {
+                    var filter = $(this).data('filter');
+
+                    if (params && params.onClick) {
+                        params.onClick(filter);
+                    }
+
+                    event.preventDefault();
+                });
+            });
+        }
+    });
 });
