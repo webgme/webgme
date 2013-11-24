@@ -1,10 +1,12 @@
 "use strict";
 
 define(['logManager',
+        'loaderCircles',
         'js/Utils/GMEConcepts',
         'text!html/Dialogs/Projects/ProjectsDialog.html',
         'css!/css/Dialogs/Projects/ProjectsDialog'], function (logManager,
-                                                                     GMEConcepts,
+                                                               LoaderCircles,
+                                                               GMEConcepts,
                                                                projectsDialogTemplate) {
 
     var ProjectsDialog;
@@ -27,6 +29,7 @@ define(['logManager',
         this._dialog.modal('show');
 
         this._dialog.on('hidden', function () {
+            self._loader.destroy();
             self._dialog.remove();
             self._dialog.empty();
             self._dialog = undefined;
@@ -57,6 +60,9 @@ define(['logManager',
         this._btnNewProjectCreate = this._dialog.find(".btn-save");
 
         this._txtNewProjectName = this._dialog.find(".txt-project-name");
+
+        this._loader = new LoaderCircles({"containerElement": this._btnRefresh });
+        this._loader.setSize(14);
 
         this._el.find('.tabContainer').first().groupedAlphabetTabs({'onClick': function (filter) {
             self._filter = filter;
@@ -193,6 +199,10 @@ define(['logManager',
     ProjectsDialog.prototype._refreshProjectList = function () {
         var self = this;
 
+        this._loader.start();
+        this._btnRefresh.addClass('disabled');
+        this._btnRefresh.find('i').css('opacity', '0');
+
         this._client.getAvailableProjectsAsync(function(err,projectNames){
             self._activeProject = self._client.getActiveProject();
             self._projectNames = projectNames || [];
@@ -207,6 +217,10 @@ define(['logManager',
             });
 
             self._updateProjectNameList();
+
+            self._loader.stop();
+            self._btnRefresh.find('i').css('opacity', '1');
+            self._btnRefresh.removeClass('disabled');
         });
     };
 
