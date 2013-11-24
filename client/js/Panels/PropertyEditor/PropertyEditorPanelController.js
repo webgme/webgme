@@ -223,17 +223,24 @@ define(['logManager',
 
             _addItemsToResultList(commonAttrs, "Attributes", propList);
 
-            //filter out rows from Registry
-            //MetaEditor.MemberCoord
+            //modify registry
             for (var it in commonRegs) {
                 if (commonRegs.hasOwnProperty(it)) {
                     if (commonRegs.hasOwnProperty(it)) {
+                        //#1: filter out rows of 'MetaEditor.MemberCoord' from Registry
                         if (it.indexOf('MetaEditor.MemberCoord.') !== -1) {
                             delete commonRegs[it];
+                        } else if (it.indexOf('MetaEditor.Members') !== -1) {  //#2: make MetaEditor.Members readonly
+                            commonRegs[it].readOnly = true;
+                        } else if (it.indexOf( nodePropertyNames.Registry.ProjectRegistry + '.') === 0) {   //#3: make ProjectRegistry entries readonly
+                            commonRegs[it].readOnly = true;
                         }
                     }
                 }
             }
+
+
+
 
             _addItemsToResultList(commonRegs, "Registry", propList);
 
