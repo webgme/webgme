@@ -22,7 +22,9 @@ define(['jquery'], function () {
             var editClass = params && params.class || null,
                 onChangeFn = params && params.onChange || null,
                 enableEmpty = params && params.enableEmpty || false,
-                __editInPlace;
+                __editInPlace,
+                MIN_HEIGHT = 36,
+                FONT_SIZE_ADJUST = 5;
 
             __editInPlace = function (el) {
                 var w = el.width(),
@@ -56,9 +58,12 @@ define(['jquery'], function () {
                 }
 
                 //set css properties to fix Bootstrap's modification
+                h = Math.max(h, MIN_HEIGHT);
                 inputCtrl.outerWidth(w).outerHeight(h);
                 inputCtrl.css({"box-sizing": "border-box",
-                    "margin": "0px"});
+                    "margin": "0px",
+                    "line-height": h + "px",
+                    "font-size": h - FONT_SIZE_ADJUST});
 
 
                 el.html(inputCtrl);
@@ -66,7 +71,7 @@ define(['jquery'], function () {
                 //set font size accordingly
                 //TODO: multiple line editor not handled correctly
                 /*h = inputCtrl.height();*/
-                inputCtrl.css({"font-size": originalFontSize});
+                //inputCtrl.css({"font-size": originalFontSize});
 
                 //finally put the control in focus
                 inputCtrl.focus();
