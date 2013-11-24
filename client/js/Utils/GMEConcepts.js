@@ -317,6 +317,9 @@ define(['jquery',
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
-        isBrowsable: _isBrowsable
+        isBrowsable: _isBrowsable,
+        isProjectFCO: _isProjectFCO,
+        isProjectMETA: _isProjectMETA,
+        isProjectPROJECTBASE: _isProjectPROJECTBASE
     }
 });
