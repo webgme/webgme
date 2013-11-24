@@ -7,14 +7,16 @@ define(['logManager',
     './ModelEditorControl.DiagramDesignerWidgetEventHandlers',
     './ModelEditorControl.DEBUG',
     'js/Utils/GMEConcepts',
-    'js/Decorators/DecoratorDB'], function (logManager,
+    'js/Decorators/DecoratorDB',
+    'js/Utils/DisplayFormat'], function (logManager,
                                                         CONSTANTS,
                                                         nodePropertyNames,
                                                         DiagramDesignerWidgetConstants,
                                                         ModelEditorControlDiagramDesignerWidgetEventHandlers,
                                                         ModelEditorControlDEBUG,
                                                         GMEConcepts,
-                                                        DecoratorDB) {
+                                                        DecoratorDB,
+                                                        displayFormat) {
 
     var ModelEditorControl,
         GME_ID = "GME_ID",
@@ -202,7 +204,7 @@ define(['logManager',
                     objDescriptor.target = nodeObj.getPointer(DST_POINTER_NAME).to;
 
                     //clear out name not to display anything for connections
-                    objDescriptor.name = "";
+                    objDescriptor.name = displayFormat.resolve(nodeObj);
 
                     if (nodeObj.getAttribute(nodePropertyNames.Attributes.directed) === true) {
                         objDescriptor.arrowEnd = "block";
