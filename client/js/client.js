@@ -1251,7 +1251,7 @@ define([
                             }
                             if(parameters[pathsToMove[i]].registry){
                                 for(var j in parameters[pathsToMove[i]].registry){
-                                    _core.setAttribute(newNode,j,parameters[pathsToMove[i]].registry[j]);
+                                    _core.setRegistry(newNode,j,parameters[pathsToMove[i]].registry[j]);
                                 }
                             }
 
