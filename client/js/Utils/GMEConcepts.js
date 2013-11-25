@@ -135,79 +135,7 @@ define(['jquery',
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
      */
     var _canCreateChild = function (parentId, baseId) {
-        var result = false,
-            validChildrenItems,
-            len,
-            parentNode,
-            childrenIDs,
-            i,
-            counter,
-            childrenMeta;
-
-        //TODO: implement real logic based on META and CONSTRAINTS...
-        if(parentId && baseId){
-            if (parentId === CONSTANTS.PROJECT_ROOT_ID) {
-                //do not let them create
-                // - FCO instances and
-                // - META instances
-                if (!_isProjectFCO(baseId) && !_isProjectMETA(baseId)) {
-                    result = true;
-                }
-            } else {
-                result = true;
-            }
-
-            //Check #1: is baseId a valid child of parentId
-            if (result === true) {
-                result = _client.isValidChild(parentId, baseId);
-            }
-
-            //Check #2: Global children number multiplicity
-            if (result === true) {
-                result = false;
-
-                parentNode = _client.getNode(parentId);
-                childrenIDs = parentNode.getChildrenIds();
-                childrenMeta = _client.getChildrenMeta(parentId);
-                if (childrenMeta.max === undefined ||
-                    (childrenMeta.max && childrenIDs.length < childrenMeta.max)) {
-                    result = true;
-                }
-            }
-
-            //Check #3: exact child type multiplicity
-            if (result === true) {
-                result = false;
-                parentNode = _client.getNode(parentId);
-
-                validChildrenItems = _client.getValidChildrenItems(parentId);
-                len = validChildrenItems.length;
-                while (len--) {
-                    if (_client.isTypeOf(baseId, validChildrenItems[len].id)) {
-                        childrenIDs = parentNode.getChildrenIds();
-                        counter = 0;
-                        result = false;
-
-                        for (i = 0; i < childrenIDs.length; i += 1) {
-                            if (_client.isTypeOf(childrenIDs[i], validChildrenItems[len].id)) {
-                                counter += 1;
-                            }
-                        }
-
-                        if (validChildrenItems[len].max === undefined ||
-                            (validChildrenItems[len].max && counter < validChildrenItems[len].max)) {
-                            result = true;
-                        }
-
-                        if (result === false) {
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-
-        return result;
+        return _canCreateChildren(parentId, [baseId]);
     };
 
     var _createBasicProjectSeed = function () {
@@ -284,6 +212,13 @@ define(['jquery',
         return objID === value;
     };
 
+    var _getProjectRegistryValue = function (key) {
+        var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
+            projectRegistry = rootNode.getRegistry(nodePropertyNames.Registry.ProjectRegistry);
+
+        return projectRegistry ?  projectRegistry[key] : null;
+    };
+
     var _isProjectFCO = function (objID) {
         return _isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
     };
@@ -296,6 +231,10 @@ define(['jquery',
         return _isProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID, objID);
     };
 
+    var _isProjectPROJECTBASEType = function (objID) {
+        return _client.isTypeOf(objID, _getProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID));
+    };
+
     var _isBrowsable = function (objID) {
         var result = false;
 
@@ -305,6 +244,130 @@ define(['jquery',
         }
 
         return result;
+    };
+
+
+    /*
+     * Returns true if a new child with the given baseId (instance of base) can be created in parent
+     */
+    var _canCreateChildren = function (parentId, baseIdList) {
+        var result = false,
+            validChildrenItems,
+            len,
+            parentNode,
+            childrenIDs,
+            i,
+            counter,
+            childrenMeta,
+            baseId,
+            j;
+
+        //TODO: implement real logic based on META and CONSTRAINTS...
+        if(parentId && baseIdList && baseIdList.length > 0){
+            if (parentId === CONSTANTS.PROJECT_ROOT_ID) {
+                //do not let them create
+                // - FCO instances and
+                // - META instances
+                //but let them create PROJECT_BASE and its derived types
+                i = baseIdList.length;
+                result = true;
+                while(i--) {
+                    baseId = baseIdList[i];
+                    if (!_isProjectPROJECTBASEType(baseId)) {
+                        result = false;
+                    }
+                }
+            } else {
+                result = true;
+            }
+
+            //Check #1: Global children number multiplicity
+            if (result === true) {
+                parentNode = _client.getNode(parentId);
+                childrenIDs = parentNode.getChildrenIds();
+                childrenMeta = _client.getChildrenMeta(parentId);
+                if (childrenMeta.max !== undefined &&
+                    childrenMeta.max > -1 &&
+                    childrenIDs.length + baseIdList.length > childrenMeta.max) {
+                    result = false;
+                }
+            }
+
+            //Check #2: is each single baseId a valid child of parentId
+            var validChildrenTypes = _client.getValidChildrenTypes(parentId);
+            i = validChildrenTypes.length;
+
+            var validChildrenTypeMap = {};
+            while (i--) {
+                validChildrenTypeMap[validChildrenTypes[i]] = 0;
+            }
+            if (result === true) {
+                i = baseIdList.length;
+                while(i--) {
+                    baseId = baseIdList[i];
+                    if (!_client.isValidChild(parentId, baseId)) {
+                        result = false;
+                        break;
+                    } else {
+                        //this baseId is a valid child
+                        //adjust accounting
+                        j = validChildrenTypes.length;
+                        while (j--) {
+                            if (_client.isTypeOf(baseId, validChildrenTypes[j])) {
+                                validChildrenTypeMap[validChildrenTypes[j]] += 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Check #3: exact child type multiplicity
+            //map is already there of the children-to-be because of check #2
+            if (result === true) {
+                parentNode = _client.getNode(parentId);
+
+                childrenIDs = parentNode.getChildrenIds();
+
+                validChildrenItems = _client.getValidChildrenItems(parentId);
+                len = validChildrenItems.length;
+                while (len--) {
+                    if (_client.isTypeOf(baseId, validChildrenItems[len].id)) {
+
+                        counter = 0;
+
+                        for (i = 0; i < childrenIDs.length; i += 1) {
+                            if (_client.isTypeOf(childrenIDs[i], validChildrenItems[len].id)) {
+                                counter += 1;
+                            }
+                        }
+
+                        if (validChildrenItems[len].max !== undefined &&
+                            validChildrenItems[len].max > -1 &&
+                            counter + validChildrenTypeMap[validChildrenItems[len].id] > validChildrenItems[len].max) {
+                            result = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return result;
+    };
+
+    var _getValidReferenceTypes = function (parentId, targetId) {
+        var validReferenceTypes = _client.getValidChildrenTypes(parentId),
+            i;
+
+        i = validReferenceTypes.length;
+        while (i--) {
+            if (!_client.isValidTarget(validReferenceTypes[i], CONSTANTS.POINTER_REF, targetId) ||
+                !_canCreateChild(parentId, validReferenceTypes[i])) {
+                validReferenceTypes.splice(i, 1);
+            }
+        }
+
+        return validReferenceTypes;
     };
 
     //return utility functions
@@ -320,6 +383,8 @@ define(['jquery',
         isBrowsable: _isBrowsable,
         isProjectFCO: _isProjectFCO,
         isProjectMETA: _isProjectMETA,
-        isProjectPROJECTBASE: _isProjectPROJECTBASE
+        isProjectPROJECTBASE: _isProjectPROJECTBASE,
+        canCreateChildren: _canCreateChildren,
+        getValidReferenceTypes: _getValidReferenceTypes
     }
 });
