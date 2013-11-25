@@ -78,8 +78,10 @@ define(['logManager',
     MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var gmeIDList = DragHelper.getDragItems(dragInfo),
             params = DragHelper.getDragParams(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo),
             i,
-            accept = false;
+            accept = false,
+            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID];
 
         //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
@@ -87,12 +89,22 @@ define(['logManager',
                 accept = true;
             }
         } else {
-            //return true if there is at least one item among the dragged ones that is not on the sheet yet
-            if (gmeIDList.length > 0) {
-                for (i = 0; i < gmeIDList.length; i+= 1) {
-                    if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
-                        accept = true;
-                        break;
+            if (gmeIDList.length === 1 &&
+                dragEffects.length === 1 &&
+                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                //dragging from PartBrowser
+                //if the dragged item can be a valid children, let it drop
+                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
+                    accept = true;
+                }
+            } else {
+                //return true if there is at least one item among the dragged ones that is not on the sheet yet
+                if (gmeIDList.length > 0) {
+                    for (i = 0; i < gmeIDList.length; i+= 1) {
+                        if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
+                            accept = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -117,7 +129,11 @@ define(['logManager',
             addMember,
             repositionMember,
             selectedIDs = [],
-            componentID;
+            componentID,
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID],
+            createChildParams,
+            newID;
 
         addMember = function (gmeID, position) {
             var added = false;
@@ -139,6 +155,8 @@ define(['logManager',
                     "y": position.y};
             }
         };
+
+        this._client.startTransaction();
 
         //check to see it self drop and reposition or dropping fro somewhere else
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
@@ -163,18 +181,40 @@ define(['logManager',
                 this.diagramDesigner.select(selectedIDs);
             }
         } else {
-            //return true if there is at least one item among the dragged ones that is not on the sheet yet
-            if (gmeIDList.length > 0) {
-                for (i = 0; i < gmeIDList.length; i += 1) {
-                    if (addMember(gmeIDList[i], position)) {
-                        position.x += 20;
-                        position.y += 20;
+            if (gmeIDList.length === 1 &&
+                dragEffects.length === 1 &&
+                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
+                //dragging from PartBrowser
+                //if the dragged item can be a valid children, let it drop
+                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
+                    createChildParams = { "parentId": PROJECT_META_ID,
+                        "baseId": gmeIDList[0]};
+
+                    newID = this._client.createChild(createChildParams);
+
+                    if (newID) {
+                        addMember(newID, position);
+                            //store new position
+                        this._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': position.x,
+                                'y': position.y});
+                    }
+                }
+            } else {
+                //return true if there is at least one item among the dragged ones that is not on the sheet yet
+                if (gmeIDList.length > 0) {
+                    for (i = 0; i < gmeIDList.length; i += 1) {
+                        if (addMember(gmeIDList[i], position)) {
+                            position.x += 20;
+                            position.y += 20;
+                        }
                     }
                 }
             }
         }
 
         this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
+
+        this._client.completeTransaction();
     };
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */
