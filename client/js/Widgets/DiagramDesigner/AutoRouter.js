@@ -4686,14 +4686,14 @@ _logger.warning("Adding "
                         startPath = getOutOfBox({ "point": start, 
                                                   "dir": startdir, 
                                                   "end": endpoint, 
-                                                  "box": startPort.getOwner() } );
+                                                  "box": startPort.getOwner() } ) || [];
                     assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
                     var end = new ArPoint(endpoint),
                         endPath = getOutOfBox({ "point": end, 
                                                 "dir": enddir, 
                                                 "end": start, 
-                                                "box": endPort.getOwner() } );
+                                                "box": endPort.getOwner() } ) || [];
                     assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
                     assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -4736,7 +4736,8 @@ _logger.warning("Adding "
                     path.addTail(endpoint);
 
                     if (isAutoRouted) {
-                        path.simplifyTrivially();
+                        path.simplifyTrivially(); 
+                        simplifyPathCurves(path);
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
                     }
@@ -5475,6 +5476,35 @@ tst = 4;
 
                 if(DEBUG)
                     path.assertValidPoints();
+            }
+
+            function simplifyPathCurves(path){
+            //This method will remove unnecessary curves inserted into the path from 
+            //hugging children.
+            //Incidently, this will also contain the functionality of simplifyTrivially
+                var pointList = path.getPointList(),
+                    p1,
+                    p2,
+                    i = 0,
+                    j;
+
+            //I will be taking the first point and checking to see if it can create a straight line
+            //that does not intersect any other boxes on the graph from the test point to the other point.
+            //The 'other point' will be the end of the path iterating back til the two points before the 
+            //current.
+                while( i < pointList.getLength() - 3 ){
+                    p1 = pointList.get(i)[0];
+                    j = pointList.getLength();
+
+                    while( j-- > 0 ){
+                        p2 = pointList.get(j)[0];
+                        if( isRightAngle( getDir(p1.minus(p2)) ) && !isLineClipBoxes(p1, p2)){
+                            pointList.splice( i+1, j-i-1); //Remove all points between i, j
+                            break;
+                        }
+                    }
+                    ++i;
+                }
             }
 
             function simplifyPathPoints(path){
