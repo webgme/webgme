@@ -75,7 +75,7 @@ define(['logManager',
         //TODO: give the UI time to render first before start using it's features
         setTimeout(function () {
             self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
-            self._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID);
+            self._client.setSelectedObjectId(self._client.getNode(CONSTANTS.PROJECT_ROOT_ID).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID]);
         }, 10);
 
 
