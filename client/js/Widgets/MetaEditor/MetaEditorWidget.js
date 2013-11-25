@@ -109,20 +109,5 @@ define(['logManager',
         }
     };
 
-    MetaEditorWidget.prototype._initializeToolbar = function () {
-        DiagramDesignerWidget.prototype._initializeToolbar.call(this);
-
-        //remove connection start/end arrow and line pattern selector
-        this.toolbarItems.ddbtnConnectionArrowStart.destroy();
-        delete this.toolbarItems.ddbtnConnectionArrowStart;
-
-        this.toolbarItems.ddbtnConnectionPattern.destroy();
-        delete this.toolbarItems.ddbtnConnectionPattern;
-
-        this.toolbarItems.ddbtnConnectionArrowEnd.destroy();
-        delete this.toolbarItems.ddbtnConnectionArrowEnd;
-
-    };
-
     return MetaEditorWidget;
 });

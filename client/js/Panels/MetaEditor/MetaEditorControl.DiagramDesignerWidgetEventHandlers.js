@@ -4,11 +4,13 @@ define(['logManager',
     'clientUtil',
     'js/Constants',
     'js/NodePropertyNames',
+    'js/Utils/GMEConcepts',
     './MetaRelations',
     'js/DragDrop/DragHelper'], function (logManager,
                                         util,
                                         CONSTANTS,
                                         nodePropertyNames,
+                                        GMEConcepts,
                                         MetaRelations,
                                         DragHelper) {
 
@@ -61,6 +63,10 @@ define(['logManager',
 
         this.diagramDesigner.onSelectionChanged = function (selectedIds) {
             self._onSelectionChanged(selectedIds);
+        };
+
+        this.diagramDesigner.onSetConnectionProperty = function (params) {
+            self._onSetConnectionProperty(params);
         };
 
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
@@ -328,15 +334,23 @@ define(['logManager',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            connectionSelected = false;
+            onlyConnectionTypeSelected = selectedIds.length > 0;
 
         while (len--) {
             id = this._ComponentID2GMEID[selectedIds[len]];
             if (id &&
                 this.diagramDesigner.itemIds.indexOf(selectedIds[len]) !== -1) {
                 gmeIDs.push(id);
+
+                onlyConnectionTypeSelected = onlyConnectionTypeSelected && GMEConcepts.isConnectionType(id);
+            } else {
+                onlyConnectionTypeSelected = false;
             }
         }
+
+        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowStart.enabled(onlyConnectionTypeSelected);
+        this.diagramDesigner.toolbarItems.ddbtnConnectionPattern.enabled(onlyConnectionTypeSelected);
+        this.diagramDesigner.toolbarItems.ddbtnConnectionArrowEnd.enabled(onlyConnectionTypeSelected);
 
         //nobody is selected on the canvas
         //set the active selection to the opened guy
@@ -347,6 +361,30 @@ define(['logManager',
         if (gmeIDs.length !== 0) {
             this._client.setPropertyEditorIdList(gmeIDs);
         }
+    };
+
+    MetaEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
+        var items = params.items,
+            visualParams = params.params,
+            gmeIDs = [],
+            len = items.length,
+            id,
+            connRegLineStyle;
+
+        this._client.startTransaction();
+
+        while (len--) {
+            id = this._ComponentID2GMEID[items[len]];
+            if (id && GMEConcepts.isConnectionType(id)) {
+                connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
+                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
+                    _.extend(connRegLineStyle, visualParams);
+                    this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+                }
+            }
+        }
+
+        this._client.completeTransaction();
     };
 
     return MetaEditorControlDiagramDesignerWidgetEventHandlers;
