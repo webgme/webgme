@@ -16,90 +16,90 @@ define(['js/NodePropertyNames'], function (nodePropertyNames) {
         this._debugToolbarItems = [];
 
         /************** AUTO RENAME GME NODES *****************/
-        this.debugbtnAutoRename = toolBar.addButton(
+        /*this.debugbtnAutoRename = toolBar.addButton(
             { "title": "Auto rename",
             "icon": "icon-th-list",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._autoRenameGMEObjects();
             }}
         );
 
-        this._debugToolbarItems.push(this.debugbtnAutoRename);
+        this._debugToolbarItems.push(this.debugbtnAutoRename);*/
 
         /************** END OF - AUTO RENAME GME NODES *****************/
 
         /************** AUTO CREATE NEW NODES *****************/
-        this.debugddlCreate = toolBar.addDropDownButton({ "text": "Create..." });
+        /*this.debugddlCreate = toolBar.addDropDownButton({ "text": "Create..." });
         this._debugToolbarItems.push(this.debugddlCreate);
 
         this.debugddlCreate.addButton({
             "title": "Create 1 item",
             "icon": "icon-plus-sign",
             "text": "1 item",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEModels(1);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 5 items",
             "icon": "icon-plus-sign",
             "text": "5 items",
-            "clickFn": function (/* data*/) {
+            "clickFn": function (data) {
                 self._createGMEModels(5);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 10 items",
             "icon": "icon-plus-sign",
             "text": "10 items",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEModels(10);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 50 items",
             "icon": "icon-plus-sign",
             "text": "50 items",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEModels(50);
-            }});
+            }});*/
 
         /************** END OF - AUTO CREATE NEW NODES *****************/
 
-        this.debugddlCreate.addDivider();
+        //this.debugddlCreate.addDivider();
 
         /************** AUTO CREATE NEW CONNECTIONS *****************/
-        this.debugddlCreate.addButton({ "title": "Create 1 connection",
+        /*this.debugddlCreate.addButton({ "title": "Create 1 connection",
             "icon": "icon-resize-horizontal",
             "text": "1 connection",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEConnections(1);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 5 connections",
             "icon": "icon-resize-horizontal",
             "text": "5 connections",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEConnections(5);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 10 connections",
             "icon": "icon-resize-horizontal",
             "text": "10 connections",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEConnections(10);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 50 connections",
             "icon": "icon-resize-horizontal",
             "text": "50 connections",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEConnections(50);
             }});
 
         this.debugddlCreate.addButton({ "title": "Create 100 connections",
             "icon": "icon-resize-horizontal",
             "text": "100 connections",
-            "clickFn": function (/*data*/) {
+            "clickFn": function (data) {
                 self._createGMEConnections(100);
-            }});
+            }});*/
 
         /************** END OF - AUTO CREATE NEW CONNECTIONS *****************/
 
