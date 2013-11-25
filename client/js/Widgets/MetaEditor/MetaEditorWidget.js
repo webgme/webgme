@@ -2,11 +2,13 @@
 
 define(['logManager',
     'clientUtil',
+    'js/DragDrop/DragHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
     './MetaEditorPointerNamesDialog',
     'css!/css/Widgets/MetaEditor/MetaEditorWidget'], function (logManager,
                                                              clientUtil,
+                                                             DragHelper,
                                                              DiagramDesignerWidget,
                                                              iCheckBox,
                                                              MetaEditorPointerNamesDialog) {
@@ -107,6 +109,11 @@ define(['logManager',
         if (this._filterCheckboxes[value] && !this._filterCheckboxes[value].isChecked()) {
             this._filterCheckboxes[value].setChecked(true);
         }
+    };
+
+    MetaEditorWidget.prototype.getDragEffects = function (selectedElements, event) {
+        //the only drag is a MOVE
+        return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];
     };
 
     return MetaEditorWidget;

@@ -7,7 +7,9 @@
 "use strict";
 
 define(['js/DragDrop/DragSource',
+    'js/DragDrop/DragHelper',
     './DiagramDesignerWidget.Constants'], function (dragSource,
+                                                    dragHelper,
                                                     DiagramDesignerWidgetConstants) {
 
     var DiagramDesignerWidgetDraggable,
@@ -21,14 +23,14 @@ define(['js/DragDrop/DragSource',
         var self = this;
 
         dragSource.makeDraggable(item.$el, {
-            'helper': function (event) {
-                return self._dragHelper(this, event);
+            'helper': function (event, dragInfo) {
+                return self._dragHelper(this, event, dragInfo);
             },
             'dragItems': function (el) {
                 return self.getDragItems(self.selectionManager.getSelectedElements());
             },
-            'dragEffects': function (el) {
-                return self.getDragEffects(self.selectionManager.getSelectedElements());
+            'dragEffects': function (el, event) {
+                return self.getDragEffects(self.selectionManager.getSelectedElements(), event);
             },
             'dragParams': function (el, event) {
                 return self.getDragParams(self.selectionManager.getSelectedElements(), event);
@@ -52,20 +54,31 @@ define(['js/DragDrop/DragSource',
     };
 
     /* OVERWRITE DragSource.prototype.dragHelper */
-    DiagramDesignerWidgetDraggable.prototype._dragHelper = function (el, event) {
+    DiagramDesignerWidgetDraggable.prototype._dragHelper = function (el, event, dragInfo) {
         var helperEl = $('<div/>', {'class': DRAG_HELPER_CLASS}),
             selectionBBox = this.selectionManager._getSelectionBoundingBox(),
-            mousePos = this.getAdjustedMousePos(event);
+            mousePos = this.getAdjustedMousePos(event),
+            dragEffects = dragHelper.getDragEffects(dragInfo);
+
+        this.logger.debug("_dragHelper's dragInfo: " + JSON.stringify(dragInfo));
 
         if (selectionBBox) {
             helperEl.css({'width': (selectionBBox.x2 - selectionBBox.x) * this._zoomRatio,
                 'height': (selectionBBox.y2 - selectionBBox.y) * this._zoomRatio,
+                'line-height': ((selectionBBox.y2 - selectionBBox.y) * this._zoomRatio) + "px",
+                'text-align': 'center',
                 'border': '2px dashed #666',
                 'background-color': 'rgba(100, 100, 100, 0.1)',
                 'margin-top': (selectionBBox.y - mousePos.mY + dragSource.DEFAULT_CURSOR_AT.top) * this._zoomRatio,
                 'margin-left': (selectionBBox.x - mousePos.mX + dragSource.DEFAULT_CURSOR_AT.left) * this._zoomRatio});
 
-            helperEl.html()
+            if (dragEffects.length === 1) {
+                if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_MOVE) {
+                    helperEl.append($('<i class="icon-move"></i>'));
+                } else if (dragEffects[0] === dragSource.DRAG_EFFECTS.DRAG_COPY) {
+                    helperEl.append($('<i class="icon-plus"></i>'));
+                }
+            }
         }
 
         return helperEl;
@@ -77,9 +90,17 @@ define(['js/DragDrop/DragSource',
         return [];
     };
 
-    DiagramDesignerWidgetDraggable.prototype.getDragEffects = function (selectedElements) {
-        var effects = [dragSource.DRAG_EFFECTS.DRAG_MOVE];
-        this.logger.debug("DiagramDesignerWidgetDraggable.getDragEffects is not overridden in the controller!!! selectedElements: " + selectedElements + ". Returning default: " + effects);
+    DiagramDesignerWidgetDraggable.prototype.getDragEffects = function (selectedElements, event) {
+        var ctrlKey = event.ctrlKey || event.metaKey,
+            effects = [dragSource.DRAG_EFFECTS.DRAG_MOVE];
+
+        //by default the drag is a MOVE
+
+        //CTRL key --> copy
+        if (ctrlKey) {
+            effects = [dragSource.DRAG_EFFECTS.DRAG_COPY];
+        }
+
         return effects;
     };
 
