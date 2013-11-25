@@ -1843,8 +1843,8 @@ define([
                 delRegistry: delRegistry,
                 copyMoreNodes: copyMoreNodes,
                 moveMoreNodes: moveMoreNodes,
-                copyNodes: copyNodes,
-                pasteNodes: pasteNodes,
+                /*copyNodes: copyNodes,
+                pasteNodes: pasteNodes,*/
                 /*deleteNode: deleteNode,*/
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
