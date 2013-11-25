@@ -609,10 +609,10 @@ define(['logManager',
                     },
                     "icon": "edit"
                 },
-                "separator2": "-",
+                /*"separator2": "-",
                 "addChild": { // The "create" menu item
                     "name": "Create",
-                    callback: function(/*key, options*/) {
+                    callback: function(key, options) {
                         self._nodeCreate(node);
                     },
                     "icon": "add"
@@ -620,19 +620,19 @@ define(['logManager',
                 "separator3": "-",
                 "copy": { // The "copy" menu item
                     "name": "Copy",
-                    callback: function(/*key, options*/) {
+                    callback: function(key, options) {
                         self._nodeCopy();
                     },
                     "icon": "copy"
                 },
                 "paste": { // The "paste" menu item
                     "name": "Paste",
-                    callback: function(/*key, options*/) {
+                    callback: function(key, options) {
                         self._nodePaste(node);
                     },
                     "icon": "paste"
                 },
-                "separator4": "-",
+                "separator4": "-",*/
                 "delete": { // The "delete" menu item
                     "name": "Delete",
                     callback: function(/*key, options*/) {
