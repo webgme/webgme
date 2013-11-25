@@ -61,7 +61,6 @@ define([
                 _users = {},
                 _patterns = {},
                 _networkStatus = '',
-                _clipboard = [],
                 _msg = "",
                 _recentCommits = [],
                 _viewer = false,
@@ -541,7 +540,6 @@ define([
                     _metaNodes = {};
                     //_commitObject = null;
                     _patterns = {};
-                    _clipboard = [];
                     _msg = "";
                     _recentCommits = [];
                     _viewer = false;
@@ -565,33 +563,11 @@ define([
                     returning(null);
                 }
             }
-            /*function createEmptyProject(project,callback){
-                var core = getNewCore(project);
-                var root = core.createNode();
-                core.setRegistry(root,"isConnection",false);
-                core.setRegistry(root,"position",{ "x": 0, "y": 0});
-                core.setAttribute(root,"name","ROOT");
-                core.setRegistry(root,"isMeta",false);
-                core.persist(root,function(err){});
-                var rootHash = core.getHash(root);
-                var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
-                project.setBranchHash('master',"",commitHash,callback);
-            }*/
+
             function createEmptyProject(project,callback){
                 var core = getNewCore(project);
                 var root = core.createNode();
                 core.setAttribute(root,"name","ROOT");
-                /*var metameta = core.createNode({parent:root});
-                core.setAttribute(metameta,"name","METAMETA");
-                var meta = core.createNode({parent:root});
-                core.setAttribute(meta,"name","META");
-                var proj = core.createNode({parent:root});
-                core.setAttribute(proj,"name","PROJECT");
-                var fco = core.createNode({parent:metameta});
-                core.setAttribute(fco,"name","FCO");
-                core.setRegistry(fco,"isConnection",false);
-                core.setRegistry(fco,"position",{ "x": 100, "y": 100});
-                core.setRegistry(fco,"isMeta",true);*/
                 core.persist(root,function(err){});
                 var rootHash = core.getHash(root);
                 var commitHash = project.makeCommit([],rootHash,'project creation commit',function(err){});
@@ -1172,6 +1148,7 @@ define([
                     }
                 });
             }
+
             //MGA
             function copyMoreNodesAsync(nodePaths,parentPath,callback){
                 var checkPaths = function(){
@@ -1232,40 +1209,61 @@ define([
                     });
                 }
             }
-            function copyMoreNodes(parentPath,nodesPath){
-                var isMissing = false;
-                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
-                    for(var i=0;i<nodesPath.length;i++){
-                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
-                            isMissing = true;
-                            break;
-                        }
-                    }
-                    if(!isMissing){
-                        for(var i=0;i<nodesPath.length;i++){
-                            _core.copyNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
-                        }
-                        saveRoot('copyMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+
+            /*function copyMoreNodes(parameters){
+                var returnParameters = {},
+                    pathsToCopy = [];
+                for(var i in parameters){
+                    if(i !== 'parentId'){
+                        pathsToCopy.push(i);
                     }
                 }
-            }
-            function moveMoreNodes(parentPath,nodesPath){
-                var isMissing = false;
-                if(_nodes[parentPath] && typeof _nodes[parentPath].node === 'object'){
-                    for(var i=0;i<nodesPath.length;i++){
-                        if(!(_nodes[nodesPath[i]] && typeof _nodes[nodesPath[i]])){
-                            isMissing = true;
-                            break;
+
+                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
+                    for(var i=0;i<pathsToCopy.length;i++){
+                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
+                            returnParameters[pathsToCopy[i]] = {'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
+
                         }
                     }
-                    if(!isMissing){
-                        for(var i=0;i<nodesPath.length;i++){
-                            _core.moveNode(_nodes[nodesPath[i]].node,_nodes[parentPath].node);
-                        }
-                        saveRoot('moveMoreNodes('+parentPath+','+JSON.stringify(nodesPath)+')');
+
+                }
+            }*/
+            function moveMoreNodes(parameters){
+                var pathsToMove = [],
+                    returnParams = {};
+                for(var i in parameters){
+                    if(i !== 'parentId'){
+                        pathsToMove.push(i);
                     }
                 }
+
+                if(pathsToMove.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i=0;i<pathsToMove.length;i++){
+                        if(_nodes[pathsToMove[i]] && typeof _nodes[pathsToMove[i]].node === 'object'){
+                            var newNode = _core.moveNode(_nodes[pathsToMove[i]].node,_nodes[parameters.parentId].node);
+                            returnParams[pathsToMove[i]] = _core.getPath(newNode);
+                            if(parameters[pathsToMove[i]].attributes){
+                                for(var j in parameters[pathsToMove[i]].attributes){
+                                    _core.setAttribute(newNode,j,parameters[pathsToMove[i]].attributes[j]);
+                                }
+                            }
+                            if(parameters[pathsToMove[i]].registry){
+                                for(var j in parameters[pathsToMove[i]].registry){
+                                    _core.setAttribute(newNode,j,parameters[pathsToMove[i]].registry[j]);
+                                }
+                            }
+
+                            delete _nodes[pathsToMove[i]];
+                            storeNode(newNode,true);
+                        }
+                    }
+                }
+
+                return returnParams;
             }
+
             function startTransaction() {
                 if (_core) {
                     _inTransaction = true;
@@ -1303,47 +1301,6 @@ define([
                 }
             }
 
-            /************** TEST CAN-SETREGISTRY ******************/
-                //TODO: implement properly
-            function canSetRegistry(path, name, value) {
-                var result = true;
-                if (_core && _nodes[path] && typeof _nodes[path].node === 'object') {
-                    switch(name) {
-                        case 'position':
-                            //TODO: implement properly - if there is an attorbute with the name 'position'
-                            //TODO: and its value is false, then the position registry cannot be set
-                            //TODO: demo case
-                            var repositionable = _core.getAttribute(_nodes[path].node,name);
-                            result = repositionable != "false";
-                            break;
-                    }
-                }
-                return result;
-            }
-            /*************************************************************/
-            function copyNodes(ids) {
-                if (_core) {
-                    _clipboard = ids;
-                }
-            }
-            function pasteNodes(parentpath) {
-                var checkClipboard = function(){
-                    var result = true;
-                    for(var i=0;i<_clipboard.length;i++){
-                        result = result && (typeof _nodes[_clipboard[i]].node === 'object');
-                    }
-                    return result;
-                };
-
-                if(_core && checkClipboard()){
-                    var paths = COPY(_clipboard);
-                    copyMoreNodesAsync(paths,parentpath,function(err,copyarray){
-                        if(!err){
-                            saveRoot('pasteNodes('+parentpath+','+paths+')');
-                        }
-                    });
-                }
-            }
             function deleteNode(path) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
                     _core.deleteNode(_nodes[path].node);
@@ -1363,35 +1320,6 @@ define([
                 }
             }
 
-            /******************* END OF --- TEST CAN-CREATECHILD **********************/
-            /*function createChild(parameters) {
-                if(_core){
-                    if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
-                        var baseId = parameters.baseId || "object";
-                        var child = _core.createNode(_nodes[parameters.parentId].node);
-                        if(baseId === "connection"){
-                            _core.setRegistry(child,"isConnection",true);
-                            _core.setRegistry(child,"isPort",false);
-                            _core.setAttribute(child,"name","defaultConn");
-                        } else {
-                            _core.setRegistry(child,"isConnection",false);
-                            _core.setRegistry(child,"isPort",true);
-                            _core.setAttribute(child,"name", parameters.name || "defaultObj");
-
-                            if (parameters.position) {
-                                _core.setRegistry(child,"position", { "x": parameters.position.x || 100, "y": parameters.position.y || 100});
-                            } else {
-                                _core.setRegistry(child,"position", { "x": 100, "y": 100});
-                            }
-                        }
-
-                        _core.setRegistry(child,"decorator","");
-
-                        storeNode(child);
-                        saveRoot('createChild('+parameters.parentId+','+baseId+','+_core.getPath(child)+')');
-                    }
-                }
-            }*/
             function createChild(parameters){
                 var newID;
 
@@ -1415,30 +1343,7 @@ define([
 
                 return newID;
             }
-            /************** TEST CAN-MAKEPOINTER ******************/
-            function canMakePointer(id, name, to) {
-                var result = false;
 
-                if( _core && _nodes[id] &&
-
-
-                    typeof _nodes[id].node === 'object' &&
-
-                    typeof name === 'string' &&
-                    name !== "" && (
-                    (_nodes[to] &&
-                        typeof _nodes[to].node === 'object') ||
-                        to === null
-                    )
-                    ){
-
-                    //TODO: ENFORCE META AND CONSTRAINS RULES
-                    result = true;
-                }
-
-                return result;
-            }
-            /************** END OF --- TEST CAN_MAKEPOINTER ******************/
             function makePointer(id, name, to) {
                 if(canMakePointer(id, name, to)){
                     if(to === null){
@@ -1459,18 +1364,13 @@ define([
             }
 
 
-            function intellyPaste(parameters) {
-                var pathestocopy = [],
-                    simplepaste = true;
+            function copyMoreNodes(parameters){
+                var pathestocopy = [];
                 if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     for(var i in parameters){
                         if(i !== "parentId"){
                             pathestocopy.push(i);
-                            simplepaste = false;
                         }
-                    }
-                    if(simplepaste){
-                        pathestocopy = clipboard || [];
                     }
 
                     if(pathestocopy.length < 1){
@@ -1507,7 +1407,7 @@ define([
                         });
                     }
                 } else {
-                    console.log('wrong parameters in intelligent paste operation - denied -');
+                    console.log('wrong parameters for copy operation - denied -');
                 }
             }
 
@@ -1941,18 +1841,15 @@ define([
                 delAttributes: delAttributes,
                 setRegistry: setRegistry,
                 delRegistry: delRegistry,
-                canSetRegistry: canSetRegistry,
                 copyMoreNodes: copyMoreNodes,
                 moveMoreNodes: moveMoreNodes,
                 copyNodes: copyNodes,
                 pasteNodes: pasteNodes,
-                deleteNode: deleteNode,
+                /*deleteNode: deleteNode,*/
                 delMoreNodes: delMoreNodes,
                 createChild: createChild,
                 makePointer: makePointer,
-                canMakePointer: canMakePointer,
                 delPointer: delPointer,
-                intellyPaste: intellyPaste,
                 addMember: addMember,
                 removeMember: removeMember,
 

@@ -174,7 +174,7 @@ define(['coreclient/meta'], function (META) {
                     pointer = rawMeta.pointers[name];
                 }
                 var refObj = META.pathToRefObject(targetObj.id);
-                var index = indexOfPathInRefArray(pointer.items,targetObj.id);
+                var index = indexOfPathInRefObjArray(pointer.items,targetObj.id);
                 if(index === -1){
                     index = pointer.items.length;
                     pointer.items.push(refObj);
