@@ -21,10 +21,11 @@ define(['./DragEffects',
             appendTo: DEFAULT_APPEND_TO,
             cursorAt: DEFAULT_CURSOR_AT,
             helper: function (event) {
-                var helperEl;
+                var helperEl,
+                    dragInfo = _createDragInfo(el, params, event);
 
                 if (params && _.isFunction(params.helper)) {
-                    helperEl = params.helper.call(el, event);
+                    helperEl = params.helper.call(el, event, dragInfo);
                 } else {
                     helperEl = el.clone();
                 }
@@ -33,7 +34,7 @@ define(['./DragEffects',
                 helperEl.css({'pointer-events':'none'});
 
                 //add DRAG info
-                helperEl.data(DragConstants.DRAG_INFO, _createDragInfo(el, params, event));
+                helperEl.data(DragConstants.DRAG_INFO, dragInfo);
 
                 return helperEl;
             },
@@ -84,7 +85,7 @@ define(['./DragEffects',
 
         dragInfo[DragConstants.DRAG_EFFECTS] = [];
         if (params && _.isFunction(params.dragEffects)) {
-            dragInfo[DragConstants.DRAG_EFFECTS] = params.dragEffects(el) || [];
+            dragInfo[DragConstants.DRAG_EFFECTS] = params.dragEffects(el, event) || [];
         }
 
         dragInfo[DragConstants.DRAG_PARAMS] = undefined;
