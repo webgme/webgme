@@ -803,34 +803,6 @@ define(['logManager',
         }
     };
 
-
-    ModelEditorControl.prototype._createConnectionVisualStyleRegistryFields = function () {
-        var idList = this.designerCanvas.selectionManager.getSelectedElements(),
-            len = idList.length,
-            nodeObj,
-            resultLineStyle = {},
-            existingLineStyle;
-
-
-        this._client.startTransaction();
-
-        while (len--) {
-            /*if (this.designerCanvas.connectionIds.indexOf(idList[len]) !== -1) {*/
-                nodeObj = this._client.getNode(this._ComponentID2GmeID[idList[len]]);
-
-                if (nodeObj) {
-                    existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle) || {};
-
-                    _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
-
-                    this._client.setRegistry(nodeObj.getId(), nodePropertyNames.Registry.lineStyle, resultLineStyle);
-                }
-            /*}*/
-        }
-
-        this._client.completeTransaction();
-    };
-
     ModelEditorControl.prototype._removeConnectionSegmentPoints = function () {
         var idList = this.designerCanvas.selectionManager.getSelectedElements(),
             len = idList.length,
@@ -1048,17 +1020,7 @@ define(['logManager',
         });
         this._toolbarItems.push(this.$btnConstraintValidate);
 
-        /************** VISUAL STYLES HIERARCHY BUTTON ****************/
-        this.$btnConnectionVisualStyleRegistryFields = toolBar.addButton(
-            { "title": "Add connection visual style registry fields",
-                "icon": "icon-random",
-                "clickFn": function (/*data*/) {
-                    self._createConnectionVisualStyleRegistryFields();
-                }
-            });
-        this._toolbarItems.push(this.$btnConnectionVisualStyleRegistryFields);
-        //this.$btnConnectionVisualStyleRegistryFields.enabled(false);
-
+        /************** REMOVE CONNECTION SEGMENTPOINTS BUTTON ****************/
         this.$btnConnectionRemoveSegmentPoints = toolBar.addButton(
             { "title": "Remove segment points",
                 "icon": "icon-remove-circle",

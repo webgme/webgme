@@ -576,12 +576,24 @@ define(['logManager',
         var gmeIDs = [],
             len = selectedIds.length,
             id,
-            connectionSelected = false;
+            connectionSelected = false,
+            allHasRegistrylineStyle = selectedIds.length > 0,
+            nodeObj,
+            lineStyle;
 
         while (len--) {
             id = this._ComponentID2GmeID[selectedIds[len]];
             if (id) {
                 gmeIDs.push(id);
+
+                nodeObj = this._client.getNode(id);
+
+                if (allHasRegistrylineStyle && nodeObj) {
+                    lineStyle = nodeObj.getRegistry(nodePropertyNames.Registry.lineStyle);
+                    allHasRegistrylineStyle = lineStyle && !_.isEmpty(lineStyle);
+                } else {
+                    allHasRegistrylineStyle = false;
+                }
             }
 
             if (this.designerCanvas.connectionIds.indexOf(selectedIds[len]) !== -1) {
@@ -589,7 +601,10 @@ define(['logManager',
             }
         }
 
-        //this.$btnConnectionVisualStyleRegistryFields.enabled(connectionSelected);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(allHasRegistrylineStyle);
+
         this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
 
         //nobody is selected on the canvas
@@ -783,15 +798,15 @@ define(['logManager',
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSetConnectionProperty = function (params) {
-        var connectionIDs = params.connections,
+        var items = params.items,
             visualParams = params.params,
             gmeIDs = [],
-            len = connectionIDs.length,
+            len = items.length,
             id,
             connRegLineStyle;
 
         while (len--) {
-            id = this._ComponentID2GmeID[connectionIDs[len]];
+            id = this._ComponentID2GmeID[items[len]];
             if (id) {
                 gmeIDs.push(id);
             }
@@ -804,8 +819,10 @@ define(['logManager',
             while(len--) {
                 id = gmeIDs[len];
                 connRegLineStyle = this._client.getNode(id).getEditableRegistry(nodePropertyNames.Registry.lineStyle);
-                _.extend(connRegLineStyle, visualParams);
-                this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+                if (connRegLineStyle && !_.isEmpty(connRegLineStyle)) {
+                    _.extend(connRegLineStyle, visualParams);
+                    this._client.setRegistry(id, nodePropertyNames.Registry.lineStyle, connRegLineStyle);
+                }
             }
 
             this._client.completeTransaction();

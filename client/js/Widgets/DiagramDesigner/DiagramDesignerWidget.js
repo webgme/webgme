@@ -1241,22 +1241,11 @@ define(['logManager',
 
     /*********************** SET CONNECTION VISUAL PROPERTIES *****************************/
     DiagramDesignerWidget.prototype._setConnectionProperty = function (params) {
-        var selectedIds = this.selectionManager.getSelectedElements(),
-            len = selectedIds.length,
-            selectedConnections = [],
-            p;
+        var selectedIds = this.selectionManager.getSelectedElements();
 
-        while (len--) {
-            if (this.connectionIds.indexOf(selectedIds[len]) !== -1) {
-                selectedConnections.push(selectedIds[len]);
-            };
-        }
-
-        if (selectedConnections.length > 0) {
-            p = {'connections': selectedConnections,
-                 'params': params};
-
-            this.onSetConnectionProperty(p);
+        if (selectedIds.length > 0) {
+            this.onSetConnectionProperty({'items': selectedIds,
+                'params': params});
         }
     };
 
