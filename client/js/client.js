@@ -132,7 +132,7 @@ define([
                 return Storage({host:_configuration.host,port:_configuration.port,log:LogManager.create('client-storage')});
             }
             function setSelectedObjectId(objectId, activeSelection) {
-                if (objectId !== _selectedObjectId) {
+                /*if (objectId !== _selectedObjectId) {*/
                     if (activeSelection) {
                         _activeSelection = [].concat(activeSelection);
                     } else {
@@ -141,7 +141,7 @@ define([
                     _selectedObjectId = objectId;
                     _self.dispatchEvent(_self.events.SELECTEDOBJECT_CHANGED, _selectedObjectId);
                     setPropertyEditorIdList([objectId]);
-                }
+                /*}*/
             }
             function clearSelectedObjectId() {
                 setSelectedObjectId(null);
