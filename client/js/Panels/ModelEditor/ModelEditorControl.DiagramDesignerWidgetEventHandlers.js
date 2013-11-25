@@ -27,13 +27,13 @@ define(['logManager',
         var self = this;
 
         /*OVERRIDE DESIGNER CANVAS METHODS*/
-        this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
+        /*this.designerCanvas.onDesignerItemsMove = function (repositionDesc) {
             self._onDesignerItemsMove(repositionDesc);
         };
 
         this.designerCanvas.onDesignerItemsCopy = function (copyDesc) {
             self._onDesignerItemsCopy(copyDesc);
-        };
+        };*/
 
         this.designerCanvas.onCreateNewConnection = function (params) {
             self._onCreateNewConnection(params);
@@ -121,10 +121,6 @@ define(['logManager',
 
         this.designerCanvas.getDragItems = function (selectedElements) {
             return self._getDragItems(selectedElements);
-        };
-
-        this.designerCanvas.getDragEffects = function (selectedElements) {
-            return self._getDragEffects(selectedElements);
         };
 
         this._oGetDragParams = this.designerCanvas.getDragParams;
@@ -337,247 +333,297 @@ define(['logManager',
         //TODO: add event handling here that a subcomponent disappeared
     };
 
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getPossibleDropActions = function (dragInfo) {
+        var items = DragHelper.getDragItems(dragInfo),
+            dragEffects = DragHelper.getDragEffects(dragInfo),
+            dragParams = DragHelper.getDragParams(dragInfo),
+            possibleDropActions = [],
+            parentID = this.currentNodeInfo.id,
+            i,
+            validReferenceTypes,
+            j,
+            validReferenceTypesNames = [],
+            validReferenceTypesMap = {},
+            refTypeID,
+            refTypeName,
+            refTypeNode,
+            dragAction;
+
+        //check to see what DROP actions are possible
+        if (items.length > 0) {
+            i = dragEffects.length;
+            while (i--) {
+                switch(dragEffects[i]) {
+                    case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                        //check to see if dragParams.parentID and this.parentID are the same
+                        //if so, it's not a real move, it is a reposition
+                        if ((dragParams && dragParams.parentID && dragParams.parentID === parentID) ||
+                            GMEConcepts.canCreateChildren(parentID, items)) {
+                            dragAction = {'dragEffect': dragEffects[i]};
+                            possibleDropActions.push(dragAction);
+                        }
+                        break;
+                    case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                            dragAction = {'dragEffect': dragEffects[i]};
+                            possibleDropActions.push(dragAction);
+                        }
+                        break;
+                    case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
+                        if (GMEConcepts.canCreateChildren(parentID, items)) {
+                            dragAction = {'dragEffect': dragEffects[i]};
+                            possibleDropActions.push(dragAction);
+                        }
+                        break;
+                    case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                        validReferenceTypes = GMEConcepts.getValidReferenceTypes(parentID, items[0]);
+                        if (items.length === 1 && validReferenceTypes.length > 0) {
+                            //possibleDropActions.push(dragEffects[i]);
+                            j = validReferenceTypes.length;
+                            while (j--) {
+                                refTypeID = validReferenceTypes[j];
+                                refTypeNode = this._client.getNode(refTypeID);
+                                refTypeName = refTypeNode ? refTypeNode.getAttribute(nodePropertyNames.Attributes.name) : '(' + refTypeID + ')';
+                                validReferenceTypesNames.push(refTypeName);
+                                validReferenceTypesMap[refTypeName] = refTypeID;
+                            }
+                            validReferenceTypesNames.sort();
+                            validReferenceTypesNames.reverse();
+                            j = validReferenceTypesNames.length;
+                            while (j--) {
+                                dragAction = { 'dragEffect': DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE,
+                                              'name': validReferenceTypesNames[j],
+                                              'id': validReferenceTypesMap[validReferenceTypesNames[j]]};
+                                possibleDropActions.push(dragAction);
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        this.logger.debug('possibleDropActions: ' + JSON.stringify(possibleDropActions));
+
+        return possibleDropActions;
+    };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
-        var accept,
-            items = DragHelper.getDragItems(dragInfo),
-            effects = DragHelper.getDragEffects(dragInfo);
+        var accept;
 
         if (GMEConcepts.isProjectPROJECTBASE(this.currentNodeInfo.id)) {
             //DO NOT ACCEPT ANYTHING IF THE PROJECT'S PROJECT_BASE IS THE CURRENTLY OPENED NODE
             accept = false;
         } else {
-            accept = (items.length > 0 && (effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_COPY) !== -1 ||
-                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_MOVE) !== -1 ||
-                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) !== -1 ||
-                effects.indexOf(DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) !== -1));
+            accept = this._getPossibleDropActions(dragInfo).length > 0;
         }
 
         return accept;
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDrop = function (event, dragInfo, position) {
-        var items = DragHelper.getDragItems(dragInfo),
-            effects = DragHelper.getDragEffects(dragInfo),
-            params = DragHelper.getDragParams(dragInfo),
-            gmeID,
-            self = this,
-            handleDrop,
-            ctrlKey = event.ctrlKey || event.metaKey,
-            shiftKey = event.shiftKey,
-            handleSelfDrop;
+        var possibleDropActions = this._getPossibleDropActions(dragInfo),
+            len = possibleDropActions.length,
+            i,
+            selectedAction,
+            self = this;
 
-        handleDrop = function (key, idList, pos) {
-            var createChildParams,
-                i,
-                POS_INC = 20,
-                newID,
-                newNode,
-                newName,
-                refObj;
+        if (len === 1) {
+            selectedAction = possibleDropActions[0];
+            this._handleDropAction(selectedAction, dragInfo, position);
+        } else {
+            var menuItems = {};
 
-            self._client.startTransaction();
-
-            for (i = 0; i < idList.length; i+= 1) {
-                createChildParams = undefined;
-                switch (key) {
-                    case "CREATE_INSTANCE":
-                        createChildParams = { "parentId": self.currentNodeInfo.id,
-                            "baseId": idList[i]};
-
-                        newID = self._client.createChild(createChildParams);
-
-                        if (newID) {
-                            newNode = self._client.getNode(newID);
-
-                            if (newNode) {
-                                //store new position
-                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
-                                    'y': pos.y});
-                            }
-                        }
+            for (i = 0; i < possibleDropActions.length; i += 1) {
+                switch (possibleDropActions[i].dragEffect) {
+                    case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                        menuItems[i] = {
+                            "name": "Copy here",
+                            "icon": false
+                        };
                         break;
-                    case "CREATE_REFERENCE":
-                        createChildParams = { "parentId": self.currentNodeInfo.id};
-
-                        newID = self._client.createChild(createChildParams);
-
-                        if (newID) {
-                            newNode = self._client.getNode(newID);
-
-                            if (newNode) {
-                                //store new position
-                                self._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': pos.x,
-                                    'y': pos.y});
-
-                                //TODO: fixme 'ref' should come from some constants list
-                                self._client.makePointer(newID, 'ref', idList[i]);
-
-                                //figure out name
-                                refObj = self._client.getNode(idList[i]);
-                                if (refObj) {
-                                    newName = "REF - " + (refObj.getAttribute(nodePropertyNames.Attributes.name) || idList[i]);
-                                } else {
-                                    newName = "REF - " + idList[i];
-                                }
-
-                                self._client.setAttributes(newID, nodePropertyNames.Attributes.name, newName);
-                            }
-                        }
+                    case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                        menuItems[i] = {
+                            "name": "Move here",
+                            "icon": false
+                        };
                         break;
-                    case "MOVE":
-                        self._client.moveMoreNodes(self.currentNodeInfo.id, [idList[i]]);
+                    case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
+                        menuItems[i] = {
+                            "name": "Create instance here",
+                            "icon": false
+                        };
                         break;
-                    case "COPY":
-                        handleSelfDrop('COPY', idList, pos, params);
-                        i = idList.length;
-
+                    case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                        menuItems[i] = {
+                            "name": "Create reference '" + possibleDropActions[i].name + "'",
+                            "icon": false
+                        };
                         break;
                     default:
                 }
-
-                pos.x += POS_INC;
-                pos.y += POS_INC;
             }
 
-            self._client.completeTransaction();
-        };
+            this.designerCanvas.createMenu(menuItems, function (key) {
+                    selectedAction = possibleDropActions[parseInt(key, 10)];
+                    self._handleDropAction(selectedAction, dragInfo, position);
+                },
+                this.designerCanvas.posToPageXY(position.x, position.y)
+            );
+        }
+    };
 
-        handleSelfDrop = function (type, items, dropPosition, selfDropParams) {
-            var i,
-                gmeID,
-                componentID,
-                len,
-                selectedIDs = [];
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._handleDropAction = function (dropAction, dragInfo, position) {
+        var dragEffect = dropAction.dragEffect,
+            items = DragHelper.getDragItems(dragInfo),
+            dragParams = DragHelper.getDragParams(dragInfo),
+            parentID = this.currentNodeInfo.id,
+            i,
+            gmeID,
+            params,
+            POS_INC = 20,
+            oldPos;
 
-            switch (type) {
-                case 'REPOSITION':
-                    var oldPos;
+        this.logger.debug('dropAction: ' + JSON.stringify(dropAction));
+        this.logger.debug('dragInfo: ' + JSON.stringify(dragInfo));
+        this.logger.debug('position: ' + JSON.stringify(position));
 
-                    //update UI
-                    self.designerCanvas.beginUpdate();
+        switch (dragEffect) {
+            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
+                params = { "parentId": parentID };
+                i = items.length;
+                while (i--) {
+                    gmeID = items[i];
 
-                    i = items.length;
-                    while (i--) {
-                        gmeID = items[i];
-                        oldPos = selfDropParams.positions[gmeID];
-                        if (!oldPos) {
-                            oldPos = {'x': 0, 'y': 0};
-                        }
+                    params[gmeID] = {};
 
-                        if (self._GmeID2ComponentID.hasOwnProperty(gmeID)) {
-                            len = self._GmeID2ComponentID[gmeID].length;
-                            while (len--) {
-                                componentID = self._GmeID2ComponentID[gmeID][len];
-                                selectedIDs.push(componentID);
-                                self.designerCanvas.updateDesignerItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
-                            }
-                        }
-                    }
-
-                    self.designerCanvas.endUpdate();
-                    self.designerCanvas.select(selectedIDs);
-
-                    //update object internals
-                    setTimeout(function () {
-                        self._client.startTransaction();
-                        i = items.length;
-                        while (i--) {
-                            gmeID = items[i];
-                            oldPos = selfDropParams.positions[gmeID];
-                            if (!oldPos) {
-                                oldPos = {'x': 0, 'y': 0};
-                            }
-                            self._client.setRegistry(gmeID, nodePropertyNames.Registry.position, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
-                        }
-
-                        self._client.completeTransaction();
-                    }, 10);
-
-                    break;
-                case 'COPY':
-                    var copyOpts = { "parentId": self.currentNodeInfo.id };
-                    i = items.length;
-                    while (i--) {
-                        gmeID = items[i];
-
-                        copyOpts[gmeID] = {};
-
-                        oldPos = selfDropParams.positions[gmeID];
-                        if (oldPos) {
-                            copyOpts[gmeID][REGISTRY_STRING] = {};
-                            copyOpts[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y };
-                        }
-                    }
-                    self._client.intellyPaste(copyOpts);
-                    break;
-                default:
-            }
-
-
-        };
-
-        if (items.length > 0) {
-            this.logger.debug('_onBackgroundDrop gmeID: ' + items);
-
-            if (params && params.parentID && params.parentID === this.currentNodeInfo.id) {
-                //if the params contains parentID, check if the parent is the same as the currently opened no
-                //it might be coming from the same hierarchy
-
-                //CTRL key --> copy
-                //no key --> reposition
-                if (!shiftKey && !ctrlKey) {
-                    //no key pressed at drop --> reposition
-                    setTimeout(function () {
-                        handleSelfDrop('REPOSITION', items, position, params);
-                    }, 1);
-                } else if (!shiftKey && ctrlKey) {
-                    //COPY
-                    setTimeout(function () {
-                        handleSelfDrop('COPY', items, position, params);
-                    }, 1);
+                    oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                    params[gmeID][REGISTRY_STRING] = {};
+                    params[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
                 }
-            } else {
-                //no parentID present
-                //only one possibility to drop
-                if (effects.length === 1 && effects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                    handleDrop('CREATE_INSTANCE', items, position);
+                this._client.startTransaction();
+                this._client.copyMoreNodes(params);
+                this._client.completeTransaction();
+                break;
+            case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
+                //check to see if dragParams.parentID and this.parentID are the same
+                //if so, it's not a real move, it is a reposition
+                if (dragParams && dragParams.parentID && dragParams.parentID === parentID) {
+                    //it is a reposition
+                    this._repositionItems(items, dragParams.positions, position);
                 } else {
-                    //multiple drop possibility, create context menu
-                    var menuItems = {},
-                        i;
+                    //it is a real hierarchical move
 
-                    for (i = 0; i < effects.length; i += 1) {
-                        switch (effects[i]) {
-                            case DragHelper.DRAG_EFFECTS.DRAG_COPY:
-                                menuItems['COPY'] = {
-                                    "name": "Copy here",
-                                    "icon": false
-                                };
-                                break;
-                            case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
-                                menuItems['MOVE'] = {
-                                    "name": "Move here",
-                                    "icon": false
-                                };
-                                break;
-                            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
-                                menuItems['CREATE_REFERENCE'] = {
-                                    "name": "Create reference here",
-                                    "icon": false
-                                };
-                                break;
-                            default:
-                        }
+                    params = { "parentId": parentID };
+                    i = items.length;
+                    while (i--) {
+                        gmeID = items[i];
+
+                        params[gmeID] = {};
+
+                        oldPos = dragParams && dragParams.positions[gmeID] || {'x':0, 'y': 0};
+                        params[gmeID][REGISTRY_STRING] = {};
+                        params[gmeID][REGISTRY_STRING][nodePropertyNames.Registry.position] = { "x": position.x + oldPos.x, "y": position.y + oldPos.y };
                     }
 
-                    this.designerCanvas.createMenu(menuItems, function (key) {
-                            handleDrop(key, items, position);
-                        },
-                        this.designerCanvas.posToPageXY(position.x, position.y)
-                    );
+                    this._client.startTransaction();
+                    this._client.moveMoreNodes(params);
+                    this._client.completeTransaction();
+                }
+                break;
+            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
+                params = { "parentId": parentID };
+                i = items.length;
+                this._client.startTransaction();
+                while (i--) {
+                    params.baseId = items[i];
+
+                    gmeID = this._client.createChild(params);
+
+                    if (gmeID) {
+                        //store new position
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
+                            'y': position.y});
+
+                        position.x += POS_INC;
+                        position.y += POS_INC;
+                    }
+                }
+                this._client.completeTransaction();
+                break;
+            case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
+                if (items.length === 1) {
+                    params = { "parentId": parentID,
+                               "baseId": dropAction.id};
+
+                    this._client.startTransaction();
+
+                    gmeID = this._client.createChild(params);
+
+                    if (gmeID) {
+                        //store new position
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
+                            'y': position.y});
+
+                        //set reference
+                        this._client.makePointer(gmeID, CONSTANTS.POINTER_REF, items[0]);
+                    }
+
+                    this._client.completeTransaction();
+                }
+                break;
+        }
+
+
+    };
+
+    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._repositionItems = function (items, dragPositions, dropPosition) {
+        var i = items.length,
+            oldPos,
+            componentID,
+            gmeID,
+            selectedIDs = [],
+            len,
+            self = this;
+
+        if (dragPositions && !_.isEmpty(dragPositions)) {
+            //update UI
+            this.designerCanvas.beginUpdate();
+
+            while (i--) {
+                gmeID = items[i];
+                oldPos = dragPositions[gmeID];
+                if (!oldPos) {
+                    oldPos = {'x': 0, 'y': 0};
+                }
+
+                if (this._GmeID2ComponentID.hasOwnProperty(gmeID)) {
+                    len = this._GmeID2ComponentID[gmeID].length;
+                    while (len--) {
+                        componentID = this._GmeID2ComponentID[gmeID][len];
+                        selectedIDs.push(componentID);
+                        this.designerCanvas.updateDesignerItem(componentID, { "position": {"x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y }});
+                    }
                 }
             }
+
+            this.designerCanvas.endUpdate();
+            this.designerCanvas.select(selectedIDs);
+
+            //update object internals
+            setTimeout(function () {
+                self._client.startTransaction();
+                i = items.length;
+                while (i--) {
+                    gmeID = items[i];
+                    oldPos = dragPositions[gmeID];
+                    if (!oldPos) {
+                        oldPos = {'x': 0, 'y': 0};
+                    }
+                    self._client.setRegistry(gmeID, nodePropertyNames.Registry.position, { "x": dropPosition.x + oldPos.x, "y": dropPosition.y + oldPos.y });
+                }
+
+                self._client.completeTransaction();
+            }, 10);
         }
     };
 
@@ -934,12 +980,6 @@ define(['logManager',
 
         return params;
     };
-
-
-    ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._getDragEffects = function (selectedElements) {
-        return [DragHelper.DRAG_EFFECTS.DRAG_COPY, DragHelper.DRAG_EFFECTS.DRAG_MOVE, DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
-    };
-
 
     return ModelEditorControlDiagramDesignerWidgetEventHandlers;
 });
