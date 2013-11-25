@@ -1,6 +1,7 @@
 define(['logManager',
     'clientUtil',
     'js/Constants',
+    'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     './MetaEditorControl.DiagramDesignerWidgetEventHandlers',
@@ -8,6 +9,7 @@ define(['logManager',
     './MetaEditorConstants'], function (logManager,
                                                         util,
                                                         CONSTANTS,
+                                                        GMEConcepts,
                                                         nodePropertyNames,
                                                         DiagramDesignerWidgetConstants,
                                                         MetaEditorControlDiagramDesignerWidgetEventHandlers,
@@ -73,6 +75,7 @@ define(['logManager',
         //TODO: give the UI time to render first before start using it's features
         setTimeout(function () {
             self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
+            self._client.setSelectedObjectId(CONSTANTS.PROJECT_ROOT_ID);
         }, 10);
 
 
@@ -1105,6 +1108,8 @@ define(['logManager',
                     self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
                 }
 
+                self._updateObjectConnectionVisualStyles(sourceID);
+
                 self._client.completeTransaction();
             });
         }
@@ -1125,6 +1130,8 @@ define(['logManager',
                 this._client.deleteMetaPointer(sourceID,pointerName);
                 this._client.delPointer(sourceID,pointerName);
             }
+
+            this._updateObjectConnectionVisualStyles(sourceID);
             //this._client.completeTransaction();
         }
     };
@@ -1276,7 +1283,7 @@ define(['logManager',
             var result = null,
                 pattNum = /^\d+$/g,
                 pattMinToMax = /^\d+\.\.\d+$/g,
-                pattMinToMany = /^\d+\.\.*$/g;
+                pattMinToMany = /^\d+\.\.\*$/g;
 
             //valid value for containment is 1, 0..*, x..y
             if (pattNum.test(value)) {
@@ -1440,6 +1447,33 @@ define(['logManager',
 
 
         this._toolbarInitialized = true;
+    };
+
+    //if the object is a validConnectionType and does not have the connection style visual properties in Registry, add them
+    //if it's not and has, remove them
+    MetaEditorControl.prototype._updateObjectConnectionVisualStyles = function(objectID) {
+        var isConnectionType = GMEConcepts.isConnectionType(objectID),
+            nodeObj = this._client.getNode(objectID),
+            existingLineStyle = nodeObj.getEditableRegistry(nodePropertyNames.Registry.lineStyle),
+            resultLineStyle = {},
+            DEFAULT_LINE_STYLE = {};
+
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.WIDTH] = 1;
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.COLOR] = "#000000";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.PATTERN] = "";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.TYPE] = "";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.START_ARROW] = "none";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.END_ARROW] = "none";
+        DEFAULT_LINE_STYLE[CONSTANTS.LINE_STYLE.POINTS] = [];
+
+        if (isConnectionType) {
+            _.extend(resultLineStyle, DEFAULT_LINE_STYLE, existingLineStyle);
+            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, resultLineStyle);
+        } else {
+            //not connection type
+            //remove registry settings
+            this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, {});
+        }
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions
