@@ -10,7 +10,7 @@ define(['jquery-csszoom'], function () {
 
     GraphVizWidgetZoom.prototype._initZoom = function () {
         //zoom
-        this._zoomSlider = $('<div/>');
+        this._zoomSlider = $('<div/>', {'class': 'graph-viz-zoom'});
         this._el.parent().append(this._zoomSlider);
 
         this._zoomSlider.csszoom({'zoomTarget': this._el.find('svg')});

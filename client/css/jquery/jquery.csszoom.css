@@ -9,12 +9,13 @@
 .css-zoom a.ui-slider-handle {
     width: 15px;
     height: 15px;
+    line-height: 15px;
     left: -7px;
     outline: none;
 }
 
 .css-zoom a.ui-slider-handle .css-zoom-label {
-    top: 2px;
+    top: 0px;
     left: 17px;
     position: absolute;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;

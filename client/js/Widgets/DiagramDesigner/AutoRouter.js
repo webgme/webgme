@@ -4306,7 +4306,7 @@ _logger.warning("Adding "
                 else
                     dif.cy = 0;
 
-                dir2 = getDir(dif);
+                dir2 = getDir(dif) || nextClockwiseDir( dir );
 
                 while( boxRect === undefined && i--){
                     if( bufferObject.children[i].ptInRect( point ) ){
@@ -4468,7 +4468,7 @@ _logger.warning("Adding "
                     parentBox = bufferObject.box,
                     initPoint = new ArPoint( point ),
                     child = goToNextBox( point, dir1, (dir1 === 1 || dir1 === 2 ? ED_MAXCOORD : ED_MINCOORD ), children ), 
-                    finalPoint = new ArPoint(point),
+                    finalPoint,
                     dir = dir2,
                     nextDir = nextClockwiseDir( dir1 ) === dir2 ? nextClockwiseDir : prevClockwiseDir,
                     points = [ [new ArPoint(point)] ],
@@ -4476,7 +4476,7 @@ _logger.warning("Adding "
 
                 exitCondition = exitCondition === undefined ? function(pt) { return !parentBox.ptInRect(pt); } : exitCondition;
 
-                goToNextBox( finalPoint, reverseDir( dir ), getRectOuterCoord( child, reverseDir( dir ) ), children );
+                //goToNextBox( finalPoint, reverseDir( dir ), getRectOuterCoord( child, reverseDir( dir ) ), children );
 
                 while( hasExit && !exitCondition( point, bufferObject ) ){
                     var old = new ArPoint( point ),
@@ -4493,7 +4493,11 @@ _logger.warning("Adding "
                         child = nextChild;
                     }
 
-                    hasExit = !point.equals(finalPoint);
+                    if( finalPoint === undefined )
+                        finalPoint = new ArPoint(point);
+                    else
+                        hasExit = !point.equals(finalPoint);
+
                 }
 
                 if( points[0][0].equals( initPoint ) )

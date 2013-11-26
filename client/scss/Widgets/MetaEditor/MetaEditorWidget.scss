@@ -1,6 +1,6 @@
 $filterPanel-background-color: #FFFFFF;
-$filterPanel-top: 60px;
-$filterPanel-left: 25px;
+$filterPanel-top: 5px;
+$filterPanel-right: 11px;
 $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
@@ -8,7 +8,7 @@ $filterPanel-header-min-width: 100px;
 div.filterPanel {
 	position: absolute;
 	top: $filterPanel-top;
-	left: $filterPanel-left;
+	right: $filterPanel-right;
 
 	background-color: $filterPanel-background-color;
 	border: $filterPanel-border;

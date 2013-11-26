@@ -98,7 +98,7 @@ define(['logManager',
         var all = this.$filterUl.find('.iCheckBox').length,
             on = this.$filterUl.find('.iCheckBox.checked').length;
 
-        this.$filterHeader.html('FILTER (' + on + '/' + all + ')');
+        this.$filterHeader.html('FILTER' + (all === on ? '' : ' *'));
     };
 
     MetaEditorWidget.prototype.selectNewPointerName = function (pointerNames, callBack) {

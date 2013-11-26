@@ -906,7 +906,9 @@ define(['logManager',
             i = selectedIDs.length,
             gmeID,
             obj,
-            nodeObj;
+            nodeObj,
+            cpData = {'project': this._client.getActiveProject(),
+                      'items' : []};
 
         while(i--) {
             gmeID = this._ComponentID2GmeID[selectedIDs[i]];
@@ -923,35 +925,56 @@ define(['logManager',
             res.push(obj);
         }
 
-        return res;
+        cpData.items = res;
+
+        return cpData;
     };
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onPaste = function (data) {
         var len,
             objDesc,
-            copyOpts = { "parentId": this.currentNodeInfo.id };
+            parentID = this.currentNodeInfo.id,
+            params = { "parentId": parentID },
+            projectName = this._client.getActiveProject(),
+            childrenIDs = [];
 
-        try {
-            data = JSON.parse(data);
-        } catch (e) {
-            this.logger.error('Can not create JSON object from pasted string: "' + data + '"');
-            data = undefined;
-        }
-
-        if (data && _.isArray(data)) {
-            len = data.length;
-
-            while (len--) {
-                objDesc = data[len];
-
-                if (objDesc && objDesc.ID) {
-                    copyOpts[objDesc.ID] = {};
-                }
+        if (parentID) {
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                this.logger.error('Invalid clipboard data: "' + data + '"');
+                data = undefined;
             }
 
-            this._client.intellyPaste(copyOpts);
-        }
+            if (data && data.project && data.items) {
+                if (projectName !== data.project) {
+                    alert('Trying to copy from project \'' + data.project + '\' to project \'' + projectName + '\' which is not supported... Copy&Paste is supported in the same project only.');
+                } else {
+                    if (_.isArray(data.items)) {
+                        data = data.items;
+                        len = data.length;
 
+                        while (len--) {
+                            objDesc = data[len];
+
+                            if (objDesc && objDesc.ID) {
+                                params[objDesc.ID] = {};
+                                childrenIDs.push(objDesc.ID);
+                            }
+                        }
+
+                        if (GMEConcepts.canCreateChildren(parentID, childrenIDs)) {
+                            this._client.startTransaction();
+                            this._client.copyMoreNodes(params);
+                            this._client.completeTransaction();
+                            this.logger.warning('Pasted ' + childrenIDs.length + ' items successfully into node (' + parentID + ')');
+                        } else {
+                            this.logger.warning('Can not paste items because not all the items on the clipboard can be created as a child of the currently opened node (' + parentID + ')');
+                        }
+                    }
+                }
+            }
+        }
     };
 
 

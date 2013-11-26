@@ -12,3 +12,8 @@
     fill: none;
     stroke: #cccccc;
     stroke-width: 1.5px; }
+
+div.css-zoom.graph-viz-zoom {
+  position: absolute;
+  top: 30px;
+  left: 10px; }
