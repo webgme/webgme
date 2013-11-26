@@ -1211,7 +1211,8 @@ define(['logManager',
             connComponentId,
             gmeSrcId,
             gmeDstId,
-            connTexts;
+            connTexts,
+            pointerName;
 
         this._filteredOutConnectionDescriptors[connType] = [];
 
@@ -1224,9 +1225,13 @@ define(['logManager',
             gmeDstId = this._connectionListByID[connComponentId].GMEDstId;
             connTexts = this._connectionListByID[connComponentId].connTexts;
 
+            if (connType === MetaRelations.META_RELATIONS.POINTER) {
+                pointerName = this._connectionListByID[connComponentId].name;
+            }
+
             this._filteredOutConnectionDescriptors[connType].push([gmeSrcId, gmeDstId, connTexts]);
 
-            this._removeConnection(gmeSrcId, gmeDstId, connType);
+            this._removeConnection(gmeSrcId, gmeDstId, connType, pointerName);
         }
 
         this.diagramDesigner.endUpdate();
