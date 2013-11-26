@@ -1210,7 +1210,7 @@ define([
                 }
             }
 
-            /*function copyMoreNodes(parameters){
+            function copyMoreNodes(parameters){
                 var returnParameters = {},
                     pathsToCopy = [];
                 for(var i in parameters){
@@ -1220,16 +1220,48 @@ define([
                 }
 
                 if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    //collecting nodes under tempFrom
                     var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
                     for(var i=0;i<pathsToCopy.length;i++){
                         if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
-                            returnParameters[pathsToCopy[i]] = {'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
-
+                            returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
+                            returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
                         }
                     }
+                    var tempTo = _core.copyNode(tempFrom,_nodes[parameters.parentId].node);
 
+                    //clean up part of temporary mess
+                    for(var i in returnParameters){
+                        _core.moveNode(returnParameters[i]['1st'],returnParameters[i]['1stparent']);
+                        delete returnParameters[i]['1st'];
+                        delete returnParameters[i]['1stparent'];
+                    }
+                    _core.deleteNode(tempFrom);
+                    delete tempFrom;
+
+                    for(var i in returnParameters){
+                        var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
+                        var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
+                        returnParameters[i] = storeNode(finalNode);
+                    }
+                    _core.deleteNode(tempTo);
+                    delete tempTo;
+
+                    return returnParameters;
+                    //now load the copied items, to set their parameters
+                    /*_core.loadChildren(tempTo,function(err,children){
+                        if(err){
+                            //we should delete the temp nodes and assume that nothing happened :/
+                            _core.deleteNode(tempTo);
+                            delete  tempTo;
+                            delete returnParameters;
+                            return null;
+                        } else {
+                            for(var i=0;i<)
+                        }
+                    });*/
                 }
-            }*/
+            }
             function moveMoreNodes(parameters){
                 var pathsToMove = [],
                     returnParams = {};
@@ -1345,16 +1377,14 @@ define([
             }
 
             function makePointer(id, name, to) {
-                if(canMakePointer(id, name, to)){
-                    if(to === null){
-                        _core.setPointer(_nodes[id].node,name,to);
-                    } else {
+                if(to === null){
+                    _core.setPointer(_nodes[id].node,name,to);
+                } else {
 
 
-                        _core.setPointer(_nodes[id].node,name,_nodes[to].node);
-                    }
-                    saveRoot('makePointer('+id+','+name+','+to+')');
+                    _core.setPointer(_nodes[id].node,name,_nodes[to].node);
                 }
+                saveRoot('makePointer('+id+','+name+','+to+')');
             }
             function delPointer(path, name) {
                 if(_core && _nodes[path] && typeof _nodes[path].node === 'object'){
@@ -1364,7 +1394,7 @@ define([
             }
 
 
-            function copyMoreNodes(parameters){
+            function _copyMoreNodes(parameters){
                 var pathestocopy = [];
                 if(parameters.parentId && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     for(var i in parameters){
