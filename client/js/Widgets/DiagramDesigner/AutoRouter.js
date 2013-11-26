@@ -4495,7 +4495,7 @@ _logger.warning("Adding "
 
                     if( finalPoint === undefined )
                         finalPoint = new ArPoint(point);
-                    else
+                    else if( !finalPoint.equals( old ) )
                         hasExit = !point.equals(finalPoint);
 
                 }
@@ -4514,7 +4514,7 @@ _logger.warning("Adding "
 
             function goToNextBox(point, dir, stop1, stop2){
                 var stophere= stop1,
-                    boxList = bufferBoxes.length > 0 ? bufferBoxes : boxes;
+                    boxList = boxes;//bufferBoxes.length > 0 ? bufferBoxes : boxes;
 
                 if(stop2 !== undefined){
                     if( stop2 instanceof Array ){
@@ -4802,13 +4802,17 @@ _logger.warning("Adding "
                         bufferObject = goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": end });//Modified goToNextBox (that allows entering parent buffer boxes here
                         box = bufferObject === null ? null : bufferObject.box;
                     }
+/*
+                        box = goToNextBox(start, dir1, end);
+                        bufferObject = box !== null ? box2bufferBox[ box.getID() ] : null;
+*/
 
                     //If goToNextBox does not modify start
                     if( start.equals(old) )
                     {
                         assert( box != null, "ARGraph.connectPoints: box != null FAILED");
 var tst = 0;
-                        var rect = box; 
+                        var rect = box instanceof ArRect ? box : box.getRect(); 
 
                         if( dir2 == Dir_None ){
                             dir2 = nextClockwiseDir(dir1);
@@ -4816,6 +4820,7 @@ var tst = 0;
 
                         assert( dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None, "ARGraph.connectPoints: dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None FAILED");
 
+/*
                         if( isPointIn( start, rect) ){
 tst = 1;
                             var swp = dir1;
@@ -4860,7 +4865,27 @@ tst = 1;
                             }
 
                         }
-                        else if( isPointInDirFrom(end, rect, dir2) )
+                        else 
+                        if( bufferObject.box.ptInRect( start ) ){ //If the blocking box contains the start point
+                            var pts = hugChildren(bufferObject, point, dir, dir2);
+
+                        } else 
+*/                      if( bufferObject.box.ptInRect( end ) ){
+                            var oldEnd = new ArPoint(end),
+                                ret2 = new ArPointListPath(),
+                                i;
+
+                            connectPoints(ret2, end, start, hintenddir, dir1);
+                            i = ret2.getLength() - 1;
+
+                            while( i-- > 1){
+                                ret.push( ret2.get(i) );
+                            }
+
+                            assert( start.equals(end), "ArGraph.connectPoints: start.equals(end) FAILED");
+                            old = emptyPoint;
+                            start = end = oldEnd;
+                        } else if( isPointInDirFrom(end, rect, dir2) )
                         {
 tst = 2;
                             assert( !isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !isPointInDirFrom(start, rect, dir2) FAILED");
@@ -4870,6 +4895,7 @@ tst = 2;
                             }else{
                                 box = goToNextBufferBox({ "point": start, "dir": dir2, "dir2": dir1, "end": end });
                             }
+
                             // this assert fails if two boxes are adjacent, and a connection wants to go between
                             //assert( isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: isPointInDirFrom(start, rect, dir2) FAILED");//This is not the best check with parent boxes
                             if( start.equals( old ) ){ //Then we are in a corner
@@ -4889,9 +4915,9 @@ tst = 2;
                                     assert( isRightAngle(dir1), "ARGraph.getOutOfBox: isRightAngle(dir1) FAILED");
 
                                     if(isHorizontal(dir1))
-                                        start.x = getRectOuterCoord(bufferObject.box, dir1, len);
+                                        start.x = getRectOuterCoord(bufferObject.box, dir1);
                                     else
-                                        start.y = getRectOuterCoord(bufferObject.box, dir1, len);
+                                        start.y = getRectOuterCoord(bufferObject.box, dir1);
                                 }
                             }
                         }
@@ -4958,16 +4984,19 @@ tst = 3;
                                 if( getPointCoord(start, dir1) != getPointCoord(end, dir1) )
                                 {
                                     //goToNextBox(start, dir1, end);
+
                                     if( bufferBoxes.length === 0 ){
                                         goToNextBox(start, dir1, end); //TODO finish this
                                     }else{
                                         goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
                                     }
+
                                 }
 
                             }else{ //If the box has multiple children
 tst = 4;
-                                var pts = hugChildren( bufferObject, start, dir1, dir2, function( pt, bo ) {return pt.x === bo.box.right; } ); 
+                                var pts = hugChildren( bufferObject, start, dir1, dir2, 
+                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); //TODO Change this
                                 if( pts !== null ){
 
                                     //Add new points to the current list 
@@ -4978,9 +5007,9 @@ tst = 4;
                                     assert( isRightAngle(dir1), "ARGraph.getOutOfBox: isRightAngle(dir1) FAILED");
 
                                     if(isHorizontal(dir1))
-                                        start.x = getRectOuterCoord(bufferObject.box, dir1, len);
+                                        start.x = getRectOuterCoord(bufferObject.box, dir1);
                                     else
-                                        start.y = getRectOuterCoord(bufferObject.box, dir1, len);
+                                        start.y = getRectOuterCoord(bufferObject.box, dir1);
                                 }
                             }
                         }
