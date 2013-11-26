@@ -139,7 +139,10 @@ define(['logManager',
             dragEffects = DragHelper.getDragEffects(dragInfo),
             PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID],
             createChildParams,
-            newID;
+            newID,
+            _client = this._client,
+            parentID = this.currentNodeInfo.id,
+            _META_EDITOR_REGISTRY_KEY = this._META_EDITOR_REGISTRY_KEY;
 
         addMember = function (gmeID, position) {
             var added = false;
@@ -162,8 +165,6 @@ define(['logManager',
             }
         };
 
-        this._client.startTransaction();
-
         //check to see it self drop and reposition or dropping fro somewhere else
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
             if (gmeIDList.length === 0) {
@@ -185,8 +186,18 @@ define(['logManager',
 
                 this.diagramDesigner.endUpdate();
                 this.diagramDesigner.select(selectedIDs);
+
+                setTimeout(function () {
+                    _client.startTransaction();
+
+                    _client.setRegistry(parentID, _META_EDITOR_REGISTRY_KEY, registry);
+
+                    _client.completeTransaction();
+                }, 10);
             }
         } else {
+            this._client.startTransaction();
+
             if (gmeIDList.length === 1 &&
                 dragEffects.length === 1 &&
                 dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
@@ -216,11 +227,13 @@ define(['logManager',
                     }
                 }
             }
+
+            this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
+
+            this._client.completeTransaction();
         }
 
-        this._client.setRegistry(this.currentNodeInfo.id, this._META_EDITOR_REGISTRY_KEY, registry);
 
-        this._client.completeTransaction();
     };
     /**********************************************************/
     /*  END OF --- HANDLE OBJECT DRAG & DROP TO SHEET         */
