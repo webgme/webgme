@@ -69,6 +69,12 @@ define(['logManager',
             self._onSetConnectionProperty(params);
         };
 
+        //oeverriding this just to avoid warning message from DiagramDesignerWidget
+        //we don't need to filter it, everybody can be connected to everybody
+        this.diagramDesigner.onFilterNewConnectionDroppableEnds = function (params) {
+            return params.availableConnectionEnds;
+        };
+
         this.logger.debug("attachDesignerCanvasEventHandlers finished");
     };
 
