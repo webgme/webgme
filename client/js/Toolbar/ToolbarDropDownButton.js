@@ -21,7 +21,7 @@ define(['./ButtonBase',
 
         delete params.clickFn;
 
-        var btn = buttonBase.createButton(params);
+        this._dropDownBtn = buttonBase.createButton(params);
         var caret = $('<span class="caret"></span>');
 
         this._ulMenu = $('<ul class="dropdown-menu"></ul>');
@@ -30,12 +30,12 @@ define(['./ButtonBase',
             this._ulMenu.addClass(params.menuClass);
         }
 
-        btn.append(' ').append(caret);
+        this._dropDownBtn.append(' ').append(caret);
 
-        btn.addClass("dropdown-toggle");
-        btn.attr('data-toggle', "dropdown");
+        this._dropDownBtn.addClass("dropdown-toggle");
+        this._dropDownBtn.attr('data-toggle', "dropdown");
 
-        this.el.append(btn).append(this._ulMenu);
+        this.el.append(this._dropDownBtn).append(this._ulMenu);
     };
 
     _.extend(ToolbarDropDownButton.prototype, ToolbarItemBase.prototype);
@@ -53,8 +53,20 @@ define(['./ButtonBase',
     };
 
     ToolbarDropDownButton.prototype.addButton = function (params) {
-        var btn = buttonBase.createButton(params),
-            li = $('<li></li>');
+        var btn,
+            oclickFn,
+            li = $('<li></li>'),
+            dropDownBtn = this._dropDownBtn;
+
+        if (params.clickFn) {
+            oclickFn = params.clickFn;
+            params.clickFn = function (data) {
+                dropDownBtn.dropdown('toggle');
+                oclickFn(data);
+            }
+        }
+
+        btn = buttonBase.createButton(params);
 
         li.append(btn.removeClass("btn btn-mini"));
 
