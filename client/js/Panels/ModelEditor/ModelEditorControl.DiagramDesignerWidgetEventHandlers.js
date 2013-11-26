@@ -242,7 +242,7 @@ define(['logManager',
             for (i = 0; i < validConnectionTypes.length; i += 1) {
                 connTypeObj = this._client.getNode(validConnectionTypes[i]);
                 menuItems[validConnectionTypes[i]] = {
-                    "name": connTypeObj ? connTypeObj.getAttribute(nodePropertyNames.Attributes.name) : validConnectionTypes[i],
+                    "name": 'Create type \'' + (connTypeObj ? connTypeObj.getAttribute(nodePropertyNames.Attributes.name) : validConnectionTypes[i]) + '\'',
                     "icon": false
                 };
             }
