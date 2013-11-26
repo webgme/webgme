@@ -32,6 +32,12 @@ $section-title-background-color: #F3F3F3;
     text-overflow: ellipsis;
     border-bottom: 1px solid #000000;
     padding: $padding;
+
+    input {
+      height: 16px !important;
+      line-height: 16px !important;
+      font-size: 11px !important;
+    }
   }
 
   .attributes,

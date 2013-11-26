@@ -14,6 +14,10 @@
     text-overflow: ellipsis;
     border-bottom: 1px solid #000000;
     padding: 0 3px 0 3px; }
+    .meta-decorator .name input {
+      height: 16px !important;
+      line-height: 16px !important;
+      font-size: 11px !important; }
   .meta-decorator .attributes,
   .meta-decorator .constraints {
     font-size: 10px;
