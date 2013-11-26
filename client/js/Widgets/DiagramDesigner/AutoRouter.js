@@ -6370,7 +6370,7 @@ pt = [pt];
                 return endbox.getRect();
             };
 
-            this.getOutOfBoxStartPoint = function(hintDir){//TODO consider adding a len
+            this.getOutOfBoxStartPoint = function(hintDir){
                 var startBoxRect = this.getStartBox();
 
                 assert( hintDir != Dir_Skew, "ARPath.getOutOfBoxStartPoint: hintDir != Dir_Skew FAILED"  );
@@ -6389,7 +6389,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(startBoxRect, d);
 
-                assert( points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxStartPoint: points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
+                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxStartPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
 
                 return p;
             };
