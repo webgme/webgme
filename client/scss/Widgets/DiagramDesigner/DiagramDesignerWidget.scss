@@ -253,16 +253,8 @@ $connection-drawing-connector-background-color: #00FF00;
   }
 }
 
-div.css-zoom {
+div.css-zoom.diagram-designer-zoom {
   position: absolute;
-  top: 60px;
+  top: 30px;
   left: 10px;
-
-  a.ui-slider-handle .css-zoom-label {
-    top: -2px;
-  }
-
-  i {
-    margin-top: -2px;
-  }
 }

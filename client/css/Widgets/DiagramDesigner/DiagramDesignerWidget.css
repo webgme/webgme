@@ -161,11 +161,7 @@
     .diagram-designer .drop-region.reject-droppable {
       background-color: rgba(255, 0, 0, 0.1); }
 
-div.css-zoom {
+div.css-zoom.diagram-designer-zoom {
   position: absolute;
-  top: 60px;
+  top: 30px;
   left: 10px; }
-  div.css-zoom a.ui-slider-handle .css-zoom-label {
-    top: -2px; }
-  div.css-zoom i {
-    margin-top: -2px; }
