@@ -1443,7 +1443,7 @@ define(['logManager'], function (logManager) {
             }
 
             function minus(otherObject){ 
-                var objectCopy = undefined;
+                var objectCopy;
 
                 if(otherObject instanceof ArSize){
                     objectCopy = new ArPoint(otherObject);
@@ -2249,14 +2249,14 @@ define(['logManager'], function (logManager) {
             };
 
             this.getStartPoint = function (){
-                
+                //return new ArPoint(startpoint[0]);
                 return startpoint !== null ? 
                     (startpoint instanceof Array ? new ArPoint(startpoint[0]) : new ArPoint(startpoint)) 
                         : emptyPoint;//returning copy of startpoint
             };
 
             this.isSameStartPoint = function(point){
-                return startpoint[0].equals( point[0] );
+                return startpoint[0] === point;
             };
 
             this.isStartPointNull = function (){
@@ -2264,8 +2264,12 @@ define(['logManager'], function (logManager) {
             };
 
             this.setStartPoint = function (point, b){
-                if(!startpoint || point instanceof Array){
+                if(point instanceof Array){
                     startpoint = point;
+
+                }else if ( !startpoint ){
+                    startpoint = [ point ];
+
                 }else{
                     startpoint[0] = point;
                 }
@@ -2275,17 +2279,23 @@ define(['logManager'], function (logManager) {
             };
 
             this.setStartPointX = function(_x){
+                    startpoint[0].x = _x;
+/*
                 if(startpoint instanceof Array)
                     startpoint[0].x = _x;
                 else
                     startpoint.x = _x;
+*/
             };
 
             this.setStartPointY = function(_y){
+                    startpoint[0].y = _y;
+/*
                 if(startpoint instanceof Array)
                     startpoint[0].y = _y;
                 else
                     startpoint.y = _y;
+*/
             };
 
             this.getEndPoint = function(){
@@ -2299,10 +2309,15 @@ define(['logManager'], function (logManager) {
             };
 
             this.setEndPoint = function(point, b){
-                if(!endpoint || point instanceof Array)
+                if(point instanceof Array){
                     endpoint = point;
-                else
+
+                }else if ( !endpoint ){
+                    endpoint = [ point ];
+
+                }else{
                     endpoint[0] = point;
+                }
 
                 if(b !== false)
                     this.recalculateDirection();
@@ -4273,49 +4288,58 @@ _logger.warning("Adding "
                 return rect;
             }
 
-            function getOutOfBufferBox(details){
-            //TODO Finish this!
-            // It is important to look at the ways to get out of the box...
-            }
-
             function getOutOfBox(details){
-                var point = details.point,
+                var bufferObject = box2bufferBox[details.box.getID()],
+                    i = bufferObject.children.length,
+                    parentBox = bufferObject.box,
+                    point = details.point,
+                    start = new ArPoint(point),
+                    second,
                     dir = details.dir,
-                    len = details.len,
-                    boxRect = details.box instanceof ArRect ? details.box : details.box.getRect(); //Assuming it is either the box or a port
+                    boxRect,
+                    dif = details.end.minus(point),
+                    dir2,
+                    pts;
 
+                if( isHorizontal( dir ))
+                    dif.cx = 0;
+                else
+                    dif.cy = 0;
+
+                dir2 = getDir(dif);
+
+                while( boxRect === undefined && i--){
+                    if( bufferObject.children[i].ptInRect( point ) ){
+                        boxRect = bufferObject.children[i];
+                    }
+                }
+                
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
 
+                if(isHorizontal(dir))
+                    point.x = getRectOuterCoord(boxRect, dir);
+                else
+                    point.y = getRectOuterCoord(boxRect, dir);
+
+                second = new ArPoint( point );
+                //Next we need to exit any parent boxes
+                pts = hugChildren(bufferObject, point, reverseDir(dir), dir2);
+
+                if( pts !== null ){
+                    if( !isRightAngle( getDir( point.minus( start ))) ) //Add the point that got out of the immediate box
+                        pts.splice(0, 0, [ second ] );
+
+                }else { //If there is no way out
+
                     if(isHorizontal(dir))
-                        point.x = getRectOuterCoord(boxRect, dir, len);
+                        point.x = getRectOuterCoord(parentBox, dir);
                     else
-                        point.y = getRectOuterCoord(boxRect, dir, len);
-
-/*
-Old Logic:
-                    var boxby = null,
-                        iter = 0; 
-
-                    while (iter < boxes.length)
-                    {
-                        var boxRect = (boxes[iter]).getRect();
-                        if( boxRect.ptInRect(point) )
-                        {
-                            boxby = boxes[iter];
-                            iter = 0;
-
-                            if(isHorizontal(dir))
-                                point.x = getRectOuterCoord(boxRect, dir, len);
-                            else
-                                point.y = getRectOuterCoord(boxRect, dir, len);
-                        }
-                        ++iter;
-                    }
-*/
+                        point.y = getRectOuterCoord(parentBox, dir);
+                }
 
                 assert( !boxRect.ptInRect( point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point ) FAILED");
 
-                return boxRect;
+                return pts;
             }
 
             function goToNextBufferBox( args ){
@@ -4475,7 +4499,12 @@ Old Logic:
                 if( points[0][0].equals( initPoint ) )
                     points.splice(0, 1);
                 
-                return hasExit ? points : null;
+                if( !hasExit ){
+                    points = null;
+                    point.assign( initPoint );
+                }
+
+                return points;
 
             }
 
@@ -4653,16 +4682,18 @@ Old Logic:
                     var startBox = box2bufferBox[startPort.getOwner().getID()].box,
                         endBox = box2bufferBox[endPort.getOwner().getID()].box;
 
-                    var start = new ArPoint(startpoint);
-                    getOutOfBox({ "point": start, 
-                                    "dir": startdir, 
-                                    "box": startBox } );
+                    var start = new ArPoint(startpoint),
+                        startPath = getOutOfBox({ "point": start, 
+                                                  "dir": startdir, 
+                                                  "end": endpoint, 
+                                                  "box": startPort.getOwner() } ) || [];
                     assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
-                    var end = new ArPoint(endpoint);
-                    getOutOfBox({ "point": end, 
-                                    "dir": enddir, 
-                                    "box": endBox } );
+                    var end = new ArPoint(endpoint),
+                        endPath = getOutOfBox({ "point": end, 
+                                                "dir": enddir, 
+                                                "end": start, 
+                                                "box": endPort.getOwner() } ) || [];
                     assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
                     assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -4689,15 +4720,24 @@ Old Logic:
                     path.deleteAll();
                     path.addTail(startpoint);
                     var pos = 0;
+                    while( pos < startPath.length ){
+                        path.addTail(startPath[pos++][0]);
+                    }
+                    pos = 0;
                     while( pos < ret.getLength())
                     {
                         var p = ret.get(pos++)[0];
                         path.addTail(p);
                     }
+                    pos = endPath.length;
+                    while( pos-- ){
+                        path.addTail(endPath[pos][0]);
+                    }
                     path.addTail(endpoint);
 
                     if (isAutoRouted) {
-                        path.simplifyTrivially();
+                        path.simplifyTrivially(); 
+                        simplifyPathCurves(path);
                         simplifyPathPoints(path);
                         centerStairsInPathPoints(path, startdir, enddir);
                     }
@@ -4835,9 +4875,20 @@ tst = 2;
                                 }else{
                                     pts = hugChildren( bufferObject, start, dir1, dir2 );
                                 }
-                                //Add new points to the current list 
-                                ret.setArPointList( ret.concat(pts));
-                                retend += pts.length;
+                                if( pts !== null ){
+
+                                    //Add new points to the current list 
+                                    ret.setArPointList( ret.concat(pts));
+                                    retend += pts.length;
+
+                                }else{ //Go through the blocking box
+                                    assert( isRightAngle(dir1), "ARGraph.getOutOfBox: isRightAngle(dir1) FAILED");
+
+                                    if(isHorizontal(dir1))
+                                        start.x = getRectOuterCoord(bufferObject.box, dir1, len);
+                                    else
+                                        start.y = getRectOuterCoord(bufferObject.box, dir1, len);
+                                }
                             }
                         }
                         else
@@ -4913,9 +4964,20 @@ tst = 3;
                             }else{ //If the box has multiple children
 tst = 4;
                                 var pts = hugChildren( bufferObject, start, dir1, dir2, function( pt, bo ) {return pt.x === bo.box.right; } ); 
-                                assert(pts !== null, "ARGraph.connectPoints: pts !== null FAILED");
-                                ret.setArPointList( ret.concat(pts));
-                                retend += pts.length;
+                                if( pts !== null ){
+
+                                    //Add new points to the current list 
+                                    ret.setArPointList( ret.concat(pts));
+                                    retend += pts.length;
+
+                                }else{ //Go through the blocking box
+                                    assert( isRightAngle(dir1), "ARGraph.getOutOfBox: isRightAngle(dir1) FAILED");
+
+                                    if(isHorizontal(dir1))
+                                        start.x = getRectOuterCoord(bufferObject.box, dir1, len);
+                                    else
+                                        start.y = getRectOuterCoord(bufferObject.box, dir1, len);
+                                }
                             }
                         }
 
@@ -5122,48 +5184,48 @@ tst = 4;
 
             function deleteTwoEdgesAt(path, points, pos){
                 if(DEBUG){
-                    assert( path.getOwner() == self, "ARGraph.deleteTwoEdgesAt: path.getOwner() == self FAILED");
+                    assert( path.getOwner() === self, "ARGraph.deleteTwoEdgesAt: path.getOwner() === self FAILED");
                     path.assertValid();
                     assert( path.isConnected(), "ARGraph.deleteTwoEdgesAt: path.isConnected() FAILED" );
                     points.AssertValidPos(pos);
                 }
 
                 var pointpos = pos, //Getting the next, and next-next, points
-                    point = points.get(pos++),
+                    point = points.get(pos++)[0],
                     npointpos = pos,
-                    npoint = points.get(pos++),
+                    npoint = points.get(pos++)[0],
                     nnpointpos = pos,
-                    nnpoint = points.get(pos++),
+                    nnpoint = points.get(pos++)[0],
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
 
                 var ppointpos = pos, //Getting the prev, prev-prev points
-                    ppoint = points.get(pos--),
+                    ppoint = points.get(pos--)[0],
                     pppointpos = pos,
-                    pppoint = points.get(pos--);
+                    pppoint = points.get(pos--)[0];
 
                 assert( pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteTwoEdgesAt: pppointpos < points.getLength() && ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null, "ARGraph.deleteTwoEdgesAt: pppoint !== null && ppoint !== null && point !== null && npoint !== null && nnpoint !== null FAILED");
 
-                var dir = getDir(npoint[0].minus(point[0]));
+                var dir = getDir(npoint.minus(point));
                 assert( isRightAngle(dir), "ARGraph.deleteTwoEdgesAt: isRightAngle(dir) FAILED");
                 var ishorizontal = isHorizontal(dir);
 
                 var newpoint = new ArPoint();
                 if(ishorizontal){
-                    newpoint.x = getPointCoord(npoint[0], ishorizontal);
-                    newpoint.y = getPointCoord(ppoint[0], !ishorizontal);
+                    newpoint.x = getPointCoord(npoint, ishorizontal);
+                    newpoint.y = getPointCoord(ppoint, !ishorizontal);
                 }else{
-                    newpoint.x = getPointCoord(ppoint[0], !ishorizontal);
-                    newpoint.y = getPointCoord(npoint[0], ishorizontal);
+                    newpoint.x = getPointCoord(ppoint, !ishorizontal);
+                    newpoint.y = getPointCoord(npoint, ishorizontal);
                 }
 
-                assert( getDir(newpoint.minus(ppoint[0])) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
+                assert( getDir(newpoint.minus(ppoint)) == dir, "ARGraph.deleteTwoEdgesAt: getDir(newpoint.minus(ppoint)) == dir FAILED");
 
-                assert( !isLineClipBoxes(newpoint, npoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
-                assert( !isLineClipBoxes(newpoint, ppoint[0]), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, npoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, npoint) FAILED");
+                assert( !isLineClipBoxes(newpoint, ppoint), "ARGraph.deleteTwoEdgesAt: !isLineClipBoxes(newpoint, ppoint) FAILED");
 
                 var hlist = getEdgeList(ishorizontal),
                     vlist = getEdgeList(!ishorizontal);
@@ -5187,20 +5249,15 @@ tst = 4;
 
                 if( nnnpointpos < points.getLength())
                 {
-                    var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); //Used to have &*
+                    var nnnedge = hlist.getEdgeByPointer(nnpoint, (nnnpointpos)); 
                     assert( nnnedge != null, "ARGraph.deleteTwoEdgesAt: nnnedge != null FAILED");
-                    assert( nnnedge.getStartPointPrev().equals(new ArPoint(npoint[0])) && nnnedge.getStartPoint().equals(new ArPoint(nnpoint[0])), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
+                    assert( nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint), "ARGraph.deleteTwoEdgesAt: nnnedge.getStartPointPrev().equals(npoint) && nnnedge.getStartPoint().equals(nnpoint) FAILED" );
                     nnnedge.setStartPointPrev(ppoint);
                 }
 
-                if( nnpoint[0].equals(newpoint) )
+                if( nnpoint.equals(newpoint) )
                     deleteSamePointsAt(path, points, ppointpos);
 
-                if(DEBUG_DEEP){
-                    path.assertValid();
-                    horizontal.AssertValidPathEdges(path, points);
-                    vertical.AssertValidPathEdges(path, points);
-                }
             }
 
             function deleteSamePointsAt(path, points, pos){
@@ -5212,20 +5269,20 @@ tst = 4;
                 }
 
                 var pointpos = pos,
-                    point = points.get(pos++), //&*
+                    point = points.get(pos++), 
                     npointpos = pos,
-                    npoint = points.get(pos++), //&*
+                    npoint = points.get(pos++),
                     nnpointpos = pos,
-                    nnpoint = points.get(pos++), //&*
+                    nnpoint = points.get(pos++),
                     nnnpointpos = pos;
 
                 pos = pointpos;
                 pos--;
             
                 var ppointpos = pos;
-                    point = points.get(pos--), //&*
+                    point = points.get(pos--), 
                     pppointpos = pos;
-                    pppoint = pos == points.getLength() ? null : points.get(pos--);//&*
+                    pppoint = pos == points.getLength() ? null : points.get(pos--);
 
                 assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
                 assert( ppoint != null && point != null && npoint != null && nnpoint != null, "ARGraph.deleteSamePointsAt: ppoint != null && point != null && npoint != null && nnpoint != null FAILED");
@@ -5419,6 +5476,35 @@ tst = 4;
 
                 if(DEBUG)
                     path.assertValidPoints();
+            }
+
+            function simplifyPathCurves(path){
+            //This method will remove unnecessary curves inserted into the path from 
+            //hugging children.
+            //Incidently, this will also contain the functionality of simplifyTrivially
+                var pointList = path.getPointList(),
+                    p1,
+                    p2,
+                    i = 0,
+                    j;
+
+            //I will be taking the first point and checking to see if it can create a straight line
+            //that does not intersect any other boxes on the graph from the test point to the other point.
+            //The 'other point' will be the end of the path iterating back til the two points before the 
+            //current.
+                while( i < pointList.getLength() - 3 ){
+                    p1 = pointList.get(i)[0];
+                    j = pointList.getLength();
+
+                    while( j-- > 0 ){
+                        p2 = pointList.get(j)[0];
+                        if( isRightAngle( getDir(p1.minus(p2)) ) && !isLineClipBoxes(p1, p2)){
+                            pointList.splice( i+1, j-i-1); //Remove all points between i, j
+                            break;
+                        }
+                    }
+                    ++i;
+                }
             }
 
             function simplifyPathPoints(path){
