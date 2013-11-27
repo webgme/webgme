@@ -1,0 +1,25 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+@import "_Colors";
+
+$initial-state-background-color: #000000;
+$initial-state-size: 20px;
+$initial-state-border-radius: 15px;
+
+@mixin InitialState {
+  &.initial-state {
+    background-color: $initial-state-background-color;
+    width: $initial-state-size;
+    height: $initial-state-size;
+    border-radius: $initial-state-border-radius;
+  }
+}
+
+@mixin SelectedInitialState {
+  &.initial-state {
+    background-color: $selected-border-color;
+  }
+}

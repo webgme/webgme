@@ -1,0 +1,47 @@
+/*
+ * Copyright (C) 2013 Vanderbilt University, All rights reserved.
+ * 
+ * Author: Robert Kereskenyi
+ */
+
+//imports
+@import "_State";
+@import "_InitialState";
+@import "_EndState";
+@import "_State";
+@import "_Diagram";
+
+@import "_Colors";
+
+@mixin UMLStateMachine_decorator_core {
+  .uml-state-machine {
+    @include InitialState;
+    @include EndState;
+    @include State;
+    @include Diagram;
+
+    &.default {
+      min-width: 65px;
+      height: 40px;
+      border: 1px solid #000000;
+      padding: 3px;
+      background-color: #FCFCFC;
+      text-align: center;
+      line-height: 40px;
+    }
+  }
+
+  .selected {
+    .uml-state-machine {
+      @include SelectedInitialState;
+      @include SelectedEndState;
+      @include SelectedState;
+      @include SelectedDiagram;
+
+      &.default {
+        background-color: $selected-background-color;
+        border-color: $selected-border-color;
+      }
+    }
+  }
+}
