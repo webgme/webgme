@@ -4202,6 +4202,30 @@ _logger.warning("Adding "
                 return false;
             }
 
+            function isRectClipBufferBoxes(rect){
+                for (var i = 0; i < boxes.length; i++)
+                {
+                    var boxRect = boxes[i].getRect();
+                    boxRect.inflateRect( BUFFER );
+                    if( isRectClip(rect, boxRect) )
+                        return true;
+                }
+                return false;
+            }
+
+            function isLineClipBufferBoxes(p1, p2){
+                var rect = new ArRect(p1, p2);
+                rect.normalizeRect();
+                assert( rect.left == rect.right || rect.ceil == rect.floor, "ARGraph.isLineClipBoxes: rect.left == rect.right || rect.ceil == rect.floor FAILED");
+
+                if( rect.left == rect.right)
+                    rect.right++;
+                if( rect.ceil == rect.floor )
+                    rect.floor++;
+
+                return isRectClipBufferBoxes(rect);
+            }
+
             function isLineClipBoxes(p1, p2){
                 var rect = new ArRect(p1, p2);
                 rect.normalizeRect();
@@ -4296,46 +4320,19 @@ _logger.warning("Adding "
                     start = new ArPoint(point),
                     second,
                     dir = details.dir,
-                    boxRect,
+                    boxRect = new ArRect( details.box.getRect() ),
                     dif = details.end.minus(point),
                     dir2,
                     pts;
 
-                if( isHorizontal( dir ))
-                    dif.cx = 0;
-                else
-                    dif.cy = 0;
+                boxRect.inflateRect( BUFFER ); //Create a copy of the buffer box
 
-                dir2 = getDir(dif) || nextClockwiseDir( dir );
-
-                while( boxRect === undefined && i--){
-                    if( bufferObject.children[i].ptInRect( point ) ){
-                        boxRect = bufferObject.children[i];
-                    }
-                }
-                
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
 
                 if(isHorizontal(dir))
                     point.x = getRectOuterCoord(boxRect, dir);
                 else
                     point.y = getRectOuterCoord(boxRect, dir);
-
-                second = new ArPoint( point );
-                //Next we need to exit any parent boxes
-                pts = hugChildren(bufferObject, point, reverseDir(dir), dir2);
-
-                if( pts !== null ){
-                    if( !isRightAngle( getDir( point.minus( start ))) ) //Add the point that got out of the immediate box
-                        pts.splice(0, 0, [ second ] );
-
-                }else { //If there is no way out
-
-                    if(isHorizontal(dir))
-                        point.x = getRectOuterCoord(parentBox, dir);
-                    else
-                        point.y = getRectOuterCoord(parentBox, dir);
-                }
 
                 assert( !boxRect.ptInRect( point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point ) FAILED");
 
@@ -4372,35 +4369,9 @@ _logger.warning("Adding "
 
                         if( !isPointInDirFrom(point, boxRect, dir) && //Add support for entering the parent box
                                 isPointBetweenSides(point, boxRect, dir) &&     // if it will not put the point in a corner (relative to dir2)
-                                //isCoordInDirFrom(stophere, getRectOuterCoord(boxRect, reverseDir(dir)), dir) ){ //Return extreme (parent box) for this comparison?
-                                isCoordInDirFrom(enterBufferBox(boxList[iter], point, dir, dir2), (isHorizontal(dir) ? point.x : point.y), dir) &&
-                                isCoordInDirFrom(stophere, enterBufferBox(boxList[iter], point, dir, dir2), dir) ){ //Return extreme (parent box) for this comparison?
-                            stophere = enterBufferBox(boxList[iter], point, dir, dir2);
+                                isCoordInDirFrom(stophere, getChildRectOuterCoordFrom(boxList[iter], dir, point).coord, dir) ){ //Return extreme (parent box) for this comparison?
+                            stophere = getChildRectOuterCoordFrom(boxList[iter], dir, point).coord;
                             boxby = boxList[iter]; 
-                        }
-
-                        if( boxRect.ptInRect(point) ){
-                            //This fails if the point is in a box that isn't a parent box
-                            //assert( boxList[iter].children.length > 1, "ARGraph.goToNextBufferBox:boxList[iter].children.length > 1 FAILED"); //It should only enter parent buffer boxes
-                            var p2 = new ArPoint(point), //temp point used for testing
-                                pStop1,//Potential STOPhere value #1
-                                pStop2 = getChildRectOuterCoordFrom( boxList[iter], dir, p2).coord,
-                                pCoord = isHorizontal(dir) ? point.x : point.y ;
-
-                            //pStop2 = enterBufferBox( boxList[iter], p2, dir, dir2 );
-                            pStop1 = enterBufferBox( boxList[iter], p2, dir, dir2 );
-
-                            //Make sure they are in the right direction relative to the point
-                            pStop1 = isCoordInDirFrom( pStop1, pCoord , dir ) ? pStop1 : pCoord;
-                            pStop2 = isCoordInDirFrom( pStop2, pCoord , dir ) ? pStop2 : pCoord;
-
-                            pStop1 = isCoordInDirFrom( pStop1, pStop2, dir ) ? pStop2 : pStop1;
-
-                            if( isCoordInDirFrom( stophere, pStop1, dir ) ){
-                                stophere = pStop1;
-                                boxby = boxList[iter];
-                            }
-
                         }
 
                         ++iter;
@@ -4412,52 +4383,6 @@ _logger.warning("Adding "
                     point.y = stophere;
 
                 return boxby;
-            }
-
-            function enterBufferBox( bufferObject, point, dir1, dir2 ){
-                // Point is entering a buffer box in dir1. It will need to exit the parent box in dir2. Therefore, this method will
-                // get the point into the box as far as possible in dir1 such that it can always exit by traveling straight dir2.
-                // We will enter the box as far as possible in dir1 then back up until we can exit in dir2 (if needed). 
-                // We return the significant coordinate of the moved point.
-                var stophere; 
-                    //dir3 = exGetMajorDir(end.minus(start));
-
-                //Setting the stophere value
-                if( bufferObject.children.length > 1 && dir1 != dir2){ 
-                    var children = bufferObject.children,
-                        i = children.length,
-                        child; 
-
-                    //Find the closest box that we would collide with in dir
-                    stophere = getChildRectOuterCoordFrom(bufferObject, dir1, point).coord;
-
-                    //Set a test point
-                    var p2 = new ArPoint(point);
-                    if(isHorizontal(dir1))
-                        p2.x = stophere;
-                    else
-                        p2.y = stophere;
-
-                    //Verify that the point will be able to exit in dir2
-                    child = getChildRectOuterCoordFrom(bufferObject, dir2, p2);
-                    while( child.box !== null ){
-                        //If there exists a child box in dir2, then get the child box's outerCoord in the given direction
-                        //Recheck until there doesn't exist a child box in dir2
-                        stophere = getRectOuterCoord(child.box, reverseDir(dir1)); //Back the test point up so doesn't hit child
-
-                        if(isHorizontal(dir1))//update test point
-                            p2.x = stophere;
-                        else
-                            p2.y = stophere;
-
-                        child = getChildRectOuterCoordFrom(bufferObject, dir2, p2);
-                    }
-
-                }else{//No children or dir1 === dir2
-                    stophere = getRectOuterCoord(bufferObject.box, reverseDir(dir1));
-                }
-
-                return stophere;
             }
 
             function hugChildren(bufferObject, point, dir1, dir2, exitCondition){ 
@@ -4475,8 +4400,6 @@ _logger.warning("Adding "
                     hasExit = true;
 
                 exitCondition = exitCondition === undefined ? function(pt) { return !parentBox.ptInRect(pt); } : exitCondition;
-
-                //goToNextBox( finalPoint, reverseDir( dir ), getRectOuterCoord( child, reverseDir( dir ) ), children );
 
                 while( hasExit && !exitCondition( point, bufferObject ) ){
                     var old = new ArPoint( point ),
@@ -4760,8 +4683,8 @@ _logger.warning("Adding "
             function connectPoints(ret, start, end, hintstartdir, hintenddir){
                 assert( ret.getLength() === 0, "ArGraph.connectPoints: ret.getLength() === 0 FAILED");
 
-                var thestart = new ArPoint( start ), //TODO Should this be a copy?
-                    retend = ret.getLength(); //I am not sure if this should be adjusted from =null to this...
+                var thestart = new ArPoint( start ), 
+                    retend = ret.getLength(); 
 
                 //This is where we create the original path that we will later adjust
                 while( !start.equals(end) )
@@ -4811,7 +4734,6 @@ _logger.warning("Adding "
                     if( start.equals(old) )
                     {
                         assert( box != null, "ARGraph.connectPoints: box != null FAILED");
-var tst = 0;
                         var rect = box instanceof ArRect ? box : box.getRect(); 
 
                         if( dir2 == Dir_None ){
@@ -4819,58 +4741,7 @@ var tst = 0;
                         }
 
                         assert( dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None, "ARGraph.connectPoints: dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None FAILED");
-
-/*
-                        if( isPointIn( start, rect) ){
-tst = 1;
-                            var swp = dir1;
-
-                            dir1 = dir2;
-                            dir2 = swp;
-                            bufferObject = goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": end });
-
-                            if( bufferObject.box.getRect().intersect( rect ).isRectEmpty() ){
-                                var futureDir = exGetMajorDir(end.minus( start )),
-                                    canExit = !isCoordInDirFrom( getChildRectOuterCoordFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
-
-                                assert( futureDir === dir1 || futureDir === dir2, "ARGraph.connectPoints: futureDir === dir1 || futureDir === dir2 FAILED"); 
-
-                                while ( !canExit ){ //navigate the parent box
-                                    //Store start
-                                    if (retend == ret.getLength() ){
-                                        ret.push([new ArPoint(start)]);
-                                        retend = ret.getLength() - 1; 
-                                    }else{
-                                        retend++;
-                                        if(retend === ret.getLength()){
-                                            ret.push([new ArPoint(start)]);
-                                            retend--;
-                                        }else{
-                                            ret.splice(retend + 1, 0, [new ArPoint(start)]); 
-                                        }
-                                    }
-
-                                    //swap dir1, dir2
-                                    swp = dir1;
-                                    dir1 = dir2;
-                                    dir2 = swp;
-
-                                    bufferObject = goToNextBufferBox({ "point": start, "dir": dir1, "dir2": dir2, "end": end });
-
-                                    //calculate future direction
-                                    futureDir = exGetMajorDir(end.minus( start ));
-                                    canExit = !isCoordInDirFrom( getChildRectOuterCoordFrom(bufferObject, reverseDir(futureDir), start).coord, start, futureDir) && !isPointIn( start, rect );
-                                }
-
-                            }
-
-                        }
-                        else 
-                        if( bufferObject.box.ptInRect( start ) ){ //If the blocking box contains the start point
-                            var pts = hugChildren(bufferObject, point, dir, dir2);
-
-                        } else 
-*/                      if( bufferObject.box.ptInRect( end ) ){
+                        if( bufferObject.box.ptInRect( end ) ){
                             var oldEnd = new ArPoint(end),
                                 ret2 = new ArPointListPath(),
                                 i;
@@ -4887,7 +4758,6 @@ tst = 1;
                             start = end = oldEnd;
                         } else if( isPointInDirFrom(end, rect, dir2) )
                         {
-tst = 2;
                             assert( !isPointInDirFrom(start, rect, dir2), "ARGraph.connectPoints: !isPointInDirFrom(start, rect, dir2) FAILED");
                             //goToNextBox(start, dir2, end);
                             if( bufferBoxes.length === 0 ){
@@ -4923,7 +4793,6 @@ tst = 2;
                         }
                         else
                         {
-tst = 3;
                             assert( isPointBetweenSides(end, rect, dir1), "ARGraph.connectPoints: isPointBetweenSides(end, rect, dir1) FAILED" );
                             assert( !isPointIn(end, rect), "ARGraph.connectPoints: !isPointIn(end, rect) FAILED" );
 
@@ -4983,20 +4852,12 @@ tst = 3;
                                 assert( isPointInDirFrom(end, start, dir1), "ARGraph.connectPoints: isPointInDirFrom(end, start, dir1) FAILED");
                                 if( getPointCoord(start, dir1) != getPointCoord(end, dir1) )
                                 {
-                                    //goToNextBox(start, dir1, end);
-
-                                    if( bufferBoxes.length === 0 ){
-                                        goToNextBox(start, dir1, end); //TODO finish this
-                                    }else{
                                         goToNextBufferBox({ "point": start, "dir": dir1, "end": end });
-                                    }
-
                                 }
 
                             }else{ //If the box has multiple children
-tst = 4;
                                 var pts = hugChildren( bufferObject, start, dir1, dir2, 
-                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); //TODO Change this
+                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); 
                                 if( pts !== null ){
 
                                     //Add new points to the current list 
@@ -6413,7 +6274,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(endBoxRect, d);
 
-                assert( points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)) == (d), "ARPath.getOutOfBoxEndPoint: points.get(pos)[0].equals(p) || getDir(points.get(pos)[0].minus(p)).equals(d) FAILED"); 
+                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxEndPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
 
                 return p;
             };
@@ -7516,7 +7377,7 @@ pt = [pt];
                 throw "AutoRouter:addPath missing source or destination";
 
             var src = a.src, //src is obj with either a box & port specified or just a box
-                dst = a.dst, //Need a way to specify which port TODO
+                dst = a.dst, 
                 autoroute = a.autoroute || true,
                 startDir = a.startDirection || a.start,
                 endDir = a.endDirection || a.end,
@@ -7564,7 +7425,6 @@ pt = [pt];
 
         AutoRouter.prototype.autoroute = function(){ //TODO add argument for grid size variables. If contains coordMax, set GRID_MAX_SIZE
             this.router.autoRoute();
-            //RemoveDeletedCustomPathDataFromGuiConnections() replacement needs to be added
         };
 
         AutoRouter.prototype.getPathPoints = function(path){
@@ -7593,18 +7453,13 @@ pt = [pt];
                 paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
                 i = paths.in.length;
 
-            //TODO Remove the ports belonging to the box. Additional ports will cause breakage
-            //Perform the same horizontal/vertical stretches/translations on the ports. Then add them back.
-
-            //First, I will need to collect the paths that will need to be adjusted
-
-            //Next, I will need to handle the ports. I will need to decide if the ports should be resized or 
-            //simply throw an error if the box resize messes up the ports...
+            //Remove and Add Ports
             box.deleteAllPorts();
             boxObject.ports = [];
             this.router.setBoxRect(box, rect);
             this.setConnectionAreas(boxObject, connAreas);
 
+            //Reconnect paths to ports
             while( i-- ){
                 var pathSrc = paths.in[i].getStartPort().getOwner(),
                     newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
