@@ -17,8 +17,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this.autorouter = new AutoRouter();
 
-        this.profiler = new Profiler('AutoRouter');
-
         this.logger.debug("ConnectionRouteManager3 ctor finished");
     };
 
@@ -30,7 +28,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         var self = this;
 
         this._onComponentUpdate = function(_canvas, ID) {//Boxes and lines
-            self.logger.warning("Updating " + ID);
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
 
              if( self.diagramDesigner.items[ID].rotation !== self._autorouterBoxRotation[ID] ) //Item has been rotated
@@ -46,7 +43,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_UPDATE, this._onComponentUpdate);
 
         this._onComponentCreate = function(_canvas, ID) {//Boxes and lines
-            self.logger.warning("Adding " + ID);
             if( self.diagramDesigner.itemIds.indexOf( ID ) !== -1 ){
 
                 if( self._autorouterBoxes[ID] === undefined )
@@ -58,7 +54,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_COMPONENT_CREATE, this._onComponentCreate);
 
         this._onComponentResize = function(_canvas, ID) {
-            self.logger.warning("Resizing " + ID.ID);
             if( self._autorouterBoxes[ID.ID] )
                 self._resizeItem( ID.ID );
             else
@@ -83,7 +78,6 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ITEM_POSITION_CHANGED, this._onItemPositionChanged);
 
         this._onClear = function(_canvas, eventArgs) {
-            self.logger.warning("Clearing Screen");
             self._clearGraph();
         };
         this.diagramDesigner.addEventListener(this.diagramDesigner.events.ON_CLEAR, this._onClear);
@@ -108,30 +102,16 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
         this._updateConnectionPorts( idList );
 
-        console.log('About to REDRAW');
-
-        this.profiler.clear();
-        this.profiler.startProfile('redrawConnections');
-
-
         //no matter what, we want the id's of all the connections
         //not just the ones that explicitly needs rerouting
         idList = this.diagramDesigner.connectionIds.slice(0);
 
         i = idList.length;
 
-        this.profiler.startProfile('_updateConnectionCoordinates');
-        //1 - set custom defined paths
-        this.profiler.endProfile('_updateConnectionCoordinates');
-
-
-        //2 - autoroute
-        this.profiler.startProfile('autoroute');
+        //1 - autoroute
         this.autorouter.autoroute();
-        this.profiler.endProfile('autoroute');
 
-        //3 - Get the path points and redraw
-        this.profiler.startProfile('setConnectionRenderData');
+        //2 - Get the path points and redraw
         var pathPoints,
             realPathPoints;
         for (i = 0; i < idList.length; i += 1) {
@@ -143,13 +123,9 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
             this.diagramDesigner.items[idList[i]].setConnectionRenderData(realPathPoints);
         }
-        this.profiler.endProfile('setConnectionRenderData');
 
         //need to return the IDs of the connections that was really
         //redrawn or any other visual property changed (width, etc)
-
-        this.profiler.endProfile('redrawConnections');
-        this.profiler.dump();
 
         return idList;
     };
@@ -217,8 +193,8 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
     ConnectionRouteManager3.prototype.insertBox = function (objId) {
         var canvas = this.diagramDesigner,
             designerItem,
-            areas, //TODO change to create incoming and outgoing ports
-            bBox,//TODO incorporate angle1, angle2
+            areas, 
+            bBox,
             boxdefinition,
             connectionMetaInfo,
             isEnd,
@@ -265,8 +241,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
             this._autorouterBoxes[objId] = undefined;
         }else if(connIds.indexOf(objId) !== -1){
-            //If objId is a connection
-            item = this._autorouterPaths[objId];
+            item = this._autorouterPaths[objId];//If objId is a connection
 
         }
             this.autorouter.remove(item);
@@ -275,7 +250,7 @@ define(['logManager', './AutoRouter', './Profiler'], function (logManager, AutoR
 
     ConnectionRouteManager3.prototype._resizeItem = function (objId) {
         var canvas = this.diagramDesigner,
-            isEnd = true, //TODO
+            isEnd = true, 
             connectionMetaInfo,
             designerItem = canvas.items[objId],
             newCoord = designerItem.getBoundingBox(),
