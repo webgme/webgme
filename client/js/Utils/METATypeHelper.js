@@ -60,7 +60,33 @@ define(['jquery',
     };
 
     var _metaFriendlyName = function (name) {
-        return name;
+        var ret = name,
+            re,
+            i;
+
+        // Not allowed characters to replace.
+        var input = "áéíóöőúüűÁÉÍÓÖŐÚÜŰ ";
+
+        // Safe characters to replace to.
+        var output = "aeiooouuuAEIOOOUUU_";
+
+        // allowed characters
+        var allowed = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_';
+
+        i = input.length;
+        while (i--) {
+            re = new RegExp(input[i], "g");
+            ret = ret.replace(re, output[i]);
+        }
+
+        i = ret.length;
+        while (i--) {
+            if (allowed.indexOf(ret[i]) === -1) {
+                ret.splice(i, 1);
+            }
+        }
+
+        return ret;
     };
 
     var _processMetaContainer = function () {
