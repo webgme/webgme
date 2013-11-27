@@ -138,13 +138,18 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		}
 
 		function __loadBase2(node, target) {
-			ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
-
-            if(target === null){
-                node.base = null;
+            if(typeof node.base !== null && typeof node.base === 'object' && (oldcore.getPath(node.base) === oldcore.getPath(target))){
+                //TODO somehow the object already loaded properly and we do no know about it!!!
                 return node;
             } else {
-                return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
+                ASSERT(typeof node.base === "undefined" || node.base === null); //kecso
+
+                if(target === null){
+                    node.base = null;
+                    return node;
+                } else {
+                    return TASYNC.call(function(n,b){n.base = b; return n;},node,__loadBase(target));
+                }
             }
 		}
 
