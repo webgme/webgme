@@ -150,6 +150,8 @@ define(['jquery',
         //create FCO, META, PROJECT_BASE
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, true);
 
         var META_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(META_ID, nodePropertyNames.Attributes.name, 'META');
