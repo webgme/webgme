@@ -64,14 +64,14 @@ define([ "util/assert"], function (ASSERT) {
             }
             return members;
         };
-        setcore.delMember = function(node,setName,member){
+        setcore.delMember = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
             //we only need the path of the member so we allow to enter only it
-            if(typeof member !== 'string'){
-                member = innerCore.getPath(member);
+            if(typeof memberPath !== 'string'){
+                memberPath = innerCore.getPath(memberPath);
             }
 
-            var setMemberRelId = getMemberRelId(node,setName,member);
+            var setMemberRelId = getMemberRelId(node,setName,memberPath);
             if(setMemberRelId){
                 var setMemberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),setMemberRelId);
                 innerCore.deleteNode(setMemberNode);
@@ -81,7 +81,8 @@ define([ "util/assert"], function (ASSERT) {
         setcore.addMember = function(node,setName,member){
             ASSERT(typeof setName === 'string');
             var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
-            if(getMemberRelId(node,setName,member) === null){
+            var setMemberRelId = getMemberRelId(node,setName,setcore.getPath(member));
+            if(setMemberRelId === null){
                 var setMember =  innerCore.getChild(setNode,createNewMemberRelid(setNode));
                 innerCore.setPointer(setMember,'member',member);
                 innerCore.setRegistry(setMember,"_","_");//TODO hack, somehow the empty children have been removed during persist
