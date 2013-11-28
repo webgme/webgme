@@ -1,8 +1,8 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+//
+// Copyright (C) 2013 Vanderbilt University, All rights reserved.
+// 
+// Author: Robert Kereskenyi
+//
 
 @import "_Colors";
 
@@ -16,7 +16,7 @@ $diagram-name-height: 16px;
 $diagram-border-radius: 13px;
 
 @mixin Diagram {
-  &.diagram {
+  .diagram {
     min-width: $diagram-min-width;
     max-width: $diagram-max-width;
     height: $diagram-height;
@@ -28,7 +28,7 @@ $diagram-border-radius: 13px;
 }
 
 @mixin SelectedDiagram {
-  &.diagram {
+  .diagram {
     background-color: $selected-background-color;
     border-color: $selected-border-color;
   }

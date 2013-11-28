@@ -14,22 +14,23 @@
 
 define(['js/Constants',
     'js/Utils/METATypeHelper',
-    './State',
-    './InitialState',
-    './EndState',
-    './Diagram',
-    'js/NodePropertyNames'], function (CONSTANTS,
+    'js/NodePropertyNames',
+    'text!./Diagram.html',
+    'text!./InitialState.html',
+    'text!./EndState.html',
+    'text!./State.html'], function (CONSTANTS,
                                        METATypeHelper,
-                                       State,
-                                       InitialState,
-                                       EndState,
-                                       Diagram,
-                                       nodePropertyNames) {
+                                       nodePropertyNames,
+                                       DiagramTemplate,
+                                       InitialStateTemplate,
+                                       EndStateTemplate,
+                                       StateTemplate) {
 
     var UMLStateMachineDecoratorCore,
         UMLStateMachineDecoratorClass = 'uml-state-machine',
         WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey],
-        DEFAULT_CLASS = 'default';
+        DEFAULT_CLASS = 'default',
+        METATYPETEMPLATES = undefined;
 
 
     UMLStateMachineDecoratorCore = function () {
@@ -69,8 +70,19 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype.renderMetaType = function () {
-        this.$el.addClass(DEFAULT_CLASS);
-        this.$el.append(this._getName());
+        if (!METATYPETEMPLATES) {
+            this._initializeMetaTypeTemapltes();
+        }
+
+        if (this._metaType && METATYPETEMPLATES && METATYPETEMPLATES[this._metaType]) {
+            this.$el.append(METATYPETEMPLATES[this._metaType].clone());
+            this.$name = this.$el.find('.name');
+        } else {
+            this.$el.addClass(DEFAULT_CLASS);
+            this.$el.append(this._getName());
+        }
+
+        this.initializeConnectors();
     };
 
     UMLStateMachineDecoratorCore.prototype._getName = function () {
@@ -100,38 +112,50 @@ define(['js/Constants',
         this._update();
     };
 
+    UMLStateMachineDecoratorCore.prototype.update = function () {
+        this._update();
+
+    };
+
     UMLStateMachineDecoratorCore.prototype._update = function () {
-        //this._updateName();
+        this._updateName();
 
     };
 
     /***** UPDATE THE NAME OF THE NODE *****/
     UMLStateMachineDecoratorCore.prototype._updateName = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            noName = "(N/A)";
-
-        if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || noName;
-        } else {
-            this.name = noName;
+        if (this.$name) {
+            this.$name.text(this._getName());
         }
-
     };
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
         if (WebGMEGlobal_META) {
             if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Initial)) {
-                _.extend(this, new InitialState());
+                this._metaType = WebGMEGlobal_META.Initial;
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.End)) {
-                _.extend(this, new EndState());
+                this._metaType = WebGMEGlobal_META.End;
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.State)) {
-                _.extend(this, new State());
+                this._metaType = WebGMEGlobal_META.State;
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
+                this._metaType = WebGMEGlobal_META.Transition;
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
-                _.extend(this, new Diagram());
+                this._metaType = WebGMEGlobal_META.UMLStateDiagram;
             }
+        }
+    };
+
+    UMLStateMachineDecoratorCore.prototype._initializeMetaTypeTemapltes = function () {
+        if (!METATYPETEMPLATES) {
+            if (WebGMEGlobal_META) {
+                METATYPETEMPLATES = {};
+                METATYPETEMPLATES[WebGMEGlobal_META.Initial] = $(InitialStateTemplate);
+                METATYPETEMPLATES[WebGMEGlobal_META.End] = $(EndStateTemplate);
+                METATYPETEMPLATES[WebGMEGlobal_META.UMLStateDiagram] = $(DiagramTemplate);
+                METATYPETEMPLATES[WebGMEGlobal_META.State] = $(StateTemplate);
+            }
+            
         }
     };
 

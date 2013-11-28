@@ -1,9 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+//
+// Copyright (C) 2013 Vanderbilt University, All rights reserved.
+// 
+// Author: Robert Kereskenyi
+//
+
 @import "_Colors";
+@import "../../../scss/Widgets/DiagramDesigner/Connector";
 
 $state-min-width: 120px;
 $state-max-width: 120px;
@@ -15,7 +17,7 @@ $state-name-height: 16px;
 $state-border-radius: 13px;
 
 @mixin State {
-  &.state {
+  .state {
     min-width: $state-min-width;
     max-width: $state-max-width;
     height: $state-height;
@@ -23,7 +25,7 @@ $state-border-radius: 13px;
     border: $state-border;
     border-radius: $state-border-radius;
 
-    > div {
+    .name {
       white-space: nowrap;
       font-size: 12px;
       font-weight: bold;
@@ -37,10 +39,25 @@ $state-border-radius: 13px;
       padding-right: $state-name-padding;
     }
   }
+
+  .connector {
+    @include connector_basics;
+
+    margin-left: $connector-size / -2;
+    left: 50%;
+
+    &.top {
+      top: $connector-size / -2;
+    }
+
+    &.bottom {
+      bottom: $connector-size / -2;
+    }
+  }
 }
 
 @mixin SelectedState {
-  &.state {
+  .state {
     background-color: $selected-background-color;
     border-color: $selected-border-color;
   }

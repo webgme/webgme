@@ -3,78 +3,41 @@
  * 
  * Author: Robert Kereskenyi
  */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
-.uml-state-machine.initial-state {
+.uml-state-machine .initial-state {
   background-color: black;
   width: 20px;
   height: 20px;
-  border-radius: 15px; }
-.uml-state-machine.end-state {
+  border-radius: 15px;
+  border: 2px solid black;
+  box-sizing: border-box; }
+  .uml-state-machine .initial-state .name {
+    white-space: nowrap;
+    position: relative;
+    top: 20px; }
+  .uml-state-machine .initial-state .connector {
+    background-color: #fefefe;
+    height: 10px;
+    width: 10px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    margin-left: -6px;
+    left: 50%;
+    margin-top: -6px;
+    top: 50%; }
+    .uml-state-machine .initial-state .connector:hover {
+      border-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+.uml-state-machine .end-state {
   background-color: white;
   border: 1px solid black;
   width: 30px;
   height: 30px;
-  border-radius: 32px; }
-  .uml-state-machine.end-state > div {
+  border-radius: 32px;
+  box-sizing: border-box; }
+  .uml-state-machine .end-state div.inner {
     background-color: black;
     width: 20px;
     height: 20px;
@@ -83,15 +46,37 @@
     top: 50%;
     left: 50%;
     margin-left: -10px;
-    margin-top: -10px; }
-.uml-state-machine.state {
+    margin-top: -10px;
+    border: 2px solid black;
+    box-sizing: border-box; }
+  .uml-state-machine .end-state .name {
+    white-space: nowrap;
+    position: relative;
+    top: 20px; }
+  .uml-state-machine .end-state .connector {
+    background-color: #fefefe;
+    height: 10px;
+    width: 10px;
+    position: absolute;
+    cursor: pointer;
+    border: 1px solid blue;
+    margin-left: -6px;
+    left: 50%;
+    margin-top: -6px;
+    top: 50%; }
+    .uml-state-machine .end-state .connector:hover {
+      border-color: rgba(82, 168, 236, 0.8);
+      -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+      box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+.uml-state-machine .state {
   min-width: 120px;
   max-width: 120px;
   height: 55px;
   background-color: #fcfcfc;
   border: 1px solid black;
   border-radius: 13px; }
-  .uml-state-machine.state > div {
+  .uml-state-machine .state .name {
     white-space: nowrap;
     font-size: 12px;
     font-weight: bold;
@@ -103,7 +88,25 @@
     line-height: 16px;
     padding-left: 5px;
     padding-right: 5px; }
-.uml-state-machine.diagram {
+.uml-state-machine .connector {
+  background-color: #fefefe;
+  height: 10px;
+  width: 10px;
+  position: absolute;
+  cursor: pointer;
+  border: 1px solid blue;
+  margin-left: -6px;
+  left: 50%; }
+  .uml-state-machine .connector:hover {
+    border-color: rgba(82, 168, 236, 0.8);
+    -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6);
+    box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(82, 168, 236, 0.6); }
+  .uml-state-machine .connector.top {
+    top: -6px; }
+  .uml-state-machine .connector.bottom {
+    bottom: -6px; }
+.uml-state-machine .diagram {
   min-width: 120px;
   max-width: 120px;
   height: 50px;
@@ -120,16 +123,16 @@
   text-align: center;
   line-height: 40px; }
 
-.selected .uml-state-machine.initial-state {
-  background-color: #52a8ec; }
-.selected .uml-state-machine.end-state {
+.selected .uml-state-machine .initial-state {
   border-color: #52a8ec; }
-  .selected .uml-state-machine.end-state > div {
-    background-color: #52a8ec; }
-.selected .uml-state-machine.state {
+.selected .uml-state-machine .end-state {
+  border-color: #52a8ec; }
+  .selected .uml-state-machine .end-state div.inner {
+    border-color: #52a8ec; }
+.selected .uml-state-machine .state {
   background-color: #dbeafc;
   border-color: #52a8ec; }
-.selected .uml-state-machine.diagram {
+.selected .uml-state-machine .diagram {
   background-color: #dbeafc;
   border-color: #52a8ec; }
 .selected .uml-state-machine.default {

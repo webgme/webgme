@@ -1,9 +1,11 @@
-/*
- * Copyright (C) 2013 Vanderbilt University, All rights reserved.
- * 
- * Author: Robert Kereskenyi
- */
+//
+// Copyright (C) 2013 Vanderbilt University, All rights reserved.
+// 
+// Author: Robert Kereskenyi
+//
+
 @import "_Colors";
+@import "../../../scss/Widgets/DiagramDesigner/Connector";
 
 $end-state-color: #000000;
 $end-state-background-color: #FFFFFF;
@@ -14,14 +16,15 @@ $end-state-internal-size: 20px;
 $end-state-internal-border-radius: 10px;
 
 @mixin EndState {
-  &.end-state {
+  .end-state {
     background-color: $end-state-background-color;
     border: $end-state-border;
     width: $end-state-size;
     height: $end-state-size;
     border-radius: $end-state-border-radius;
+    box-sizing: border-box;
 
-    > div {
+    div.inner {
       background-color: $end-state-color;
       width: $end-state-internal-size;
       height: $end-state-internal-size;
@@ -31,16 +34,33 @@ $end-state-internal-border-radius: 10px;
       left: 50%;
       margin-left: $end-state-internal-size / -2;
       margin-top: $end-state-internal-size / -2;
+      border: 2px solid $initial-state-background-color;
+      box-sizing: border-box;
+    }
+
+    .name {
+      white-space: nowrap;
+      position: relative;
+      top: $end-state-internal-size;
+    }
+
+    .connector {
+      @include connector_basics;
+
+      margin-left: $connector-size / -2;
+      left: 50%;
+      margin-top: $connector-size / -2;
+      top: 50%;
     }
   }
 }
 
 @mixin SelectedEndState {
-  &.end-state {
+  .end-state {
     border-color: $selected-border-color;
 
-    > div {
-      background-color: $selected-border-color;
+    div.inner {
+      border-color: $selected-border-color;
     }
   }
 }

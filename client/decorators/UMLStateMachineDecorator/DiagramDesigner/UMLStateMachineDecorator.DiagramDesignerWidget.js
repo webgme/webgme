@@ -38,8 +38,8 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.DECORATORID = DECORATOR_ID;
 
-    /*********************** OVERRIDE DiagramDesignerWidgetDecoratorBase MEMBERS **************************/
 
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
         var self = this;
 
@@ -58,6 +58,17 @@ define(['js/Constants',
         });*/
     };
 
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
+        this.$sourceConnectors.appendTo(this.$el.find('> div').first());
+    };
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
+        this.$endConnectors.appendTo(this.$el.find('> div').first());
+    };
+
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype._renderName = function () {
         var client = this._control._client,
             nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
@@ -74,9 +85,6 @@ define(['js/Constants',
         this.skinParts.$name.text(this.name);*/
     };
 
-    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.update = function () {
-
-    };
 
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.getConnectionAreas = function (id, isEnd, connectionMetaInfo) {
         var result = [],
@@ -129,6 +137,9 @@ define(['js/Constants',
 
         return result;
     };
+
+
+
 
     /**************** EDIT NODE TITLE ************************/
 
