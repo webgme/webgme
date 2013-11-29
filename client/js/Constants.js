@@ -32,16 +32,25 @@ define(['underscore', 'common/Constants'], function (underscore, COMMON_CONSTANT
                       COLOR: 'color',
                       PATTERN: 'pattern',
                       PATTERNS: { SOLID: '',
-                                  DASH: "dash",
-                                  DOT: "dot",
-                                  DASH_DOT: "dash-dot",
-                                  DASH_DOT_DOT: "dash-dot-dot"},
+                          DASH: "-",
+                          DOT: ".",
+                          DASH_DOT: "-.",
+                          DASH_DOT_DOT: "-.."},
                       TYPE: 'type',
                       TYPES: { NONE : '',
                                BEZIER: 'bezier'},
                       START_ARROW: 'start-arrow',
                       END_ARROW: 'end-arrow',
-                      POINTS: 'points'}
+                      POINTS: 'points',
+                      LINE_ARROWS: { NONE: 'none',
+                            DIAMOND: 'diamond',
+                            BLOCK: 'block',
+                            CLASSIC: 'classic',
+                            OPEN: 'open',
+                            OVAL: 'oval',
+                            DIAMOND2: 'diamond2',
+                            INHERITANCE: 'inheritance'}
+        }
     });
 
 
