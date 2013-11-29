@@ -3,3 +3,59 @@
  * 
  * Author: Robert Kereskenyi
  */
+
+"use strict";
+
+define(['js/Constants',
+    'js/NodePropertyNames',
+    'js/Utils/METATypeHelper',
+    'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
+    './../Core/UMLStateMachineDecoratorCore',
+    'css!./UMLStateMachineDecorator.PartBrowserWidget'], function (CONSTANTS,
+                                                         nodePropertyNames,
+                                                         METATypeHelper,
+                                                         PartBrowserWidgetDecoratorBase,
+                                                         UMLStateMachineDecoratorCore) {
+
+    var UMLStateMachineDecoratorPartBrowserWidget,
+        DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget",
+        WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
+
+
+    UMLStateMachineDecoratorPartBrowserWidget = function (options) {
+        var opts = _.extend( {}, options);
+
+        PartBrowserWidgetDecoratorBase.apply(this, [opts]);
+
+        this._initializeDecorator({"connectors": false});
+
+        this.logger.debug("UMLStateMachineDecoratorPartBrowserWidget ctor");
+    };
+
+
+    /************************ INHERITANCE *********************/
+    _.extend(UMLStateMachineDecoratorPartBrowserWidget.prototype, PartBrowserWidgetDecoratorBase.prototype);
+    _.extend(UMLStateMachineDecoratorPartBrowserWidget.prototype, UMLStateMachineDecoratorCore.prototype);
+
+
+    /**************** OVERRIDE INHERITED / EXTEND ****************/
+
+    /**** Override from PartBrowserWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorPartBrowserWidget.prototype.DECORATORID = DECORATOR_ID;
+
+
+    /**** Override from PartBrowserWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorPartBrowserWidget.prototype.beforeAppend = function () {
+        this.$el = this.$DOMBase.clone();
+
+        this._renderContent();
+    };
+
+
+    /**** Override from PartBrowserWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
+    };
+
+
+    return UMLStateMachineDecoratorPartBrowserWidget;
+});

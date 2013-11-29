@@ -16,6 +16,8 @@
 
 @mixin UMLStateMachine_decorator_core {
   .uml-state-machine {
+    position: relative;
+
     @include InitialState;
     @include EndState;
     @include State;

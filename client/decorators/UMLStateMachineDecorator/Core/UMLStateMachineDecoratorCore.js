@@ -15,6 +15,7 @@
 define(['js/Constants',
     'js/Utils/METATypeHelper',
     'js/NodePropertyNames',
+    'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./Diagram.html',
     'text!./InitialState.html',
     'text!./EndState.html',
@@ -23,6 +24,7 @@ define(['js/Constants',
     './Transition'], function (CONSTANTS,
                                        METATypeHelper,
                                        nodePropertyNames,
+                                       DiagramDesignerWidgetConstants,
                                        DiagramTemplate,
                                        InitialStateTemplate,
                                        EndStateTemplate,
@@ -86,7 +88,11 @@ define(['js/Constants',
 
         this.$name = this.$el.find('.name');
 
-        this.initializeConnectors();
+        if (this._displayConnectors) {
+            this.initializeConnectors();
+        } else {
+            this.$el.find('.' + DiagramDesignerWidgetConstants.CONNECTOR_CLASS).remove();
+        }
 
         this._renderMetaTypeSpecificParts();
     };
@@ -122,6 +128,9 @@ define(['js/Constants',
         this._update();
     };
 
+
+    /**** Override from PartBrowserWidgetDecoratorBase ****/
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorCore.prototype.update = function () {
         this._update();
 
