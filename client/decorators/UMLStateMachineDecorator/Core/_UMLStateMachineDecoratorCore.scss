@@ -10,6 +10,7 @@
 @import "_EndState";
 @import "_State";
 @import "_Diagram";
+@import "_Transition";
 
 @import "_Colors";
 
@@ -19,6 +20,7 @@
     @include EndState;
     @include State;
     @include Diagram;
+    @include Transition;
 
     &.default {
       min-width: 65px;
@@ -28,6 +30,14 @@
       background-color: #FCFCFC;
       text-align: center;
       line-height: 40px;
+
+      .name {
+        > input {
+          font-size: 12px !important;
+          line-height: 16px !important;
+          height: 16px !important;
+        }
+      }
     }
   }
 
@@ -37,6 +47,7 @@
       @include SelectedEndState;
       @include SelectedState;
       @include SelectedDiagram;
+      @include SelectedTransition;
 
       &.default {
         background-color: $selected-background-color;

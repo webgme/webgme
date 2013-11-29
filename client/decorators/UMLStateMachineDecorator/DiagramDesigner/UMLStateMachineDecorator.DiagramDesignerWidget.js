@@ -8,15 +8,18 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
+    'js/Utils/METATypeHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     'css!./UMLStateMachineDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                                nodePropertyNames,
+                                                               METATypeHelper,
                                                                DiagramDesignerWidgetDecoratorBase,
                                                                UMLStateMachineDecoratorCore) {
 
     var UMLStateMachineDecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget";
+        DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget",
+        WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
 
     UMLStateMachineDecoratorDiagramDesignerWidget = function (options) {
         var opts = _.extend( {}, options);
@@ -45,17 +48,28 @@ define(['js/Constants',
 
         this._renderContent();
 
-        // set title editable on double-click
-        /*this.skinParts.$name.on("dblclick.editOnDblClick", null, function (event) {
-            if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
-                $(this).editInPlace({"class": "",
-                    "onChange": function (oldValue, newValue) {
-                        self._onNodeTitleChanged(oldValue, newValue);
-                    }});
+        //if END or INITIAL state, don't display name
+        if ((this._metaType === WebGMEGlobal_META.End ||
+            this._metaType === WebGMEGlobal_META.Initial) &&
+            this._gmeID !== WebGMEGlobal_META.Initial &&
+            this._gmeID !== WebGMEGlobal_META.End) {
+            this.$name.remove();
+        } else {
+            // set title editable on double-click
+            if (this.$name) {
+                this.$name.on("dblclick.editOnDblClick", null, function (event) {
+                    if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
+                        self.hostDesignerItem.canvas.selectNone();
+                        $(this).editInPlace({"class": "",
+                            "onChange": function (oldValue, newValue) {
+                                self._onNodeTitleChanged(oldValue, newValue);
+                            }});
+                    }
+                    event.stopPropagation();
+                    event.preventDefault();
+                });
             }
-            event.stopPropagation();
-            event.preventDefault();
-        });*/
+        }
     };
 
 

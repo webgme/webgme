@@ -13,7 +13,8 @@
   .uml-state-machine .initial-state .name {
     white-space: nowrap;
     position: relative;
-    top: 20px; }
+    top: 20px;
+    left: 50%; }
   .uml-state-machine .initial-state .connector {
     background-color: #fefefe;
     height: 10px;
@@ -52,7 +53,8 @@
   .uml-state-machine .end-state .name {
     white-space: nowrap;
     position: relative;
-    top: 20px; }
+    top: 20px;
+    left: 50%; }
   .uml-state-machine .end-state .connector {
     background-color: #fefefe;
     height: 10px;
@@ -114,6 +116,24 @@
   border: 1px solid black;
   border-radius: 13px;
   text-align: center; }
+.uml-state-machine .transition {
+  width: 120px;
+  height: 55px;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid rgba(0, 0, 0, 0); }
+  .uml-state-machine .transition .svgContainer {
+    width: 120px;
+    height: 40px; }
+  .uml-state-machine .transition .name {
+    white-space: nowrap;
+    font-size: 12px;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 16px;
+    line-height: 16px;
+    padding-left: 5px;
+    padding-right: 5px; }
 .uml-state-machine.default {
   min-width: 65px;
   height: 40px;
@@ -122,6 +142,10 @@
   background-color: #FCFCFC;
   text-align: center;
   line-height: 40px; }
+  .uml-state-machine.default .name > input {
+    font-size: 12px !important;
+    line-height: 16px !important;
+    height: 16px !important; }
 
 .selected .uml-state-machine .initial-state {
   border-color: #52a8ec; }
@@ -133,6 +157,9 @@
   background-color: #dbeafc;
   border-color: #52a8ec; }
 .selected .uml-state-machine .diagram {
+  background-color: #dbeafc;
+  border-color: #52a8ec; }
+.selected .uml-state-machine .transition {
   background-color: #dbeafc;
   border-color: #52a8ec; }
 .selected .uml-state-machine.default {

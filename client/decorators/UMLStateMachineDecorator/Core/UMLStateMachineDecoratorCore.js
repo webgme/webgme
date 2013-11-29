@@ -18,13 +18,17 @@ define(['js/Constants',
     'text!./Diagram.html',
     'text!./InitialState.html',
     'text!./EndState.html',
-    'text!./State.html'], function (CONSTANTS,
+    'text!./State.html',
+    'text!./Transition.html',
+    './Transition'], function (CONSTANTS,
                                        METATypeHelper,
                                        nodePropertyNames,
                                        DiagramTemplate,
                                        InitialStateTemplate,
                                        EndStateTemplate,
-                                       StateTemplate) {
+                                       StateTemplate,
+                                       TransitionTemplate,
+                                       Transition) {
 
     var UMLStateMachineDecoratorCore,
         UMLStateMachineDecoratorClass = 'uml-state-machine',
@@ -40,8 +44,7 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype._initializeDecorator = function (params) {
-        this.name = "";
-        this.skinParts = { "$name": undefined };
+        this.$name = undefined;
 
         this._displayConnectors = false;
         if (params && params.connectors) {
@@ -63,9 +66,10 @@ define(['js/Constants',
 
     /**** Override from *.WidgetDecoratorBase ****/
     UMLStateMachineDecoratorCore.prototype.doSearch = function (searchDesc) {
-        var searchText = searchDesc.toString().toLowerCase();
+        var searchText = searchDesc.toString().toLowerCase(),
+            name = this._getName();
 
-        return (this.name && this.name.toLowerCase().indexOf(searchText) !== -1);
+        return (name && name.toLowerCase().indexOf(searchText) !== -1);
     };
 
 
@@ -76,13 +80,20 @@ define(['js/Constants',
 
         if (this._metaType && METATYPETEMPLATES && METATYPETEMPLATES[this._metaType]) {
             this.$el.append(METATYPETEMPLATES[this._metaType].clone());
-            this.$name = this.$el.find('.name');
         } else {
             this.$el.addClass(DEFAULT_CLASS);
-            this.$el.append(this._getName());
+            this.$el.append($('<div/>', {'class': 'name'}));
         }
 
+        this.$name = this.$el.find('.name');
+
         this.initializeConnectors();
+
+        this._renderMetaTypeSpecificParts();
+    };
+
+    /* TO BE OVERRIDDEN IN META TYPE SPECIFIC CODE */
+    UMLStateMachineDecoratorCore.prototype._renderMetaTypeSpecificParts = function () {
     };
 
     UMLStateMachineDecoratorCore.prototype._getName = function () {
@@ -119,7 +130,11 @@ define(['js/Constants',
 
     UMLStateMachineDecoratorCore.prototype._update = function () {
         this._updateName();
+        this._updateMetaTypeSpecificParts();
+    };
 
+    /* TO BE OVERRIDDEN IN META TYPE SPECIFIC CODE */
+    UMLStateMachineDecoratorCore.prototype._updateMetaTypeSpecificParts = function () {
     };
 
     /***** UPDATE THE NAME OF THE NODE *****/
@@ -140,6 +155,7 @@ define(['js/Constants',
                 this._metaType = WebGMEGlobal_META.State;
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
                 this._metaType = WebGMEGlobal_META.Transition;
+                _.extend(this, new Transition());
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
                 this._metaType = WebGMEGlobal_META.UMLStateDiagram;
             }
@@ -154,6 +170,7 @@ define(['js/Constants',
                 METATYPETEMPLATES[WebGMEGlobal_META.End] = $(EndStateTemplate);
                 METATYPETEMPLATES[WebGMEGlobal_META.UMLStateDiagram] = $(DiagramTemplate);
                 METATYPETEMPLATES[WebGMEGlobal_META.State] = $(StateTemplate);
+                METATYPETEMPLATES[WebGMEGlobal_META.Transition] = $(TransitionTemplate);
             }
             
         }
