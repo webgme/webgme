@@ -54,8 +54,7 @@ define(['js/Constants',
 
     /**** Override from *.WidgetDecoratorBase ****/
     UMLStateMachineDecoratorCore.prototype.getTerritoryQuery = function () {
-        var territoryRule = {};
-        return territoryRule;
+        return {};
     };
 
 

@@ -74,29 +74,13 @@ define(['js/Constants',
 
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (params) {
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showSourceConnectors = function (/*params*/) {
         this.$sourceConnectors.appendTo(this.$el.find('> div').first());
     };
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
-    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (params) {
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (/*params*/) {
         this.$endConnectors.appendTo(this.$el.find('> div').first());
-    };
-
-    UMLStateMachineDecoratorDiagramDesignerWidget.prototype._renderName = function () {
-        var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
-
-        //render GME-ID in the DOM, for debugging
-        /*this.$el.attr({"data-id": this._metaInfo[CONSTANTS.GME_ID]});
-
-        if (nodeObj) {
-            this.name = nodeObj.getAttribute(nodePropertyNames.Attributes.name) || "";
-        }
-
-        //find name placeholder
-        this.skinParts.$name = this.$el.find(".name");
-        this.skinParts.$name.text(this.name);*/
     };
 
 
