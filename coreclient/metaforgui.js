@@ -259,41 +259,43 @@ define(['coreclient/meta'], function (META) {
 
         return {
             initialize: META.initialize,
-            getMeta : META.getMeta,
-            setMeta : META.setMeta,
+            getMeta   : META.getMeta,
+            setMeta   : META.setMeta,
 
             //containment
-            getChildrenMeta: getChildrenMeta,
-            setChildrenMeta: setChildrenMeta,
+            getChildrenMeta         : getChildrenMeta,
+            setChildrenMeta         : setChildrenMeta,
             getChildrenMetaAttribute: getChildrenMetaAttribute,
             setChildrenMetaAttribute: setChildrenMetaAttribute,
-            getValidChildrenItems: getValidChildrenItems,
-            updateValidChildrenItem: updateValidChildrenItem,
-            removeValidChildrenItem: removeValidChildrenItem,
+            getValidChildrenItems   : getValidChildrenItems,
+            updateValidChildrenItem : updateValidChildrenItem,
+            removeValidChildrenItem : removeValidChildrenItem,
 
             //attribute
-            getAttributeSchema: getAttributeSchema,
-            setAttributeSchema: setAttributeSchema,
+            getAttributeSchema       : getAttributeSchema,
+            setAttributeSchema       : setAttributeSchema,
+            getValidAttributeNames   : META.getValidAttributeNames,
+            getOwnValidAttributeNames: META.getOwnValidAttributeNames,
 
             //pointer
-            getPointerMeta: getPointerMeta,
-            setPointerMeta: setPointerMeta,
-            getValidTargetItems: getValidTargetItems,
+            getPointerMeta       : getPointerMeta,
+            setPointerMeta       : setPointerMeta,
+            getValidTargetItems  : getValidTargetItems,
             updateValidTargetItem: updateValidTargetItem,
             removeValidTargetItem: removeValidTargetItem,
-            deleteMetaPointer: deleteMetaPointer,
+            deleteMetaPointer    : deleteMetaPointer,
 
             //misc functions from lower layer
             getOwnValidChildrenTypes: META.getOwnValidChildrenTypes,
-            getOwnValidTargetTypes: META.getOwnValidTargetTypes,
-            isValidChild: META.isValidChild,
-            isValidTarget: META.isValidTarget,
-            isValidAttribute: META.isValidAttribute,
-            getValidChildrenTypes: META.getValidChildrenTypes,
-            getValidTargetTypes: META.getValidTargetTypes,
-            hasOwnMetaRules : META.hasOwnMetaRules,
-            filterValidTarget : META.filterValidTarget,
-            isTypeOf: META.isTypeOf
+            getOwnValidTargetTypes  : META.getOwnValidTargetTypes,
+            isValidChild            : META.isValidChild,
+            isValidTarget           : META.isValidTarget,
+            isValidAttribute        : META.isValidAttribute,
+            getValidChildrenTypes   : META.getValidChildrenTypes,
+            getValidTargetTypes     : META.getValidTargetTypes,
+            hasOwnMetaRules         : META.hasOwnMetaRules,
+            filterValidTarget       : META.filterValidTarget,
+            isTypeOf                : META.isTypeOf
         }
     }
     return metaForGui();

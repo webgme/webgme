@@ -1920,7 +1920,9 @@ define([
                 getValidTargetTypes: META.getValidTargetTypes,
                 hasOwnMetaRules : META.hasOwnMetaRules,
                 filterValidTarget : META.filterValidTarget,
-                isTypeOf: META.isTypeOf,
+                isTypeOf: META.isTypeOf,               
+                getValidAttributeNames   : META.getValidAttributeNames,
+                getOwnValidAttributeNames: META.getOwnValidAttributeNames,
                 //end of META functions
 
                 //constraint

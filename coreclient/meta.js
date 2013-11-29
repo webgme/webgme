@@ -314,6 +314,33 @@ define([], function () {
             return items;
         }
 
+        function getValidAttributeNames(path){
+            var rawMeta = getMeta(path),
+                names = [];
+            if( rawMeta ){
+                for(var i in rawMeta.attributes){
+                    names.push(i);
+                }
+            }
+            return names;
+        }
+
+        function getOwnValidAttributeNames(path){
+            var names = [],
+                node = _nodes[path];
+
+            if(node){
+                var own = getValidAttributeNames(path);
+                var base = getValidAttributeNames(_core.getPath(_core.getBase(node)));
+                for(var i=0;i<own.length;i++){
+                    if(base.indexOf(own[i]) === -1){
+                        names.push(own[i]);
+                    }
+                }
+            }
+            return names;
+        }
+
         return {
             initialize: initialize,
             refObjectToPath : refObjectToPath,
@@ -329,7 +356,9 @@ define([], function () {
             filterValidTarget : filterValidTarget,
             getOwnValidChildrenTypes: getOwnValidChildrenTypes,
             getOwnValidTargetTypes: getOwnValidTargetTypes,
-            isTypeOf: isTypeOf
+            isTypeOf: isTypeOf,
+            getValidAttributeNames :  getValidAttributeNames,
+            getOwnValidAttributeNames : getOwnValidAttributeNames,
         };
     }
 

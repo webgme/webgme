@@ -180,8 +180,7 @@ define(['js/Constants',
     /***************  CUSTOM DECORATOR PART ****************************/
     MetaDecoratorDiagramDesignerWidget.prototype._updateAttributes = function () {
         var client = this._control._client,
-            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]),
-            newAttributes = nodeObj ? nodeObj.getAttributeNames() : [],
+            newAttributes = this._control._client.getOwnValidAttributeNames(this._metaInfo[CONSTANTS.GME_ID]),
             len,
             displayedAttributes = this._attributeNames.slice(0),
             diff,
