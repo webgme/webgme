@@ -1905,6 +1905,7 @@ define([
                 removeValidChildrenItem: META.removeValidChildrenItem,
                 getAttributeSchema: META.getAttributeSchema,
                 setAttributeSchema: META.setAttributeSchema,
+                removeAttributeSchema: META.removeAttributeSchema,
                 getPointerMeta: META.getPointerMeta,
                 setPointerMeta: META.setPointerMeta,
                 getValidTargetItems: META.getValidTargetItems,
