@@ -400,6 +400,7 @@ define(['js/Constants',
         client.startTransaction();
 
         //this.logger.warning('saveAttributeDescriptor: ' + name + ', attrDesc: ' + JSON.stringify(attrDesc));
+        //if this is an attribute rename
         if (attrName !== attrDesc.name) {
             //name has changed --> delete the descriptor with the old name
             client.delAttributeDescriptor(objID, attrName);
@@ -410,6 +411,9 @@ define(['js/Constants',
             {
                 client.delAttributes(objID, attrName);
             }
+
+            //set the new name to attrName
+            attrName = attrDesc.name;
         }
 
         /*
@@ -426,7 +430,7 @@ define(['js/Constants',
             attrSchema.enum = attrDesc.enumValues;
         }
         client.setAttributeSchema(objID,attrName,attrSchema);
-        client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
+        client.setAttributes(objID, attrName, attrDesc.defaultValue);
 
         client.completeTransaction();
     };
