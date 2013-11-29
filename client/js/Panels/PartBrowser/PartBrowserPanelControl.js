@@ -256,11 +256,15 @@ define(['logManager',
 
     PartBrowserControl.prototype._updateValidChildrenTypeDecorators = function () {
         var len = this._validChildrenTypeIDs.length,
-            decorators = [],
-            self = this;
+            decorators = [DEFAULT_DECORATOR],
+            self = this,
+            dec;
 
         while (len--) {
-            decorators.push(this._getObjectDescriptor(this._validChildrenTypeIDs[len]).decorator);
+            dec = this._getObjectDescriptor(this._validChildrenTypeIDs[len]).decorator;
+            if (decorators.indexOf(dec) === -1) {
+                decorators.push(dec);
+            }
         }
 
         if (decorators.length > 0) {
