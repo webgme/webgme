@@ -466,7 +466,8 @@ define(['logManager',
             gmeSrcID,
             gmeDstID,
             connType,
-            connTexts;
+            connTexts,
+            c = [];
 
         //check for possible endpoint as gmeID
         gmeDstID = gmeID;
@@ -477,7 +478,11 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][0];
                         connTexts = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][1];
-                        this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        //this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        c.push({'gmeSrcID': gmeSrcID,
+                                'gmeDstID': gmeDstID,
+                                'connType': connType,
+                                'connTexts': connTexts});
                     }
                 }
             }
@@ -494,12 +499,25 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][0];
                         connTexts = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][1];
-                        this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        //this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
+                        c.push({'gmeSrcID': gmeSrcID,
+                            'gmeDstID': gmeDstID,
+                            'connType': connType,
+                            'connTexts': connTexts});
                     }
                 }
             }
 
             delete this._connectionWaitingListBySrcGMEID[gmeSrcID];
+        }
+
+        len = c.length;
+        while (len--) {
+            gmeSrcID = c[len].gmeSrcID;
+            gmeDstID = c[len].gmeDstID;
+            connType = c[len].connType;
+            connTexts = c[len].connTexts;
+            this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
         }
     };
     /**************************************************************************/
@@ -512,11 +530,40 @@ define(['logManager',
     /****************************************************************************/
     MetaEditorControl.prototype._processNodeUnload = function (gmeID) {
         var componentID,
-            idx;
+            idx,
+            len,
+            otherEnd,
+            pointerName,
+            aConns,
+            connectionID;
 
         if (this._GMEID2ComponentID.hasOwnProperty(gmeID)) {
             componentID = this._GMEID2ComponentID[gmeID];
 
+            //gather all the information that is stored in this node's META
+
+            //CONTAINMENT
+            len = this._nodeMetaContainment[gmeID].targets.length;
+            while(len--) {
+                otherEnd = this._nodeMetaContainment[gmeID].targets[len];
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.CONTAINMENT);
+            }
+
+            //POINTERS
+            len = this._nodeMetaPointers[gmeID].combinedNames.length;
+            while(len--) {
+                pointerName = this._nodeMetaPointers[gmeID].combinedNames[len];
+                otherEnd = this._nodeMetaPointers[gmeID][pointerName].target;
+                pointerName = this._nodeMetaPointers[gmeID][pointerName].name;
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.POINTER, pointerName);
+            }
+
+            //INHERITANCE
+            if (this._nodeMetaInheritance[gmeID] && !_.isEmpty(this._nodeMetaInheritance[gmeID])) {
+                this._removeConnection(this._nodeMetaInheritance[gmeID], gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
+            }
+
+            //finally delete the guy from the screen
             this.diagramDesigner.deleteComponent(componentID);
 
             delete this._ComponentID2GMEID[componentID];
@@ -525,6 +572,53 @@ define(['logManager',
 
             idx = this._GMENodes.indexOf(gmeID);
             this._GMENodes.splice(idx,1);
+
+            //check if there is any more connection present that's associated with this object
+            //typically the connection end is this guy
+            //if so, remove but save to savedList
+            aConns = this._getAssociatedConnections(gmeID);
+            len = aConns.src.length;
+            while (len--) {
+                connectionID = aConns.src[len];
+                //if the source of the inheritance relationship is being removed from the screen
+                //save the connection to the waiting list, since the destination is still there
+                if (this._connectionListByID[connectionID].type === MetaRelations.META_RELATIONS.INHERITANCE) {
+                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+                }
+            }
+
+            len = aConns.dst.length;
+            while (len--) {
+                connectionID = aConns.dst[len];
+                //if the source of the inheritance relationship is being removed from the screen
+                //save the connection to the waiting list, since the destination is still there
+                if (this._connectionListByID[connectionID].type === MetaRelations.META_RELATIONS.INHERITANCE) {
+                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+                }
+            }
+
+            //check the waiting list and remove any connection that was waiting and this end was present
+            for (otherEnd in this._connectionWaitingListBySrcGMEID) {
+                if (this._connectionWaitingListBySrcGMEID.hasOwnProperty(otherEnd)) {
+                    delete this._connectionWaitingListBySrcGMEID[otherEnd][gmeID];
+
+                    if (_.isEmpty(this._connectionWaitingListBySrcGMEID[otherEnd])) {
+                        delete this._connectionWaitingListBySrcGMEID[otherEnd];
+                    }
+                }
+            }
+
+            for (otherEnd in this._connectionWaitingListByDstGMEID) {
+                if (this._connectionWaitingListByDstGMEID.hasOwnProperty(otherEnd)) {
+                    delete this._connectionWaitingListByDstGMEID[otherEnd][gmeID];
+
+                    if (_.isEmpty(this._connectionWaitingListByDstGMEID[otherEnd])) {
+                        delete this._connectionWaitingListByDstGMEID[otherEnd];
+                    }
+                }
+            }
 
             //keep up accounting
             delete this._nodeMetaContainment[gmeID];
@@ -650,9 +744,7 @@ define(['logManager',
         //only bother if
         //- both the source and destination is present on the screen
         //the connection in question is drawn
-        if (this._GMENodes.indexOf(gmeSrcId)!== -1 &&
-            this._GMENodes.indexOf(gmeDstId)!== -1 &&
-            this._connectionListBySrcGMEID[gmeSrcId] &&
+        if (this._connectionListBySrcGMEID[gmeSrcId] &&
             this._connectionListBySrcGMEID[gmeSrcId][gmeDstId] &&
             this._connectionListBySrcGMEID[gmeSrcId][gmeDstId][connType]) {
             connectionPresent = true;
@@ -1479,6 +1571,41 @@ define(['logManager',
             //remove registry settings
             this._client.setRegistry(objectID, nodePropertyNames.Registry.lineStyle, {});
         }
+    };
+
+    MetaEditorControl.prototype._getAssociatedConnections =  function (objectID) {
+        var result = {'src': [], 'dst': []},
+            otherID,
+            connType,
+            len,
+            cID,
+            checkConnections;
+
+        checkConnections = function (cList, res) {
+            //check objectID as source
+            if (cList.hasOwnProperty(objectID)) {
+                for (otherID in cList[objectID]) {
+                    if (cList[objectID].hasOwnProperty(otherID)) {
+                        for (connType in cList[objectID][otherID]) {
+                            if (cList[objectID][otherID].hasOwnProperty(connType)) {
+                                len = cList[objectID][otherID][connType].length;
+                                while (len--) {
+                                    cID = cList[objectID][otherID][connType][len];
+                                    if (res.indexOf(cID) === -1) {
+                                        res.push(cID);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        checkConnections(this._connectionListBySrcGMEID, result.src);
+        checkConnections(this._connectionListByDstGMEID, result.dst);
+
+        return result;
     };
 
     //attach MetaEditorControl - DiagramDesigner event handler functions
