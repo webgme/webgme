@@ -13,7 +13,7 @@ define(['logManager',
     'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
-    'js/ObjectConstraintManager'], function (logManager,
+    'js/ConstraintManager'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -22,7 +22,7 @@ define(['logManager',
                                             KeyboardManager,
                                             PanelManager,
                                             WebGMEHistory,
-                                            ObjectConstraintManager) {
+                                            ConstraintManager) {
 
     var _webGMEStart = function () {
         var lm,
@@ -44,7 +44,7 @@ define(['logManager',
 
             client = new Client(CONFIG);
 
-            WebGMEGlobal.ObjectConstraintManager = new ObjectConstraintManager(client);
+            WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
 
             WebGMEHistory.setClient(client);
 

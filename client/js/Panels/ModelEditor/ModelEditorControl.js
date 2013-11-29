@@ -1021,7 +1021,7 @@ define(['logManager',
     ModelEditorControl.prototype._onOCLValidate = function () {
         //OCL Validation goes here...
         this.logger.warning('OCL Validate all clicked...');
-        WebGMEGlobal.ObjectConstraintManager.validateAll("root");
+        WebGMEGlobal.ConstraintManager.validateAll(this.currentNodeInfo.id || 'root');
     };
 
     ModelEditorControl.prototype.attachClientEventListeners = function () {
