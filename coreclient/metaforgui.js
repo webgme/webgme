@@ -131,6 +131,14 @@ define(['coreclient/meta'], function (META) {
             }
         }
 
+        function removeAttributeSchema(path,name){
+            var rawMeta = META.getMeta(path);
+            if(rawMeta){
+                delete rawMeta.attributes[name];
+                META.setMeta(path,rawMeta);
+            }
+        }
+
         function getPointerMeta(path,name){
             //the returned object structure is : {"min":0,"max":0,"items":[{"id":path,"min":0,"max":0},...]}
             var rawMeta = META.getMeta(path);
@@ -274,6 +282,7 @@ define(['coreclient/meta'], function (META) {
             //attribute
             getAttributeSchema       : getAttributeSchema,
             setAttributeSchema       : setAttributeSchema,
+            removeAttributeSchema    : removeAttributeSchema,
             getValidAttributeNames   : META.getValidAttributeNames,
             getOwnValidAttributeNames: META.getOwnValidAttributeNames,
 
