@@ -91,11 +91,12 @@ define([ "util/assert" ], function (ASSERT) {
 			function deepFreeze (obj) {
 				ASSERT(typeof obj === "object");
 
+
 				Object.freeze(obj);
 
 				var key;
 				for (key in obj) {
-					if (typeof obj[key] === "object") {
+					if (obj[key] !== null && typeof obj[key] === "object") {
 						deepFreeze(obj[key]);
 					}
 				}
