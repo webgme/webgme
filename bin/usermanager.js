@@ -71,7 +71,7 @@ if (typeof define !== "function") {
                 done = TASYNC.call(infoPrint,core,_startHash,_user);
             } else if(COMMON.getParameters("addproject")){
                 var projpars = COMMON.getParameters("addproject");
-                done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1]);
+                done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1] || "");
             } else if(COMMON.getParameters("removeproject")){
                 var projpars = COMMON.getParameters("removeproject");
                 done = TASYNC.call(removeProject,core,_startHash,_user,projpars[0]);
@@ -293,7 +293,7 @@ if (typeof define !== "function") {
                     }
 
                     if(child === null){
-                        child = core.createNode(parentObject);
+                        child = core.createNode({parent:parentObject, base:null});
                         core.setAttribute(child,'name',username);
                         core.setRegistry(child,'create',cancreate === 'true');
                         core.setRegistry(child,'projects',{});

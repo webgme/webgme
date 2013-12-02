@@ -83,11 +83,13 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                                             return callback(null,children[i]);
                                         }
                                     }
+                                    err = err || 'no such user found';
+                                    callback(err);
                                 } else {
                                     err = err || 'no such user found';
                                     callback(err);
                                 }
-                            })
+                            });
                         } else {
                             err = err || 'cannot find user manager\'s root';
                             callback(err);
@@ -116,7 +118,7 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                                             guest = children[i];
                                         }
                                     }
-                                    if(_guest){
+                                    if(_guest && guest !== null){
                                         return callback(null,guest);
                                     } else {
                                         return callback('no such user found');
@@ -231,6 +233,7 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                                     callback(null,userData[type] === true);
                                 } else {
                                     err = err || 'no valid user permissions found';
+                                    callback(err,false);
                                 }
                             });
                         }
