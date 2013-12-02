@@ -4317,13 +4317,9 @@ _logger.warning("Adding "
                     i = bufferObject.children.length,
                     parentBox = bufferObject.box,
                     point = details.point,
-                    start = new ArPoint(point),
-                    second,
                     dir = details.dir,
                     boxRect = new ArRect( details.box.getRect() ),
-                    dif = details.end.minus(point),
-                    dir2,
-                    pts;
+                    dir2;
 
                 boxRect.inflateRect( BUFFER ); //Create a copy of the buffer box
 
@@ -4335,8 +4331,6 @@ _logger.warning("Adding "
                     point.y = getRectOuterCoord(boxRect, dir);
 
                 assert( !boxRect.ptInRect( point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point ) FAILED");
-
-                return pts;
             }
 
             function goToNextBufferBox( args ){
@@ -4609,18 +4603,18 @@ _logger.warning("Adding "
                     var startBox = box2bufferBox[startPort.getOwner().getID()].box,
                         endBox = box2bufferBox[endPort.getOwner().getID()].box;
 
-                    var start = new ArPoint(startpoint),
-                        startPath = getOutOfBox({ "point": start, 
-                                                  "dir": startdir, 
-                                                  "end": endpoint, 
-                                                  "box": startPort.getOwner() } ) || [];
+                    var start = new ArPoint(startpoint);
+                    getOutOfBox({ "point": start, 
+                            "dir": startdir, 
+                            "end": endpoint, 
+                            "box": startPort.getOwner() } );
                     assert( !start.equals(startpoint), "ARGraph.connect: !start.equals(startpoint) FAILED" );
 
-                    var end = new ArPoint(endpoint),
-                        endPath = getOutOfBox({ "point": end, 
-                                                "dir": enddir, 
-                                                "end": start, 
-                                                "box": endPort.getOwner() } ) || [];
+                    var end = new ArPoint(endpoint);
+                    getOutOfBox({ "point": end, 
+                            "dir": enddir, 
+                            "end": start, 
+                            "box": endPort.getOwner() } ) ;
                     assert( !end.equals(endpoint), "ARGraph.connect: !end.equals(endpoint) FAILED" );
 
                     assert( path.isEmpty(),  "ARGraph.connect: path.isEmpty() FAILED" );
@@ -4647,18 +4641,10 @@ _logger.warning("Adding "
                     path.deleteAll();
                     path.addTail(startpoint);
                     var pos = 0;
-                    while( pos < startPath.length ){
-                        path.addTail(startPath[pos++][0]);
-                    }
-                    pos = 0;
                     while( pos < ret.getLength())
                     {
                         var p = ret.get(pos++)[0];
                         path.addTail(p);
-                    }
-                    pos = endPath.length;
-                    while( pos-- ){
-                        path.addTail(endPath[pos][0]);
                     }
                     path.addTail(endpoint);
 
@@ -4771,7 +4757,8 @@ _logger.warning("Adding "
                             if( start.equals( old ) ){ //Then we are in a corner
                                 var pts;
                                 if( box.children.length > 1 ){
-                                    pts = hugChildren( box, start, dir2, dir1 );
+                                    pts = hugChildren( box, start, dir2, dir1, 
+                                        function( pt, bo ) { return getPointCoord( pt, dir1 ) === getRectOuterCoord( bo.box, dir1); } ); 
                                 }else{
                                     pts = hugChildren( bufferObject, start, dir1, dir2 );
                                 }
@@ -4822,7 +4809,7 @@ _logger.warning("Adding "
                             if( bufferObject.children.length === 1){
                                 if(isHorizontal(dir2))
                                 {
-                                    start.x = getRectOuterCoord(rect, dir2);//getRectOuterCoord(rect, dir2); 
+                                    start.x = getRectOuterCoord(rect, dir2);
                                 }
                                 else
                                 {
@@ -4836,7 +4823,7 @@ _logger.warning("Adding "
                                     ret.push([new ArPoint(start)]);
                                     retend--;
                                 }else{
-                                    ret.splice(retend + 1, 0, [new ArPoint(start)]); //insert after
+                                    ret.splice(retend + 1, 0, [new ArPoint(start)]); 
                                 }
                                 old.assign(start);
 
