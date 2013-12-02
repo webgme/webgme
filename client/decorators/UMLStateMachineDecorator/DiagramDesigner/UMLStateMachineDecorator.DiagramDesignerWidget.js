@@ -48,7 +48,7 @@ define(['js/Constants',
 
         this._renderContent();
 
-        //if END or INITIAL state, don't display name
+        //if END or INITIAL state, don't display name only on META level
         if ((this._metaType === WebGMEGlobal_META.End ||
             this._metaType === WebGMEGlobal_META.Initial) &&
             this._gmeID !== WebGMEGlobal_META.Initial &&
@@ -81,6 +81,36 @@ define(['js/Constants',
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.showEndConnectors = function (/*params*/) {
         this.$endConnectors.appendTo(this.$el.find('> div').first());
+    };
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
+        //let the parent decorator class do its job first
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
+
+        if (this.$name) {
+            if (this._metaType === WebGMEGlobal_META.End ||
+                this._metaType === WebGMEGlobal_META.Initial) {
+                this.renderLayoutInfo.nameWidth = this.$name.outerWidth();
+            }
+        }
+    };
+
+    /**** Override from DiagramDesignerWidgetDecoratorBase ****/
+    UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
+        if (this.renderLayoutInfo) {
+            var shift = this.renderLayoutInfo.nameWidth / -2;
+
+            if (this.$name) {
+                if (this._metaType === WebGMEGlobal_META.End ||
+                    this._metaType === WebGMEGlobal_META.Initial) {
+                    this.$name.css({ "margin-left": shift });
+                }
+            }
+        }
+
+        //let the parent decorator class do its job finally
+        DiagramDesignerWidgetDecoratorBase.prototype.onRenderSetLayoutInfo.apply(this, arguments);
     };
 
 
