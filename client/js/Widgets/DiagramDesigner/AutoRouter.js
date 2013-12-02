@@ -839,27 +839,31 @@ define(['logManager'], function (logManager) {
         };
 
         var getDir = function (offset, nodir){
-            assert(offset !== undefined && offset.cx !== undefined, "getDir: offset.cx cannot be undefined! offset is " + offset);
-            if( offset.cx == 0 )
-            {
-                if( offset.cy == 0 )
-                    return nodir;
+            assert(offset.cy !== undefined && offset.cx !== undefined, "getDir: offset.cx cannot be undefined! offset is " + offset);
 
-                if( offset.cy < 0 )
-                    return Dir_Top;
+            if( offset.cx === 0 && offset.cy === 0)
+                return nodir;
 
-                return Dir_Bottom;
-            }
+            if( Math.abs( offset.cx ) < 1 ){
 
-            if( offset.cy == 0 )
-            {
+                if( Math.abs( offset.cx ) > Math.abs( offset.cy ) )
+                    return offset.cx > 0 ? Dir_Right : Dir_Left;
+
+                if( offset.cy > 0 )
+                    return Dir_Bottom;
+
+                return Dir_Top;
+
+            }else if( Math.abs( offset.cy ) < 1 ){
+
                 if( offset.cx > 0 )
                     return Dir_Right;
 
                 return Dir_Left;
+
             }
 
-            return Dir_Skew;
+                return Dir_Skew;
         };
 
         var getSkewDir = function (offset, nodir){
@@ -4727,7 +4731,7 @@ _logger.warning("Adding "
                         }
 
                         assert( dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None, "ARGraph.connectPoints: dir1 != dir2 && dir1 != Dir_None && dir2 != Dir_None FAILED");
-                        if( bufferObject.box.ptInRect( end ) ){
+                        if( bufferObject.box.ptInRect( end ) && !bufferObject.box.ptInRect( start ) ){
                             var oldEnd = new ArPoint(end),
                                 ret2 = new ArPointListPath(),
                                 i;
@@ -7221,30 +7225,7 @@ pt = [pt];
 
                                 assert(x1 < arx1 && y1 < ary1 && x2 > arx2 && y2 > ary2, "AutoRouter.addBox Cannot add port outside of the box");
                                 r = new ArRect(arx1, ary1, arx2, ary2); 
-
-/*
-                                ( horizontal ? 
-                                    //If it is horizontal:
-                                    (Math.abs(_y1 - y1) < Math.abs(_y1 - y2) ? //Closer to the top (horizontal)
-
-                                    //Connection area is on Top
-                                    (( j % 2 == 0 ? ARPORT_StartOnTop : 0) + (j < 2 ? ARPORT_EndOnTop : 0)) : 
-
-                                    //Connection area is on Bottom
-                                    (( j % 2 == 0 ? ARPORT_StartOnBottom : 0) + (j < 2 ? ARPORT_EndOnBottom : 0))) : 
-
-                                    //If it is vertical:
-                                    (Math.abs(_x1 - x1) < Math.abs(_x1 - x2) ? //Closer to the left (vertical)
-
-                                    //Connection area is on left
-                                    (( j % 2 == 0 ? ARPORT_StartOnLeft : 0) + (j < 2 ? ARPORT_EndOnLeft : 0)) : 
-
-                                    //Connection area is on right
-                                    (( j % 2 == 0 ? ARPORT_StartOnRight : 0) + (j < 2 ? ARPORT_EndOnRight : 0))) );
-
-*/
                 
-                                //attr = ARPORT_ConnectOnAll; 
                             }else if(typeof connArea[j] == "string") //Using words to designate connection area
                             {
                                 r = new ArRect(x1 + 1, y1 + 1, x2 - 1, y2 - 1);
@@ -7410,7 +7391,7 @@ pt = [pt];
             return path;
         };
 
-        AutoRouter.prototype.autoroute = function(){ //TODO add argument for grid size variables. If contains coordMax, set GRID_MAX_SIZE
+        AutoRouter.prototype.autoroute = function(){ 
             this.router.autoRoute();
         };
 
@@ -7506,7 +7487,7 @@ pt = [pt];
             this.router.setBuffer( Math.floor(min/2) );
         };
 
-        AutoRouter.prototype.setPathCustomPoints = function( args ){ //path, [ [x
+        AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
             var points = [],
                 i = 0;
             if( !args.path instanceof AutoRouterPath )
