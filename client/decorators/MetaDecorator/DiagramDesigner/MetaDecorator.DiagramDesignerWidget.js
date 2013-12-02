@@ -92,7 +92,7 @@ define(['js/Constants',
         this._skinParts.$attributesContainer.on('dblclick', 'li', function (e) {
             if (self.hostDesignerItem.canvas.getIsReadOnlyMode() !== true) {
                 var attrName = $(this).find('.n').text().replace(":", ""),
-                    attrNames = self._attributeNames.slice(0),
+                    attrNames,
                     dialog = new AttributeDetailsDialog(),
                     /*desc = _.extend({}, nodeObj.getAttributeDescriptor(attrName));*/
                     atrMeta = client.getAttributeSchema(self._metaInfo[CONSTANTS.GME_ID],attrName);
@@ -107,9 +107,9 @@ define(['js/Constants',
                     desc.isMeta = false;
                 }
 
-
                 //pass all the other attribute names to the dialog
-                attrNames.splice(self._attributeNames.indexOf(attrName), 1);
+                attrNames = client.getValidAttributeNames(self._metaInfo[CONSTANTS.GME_ID]);
+                attrNames.splice(attrNames.indexOf(attrName), 1);
 
                 dialog.show(desc, attrNames, function (attrDesc) {
                         self.saveAttributeDescriptor(attrName, attrDesc);
@@ -255,7 +255,9 @@ define(['js/Constants',
     /**************** CREATE NEW ATTRIBUTE ********************/
 
     MetaDecoratorDiagramDesignerWidget.prototype._onNewAttributeClick = function () {
-        this._onNewClick(this._attributeNames, this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._onNewAttributeCreate);
+        var client = this._control._client,
+            objId = this._metaInfo[CONSTANTS.GME_ID];
+        this._onNewClick(client.getValidAttributeNames(objId), this._skinParts.$attributesContainer, this._skinParts.$addAttributeContainer, this._onNewAttributeCreate);
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._onNewClick = function (existingNames, itemContainer, addNewContainer, saveFn) {
@@ -395,7 +397,8 @@ define(['js/Constants',
 
     MetaDecoratorDiagramDesignerWidget.prototype.saveAttributeDescriptor = function (attrName, attrDesc) {
         var client = this._control._client,
-            objID = this._metaInfo[CONSTANTS.GME_ID];
+            objID = this._metaInfo[CONSTANTS.GME_ID],
+            attrSchema;
 
         client.startTransaction();
 
@@ -403,12 +406,12 @@ define(['js/Constants',
         //if this is an attribute rename
         if (attrName !== attrDesc.name) {
             //name has changed --> delete the descriptor with the old name
-            client.delAttributeDescriptor(objID, attrName);
             //TODO: as of now we have to create an alibi attribute instance with the same name
             //TODO: just because of this hack, make sure that the name is not overwritten
             //TODO: just because of this hack, delete the alibi attribute as well
             if (attrName !== nodePropertyNames.Attributes.name)
             {
+                client.removeAttributeSchema(objID,attrName);
                 client.delAttributes(objID, attrName);
             }
 
@@ -416,21 +419,18 @@ define(['js/Constants',
             attrName = attrDesc.name;
         }
 
-        /*
-        client.setAttributeDescriptor(objID, attrDesc.name, attrDesc);
+
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
-        if (attrDesc.name !== nodePropertyNames.Attributes.name)
+        if (attrName !== nodePropertyNames.Attributes.name)
         {
-            client.setAttributes(objID, attrDesc.name, attrDesc.defaultValue);
+            attrSchema = {"type":attrDesc.type,"default":attrDesc.defaultValue};
+            if(attrDesc.isEnum){
+                attrSchema.enum = attrDesc.enumValues;
+            }
+            client.setAttributeSchema(objID,attrName,attrSchema);
+            client.setAttributes(objID, attrName, attrDesc.defaultValue);
         }
-        */
-        var attrSchema = {"type":attrDesc.type,"default":attrDesc.defaultValue};
-        if(attrDesc.isEnum){
-            attrSchema.enum = attrDesc.enumValues;
-        }
-        client.setAttributeSchema(objID,attrName,attrSchema);
-        client.setAttributes(objID, attrName, attrDesc.defaultValue);
 
         client.completeTransaction();
     };
@@ -441,12 +441,12 @@ define(['js/Constants',
 
         client.startTransaction();
 
-        client.delAttributeDescriptor(objID, attrName);
         //TODO: as of now we have to create an alibi attribute instance with the same name
         //TODO: just because of this hack, make sure that the name is not overwritten
         //TODO: just because of this hack, delete the alibi attribute as well
         if (attrName !== nodePropertyNames.Attributes.name)
         {
+            client.removeAttributeSchema(objID,attrName);
             client.delAttributes(objID, attrName);
         }
 
