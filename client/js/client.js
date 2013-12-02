@@ -1243,23 +1243,20 @@ define([
                         var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
                         var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
                         returnParameters[i] = storeNode(finalNode);
+                        if(parameters[i]){
+                            for(var j in parameters[i].attributes){
+                                _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
+                            }
+                            for(j in parameters[i].registry){
+                                _core.setRegistry(finalNode,j,parameters[i].registry[j]);
+                            }
+                        }
                     }
                     _core.deleteNode(tempTo);
                     delete tempTo;
 
+                    saveRoot('copyMoreNodes('+JSON.stringify(returnParameters)+')');
                     return returnParameters;
-                    //now load the copied items, to set their parameters
-                    /*_core.loadChildren(tempTo,function(err,children){
-                        if(err){
-                            //we should delete the temp nodes and assume that nothing happened :/
-                            _core.deleteNode(tempTo);
-                            delete  tempTo;
-                            delete returnParameters;
-                            return null;
-                        } else {
-                            for(var i=0;i<)
-                        }
-                    });*/
                 }
             }
             function moveMoreNodes(parameters){
