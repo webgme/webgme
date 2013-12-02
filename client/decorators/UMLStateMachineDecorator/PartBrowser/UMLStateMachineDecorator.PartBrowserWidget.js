@@ -54,6 +54,12 @@ define(['js/Constants',
 
     /**** Override from PartBrowserWidgetDecoratorBase ****/
     UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
+        if (this._metaType === WebGMEGlobal_META.End ||
+            this._metaType === WebGMEGlobal_META.Initial) {
+            var nameWidth = this.$name.outerWidth();
+
+            this.$name.css({ "margin-left": nameWidth / -2 });
+        }
     };
 
 
