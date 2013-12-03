@@ -3019,9 +3019,6 @@ define(['logManager'], function (logManager) {
                 while( edge )
                 {
                     position_SetRealY(edge, edge.getPositionY());
-//REMOVE
-//_logger.info("Storing " + edge.getStartPoint().x + "," + edge.getStartPoint().y + " " + edge.getEndPoint().x + "," + edge.getEndPoint().y);
-//REMOVE_END
 
                     edge = edge.getOrderNext();
                 }
@@ -3070,15 +3067,6 @@ define(['logManager'], function (logManager) {
                 }
 
                 before.setOrderPrev(edge);
-//REMOVE
-/*
-_logger.warning("Adding " 
-+ edge.getStartPoint().x + "," + edge.getStartPoint().y + " " 
-+ edge.getEndPoint().x + "," + edge.getEndPoint().y + " before " 
-+ before.getStartPoint().x + "," + before.getStartPoint().y + " " 
-+ before.getEndPoint().x + "," + before.getEndPoint().y + " in the EdgeList" );
-*/
-//REMOVE_END
             };
 
             this.insertAfter = function(edge, after){
@@ -5677,8 +5665,8 @@ _logger.warning("Adding "
 
                 deleteBoxAndPortEdges(box);
 
-                var rect = box.getRect(); 
-                disconnectPathsClipping(rect); //paths could be clipping the box initially if it is in a parent box
+                var rect = box2bufferBox[box.getID()].box; 
+                disconnectPathsClipping(rect); //redraw all paths clipping parent box.
 
                 box.shiftBy(offset);
                 addBoxAndPortEdges(box);
@@ -5711,9 +5699,6 @@ _logger.warning("Adding "
 
                 while( c > 0 )
                 {
-//REMOVE
-_logger.info("About to simplifyPaths()");
-//REMOVE_END
                     if( c > 0 )
                     {
                         if( last === 1 )
@@ -5733,9 +5718,6 @@ _logger.info("About to simplifyPaths()");
                             break;
 
                         c--;
-//REMOVE
-_logger.info("About to horizontal.block_ScanBackward() ");
-//REMOVE_END
                         if( horizontal.block_ScanBackward() )
                         {
                             updated = 1;
@@ -5753,9 +5735,6 @@ _logger.info("About to horizontal.block_ScanBackward() ");
                             last = 2;
                         }
                     }
-//REMOVE
-_logger.info("About to horizontal.block_ScanForward()");
-//REMOVE_END
 
                     if( c > 0 )
                     {
@@ -5780,9 +5759,6 @@ _logger.info("About to horizontal.block_ScanForward()");
                         }
                     }
 
-//REMOVE
-_logger.info("About to vertical.block_ScanBackward()");
-//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 4 )
@@ -5806,9 +5782,6 @@ _logger.info("About to vertical.block_ScanBackward()");
                         }
                     }
 
-//REMOVE
-_logger.info("About to vertical.block_ScanForward()");
-//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 5 )
@@ -5831,9 +5804,6 @@ _logger.info("About to vertical.block_ScanForward()");
                             last = 5;
                         }
                     }
-//REMOVE
-_logger.info("About to horizontal.block_SwitchWrongs()");
-//REMOVE_END
 
                     if( c > 0 )
                     {
@@ -5848,9 +5818,6 @@ _logger.info("About to horizontal.block_SwitchWrongs()");
                         }
                     }
 
-//REMOVE
-_logger.info("About to vertical.block_SwitchWrongs()");
-//REMOVE_END
                     if( c > 0 )
                     {
                         if( last == 7 )
