@@ -64,7 +64,8 @@ define(['logManager', 'js/NodePropertyNames', 'text!./ConstraintManager.html'],
         create_alert(no_violation_message, 'alert-success').appendTo($cmb);
       } else {
         var violation_message = '!!!Violation: ' + msg;
-        create_alert(violation_message).appendTo($cmb);
+        var cls = constraint.priority == 0 ? 'alert-error' : '';
+        create_alert(violation_message, cls).appendTo($cmb);
         if ( constraint.priority == 0) {
           create_alert('Please fix the last constraint violation to run'
             + ' the remaining constraints, if there are more', 'alert-error')
