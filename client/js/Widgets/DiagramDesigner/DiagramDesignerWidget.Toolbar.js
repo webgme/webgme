@@ -59,12 +59,12 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "Basic+ route manager",
                 "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOHybfFvLhAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAHpJREFUeNpj/P//PwNxgIlIdUDAAsQGBgbIQhcuXMCu9j8q0NfX/48DMGHqpIJb6W9qa2vrxo0bcYaAjo4OMhsIcnNzIVxGNMcB5eBsTk5OIPn9+/ewsLC6ujqG/7iBNhhkZWVBuCx4/BEcHKylpRUeHg7hMv4nOrkAAEbVjF45QyssAAAAAElFTkSuQmCC)'),
-                "selected": true,
                 "data": { "type": "basic2"}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "AutoRouter",
                 "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOKAp9yT42AAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAOUANwAB2LGMvQAAAIxJREFUeNpjfGrOyEAcYEHje/3Qw6puG8clFmRpIB9OYupngshhSmMCJiIdSppSFkwhXD5DV4rH0fgcMN+3+XTlenwOgIMVK1YASUfHnIpTU4AMRnhsQZz4588fuFJOTk4g+f3797CwsJRtDYx4ItbtixaQtLe3rz47nYADgoODtbS0bPsjIVxG4pMLAGzALHONeXRYAAAAAElFTkSuQmCC)'),
+                "selected": true,
                 "data": { "type": "basic3"}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
