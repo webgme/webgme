@@ -19,8 +19,8 @@
         "panel": "js/Panels/GraphViz/GraphVizPanel",
         "DEBUG_ONLY": false},
 
-    {"id": "METAEditor",
-        "title": "METAEditor",
+    {"id": "METAAspect",
+        "title": "META Aspect",
         "panel": "js/Panels/MetaEditor/MetaEditorPanel",
         "DEBUG_ONLY": false}
 ]
