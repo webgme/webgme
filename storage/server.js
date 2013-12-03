@@ -38,11 +38,12 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
             if(_databaseOpened){
                 callback();
             } else {
+                _databaseOpened = true;
                 _database.openDatabase(function(err){
                     if(err){
+                        _databaseOpened = false;
                         callback(err);
                     } else {
-                        _databaseOpened = true;
                         callback(null);
                     }
                 });
@@ -54,6 +55,21 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 if(!err && cando === true){
                     if(_projects[project]){
                         addClient(client,project);
+                        //TODO we should find the real reason behind collection loose
+                        try{
+                         _projects[project].getBranchNames(function(err,names){
+                            if(err){
+                                delete _projects[project];
+                                checkProject(client,project,callback);
+                            } else {
+                                callback(null,_projects[project]);
+                            }
+                         });
+                        }
+                        catch(e){
+                            delete _projects[project];
+                            checkProject(client,project,callback);
+                        }
                         callback(null,_projects[project]);
                     } else {
                         _database.openProject(project,function(err,proj){
@@ -91,7 +107,9 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                     var sessionID = data.webgme;
                     if(sessionID === null || sessionID === undefined){
                         var cookie = URL.parseCookie(data.headers.cookie);
-                        sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                        if(cookie[options.cookieID] !== undefined || cookie[options.cookieID] !== null){
+                            sessionID = require('connect').utils.parseSignedCookie(cookie[options.cookieID],options.secret);
+                        }
                     }
                     options.sessioncheck(sessionID,function(err,isOk){
                         if(!err && isOk === true){
@@ -176,15 +194,16 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         if(err) {
                             callback(err);
                         } else {
-                            var index = _references[projectName].indexOf(getSessionID(socket));
-                            _references[projectName].splice(index,1);
-                            if(_references[projectName].length === 0){
-                                delete _references[projectName];
+                            //TODO put this shit together
+                            //var index = _references[projectName].indexOf(getSessionID(socket));
+                            //_references[projectName].splice(index,1);
+                            //if(_references[projectName].length === 0){
+                                //delete _references[projectName];
                                 delete _projects[projectName];
-                                project.closeProject(callback);
-                            } else {
+                                //project.closeProject(callback);
+                            //} else {
                                 callback(null);
-                            }
+                           // }
                         }
                     });
                 });

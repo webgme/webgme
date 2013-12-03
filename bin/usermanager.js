@@ -36,16 +36,17 @@ if (typeof define !== "function") {
                 console.log("");
                 console.log("Parses a GME xme file and stores it int a WEBGME database. Possible options:");
                 console.log("");
-                console.log("  -mongo [database [host [port]]]\topens a mongo database");
-                console.log("  -proj <project>\t\t\tselects the given project");
-                console.log("  -branch <branch>\t\t\tthe branch to work with");
-                console.log("  -user <username>\t\t\tthe user which we would like to manage");
-                console.log("  -adduser <write = true/false> [password email]\t\t\tthe user to add");
-                console.log("  -addproject <projectname> <mode = r|rw|rwd>\t\t\t adds a project to the user data");
-                console.log("  -removeproject <projectname>\t\t\t removes a project from the user data");
-                console.log("  -removeuser \t\t\t removes a user data");
-                console.log("  -info\t\t\t prints out the data of the user, or if no user is given then the data of all users");
-                console.log("  -help\t\t\t\t\tprints out this help message");
+                console.log("  -mongo [database [host [port]]]\t\t\topens a mongo database");
+                console.log("  -proj <project>\t\t\t\t\tselects the given project");
+                console.log("  -branch <branch>\t\t\t\t\tthe branch to work with");
+                console.log("  -create\t\t\t\t\t\tcreates an empty user project");
+                console.log("  -user <username>\t\t\t\t\tthe user which we would like to manage");
+                console.log("  -adduser <write = true/false> [password email]\tthe user to add");
+                console.log("  -addproject <projectname> <mode = r|rw|rwd>\t\tadds a project to the user data");
+                console.log("  -removeproject <projectname>\t\t\t\tremoves a project from the user data");
+                console.log("  -removeuser \t\t\t\t\t\tremoves a user data");
+                console.log("  -info\t\t\t\t\t\t\tprints out the data of the user, or if no user is given then the data of all users");
+                console.log("  -help\t\t\t\t\t\t\tprints out this help message");
                 console.log("");
                 return;
             }
@@ -54,6 +55,7 @@ if (typeof define !== "function") {
             _branch = COMMON.getParameters("branch") || [];
             _branch = _branch[0] || "master";
 
+            console.log("kecso",_branch);
             _projectName = COMMON.getParameters("proj") || [];
             _projectName = _projectName[0] || "users";
 
@@ -63,25 +65,32 @@ if (typeof define !== "function") {
             var done = TASYNC.call(COMMON.openDatabase);
             done = TASYNC.call(COMMON.openProject,_projectName,done);
             var core = TASYNC.call(COMMON.getCore, done);
-            _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
 
+            if(COMMON.getParameters("create")){
+                done = TASYNC.call(createEmptyDb,core,_branch,done);
+            } else {
+                _startHash = TASYNC.call(getRootHashOfBranch,_branch,done);
 
-            if(COMMON.getParameters("info")){
-                //info command
-                done = TASYNC.call(infoPrint,core,_startHash,_user);
-            } else if(COMMON.getParameters("addproject")){
-                var projpars = COMMON.getParameters("addproject");
-                done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1] || "");
-            } else if(COMMON.getParameters("removeproject")){
-                var projpars = COMMON.getParameters("removeproject");
-                done = TASYNC.call(removeProject,core,_startHash,_user,projpars[0]);
-            } else if(COMMON.getParameters("adduser")){
-                var projpars = COMMON.getParameters("adduser");
-                done = TASYNC.call(addUser,core,_startHash,_user,projpars[0] || "false",projpars[1] || null,projpars[2] || null);
-            } else if(COMMON.getParameters("removeuser")){
-                var projpars = COMMON.getParameters("removeuser");
-                done = TASYNC.call(removeUser,core,_startHash,_user);
+                if(COMMON.getParameters("info")){
+                    //info command
+                    done = TASYNC.call(infoPrint,core,_startHash,_user);
+                } else if(COMMON.getParameters("addproject")){
+                    var projpars = COMMON.getParameters("addproject");
+                    done = TASYNC.call(addProject,core,_startHash,_user,projpars[0],projpars[1] || "");
+                } else if(COMMON.getParameters("removeproject")){
+                    var projpars = COMMON.getParameters("removeproject");
+                    done = TASYNC.call(removeProject,core,_startHash,_user,projpars[0]);
+                } else if(COMMON.getParameters("adduser")){
+                    var projpars = COMMON.getParameters("adduser");
+                    done = TASYNC.call(addUser,core,_startHash,_user,projpars[0] || "false",projpars[1] || null,projpars[2] || null);
+                } else if(COMMON.getParameters("removeuser")){
+                    var projpars = COMMON.getParameters("removeuser");
+                    done = TASYNC.call(removeUser,core,_startHash,_user);
+                }
             }
+
+
+
 
             done = TASYNC.call(COMMON.closeProject, done);
             done = TASYNC.call(COMMON.closeDatabase, done);
@@ -107,6 +116,7 @@ if (typeof define !== "function") {
             return project.makeCommit([parentcommithash], newroothash, msg);
         }
         function writeBranch (oldhash,newhash) {
+            console.log("kecso",_branch,oldhash,newhash,typeof _branch,typeof oldhash,typeof newhash);
             var project = COMMON.getProject();
             var done = project.setBranchHash(_branch, oldhash, newhash);
             return TASYNC.call(function () {
@@ -133,6 +143,19 @@ if (typeof define !== "function") {
         }
 
         //commands
+        function createEmptyDb(core,branch){
+            var root = core.createNode({parent:null,base:null});
+            core.setAttribute(root,'name',"USERS");
+
+            var newroothash = persist(core,root);
+            var project = COMMON.getProject();
+            var newcommit = TASYNC.call(project.makeCommit,[],newroothash,"creating empty user database");
+            var oldcommit = project.getBranchHash(branch,null);
+            var done = TASYNC.call(project.setBranchHash,branch,oldcommit,newcommit);
+            return TASYNC.call(function () {
+                console.log("Commit " + newcommit + " written to branch " + branch);
+            }, done);
+        }
         function infoPrint(core,roothash,userName){
             function printUser(userObject){
                 var outstring = "";
