@@ -357,8 +357,7 @@ define(['logManager',
         i = this._validChildrenTypeIDs.length;
         while (i--) {
             id = this._validChildrenTypeIDs[i];
-            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id) &&
-                        !GMEConcepts.isProjectPROJECTBASE(this._containerNodeId);
+            partEnabled = GMEConcepts.canCreateChild(this._containerNodeId, id);
             this._partBrowserView.setEnabled(id, partEnabled);
         }
 

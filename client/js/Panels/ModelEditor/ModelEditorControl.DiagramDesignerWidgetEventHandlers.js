@@ -410,12 +410,7 @@ define(['logManager',
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onBackgroundDroppableAccept = function (event, dragInfo) {
         var accept;
 
-        if (GMEConcepts.isProjectPROJECTBASE(this.currentNodeInfo.id)) {
-            //DO NOT ACCEPT ANYTHING IF THE PROJECT'S PROJECT_BASE IS THE CURRENTLY OPENED NODE
-            accept = false;
-        } else {
-            accept = this._getPossibleDropActions(dragInfo).length > 0;
-        }
+        accept = this._getPossibleDropActions(dragInfo).length > 0;
 
         return accept;
     };

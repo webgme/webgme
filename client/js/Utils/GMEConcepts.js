@@ -153,16 +153,8 @@ define(['jquery',
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, true);
 
-        var META_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(META_ID, nodePropertyNames.Attributes.name, 'META');
-
-        var PROJECT_BASE_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
-        _client.setAttributes(PROJECT_BASE_ID, nodePropertyNames.Attributes.name, 'PROJECT');
-
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
-        projectRegistry[CONSTANTS.PROJECT_META_ID] = META_ID;
-        projectRegistry[CONSTANTS.PROJECT_PROJECT_BASE_ID] = PROJECT_BASE_ID;
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, nodePropertyNames.Registry.ProjectRegistry, projectRegistry);
 
         //FCO has a DisplayAttr registry field that controls what Attribute's value should be displayed
@@ -173,24 +165,11 @@ define(['jquery',
 
         //ROOT's meta rules
         var rootMeta = $.extend(true, {}, metaRuleBase);
-        rootMeta.children.items = [{'$ref': '#' + FCO_ID}, {'$ref': '#' + META_ID}, {'$ref': '#' + PROJECT_BASE_ID}];
-        rootMeta.children.minItems = [1,1,-1];
-        rootMeta.children.maxItems = [1,1,-1];
+        rootMeta.children.items = [{'$ref': '#' + FCO_ID}];
+        rootMeta.children.minItems = [-1];
+        rootMeta.children.maxItems = [-1];
         rootMeta.attributes.name = {'type': 'string'};
         _client.setMeta(CONSTANTS.PROJECT_ROOT_ID, rootMeta);
-
-        //META's meta rules
-        var metaMeta = $.extend(true, {}, metaRuleBase);
-        metaMeta.children.items = [{'$ref': '#' + FCO_ID}, {'$ref': '#' + PROJECT_BASE_ID}];
-        metaMeta.children.minItems = [-1,-1];
-        metaMeta.children.maxItems = [-1,-1];
-        metaMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(META_ID, metaMeta);
-
-        //META's meta rules
-        var projectBaseMeta = $.extend(true, {}, metaRuleBase);
-        projectBaseMeta.attributes.name = {'type': 'string'};
-        _client.setMeta(PROJECT_BASE_ID, projectBaseMeta);
 
         //FCO's meta rules
         var fcoMeta = $.extend(true, {}, metaRuleBase);
@@ -199,8 +178,8 @@ define(['jquery',
 
         //set METAEDITOR object containment correctly
         var rootMetaEditorDesc = MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
-        rootMetaEditorDesc.Members = [PROJECT_BASE_ID];
-        rootMetaEditorDesc.MemberCoord[PROJECT_BASE_ID] = {'x': 100, 'y': 100};
+        rootMetaEditorDesc.Members = [FCO_ID];
+        rootMetaEditorDesc.MemberCoord[FCO_ID] = {'x': 100, 'y': 100};
         _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_EDITOR_REGISTRY_KEY, rootMetaEditorDesc);
 
         _client.completeTransaction();
@@ -225,30 +204,6 @@ define(['jquery',
         return _isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
     };
 
-    var _isProjectMETA = function (objID) {
-        return _isProjectRegistryValue(CONSTANTS.PROJECT_META_ID, objID);
-    };
-
-    var _isProjectPROJECTBASE = function (objID) {
-        return _isProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID, objID);
-    };
-
-    var _isProjectPROJECTBASEType = function (objID) {
-        return _client.isTypeOf(objID, _getProjectRegistryValue(CONSTANTS.PROJECT_PROJECT_BASE_ID));
-    };
-
-    var _isBrowsable = function (objID) {
-        var result = false;
-
-        if (!_isProjectFCO(objID) &&
-            !_isProjectPROJECTBASE(objID)) {
-            result = true;
-        }
-
-        return result;
-    };
-
-
     /*
      * Returns true if a new child with the given baseId (instance of base) can be created in parent
      */
@@ -266,22 +221,7 @@ define(['jquery',
 
         //TODO: implement real logic based on META and CONSTRAINTS...
         if(parentId && baseIdList && baseIdList.length > 0){
-            if (parentId === CONSTANTS.PROJECT_ROOT_ID) {
-                //do not let them create
-                // - FCO instances and
-                // - META instances
-                //but let them create PROJECT_BASE and its derived types
-                i = baseIdList.length;
-                result = true;
-                while(i--) {
-                    baseId = baseIdList[i];
-                    if (!_isProjectPROJECTBASEType(baseId)) {
-                        result = false;
-                    }
-                }
-            } else {
-                result = true;
-            }
+           result = true;
 
             //Check #1: Global children number multiplicity
             if (result === true) {
@@ -382,10 +322,7 @@ define(['jquery',
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
         createBasicProjectSeed: _createBasicProjectSeed,
-        isBrowsable: _isBrowsable,
         isProjectFCO: _isProjectFCO,
-        isProjectMETA: _isProjectMETA,
-        isProjectPROJECTBASE: _isProjectPROJECTBASE,
         canCreateChildren: _canCreateChildren,
         getValidReferenceTypes: _getValidReferenceTypes
     }

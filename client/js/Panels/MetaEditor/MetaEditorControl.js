@@ -75,7 +75,6 @@ define(['logManager',
         //TODO: give the UI time to render first before start using it's features
         setTimeout(function () {
             self.selectedObjectChanged(META_RULES_CONTAINER_NODE_ID);
-            self._client.setSelectedObjectId(self._client.getNode(CONSTANTS.PROJECT_ROOT_ID).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID]);
         }, 10);
 
 
@@ -582,10 +581,8 @@ define(['logManager',
                 connectionID = aConns.src[len];
                 //if the source of the inheritance relationship is being removed from the screen
                 //save the connection to the waiting list, since the destination is still there
-                if (this._connectionListByID[connectionID].type === MetaRelations.META_RELATIONS.INHERITANCE) {
-                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
-                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
-                }
+                this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
             }
 
             len = aConns.dst.length;
@@ -593,10 +590,8 @@ define(['logManager',
                 connectionID = aConns.dst[len];
                 //if the source of the inheritance relationship is being removed from the screen
                 //save the connection to the waiting list, since the destination is still there
-                if (this._connectionListByID[connectionID].type === MetaRelations.META_RELATIONS.INHERITANCE) {
-                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
-                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
-                }
+                this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
             }
 
             //check the waiting list and remove any connection that was waiting and this end was present

@@ -86,8 +86,7 @@ define(['logManager',
             params = DragHelper.getDragParams(dragInfo),
             dragEffects = DragHelper.getDragEffects(dragInfo),
             i,
-            accept = false,
-            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID];
+            accept = false;
 
         //accept is self reposition OR dragging from somewhere else and the items are not on the sheet yet
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID)) {
@@ -95,24 +94,20 @@ define(['logManager',
                 accept = true;
             }
         } else {
-            if (gmeIDList.length === 1 &&
-                dragEffects.length === 1 &&
+            if (dragEffects.length === 1 &&
                 dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                //dragging from PartBrowser
-                //if the dragged item can be a valid children, let it drop
-                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
-                    accept = true;
-                }
-            } else {
-                //return true if there is at least one item among the dragged ones that is not on the sheet yet
-                if (gmeIDList.length > 0) {
-                    for (i = 0; i < gmeIDList.length; i+= 1) {
-                        if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
-                            accept = true;
-                            break;
+                    //dragging from PartBrowser
+                    accept = false;
+                } else {
+                    //return true if there is at least one item among the dragged ones that is not on the sheet yet
+                    if (gmeIDList.length > 0) {
+                        for (i = 0; i < gmeIDList.length; i+= 1) {
+                            if (this._GMENodes.indexOf(gmeIDList[i]) === -1 ) {
+                                accept = true;
+                                break;
+                            }
                         }
                     }
-                }
             }
         }
 
@@ -137,7 +132,6 @@ define(['logManager',
             selectedIDs = [],
             componentID,
             dragEffects = DragHelper.getDragEffects(dragInfo),
-            PROJECT_META_ID = this._client.getNode(this.currentNodeInfo.id).getRegistry(nodePropertyNames.Registry.ProjectRegistry)[CONSTANTS.PROJECT_META_ID],
             createChildParams,
             newID,
             _client = this._client,
@@ -165,7 +159,7 @@ define(['logManager',
             }
         };
 
-        //check to see it self drop and reposition or dropping fro somewhere else
+        //check to see it self drop and reposition or dropping from somewhere else
         if (params && params.hasOwnProperty(DRAG_PARAMS_META_CONTAINER_ID) && params[DRAG_PARAMS_META_CONTAINER_ID] === this.currentNodeInfo.id) {
             if (gmeIDList.length === 0) {
                 //params.position holds the old coordinates of the items being dragged
@@ -198,32 +192,12 @@ define(['logManager',
         } else {
             this._client.startTransaction();
 
-            if (gmeIDList.length === 1 &&
-                dragEffects.length === 1 &&
-                dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
-                //dragging from PartBrowser
-                //if the dragged item can be a valid children, let it drop
-                if (GMEConcepts.canCreateChild(PROJECT_META_ID, gmeIDList[0])) {
-                    createChildParams = { "parentId": PROJECT_META_ID,
-                        "baseId": gmeIDList[0]};
-
-                    newID = this._client.createChild(createChildParams);
-
-                    if (newID) {
-                        addMember(newID, position);
-                            //store new position
-                        this._client.setRegistry(newID, nodePropertyNames.Registry.position, {'x': position.x,
-                                'y': position.y});
-                    }
-                }
-            } else {
-                //return true if there is at least one item among the dragged ones that is not on the sheet yet
-                if (gmeIDList.length > 0) {
-                    for (i = 0; i < gmeIDList.length; i += 1) {
-                        if (addMember(gmeIDList[i], position)) {
-                            position.x += 20;
-                            position.y += 20;
-                        }
+            //return true if there is at least one item among the dragged ones that is not on the sheet yet
+            if (gmeIDList.length > 0) {
+                for (i = 0; i < gmeIDList.length; i += 1) {
+                    if (addMember(gmeIDList[i], position)) {
+                        position.x += 20;
+                        position.y += 20;
                     }
                 }
             }
@@ -344,11 +318,11 @@ define(['logManager',
                 // --> DELETE these relationship definitions from the node
                 //if GMEObject is a destination of a connection (Inheritance)
                 // --> inheritance is stored on the 'other' end, need to delete from the 'other' node
-                aConnections = getAssociatedConnections(gmeID);
+                /*aConnections = getAssociatedConnections(gmeID);
                 i = aConnections.length;
                 while (i--) {
                     deleteConnection(aConnections[i]);
-                }
+                }*/
 
                 //finally remove from members list
                 registry.Members.splice(idx, 1);
