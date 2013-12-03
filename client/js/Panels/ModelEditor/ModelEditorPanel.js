@@ -75,6 +75,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         PanelBaseWithHeader.prototype.destroy.call(this);
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     /* override IActivePanel.prototype.onActivate */
@@ -82,6 +83,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     /* override IActivePanel.prototype.onDeactivate */
@@ -89,6 +91,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     return ModelEditorPanel;

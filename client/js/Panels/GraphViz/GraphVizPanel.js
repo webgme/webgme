@@ -69,18 +69,21 @@ define(['js/PanelBase/PanelBaseWithHeader',
 
         PanelBaseWithHeader.prototype.destroy.call(this);
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     GraphVizPanel.prototype.onActivate = function () {
         this.widget.onActivate();
         this.control.onActivate();
         WebGMEGlobal.KeyboardManager.setListener(this.widget);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     GraphVizPanel.prototype.onDeactivate = function () {
         this.widget.onDeactivate();
         this.control.onDeactivate();
         WebGMEGlobal.KeyboardManager.setListener(undefined);
+        WebGMEGlobal.Toolbar.refresh();
     };
 
     return GraphVizPanel;

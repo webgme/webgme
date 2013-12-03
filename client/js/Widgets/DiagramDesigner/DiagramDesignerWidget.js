@@ -535,6 +535,7 @@ define(['logManager',
             this.logger.debug(msg);
             if (DEBUG === true && this.toolbarItems && this.toolbarItems.progressText) {
                 this.toolbarItems.progressText.text(msg);
+                WebGMEGlobal.Toolbar.refresh();
             }
 
             this._refreshScreen();
