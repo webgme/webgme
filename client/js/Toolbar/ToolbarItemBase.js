@@ -11,6 +11,7 @@ define([], function () {
     var ToolbarItemBase;
 
     ToolbarItemBase = function () {
+        this._toolbar = undefined;
     };
 
     ToolbarItemBase.prototype.show = function () {
