@@ -4318,6 +4318,7 @@ _logger.warning("Adding "
 
             function getOutOfBox(details){
                 var bufferObject = box2bufferBox[details.box.getID()],
+                    children = bufferObject.children,
                     i = bufferObject.children.length,
                     parentBox = bufferObject.box,
                     point = details.point,
@@ -4329,10 +4330,20 @@ _logger.warning("Adding "
 
                 assert( isRightAngle(dir), "ARGraph.getOutOfBox: isRightAngle(dir) FAILED");
 
-                if(isHorizontal(dir))
-                    point.x = getRectOuterCoord(boxRect, dir);
-                else
-                    point.y = getRectOuterCoord(boxRect, dir);
+                while( boxRect.ptInRect( point ) ){
+                    if(isHorizontal(dir))
+                        point.x = getRectOuterCoord(boxRect, dir);
+                    else
+                        point.y = getRectOuterCoord(boxRect, dir);
+
+                    while( i-- ){
+                        if( children[i].ptInRect( point ) ){
+                            boxRect = children[i];
+                            break;
+                        }
+                    }
+                    i = bufferObject.children.length;
+                }
 
                 assert( !boxRect.ptInRect( point ), "ARGraph.getOutOfBox: !boxRect.ptInRect( point ) FAILED");
             }
@@ -5665,10 +5676,14 @@ _logger.warning("Adding "
                     return;
 
                 deleteBoxAndPortEdges(box);
+
+                var rect = box.getRect(); 
+                disconnectPathsClipping(rect); //paths could be clipping the box initially if it is in a parent box
+
                 box.shiftBy(offset);
                 addBoxAndPortEdges(box);
 
-                var rect = box.getRect();
+                rect = box.getRect();
                 disconnectPathsClipping(rect);
                 disconnectPathsFrom(box);
             };
