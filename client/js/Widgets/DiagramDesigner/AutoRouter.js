@@ -840,6 +840,8 @@ define(['logManager'], function (logManager) {
 
         var getDir = function (offset, nodir){
             assert(offset.cy !== undefined && offset.cx !== undefined, "getDir: offset.cx cannot be undefined! offset is " + offset);
+            if( nodir === undefined )
+                nodir = Dir_None;
 
             if( offset.cx === 0 && offset.cy === 0)
                 return nodir;
@@ -6223,7 +6225,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(startBoxRect, d);
 
-                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxStartPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
+                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d, "getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d FAILED"); 
 
                 return p;
             };
