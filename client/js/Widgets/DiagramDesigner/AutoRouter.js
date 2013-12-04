@@ -1930,7 +1930,7 @@ define(['logManager'], function (logManager) {
             }
 
             function deleteAllPorts(){
-                for(i = 0; i < ports.length; i++){
+                for(var i = 0; i < ports.length; i++){
                     ports[i].setOwner(null);
                     ports[i] = null;
                 }
