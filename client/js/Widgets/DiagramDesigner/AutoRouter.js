@@ -82,6 +82,7 @@ define(['logManager'], function (logManager) {
 
        ED_MAXCOORD = (graphDetails && graphDetails.coordMax !== undefined ? graphDetails.coordMax : false) || ED_MAXCOORD;
        ED_MINCOORD = (graphDetails && graphDetails.coordMin !== undefined ? graphDetails.coordMin : false) || ED_MINCOORD;
+       BUFFER = (graphDetails && graphDetails.minGap !== undefined ? Math.floor( graphDetails.minGap/2 ) : false) || BUFFER;
        EDLS_D = ED_MAXCOORD - ED_MINCOORD,
  
        this.router = new AutoRouterGraph();
@@ -430,11 +431,11 @@ define(['logManager'], function (logManager) {
             var end2 = end;
             end2.subtract(start);
 
-            var x = end2.x;
-                y = end2.y;
-                u = point2.x;
-                v = point2.y;
-                xuyv = x * u + y * v;
+            var x = end2.x,
+                y = end2.y,
+                u = point2.x,
+                v = point2.y,
+                xuyv = x * u + y * v,
                 x2y2 = x * x + y * y;
 
             if(xuyv < 0 || xuyv > x2y2)
@@ -2591,7 +2592,6 @@ define(['logManager'], function (logManager) {
             this.destroy = function(){
                 checkOrder();
                 checkSection();
-                this = null;
             };
 
             this.setOwner = function(newOwner){
@@ -5164,9 +5164,9 @@ define(['logManager'], function (logManager) {
                 pos = pointpos;
                 pos--;
             
-                var ppointpos = pos;
+                var ppointpos = pos,
                     point = points.get(pos--), 
-                    pppointpos = pos;
+                    pppointpos = pos,
                     pppoint = pos == points.getLength() ? null : points.get(pos--);
 
                 assert( ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength(), "ARGraph.deleteSamePointsAt: ppointpos < points.getLength() && pointpos < points.getLength() && npointpos < points.getLength() && nnpointpos < points.getLength() FAILED");
@@ -6452,7 +6452,7 @@ pt = [pt];
             };
             
             this.applyCustomizationsBeforeAutoConnectPoints = function(){
-                plist = [];
+                var plist = [];
 
                 if (customPathData.length === 0)
                     return;
@@ -6722,7 +6722,6 @@ pt = [pt];
 
             function destroy(){
                 this.setOwner(null);
-                this = null;
             }
 
             function getOwner(){
@@ -6957,6 +6956,12 @@ pt = [pt];
             
         };
 
+        var ArBoxObject = function(b, p){
+            //Stores a box with ports used to connect to the box
+            this.box = b;
+            this.ports = p;
+        };
+
         AutoRouter.prototype.clear = function(){
             this.router.deleteAll(true);
             this.boxes = [];
@@ -6997,7 +7002,7 @@ pt = [pt];
             this.boxes.push(box);
             this.boxId2Path[ box.getID() ] = { 'in': [], 'out': [] };
 
-            return { "box": box, "ports": p }; 
+            return new ArBoxObject(box, p);
         };
 
         AutoRouter.prototype.addPort = function(box, connAreas){
@@ -7427,7 +7432,7 @@ pt = [pt];
             ports = this.addPort(box, connArea);
             boxObject.ports = ports;
 
-            return { "box": box, "ports": ports };
+            return new ArBoxObject(box, ports);
         };
 
         AutoRouter.prototype.remove = function(item){
@@ -7447,8 +7452,11 @@ pt = [pt];
 
         AutoRouter.prototype.move = function( box, details ){
             //Make sure details are in terms of dx, dy
+            box = box instanceof AutoRouterBox ? box : box.box;
             var dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left ),
                 dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
+
+            assert(box instanceof AutoRouterBox, "AutoRouter:move First argument must be an AutoRouterBox or ArBoxObject");
 
             this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
         };
