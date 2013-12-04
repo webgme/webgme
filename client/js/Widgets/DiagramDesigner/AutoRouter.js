@@ -1,9 +1,8 @@
-//"use strict"; //Will need to be converted to strict mode and convert logic
+"use strict"; 
 
 define(['logManager'], function (logManager) {
 
     var AutoRouter;
-    //Static Variables
 
      var ED_MAXCOORD = 100000,
          ED_MINCOORD = -2,//This allows connections to be still be draw when box is pressed against the edge
@@ -840,6 +839,8 @@ define(['logManager'], function (logManager) {
 
         var getDir = function (offset, nodir){
             assert(offset.cy !== undefined && offset.cx !== undefined, "getDir: offset.cx cannot be undefined! offset is " + offset);
+            if( nodir === undefined )
+                nodir = Dir_None;
 
             if( offset.cx === 0 && offset.cy === 0)
                 return nodir;
@@ -1929,7 +1930,7 @@ define(['logManager'], function (logManager) {
             }
 
             function deleteAllPorts(){
-                for(i = 0; i < ports.length; i++){
+                for(var i = 0; i < ports.length; i++){
                     ports[i].setOwner(null);
                     ports[i] = null;
                 }
@@ -2166,6 +2167,7 @@ define(['logManager'], function (logManager) {
                 edge_fixed = false,
                 edge_customFixed = false,
                 edge_canpassed = false,
+                edge_direction = null,
 
                 block_prev = null,
                 block_next = null,
@@ -5003,7 +5005,7 @@ define(['logManager'], function (logManager) {
 
                 deleteEdges(box);
 
-                var pl = box.getPortList();
+                var pl = box.getPortList(),
                     ii = 0;
                 while( ii < pl.length){
                     deleteEdges(pl[ii++]);
@@ -5590,7 +5592,7 @@ define(['logManager'], function (logManager) {
                     i++;
                 }
 
-                for( id in box2bufferBox ){ //change the indices to bufferbox elements 
+                for( var id in box2bufferBox ){ //change the indices to bufferbox elements 
                     box2bufferBox[id] = bufferBoxes[ box2bufferBox[id] ];
                 }
 
@@ -6223,7 +6225,7 @@ pt = [pt];
                 else
                     p.y = getRectOuterCoord(startBoxRect, d);
 
-                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) == d, "ARPath.getOutOfBoxStartPoint: getDir(points.get(pos)[0].minus(p)) == d || getDir(points.get(pos)[0].minus(p)) == d FAILED"); 
+                assert( getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d, "getDir(points.get(pos)[0].minus(p)) === reverseDir( d ) || getDir(points.get(pos)[0].minus(p)) === d FAILED"); 
 
                 return p;
             };
@@ -7458,9 +7460,9 @@ pt = [pt];
         };
 
         AutoRouter.prototype.move = function( box, details ){
-            //Make sure details is in dx, dy
-            dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left );
-            dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
+            //Make sure details are in terms of dx, dy
+            var dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left ),
+                dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
 
             this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
         };
