@@ -7008,6 +7008,7 @@ pt = [pt];
         AutoRouter.prototype.addPort = function(box, connAreas){
             //Adding a port to an already existing box (also called in addBox method)
             //Default is no connection ports (more relevant when creating a box)
+            box = box instanceof ArBoxObject ? box.box : box;
             var port,
                 r,
                 p = [],
@@ -7058,7 +7059,7 @@ pt = [pt];
 
                 connAreas.forEach(function (connData, i, list){
                         var attr = 0,
-                            type = "any", //Specify start, end, or any
+                            type = "any", //Specify start, end, or any --Not fully implemented
                             j = 0,
                             port = box.createPort(),
                             connArea = connData instanceof Array ? 
@@ -7313,179 +7314,180 @@ pt = [pt];
         }
 
         return { "src": srcPorts[ srcP ], "dst": dstPorts[ dstP ] };
-    }
+    };
 
-        AutoRouter.prototype.addPath = function(a){
-            if( !a.src || !a.dst)
-                throw "AutoRouter:addPath missing source or destination";
-
-            var src = a.src, //src is obj with either a box & port specified or just a box
-                dst = a.dst, 
-                autoroute = a.autoroute || true,
-                startDir = a.startDirection || a.start,
-                endDir = a.endDirection || a.end,
-                path;
-
-            assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
-            assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
-            if( src.ports || dst.ports ){
-                var srcPorts = src.ports || src,
-                    dstPorts = dst.ports || dst,
-                    portsInfo = this._getClosestPorts(srcPorts, dstPorts);
-
-                src = portsInfo.src;
-                dst = portsInfo.dst;
-            }
-
-                path = this.router.addPath(autoroute, src, dst);
-
-            if(startDir || endDir){ 
-                var start = startDir != undefined ? (startDir.indexOf("top") != -1 ? ARPATH_StartOnTop : 0) +
-                                    (startDir.indexOf("bottom") != -1 ? ARPATH_StartOnBottom : 0) +
-                                    (startDir.indexOf("left") != -1 ? ARPATH_StartOnLeft : 0) +
-                                    (startDir.indexOf("right") != -1 ? ARPATH_StartOnRight : 0) ||
-                                    (startDir.indexOf("all") != -1 ? ARPATH_Default : 0) : ARPATH_Default ;
-                var end = endDir != undefined ? (endDir.indexOf("top") != -1 ? ARPATH_EndOnTop : 0) +
-                                    (endDir.indexOf("bottom") != -1 ? ARPATH_EndOnBottom : 0) +
-                                    (endDir.indexOf("left") != -1 ? ARPATH_EndOnLeft : 0) +
-                                    (endDir.indexOf("right") != -1 ? ARPATH_EndOnRight : 0) ||
-                                    (endDir.indexOf("all") != -1 ? ARPATH_Default : 0) : ARPATH_Default;
-
-                path.setStartDir(start); 
-                path.setEndDir(end);
-            }else{
-                path.setStartDir(ARPATH_Default); //ARPATH_StartOnLeft);
-                path.setEndDir(ARPATH_Default);
-            }
-
-            this.paths.push(path);
-
-            //Register the path under box id
-            this.boxId2Path[src.getOwner().getID()].out.push(path);
-            this.boxId2Path[dst.getOwner().getID()].in.push(path);
-            return path;
-        };
-
-        AutoRouter.prototype.autoroute = function(){ 
-            this.router.autoRoute();
-        };
-
-        AutoRouter.prototype.getPathPoints = function(path){
-            assert(this.paths.indexOf(path) != -1, "AutoRouter:getPath requested path does not match any current paths");
-            var points = path.getPointList(),
-                i = -1,
-                res = [];
-
-                while(++i < points.getLength()){
-                    var pt = [points.get(i)[0].x, points.get(i)[0].y];
-                    res.push(pt);
-                }
-
-            return res;
-        };
-
-        AutoRouter.prototype.setBox = function(boxObject, size){
-            var box = boxObject.box,
-                ports = boxObject.ports,
-                x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
-                x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
-                y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
-                y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
-                connAreas = size.ConnectionAreas,
-                rect = new ArRect(x1, y1, x2, y2),
-                paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
-                i = paths.in.length;
-
-            //Remove and Add Ports
-            box.deleteAllPorts();
-            boxObject.ports = [];
-            this.router.setBoxRect(box, rect);
-            this.setConnectionAreas(boxObject, connAreas);
-
-            //Reconnect paths to ports
-            while( i-- ){
-                var pathSrc = paths.in[i].getStartPort().getOwner(),
-                    newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
-                paths.in[i].setEndPort( newEndPort );
-                this.router.disconnect( paths.in[i] );
-            }
-
-            i = paths.out.length;
-            while( i-- ){
-                var pathDst = paths.out[i].getEndPort().getOwner(),
-                    newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
-                paths.out[i].setStartPort( newStartPort );
-                this.router.disconnect( paths.out[i] );
-            }
-        };
-
-        AutoRouter.prototype.setConnectionAreas = function(boxObject, connArea){
-            var box = boxObject.box,
-                oldPorts = boxObject.ports,
-                ports;
-
-            
-            while( oldPorts.length ){
-                box.deletePort(oldPorts[0]);
-            }
-
-            ports = this.addPort(box, connArea);
-            boxObject.ports = ports;
-
-            return new ArBoxObject(box, ports);
-        };
-
-        AutoRouter.prototype.remove = function(item){
-            assert(item !== undefined, "AutoRouter:remove Cannot remove undefined object");
-            item = item.box || item;
-
-            if(item instanceof AutoRouterBox){
-                this.boxId2Path[ item.getID() ] = undefined;
-                this.router.deleteBox(item);
-
-            }else if(item instanceof AutoRouterPath){
-                this.router.deletePath(item); //This should remove it from boxId2Path dictionary also
-
-            }else
-                throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath";
-        };
-
-        AutoRouter.prototype.move = function( box, details ){
-            //Make sure details are in terms of dx, dy
-            box = box instanceof AutoRouterBox ? box : box.box;
-            var dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left ),
-                dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
-
-            assert(box instanceof AutoRouterBox, "AutoRouter:move First argument must be an AutoRouterBox or ArBoxObject");
-
-            this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
-        };
-
-        AutoRouter.prototype.setMinimumGap = function( min ){
-            this.router.setBuffer( Math.floor(min/2) );
-        };
-
-        AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
-            var points = [],
-                i = 0;
-            if( !args.path instanceof AutoRouterPath )
-                throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
-
-            if( args.points.length > 0 )
-                args.path.setAutoRouting( false );
-            else
-                args.path.setAutoRouting( true );
-            
-            //Convert args.points to array of [ArPoint] 's
-            while ( i < args.points.length ){
-                points.push(new CustomPathData( args.points[i][0], args.points[i][1] ));
-                ++i;
-            }
-
-            args.path.setCustomPathData( points );
-
-        };
-
+    AutoRouter.prototype.addPath = function(a){
+        if( !a.src || !a.dst)
+            throw "AutoRouter:addPath missing source or destination";
+    
+        var src = a.src, //src is obj with either a box & port specified or just a box
+            dst = a.dst, 
+            autoroute = a.autoroute || true,
+            startDir = a.startDirection || a.start,
+            endDir = a.endDirection || a.end,
+            path;
+    
+        assert(src instanceof AutoRouterBox || src instanceof AutoRouterPort || src.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: src is not recognized as an AutoRouterPort");
+        assert(dst instanceof AutoRouterBox || dst instanceof AutoRouterPort || dst.ports[0] instanceof AutoRouterPort, "AutoRouter.addPath: dst is not recognized as an AutoRouterPort");
+        if( src.ports || dst.ports
+                || src instanceof Array || dst instanceof Array ){ //If there are multiple port possibilities
+            var srcPorts = src.ports || src,
+                dstPorts = dst.ports || dst,
+                portsInfo = this._getClosestPorts(srcPorts, dstPorts);
+    
+            src = portsInfo.src;
+            dst = portsInfo.dst;
+        }
+    
+        path = this.router.addPath(autoroute, src, dst);
+    
+        if(startDir || endDir){ 
+            var start = startDir != undefined ? (startDir.indexOf("top") != -1 ? ARPATH_StartOnTop : 0) +
+                (startDir.indexOf("bottom") != -1 ? ARPATH_StartOnBottom : 0) +
+                (startDir.indexOf("left") != -1 ? ARPATH_StartOnLeft : 0) +
+                (startDir.indexOf("right") != -1 ? ARPATH_StartOnRight : 0) ||
+                (startDir.indexOf("all") != -1 ? ARPATH_Default : 0) : ARPATH_Default ;
+            var end = endDir != undefined ? (endDir.indexOf("top") != -1 ? ARPATH_EndOnTop : 0) +
+                (endDir.indexOf("bottom") != -1 ? ARPATH_EndOnBottom : 0) +
+                (endDir.indexOf("left") != -1 ? ARPATH_EndOnLeft : 0) +
+                (endDir.indexOf("right") != -1 ? ARPATH_EndOnRight : 0) ||
+                (endDir.indexOf("all") != -1 ? ARPATH_Default : 0) : ARPATH_Default;
+    
+            path.setStartDir(start); 
+            path.setEndDir(end);
+        }else{
+            path.setStartDir(ARPATH_Default); //ARPATH_StartOnLeft);
+            path.setEndDir(ARPATH_Default);
+        }
+    
+        this.paths.push(path);
+    
+        //Register the path under box id
+        this.boxId2Path[src.getOwner().getID()].out.push(path);
+        this.boxId2Path[dst.getOwner().getID()].in.push(path);
+        return path;
+    };
+    
+    AutoRouter.prototype.autoroute = function(){ 
+        this.router.autoRoute();
+    };
+    
+    AutoRouter.prototype.getPathPoints = function(path){
+        assert(this.paths.indexOf(path) != -1, "AutoRouter:getPath requested path does not match any current paths");
+        var points = path.getPointList(),
+            i = -1,
+            res = [];
+    
+        while(++i < points.getLength()){
+            var pt = [points.get(i)[0].x, points.get(i)[0].y];
+            res.push(pt);
+        }
+    
+        return res;
+    };
+    
+    AutoRouter.prototype.setBox = function(boxObject, size){
+        var box = boxObject.box,
+            ports = boxObject.ports,
+            x1 = size.x1 !== undefined ? size.x1 : (size.x2 - size.width),
+            x2 = size.x2 !== undefined ? size.x2 : (size.x1 + size.width),
+            y1 = size.y1 !== undefined ? size.y1 : (size.y2 - size.height),
+            y2 = size.y2 !== undefined ? size.y2 : (size.y1 + size.height),
+            connAreas = size.ConnectionAreas,
+            rect = new ArRect(x1, y1, x2, y2),
+            paths = { "in": this.boxId2Path[ box.getID() ].in, "out": this.boxId2Path[ box.getID() ].out },
+            i = paths.in.length;
+    
+        //Remove and Add Ports
+        box.deleteAllPorts();
+        boxObject.ports = [];
+        this.router.setBoxRect(box, rect);
+        this.setConnectionAreas(boxObject, connAreas);
+    
+        //Reconnect paths to ports
+        while( i-- ){
+            var pathSrc = paths.in[i].getStartPort().getOwner(),
+                newEndPort = this._getClosestPorts( pathSrc, boxObject ).dst;
+            paths.in[i].setEndPort( newEndPort );
+            this.router.disconnect( paths.in[i] );
+        }
+    
+        i = paths.out.length;
+        while( i-- ){
+            var pathDst = paths.out[i].getEndPort().getOwner(),
+                newStartPort = this._getClosestPorts( boxObject, pathDst ).src;
+            paths.out[i].setStartPort( newStartPort );
+            this.router.disconnect( paths.out[i] );
+        }
+    };
+    
+    AutoRouter.prototype.setConnectionAreas = function(boxObject, connArea){
+        var box = boxObject.box,
+            oldPorts = boxObject.ports,
+            ports;
+    
+    
+        while( oldPorts.length ){
+            box.deletePort(oldPorts[0]);
+        }
+    
+        ports = this.addPort(box, connArea);
+        boxObject.ports = ports;
+    
+        return new ArBoxObject(box, ports);
+    };
+    
+    AutoRouter.prototype.remove = function(item){
+        assert(item !== undefined, "AutoRouter:remove Cannot remove undefined object");
+        item = item.box || item;
+    
+        if(item instanceof AutoRouterBox){
+            this.boxId2Path[ item.getID() ] = undefined;
+            this.router.deleteBox(item);
+    
+        }else if(item instanceof AutoRouterPath){
+            this.router.deletePath(item); //This should remove it from boxId2Path dictionary also
+    
+        }else
+            throw "AutoRouter:remove Unrecognized item type. Must be an AutoRouterBox or an AutoRouterPath";
+    };
+    
+    AutoRouter.prototype.move = function( box, details ){
+        //Make sure details are in terms of dx, dy
+        box = box instanceof AutoRouterBox ? box : box.box;
+        var dx = details.dx !== undefined ? details.dx : Math.round( details.x - box.getRect().left ),
+            dy = details.dy !== undefined ? details.dy : Math.round( details.y - box.getRect().ceil );
+    
+        assert(box instanceof AutoRouterBox, "AutoRouter:move First argument must be an AutoRouterBox or ArBoxObject");
+    
+        this.router.shiftBoxBy(box, { "cx": dx, "cy": dy });
+    };
+    
+    AutoRouter.prototype.setMinimumGap = function( min ){
+        this.router.setBuffer( Math.floor(min/2) );
+    };
+    
+    AutoRouter.prototype.setPathCustomPoints = function( args ){ //args.path = [ [x, y], [x2, y2], ... ]
+        var points = [],
+            i = 0;
+        if( !args.path instanceof AutoRouterPath )
+            throw "AutoRouter: Need to have an AutoRouterPath type to set custom path points";
+    
+        if( args.points.length > 0 )
+            args.path.setAutoRouting( false );
+        else
+            args.path.setAutoRouting( true );
+    
+        //Convert args.points to array of [ArPoint] 's
+        while ( i < args.points.length ){
+            points.push(new CustomPathData( args.points[i][0], args.points[i][1] ));
+            ++i;
+        }
+    
+        args.path.setCustomPathData( points );
+    
+    };
+    
     return AutoRouter;
-
+    
 });

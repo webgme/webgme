@@ -89,10 +89,6 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 			return TASYNC.call(__loadBase, oldcore.loadByPath(node, path));
 		};
 
-		/*core.loadPointer = function(node, name) {
-			ASSERT(isValidNode(node));
-			return TASYNC.call(__loadBase, oldcore.loadPointer(node, name));
-		};*/
         core.loadPointer = function(node,name){
             var pointer = TASYNC.call(__loadBase,oldcore.loadPointer(node, name));
             var base = core.getBase(node);
@@ -214,6 +210,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 
 			ASSERT(!parent || isValidNode(parent));
 			ASSERT(!base || isValidNode(base));
+            ASSERT(!base || core.getPath(base) !== core.getPath(parent));
 
 			var node = oldcore.createNode(parameters);
             node.base = base;
@@ -316,6 +313,8 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         // -------- kecso
         core.setBase = function(node,base){
             ASSERT(isValidNode(node) && (base === undefined || base === null || isValidNode(base)));
+            ASSERT(!base || core.getPath(core.getParent(node)) !== core.getPath(base));
+            ASSERT(!base || core.getPath(node) !== core.getPath(base));
             if(!!base){
                 oldcore.setPointer(node, "base", base);
                 //TODO maybe this is not the best way, needs to be double checked
@@ -340,12 +339,16 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
         };
         core.moveNode = function(node,parent){
             var base = node.base;
+            ASSERT(!base || core.getPath(base) !== core.getPath(parent));
+
             var moved = oldcore.moveNode(node,parent);
             moved.base = base;
             return moved;
         };
         core.copyNode = function(node,parent){
             var base = node.base;
+            ASSERT(!base || core.getPath(base) !== core.getPath(parent));
+
             var newnode = oldcore.copyNode(node,parent);
             newnode.base = base;
             return newnode;
