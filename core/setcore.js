@@ -115,6 +115,48 @@ define([ "util/assert"], function (ASSERT) {
                 innerCore.setAttribute(memberNode,attrName,attrValue);
             }
         };
+        setcore.delMemberAttribute = function(node,setName,memberPath,attrName){
+            ASSERT(typeof setName === 'string' && typeof attrName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.delAttribute(memberNode,attrName);
+            }
+        };
+
+        setcore.getMemberRegistryNames = function(node,setName,memberPath){
+            ASSERT(typeof setName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getRegistryNames(memberNode);
+            }
+            return [];
+        };
+        setcore.getMemberRegistry = function(node,setName,memberPath,regName){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                return innerCore.getAttribute(memberNode,regName);
+            }
+        };
+        setcore.setMemberRegistry = function(node,setName,memberPath,regName,regValue){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string' && regValue !== undefined);
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.setAttribute(memberNode,regName,regValue);
+            }
+        };
+        setcore.delMemberRegistry = function(node,setName,memberPath,regName){
+            ASSERT(typeof setName === 'string' && typeof regName === 'string');
+            var memberRelId = getMemberRelId(node,setName,memberPath);
+            if(memberRelId){
+                var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
+                innerCore.delAttribute(memberNode,regName);
+            }
+        };
 
         return setcore;
 

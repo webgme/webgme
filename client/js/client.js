@@ -1455,6 +1455,30 @@ define([
                     saveRoot('removeMember('+path+','+memberpath+','+setid+')');
                 }
             }
+            function setMemberAttribute(path,memberpath,setid,name,value){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setMemberAttribute(_nodes[path].node,setid,memberpath,name,value);
+                    saveRoot('setMemberAttribute('+path+","+memberpath+","+setid+","+name+","+value+")");
+                }
+            }
+            function delMemberAttribute(path,memberpath,setid,name){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delMemberAttribute(_nodes[path].node,setid,memberpath,name);
+                    saveRoot('delMemberAttribute('+path+","+memberpath+","+setid+","+name+")");
+                }
+            }
+            function setMemberRegistry(path,memberpath,setid,name,value){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.setMemberRegistry(_nodes[path].node,setid,memberpath,name,value);
+                    saveRoot('setMemberRegistry('+path+","+memberpath+","+setid+","+name+","+value+")");
+                }
+            }
+            function delMemberRegistry(path,memberpath,setid,name){
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.delMemberRegistry(_nodes[path].node,setid,memberpath,name);
+                    saveRoot('delMemberRegistry('+path+","+memberpath+","+setid+","+name+")");
+                }
+            }
 
             //Meta like descriptor functions
             function setAttributeDescriptor(path,attributename,descriptor){
@@ -1658,6 +1682,34 @@ define([
                 var getSetNames = function(){
                     return _core.getSetNames(_nodes[_id].node);
                 };
+                var getMemberAttributeNames = function(setid,memberid){
+                    return _core.getMemberAttributeNames(_nodes[_id].node,setid,memberid);
+                };
+                var getMemberAttribute = function(setid,memberid,name){
+                    return _core.getMemberAttribute(_nodes[_id].node,setid,memberid,name);
+                };
+                var getEditableMemberAttribute = function(setid,memberid,name){
+                    var attr = _core.getMemberAttribute(_nodes[_id].node,setid,memberid,name);
+                    if(attr !== null && attr !== undefined){
+                        return JSON.parse(JSON.stringify(attr));
+                    }
+                    return null;
+                };
+
+                var getMemberRegistryNames = function(setid,memberid){
+                    return _core.getMemberRegistryNames(_nodes[_id].node,setid,memberid);
+                };
+                var getMemberRegistry = function(setid,memberid,name){
+                    return _core.getMemberRegistry(_nodes[_id].node,setid,memberid,name);
+                };
+                var getEditableMemberRegistry = function(setid,memberid,name){
+                    var attr = _core.getMemberRegistry(_nodes[_id].node,setid,memberid,name);
+                    if(attr !== null && attr !== undefined){
+                        return JSON.parse(JSON.stringify(attr));
+                    }
+                    return null;
+                };
+
 
                 //META
                 var getValidChildrenTypes = function(){
@@ -1738,10 +1790,18 @@ define([
                         getAttributeNames : getAttributeNames,
                         getRegistryNames : getRegistryNames,
 
+                        //SetFunctions
+                        getMemberIds               : getMemberIds,
+                        getSetNames                : getSetNames,
+                        getMemberAttributeNames    : getMemberAttributeNames,
+                        getMemberAttribute         : getMemberAttribute,
+                        getEditableMemberAttribute : getEditableMemberAttribute,
+                        getMemberRegistryNames     : getMemberRegistryNames,
+                        getMemberRegistry          : getMemberRegistry,
+                        getEditableMemberRegistry  : getEditableMemberRegistry,
+
                         //META functions
                         getValidChildrenTypes : getValidChildrenTypes,
-                        getMemberIds          : getMemberIds,
-                        getSetNames           : getSetNames,
                         getAttributeDescriptor         : getAttributeDescriptor,
                         getEditableAttributeDescriptor : getEditableAttributeDescriptor,
                         getPointerDescriptor           : getPointerDescriptor,
@@ -1879,6 +1939,10 @@ define([
                 delPointer: delPointer,
                 addMember: addMember,
                 removeMember: removeMember,
+                setMemberAttribute: setMemberAttribute,
+                delMemberAttribute: delMemberAttribute,
+                setMemberRegistry: setMemberRegistry,
+                delMemberRegistry: delMemberRegistry,
 
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,
