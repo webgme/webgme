@@ -23,7 +23,6 @@ define(['logManager'], function (logManager) {
          ARPATH_EndOnLeft = 0x0080,
          ARPATH_EndMask = (ARPATH_EndOnTop | ARPATH_EndOnRight | ARPATH_EndOnBottom | ARPATH_EndOnLeft),
 
-
          ARPATH_StartOnDefault = 0x0000,
          ARPATH_StartOnTop = 0x0100,
          ARPATH_StartOnRight = 0x0200,
@@ -375,7 +374,7 @@ define(['logManager'], function (logManager) {
             //            |end-start|
             //
             var nom = Math.abs((end.x - start.x) * (start.y - pt.y) - (start.x - pt.x) * (end.y - start.y)),
-                denom_square = ((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y));
+                denom_square = ((end.x - start.x) * (end.x - start.x) + (end.y - start.y) * (end.y - start.y)),
                 d_square = nom * nom / denom_square;
             return d_square;
         };
@@ -6469,19 +6468,6 @@ pt = [pt];
 
                     ++i;
                 }
-/*
-                while (ii < customPathData.length){
-                    if ((customPathData[ii]).getType() == SimpleEdgeDisplacement) {
-                        // it is done in a next phase
-                    } else if ((customPathData[ii]).getType() == CustomPointCustomization) {
-                        if (!isAutoRoutingOn)
-                            plist.push(ArPoint((customPathData[ii]).getX(), (customPathData[ii]).getY()));
-                    } else {
-                        // unknown displacement type
-                    }
-                    ++ii;
-                }
-*/
 
                 return plist;
             };
