@@ -9,11 +9,12 @@
  * STRING CONSTANT DEFINITIONS USED IN METAEDITOR CONTROLLER
  */
 
-define([], function () {
+define(['js/Constants'], function (CONSTANTS) {
 
     //return string constants
     return {
         META_ASPECT_SET_NAME : 'MetaAspectSet',
-        META_ASPECT_MEMBER_POSITION_REGISTRY_KEY : 'MetaAspectPosition'
+        META_ASPECT_MEMBER_POSITION_REGISTRY_KEY : 'MetaAspectPosition',
+        RESERVED_POINTER_NAMES : [CONSTANTS.POINTER_BASE]
     };
 });

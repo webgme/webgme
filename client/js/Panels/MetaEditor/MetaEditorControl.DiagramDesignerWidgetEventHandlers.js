@@ -232,11 +232,12 @@ define(['logManager',
             if (connDesc.type === MetaRelations.META_RELATIONS.CONTAINMENT) {
                 self._deleteContainmentRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTER) {
-                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name);
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, false);
             } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
                 self._deleteInheritanceRelationship(connDesc.GMESrcId, connDesc.GMEDstId);
+            } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+                self._deletePointerRelationship(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, true);
             }
-            //TODO: PointerList deletion not yet handled
         };
 
         _client.startTransaction();

@@ -107,6 +107,7 @@ define(['logManager',
 
         this._nodeMetaContainment = {};
         this._nodeMetaPointers = {};
+        this._nodeMetaPointerLists = {};
         this._nodeMetaInheritance = {};
 
         this._filteredOutConnectionDescriptors = {};
@@ -442,8 +443,9 @@ define(['logManager',
 
                 //process new node to display containment / pointers / inheritance / pointerlists as connections
                 this._processNodeMetaContainment(gmeID);
-                this._processNodeMetaPointers(gmeID);
+                this._processNodeMetaPointers(gmeID, false);
                 this._processNodeMetaInheritance(gmeID);
+                this._processNodeMetaPointers(gmeID, true);
 
                 //check all the waiting pointers (whose SRC/DST is already displayed and waiting for the DST/SRC to show up)
                 //it might be this new node
@@ -469,7 +471,6 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][0];
                         connTexts = this._connectionWaitingListByDstGMEID[gmeDstID][gmeSrcID][len][1];
-                        //this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
                         c.push({'gmeSrcID': gmeSrcID,
                                 'gmeDstID': gmeDstID,
                                 'connType': connType,
@@ -490,7 +491,6 @@ define(['logManager',
                     while (len--) {
                         connType = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][0];
                         connTexts = this._connectionWaitingListBySrcGMEID[gmeSrcID][gmeDstID][len][1];
-                        //this._createConnection(gmeSrcID, gmeDstID, connType, connTexts);
                         c.push({'gmeSrcID': gmeSrcID,
                             'gmeDstID': gmeDstID,
                             'connType': connType,
@@ -554,6 +554,15 @@ define(['logManager',
                 this._removeConnection(this._nodeMetaInheritance[gmeID], gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
             }
 
+            //POINTER LISTS
+            len = this._nodeMetaPointerLists[gmeID].combinedNames.length;
+            while(len--) {
+                pointerName = this._nodeMetaPointerLists[gmeID].combinedNames[len];
+                otherEnd = this._nodeMetaPointerLists[gmeID][pointerName].target;
+                pointerName = this._nodeMetaPointerLists[gmeID][pointerName].name;
+                this._removeConnection(gmeID, otherEnd, MetaRelations.META_RELATIONS.POINTERLIST, pointerName);
+            }
+
             //finally delete the guy from the screen
             this.diagramDesigner.deleteComponent(componentID);
 
@@ -611,6 +620,7 @@ define(['logManager',
             delete this._nodeMetaContainment[gmeID];
             delete this._nodeMetaPointers[gmeID];
             delete this._nodeMetaInheritance[gmeID];
+            delete this._nodeMetaPointerLists[gmeID];
         }
     };
     /****************************************************************************/
@@ -871,8 +881,9 @@ define(['logManager',
 
             //update set relations
             this._processNodeMetaContainment(gmeID);
-            this._processNodeMetaPointers(gmeID);
+            this._processNodeMetaPointers(gmeID, false);
             this._processNodeMetaInheritance(gmeID);
+            this._processNodeMetaPointers(gmeID, true);
         }
     };
     /**************************************************************************/
@@ -953,9 +964,9 @@ define(['logManager',
     /*******************************************************************************/
     /*  DISPLAY META POINTER RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /*******************************************************************************/
-    MetaEditorControl.prototype._processNodeMetaPointers = function (gmeID) {
+    MetaEditorControl.prototype._processNodeMetaPointers = function (gmeID, isPointerList) {
         var node = this._client.getNode(gmeID),
-            pointerNames = node.getPointerNames(),
+            pointerNames = isPointerList === true ? node.getSetNames() : node.getPointerNames(),
             pointerMetaDescriptor,
             pointerOwnMetaTypes,
             len,
@@ -966,10 +977,16 @@ define(['logManager',
             pointerName,
             idx,
             lenTargets,
-            combinedName;
+            combinedName,
+            ptrType = isPointerList === true ? MetaRelations.META_RELATIONS.POINTERLIST : MetaRelations.META_RELATIONS.POINTER;
 
-        this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': [], 'combinedNames': []};
-        oldMetaPointers = this._nodeMetaPointers[gmeID];
+        if (isPointerList !== true) {
+            this._nodeMetaPointers[gmeID] = this._nodeMetaPointers[gmeID] || {'names': [], 'combinedNames': []};
+            oldMetaPointers = this._nodeMetaPointers[gmeID];
+        } else {
+            this._nodeMetaPointerLists[gmeID] = this._nodeMetaPointerLists[gmeID] || {'names': [], 'combinedNames': []};
+            oldMetaPointers = this._nodeMetaPointerLists[gmeID];
+        }
 
         len = pointerNames.length;
         while (len--) {
@@ -1006,7 +1023,7 @@ define(['logManager',
 
                 oldMetaPointers[combinedName].multiplicity = newMetaPointers[combinedName].multiplicity;
 
-                this._updateConnectionText(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
+                this._updateConnectionText(gmeID, pointerTarget, ptrType, {'name': pointerName,
                     'dstText': newMetaPointers[combinedName].multiplicity,
                     'dstTextEdit': true});
             }
@@ -1020,7 +1037,7 @@ define(['logManager',
             pointerName = oldMetaPointers[combinedName].name;
             pointerTarget = oldMetaPointers[combinedName].target;
 
-            this._removeConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, pointerName);
+            this._removeConnection(gmeID, pointerTarget, ptrType, pointerName);
 
             idx = oldMetaPointers.combinedNames.indexOf(combinedName);
             oldMetaPointers.combinedNames.splice(idx,1);
@@ -1041,9 +1058,9 @@ define(['logManager',
                                             'target': newMetaPointers[combinedName].target,
                                             'multiplicity': newMetaPointers[combinedName].multiplicity};
 
-            this._createConnection(gmeID, pointerTarget, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
-                                                                                                'dstText': newMetaPointers[combinedName].multiplicity,
-                                                                                                'dstTextEdit': true});
+            this._createConnection(gmeID, pointerTarget, ptrType, {'name': pointerName,
+                                                                    'dstText': newMetaPointers[combinedName].multiplicity,
+                                                                    'dstTextEdit': true});
         }
     };
     /******************************************************************************************/
@@ -1120,9 +1137,10 @@ define(['logManager',
                 this._createInheritanceRelationship(sourceId, targetId);
                 break;
             case MetaRelations.META_RELATIONS.POINTER:
-                this._createPointerRelationship(sourceId, targetId);
+                this._createPointerRelationship(sourceId, targetId, false);
                 break;
             case MetaRelations.META_RELATIONS.POINTERLIST:
+                this._createPointerRelationship(sourceId, targetId, true);
                 break;
             default:
                 break;
@@ -1150,43 +1168,70 @@ define(['logManager',
     };
 
 
-    MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID) {
+    MetaEditorControl.prototype._createPointerRelationship = function (sourceID, targetID, isPointerList) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
             pointerMetaDescriptor,
-            pointerNames,
+            existingPointerNames,
+            notAllowedPointerNames,
             self = this;
 
         if (sourceNode && targetNode) {
-            //get the list of existing pointers and show them in a dialog so the user can choose
-            pointerNames = sourceNode.getPointerNames() || [];
-
-            //exclude ones that are dedicated META pointers and should not be overriden by the user
-            if (pointerNames.indexOf(CONSTANTS.POINTER_BASE) !== -1) {
-                pointerNames.splice(pointerNames.indexOf(CONSTANTS.POINTER_BASE), 1);
+            if (isPointerList === true) {
+                //this is a pointer list
+                existingPointerNames = sourceNode.getSetNames() || [];
+                notAllowedPointerNames = sourceNode.getPointerNames() || [];
+            } else {
+                //this is a single pointer
+                //get the list of existing pointers and show them in a dialog so the user can choose
+                existingPointerNames = sourceNode.getPointerNames() || [];
+                notAllowedPointerNames = sourceNode.getSetNames() || [];
             }
 
+            //handle RESERVED pointer names
+            existingPointerNames = _.difference(existingPointerNames, MetaEditorConstants.RESERVED_POINTER_NAMES);
+            notAllowedPointerNames = notAllowedPointerNames.concat(MetaEditorConstants.RESERVED_POINTER_NAMES);
+
             //query pointer name from user
-            this.diagramDesigner.selectNewPointerName(pointerNames, function (userSelectedPointerName) {
+            this.diagramDesigner.selectNewPointerName(existingPointerNames, notAllowedPointerNames, isPointerList, function (userSelectedPointerName) {
                 self._client.startTransaction();
                 pointerMetaDescriptor = self._client.getValidTargetItems(sourceID,userSelectedPointerName);
                 if(!pointerMetaDescriptor){
-                    self._client.makePointer(sourceID,userSelectedPointerName,null);
-                    self._client.setPointerMeta(sourceID,userSelectedPointerName,{
-                        "min":1,
-                        "max":1,
-                        "items":[
-                            {
-                                id:targetID,
-                                "max":1
-                            }
-                        ]
-                    });
+                    if (isPointerList !== true) {
+                        //single pointer
+                        self._client.setPointerMeta(sourceID,userSelectedPointerName,{
+                            "min":1,
+                            "max":1,
+                            "items":[
+                                {
+                                    id:targetID,
+                                    "max":1
+                                }
+                            ]
+                        });
+                        self._client.makePointer(sourceID,userSelectedPointerName,null);
+                        self._updateObjectConnectionVisualStyles(sourceID);
+                    } else {
+                        //pointer list
+                        self._client.setPointerMeta(sourceID,userSelectedPointerName,{
+                            "items":[
+                                {
+                                    id:targetID
+                                }
+                            ]
+                        });
+                        self._client.createSet(sourceID,userSelectedPointerName);
+                    }
                 } else {
-                    self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
+                    if (isPointerList !== true) {
+                        //single pointer
+                        self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID,max:1});
+                        self._updateObjectConnectionVisualStyles(sourceID);
+                    } else {
+                        //pointer list
+                        self._client.updateValidTargetItem(sourceID,userSelectedPointerName,{id:targetID});
+                    }
                 }
-
-                self._updateObjectConnectionVisualStyles(sourceID);
 
                 self._client.completeTransaction();
             });
@@ -1194,7 +1239,7 @@ define(['logManager',
     };
 
 
-    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName) {
+    MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName, isPointerList) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
             pointerMetaDescriptor;
@@ -1205,11 +1250,17 @@ define(['logManager',
             this._client.removeValidTargetItem(sourceID,pointerName,targetID);
             pointerMetaDescriptor = this._client.getValidTargetItems(sourceID,pointerName);
             if(pointerMetaDescriptor && pointerMetaDescriptor.length === 0){
-                this._client.deleteMetaPointer(sourceID,pointerName);
-                this._client.delPointer(sourceID,pointerName);
+                if (isPointerList === false) {
+                    //single pointer
+                    this._client.deleteMetaPointer(sourceID,pointerName);
+                    this._client.delPointer(sourceID,pointerName);
+                    this._updateObjectConnectionVisualStyles(sourceID);
+                } else {
+                    //pointer list
+                    this._client.deleteMetaPointer(sourceID,pointerName);
+                    this._client.deleteSet(sourceID,pointerName);
+                }
             }
-
-            this._updateObjectConnectionVisualStyles(sourceID);
         }
     };
 
@@ -1352,6 +1403,8 @@ define(['logManager',
             this._pointerRelationshipMultiplicityUpdate(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, oldValue, newValue);
         } else if (connDesc.type === MetaRelations.META_RELATIONS.INHERITANCE) {
             //never can happen
+        } else if (connDesc.type === MetaRelations.META_RELATIONS.POINTERLIST) {
+            this._pointerListRelationshipMultiplicityUpdate(connDesc.GMESrcId, connDesc.GMEDstId, connDesc.name, oldValue, newValue);
         }
     };
 
@@ -1367,7 +1420,7 @@ define(['logManager',
                 pattMinToMax = /^\d+\.\.\d+$/g,
                 pattMinToMany = /^\d+\.\.\*$/g;
 
-            //valid value for containment is 1, 0..*, x..y
+            //valid values for containment are 1, x..*, x..y
             if (pattNum.test(value)) {
                 //#1: single digit number
                 result = {'min': parseInt(value, 10),
@@ -1410,7 +1463,7 @@ define(['logManager',
                 pattOne = "1",
                 pattZeroOne = "0..1";
 
-            //valid value for pointer is 1, 0..1
+            //valid values for pointer are: 1, 0..1
             result = value === pattOne || value === pattZeroOne;
 
             return result;
@@ -1424,6 +1477,49 @@ define(['logManager',
                 this._client.setPointerDescriptor(sourceID, pointerName, pointerMetaDescriptor);
             } else {
                 this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, { 'name': pointerName,
+                    'dstText': oldValue,
+                    'dstTextEdit': true});
+            }
+        }
+    };
+
+    MetaEditorControl.prototype._pointerListRelationshipMultiplicityUpdate = function (sourceID, targetID, pointerName, oldValue, newValue) {
+        var sourceNode = this._client.getNode(sourceID),
+            targetNode = this._client.getNode(targetID),
+            multiplicityValid,
+            multiplicity;
+
+        multiplicityValid = function (value) {
+            var result = null,
+                pattNum = /^\d+$/g,
+                pattMinToMax = /^\d+\.\.\d+$/g,
+                pattMinToMany = /^\d+\.\.\*$/g;
+
+            //valid value for pointer list are: 1, x..*, x..y
+            if (pattNum.test(value)) {
+                //#1: single digit number
+                result = {'min': parseInt(value, 10),
+                    'max': parseInt(value, 10)};
+            } else if (pattMinToMax.test(value)) {
+                //#2: x..y
+                result = {'min': parseInt(value, 10),
+                    'max': parseInt(value.substring(value.indexOf('..') + 2), 10)};
+            } else if (pattMinToMany.test(value)) {
+                //#3: x..*
+                result = {'min': parseInt(value, 10),
+                    'max': -1};
+            }
+
+            return result;
+        };
+
+        if (sourceNode && targetNode) {
+            multiplicity = multiplicityValid(newValue);
+            if (multiplicity) {
+                multiplicity.id = targetID;
+                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
+            } else {
+                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTERLIST, {'name': pointerName,
                     'dstText': oldValue,
                     'dstTextEdit': true});
             }
