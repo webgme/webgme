@@ -20,7 +20,6 @@ define(['jquery',
 
     var METAKey = "META",
         META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID,
-        META_EDITOR_REGISTRY_KEY = MetaEditorConstants.META_EDITOR_REGISTRY_KEY,
         _client,
         _territoryId,
         _territoryUI,
@@ -97,18 +96,16 @@ define(['jquery',
 
         if (metaContainer) {
             //read the META rules out of the META container and generate
-            var metaContainerRegistry = metaContainer.getRegistry(META_EDITOR_REGISTRY_KEY),
+            var metaAspectSetMembers = metaContainer.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
                 diff,
                 territoryChanged = false,
                 len,
                 nodeID,
                 nodeName;
 
-            if (metaContainerRegistry && metaContainerRegistry.Members) {
-                var members = metaContainerRegistry.Members;
-
+            if (metaAspectSetMembers && metaAspectSetMembers.length > 0) {
                 //check deleted nodes
-                diff = _.difference(_metaMembers, members);
+                diff = _.difference(_metaMembers, metaAspectSetMembers);
                 len = diff.length;
                 while (len--) {
                     if (diff[len] !== META_RULES_CONTAINER_NODE_ID) {
@@ -118,7 +115,7 @@ define(['jquery',
                 }
 
                 //check added nodes
-                diff = _.difference(members, _metaMembers);
+                diff = _.difference(metaAspectSetMembers, _metaMembers);
                 len = diff.length;
                 while (len--) {
                     if (diff[len] !== META_RULES_CONTAINER_NODE_ID) {
@@ -128,7 +125,7 @@ define(['jquery',
                 }
 
                 //save the new contained nodes
-                _metaMembers = members.slice(0);
+                _metaMembers = metaAspectSetMembers.slice(0);
 
                 WebGMEGlobal[METAKey] = {};
 

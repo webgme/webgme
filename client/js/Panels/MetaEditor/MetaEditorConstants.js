@@ -11,14 +11,9 @@
 
 define([], function () {
 
-    var _emptyMetaEditorRegistry = function () {
-        return { "Members": [],
-            "MemberCoord": {}};
-    };
-
     //return string constants
     return {
-        META_EDITOR_REGISTRY_KEY: "MetaEditor",
-        GET_EMPTY_META_EDITOR_REGISTRY_OBJ: _emptyMetaEditorRegistry
+        META_ASPECT_SET_NAME : 'MetaAspectSet',
+        META_ASPECT_MEMBER_POSITION_REGISTRY_KEY : 'MetaAspectPosition'
     };
 });

@@ -176,11 +176,9 @@ define(['jquery',
         fcoMeta.attributes.name = {'type': 'string'};
         _client.setMeta(FCO_ID, fcoMeta);
 
-        //set METAEDITOR object containment correctly
-        var rootMetaEditorDesc = MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
-        rootMetaEditorDesc.Members = [FCO_ID];
-        rootMetaEditorDesc.MemberCoord[FCO_ID] = {'x': 100, 'y': 100};
-        _client.setRegistry(CONSTANTS.PROJECT_ROOT_ID, MetaEditorConstants.META_EDITOR_REGISTRY_KEY, rootMetaEditorDesc);
+        //set META ASPECT to show FCO
+        _client.addMember(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME);
+        _client.setMemberRegistry(CONSTANTS.PROJECT_ROOT_ID, FCO_ID, MetaEditorConstants.META_ASPECT_SET_NAME, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY, {'x': 100, 'y': 100} );
 
         _client.completeTransaction();
     };

@@ -20,7 +20,6 @@ define(['logManager',
 
     var MetaEditorControl,
         GME_ID = "GME_ID",
-        META_EDITOR_REGISTRY_KEY = MetaEditorConstants.META_EDITOR_REGISTRY_KEY,
         META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner',
         META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID;
@@ -34,8 +33,6 @@ define(['logManager',
 
         //initialize core collections and variables
         this.diagramDesigner = options.widget;
-
-        this._META_EDITOR_REGISTRY_KEY = META_EDITOR_REGISTRY_KEY;
 
         if (this._client === undefined) {
             this.logger.error("ModelEditorControl's client is not specified...");
@@ -169,10 +166,6 @@ define(['logManager',
     /*                   PRIVATE METHODS                      */
     /**********************************************************/
 
-    MetaEditorControl.prototype._emptyMetaEditorRegistry = function () {
-        return MetaEditorConstants.GET_EMPTY_META_EDITOR_REGISTRY_OBJ();
-    };
-
     /**********************************************************/
     /*       EVENT AND DECORATOR DOWNLOAD HANDLING            */
     /**********************************************************/
@@ -250,8 +243,10 @@ define(['logManager',
     /*       READ IMPORTANT INFORMATION FROM A NODE           */
     /**********************************************************/
     MetaEditorControl.prototype._getObjectDescriptor = function (gmeID) {
-        var cNode = this._client.getNode(gmeID),
-            nodeDescriptor;
+        var aspectNode = this._client.getNode(this.currentNodeInfo.id),
+            cNode = this._client.getNode(gmeID),
+            nodeDescriptor,
+            metaAspectPos;
 
         if (cNode) {
             nodeDescriptor = {"ID": gmeID,
@@ -260,13 +255,13 @@ define(['logManager',
                 "name": cNode.getAttribute(nodePropertyNames.Attributes.name) || "",
                 "position": { "x": -1, "y": -1 }};
 
-            //nodeDescriptor.decorator = cNode.getRegistry(nodePropertyNames.Registry.decorator) || META_DECORATOR;
-
-            if (gmeID === this.currentNodeInfo.id) {
-
-            } else {
-                if (this._selfRegistry) {
-                    nodeDescriptor.position = this._selfRegistry.MemberCoord[gmeID]; // || { "x": 100, "y": 100  };
+            if (gmeID !== this.currentNodeInfo.id) {
+                if (this.currentNodeInfo.members.indexOf(gmeID) !== -1) {
+                    metaAspectPos = aspectNode.getMemberRegistry(MetaEditorConstants.META_ASPECT_SET_NAME, gmeID, MetaEditorConstants.META_ASPECT_MEMBER_POSITION_REGISTRY_KEY);
+                    if (metaAspectPos) {
+                        nodeDescriptor.position.x = metaAspectPos.x;
+                        nodeDescriptor.position.y = metaAspectPos.y;
+                    }
                 }
             }
         }
@@ -373,14 +368,11 @@ define(['logManager',
             objDesc,
             componentID,
             gmeID,
-            metaEditorRegistry = aspectNode.getEditableRegistry(META_EDITOR_REGISTRY_KEY) || this._emptyMetaEditorRegistry(),
+            metaAspectSetMembers = aspectNode.getMemberIds(MetaEditorConstants.META_ASPECT_SET_NAME),
             territoryChanged = false;
 
-        //update selfRegistry (for node positions)
-        this._selfRegistry = metaEditorRegistry;
-
         //check deleted nodes
-        diff = _.difference(this.currentNodeInfo.members, metaEditorRegistry.Members);
+        diff = _.difference(this.currentNodeInfo.members, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             delete this._selfPatterns[diff[len]];
@@ -388,7 +380,7 @@ define(['logManager',
         }
 
         //check added nodes
-        diff = _.difference(metaEditorRegistry.Members, this.currentNodeInfo.members);
+        diff = _.difference(metaAspectSetMembers, this.currentNodeInfo.members);
         len = diff.length;
         while (len--) {
             this._selfPatterns[diff[len]] = { "children": 0 };
@@ -396,7 +388,7 @@ define(['logManager',
         }
 
         //check all other nodes for position change
-        diff = _.intersection(this.currentNodeInfo.members, metaEditorRegistry.Members);
+        diff = _.intersection(this.currentNodeInfo.members, metaAspectSetMembers);
         len = diff.length;
         while (len--) {
             gmeID = diff[len];
@@ -409,7 +401,7 @@ define(['logManager',
         }
 
         //update current member list
-        this.currentNodeInfo.members = metaEditorRegistry.Members.slice(0);
+        this.currentNodeInfo.members = metaAspectSetMembers.slice(0);
 
         //there was change in the territory
         if (territoryChanged === true) {
@@ -892,8 +884,7 @@ define(['logManager',
     /*  DISPLAY META CONTAINMENT RELATIONS AS A CONNECTION FROM CONTAINER TO CONTAINED */
     /***********************************************************************************/
     MetaEditorControl.prototype._processNodeMetaContainment = function (gmeID) {
-        var node = this._client.getNode(gmeID),
-            containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
+        var containmentMetaDescriptor = this._client.getValidChildrenItems(gmeID) || [],
             containmentOwnTypes = this._client.getOwnValidChildrenTypes(gmeID) || [],
             len,
             oldMetaContainment,
@@ -1206,11 +1197,11 @@ define(['logManager',
     MetaEditorControl.prototype._deletePointerRelationship = function (sourceID, targetID, pointerName) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
-            pointerMetaDescriptor,
-            idx;
+            pointerMetaDescriptor;
+
+        //NOTE: this method is called from inside a transaction, don't need to start/complete one
 
         if (sourceNode && targetNode) {
-            //this._client.startTransaction();
             this._client.removeValidTargetItem(sourceID,pointerName,targetID);
             pointerMetaDescriptor = this._client.getValidTargetItems(sourceID,pointerName);
             if(pointerMetaDescriptor && pointerMetaDescriptor.length === 0){
@@ -1219,7 +1210,6 @@ define(['logManager',
             }
 
             this._updateObjectConnectionVisualStyles(sourceID);
-            //this._client.completeTransaction();
         }
     };
 
@@ -1505,22 +1495,22 @@ define(['logManager',
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Containment",
             "selected": true,
             "data": { "connType": MetaRelations.META_RELATIONS.CONTAINMENT },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)});
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)});
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Pointer",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.POINTER },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTER)});
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "PointerList",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.POINTERLIST },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)}, this._$btnGroupObjectRelations);
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.POINTERLIST)});
 
         /************** END OF - CREATE META RELATION CONNECTION TYPES *****************/
 
