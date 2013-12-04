@@ -1479,6 +1479,12 @@ define([
                     saveRoot('delMemberRegistry('+path+","+memberpath+","+setid+","+name+")");
                 }
             }
+            function createSet(path, setid) {
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.createSet(_nodes[path].node,setid);
+                    saveRoot('createSet('+path+","+setid+")");
+                }
+            }
 
             //Meta like descriptor functions
             function setAttributeDescriptor(path,attributename,descriptor){
@@ -1709,7 +1715,6 @@ define([
                     }
                     return null;
                 };
-
 
                 //META
                 var getValidChildrenTypes = function(){
@@ -1943,6 +1948,7 @@ define([
                 delMemberAttribute: delMemberAttribute,
                 setMemberRegistry: setMemberRegistry,
                 delMemberRegistry: delMemberRegistry,
+                createSet:createSet,
 
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,

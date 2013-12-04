@@ -45,11 +45,11 @@ define([ "util/assert"], function (ASSERT) {
         }
 
         //adding new functions
-        setcore.getSetsNumber = function(node){
-            return (innerCore.getChildrenRelids(innerCore.getChild(node,SETS_ID))).length;
+        setcore.getSetNumbers = function(node){
+            return this.getSetNames(node).length;
         };
-        setcore.getSetsName = function(node){
-            return  innerCore.getChildrenRelids(innerCore.getChild(node,SETS_ID))|| [];
+        setcore.getSetNames = function(node){
+            return  innerCore.getPointerNames(innerCore.getChild(node,SETS_ID))|| [];
         };
         setcore.getMemberPaths = function(node,setName){
             ASSERT(typeof setName === 'string');
@@ -156,6 +156,13 @@ define([ "util/assert"], function (ASSERT) {
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.delAttribute(memberNode,regName);
             }
+        };
+        setcore.createSet = function(node,setName) {
+            ASSERT(typeof setName === 'string');
+            var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
+            innerCore.setRegistry(setNode,"_","_");//TODO hack, somehow the empty children have been removed during persist
+            innerCore.setPointer(innerCore.getChild(node,SETS_ID), setName, null);
+            setModified(node,setName);
         };
 
         return setcore;
