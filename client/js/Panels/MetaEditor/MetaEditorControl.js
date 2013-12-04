@@ -1455,8 +1455,8 @@ define(['logManager',
     MetaEditorControl.prototype._pointerRelationshipMultiplicityUpdate = function (sourceID, targetID, pointerName, oldValue, newValue) {
         var sourceNode = this._client.getNode(sourceID),
             targetNode = this._client.getNode(targetID),
-            pointerMetaDescriptor,
-            multiplicityValid;
+            multiplicityValid,
+            multiplicity;
 
         multiplicityValid = function (value) {
             var result,
@@ -1464,19 +1464,25 @@ define(['logManager',
                 pattZeroOne = "0..1";
 
             //valid values for pointer are: 1, 0..1
-            result = value === pattOne || value === pattZeroOne;
+            if (value === pattOne) {
+                //#1: single digit number
+                result = {'min': 1,
+                    'max': 1};
+            } else if (value === pattZeroOne) {
+                result = {'min': 0,
+                    'max': 1};
+            }
 
             return result;
         };
 
         if (sourceNode && targetNode) {
-            pointerMetaDescriptor = sourceNode.getEditablePointerDescriptor(pointerName) || [];
-
-            if (multiplicityValid(newValue)) {
-                pointerMetaDescriptor.multiplicity = newValue;
-                this._client.setPointerDescriptor(sourceID, pointerName, pointerMetaDescriptor);
+            multiplicity = multiplicityValid(newValue);
+            if (multiplicity) {
+                multiplicity.id = targetID;
+                this._client.updateValidTargetItem(sourceID, pointerName, multiplicity);
             } else {
-                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, { 'name': pointerName,
+                this._updateConnectionText(sourceID, targetID, MetaRelations.META_RELATIONS.POINTER, {'name': pointerName,
                     'dstText': oldValue,
                     'dstTextEdit': true});
             }
