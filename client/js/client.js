@@ -1485,6 +1485,10 @@ define([
                     saveRoot('createSet('+path+","+setid+")");
                 }
             }
+            function deleteSet(path, setid) {
+                //TODO: implement
+                logger.error('deleteSet not yet implemented!!!');
+            }
 
             //Meta like descriptor functions
             function setAttributeDescriptor(path,attributename,descriptor){
@@ -1949,6 +1953,7 @@ define([
                 setMemberRegistry: setMemberRegistry,
                 delMemberRegistry: delMemberRegistry,
                 createSet:createSet,
+                deleteSet: deleteSet,
 
                 //desc and META
                 setAttributeDescriptor: setAttributeDescriptor,
