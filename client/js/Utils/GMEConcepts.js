@@ -191,13 +191,6 @@ define(['jquery',
         return objID === value;
     };
 
-    var _getProjectRegistryValue = function (key) {
-        var rootNode = _client.getNode(CONSTANTS.PROJECT_ROOT_ID),
-            projectRegistry = rootNode.getRegistry(nodePropertyNames.Registry.ProjectRegistry);
-
-        return projectRegistry ?  projectRegistry[key] : null;
-    };
-
     var _isProjectFCO = function (objID) {
         return _isProjectRegistryValue(CONSTANTS.PROJECT_FCO_ID, objID);
     };
