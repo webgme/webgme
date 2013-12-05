@@ -70,7 +70,8 @@ define(['jquery',
     };
 
     ContextMenu.prototype.createMenu = function (items) {
-        var li;
+        var li,
+            icon;
 
         this._menuUL.empty();
 
@@ -79,6 +80,15 @@ define(['jquery',
                 li = LI_BASE.clone();
                 li.data(DATA_KEY, i);
                 li.find('a').text(items[i].name);
+                if (items[i].icon) {
+                    li.find('a').prepend(' ')
+                    if (typeof items[i].icon === 'string') {
+                        icon = $('<i/>', {'class': items[i].icon });
+                        li.find('a').prepend(icon);
+                    } else {
+                        li.find('a').prepend($(items[i].icon));
+                    }
+                }
                 this._menuUL.append(li);
             }
         }
