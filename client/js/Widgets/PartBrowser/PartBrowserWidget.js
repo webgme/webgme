@@ -48,7 +48,7 @@ define(['logManager',
     PartBrowserWidget.prototype.$_DOMBase = $('<div/>').attr({ "class": PART_CLASS });
 
     PartBrowserWidget.prototype.addPart = function (partId, partDesc) {
-        var partContainerDiv = this._list.find("div[id='" + partId + "']"),
+        var partContainerDiv = this._getPartDiv(partId),
             partContainerLi = $("<li/>"),
             DecoratorClass = partDesc.decoratorClass,
             decoratorInstance;
@@ -149,8 +149,12 @@ define(['logManager',
         return draggedEl;
     };*/
 
+    PartBrowserWidget.prototype._getPartDiv = function (partId) {
+        return this._list.find("div." + PART_CLASS + "[id='" + partId + "']");
+    };
+
     PartBrowserWidget.prototype.removePart = function (partId) {
-        var partContainer = this._list.find("div[id='" + partId + "']");
+        var partContainer = this._getPartDiv(partId);
 
         if (partContainer.length > 0) {
             dragSource.destroyDraggable(partContainer);
@@ -166,7 +170,7 @@ define(['logManager',
     PartBrowserWidget.prototype.updatePart = function (partId, partDesc) {
         var partDecoratorInstance = this._parts[partId] ? this._parts[partId].decoratorInstance : undefined,
             DecoratorClass = partDesc.decoratorClass,
-            partContainerDiv = this._list.find("div[id='" + partId + "']");
+            partContainerDiv = this._getPartDiv(partId);
 
         if (partDecoratorInstance) {
             if (partDesc.decoratorClass && partDecoratorInstance.DECORATORID !== partDesc.decoratorClass.prototype.DECORATORID) {
