@@ -3,16 +3,20 @@
 define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
-    'js/NodePropertyNames'], function (logManager,
+    'js/NodePropertyNames',
+    'js/Utils/METATypeHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
-                             nodePropertyNames) {
+                             nodePropertyNames,
+                             METATypeHelper) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
         DEFAULT_DECORATOR = "ModelDecorator";
 
     PartBrowserControl = function (myClient, myPartBrowserView) {
+        var self = this;
+
         this._client = myClient;
         this._partBrowserView = myPartBrowserView;
 
@@ -29,6 +33,10 @@ define(['logManager',
 
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
+
+        METATypeHelper.addEventListener(METATypeHelper.events.META_ASPECT_CHANGED, function () {
+            self._processContainerNode(self._containerNodeId);
+        });
     };
 
     PartBrowserControl.prototype.selectedObjectChanged = function (nodeId) {
@@ -124,11 +132,22 @@ define(['logManager',
             len,
             diff,
             id,
-            territoryChanged = false;
+            territoryChanged = false,
+            metaAspectMembers = METATypeHelper.getMetaAspectMembers();
 
         if (node) {
             //get possible targets from MetaDescriptor
             validChildrenTypes = this._client.getValidChildrenTypes(gmeID);
+
+            len = metaAspectMembers.length;
+            while(len--) {
+                id = metaAspectMembers[len];
+                if (validChildrenTypes.indexOf(id) === -1) {
+                    if (GMEConcepts.canCreateChild(gmeID, id)) {
+                        validChildrenTypes.push(id);
+                    }
+                }
+            }
 
             //the deleted ones
             diff = _.difference(oValidChildrenTypes, validChildrenTypes);
