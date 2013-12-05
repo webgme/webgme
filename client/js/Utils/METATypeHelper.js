@@ -11,15 +11,17 @@ define(['jquery',
         'js/Constants',
         'js/NodePropertyNames',
         'logManager',
-        'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+        'js/Panels/MetaEditor/MetaEditorConstants',
+        'eventDispatcher'], function (_jquery,
                                     _underscore,
                                     CONSTANTS,
                                     nodePropertyNames,
                                     logManager,
-                                    MetaEditorConstants) {
+                                    MetaEditorConstants,
+                                    EventDispatcher) {
 
     var METAKey = "META",
-        META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID,
+        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,
         _territoryId,
         _territoryUI,
@@ -27,13 +29,17 @@ define(['jquery',
         _metaMembers,
         _patterns = {},
         _logger = logManager.create("METATypeHelper"),
-        _btnMETA;
+        _btnMETA,
+        _events = {'META_ASPECT_CHANGED': 'META_ASPECT_CHANGED'};
 
     TerritoryUI = function () {
+        $.extend(this, new EventDispatcher());
     };
 
     TerritoryUI.prototype.onOneEvent = function (/*events*/) {
         _processMetaContainer();
+
+        this.dispatchEvent(_events.META_ASPECT_CHANGED);
     };
 
     var _reset = function () {
@@ -207,8 +213,37 @@ define(['jquery',
         return result;
     };
 
+    var _getMetaAspectMembers = function () {
+        var members = [];
+
+        for (var m in WebGMEGlobal[METAKey]) {
+            if (WebGMEGlobal[METAKey].hasOwnProperty(m)) {
+                members.push(WebGMEGlobal[METAKey][m]);
+            }
+        }
+
+        return members;
+    };
+
+    var _addEventListener = function (event, callback) {
+        if (_territoryUI) {
+            _territoryUI.addEventListener(event, callback);
+        }
+    };
+
+    var _removeEventListener = function (event, callback) {
+        if (_territoryUI) {
+            _territoryUI.removeEventListener(event, callback);
+        }
+    };
+
     //return utility functions
     return { initialize: _initialize,
             METAKey: METAKey,
-            isMETAType: _isMETAType};
+            isMETAType: _isMETAType,
+            getMetaAspectMembers: _getMetaAspectMembers,
+            events: _events,
+            addEventListener: _addEventListener,
+            removeEventListener: _removeEventListener
+        };
 });
