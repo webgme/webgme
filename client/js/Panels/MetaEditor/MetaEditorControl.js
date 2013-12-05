@@ -22,7 +22,7 @@ define(['logManager',
         GME_ID = "GME_ID",
         META_DECORATOR = "MetaDecorator",
         WIDGET_NAME = 'DiagramDesigner',
-        META_RULES_CONTAINER_NODE_ID = CONSTANTS.PROJECT_ROOT_ID;
+        META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID;
 
     MetaEditorControl = function (options) {
         var self = this;
