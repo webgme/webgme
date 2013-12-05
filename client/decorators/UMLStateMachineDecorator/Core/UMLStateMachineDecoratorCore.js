@@ -153,24 +153,24 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
-        var WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
+        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
 
-        if (WebGMEGlobal_META) {
-            if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Initial)) {
-                this._metaType = WebGMEGlobal_META.Initial;
+        if (META_TYPES) {
+            if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.Initial)) {
+                this._metaType = META_TYPES.Initial;
                 this._metaTypeTemplate = METATYPETEMPLATE_INTIAL.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.End)) {
-                this._metaType = WebGMEGlobal_META.End;
+            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.End)) {
+                this._metaType = META_TYPES.End;
                 this._metaTypeTemplate = METATYPETEMPLATE_END.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.State)) {
-                this._metaType = WebGMEGlobal_META.State;
+            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.State)) {
+                this._metaType = META_TYPES.State;
                 this._metaTypeTemplate = METATYPETEMPLATE_STATE.clone();
-            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
-                this._metaType = WebGMEGlobal_META.Transition;
+            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.Transition)) {
+                this._metaType = META_TYPES.Transition;
                 this._metaTypeTemplate = METATYPETEMPLATE_TRANSITION.clone();
                 _.extend(this, new Transition());
-            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
-                this._metaType = WebGMEGlobal_META.UMLStateDiagram;
+            } else if (METAAspectHelper.isMETAType(this._gmeID, META_TYPES.UMLStateDiagram)) {
+                this._metaType = META_TYPES.UMLStateDiagram;
                 this._metaTypeTemplate = METATYPETEMPLATE_UMLSTATEDIAGRAM.clone();
             }
         }

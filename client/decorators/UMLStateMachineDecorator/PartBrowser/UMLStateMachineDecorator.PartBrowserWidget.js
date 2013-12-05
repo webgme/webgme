@@ -18,8 +18,7 @@ define(['js/Constants',
                                                          UMLStateMachineDecoratorCore) {
 
     var UMLStateMachineDecoratorPartBrowserWidget,
-        DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget",
-        WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
+        DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget";
 
 
     UMLStateMachineDecoratorPartBrowserWidget = function (options) {
@@ -54,8 +53,10 @@ define(['js/Constants',
 
     /**** Override from PartBrowserWidgetDecoratorBase ****/
     UMLStateMachineDecoratorPartBrowserWidget.prototype.afterAppend = function () {
-        if (this._metaType === WebGMEGlobal_META.End ||
-            this._metaType === WebGMEGlobal_META.Initial) {
+        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+
+        if (this._metaType === META_TYPES.End ||
+            this._metaType === META_TYPES.Initial) {
             var nameWidth = this.$name.outerWidth();
 
             this.$name.css({ "margin-left": nameWidth / -2 });

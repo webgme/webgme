@@ -18,8 +18,7 @@ define(['js/Constants',
                                                                UMLStateMachineDecoratorCore) {
 
     var UMLStateMachineDecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget",
-        WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
+        DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget";
 
     UMLStateMachineDecoratorDiagramDesignerWidget = function (options) {
         var opts = _.extend( {}, options);
@@ -44,15 +43,16 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.on_addTo = function () {
-        var self = this;
+        var self = this,
+            META_TYPES = METAAspectHelper.getMETAAspectTypes();
 
         this._renderContent();
 
         //if END or INITIAL state, don't display name only on META level
-        if ((this._metaType === WebGMEGlobal_META.End ||
-            this._metaType === WebGMEGlobal_META.Initial) &&
-            this._gmeID !== WebGMEGlobal_META.Initial &&
-            this._gmeID !== WebGMEGlobal_META.End) {
+        if ((this._metaType === META_TYPES.End ||
+            this._metaType === META_TYPES.Initial) &&
+            this._gmeID !== META_TYPES.Initial &&
+            this._gmeID !== META_TYPES.End) {
             this.$name.remove();
         } else {
             // set title editable on double-click
@@ -85,12 +85,14 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderGetLayoutInfo = function () {
+        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+
         //let the parent decorator class do its job first
         DiagramDesignerWidgetDecoratorBase.prototype.onRenderGetLayoutInfo.apply(this, arguments);
 
         if (this.$name) {
-            if (this._metaType === WebGMEGlobal_META.End ||
-                this._metaType === WebGMEGlobal_META.Initial) {
+            if (this._metaType === META_TYPES.End ||
+                this._metaType === META_TYPES.Initial) {
                 this.renderLayoutInfo.nameWidth = this.$name.outerWidth();
             }
         }
@@ -98,12 +100,14 @@ define(['js/Constants',
 
     /**** Override from DiagramDesignerWidgetDecoratorBase ****/
     UMLStateMachineDecoratorDiagramDesignerWidget.prototype.onRenderSetLayoutInfo = function () {
+        var META_TYPES = METAAspectHelper.getMETAAspectTypes();
+
         if (this.renderLayoutInfo) {
             var shift = this.renderLayoutInfo.nameWidth / -2;
 
             if (this.$name) {
-                if (this._metaType === WebGMEGlobal_META.End ||
-                    this._metaType === WebGMEGlobal_META.Initial) {
+                if (this._metaType === META_TYPES.End ||
+                    this._metaType === META_TYPES.Initial) {
                     this.$name.css({ "margin-left": shift });
                 }
             }
