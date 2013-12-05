@@ -34,9 +34,12 @@ define(['js/Constants',
 
     var UMLStateMachineDecoratorCore,
         UMLStateMachineDecoratorClass = 'uml-state-machine',
-        WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey],
         DEFAULT_CLASS = 'default',
-        METATYPETEMPLATES = undefined;
+        METATYPETEMPLATE_INTIAL = $(InitialStateTemplate),
+        METATYPETEMPLATE_END = $(EndStateTemplate),
+        METATYPETEMPLATE_UMLSTATEDIAGRAM = $(DiagramTemplate),
+        METATYPETEMPLATE_STATE = $(StateTemplate),
+        METATYPETEMPLATE_TRANSITION = $(TransitionTemplate);
 
 
     UMLStateMachineDecoratorCore = function () {
@@ -75,12 +78,8 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype.renderMetaType = function () {
-        if (!METATYPETEMPLATES) {
-            this._initializeMetaTypeTemapltes();
-        }
-
-        if (this._metaType && METATYPETEMPLATES && METATYPETEMPLATES[this._metaType]) {
-            this.$el.append(METATYPETEMPLATES[this._metaType].clone());
+        if (this._metaType && this._metaTypeTemplate) {
+            this.$el.append(this._metaTypeTemplate);
         } else {
             this.$el.addClass(DEFAULT_CLASS);
             this.$el.append($('<div/>', {'class': 'name'}));
@@ -154,33 +153,26 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
+        var WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
+
         if (WebGMEGlobal_META) {
             if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Initial)) {
                 this._metaType = WebGMEGlobal_META.Initial;
+                this._metaTypeTemplate = METATYPETEMPLATE_INTIAL.clone();
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.End)) {
                 this._metaType = WebGMEGlobal_META.End;
+                this._metaTypeTemplate = METATYPETEMPLATE_END.clone();
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.State)) {
                 this._metaType = WebGMEGlobal_META.State;
+                this._metaTypeTemplate = METATYPETEMPLATE_STATE.clone();
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
                 this._metaType = WebGMEGlobal_META.Transition;
+                this._metaTypeTemplate = METATYPETEMPLATE_TRANSITION.clone();
                 _.extend(this, new Transition());
             } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
                 this._metaType = WebGMEGlobal_META.UMLStateDiagram;
+                this._metaTypeTemplate = METATYPETEMPLATE_UMLSTATEDIAGRAM.clone();
             }
-        }
-    };
-
-    UMLStateMachineDecoratorCore.prototype._initializeMetaTypeTemapltes = function () {
-        if (!METATYPETEMPLATES) {
-            if (WebGMEGlobal_META) {
-                METATYPETEMPLATES = {};
-                METATYPETEMPLATES[WebGMEGlobal_META.Initial] = $(InitialStateTemplate);
-                METATYPETEMPLATES[WebGMEGlobal_META.End] = $(EndStateTemplate);
-                METATYPETEMPLATES[WebGMEGlobal_META.UMLStateDiagram] = $(DiagramTemplate);
-                METATYPETEMPLATES[WebGMEGlobal_META.State] = $(StateTemplate);
-                METATYPETEMPLATES[WebGMEGlobal_META.Transition] = $(TransitionTemplate);
-            }
-            
         }
     };
 
