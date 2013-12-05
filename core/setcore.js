@@ -12,9 +12,8 @@ define([ "util/assert"], function (ASSERT) {
     function SetCore(innerCore){
 
         //help functions
-        var setModified = function(node,setName){
-            var sethashregid = '_hash_'+setName;
-            innerCore.setRegistry(node,sethashregid,(innerCore.getRegistry(node,sethashregid) || 0)+1);
+        var setModified = function(node){
+            innerCore.setRegistry(node,'_sets_',(innerCore.getRegistry(node,'_sets_') || 0)+1);
         };
         var getMemberRelId = function(node,setName,memberPath){
             ASSERT(typeof setName === 'string');
@@ -75,7 +74,7 @@ define([ "util/assert"], function (ASSERT) {
             if(setMemberRelId){
                 var setMemberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),setMemberRelId);
                 innerCore.deleteNode(setMemberNode);
-                setModified(node,setName);
+                setModified(node);
             }
         };
         setcore.addMember = function(node,setName,member){
@@ -86,7 +85,7 @@ define([ "util/assert"], function (ASSERT) {
                 var setMember =  innerCore.getChild(setNode,createNewMemberRelid(setNode));
                 innerCore.setPointer(setMember,'member',member);
                 innerCore.setRegistry(setMember,"_","_");//TODO hack, somehow the empty children have been removed during persist
-                setModified(node,setName);
+                setModified(node);
             }
         };
 
@@ -159,10 +158,19 @@ define([ "util/assert"], function (ASSERT) {
         };
         setcore.createSet = function(node,setName) {
             ASSERT(typeof setName === 'string');
-            var setNode = innerCore.getChild(innerCore.getChild(node,SETS_ID),setName);
+            var setsNode = innerCore.getChild(node,SETS_ID),
+                setNode = innerCore.getChild(setsNode,setName);
             innerCore.setRegistry(setNode,"_","_");//TODO hack, somehow the empty children have been removed during persist
             innerCore.setPointer(innerCore.getChild(node,SETS_ID), setName, null);
-            setModified(node,setName);
+            setModified(node);
+        };
+        setcore.deleteSet = function(node,setName) {
+            ASSERT(typeof setName === 'string');
+            var setsNode = innerCore.getChild(node,SETS_ID),
+                setNode = innerCore.getChild(setsNode,setName);
+            innerCore.deletePointer(setsNode,setName);
+            innerCore.deleteNode(setNode);
+            setModified(node);
         };
 
         return setcore;

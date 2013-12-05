@@ -1486,8 +1486,10 @@ define([
                 }
             }
             function deleteSet(path, setid) {
-                //TODO: implement
-                logger.error('deleteSet not yet implemented!!!');
+                if(_nodes[path] && typeof _nodes[path].node === 'object'){
+                    _core.deleteSet(_nodes[path].node,setid);
+                    saveRoot('deleteSet('+path+","+setid+")");
+                }
             }
 
             //Meta like descriptor functions
