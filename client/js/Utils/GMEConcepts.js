@@ -151,7 +151,7 @@ define(['jquery',
         var FCO_ID = _client.createChild({'parentId': CONSTANTS.PROJECT_ROOT_ID});
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
-        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, true);
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
