@@ -203,7 +203,8 @@ define(['logManager',
         treeBrowser.getDragEffects = function (el) {
             return [treeBrowser.DRAG_EFFECTS.DRAG_COPY,
                 treeBrowser.DRAG_EFFECTS.DRAG_MOVE,
-                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_REFERENCE,
+                treeBrowser.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
         };
 
         treeBrowser.getDragItems = function (el) {
