@@ -2,11 +2,11 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/PanelManager/IActivePanel',
-    'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
+    'js/Widgets/ModelEditor/ModelEditorWidget',
     './ModelEditorControl'
 ], function (PanelBaseWithHeader,
              IActivePanel,
-             DiagramDesignerWidget,
+             ModelEditorWidget,
              ModelEditorControl) {
 
     var ModelEditorPanel;
@@ -38,7 +38,7 @@ define(['js/PanelBase/PanelBaseWithHeader',
         //set Widget title
         this.setTitle("DiagramDesigner");
 
-        this.widget = new DiagramDesignerWidget(this.$el, {'toolBar': this.toolBar});
+        this.widget = new ModelEditorWidget(this.$el, {'toolBar': this.toolBar});
 
         this.widget.setTitle = function (title) {
             self.setTitle(title);

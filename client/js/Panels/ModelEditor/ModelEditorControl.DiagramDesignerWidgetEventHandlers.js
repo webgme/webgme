@@ -535,12 +535,17 @@ define(['logManager',
                     gmeID = this._client.createChild(params);
 
                     if (gmeID) {
+                        //check if old position is in drag-params
+                        oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
                         //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
-                            'y': position.y});
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
+                            'y': position.y + oldPos.y});
 
-                        position.x += POS_INC;
-                        position.y += POS_INC;
+                        //old position is not in drag-params
+                        if (!(dragParams && dragParams.positions[items[i]])) {
+                            position.x += POS_INC;
+                            position.y += POS_INC;
+                        }
                     }
                 }
                 this._client.completeTransaction();
