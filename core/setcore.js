@@ -112,6 +112,7 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.setAttribute(memberNode,attrName,attrValue);
+                setModified(node);
             }
         };
         setcore.delMemberAttribute = function(node,setName,memberPath,attrName){
@@ -120,6 +121,7 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.delAttribute(memberNode,attrName);
+                setModified(node);
             }
         };
 
@@ -146,6 +148,7 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.setAttribute(memberNode,regName,regValue);
+                setModified(node);
             }
         };
         setcore.delMemberRegistry = function(node,setName,memberPath,regName){
@@ -154,6 +157,7 @@ define([ "util/assert"], function (ASSERT) {
             if(memberRelId){
                 var memberNode = innerCore.getChild(innerCore.getChild(innerCore.getChild(node,SETS_ID),setName),memberRelId);
                 innerCore.delAttribute(memberNode,regName);
+                setModified(node);
             }
         };
         setcore.createSet = function(node,setName) {
