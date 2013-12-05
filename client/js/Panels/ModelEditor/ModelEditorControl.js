@@ -1032,7 +1032,7 @@ define(['logManager',
         this.$btnConnectionRemoveSegmentPoints.enabled(false);
 
         /************ ENFORCE META RULES TOGGLE BUTTON **********************/
-        this.$btnEnforceMetaRules = toolBar.addToggleButton({
+        /*this.$btnEnforceMetaRules = toolBar.addToggleButton({
                 "icon": 'icon-exclamation-sign',
                 "text": 'Enforce META rules',
                 "title": "Enforce META rules ON/OFF",
@@ -1042,7 +1042,7 @@ define(['logManager',
                 }}
         );
         this.$btnEnforceMetaRules.setToggled(this._enforceMetaRules);
-        this._toolbarItems.push(this.$btnEnforceMetaRules);
+        this._toolbarItems.push(this.$btnEnforceMetaRules);*/
 
 
         this._toolbarInitialized = true;
