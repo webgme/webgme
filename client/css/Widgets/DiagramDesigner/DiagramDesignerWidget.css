@@ -165,3 +165,6 @@ div.css-zoom.diagram-designer-zoom {
   position: absolute;
   top: 30px;
   left: 10px; }
+
+div.diagram-designer-drag-outline {
+  white-space: nowrap; }
