@@ -560,9 +560,11 @@ define(['logManager',
                     gmeID = this._client.createChild(params);
 
                     if (gmeID) {
+                        //check if old position is in drag-params
+                        oldPos = dragParams && dragParams.positions[items[0]] || {'x':0, 'y': 0};
                         //store new position
-                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x,
-                            'y': position.y});
+                        this._client.setRegistry(gmeID, nodePropertyNames.Registry.position, {'x': position.x + oldPos.x,
+                            'y': position.y + oldPos.y});
 
                         //set reference
                         this._client.makePointer(gmeID, CONSTANTS.POINTER_REF, items[0]);

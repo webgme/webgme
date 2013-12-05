@@ -21,11 +21,14 @@ define(['js/DragDrop/DragHelper',
     ModelEditorWidget.prototype.getDragEffects = function (selectedElements, event) {
         var ctrlKey = event.ctrlKey || event.metaKey,
             altKey = event.altKey,
+            shiftKey = event.shiftKey,
             effects = DiagramDesignerWidget.prototype.getDragEffects.apply(this, [selectedElements, event]);
 
-        //ALT_KEY --> copy_2
-        if (!ctrlKey && altKey) {
+        //ALT_KEY --> DRAG_CREATE_INSTANCE
+        if (!ctrlKey && altKey && !shiftKey) {
             effects = [DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE];
+        } else if (!ctrlKey && !altKey && shiftKey) {
+            effects = [DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE];
         }
 
         return effects;
@@ -39,6 +42,8 @@ define(['js/DragDrop/DragHelper',
         if (dragEffects.length === 1) {
             if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE) {
                 helperEl.html($('<i class="icon-share-alt"></i>'));
+            } else if (dragEffects[0] === DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE) {
+                helperEl.html($('<i class="icon-share"></i>'));
             }
         }
 
