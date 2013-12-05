@@ -8,18 +8,18 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METATypeHelper',
+    'js/Utils/METAAspectHelper',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     'css!./UMLStateMachineDecorator.DiagramDesignerWidget'], function (CONSTANTS,
                                                                nodePropertyNames,
-                                                               METATypeHelper,
+                                                               METAAspectHelper,
                                                                DiagramDesignerWidgetDecoratorBase,
                                                                UMLStateMachineDecoratorCore) {
 
     var UMLStateMachineDecoratorDiagramDesignerWidget,
         DECORATOR_ID = "UMLStateMachineDecoratorDiagramDesignerWidget",
-        WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
+        WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
 
     UMLStateMachineDecoratorDiagramDesignerWidget = function (options) {
         var opts = _.extend( {}, options);

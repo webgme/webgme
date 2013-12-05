@@ -14,7 +14,7 @@ define(['logManager',
     'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
-    'js/Utils/METATypeHelper'], function (logManager,
+    'js/Utils/METAAspectHelper'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -24,7 +24,7 @@ define(['logManager',
                                             KeyboardManager,
                                             PanelManager,
                                             WebGMEHistory,
-                                            METATypeHelper) {
+                                            METAAspectHelper) {
 
     var _webGMEStart = function () {
         var lm,
@@ -50,7 +50,7 @@ define(['logManager',
 
             GMEConcepts.initialize(client);
 
-            METATypeHelper.initialize(client);
+            METAAspectHelper.initialize(client);
 
             //hook up branch changed to set read-only mode on panels
             client.addEventListener(client.events.BRANCH_CHANGED, function (__project, branchName) {

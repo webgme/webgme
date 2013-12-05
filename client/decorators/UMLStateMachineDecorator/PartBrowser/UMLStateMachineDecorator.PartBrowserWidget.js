@@ -8,18 +8,18 @@
 
 define(['js/Constants',
     'js/NodePropertyNames',
-    'js/Utils/METATypeHelper',
+    'js/Utils/METAAspectHelper',
     'js/Widgets/PartBrowser/PartBrowserWidget.DecoratorBase',
     './../Core/UMLStateMachineDecoratorCore',
     'css!./UMLStateMachineDecorator.PartBrowserWidget'], function (CONSTANTS,
                                                          nodePropertyNames,
-                                                         METATypeHelper,
+                                                         METAAspectHelper,
                                                          PartBrowserWidgetDecoratorBase,
                                                          UMLStateMachineDecoratorCore) {
 
     var UMLStateMachineDecoratorPartBrowserWidget,
         DECORATOR_ID = "UMLStateMachineDecoratorPartBrowserWidget",
-        WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
+        WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
 
 
     UMLStateMachineDecoratorPartBrowserWidget = function (options) {

@@ -4,11 +4,11 @@ define(['logManager',
     'js/Constants',
     'js/Utils/GMEConcepts',
     'js/NodePropertyNames',
-    'js/Utils/METATypeHelper'], function (logManager,
+    'js/Utils/METAAspectHelper'], function (logManager,
                              CONSTANTS,
                              GMEConcepts,
                              nodePropertyNames,
-                             METATypeHelper) {
+                             METAAspectHelper) {
 
     var PartBrowserControl,
         WIDGET_NAME = 'PartBrowser',
@@ -34,7 +34,7 @@ define(['logManager',
         this._logger = logManager.create("PartBrowserControl");
         this._logger.debug("Created");
 
-        METATypeHelper.addEventListener(METATypeHelper.events.META_ASPECT_CHANGED, function () {
+        METAAspectHelper.addEventListener(METAAspectHelper.events.META_ASPECT_CHANGED, function () {
             self._processContainerNode(self._containerNodeId);
         });
     };
@@ -133,7 +133,7 @@ define(['logManager',
             diff,
             id,
             territoryChanged = false,
-            metaAspectMembers = METATypeHelper.getMetaAspectMembers();
+            metaAspectMembers = METAAspectHelper.getMetaAspectMembers();
 
         if (node) {
             //get possible targets from MetaDescriptor

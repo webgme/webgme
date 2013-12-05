@@ -13,7 +13,7 @@
 "use strict";
 
 define(['js/Constants',
-    'js/Utils/METATypeHelper',
+    'js/Utils/METAAspectHelper',
     'js/NodePropertyNames',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
     'text!./Diagram.html',
@@ -22,7 +22,7 @@ define(['js/Constants',
     'text!./State.html',
     'text!./Transition.html',
     './Transition'], function (CONSTANTS,
-                                       METATypeHelper,
+                                       METAAspectHelper,
                                        nodePropertyNames,
                                        DiagramDesignerWidgetConstants,
                                        DiagramTemplate,
@@ -153,23 +153,23 @@ define(['js/Constants',
 
 
     UMLStateMachineDecoratorCore.prototype._instantiateMetaType = function () {
-        var WebGMEGlobal_META = WebGMEGlobal[METATypeHelper.METAKey];
+        var WebGMEGlobal_META = WebGMEGlobal[METAAspectHelper.METAKey];
 
         if (WebGMEGlobal_META) {
-            if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Initial)) {
+            if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Initial)) {
                 this._metaType = WebGMEGlobal_META.Initial;
                 this._metaTypeTemplate = METATYPETEMPLATE_INTIAL.clone();
-            } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.End)) {
+            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.End)) {
                 this._metaType = WebGMEGlobal_META.End;
                 this._metaTypeTemplate = METATYPETEMPLATE_END.clone();
-            } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.State)) {
+            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.State)) {
                 this._metaType = WebGMEGlobal_META.State;
                 this._metaTypeTemplate = METATYPETEMPLATE_STATE.clone();
-            } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
+            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.Transition)) {
                 this._metaType = WebGMEGlobal_META.Transition;
                 this._metaTypeTemplate = METATYPETEMPLATE_TRANSITION.clone();
                 _.extend(this, new Transition());
-            } else if (METATypeHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
+            } else if (METAAspectHelper.isMETAType(this._gmeID, WebGMEGlobal_META.UMLStateDiagram)) {
                 this._metaType = WebGMEGlobal_META.UMLStateDiagram;
                 this._metaTypeTemplate = METATYPETEMPLATE_UMLSTATEDIAGRAM.clone();
             }
