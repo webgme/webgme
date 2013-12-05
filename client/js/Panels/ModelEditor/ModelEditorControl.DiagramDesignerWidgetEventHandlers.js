@@ -433,25 +433,25 @@ define(['logManager',
                     case DragHelper.DRAG_EFFECTS.DRAG_COPY:
                         menuItems[i] = {
                             "name": "Copy here",
-                            "icon": false
+                            "icon": 'icon-plus'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_MOVE:
                         menuItems[i] = {
                             "name": "Move here",
-                            "icon": false
+                            "icon": 'icon-move'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                         menuItems[i] = {
                             "name": "Create instance here",
-                            "icon": false
+                            "icon": 'icon-share-alt'
                         };
                         break;
                     case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
                         menuItems[i] = {
                             "name": "Create reference '" + possibleDropActions[i].name + "'",
-                            "icon": false
+                            "icon": 'icon-share'
                         };
                         break;
                     default:
