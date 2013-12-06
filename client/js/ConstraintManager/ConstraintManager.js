@@ -41,10 +41,12 @@ define(['logManager',
                 constraints.forEach(function(constraint) {
                     var result = eval("(" + constraint.script + ")(client, node);");
 
+                    var msg = ': <strong>' + constraint.name + '</strong>' + '&nbsp;&nbsp;&nbsp;[priority: ' + constraint.priority + ']';
+
                     if (result === true) {
-                        addValidationResult('SUCCESS: <strong>' + constraint.name + '</strong>', 'alert-success');
+                        addValidationResult('SUCCESS' + msg, 'alert-success');
                     } else {
-                        addValidationResult('FAIL: <strong>' + constraint.name + '</strong>', 'alert-error');
+                        addValidationResult('FAIL' + msg + '<br/><span class="muted">' + constraint.message + '</span>', 'alert-error');
                     }
                 });
             }

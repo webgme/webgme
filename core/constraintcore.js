@@ -8,7 +8,8 @@ example constraint structure for the outside world:
 {
 script:string,
 priority:integer,
-name:string
+name:string,
+message:string
 }
 provided API:
 getConstraint(node,name) -> constraintObj
@@ -59,7 +60,8 @@ define([ "util/assert" ], function (ASSERT) {
                 var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
                 return {
                     "script":_innerCore.getAttribute(constraintNode,"script"),
-                    "priority":_innerCore.getAttribute(constraintNode,"priority")
+                    "priority":_innerCore.getAttribute(constraintNode,"priority"),
+                    "message":_innerCore.getAttribute(constraintNode,"message")
                 };
             } else {
                 return null;
@@ -79,9 +81,11 @@ define([ "util/assert" ], function (ASSERT) {
             var constraintNode = _innerCore.getChild(constraintsNode,constRelId);
             constraintObj.priority = constraintObj.priority || C_DEF_PRIORITY;
             constraintObj.script = constraintObj.script || "console.log(\"empty constraint\");";
+            constraintObj.message = constraintObj.message || "";
             _innerCore.setAttribute(constraintNode,"name",name);
             _innerCore.setAttribute(constraintNode,"script",constraintObj.script);
             _innerCore.setAttribute(constraintNode,"priority",constraintObj.priority);
+            _innerCore.setAttribute(constraintNode,"message",constraintObj.message);
             _innerCore.setRegistry(node,getRegConstName(name),(_innerCore.getRegistry(node,getRegConstName(name)) || 0)+1);
         };
 

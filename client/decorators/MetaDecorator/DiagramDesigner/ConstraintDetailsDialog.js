@@ -47,7 +47,8 @@ define(['clientUtil',
         closeSave = function () {
             var constDesc = {'name': self._inputName.val(),
                             'script': self._codeMirror.getValue(),
-                            'priority': self._inputPriority.val()};
+                            'priority': self._inputPriority.val(),
+                            'message': self._inputMessage.val()};
 
             self._dialog.modal('hide');
 
@@ -82,6 +83,7 @@ define(['clientUtil',
 
         this._inputName = this._el.find('#inputName').first();
         this._inputPriority = this._el.find('#inputPriority').first();
+        this._inputMessage = this._el.find('#inputMessage').first();
 
         //hook up event handlers
         //key-up in name textbox
@@ -138,6 +140,7 @@ define(['clientUtil',
         //fill controls based on the currently edited constraint
         this._inputName.val(constraintDesc.name).focus();
         this._inputPriority.val(constraintDesc.priority);
+        this._inputMessage.val(constraintDesc.message);
 
        this._codeMirror = CodeMirror(this._scriptEditor[0], {
             value: constraintDesc.script,
