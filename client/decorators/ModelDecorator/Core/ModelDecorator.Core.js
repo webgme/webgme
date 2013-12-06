@@ -55,6 +55,7 @@ define(['js/Constants',
     ModelDecoratorCore.prototype.destroy = function () {
         var len = this._portIDs.length;
         while (len--) {
+            this._unregisterForNotification(this._portIDs[len]);
             this._removePort(this._portIDs[len]);
         }
     };
