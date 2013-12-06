@@ -928,10 +928,11 @@ define(['logManager',
         }
     };
 
-    ModelEditorControl.prototype._onOCLValidate = function () {
-        //OCL Validation goes here...
-        //WebGMEGlobal.OCLManager.validate()....
-        this.logger.warning('OCL Validate all clicked...');
+    ModelEditorControl.prototype._constraintCheck = function () {
+        //Cconstraint Checking goes here...
+        if (this.currentNodeInfo.id) {
+            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
+        }
     };
 
     ModelEditorControl.prototype._attachClientEventListeners = function () {
@@ -1011,11 +1012,11 @@ define(['logManager',
         this.$btnModelHierarchyUp.hide();
 
 
-        /************************ OCL CONTSTRAINT VALIDATION ******************/
-        this.$btnConstraintValidate = toolBar.addButton({ "title": "Validate",
+        /************************ CONTSTRAINT VALIDATION ******************/
+        this.$btnConstraintValidate = toolBar.addButton({ "title": "Constraint check...",
             "icon": "icon-fire",
             "clickFn": function (/*data*/) {
-                self._onOCLValidate();
+                self._constraintCheck();
             }
         });
         this._toolbarItems.push(this.$btnConstraintValidate);

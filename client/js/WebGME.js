@@ -14,7 +14,8 @@ define(['logManager',
     'js/KeyboardManager/KeyboardManager',
     'js/PanelManager/PanelManager',
     './WebGME.History',
-    'js/Utils/METAAspectHelper'], function (logManager,
+    'js/Utils/METAAspectHelper',
+    'js/ConstraintManager'], function (logManager,
                                             CONFIG,
                                             Client,
                                             util,
@@ -24,7 +25,8 @@ define(['logManager',
                                             KeyboardManager,
                                             PanelManager,
                                             WebGMEHistory,
-                                            METAAspectHelper) {
+                                            METAAspectHelper,
+                                            ConstraintManager) {
 
     var _webGMEStart = function () {
         var lm,
@@ -45,6 +47,8 @@ define(['logManager',
                 i;
 
             client = new Client(CONFIG);
+
+            WebGMEGlobal.ConstraintManager = new ConstraintManager(client);
 
             WebGMEHistory.setClient(client);
 
