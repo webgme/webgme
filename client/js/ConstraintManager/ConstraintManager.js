@@ -39,14 +39,17 @@ define(['logManager',
                 addValidationResult('SUCCESS: No constraints defined for <strong>' + node_name + '</strong>', 'alert-success');
             } else {
                 constraints.forEach(function(constraint) {
-                    var result = eval("(" + constraint.script + ")(client, node);");
-
                     var msg = ': <strong>' + constraint.name + '</strong>' + '&nbsp;&nbsp;&nbsp;[priority: ' + constraint.priority + ']';
+                    try {
+                        var result = eval("(" + constraint.script + ")(client, node);");
 
-                    if (result === true) {
-                        addValidationResult('SUCCESS' + msg, 'alert-success');
-                    } else {
-                        addValidationResult('FAIL' + msg + '<br/><span class="muted">' + constraint.message + '</span>', 'alert-error');
+                        if (result === true) {
+                            addValidationResult('SUCCESS' + msg, 'alert-success');
+                        } else {
+                            addValidationResult('FAIL' + msg + '<br/><span class="muted">' + constraint.message + '</span>', 'alert-error');
+                        }
+                    } catch (exp) {
+                        addValidationResult('ERROR' + msg + '<br/><span class="muted">Constraint threw an exception:<br/>' + exp.message + '</span>', 'alert-error');
                     }
                 });
             }
@@ -58,7 +61,16 @@ define(['logManager',
               constraint_obj.name = constraint_name;
               return constraint_obj;
             }).sort(function(a, b) {
-                return a.priority - b.priority;
+                //sort first by priority descending, then by name ascending
+                var res = b.priority - a.priority;
+                if (res === 0) {
+                    if(a.name < b.name) {
+                        res = -1;
+                    } else if( a.name > b.name) {
+                        res = 1;
+                    }
+                }
+                return res;
             });
 
         dialog.on('shown', function () {
