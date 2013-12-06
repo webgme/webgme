@@ -152,6 +152,7 @@ define(['jquery',
         _client.setAttributes(FCO_ID, nodePropertyNames.Attributes.name, 'FCO');
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.decorator, "");
         _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isPort, false);
+        _client.setRegistry(FCO_ID, nodePropertyNames.Registry.isAbstract, false);
 
         var projectRegistry = {};
         projectRegistry[CONSTANTS.PROJECT_FCO_ID] = FCO_ID;
@@ -208,11 +209,27 @@ define(['jquery',
             counter,
             childrenMeta,
             baseId,
-            j;
+            j,
+            node;
 
         //TODO: implement real logic based on META and CONSTRAINTS...
         if(parentId && baseIdList && baseIdList.length > 0){
            result = true;
+
+            //FILTER OUT ABSTRACTS
+            len = baseIdList.length;
+            while (len--) {
+                node = _client.getNode(baseIdList[len]);
+                if (node) {
+                    if (node.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                        baseIdList.splice(len, 1);
+                    }
+                }
+            }
+            if (baseIdList.length === 0) {
+                result = false;
+            }
+            //END OF --- FILTER OUT ABSTRACTS
 
             //Check #1: Global children number multiplicity
             if (result === true) {
