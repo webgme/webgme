@@ -580,7 +580,6 @@ define(['logManager',
             len = aConns.src.length;
             while (len--) {
                 connectionID = aConns.src[len];
-                //if the source of the inheritance relationship is being removed from the screen
                 //save the connection to the waiting list, since the destination is still there
                 this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
                 this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
@@ -589,10 +588,11 @@ define(['logManager',
             len = aConns.dst.length;
             while (len--) {
                 connectionID = aConns.dst[len];
-                //if the source of the inheritance relationship is being removed from the screen
-                //save the connection to the waiting list, since the destination is still there
-                this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
-                this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+                if (this._connectionListByID[connectionID]) {
+                    //save the connection to the waiting list, since the destination is still there
+                    this._saveConnectionToWaitingList(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type, this._connectionListByID[connectionID].connTexts);
+                    this._removeConnection(this._connectionListByID[connectionID].GMESrcId, this._connectionListByID[connectionID].GMEDstId, this._connectionListByID[connectionID].type);
+                }
             }
 
             //check the waiting list and remove any connection that was waiting and this end was present
