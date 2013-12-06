@@ -892,6 +892,10 @@ define(['logManager',
             idx = this._componentIDPartIDMap[componentID].indexOf(partId);
             if (idx !== -1) {
                 this._componentIDPartIDMap[componentID].splice(idx, 1);
+
+                if (this._componentIDPartIDMap[componentID].length === 0) {
+                    delete this._componentIDPartIDMap[componentID];
+                }
             }
         }
     };
