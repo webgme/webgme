@@ -88,13 +88,13 @@ define(['logManager',
 
         /************** END OF - GOTO PARENT IN HIERARCHY BUTTON ****************/
 
-        /* OCL CONTSTRAINT VALIDATION */
-        this.$btnGroupOCLValidate = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
-            self._onOCLValidate();
+        /* CONTSTRAINT VALIDATION */
+        this.$btnGroupConstraintCheck = this.designerCanvas.toolBar.addButtonGroup(function (/*event, data*/) {
+            self._constraintCheck();
         });
 
-        this.designerCanvas.toolBar.addButton({ "title": "Validate ALL",
-            "icon": "icon-fire"}, this.$btnGroupOCLValidate);
+        this.designerCanvas.toolBar.addButton({ "title": "Constraint check...",
+            "icon": "icon-fire"}, this.$btnGroupConstraintCheck);
 
         /************** VISUAL STYLES HIERARCHY BUTTON ****************/
         this.$btnGroupVisualStyles = this.designerCanvas.toolBar.addButtonGroup();
@@ -1018,10 +1018,11 @@ define(['logManager',
         }
     };
 
-    ModelEditorControl.prototype._onOCLValidate = function () {
-        //OCL Validation goes here...
-        this.logger.warning('OCL Validate all clicked...');
-        WebGMEGlobal.ConstraintManager.validateAll(this.currentNodeInfo.id || 'root');
+    ModelEditorControl.prototype._constraintCheck = function () {
+        //Cconstraint Checking goes here...
+        if (this.currentNodeInfo.id) {
+            WebGMEGlobal.ConstraintManager.validate(this.currentNodeInfo.id);
+        }
     };
 
     ModelEditorControl.prototype.attachClientEventListeners = function () {
