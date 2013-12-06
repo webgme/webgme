@@ -303,6 +303,18 @@ define(['jquery',
         return validReferenceTypes;
     };
 
+    var _canDeleteNode = function (objID) {
+        var result = false;
+
+        //do not let delete project root and FCO
+        if (objID !== CONSTANTS.PROJECT_ROOT_ID &&
+            !_isProjectFCO(objID)) {
+            result = true;
+        }
+
+        return result;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -315,6 +327,7 @@ define(['jquery',
         createBasicProjectSeed: _createBasicProjectSeed,
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
-        getValidReferenceTypes: _getValidReferenceTypes
+        getValidReferenceTypes: _getValidReferenceTypes,
+        canDeleteNode: _canDeleteNode
     }
 });
