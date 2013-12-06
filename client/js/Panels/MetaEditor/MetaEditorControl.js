@@ -341,7 +341,7 @@ define(['logManager',
                     this.logger.warning(nodeName + ' (' + gmeID + ')\'s pointerMetaDescriptor "' + pointerNames[i] + '": ' + JSON.stringify(pointerMetaDescriptor));
                 }
 
-                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBase());
+                this.logger.warning(nodeName + ' (' + gmeID + ')\'s metaInheritance: ' + node.getBaseId());
 
                 var attributeNames = node.getAttributeNames();
                 i = attributeNames.length;
@@ -1075,17 +1075,17 @@ define(['logManager',
     MetaEditorControl.prototype._processNodeMetaInheritance = function (gmeID) {
         var node = this._client.getNode(gmeID),
             oldMetaInheritance,
-            newMetaInheritance = node.getBase();
+            newMetaInheritance = node.getBaseId();
 
         //if there was a valid old that's different than the current, delete the connection representing the old
         oldMetaInheritance = this._nodeMetaInheritance[gmeID];
-        if (oldMetaInheritance && !_.isEmpty(oldMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
+        if (oldMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
             this._removeConnection(oldMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE);
 
             delete this._nodeMetaInheritance[gmeID];
         }
 
-        if (newMetaInheritance && !_.isEmpty(newMetaInheritance) && (oldMetaInheritance !== newMetaInheritance)) {
+        if (newMetaInheritance && (oldMetaInheritance !== newMetaInheritance)) {
             this._nodeMetaInheritance[gmeID] = newMetaInheritance;
             this._createConnection(newMetaInheritance, gmeID, MetaRelations.META_RELATIONS.INHERITANCE, undefined);
         }
@@ -1266,32 +1266,40 @@ define(['logManager',
 
 
     MetaEditorControl.prototype._createInheritanceRelationship = function (parentID, objectID) {
-        var parentNode = this._client.getNode(parentID),
+        //TEMPORARILY DO NOT ALLOW CREATING INHERITANCE RELATIONSHIP
+        /*var parentNode = this._client.getNode(parentID),
             objectNode = this._client.getNode(objectID),
             objectBase;
 
         if (parentNode && objectNode) {
-            objectBase = objectNode.getBase();
+            objectBase = objectNode.getBaseId();
 
             if (objectBase && !_.isEmpty(objectBase)) {
                 this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but overwriting to "' + parentNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + parentID + ')"');
             }
 
             this._client.setBase(objectID, parentID);
-        }
+        }*/
     };
 
 
     MetaEditorControl.prototype._deleteInheritanceRelationship = function (parentID, objectID) {
         var objectNode = this._client.getNode(objectID),
-            objectBase;
+            objectBaseId,
+            baseNode;
 
         if (objectNode) {
-            objectBase = objectNode.getBase();
+            objectBaseId = objectNode.getBaseId();
 
-            if (objectBase && !_.isEmpty(objectBase)) {
-                this.logger.debug('InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBase + '" already exists, but deleting it');
-                this._client.delBase(objectID);
+            if (objectBaseId) {
+                baseNode = this._client.getNode(objectBaseId);
+                if (baseNode) {
+                    objectBaseId = baseNode.getAttribute(nodePropertyNames.Attributes.name) + ' (' + objectBaseId + ')';
+                }
+                /*this.logger.debug('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '"');
+                this._client.delBase(objectID);*/
+                //TEMPORARILY DO NOT ALLOW DELETING INHERITANCE RELATIONSHIP
+                this.logger.warning('Deleting InheritanceRelationship from "' + objectNode.getAttribute(nodePropertyNames.Attributes.name) + '" (' + objectID + ') to parent "' + objectBaseId + '" is not allowed...');
             }
         }
     };
@@ -1599,10 +1607,10 @@ define(['logManager',
             "data": { "connType": MetaRelations.META_RELATIONS.CONTAINMENT },
             "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.CONTAINMENT)});
 
-        this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
+        /*this._radioButtonGroupMetaRelationType.addButton({ "title": "Inheritance",
             "selected": false,
             "data": { "connType": MetaRelations.META_RELATIONS.INHERITANCE },
-            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)});
+            "icon": MetaRelations.createButtonIcon(16, MetaRelations.META_RELATIONS.INHERITANCE)});*/
 
         this._radioButtonGroupMetaRelationType.addButton({ "title": "Pointer",
             "selected": false,

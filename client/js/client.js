@@ -1843,10 +1843,7 @@ define([
                     }
                     return descriptor;
                 };
-                var getBase = function(){
-                    //return _core.getRegistry(_nodes[_id].node,'base');
-                    return _core.getPath(_core.getBase(_nodes[_id].node));
-                };
+
 
                 //constraint functions
                 var getConstraintNames = function(){
@@ -1905,7 +1902,6 @@ define([
                         getEditablePointerDescriptor   : getEditablePointerDescriptor,
                         getChildrenMetaDescriptor      : getChildrenMetaDescriptor,
                         getEditableChildrenMetaDescriptor      : getEditableChildrenMetaDescriptor,
-                        getBase                        : getBase,
 
                         //constraint functions
                         getConstraintNames : getConstraintNames,
