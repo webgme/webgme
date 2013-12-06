@@ -528,7 +528,7 @@ define(['logManager',
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_INSTANCE:
                 params = { "parentId": parentID };
                 i = items.length;
-                this._client.startTransaction();
+                /*this._client.startTransaction();
                 while (i--) {
                     params.baseId = items[i];
 
@@ -548,7 +548,18 @@ define(['logManager',
                         }
                     }
                 }
-                this._client.completeTransaction();
+                this._client.completeTransaction();*/
+                while(i--){
+                    oldPos = dragParams && dragParams.positions[items[i]] || {'x':0, 'y': 0};
+                    params[items[i]] = {registry:{position:{x:position.x+oldPos.x,y:position.y+oldPos.y}}};
+                    //old position is not in drag-params
+                    if (!(dragParams && dragParams.positions[items[i]])) {
+                        position.x += POS_INC;
+                        position.y += POS_INC;
+                    }
+                }
+                this._client.createChildren(params);
+                
                 break;
             case DragHelper.DRAG_EFFECTS.DRAG_CREATE_REFERENCE:
                 if (items.length === 1) {
