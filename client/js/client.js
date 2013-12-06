@@ -1300,14 +1300,47 @@ define([
                         pathsToCopy.push(i);
                     }
                 }
+                if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
+                    for(var i=0;i<pathsToCopy.length;i++){
+                        if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
+                            var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
+                            var newPath = storeNode(node);
+                            returnParameters[pathsToCopy[i]] = newPath;
+
+                            if(parameters[pathsToCopy[i]]){
+                                for(var j in parameters[pathsToCopy[i]].attributes){
+                                    _core.setAttribute(node,j,parameters[pathsToCopy[i]].attributes[j]);
+                                }
+                                for(j in parameters[pathsToCopy[i]].registry){
+                                    _core.setRegistry(node,j,parameters[pathsToCopy[i]].registry[j]);
+                                }
+                            }
+
+                        }
+                    }
+                }
+
+                saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
+                return returnParameters;
+            }
+            function _createChildren(parameters){
+                var returnParameters = {},
+                    pathsToCopy = [];
+                for(var i in parameters){
+                    if(i !== 'parentId'){
+                        pathsToCopy.push(i);
+                    }
+                }
                 
                 if(pathsToCopy.length > 0 && _nodes[parameters.parentId] && typeof _nodes[parameters.parentId].node === 'object'){
                     //collecting nodes under tempFrom
-                /*    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node});
+                    var tempFrom = _core.createNode({parent:_nodes[parameters.parentId].node,base:null});
                     for(var i=0;i<pathsToCopy.length;i++){
+                        console.log('kecso',001,pathsToCopy[i]);
                         if(_nodes[pathsToCopy[i]] && typeof _nodes[pathsToCopy[i]].node === 'object'){
                             returnParameters[pathsToCopy[i]] = {'1stparent':_core.getParent(_nodes[pathsToCopy[i]].node),'1st':_core.moveNode(_nodes[pathsToCopy[i]].node,tempFrom)};
                             returnParameters[pathsToCopy[i]]['1strelid'] = _core.getRelid(returnParameters[pathsToCopy[i]]['1st']);
+                            console.log('kecso',002,pathsToCopy[i],returnParameters[pathsToCopy[i]]['1strelid']);
                         }
                     }
                     var tempTo = _core.createNode({parent:_nodes[parameters.parentId].node, base:tempFrom});
@@ -1318,13 +1351,16 @@ define([
                         delete returnParameters[i]['1st'];
                         delete returnParameters[i]['1stparent'];
                     }
+
                     _core.deleteNode(tempFrom);
                     delete tempFrom;
 
                     for(var i in returnParameters){
+                        console.log('kecso',003,i);
                         var child = _core.getChild(tempTo,returnParameters[i]['1strelid']);
                         var finalNode = _core.moveNode(child,_nodes[parameters.parentId].node);
                         returnParameters[i] = storeNode(finalNode);
+                        console.log('kecso',004,i,returnParameters[i]);
                         if(parameters[i]){
                             for(var j in parameters[i].attributes){
                                 _core.setAttribute(finalNode,j,parameters[i].attributes[j]);
@@ -1336,44 +1372,8 @@ define([
                     }
                     _core.deleteNode(tempTo);
                     delete tempTo;
-                    */
-                    for(var i=0;i<pathsToCopy.length;i++){
-                        var node = _core.createNode({parent:_nodes[parameters.parentId].node,base:_nodes[pathsToCopy[i]].node});
-                        var newpath = storeNode(node);
-                        returnParameters[pathsToCopy[i]] = newpath;
-                    }
-                    /*
-                    //TODO this should be done in corerel layer!!!
-                    var reverseRetPars = {};
-                    for(i in returnParameters){
-                        reverseRetPars[returnParameters[i]] = i;
-                    }
-                    //TODO temporary we set the pointers here, if it was pointing inside the selection we change it otherwise we let it as it is now
-                    //TODO temporary setting sets as well
-                    for(var i in reverseRetPars){
-                        _core.persist(_nodes["root"].node,function(){});
-                        var node = _nodes[i].node;
-                        var nodepointers = _core.getPointerNames(node);
-                        for(var j=0;j<nodepointers.length;j++){
-                            if(nodepointers[i] !== 'base'){
-                                var targetPath = _core.getPointerPath(node,nodepointers[j]);
-                                if(returnParameters[targetPath]){
-                                    _core.setPointer(node,nodepointers[j],_nodes[returnParameters[targetPath]].node);
-                                }
-                            }
-                        }
-                        var sets = _core.getSetNames(node);
-                        for(var j=0;j<sets.length;j++){
-                            var currentMembers = _core.getMemberPaths(node,sets[j]);
-                            for(var k=0;k<currentMembers.length;k++){
-                                if(returnParameters[currentMembers[k]]){
-                                    _core.delMember(node,sets[i],currentMembers[k]);
-                                    _core.addMember(node,sets[i],_nodes[returnParameters[currentMembers[k]]].node);
-                                }
-                            }
-                        }    
-                    }
-                    */
+
+
                     saveRoot('createChildren('+JSON.stringify(returnParameters)+')');
                     return returnParameters;
                 }
