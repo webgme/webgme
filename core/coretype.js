@@ -374,6 +374,17 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
             }
             return hash;
         };
+
+        core.getChildrenPaths = function(node){
+            var path = core.getPath(node);
+
+            var relids = core.getChildrenRelids(node);
+            for ( var i = 0; i < relids.length; ++i) {
+                relids[i] = path + "/" + relids[i];
+            }
+
+            return relids;
+        };
         // -------- kecso
 
 		return core;
