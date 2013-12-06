@@ -171,10 +171,14 @@ define(['logManager',
 
         //called from the TreeBrowserWidget when a node has been marked to "delete this"
         treeBrowser.onNodeDelete = function (selectedIds) {
-            /*var i;
-            for (i = 0; i < selectedIds.length; i += 1) {
-                client.deleteNode(selectedIds[i]);
-            }*/
+            var i = selectedIds.length;
+            //temporary fix to not allow deleting ROOT AND FCO
+            while (i--) {
+                if (!GMEConcepts.canDeleteNode(selectedIds[i])) {
+                    logger.warning('Can not delete item with ID: ' + selectedIds[i] + '. Possibly it is the ROOT or FCO');
+                    selectedIds.splice(i, 1);
+                }
+            }
             client.delMoreNodes(selectedIds);
         };
 

@@ -260,10 +260,17 @@ define(['logManager',
 
     ModelEditorControlDiagramDesignerWidgetEventHandlers.prototype._onSelectionDelete = function (idList) {
         var objIdList = [],
-            i = idList.length;
+            i = idList.length,
+            objID;
 
         while(i--) {
-            objIdList.pushUnique(this._ComponentID2GmeID[idList[i]]);
+            objID = this._ComponentID2GmeID[idList[i]];
+            //temporary fix to not allow deleting ROOT AND FCO
+            if (GMEConcepts.canDeleteNode(objID)) {
+                objIdList.pushUnique(objID);
+            } else {
+                this.logger.warning('Can not delete item with ID: ' + objID + '. Possibly it is the ROOT or FCO');
+            }
         }
 
         if (objIdList.length > 0) {
