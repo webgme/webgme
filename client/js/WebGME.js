@@ -34,7 +34,7 @@ define(['logManager',
             loadPanels,
             layoutToLoad = util.getURLParameterByName('layout') || 'DefaultLayout',
             commitToLoad = util.getURLParameterByName('commit').toLowerCase(),
-            projectToLoad = util.getURLParameterByName('project').toLowerCase(),
+            projectToLoad = util.getURLParameterByName('project'),
             objectToLoad = util.getURLParameterByName('obj').toLowerCase(),
             logger = logManager.create('WebGME'),
             selectObject;
