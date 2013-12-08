@@ -20,7 +20,8 @@ define(['js/Constants',
                                                           MetaTextEditorDialog) {
 
     var MetaDecoratorDiagramDesignerWidget,
-        DECORATOR_ID = "MetaDecorator";
+        DECORATOR_ID = "MetaDecorator",
+        ABSTRACT_CLASS = 'abstract';
 
     MetaDecoratorDiagramDesignerWidget = function (options) {
 
@@ -150,6 +151,7 @@ define(['js/Constants',
 
             this._updateAttributes();
             this._updateConstraints();
+            this._updateAbstract();
         }
 
     };
@@ -169,12 +171,28 @@ define(['js/Constants',
 
             this._updateAttributes();
             this._updateConstraints();
+            this._updateAbstract();
         }
     };
 
     MetaDecoratorDiagramDesignerWidget.prototype._refreshName = function () {
         this._skinParts.$name.text(this.name);
         this._skinParts.$name.attr("title", this.name);
+    };
+
+    MetaDecoratorDiagramDesignerWidget.prototype._updateAbstract = function () {
+        var client = this._control._client,
+            nodeObj = client.getNode(this._metaInfo[CONSTANTS.GME_ID]);
+
+        if (nodeObj) {
+            if (nodeObj.getRegistry(nodePropertyNames.Registry.isAbstract) === true) {
+                this.$el.addClass(ABSTRACT_CLASS);
+            } else {
+                this.$el.removeClass(ABSTRACT_CLASS);
+            }
+        } else {
+            this.$el.removeClass(ABSTRACT_CLASS);
+        }
     };
 
     /***************  CUSTOM DECORATOR PART ****************************/

@@ -102,6 +102,9 @@
     .model-decorator .ref [class^="icon-"],
     .model-decorator .ref [class*=" icon-"] {
       margin-top: -2px; }
+  .model-decorator.abstract .name {
+    font-style: italic;
+    color: #aaaaaa; }
 
 .model-decorator .connector {
   background-color: #fefefe;
