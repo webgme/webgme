@@ -13,9 +13,11 @@
 define(['jquery',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           METAAspectHelper,
                                            MetaEditorConstants) {
 
     var _client;
@@ -76,7 +78,7 @@ define(['jquery',
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
@@ -100,7 +102,7 @@ define(['jquery',
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
@@ -306,7 +308,7 @@ define(['jquery',
     };
 
     var _getValidReferenceTypes = function (parentId, targetId) {
-        var validReferenceTypes = _client.getValidChildrenTypes(parentId),
+        var validReferenceTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
             i;
 
         i = validReferenceTypes.length;
@@ -332,6 +334,24 @@ define(['jquery',
         return result;
     };
 
+    var _getMETAAspectMergedValidChildrenTypes = function (objID) {
+        var metaAspectMembers = METAAspectHelper.getMetaAspectMembers(),
+            validChildrenTypes = _client.getValidChildrenTypes(objID),
+            len = metaAspectMembers.length,
+            id;
+
+        while(len--) {
+            id = metaAspectMembers[len];
+            if (validChildrenTypes.indexOf(id) === -1) {
+                if (_canCreateChild(objID, id)) {
+                    validChildrenTypes.push(id);
+                }
+            }
+        }
+
+        return validChildrenTypes;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
@@ -345,6 +365,7 @@ define(['jquery',
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
         getValidReferenceTypes: _getValidReferenceTypes,
-        canDeleteNode: _canDeleteNode
+        canDeleteNode: _canDeleteNode,
+        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes
     }
 });

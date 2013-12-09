@@ -132,22 +132,11 @@ define(['logManager',
             len,
             diff,
             id,
-            territoryChanged = false,
-            metaAspectMembers = METAAspectHelper.getMetaAspectMembers();
+            territoryChanged = false;
 
         if (node) {
             //get possible targets from MetaDescriptor
-            validChildrenTypes = this._client.getValidChildrenTypes(gmeID);
-
-            len = metaAspectMembers.length;
-            while(len--) {
-                id = metaAspectMembers[len];
-                if (validChildrenTypes.indexOf(id) === -1) {
-                    if (GMEConcepts.canCreateChild(gmeID, id)) {
-                        validChildrenTypes.push(id);
-                    }
-                }
-            }
+            validChildrenTypes = GMEConcepts.getMETAAspectMergedValidChildrenTypes(gmeID);
 
             //the deleted ones
             diff = _.difference(oValidChildrenTypes, validChildrenTypes);
