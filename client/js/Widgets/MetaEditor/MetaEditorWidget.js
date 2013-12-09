@@ -6,16 +6,24 @@ define(['logManager',
     'js/Widgets/DiagramDesigner/DiagramDesignerWidget',
     'js/Controls/iCheckBox',
     './MetaEditorPointerNamesDialog',
+    'js/Toolbar/ToolbarButton',
+    'js/Toolbar/ToolbarDropDownButton',
     'css!/css/Widgets/MetaEditor/MetaEditorWidget'], function (logManager,
                                                              clientUtil,
                                                              DragHelper,
                                                              DiagramDesignerWidget,
                                                              iCheckBox,
-                                                             MetaEditorPointerNamesDialog) {
+                                                             MetaEditorPointerNamesDialog,
+                                                             ToolbarButton,
+                                                             ToolbarDropDownButton) {
 
     var MetaEditorWidget,
         __parent__ = DiagramDesignerWidget,
-        __parent_proto__ = DiagramDesignerWidget.prototype;
+        __parent_proto__ = DiagramDesignerWidget.prototype,
+        SHEETS_CONTAINER = "sheets-container",
+        ADD_SHEET_CONTAINER_CLASS = 'add-sheet-container',
+        SHEET_LIST_CONTAINER_CLASS = 'sheet-list-container',
+        SHEET_SCROLL = 200;
 
     MetaEditorWidget = function (container, params) {
         params = params || {};
@@ -36,6 +44,8 @@ define(['logManager',
         this._connectToConnection = false;
 
         this._initializeFilterPanel();
+
+        this._initializeSheets();
     };
 
     MetaEditorWidget.prototype._afterManagersInitialized = function () {
@@ -114,6 +124,100 @@ define(['logManager',
     MetaEditorWidget.prototype.getDragEffects = function (selectedElements, event) {
         //the only drag is a MOVE
         return [DragHelper.DRAG_EFFECTS.DRAG_MOVE];
+    };
+
+    MetaEditorWidget.prototype._initializeSheets = function () {
+        var self = this;
+
+        this.$sheetsContainer = $('<div/>', { 'class': SHEETS_CONTAINER });
+
+        this.$el.parent().append(this.$sheetsContainer);
+
+        this._sheets = [];
+
+        this.$divAddSheet = $('<div/>', {'class': ADD_SHEET_CONTAINER_CLASS});
+
+        this.$btnAddSheet = new ToolbarButton({ "title": "Add new sheet...",
+            "icon": "icon-plus",
+            "clickFn": function (/*data*/) {
+                self.addSheet('Sheet' + (self._sheets.length + 1));
+            }});
+        this.$divAddSheet.append(this.$btnAddSheet.el);
+
+        this.$ddlSheetsList = new ToolbarDropDownButton({ "title": "Sheet list",
+            "icon": "icon-list"});
+        this.$divAddSheet.append(this.$ddlSheetsList.el);
+
+        this.$btnScrollLeft = new ToolbarButton({ "title": "Scroll left",
+            "icon": "icon-chevron-left",
+            "clickFn": function (/*data*/) {
+                self._sheetsScrollLeft();
+            } });
+        this.$divAddSheet.append(this.$btnScrollLeft.el);
+
+        this.$btnScrollRight = new ToolbarButton({ "title": "Scroll right",
+            "icon": "icon-chevron-right",
+            "clickFn": function (/*data*/) {
+                self._sheetsScrollRight();
+            } });
+        this.$divAddSheet.append(this.$btnScrollRight.el);
+
+
+        this.$divSheetList = $('<div/>', {'class': SHEET_LIST_CONTAINER_CLASS});
+        this.$ulSheetTab = $('<ul/>', {'class': 'nav nav-tabs'});
+        this.$divSheetList.append(this.$ulSheetTab);
+ 
+        
+        this.$sheetsContainer.append(this.$divAddSheet);
+        this.$sheetsContainer.append(this.$divSheetList);
+
+        for (var i = 0; i <5 ; i++) {
+            this.addSheet('Sheet'+i);
+        }
+
+        this._sheetScrollValue = 0;
+
+        //hook up sheet rename
+        // set title editable on double-click
+        this.$ulSheetTab.on("dblclick.editOnDblClick", 'a', function (event) {
+            if (self.getIsReadOnlyMode() !== true) {
+                $(this).editInPlace({"class": "",
+                    "onChange": function (oldValue, newValue) {
+                        //self._onSheetTitleChanged(oldValue, newValue);
+                    }});
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
+    };
+
+    MetaEditorWidget.prototype.addSheet = function (name) {
+        var li = $('<li class=""><a href="#" data-toggle="tab">'+ name +'</a></li>');
+
+        if (this._sheets.indexOf(name) === -1) {
+            this.$ulSheetTab.append(li);
+            this._sheets.push(name);
+        }
+    };
+
+    MetaEditorWidget.prototype._sheetsScrollLeft = function () {
+        if (this._sheetScrollValue < 0) {
+            this._scrollSheetListBy(Math.min(Math.abs(this._sheetScrollValue), SHEET_SCROLL));
+        }
+    };
+
+    MetaEditorWidget.prototype._sheetsScrollRight = function () {
+        var overflowRightBy = this.$ulSheetTab.width() - this.$sheetsContainer.width() + this.$divAddSheet.outerWidth(true) + this._sheetScrollValue;
+
+        if (overflowRightBy > 0) {
+            overflowRightBy = Math.min(overflowRightBy, SHEET_SCROLL);
+            this._scrollSheetListBy(-overflowRightBy);
+        }
+    };
+
+    MetaEditorWidget.prototype._scrollSheetListBy = function (value) {
+        this._sheetScrollValue += value;
+        this.$ulSheetTab.css('left', this._sheetScrollValue);
     };
 
     return MetaEditorWidget;

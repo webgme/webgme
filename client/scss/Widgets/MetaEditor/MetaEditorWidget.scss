@@ -5,9 +5,11 @@ $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
 
+$sheets-container-height: 25px;
+
 div.filterPanel {
 	position: absolute;
-	top: $filterPanel-top;
+	top: $sheets-container-height + $filterPanel-top;
 	right: $filterPanel-right;
 
 	background-color: $filterPanel-background-color;
@@ -59,6 +61,58 @@ div.filterPanel {
 
 		.body {
 			display :block;
+		}
+	}
+}
+
+.sheets-container {
+	position: absolute;
+	top: 2px;
+	width : 100%;
+	height: $sheets-container-height;
+	background-color: rgba(255, 255, 255, 0.3);
+	padding-top: 2px;
+
+	> div {
+		display: table-cell;
+		vertical-align: middle;
+		white-space: nowrap;
+	}
+
+	div.add-sheet-container {
+		border-bottom: 1px solid #ddd;
+		padding-left: 3px;
+		padding-right: 3px;
+		padding-bottom: 2px;
+	}
+
+	div.add-sheet-container {
+		> div {
+			display: inline-block;
+			margin-right: 3px;
+		}
+	}
+
+	div.sheet-list-container {
+		width: 100%;
+		overflow: hidden;
+
+		ul.nav {
+			position: relative;
+			margin-bottom: 0px;
+
+			&.nav-tabs {
+				> li {
+					display: inline-block;
+					float:none;
+
+					> a {
+						padding-top: 5px;
+				  		padding-bottom: 5px;
+				  		line-height: 13px;
+					}
+				}
+			}
 		}
 	}
 }
