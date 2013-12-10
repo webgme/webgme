@@ -1,11 +1,11 @@
 $filterPanel-background-color: #FFFFFF;
-$filterPanel-top: 5px;
+$filterPanel-top: 8px;
 $filterPanel-right: 11px;
 $filterPanel-border: 1px solid rgba(0, 0, 0, 0.2);
 $filterPanel-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
 $filterPanel-header-min-width: 100px;
 
-$sheets-container-height: 25px;
+$sheets-container-height: 26px;
 
 div.filterPanel {
 	position: absolute;
@@ -110,7 +110,32 @@ div.filterPanel {
 						padding-top: 5px;
 				  		padding-bottom: 5px;
 				  		line-height: 13px;
+
+                      .sheet-title {
+                        white-space: nowrap;
+                        display: inline-block;
+                        max-width: 120px;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                      }
+
+                        [class^="icon-"],
+                        [class*=" icon-"] {
+                          margin-top: -1px;
+                          margin-left: 2px;
+                          cursor: pointer;
+                          display: none;
+                        }
 					}
+
+                  &.active {
+                    > a {
+                      [class^="icon-"],
+                      [class*=" icon-"] {
+                        display: inline-block;
+                      }
+                    }
+                  }
 				}
 			}
 		}

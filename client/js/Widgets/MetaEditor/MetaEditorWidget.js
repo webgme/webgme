@@ -172,31 +172,45 @@ define(['logManager',
         this.$sheetsContainer.append(this.$divSheetList);
 
         for (var i = 0; i <5 ; i++) {
-            this.addSheet('Sheet'+i);
+            this.addSheet('Sheet'+i, i !== 0);
         }
 
         this._sheetScrollValue = 0;
 
         //hook up sheet rename
         // set title editable on double-click
-        this.$ulSheetTab.on("dblclick.editOnDblClick", 'a', function (event) {
+        this.$ulSheetTab.on("dblclick.editOnDblClick", '.sheet-title', function (event) {
             if (self.getIsReadOnlyMode() !== true) {
                 $(this).editInPlace({"class": "",
                     "onChange": function (oldValue, newValue) {
-                        //self._onSheetTitleChanged(oldValue, newValue);
+                        self.onSheetTitleChanged(oldValue, newValue);
                     }});
+            }
+            event.stopPropagation();
+            event.preventDefault();
+        });
+
+        this.$ulSheetTab.on("click.deleteSheetClick", 'a > i', function (event) {
+            if (self.getIsReadOnlyMode() !== true) {
+                    self.onSheetDelete($(this).parent().text());
             }
             event.stopPropagation();
             event.preventDefault();
         });
     };
 
-    MetaEditorWidget.prototype.addSheet = function (name) {
-        var li = $('<li class=""><a href="#" data-toggle="tab">'+ name +'</a></li>');
+    MetaEditorWidget.prototype.addSheet = function (name, deletable) {
+        var li = $('<li class=""><a href="#" data-toggle="tab"></a></li>');
 
         if (this._sheets.indexOf(name) === -1) {
             this.$ulSheetTab.append(li);
             this._sheets.push(name);
+
+            li.find('a').append('<div class="sheet-title" title="' + name + '">' + name + '</div>');
+
+            if (deletable === true) {
+                li.find('a').append($('<i class="icon-remove-circle"/>'));
+            }
         }
     };
 
@@ -218,6 +232,14 @@ define(['logManager',
     MetaEditorWidget.prototype._scrollSheetListBy = function (value) {
         this._sheetScrollValue += value;
         this.$ulSheetTab.css('left', this._sheetScrollValue);
+    };
+
+    MetaEditorWidget.prototype.onSheetDelete = function (sheetName) {
+        this.logger.warning('onSheetDelete not implemented: "' + sheetName + '"');
+    };
+
+    MetaEditorWidget.prototype.onSheetTitleChanged = function (oldValue, newValue) {
+        this.logger.warning('onSheetTitleChanged not implemented: "' + oldValue + '" --> "' + newValue + '"');
     };
 
     return MetaEditorWidget;

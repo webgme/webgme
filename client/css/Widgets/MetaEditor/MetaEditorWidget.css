@@ -1,6 +1,6 @@
 div.filterPanel {
   position: absolute;
-  top: 30px;
+  top: 34px;
   right: 11px;
   background-color: white;
   border: 1px solid rgba(0, 0, 0, 0.2);
@@ -39,7 +39,7 @@ div.filterPanel {
   position: absolute;
   top: 2px;
   width: 100%;
-  height: 25px;
+  height: 26px;
   background-color: rgba(255, 255, 255, 0.3);
   padding-top: 2px; }
   .sheets-container > div {
@@ -67,3 +67,18 @@ div.filterPanel {
           padding-top: 5px;
           padding-bottom: 5px;
           line-height: 13px; }
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a .sheet-title {
+            white-space: nowrap;
+            display: inline-block;
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis; }
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class^="icon-"],
+          .sheets-container div.sheet-list-container ul.nav.nav-tabs > li > a [class*=" icon-"] {
+            margin-top: -1px;
+            margin-left: 2px;
+            cursor: pointer;
+            display: none; }
+        .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class^="icon-"],
+        .sheets-container div.sheet-list-container ul.nav.nav-tabs > li.active > a [class*=" icon-"] {
+          display: inline-block; }
