@@ -19,7 +19,7 @@ define([ "util/assert" ], function (ASSERT) {
 			},
 
 			unlock: function () {
-				waiters.pop();
+                waiters.shift();
 				if (waiters.length >= 1) {
 					var func = waiters[0];
 					func();
