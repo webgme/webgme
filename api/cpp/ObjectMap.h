@@ -76,7 +76,7 @@ namespace webgme {
         HandleScope scope;
         //CERR << "Calling func on: " << object_->GetIdentityHash() << std::endl;
         //CERR << "Calling func on: " << reinterpret_cast<void*>(*object_) << std::endl;
-        const int argc = sizeof...(args);
+        const unsigned int argc = sizeof...(args);
         Handle<Value> argv[argc] = {args...};
         return scope.Close(WebGME::CallTasyncMethod(func_, argc, argv, object_));
       }
