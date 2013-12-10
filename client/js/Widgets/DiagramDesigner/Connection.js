@@ -77,6 +77,8 @@ define(['logManager',
         this.reconnectable = objDescriptor.reconnectable === true;
         this.editable = !!objDescriptor.editable;
 
+        this.isBezier = (objDescriptor[DiagramDesignerWidgetConstants.LINE_TYPE] || DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase() === DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
+
         /*PathAttributes*/
         this.designerAttributes.arrowStart = objDescriptor[DiagramDesignerWidgetConstants.LINE_START_ARROW] || CONNECTION_DEFAULT_END;
         this.designerAttributes.arrowEnd = objDescriptor[DiagramDesignerWidgetConstants.LINE_END_ARROW] || CONNECTION_DEFAULT_END;
@@ -112,10 +114,13 @@ define(['logManager',
         if (objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS]) {
             var fixedP;
             var len =  objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS].length;
+            var cx, cy;
             for (var i = 0; i < len; i += 1) {
                 fixedP = this._fixXY({'x': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][0],
                                       'y': objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][1]});
-                this.segmentPoints.push([fixedP.x, fixedP.y]);
+                cx = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][2] : 0;
+                cy = objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i].length > 2 ? objDescriptor[DiagramDesignerWidgetConstants.LINE_POINTS][i][3] : 0;
+                this.segmentPoints.push([fixedP.x, fixedP.y, cx, cy]);
             }
         }
     };
@@ -280,8 +285,6 @@ define(['logManager',
             maxX,
             maxY;
 
-
-
         //remove edit features
         this._removeEditModePath();
 
@@ -309,7 +312,7 @@ define(['logManager',
         this.endCoordinates = { "x": -1,
                                 "y": -1};
 
-        i = len = points.length;
+        len = points.length;
         validPath = len > 1;
 
         if (validPath) {
@@ -319,7 +322,6 @@ define(['logManager',
 
             //non-edit mode, one path builds the connection
             p = points[0];
-            pathDef.push("M" + p.x + "," + p.y);
 
             minX = maxX = p.x;
             minY = maxY = p.y;
@@ -328,16 +330,13 @@ define(['logManager',
             this.sourceCoordinates.x = p.x;
             this.sourceCoordinates.y = p.y;
 
-            //fix the counter to start from the second point in the list
-            len--;
-            i--;
+            i = points.length;
             while (i--) {
-                p = points[len - i];
+                p = points[i];
                 minX = Math.min(minX, p.x);
                 minY = Math.min(minY, p.y);
                 maxX = Math.max(maxX, p.x);
                 maxY = Math.max(maxY, p.y);
-                pathDef.push("L" + p.x + "," + p.y);
             }
 
             //save calculated bounding box
@@ -347,10 +346,12 @@ define(['logManager',
             this._pathPointsBBox.y2 = maxY;
 
             //save endpoint coordinates
+            p = points[points.length - 1];
             this.endCoordinates.x = p.x;
             this.endCoordinates.y = p.y;
 
-
+            //construct the SVG path definition from path-points
+            pathDef = this._getPathDefFromPoints(points);
             pathDef = this._jumpOnCrossings(pathDef);
             pathDef = pathDef.join(" ");
 
@@ -923,7 +924,7 @@ define(['logManager',
             }
         }
 
-        //PATHSHADOW without marker endgins
+        //PATHSHADOW without marker endings
         if (this.designerAttributes.arrowStart !== CONNECTION_NO_END) {
             points = eliminatePoints(points, {"x": osX, "y": osY}, {"x": points[0].x, "y": points[0].y}, false);
         }
@@ -933,18 +934,8 @@ define(['logManager',
             points = eliminatePoints(points, {"x": oeX, "y": oeY}, {"x": points[len - 1].x, "y": points[len - 1].y}, true);
         }
 
-        i = len = points.length;
-        p = points[0];
-        pathDef.push("M" + p.x + "," + p.y);
-
-        //fix the counter to start from the second point in the list
-        len--;
-        i--;
-        while (i--) {
-            p = points[len - i];
-            pathDef.push("L" + p.x + "," + p.y);
-        }
-
+        //construct the SVG path definition from path-points
+        pathDef = this._getPathDefFromPoints(points);
         pathDef = this._jumpOnCrossings(pathDef);
         pathDef = pathDef.join(" ");
         this.skinParts.pathShadow.attr({ "path": pathDef});
@@ -1098,7 +1089,7 @@ define(['logManager',
                 //till we reach the next segment point in the list, all routing points go to the same path-segment
                 if (sIt < segmentPointsLen && this._isSamePoint(routingPoints[rIt], {'x': this.segmentPoints[sIt][0], 'y': this.segmentPoints[sIt][1]})) {
                     //found the end of a segment
-                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                    pathSegmentPoints.push([this.segmentPoints[sIt][0], this.segmentPoints[sIt][1], this.segmentPoints[sIt][2], this.segmentPoints[sIt][3]]);
 
                     //create segment
                     this._createEditSegment(pathSegmentPoints, pNum);
@@ -1111,9 +1102,9 @@ define(['logManager',
 
                     //start new pathSegmentPoint list
                     pathSegmentPoints = [];
-                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                    pathSegmentPoints.push([this.segmentPoints[sIt - 1][0], this.segmentPoints[sIt - 1][1], this.segmentPoints[sIt - 1][2], this.segmentPoints[sIt - 1][3]]);
                 } else {
-                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y]);
+                    pathSegmentPoints.push([routingPoints[rIt].x, routingPoints[rIt].y, 0, 0]);
                 }
             }
 
@@ -1157,9 +1148,14 @@ define(['logManager',
         this._connectionEditSegments.push(segment);
     };
 
-    Connection.prototype.addSegmentPoint = function (idx, x, y) {
-        var d = [x, y],
+    Connection.prototype.addSegmentPoint = function (idx, x, y, cx, cy) {
+        var d = [x, y, 0, 0],
             newSegmentPoints = this.segmentPoints.slice(0);
+
+        if (cx && cy) {
+            d[2] = cx;
+            d[3] = cy;
+        }
 
         newSegmentPoints.splice(idx,0,d);
 
@@ -1177,12 +1173,12 @@ define(['logManager',
     };
 
     Connection.prototype.setSegmentPoint = function (idx, x, y, cx, cy) {
-        var d = [x, y],
+        var d = [x, y, 0, 0],
             newSegmentPoints = this.segmentPoints.slice(0);
 
         if (cx && cy) {
-            d.push(cx);
-            d.push(cy);
+            d[2] = cx;
+            d[3] = cy;
         }
 
         newSegmentPoints[idx] = d;
@@ -1204,8 +1200,8 @@ define(['logManager',
             marker = new ConnectionSegmentPoint({'connection': this,
                 'id': i,
                 'point': this.segmentPoints[i],
-                'pointAfter': i === len - 1 ? [this._pathPoints[pointsLastIdx].x, this._pathPoints[pointsLastIdx].y] : this.segmentPoints[i + 1],
-                'pointBefore': i === 0 ? [this._pathPoints[0].x, this._pathPoints[0].y] : this.segmentPoints[i - 1]});
+                'pointAfter': i === len - 1 ? [this._pathPoints[pointsLastIdx].x, this._pathPoints[pointsLastIdx].y, 0, 0] : this.segmentPoints[i + 1],
+                'pointBefore': i === 0 ? [this._pathPoints[0].x, this._pathPoints[0].y, 0, 0] : this.segmentPoints[i - 1]});
 
             this._segmentPointMarkers.push(marker);
         }
@@ -1620,7 +1616,13 @@ define(['logManager',
             hDir,
             vDir;
 
+        //no jumps if not set by DiagramDesigner
         if (this.diagramDesigner._connectionJumpXing !== true) {
+            return pathDefArray;
+        }
+
+        //no jump on Bezier curves
+        if (this.isBezier === true) {
             return pathDefArray;
         }
 
@@ -1629,18 +1631,20 @@ define(['logManager',
 
         while(len--) {
             otherConn = items[connectionIDs[len]];
-            xingWithOther = this._pathIntersect(otherConn);
-            if (xingWithOther && xingWithOther.length > 0) {
-                for (i = 0; i < xingWithOther.length; i += 1) {
-                    xingDesc = xingWithOther[i];
-                    intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
-                    intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
-                                                    't': xingDesc.t1,
-                                                  'path': xingDesc.path1,
-                                                  'length': xingDesc.segment1Length,
-                                                  'otherWidth': otherConn.designerAttributes.width });
-                    if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
-                        intersectionSegments.push(xingDesc.segment1);
+            if (otherConn.isBezier === false) {
+                xingWithOther = this._pathIntersect(otherConn);
+                if (xingWithOther && xingWithOther.length > 0) {
+                    for (i = 0; i < xingWithOther.length; i += 1) {
+                        xingDesc = xingWithOther[i];
+                        intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
+                        intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
+                                                        't': xingDesc.t1,
+                                                      'path': xingDesc.path1,
+                                                      'length': xingDesc.segment1Length,
+                                                      'otherWidth': otherConn.designerAttributes.width });
+                        if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
+                            intersectionSegments.push(xingDesc.segment1);
+                        }
                     }
                 }
             }
@@ -1948,6 +1952,58 @@ define(['logManager',
         return this._metaInfo;
     };
     /***************************** END OF --- CONNECTION'S META INFO **************************/
+
+    Connection.prototype._getPathDefFromPoints = function (points) {
+        var pathDef = [],
+            p,
+            i,
+            len,
+            segmentPoints = this.segmentPoints,
+            sIdx = 0,
+            pcX = 0,
+            pcY = 0,
+            cX = 0,
+            cY = 0,
+            pp;
+
+        //non-edit mode, one path builds the connection
+        p = points[0];
+        pathDef.push("M" + p.x + "," + p.y);
+        pp = points[0];
+
+        //fix the counter to start from the second point in the list
+        len = points.length;
+        for (i = 1; i < len; i += 1) {
+            p = points[i];
+            if (this.isBezier === false) {
+                pathDef.push("L" + p.x + "," + p.y);
+            } else {
+                //draw a Quadratic Bezier path
+                //if the next point is a user defined segment point, use it's control points
+                if (segmentPoints.length > 0 &&
+                    segmentPoints.length > sIdx &&
+                    this._isSamePoint(p, {'x': segmentPoints[sIdx][0], 'y': segmentPoints[sIdx][1]})) {
+                    cX = segmentPoints[sIdx][2];
+                    cY = segmentPoints[sIdx][3];
+                    sIdx += 1;
+                } else {
+                    //if the segment point is introduced by the routing algorithm but not defined by the user, it has no control point values
+                    cX = 0;
+                    cY = 0;
+                }
+
+                //C x1,y1 x2,y2 x,y
+                //draws a quadratic Bezier from the current point via control points x1,y1 and x2,y2 to x,y
+                pathDef.push("C" + (pp.x + pcX) + "," + (pp.y + pcY) + " " + (p.x - cX) + "," + (p.y - cY) + " " + p.x + "," + p.y);
+
+                pp = p;
+                pcX = cX;
+                pcY = cY;
+            }
+        }
+
+        return pathDef;
+    };
 
     return Connection;
 });
