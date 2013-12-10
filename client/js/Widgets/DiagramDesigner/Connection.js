@@ -1631,18 +1631,20 @@ define(['logManager',
 
         while(len--) {
             otherConn = items[connectionIDs[len]];
-            xingWithOther = this._pathIntersect(otherConn);
-            if (xingWithOther && xingWithOther.length > 0) {
-                for (i = 0; i < xingWithOther.length; i += 1) {
-                    xingDesc = xingWithOther[i];
-                    intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
-                    intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
-                                                    't': xingDesc.t1,
-                                                  'path': xingDesc.path1,
-                                                  'length': xingDesc.segment1Length,
-                                                  'otherWidth': otherConn.designerAttributes.width });
-                    if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
-                        intersectionSegments.push(xingDesc.segment1);
+            if (otherConn.isBezier === false) {
+                xingWithOther = this._pathIntersect(otherConn);
+                if (xingWithOther && xingWithOther.length > 0) {
+                    for (i = 0; i < xingWithOther.length; i += 1) {
+                        xingDesc = xingWithOther[i];
+                        intersections[xingDesc.segment1] = intersections[xingDesc.segment1] || [];
+                        intersections[xingDesc.segment1].push({'xy': [xingDesc.x, xingDesc.y],
+                                                        't': xingDesc.t1,
+                                                      'path': xingDesc.path1,
+                                                      'length': xingDesc.segment1Length,
+                                                      'otherWidth': otherConn.designerAttributes.width });
+                        if (intersectionSegments.indexOf(xingDesc.segment1) === -1) {
+                            intersectionSegments.push(xingDesc.segment1);
+                        }
                     }
                 }
             }
