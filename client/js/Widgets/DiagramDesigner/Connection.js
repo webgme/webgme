@@ -1149,13 +1149,8 @@ define(['logManager',
     };
 
     Connection.prototype.addSegmentPoint = function (idx, x, y, cx, cy) {
-        var d = [x, y, 0, 0],
+        var d = [x, y, cx, cy],
             newSegmentPoints = this.segmentPoints.slice(0);
-
-        if (cx && cy) {
-            d[2] = cx;
-            d[3] = cy;
-        }
 
         newSegmentPoints.splice(idx,0,d);
 
@@ -1173,13 +1168,8 @@ define(['logManager',
     };
 
     Connection.prototype.setSegmentPoint = function (idx, x, y, cx, cy) {
-        var d = [x, y, 0, 0],
+        var d = [x, y, cx, cy],
             newSegmentPoints = this.segmentPoints.slice(0);
-
-        if (cx && cy) {
-            d[2] = cx;
-            d[3] = cy;
-        }
 
         newSegmentPoints[idx] = d;
 

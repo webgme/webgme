@@ -4,11 +4,18 @@
  * Author: Robert Kereskenyi
  */
 
-.tabContainer {
-  ul.nav.nav-tabs {
-    li {
-      width: 86px;
-      text-align: center;
+.pre-body {
+  padding: 15px;
+  padding-bottom: 0px;
+
+  .tabContainer {
+    ul.nav.nav-tabs {
+      margin-bottom: 0px;
+      
+      li {
+        width: 86px;
+        text-align: center;
+      }
     }
   }
 }
