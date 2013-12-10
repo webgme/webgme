@@ -89,6 +89,45 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
             });
         }
 
+        function createProject(client,project,callback){
+            options.authorization(client,project,'create',function(err,cando){
+                if(!err && cando === true){
+                    if(_projects[project]){
+                        addClient(client,project);
+                        //TODO we should find the real reason behind collection loose
+                        try{
+                            _projects[project].getBranchNames(function(err,names){
+                                if(err){
+                                    delete _projects[project];
+                                    checkProject(client,project,callback);
+                                } else {
+                                    callback(null,_projects[project]);
+                                }
+                            });
+                        }
+                        catch(e){
+                            delete _projects[project];
+                            checkProject(client,project,callback);
+                        }
+                        callback(null,_projects[project]);
+                    } else {
+                        _database.openProject(project,function(err,proj){
+                            if(!err && proj){
+                                _projects[project] = proj;
+                                addClient(client,project);
+                                callback(null,_projects[project]);
+                            } else {
+                                callback(err,null);
+                            }
+                        });
+                    }
+                } else {
+                    err = err || 'missing necessary user rights';
+                    callback(err);
+                }
+            });
+        }
+
         function open(){
             _socket = IO.listen(options.combined ? options.combined : options.port,{
                 'transports': [
@@ -185,7 +224,20 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });
 
                 socket.on('openProject', function(projectName,callback){
-                    checkProject(getSessionID(socket),projectName,callback);
+                    checkDatabase(function(err){
+                        if(err){
+                            callback(err);
+                        } else {
+                            _database.getProjectNames(function(err,names){
+                                if(names.indexOf(projectName) === -1){
+                                    //project creation
+                                    createProject(getSessionID(socket),projectName,callback);
+                                } else {
+                                    checkProject(getSessionID(socket),projectName,callback);
+                                }
+                            });
+                        }
+                    });
                 });
 
                 socket.on('closeProject', function(projectName,callback){
