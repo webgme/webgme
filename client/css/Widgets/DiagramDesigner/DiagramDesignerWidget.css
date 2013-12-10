@@ -114,7 +114,7 @@
       stroke: red; }
     .diagram-designer .items svg.connection-container .path-edit-segment {
       stroke: rgba(0, 0, 0, 0);
-      opacity: 0.5; }
+      opacity: 0; }
     .diagram-designer .items svg.connection-container .segment-point {
       fill: yellow;
       stroke: black;
@@ -123,6 +123,12 @@
         fill: #ff7800; }
     .diagram-designer .items svg.connection-container .segment-point-move-path {
       stroke: #ff7800; }
+    .diagram-designer .items svg.connection-container .segment-point-bezier-control {
+      fill: white;
+      stroke: black;
+      cursor: pointer; }
+      .diagram-designer .items svg.connection-container .segment-point-bezier-control:hover {
+        fill: #ff7800; }
     .diagram-designer .items div.c-t {
       position: absolute;
       top: 0;

@@ -26,6 +26,7 @@ define([], function () {
         PATH_EDIT_SEGMENT_NEW_SEGMENT_POINT_MARKER_CLASS: 'new-segment-point-marker',
         CONNECTION_SEGMENT_POINT_CLASS: 'segment-point',
         SEGMENT_POINT_MOVE_PATH_CLASS : 'segment-point-move-path',
+        CONNECTION_SEGMENT_POINT_BEZIER_CONTROL_CLASS: 'segment-point-bezier-control',
         HIGHLIGHT_MODE_CLASS: 'highlight-mode',
         ITEM_HIGHLIGHT_CLASS: 'highlighted',
         DROP_REGION_CLASS: 'drop-region',
