@@ -287,6 +287,14 @@ define(['js/Widgets/DiagramDesigner/DiagramDesignerWidget.Constants',
                 this.point[3] = mousePos.mY - this.point[1];
             }
 
+            if (Math.abs(this.point[2]) < SNAP_DISTANCE) {
+                this.point[2] = 0;
+            }
+
+            if (Math.abs(this.point[3]) < SNAP_DISTANCE) {
+                this.point[3] = 0;
+            }
+
             this.cpLine.attr({'path': "M" + (this.point[0] - this.point[2]) + "," + (this.point[1] - this.point[3]) + " L" + (this.point[0] + this.point[2]) + "," + (this.point[1] + this.point[3])});
 
             this.cpBeforeCircle.attr({'cx': this.point[0] - this.point[2],
