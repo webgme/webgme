@@ -347,7 +347,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
                     var baseOverlays = coretree.getChild(base, OVERLAYS);
                     var list = overlayQuery(baseOverlays, baseOldPath);
 
-                    aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
+                    aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? 1 : -1));
 
                     var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
@@ -430,7 +430,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
                 var baseOverlays = coretree.getChild(base, OVERLAYS);
                 var list = overlayQuery(baseOverlays, baseOldPath);
 
-                aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
+                aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? 1 : -1));
 
                 var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
