@@ -17,7 +17,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
         var _socket = null,
             _objects = {},
             _projects = {},
-            _references = {},
+            /*_references = {},*/
             _databaseOpened = false,
             ERROR_DEAD_GUID = 'the given object does not exists';
 
@@ -50,11 +50,11 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
             }
         }
 
-        function checkProject(client,project,callback){
+        function _checkProject(client,project,callback){
             options.authorization(client,project,'read',function(err,cando){
                 if(!err && cando === true){
                     if(_projects[project]){
-                        addClient(client,project);
+                        //addClient(client,project);
                         //TODO we should find the real reason behind collection loose
                         try{
                          _projects[project].getBranchNames(function(err,names){
@@ -75,7 +75,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         _database.openProject(project,function(err,proj){
                             if(!err && proj){
                                 _projects[project] = proj;
-                                addClient(client,project);
+                                //addClient(client,project);
                                 callback(null,_projects[project]);
                             } else {
                                 callback(err,null);
@@ -88,12 +88,22 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 }
             });
         }
+        function checkProject(client,projectName,callback){
+            options.authorization(client,projectName,'read',function(err,cando){
+                if(!err && cando === true){
+                    _database.openProject(projectName,callback);
+                } else {
+                    err = err || 'missing necessary user rights';
+                    callback(err);
+                }
+            });
+        }
 
         function createProject(client,project,callback){
             options.authorization(client,project,'create',function(err,cando){
                 if(!err && cando === true){
                     if(_projects[project]){
-                        addClient(client,project);
+                        //addClient(client,project);
                         //TODO we should find the real reason behind collection loose
                         try{
                             _projects[project].getBranchNames(function(err,names){
@@ -114,7 +124,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         _database.openProject(project,function(err,proj){
                             if(!err && proj){
                                 _projects[project] = proj;
-                                addClient(client,project);
+                                //addClient(client,project);
                                 callback(null,_projects[project]);
                             } else {
                                 callback(err,null);
@@ -246,12 +256,12 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                         if(err) {
                             callback(err);
                         } else {
-                            //TODO put this shit together
+                            //TODO put this together
                             //var index = _references[projectName].indexOf(getSessionID(socket));
                             //_references[projectName].splice(index,1);
                             //if(_references[projectName].length === 0){
                                 //delete _references[projectName];
-                                delete _projects[projectName];
+                                //delete _projects[projectName];
                                 //project.closeProject(callback);
                             //} else {
                                 callback(null);
@@ -359,7 +369,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
                 });*/
 
                 socket.on('disconnect',function(){
-                    var todelete = [];
+                    /*var todelete = [];
                     for(var i in _references){
                         if(_projects[i]){
                             var index = _references[i].indexOf(socket.id);
@@ -379,7 +389,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
                     for(i=0;i<todelete.length;i++){
                         delete _references[todelete[i]];
-                    }
+                    }*/
                 });
             });
         }
@@ -408,7 +418,7 @@ define([ "util/assert","util/guid","util/url","socket.io" ],function(ASSERT,GUID
 
             _objects = {};
             _projects = {};
-            _references = {};
+            //_references = {};
             _databaseOpened = false;
         }
 
