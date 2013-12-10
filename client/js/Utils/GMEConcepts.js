@@ -11,14 +11,19 @@
  */
 
 define(['jquery',
+        'logManager',
         'js/Constants',
         'js/NodePropertyNames',
+        'js/Utils/METAAspectHelper',
         'js/Panels/MetaEditor/MetaEditorConstants'], function (_jquery,
+                                                               logManager,
                                            CONSTANTS,
                                            nodePropertyNames,
+                                           METAAspectHelper,
                                            MetaEditorConstants) {
 
-    var _client;
+    var _client,
+        _logger = logManager.create('GMEConcepts');
 
     var _initialize = function (client) {
         if (!_client) {
@@ -70,13 +75,13 @@ define(['jquery',
      * The given parent has a valid children type that has CONSTANTS.POINTER_SOURCE and CONSTANTS.POINTER_TARGET pointers
      * and the given object can be a valid target for CONSTANTS.POINTER_SOURCE
      */
-    var _isValidConnectionSource = function (objID, parentID) {
+    /*var _isValidConnectionSource = function (objID, parentID) {
         var valid = false,
             validChildrenTypes,
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
@@ -89,7 +94,7 @@ define(['jquery',
         }
 
         return valid;
-    };
+    };*/
 
     /*
      * Determines if a GME Connection can be created between source and target in parent
@@ -100,13 +105,12 @@ define(['jquery',
             len,
             childID;
 
-        validChildrenTypes = _client.getValidChildrenTypes(parentID) || [];
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
+
         len = validChildrenTypes.length;
         while (len--) {
             childID = validChildrenTypes[len];
-            if (_client.getPointerMeta(childID, CONSTANTS.POINTER_SOURCE) &&
-                _client.getPointerMeta(childID, CONSTANTS.POINTER_TARGET) &&
-                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
+            if (_client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
                 _client.isValidTarget(childID, CONSTANTS.POINTER_TARGET, targetID)) {
                 validTypes.push(childID);
             }
@@ -306,7 +310,7 @@ define(['jquery',
     };
 
     var _getValidReferenceTypes = function (parentId, targetId) {
-        var validReferenceTypes = _client.getValidChildrenTypes(parentId),
+        var validReferenceTypes = _getMETAAspectMergedValidChildrenTypes(parentId),
             i;
 
         i = validReferenceTypes.length;
@@ -332,12 +336,30 @@ define(['jquery',
         return result;
     };
 
+    var _getMETAAspectMergedValidChildrenTypes = function (objID) {
+        var metaAspectMembers = METAAspectHelper.getMetaAspectMembers(),
+            validChildrenTypes = _client.getValidChildrenTypes(objID),
+            len = metaAspectMembers.length,
+            id;
+
+        while(len--) {
+            id = metaAspectMembers[len];
+            if (validChildrenTypes.indexOf(id) === -1) {
+                if (_client.isValidChild(objID, id)) {
+                    validChildrenTypes.push(id);
+                }
+            }
+        }
+
+        return validChildrenTypes;
+    };
+
     //return utility functions
     return {
         initialize: _initialize,
         isConnection: _isConnection,
         isConnectionType: _isConnectionType,
-        isValidConnectionSource: _isValidConnectionSource,
+        /*isValidConnectionSource: _isValidConnectionSource,*/
         getValidConnectionTypes: _getValidConnectionTypes,
         canCreateChild: _canCreateChild,
         isValidConnection: _isValidConnection,
@@ -345,6 +367,7 @@ define(['jquery',
         isProjectFCO: _isProjectFCO,
         canCreateChildren: _canCreateChildren,
         getValidReferenceTypes: _getValidReferenceTypes,
-        canDeleteNode: _canDeleteNode
+        canDeleteNode: _canDeleteNode,
+        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes
     }
 });

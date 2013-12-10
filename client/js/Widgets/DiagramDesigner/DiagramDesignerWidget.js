@@ -60,7 +60,7 @@ define(['logManager',
     var DiagramDesignerWidget,
         CANVAS_EDGE = 100,
         WIDGET_CLASS = 'diagram-designer',  // must be same as scss/Widgets/DiagramDesignerWidget.scss
-        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager3,
+        DEFAULT_CONNECTION_ROUTE_MANAGER = ConnectionRouteManager2,
         GUID_DIGITS = 6;
 
     var defaultParams = {'loggerName': 'DiagramDesignerWidget',
@@ -356,23 +356,29 @@ define(['logManager',
         this.__loader = new LoaderCircles({"containerElement": this.$el.parent()});
     };
 
-    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow) {
+    DiagramDesignerWidget.prototype._createLineStyleMenuItem = function (width, color, pattern, startArrow, endArrow, type) {
         var el = $('<div/>'),
             path,
             hSize = 50,
             vSize = 20,
             paper = Raphael(el[0], hSize, vSize),
-            pathParams = {};
+            pathParams = {},
+            bezierControlOffset = 10;
 
         width = width || 1;
         color = color || "#000000";
         pattern = pattern || DiagramDesignerWidgetConstants.LINE_PATTERNS.SOLID;
         startArrow = startArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
         endArrow = endArrow || DiagramDesignerWidgetConstants.LINE_ARROWS.NONE;
+        type = (type || DiagramDesignerWidgetConstants.LINE_TYPES.NONE).toLowerCase();
 
         el.attr({"style": "height: " + vSize + "px; width: " + hSize + "px;"});
 
-        path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + ", L" + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+        if (type === DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER) {
+            path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + " C" + (5 + bezierControlOffset) + "," +  (Math.round(vSize / 2) + 0.5 - bezierControlOffset * 2) + " " + (hSize - bezierControlOffset) + "," +  (Math.round(vSize / 2) + 0.5 + bezierControlOffset * 2) + " " + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+        } else {
+            path = paper.path("M 5," + (Math.round(vSize / 2) + 0.5) + " L" + (hSize - 5) + "," + (Math.round(vSize / 2) + 0.5));
+        }
 
         path.attr({ "arrow-start": startArrow,
             "arrow-end": endArrow,
@@ -835,6 +841,10 @@ define(['logManager',
 
             if (this.toolbarItems.ddbtnConnectionPattern) {
                 this.toolbarItems.ddbtnConnectionPattern.enabled(connectionSelected);
+            }
+
+            if (this.toolbarItems.ddbtnConnectionLineType) {
+                this.toolbarItems.ddbtnConnectionLineType.enabled(connectionSelected);
             }
         }
 

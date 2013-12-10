@@ -23,13 +23,15 @@ $error-decorator-background-color: #F2DEDE;
 $accept-droppable-background-color: rgba(0, 255, 0, 0.1);
 $reject-droppable-background-color: rgba(255, 0, 0, 0.1);
 
-$path-edit-segment-color: rgba(0, 0, 0, 0);
+$path-edit-segment-color: rgba(0,0,0,0);
 $new-segment-point-marker-background-color: #FFFF00;
 $new-segment-point-marker-border-color: #FF0000;
 $segment-point-marker-background-color: #FFFF00;
 $segment-point-marker-border-color: #000000;
 $segment-point-marker-hover-background-color: #FF7800;
 $segment-point-move-path-color: #FF7800;
+$segment-point-bezier-control-marker-background-color: #FFFFFF;
+$segment-point-bezier-control-marker-border-color: #000000;
 
 $connection-end-src-connector-border-color: #FF0000;
 $connection-end-dst-connector-border-color: #0000FF;
@@ -170,7 +172,7 @@ $connection-drawing-connector-background-color: #00FF00;
 
       .path-edit-segment {
         stroke: $path-edit-segment-color;
-        opacity: 0.5;
+        opacity: 0;
       }
 
       .segment-point {
@@ -185,6 +187,16 @@ $connection-drawing-connector-background-color: #00FF00;
 
       .segment-point-move-path {
         stroke: $segment-point-move-path-color;
+      }
+
+      .segment-point-bezier-control {
+        fill: $segment-point-bezier-control-marker-background-color;
+        stroke: $segment-point-bezier-control-marker-border-color;
+        cursor: pointer;
+
+        &:hover {
+          fill: $segment-point-marker-hover-background-color;
+        }
       }
     }
 

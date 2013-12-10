@@ -4,7 +4,7 @@
  * Author: Tamas Kecskes
  */
 
-define(["storage/mongo", "core/core"],function(Mongo,Core){
+define(["storage/mongo", "storage/commit", "core/core"],function(Mongo,Commit,Core){
     function GMEAuth(_options){
         var _collection = _options.collection || 'users',
             _session = _options.session,
@@ -12,12 +12,12 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
             _userField = _options.user || 'username',
             _passwordField = _options.password || 'password',
             _guest = _options.guest === true ? true : false,
-            _storage = new Mongo(
+            _storage = new Commit(new Mongo(
                 {
                     host: _options.host || '127.0.0.1',
                     port: _options.port || 27017,
                     database: _options.database || 'test'
-                }),
+                }),{}),
             _project = null,
             _core = null,
             _cachedUserData = {};
@@ -27,13 +27,13 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                 delete _cachedUserData[id];
             }
         }
-        function getLatestRootHash(callback){
+        function getLatestCommit(callback){
             var hasEverything = function(){
                 _project.getBranchHash('master','#hack',function(err,commithash){
                     if(!err && commithash){
                         _project.loadObject(commithash,function(err,commit){
                             if(!err && commit){
-                                callback(null,commit.root);
+                                callback(null,commit);
                             } else {
                                 err = err || 'invalid latest database info';
                                 callback(err);
@@ -71,9 +71,9 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
             }
         }
         function getUserNode(id,callback){
-            getLatestRootHash(function(err,rootHash){
-                if(!err && rootHash){
-                    _core.loadRoot(rootHash,function(err,root){
+            getLatestCommit(function(err,commit){
+                if(!err && commit){
+                    _core.loadRoot(commit.root,function(err,root){
                         if(!err && root){
                             _core.loadChildren(root,function(err,children){
                                 if(!err && children && children.length>0){
@@ -102,9 +102,9 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
             });
         }
         function getUserNodeByEmail(email,callback){
-            getLatestRootHash(function(err,rootHash){
-                if(!err && rootHash){
-                    _core.loadRoot(rootHash,function(err,root){
+            getLatestCommit(function(err,commit){
+                if(!err && commit){
+                    _core.loadRoot(commit.root,function(err,root){
                         if(!err && root){
                             _core.loadChildren(root,function(err,children){
                                 var guest = null;
@@ -170,6 +170,42 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
             }
         }
 
+        function addProjectToUser(userId,projectName,callback){
+            getUserNode(userId,function(err,userNode){
+                if(!err && userNode){
+                    //_cachedUserData[id+'/'+projectName] = _core.getRegistry(node,'projects')[projectName];
+                    var userProjects = _core.getRegistry(userNode,'projects');
+                    if(userProjects === null || userProjects === undefined){
+                        userProjects = {};
+                    } else {
+                        userProjects = JSON.parse(JSON.stringify(userProjects));
+                    }
+                    userProjects[projectName] = {read:true,write:true,delete:true};
+                    _core.setRegistry(userNode,'projects',userProjects);
+                    var root = _core.getRoot(userNode);
+                    _core.persist(root,function(){});
+                    var newHash = _core.getHash(root);
+                    getLatestCommit(function(err,oldCommit){
+                        if(!err && oldCommit){
+                            var newCommitHash = _project.makeCommit([oldCommit.root],newHash,'user '+userId+'have created '+projectName+' project',function(err){});
+                            _project.setBranchHash('master',oldCommit['_id'],newCommitHash,function(err){
+                                if(!err){
+                                    _cachedUserData[userId+'/'+projectName] = {read:true,write:true,delete:true};
+                                    callback(null);
+                                } else {
+                                    callback(err);
+                                }
+                            });
+                        } else {
+                            callback(err);
+                        }
+                    });
+                } else {
+                    callback(err);
+                }
+            });
+        }
+
         function authenticate(req,res,next){
             var userId = req.body[_userField],
                 password = req.body[_passwordField],
@@ -213,11 +249,31 @@ define(["storage/mongo", "core/core"],function(Mongo,Core){
                     var projId = userID+'/'+projectName;
                     if(type === 'create'){
                         if(_cachedUserData[userID]){
-                            callback(null,_cachedUserData[userID].create === true);
+                            if(_cachedUserData[userID].create === true){
+                                addProjectToUser(userID,projectName,function(err){
+                                    if(!err){
+                                        callback(null,true);
+                                    } else {
+                                        callback('cannot update user rights',false);
+                                    }
+                                });
+                            } else {
+                                callback(null,false);
+                            }
                         } else {
                             getUser(userID,function(err,userData){
                                 if(!err && userData){
-                                    callback(null,userData.create === true);
+                                    if(userData.create === true){
+                                        addProjectToUser(userID,projectName,function(err){
+                                            if(!err){
+                                                callback(null,true);
+                                            } else {
+                                                callback('cannot update user rights',false);
+                                            }
+                                        });
+                                    } else {
+                                        callback(null,false);
+                                    }
                                 } else {
                                     err = err || 'no valid user permissions found';
                                     callback(err,false);

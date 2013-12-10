@@ -150,7 +150,7 @@ define([ "util/assert", "core/core", "core/tasync" ], function(ASSERT, Core, TAS
 		}
 
         core.getChildrenRelids = function(node){
-            var inheritRelIds = node.base === null ? [] : oldcore.getChildrenRelids(core.getBase(node));
+            var inheritRelIds = node.base === null ? [] : core.getChildrenRelids(core.getBase(node));
             var ownRelIds = oldcore.getChildrenRelids(node);
             for(var i=0;i<inheritRelIds.length;i++){
                 if(ownRelIds.indexOf(inheritRelIds[i]) === -1){

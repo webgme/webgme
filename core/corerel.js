@@ -346,10 +346,11 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
                 while (base) {
                     var baseOverlays = coretree.getChild(base, OVERLAYS);
                     var list = overlayQuery(baseOverlays, baseOldPath);
+                    var tempAncestor = coretree.getAncestor(base,ancestor);
 
-                    aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
+                    aboveAncestor = (base === ancestor ? 0 : tempAncestor === base ? 1 : -1);
 
-                    var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
+                    var relativePath = aboveAncestor < 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
                     for ( var i = 0; i < list.length; ++i) {
                         var entry = list[i];
@@ -360,11 +361,13 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
                             var source, target, overlays;
 
-                            if (aboveAncestor > 0) {
+                            if (aboveAncestor < 0) {
+                                //below ancestor node - further from root
                                 source = ancestorNewPath + entry.s.substr(baseOldPath.length);
                                 target = coretree.joinPaths(relativePath, entry.t);
                                 overlays = ancestorOverlays;
                             } else if (aboveAncestor === 0) {
+                                //at ancestor node
                                 var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
                                 overlays = newNode;
@@ -376,6 +379,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
                                 source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                                 target = data.second;
                             } else {
+                                //above ancestor node - closer to root
                                 ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
 
                                 source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);
@@ -429,10 +433,11 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
             while (base) {
                 var baseOverlays = coretree.getChild(base, OVERLAYS);
                 var list = overlayQuery(baseOverlays, baseOldPath);
+                var tempAncestor = coretree.getAncestor(base,ancestor);
 
-                aboveAncestor = (base === ancestor ? 0 : (aboveAncestor === 0 ? -1 : 1));
+                aboveAncestor = (base === ancestor ? 0 : tempAncestor === base ? 1 : -1);
 
-                var relativePath = aboveAncestor > 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
+                var relativePath = aboveAncestor < 0 ? coretree.getPath(base, ancestor) : coretree.getPath(ancestor, base);
 
                 for ( var i = 0; i < list.length; ++i) {
                     var entry = list[i];
@@ -451,11 +456,13 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
 
                     var source, target, overlays;
 
-                    if (aboveAncestor > 0) {
+                    if (aboveAncestor < 0) {
+                        //below ancestor node
                         source = ancestorNewPath + entry.s.substr(baseOldPath.length);
                         target = coretree.joinPaths(relativePath, entry.t);
                         overlays = ancestorOverlays;
                     } else if (aboveAncestor === 0) {
+                        //at ancestor node
                         var data = getCommonPathPrefixData(ancestorNewPath, entry.t);
 
                         overlays = node;
@@ -467,6 +474,7 @@ define([ "util/assert", "core/coretree", "util/sha1", "core/tasync", "util/canon
                         source = coretree.joinPaths(data.first, entry.s.substr(baseOldPath.length));
                         target = data.second;
                     } else {
+                        //above ancestor node
                         ASSERT(entry.s.substr(0, baseOldPath.length) === baseOldPath);
 
                         source = relativePath + ancestorNewPath + entry.s.substr(baseOldPath.length);

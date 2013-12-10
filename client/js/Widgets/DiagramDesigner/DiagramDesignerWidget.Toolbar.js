@@ -59,12 +59,12 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "Basic+ route manager",
                 "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOHybfFvLhAAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAP8A/wD/N1gbfQAAAHpJREFUeNpj/P//PwNxgIlIdUDAAsQGBgbIQhcuXMCu9j8q0NfX/48DMGHqpIJb6W9qa2vrxo0bcYaAjo4OMhsIcnNzIVxGNMcB5eBsTk5OIPn9+/ewsLC6ujqG/7iBNhhkZWVBuCx4/BEcHKylpRUeHg7hMv4nOrkAAEbVjF45QyssAAAAAElFTkSuQmCC)'),
+                "selected": true,
                 "data": { "type": "basic2"}
             });
 
             this.toolbarItems.radioButtonGroupRouteManager.addButton({ "title": "AutoRouter",
                 "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAALHRFWHRDcmVhdGlvbiBUaW1lAFdlZCAyMCBOb3YgMjAxMyAwODozMDoyNyAtMDYwMIPyYLIAAAAHdElNRQfdCxQOKAp9yT42AAAACXBIWXMAAAsSAAALEgHS3X78AAAABGdBTUEAALGPC/xhBQAAAAZ0Uk5TAOUANwAB2LGMvQAAAIxJREFUeNpjfGrOyEAcYEHje/3Qw6puG8clFmRpIB9OYupngshhSmMCJiIdSppSFkwhXD5DV4rH0fgcMN+3+XTlenwOgIMVK1YASUfHnIpTU4AMRnhsQZz4588fuFJOTk4g+f3797CwsJRtDYx4ItbtixaQtLe3rz47nYADgoODtbS0bPsjIVxG4pMLAGzALHONeXRYAAAAAElFTkSuQmCC)'),
-                "selected": true,
                 "data": { "type": "basic3"}
             });
             /************** END OF - ROUTING MANAGER SELECTION **************************/
@@ -106,9 +106,13 @@ define(['./DiagramDesignerWidget.OperatingModes',
 
             if (this._lineStyleControls === true) {
                 /************** END OF - VISUAL STYLE ARROWS *****************/
-                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "icon": "icon-arrow-left", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "icon": "icon-minus", "menuClass": "no-min-width" });
-                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "icon": "icon-arrow-right", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowStart = toolbar.addDropDownButton({ "title": "Line start marker", "icon": "icon-arrow-left", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionPattern = toolbar.addDropDownButton({ "title": "Line pattern", "icon": "icon-minus", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionArrowEnd = toolbar.addDropDownButton({ "title": "Line end marker","icon": "icon-arrow-right", "menuClass": "no-min-width" });
+                this.toolbarItems.ddbtnConnectionLineType = toolbar.addDropDownButton({
+                    "title": "Line type",
+                    "icon": btnIconBase.clone().css('background-image', 'url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAIAAACQKrqGAAAAK3RFWHRDcmVhdGlvbiBUaW1lAEZyaSA2IERlYyAyMDEzIDE1OjE1OjUyIC0wNjAwvQqmVQAAAAd0SU1FB90MBhURF0gI0MAAAAAJcEhZcwAACxIAAAsSAdLdfvwAAAAEZ0FNQQAAsY8L/GEFAAAABnRSTlMA/wD/AP83WBt9AAAAuUlEQVR42mP8//8/A3GAiUh1KEp//fqFXykLhCorK3v+/LmkpGRXVxdOtUC35ufnb9myBcjYuHEjkP0fB2AGYhsbGx8fH6A2dXX1P3/+LFu2zMHBAYtbP3365OvrC+cD9Xz+/Pno0aPYHYAGTpw4gekMoAiWwDI3NxcQENiwYQNcZNOmTYKCggy4PFFYWAhUAfFrQUEBkMGIJ7bKy8ufPn0qLS3d2dkJ5OJTCgTAAGFhgYY9AaVkpgEAIAumySCHw2MAAAAASUVORK5CYII=)'),
+                    "menuClass": "no-min-width" });
 
                 var createArrowMenuItem = function (arrowType, isEnd) {
                     var size = arrowType === DiagramDesignerWidgetConstants.LINE_ARROWS.NONE ? "" : "-xwide-xlong",
@@ -158,9 +162,29 @@ define(['./DiagramDesignerWidget.OperatingModes',
                     }
                 }
 
+                //fill linetype dropdown
+                this.toolbarItems.ddbtnConnectionLineType.addButton({ "title": 'Straight',
+                    "icon": self._createLineStyleMenuItem(),
+                    "clickFn": function (/*data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_TYPE] = DiagramDesignerWidgetConstants.LINE_TYPES.NONE;
+                        self._setConnectionProperty(p);
+                    }
+                });
+
+                this.toolbarItems.ddbtnConnectionLineType.addButton({ "title": 'Bezier',
+                    "icon": self._createLineStyleMenuItem(null, null, null, null, null, DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER),
+                    "clickFn": function (/*data*/) {
+                        var p = {};
+                        p[DiagramDesignerWidgetConstants.LINE_TYPE] = DiagramDesignerWidgetConstants.LINE_TYPES.BEZIER;
+                        self._setConnectionProperty(p);
+                    }
+                });
+
                 this.toolbarItems.ddbtnConnectionArrowStart.enabled(false);
                 this.toolbarItems.ddbtnConnectionPattern.enabled(false);
                 this.toolbarItems.ddbtnConnectionArrowEnd.enabled(false);
+                this.toolbarItems.ddbtnConnectionLineType.enabled(false);
                 /************** END OF - VISUAL STYLE ARROWS *****************/
             }
 

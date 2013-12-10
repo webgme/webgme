@@ -679,6 +679,7 @@ define(['logManager',
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowStart.enabled(allHasRegistrylineStyle);
         this.designerCanvas.toolbarItems.ddbtnConnectionPattern.enabled(allHasRegistrylineStyle);
         this.designerCanvas.toolbarItems.ddbtnConnectionArrowEnd.enabled(allHasRegistrylineStyle);
+        this.designerCanvas.toolbarItems.ddbtnConnectionLineType.enabled(allHasRegistrylineStyle);
 
         this.$btnConnectionRemoveSegmentPoints.enabled(connectionSelected);
 
