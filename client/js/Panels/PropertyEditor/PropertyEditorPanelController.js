@@ -79,7 +79,10 @@ define(['logManager',
             _getNodePropertyValues, //fn
             _filterCommon, //fn
             _addItemsToResultList,  //fn
-            _getPointerInfo;
+            _getPointerInfo,
+            commonAttrMeta = {},
+            buildCommonAttrMeta,     //fn
+            _client = this._client;
 
         _getNodePropertyValues = function (node, propNameFn, propValueFn) {
             var result =  {},
@@ -131,6 +134,93 @@ define(['logManager',
             return util.flattenObject(result);
         };
 
+        buildCommonAttrMeta = function (node, initPhase) {
+            var nodeId = node.getId(),
+                nodeAttributeNames = _client.getValidAttributeNames(nodeId) || [],
+                len = nodeAttributeNames.length,
+                attrMetaDescriptor,
+                attrName,
+                isCommon,
+                commonEnumValues,
+                isEnumCommon,
+                isEnumAttrMeta;
+
+            //first delete the ones from the common that does not exist in this node
+            for (attrName in commonAttrMeta) {
+                if (commonAttrMeta.hasOwnProperty(attrName)) {
+                    if (nodeAttributeNames.indexOf(attrName) === -1) {
+                        delete commonAttrMeta[attrName];
+                    }
+                }
+            }
+
+            //for the remaining list check if still common
+            //common: type is the same
+            //if type is enum, the common types should be the intersection of the individual enum types
+            while (len--) {
+                attrName = nodeAttributeNames[len];
+                attrMetaDescriptor = _client.getAttributeSchema(nodeId,attrName);
+                if (commonAttrMeta.hasOwnProperty(attrName)) {
+                    isCommon = true;
+                    //this attribute already exist in the attribute meta map
+                    //let's see if it is still common
+                    if (attrMetaDescriptor) {
+                        if (commonAttrMeta[attrName].type === attrMetaDescriptor.type) {
+                            isEnumCommon = commonAttrMeta[attrName].enum && commonAttrMeta[attrName].enum.length > 0;
+                            isEnumAttrMeta = attrMetaDescriptor.enum && attrMetaDescriptor.enum.length > 0;
+                            if (isEnumCommon && isEnumAttrMeta) {
+                                //same type, both enum
+                                //get the intersection of the enum values
+                                commonEnumValues = _.intersection(commonAttrMeta[attrName].enum, attrMetaDescriptor.enum);
+
+                                if (commonEnumValues.length !== commonAttrMeta[attrName].enum.length) {
+                                    if (commonEnumValues.length === 0) {
+                                        //0 common enum values, can not consider common attribute anymore
+                                        isCommon = false;
+                                    } else {
+                                        //has common values but less than before
+                                        //store the new common values
+                                        commonAttrMeta[attrName].enum = commonEnumValues.slice(0);
+                                    }
+                                }
+                            } else {
+                                //not both are enum
+                                //if only one is enum --> not common anymore
+                                //if both are not enum --> still common
+                                if (!isEnumCommon && !isEnumAttrMeta) {
+
+                                } else {
+                                    isCommon = false;
+                                }
+                            }
+                        } else {
+                            //different types, for sure it's not common anymore
+                            isCommon = false;
+                        }
+                    } else {
+                        //node meta descriptor in this node
+                        //it's not common then
+                        //NOTE: it should never happen probably
+                        isCommon = false;
+                    }
+
+                    //if not common, delete it from attribute map
+                    if (!isCommon) {
+                        delete commonAttrMeta[attrName];
+                    }
+                } else {
+                    //no entry for this attribute
+                    //in init phase, create entry
+                    if (initPhase) {
+                        if (attrMetaDescriptor) {
+                            commonAttrMeta[attrName] = {};
+                            _.extend(commonAttrMeta[attrName], attrMetaDescriptor);
+                        }
+                    }
+                }
+            }
+        };
+
         if (selectionLength > 0) {
             //get all attributes
             //get all registry elements
@@ -140,6 +230,7 @@ define(['logManager',
 
                 if (cNode) {
                     flattenedAttrs = _getNodePropertyValues(cNode, "getAttributeNames", "getAttribute");
+                    buildCommonAttrMeta(cNode, i === selectionLength - 1);
 
                     _filterCommon(commonAttrs, flattenedAttrs, i === selectionLength - 1);
 
@@ -153,10 +244,11 @@ define(['logManager',
                 }
             }
 
-            _addItemsToResultList = function (srcList, prefix, dstList) {
+            _addItemsToResultList = function (srcList, prefix, dstList, isAttribute) {
                 var i,
                     extKey,
-                    keyParts;
+                    keyParts,
+                    doDisplay;
 
                 if (prefix !== "") {
                     prefix += ".";
@@ -164,38 +256,53 @@ define(['logManager',
 
                 for (i in srcList) {
                     if (srcList.hasOwnProperty(i)) {
-                        extKey = prefix + i;
-                        keyParts = i.split(".");
-                        dstList[extKey] = { "name": keyParts[keyParts.length - 1],
-                            "value": srcList[i].value,
-                            "valueType": srcList[i].valueType};
+                        doDisplay = true;
 
-                        if (i === "position.x" || i === "position.y") {
-                            dstList[extKey].minValue = 0;
-                            dstList[extKey].stepValue = 10;
+                        if (isAttribute && !commonAttrMeta.hasOwnProperty(i)) {
+                            doDisplay = false;
                         }
 
-                        if (srcList[i].readOnly === false || srcList[i].readOnly === true) {
-                            dstList[extKey].readOnly = srcList[i].readOnly;
-                        }
+                        if (doDisplay) {
+                            extKey = prefix + i;
+                            keyParts = i.split(".");
 
-                        if (srcList[i].isCommon === false) {
-                            dstList[extKey].value = "";
-                            dstList[extKey].options = {"textColor": noCommonValueColor};
-                        }
+                            dstList[extKey] = { "name": keyParts[keyParts.length - 1],
+                                "value": srcList[i].value,
+                                "valueType": srcList[i].valueType};
 
-                        if (extKey.indexOf(".x") > -1) {
-                            //let's say its inherited, make it italic
-                            dstList[extKey].options = dstList[extKey].options || {};
-                            dstList[extKey].options.textItalic = true;
-                            dstList[extKey].options.textBold = true;
-                        }
+                            if (i === "position.x" || i === "position.y") {
+                                dstList[extKey].minValue = 0;
+                                dstList[extKey].stepValue = 10;
+                            }
 
-                        //decorator value should be rendered as an option list
-                        if (i === nodePropertyNames.Registry.decorator) {
-                            //dstList[extKey].valueType = "option";
-                            //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
-                            dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
+                            if (srcList[i].readOnly === false || srcList[i].readOnly === true) {
+                                dstList[extKey].readOnly = srcList[i].readOnly;
+                            }
+
+                            if (srcList[i].isCommon === false) {
+                                dstList[extKey].value = "";
+                                dstList[extKey].options = {"textColor": noCommonValueColor};
+                            }
+
+                            if (extKey.indexOf(".x") > -1) {
+                                //let's say its inherited, make it italic
+                                dstList[extKey].options = dstList[extKey].options || {};
+                                dstList[extKey].options.textItalic = true;
+                                dstList[extKey].options.textBold = true;
+                            }
+
+                            //decorator value should be rendered as an option list
+                            if (i === nodePropertyNames.Registry.decorator) {
+                                //dstList[extKey].valueType = "option";
+                                //TODO: only the decorators for DiagramDesigner are listed so far, needs to be fixed...
+                                dstList[extKey].valueItems = DecoratorDB.getDecoratorsByWidget('DiagramDesigner');
+                            }
+
+                            //if the attribute value is an enum, display the enum values
+                            if (isAttribute && commonAttrMeta[i].enum && commonAttrMeta[i].enum.length > 0) {
+                                dstList[extKey].valueItems = commonAttrMeta[i].enum.slice(0);
+                                dstList[extKey].valueItems.sort();
+                            }
                         }
                     }
                 }
@@ -221,7 +328,10 @@ define(['logManager',
                 "text": "Pointers",
                 "value": undefined};
 
-            _addItemsToResultList(commonAttrs, "Attributes", propList);
+            _addItemsToResultList(commonAttrs, "Attributes", propList, true);
+
+            console.log('!!!!!!!!!!!!!!!!!!!!!');
+            console.log(JSON.stringify(commonAttrMeta));
 
             //modify registry
             for (var it in commonRegs) {
