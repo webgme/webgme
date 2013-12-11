@@ -2,8 +2,7 @@
 
 define(['js/PanelBase/PanelBaseWithHeader',
     'js/Controls/PropertyGrid/PropertyGrid',
-    './PropertyEditorPanelController',
-    'css!/css/Panels/PropertyEditor/PropertyEditorPanel'], function (PanelBaseWithHeader,
+    './PropertyEditorPanelController'], function (PanelBaseWithHeader,
                                                                      PropertyGrid,
                                                                      PropertyEditorPanelController) {
 
