@@ -173,7 +173,7 @@ define(['jquery',
                 _btnMETA = WebGMEGlobal.Toolbar.addButton({ "title": "Display META entries...",
                     "icon": "icon-barcode",
                     "clickFn": function (/*data*/) {
-                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypes(), undefined, 2));
+                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
                     }});
             }
         }
@@ -244,6 +244,48 @@ define(['jquery',
         return result;
     };
 
+    var _getMETAAspectTypesSorted = function () {
+        var result = {},
+            typeNames = [],
+            m;
+
+        for (m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                typeNames.push(m);
+            }
+        }
+
+        typeNames.sort();
+
+        for (m = 0; m < typeNames.length; m += 1) {
+            result[typeNames[m]] = _metaTypes[typeNames[m]];
+        }
+
+        return result;
+    };
+
+    /*
+    Returns the parent meta types of the given object ID in the order of inheritance.
+     */
+    var _getMETATypesOf = function (objID) {
+        var result = [];
+
+        for (var m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                if (_isMETAType(objID, _metaTypes[m])) {
+                    result.push(m);
+                }
+            }
+        }
+
+        // sort based on metatypes inheritance
+        result.sort(function(a, b) {
+            return  _isMETAType(_metaTypes[a], _metaTypes[b]) ? -1 : 1;
+        });
+
+        return result;
+    };
+
     //return utility functions
     return { initialize: _initialize,
             isMETAType: _isMETAType,
@@ -251,6 +293,7 @@ define(['jquery',
             events: _events,
             addEventListener: _addEventListener,
             removeEventListener: _removeEventListener,
-            getMETAAspectTypes: _getMETAAspectTypes
+            getMETAAspectTypes: _getMETAAspectTypes,
+            getMETATypesOf: _getMETATypesOf
         };
 });

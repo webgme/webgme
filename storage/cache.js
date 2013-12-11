@@ -92,7 +92,13 @@ define([ "util/assert" ], function (ASSERT) {
 				ASSERT(typeof obj === "object");
 
 
-				Object.freeze(obj);
+                try{
+				    Object.freeze(obj);
+                }
+                catch(e){
+                    //TODO find the proper answer why this can occur
+                    return;
+                }
 
 				var key;
 				for (key in obj) {

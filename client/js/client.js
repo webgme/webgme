@@ -342,22 +342,21 @@ define([
                 }
 
                 function getNCommitsFrom(commitHash,number,callback){
-                    var fillCache = function(time,number,callback){
+                    var fillCache = function(time,number,cb){
                         _project.getCommits(time,number,function(err,commits){
                             if(!err && commits){
                                 for(var i=0;i<commits.length;i++){
                                     addCommit(commits[i]);
                                 }
-                                callback(null);
+                                cb(null);
                             } else {
                                 //we cannot get new commits from the server
                                 //we should use our very own ones
-                                //callback(err);
-                                callback(null);
+                                cb(null);
                             }
                         });
                     };
-                    var returnNCommitsFromHash= function(hash,num,cb){
+                    var returnNCommitsFromHash = function(hash,num,cb){
                         //now we should have all the commits in place
                         var index = _timeOrder.indexOf(hash),
                             commits = [];
