@@ -244,6 +244,28 @@ define(['jquery',
         return result;
     };
 
+    /*
+    Returns the parent meta types of the given object ID in the order of inheritance.
+     */
+    var _getMETATypesOf = function (objID) {
+        var result = [];
+
+        for (var m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                if (_isMETAType(objID, _metaTypes[m])) {
+                    result.push(m);
+                }
+            }
+        }
+
+        // sort based on metatypes inheritance
+        result.sort(function(a, b) {
+            return  _isMETAType(_metaTypes[a], _metaTypes[b]) ? -1 : 1;
+        });
+
+        return result;
+    };
+
     //return utility functions
     return { initialize: _initialize,
             isMETAType: _isMETAType,
@@ -251,6 +273,7 @@ define(['jquery',
             events: _events,
             addEventListener: _addEventListener,
             removeEventListener: _removeEventListener,
-            getMETAAspectTypes: _getMETAAspectTypes
+            getMETAAspectTypes: _getMETAAspectTypes,
+            getMETATypesOf: _getMETATypesOf
         };
 });
