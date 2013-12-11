@@ -2,8 +2,10 @@
 
 define(['logManager',
         'js/NodePropertyNames',
+        'js/Utils/METAAspectHelper',
         'text!./ConstraintManager.html'], function (logManager,
                                                     nodePropertyNames,
+                                                    METAAspectHelper,
                                                     constraintManagerDialogTemplate) {
   
     var dialog_base = $(constraintManagerDialogTemplate);
