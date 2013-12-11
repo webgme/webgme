@@ -173,7 +173,7 @@ define(['jquery',
                 _btnMETA = WebGMEGlobal.Toolbar.addButton({ "title": "Display META entries...",
                     "icon": "icon-barcode",
                     "clickFn": function (/*data*/) {
-                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypes(), undefined, 2));
+                        alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
                     }});
             }
         }
@@ -240,6 +240,26 @@ define(['jquery',
     var _getMETAAspectTypes = function () {
         var result = {};
         _.extend(result, _metaTypes);
+
+        return result;
+    };
+
+    var _getMETAAspectTypesSorted = function () {
+        var result = {},
+            typeNames = [],
+            m;
+
+        for (m in _metaTypes) {
+            if (_metaTypes.hasOwnProperty(m)) {
+                typeNames.push(m);
+            }
+        }
+
+        typeNames.sort();
+
+        for (m = 0; m < typeNames.length; m += 1) {
+            result[typeNames[m]] = _metaTypes[typeNames[m]];
+        }
 
         return result;
     };
