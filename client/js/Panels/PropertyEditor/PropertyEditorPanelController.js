@@ -330,9 +330,6 @@ define(['logManager',
 
             _addItemsToResultList(commonAttrs, "Attributes", propList, true);
 
-            console.log('!!!!!!!!!!!!!!!!!!!!!');
-            console.log(JSON.stringify(commonAttrMeta));
-
             //modify registry
             for (var it in commonRegs) {
                 if (commonRegs.hasOwnProperty(it)) {
@@ -344,9 +341,6 @@ define(['logManager',
                     }
                 }
             }
-
-
-
 
             _addItemsToResultList(commonRegs, "Registry", propList);
 
