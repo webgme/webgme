@@ -120,6 +120,30 @@ define(['jquery',
     };
 
     /*
+     * Determines if a GME Connection can be created between source and target in parent
+     */
+    var _getValidConnectionTypesInParent = function (sourceID, parentID) {
+        var validTypes = [],
+            validChildrenTypes,
+            len,
+            childID;
+
+        validChildrenTypes = _getMETAAspectMergedValidChildrenTypes(parentID) || [];
+
+        len = validChildrenTypes.length;
+        while (len--) {
+            childID = validChildrenTypes[len];
+            if (_isConnectionType(childID) &&
+                _client.isValidTarget(childID, CONSTANTS.POINTER_SOURCE, sourceID) &&
+                _canCreateChild(parentID, childID)) {
+                validTypes.push(childID);
+            }
+        }
+
+        return validTypes;
+    };
+
+    /*
      * Determines if a GME Connection is valid by META between source and destination
      */
     var _isValidConnection = function (sourceID, targetID, connectionID) {
@@ -368,6 +392,7 @@ define(['jquery',
         canCreateChildren: _canCreateChildren,
         getValidReferenceTypes: _getValidReferenceTypes,
         canDeleteNode: _canDeleteNode,
-        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes
+        getMETAAspectMergedValidChildrenTypes: _getMETAAspectMergedValidChildrenTypes,
+        getValidConnectionTypesInParent: _getValidConnectionTypesInParent
     }
 });

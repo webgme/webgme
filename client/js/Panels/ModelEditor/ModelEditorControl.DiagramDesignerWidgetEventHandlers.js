@@ -745,7 +745,8 @@ define(['logManager',
             validConnectionTypes,
             j,
             canCreateChildOfConnectionType,
-            parentID = this.currentNodeInfo.id;
+            parentID = this.currentNodeInfo.id,
+            client = this._client;
 
         if (params.srcSubCompId !== undefined) {
             sourceId = this._Subcomponent2GMEID[params.srcId][params.srcSubCompId];
@@ -756,6 +757,8 @@ define(['logManager',
         //need to test for each source-destination pair if the connection can be made or not?
         //there is at least one valid connection type definition in the parent that could be created between the source and target
         //there is at least one valid connection type that really can be created in the parent (max chilren num...)
+        validConnectionTypes = GMEConcepts.getValidConnectionTypesInParent(sourceId, parentID);
+
         while (i--) {
             var p = availableConnectionEnds[i];
             if (p.dstSubCompID !== undefined) {
@@ -764,18 +767,12 @@ define(['logManager',
                 targetId = this._ComponentID2GmeID[p.dstItemID];
             }
 
-            validConnectionTypes = GMEConcepts.getValidConnectionTypes(sourceId, targetId, parentID);
             j = validConnectionTypes.length;
-            canCreateChildOfConnectionType = false;
             while (j--) {
-                if (GMEConcepts.canCreateChild(parentID, validConnectionTypes[j])) {
-                    canCreateChildOfConnectionType = true;
+                if (client.isValidTarget(validConnectionTypes[j], CONSTANTS.POINTER_TARGET, targetId)) {
+                    result.push(availableConnectionEnds[i]);
                     break;
                 }
-            }
-
-            if (canCreateChildOfConnectionType) {
-                result.push(availableConnectionEnds[i]);
             }
         }
 
