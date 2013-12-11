@@ -67,7 +67,7 @@ namespace webgme {
     HandleScope scope;
     //CERR << "Calling: " << method << ", argc: " << argc << std::endl;
     Handle<Function> func = GetObjectMethod(object, method);
-    return scope.Close(CallTasyncMethod(func, argc, argv));
+    return scope.Close(CallTasyncMethod(func, argc, argv, object));
 
   }
 }
