@@ -27,7 +27,8 @@ define(['logManager',
         DEFAULT_END_ARROW = "none",
         DEFAULT_START_ARROW = "none",
         DRAW_TYPE_CREATE = "create",
-        DRAW_TYPE_RECONNECT = "reconnect";
+        DRAW_TYPE_RECONNECT = "reconnect",
+        MINIMAL_DISTANCE = 10;
 
 
     /*
@@ -158,7 +159,9 @@ define(['logManager',
                     self.logger.error('MOUSEUP on "connector" element but attribute "' + DiagramDesignerWidgetConstants.DATA_ITEM_ID + '" is not specified');
                 } else {
                     if (self._diagramDesigner.mode === self._diagramDesigner.OPERATING_MODES.DESIGN) {
-                        self._connectionEndDrop(objId, sCompId);
+                        if (self._minimalDistanceMet === true) {
+                            self._connectionEndDrop(objId, sCompId);
+                        }
                     }
                 }
             }
@@ -410,6 +413,8 @@ define(['logManager',
 
         this._connectionInDraw = true;
 
+        this._minimalDistanceMet = false;
+
         //ask the decorator if it wants to specify custom line-in-draw-visual-properties for the connection being drawn
         this._setTempConnectionInDrawProperties(this._diagramDesigner.items[objId].getDrawnConnectionVisualStyle(sCompId));
 
@@ -453,6 +458,8 @@ define(['logManager',
         this.logger.debug('_startConnectionReconnect connectionId:' + connectionId + ', draggedEnd:' + draggedEnd);
 
         this._connectionInDraw = true;
+
+        this._minimalDistanceMet = true;
 
         this._connectionInDrawProps = { "connId": connectionId,
                                         "draggedEnd": draggedEnd,
@@ -554,7 +561,21 @@ define(['logManager',
         var mousePos = this._diagramDesigner.getAdjustedMousePos(event);
 
         if (this._connectionInDraw === true) {
-            this._updateDrawnConnection(mousePos);
+            if (this._minimalDistanceMet === true) {
+                this._updateDrawnConnection(mousePos);
+            } else {
+                //not yet considered as drawing
+                //check if the mouse delta reached the minimum mouse delta at all to initiate the drag
+
+                var dx = mousePos.mX - this._connectionDesc.x2,
+                    dy = mousePos.mY - this._connectionDesc.y2;
+
+                if (Math.abs(dx) >= MINIMAL_DISTANCE || Math.abs(dy) >= MINIMAL_DISTANCE) {
+                    //minimum delta is met, start the drawing
+                    this._minimalDistanceMet = true;
+                    this._updateDrawnConnection(mousePos);
+                }
+            }
         }
     };
 
