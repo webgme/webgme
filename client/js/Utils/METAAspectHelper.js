@@ -12,13 +12,15 @@ define(['jquery',
         'js/NodePropertyNames',
         'logManager',
         'js/Panels/MetaEditor/MetaEditorConstants',
-        'eventDispatcher'], function (_jquery,
+        'eventDispatcher',
+        'text!./METATemplate.js'], function (_jquery,
                                     _underscore,
                                     CONSTANTS,
                                     nodePropertyNames,
                                     logManager,
                                     MetaEditorConstants,
-                                    EventDispatcher) {
+                                    EventDispatcher,
+                                    METATemplateJS) {
 
     var META_RULES_CONTAINER_NODE_ID = MetaEditorConstants.META_ASPECT_CONTAINER_ID,
         _client,
@@ -175,6 +177,12 @@ define(['jquery',
                     "clickFn": function (/*data*/) {
                         alert('META entries: \n' + JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
                     }});
+
+                WebGMEGlobal.Toolbar.addButton({ "title": "Download Domain's META...",
+                    "icon": "icon-file",
+                    "clickFn": function (/*data*/) {
+                        _downloadMETA();
+                    }});
             }
         }
 
@@ -285,6 +293,26 @@ define(['jquery',
 
         return result;
     };
+
+
+    var _downloadMETA = function () {
+        if (!_.isEmpty(_metaTypes)) {
+            var projName = _client.getActiveProject();
+            var fileName = projName + ".META.js";
+            var content = METATemplateJS;
+            var regExpPROJ = /__PROJECT__/g;
+            var regExpMETAASPECTTYPES = /__META_ASPECT_TYPES__/g;
+
+            content = content.replace(regExpPROJ, projName);
+            content = content.replace(regExpMETAASPECTTYPES, JSON.stringify(_getMETAAspectTypesSorted(), undefined, 2));
+
+            var pom = document.createElement('a');
+            pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
+            pom.setAttribute('download', fileName);
+            pom.click();
+        }
+    };
+
 
     //return utility functions
     return { initialize: _initialize,
